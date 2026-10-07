@@ -85,6 +85,7 @@ from .media_source import (
     _build_media_proxy_path,
     split_motioneye_device_identifier,
 )
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [CAMERA_DOMAIN, SENSOR_DOMAIN, SWITCH_DOMAIN]
@@ -268,6 +269,7 @@ def _add_camera(
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the motionEye integration."""
     hass.http.register_view(MotionEyeMediaProxyView(hass))
+    async_setup_services(hass)
     return True
 
 
@@ -437,6 +439,7 @@ def _get_media_event_data(
     _, config_entry = dr.async_get_device_and_config_entry_for_domain(
         hass, device.id, domain=DOMAIN
     )
+
     if config_entry is None or config_entry.state is not ConfigEntryState.LOADED:
         return {}
     config_entry_id = config_entry.entry_id

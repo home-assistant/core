@@ -1,7 +1,7 @@
 """Test the entity helper."""
 
 import asyncio
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 import dataclasses
 from datetime import timedelta
 import logging
@@ -16,11 +16,15 @@ import pytest
 from pytest_unordered import unordered
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.camera import Camera
+from homeassistant.components.device_tracker import ScannerEntity
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry, ConfigSubentryData
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_DEVICE_CLASS,
     ATTR_FRIENDLY_NAME,
+    EVENT_STATE_CHANGED,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     EntityCategory,
@@ -30,6 +34,7 @@ from homeassistant.core import (
     HassJobType,
     HomeAssistant,
     ReleaseChannel,
+    State,
     callback,
 )
 from homeassistant.exceptions import HomeAssistantError, NoEntitySpecifiedError
@@ -41,7 +46,13 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.event import (
+    async_track_state_added_domain,
+    async_track_state_removed_domain,
+)
+from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from tests.common import (
     MockConfigEntry,
@@ -50,6 +61,7 @@ from tests.common import (
     MockModule,
     MockPlatform,
     RegistryEntryWithDefaults,
+    async_capture_events,
     mock_integration,
     mock_registry,
 )
@@ -685,6 +697,38 @@ async def test_async_remove_twice(hass: HomeAssistant) -> None:
     assert ent._platform_state is entity.EntityPlatformState.REMOVED
 
 
+async def test_async_remove_cancel_concurrent_waiter(hass: HomeAssistant) -> None:
+    """Test cancelling a concurrent remove does not break the in-progress remove."""
+    release = asyncio.Event()
+
+    class MockEntitySlowRemoval(entity.Entity):
+        """Entity that blocks while being removed."""
+
+        async def async_will_remove_from_hass(self) -> None:
+            """Block until released."""
+            await release.wait()
+
+    platform = MockEntityPlatform(hass, domain="test")
+    ent = MockEntitySlowRemoval()
+    ent.entity_id = "test.test"
+    await platform.async_add_entities([ent])
+
+    owner = hass.async_create_task(ent.async_remove())
+    await asyncio.sleep(0)
+    waiter = hass.async_create_task(ent.async_remove())
+    other_waiter = hass.async_create_task(ent.async_remove())
+    await asyncio.sleep(0)
+
+    waiter.cancel()
+    with pytest.raises(asyncio.CancelledError):
+        await waiter
+
+    release.set()
+    await owner
+    await other_waiter
+    assert hass.states.get("test.test") is None
+
+
 async def test_set_context(hass: HomeAssistant) -> None:
     """Test setting context."""
     context = Context()
@@ -1040,6 +1084,44 @@ async def _test_friendly_name(
 
     await async_update_entity(hass, ent.entity_id)
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == expected_friendly_name
+
+
+@pytest.mark.parametrize("has_entity_name", [False, True])
+async def test_friendly_name_empty_override_uses_device_name(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    has_entity_name: bool,
+) -> None:
+    """Test an empty name follows the device until the override is reset."""
+    ent = MockEntity(
+        unique_id="empty_name",
+        device_info={
+            "identifiers": {("test", "device")},
+            "name": "Device Bla",
+        },
+        has_entity_name=has_entity_name,
+        name="Temperature",
+    )
+    await _test_friendly_name(hass, ent, "Device Bla Temperature")
+
+    entry = entity_registry.async_update_entity(ent.entity_id, name="")
+    await hass.async_block_till_done()
+    assert hass.states.get(ent.entity_id).attributes[ATTR_FRIENDLY_NAME] == "Device Bla"
+
+    assert entry.device_id is not None
+    device_registry.async_update_device(entry.device_id, name_by_user="Living room")
+    await hass.async_block_till_done()
+    assert (
+        hass.states.get(ent.entity_id).attributes[ATTR_FRIENDLY_NAME] == "Living room"
+    )
+
+    entity_registry.async_update_entity(ent.entity_id, name=None)
+    await hass.async_block_till_done()
+    assert (
+        hass.states.get(ent.entity_id).attributes[ATTR_FRIENDLY_NAME]
+        == "Living room Temperature"
+    )
 
 
 @pytest.mark.parametrize(
@@ -1670,6 +1752,113 @@ async def test_friendly_name_updated(
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == expected_friendly_name3
 
 
+@pytest.mark.parametrize(
+    (
+        "entity_kwargs",
+        "new_device_identifier",
+        "expected_device_identifier",
+        "expected_friendly_name_after_move",
+        "expected_friendly_name_final",
+    ),
+    [
+        pytest.param(
+            {},
+            ("test", "new"),
+            ("test", "new"),
+            "New Device Entity",
+            "New renamed Entity",
+            id="no_device_to_device",
+        ),
+        pytest.param(
+            {"device_info": {"identifiers": {("test", "old")}}},
+            ("test", "new"),
+            ("test", "new"),
+            "New Device Entity",
+            "New renamed Entity",
+            id="device_to_other_device",
+        ),
+        pytest.param(
+            {"device_info": {"identifiers": {("test", "old")}}},
+            None,
+            None,
+            "Entity",
+            "Entity",
+            id="device_to_no_device",
+        ),
+    ],
+)
+async def test_device_updates_follow_device_id_change(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    entity_kwargs: dict[str, Any],
+    new_device_identifier: tuple[str, str] | None,
+    expected_device_identifier: tuple[str, str] | None,
+    expected_friendly_name_after_move: str,
+    expected_friendly_name_final: str,
+) -> None:
+    """Test device registry updates track the entity's current device.
+
+    After a device_id change, updates of the new device must be applied, and
+    updates of the previous device must not be.
+    """
+    config_entry = MockConfigEntry(entry_id="super-mock-id")
+    config_entry.add_to_hass(hass)
+    old_device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("test", "old")},
+        name="Old Device",
+    )
+    new_device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("test", "new")},
+        name="New Device",
+    )
+    devices = {("test", "old"): old_device, ("test", "new"): new_device, None: None}
+    device_ids = {("test", "old"): old_device.id, ("test", "new"): new_device.id}
+
+    ent = MockEntity(
+        unique_id="qwer", has_entity_name=True, name="Entity", **entity_kwargs
+    )
+
+    async def async_setup_entry(
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        async_add_entities: AddConfigEntryEntitiesCallback,
+    ) -> None:
+        """Mock setup entry method."""
+        async_add_entities([ent])
+
+    platform = MockPlatform(async_setup_entry=async_setup_entry)
+    entity_platform = MockEntityPlatform(
+        hass, platform_name=config_entry.domain, platform=platform
+    )
+    assert await entity_platform.async_setup_entry(config_entry)
+    await hass.async_block_till_done()
+
+    entity_registry.async_update_entity(
+        ent.entity_id, device_id=device_ids.get(new_device_identifier)
+    )
+    await hass.async_block_till_done()
+    expected_device = devices[expected_device_identifier]
+    assert ent.device_entry == expected_device
+    state = hass.states.get(ent.entity_id)
+    assert state.attributes[ATTR_FRIENDLY_NAME] == expected_friendly_name_after_move
+
+    # Renaming the previous device must not affect the entity
+    device_registry.async_update_device(old_device.id, name_by_user="Old renamed")
+    await hass.async_block_till_done()
+    assert ent.device_entry == expected_device
+    state = hass.states.get(ent.entity_id)
+    assert state.attributes[ATTR_FRIENDLY_NAME] == expected_friendly_name_after_move
+
+    # Renaming the new device must update the entity
+    device_registry.async_update_device(new_device.id, name_by_user="New renamed")
+    await hass.async_block_till_done()
+    state = hass.states.get(ent.entity_id)
+    assert state.attributes[ATTR_FRIENDLY_NAME] == expected_friendly_name_final
+
+
 async def test_device_entry_cleared_when_detached_from_device(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -2027,56 +2216,875 @@ async def test_reuse_entity_object_after_entity_registry_disabled(
     assert ent._platform_state == entity.EntityPlatformState.REMOVED
 
 
+class _LifecycleTrackingEntity(entity.Entity):
+    """Entity which records calls to its add and remove hooks."""
+
+    _attr_unique_id = "5678"
+
+    def __init__(self) -> None:
+        """Initialize the entity."""
+        self.added_calls = 0
+        self.remove_calls = 0
+        self.on_remove_calls = 0
+
+    async def async_added_to_hass(self) -> None:
+        """Run when the entity has been added to hass."""
+        self.added_calls += 1
+        self.async_on_remove(self._handle_remove)
+
+    def _handle_remove(self) -> None:
+        """Run when the entity is removed."""
+        self.on_remove_calls += 1
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Run when the entity is about to be removed from hass."""
+        self.remove_calls += 1
+
+
+class _RenameTrackingEntity(_LifecycleTrackingEntity):
+    """Entity which also records calls to async_entity_id_changed."""
+
+    def __init__(self) -> None:
+        """Initialize the entity."""
+        super().__init__()
+        self.entity_id_changed_calls: list[tuple[str, str]] = []
+
+    @callback
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Run when the entity_id has been changed."""
+        self.entity_id_changed_calls.append((old_entity_id, self.entity_id))
+
+
+def _assert_entity_bookkeeping(
+    hass: HomeAssistant,
+    platform: MockEntityPlatform,
+    ent: entity.Entity,
+    entity_ids: list[str],
+) -> None:
+    """Assert which entity_ids core tracks the entity by."""
+    assert list(entity.entity_sources(hass)) == entity_ids
+    expected = dict.fromkeys(entity_ids, ent)
+    assert platform.entities == expected
+    assert platform.domain_entities == expected
+    assert platform.domain_platform_entities == expected
+
+
 async def test_change_entity_id(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
-    """Test changing entity id."""
-    result = []
-
-    entry = entity_registry.async_get_or_create(
+    """Test changing entity id moves the entity without removing it."""
+    entity_registry.async_get_or_create(
         "test", "test_platform", "5678", suggested_object_id="test"
     )
-    assert entry.entity_id == "test.test"
-
-    class MockEntity(entity.Entity):
-        _attr_unique_id = "5678"
-
-        def __init__(self) -> None:
-            self.added_calls = []
-            self.remove_calls = []
-
-        async def async_added_to_hass(self):
-            self.added_calls.append(None)
-            self.async_on_remove(lambda: result.append(1))
-
-        async def async_will_remove_from_hass(self):
-            self.remove_calls.append(None)
-
     platform = MockEntityPlatform(hass, domain="test")
-    ent = MockEntity()
-    assert ent._platform_state is entity.EntityPlatformState.NOT_ADDED
+    ent = _RenameTrackingEntity()
     await platform.async_add_entities([ent])
     assert hass.states.get("test.test").state == STATE_UNKNOWN
-    assert len(ent.added_calls) == 1
-    assert ent._platform_state is entity.EntityPlatformState.ADDED
+    assert ent.added_calls == 1
+    _assert_entity_bookkeeping(hass, platform, ent, ["test.test"])
 
-    entry = entity_registry.async_update_entity(
-        entry.entity_id, new_entity_id="test.test2"
+    state_changes = async_capture_events(hass, EVENT_STATE_CHANGED)
+    added_to_domain: list[str] = []
+    removed_from_domain: list[str] = []
+    async_track_state_added_domain(
+        hass, "test", lambda event: added_to_domain.append(event.data["entity_id"])
+    )
+    async_track_state_removed_domain(
+        hass, "test", lambda event: removed_from_domain.append(event.data["entity_id"])
+    )
+
+    entity_registry.async_update_entity("test.test", new_entity_id="test.test2")
+    await hass.async_block_till_done()
+
+    assert ent.entity_id == "test.test2"
+    assert ent.entity_id_changed_calls == [("test.test", "test.test2")]
+    assert ent._platform_state is entity.EntityPlatformState.ADDED
+    assert hass.states.get("test.test") is None
+    assert hass.states.get("test.test2").state == STATE_UNKNOWN
+    # The old state is removed and the new state is written as a new state
+    assert [
+        (
+            event.data["entity_id"],
+            event.data["old_state"] is None,
+            event.data["new_state"] is None,
+        )
+        for event in state_changes
+    ] == [("test.test", False, True), ("test.test2", True, False)]
+    assert removed_from_domain == ["test.test"]
+    assert added_to_domain == ["test.test2"]
+    _assert_entity_bookkeeping(hass, platform, ent, ["test.test2"])
+
+    entity_registry.async_update_entity("test.test2", new_entity_id="test.test3")
+    await hass.async_block_till_done()
+
+    assert ent.entity_id == "test.test3"
+    assert ent.entity_id_changed_calls == [
+        ("test.test", "test.test2"),
+        ("test.test2", "test.test3"),
+    ]
+    assert hass.states.get("test.test2") is None
+    assert hass.states.get("test.test3").state == STATE_UNKNOWN
+    assert removed_from_domain == ["test.test", "test.test2"]
+    assert added_to_domain == ["test.test2", "test.test3"]
+    _assert_entity_bookkeeping(hass, platform, ent, ["test.test3"])
+
+    # The entity was never removed nor added again
+    assert ent.added_calls == 1
+    assert ent.remove_calls == 0
+    assert ent.on_remove_calls == 0
+
+
+@pytest.mark.parametrize(
+    "update_registry",
+    [
+        pytest.param(
+            lambda entity_registry: entity_registry.async_update_entity(
+                "test.test2", disabled_by=er.RegistryEntryDisabler.USER
+            ),
+            id="disable",
+        ),
+        pytest.param(
+            lambda entity_registry: entity_registry.async_remove("test.test2"),
+            id="remove",
+        ),
+    ],
+)
+async def test_change_entity_id_then_remove(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    update_registry: Callable[[er.EntityRegistry], Any],
+) -> None:
+    """Test entity registry updates are still tracked after changing entity id."""
+    entity_registry.async_get_or_create(
+        "test", "test_platform", "5678", suggested_object_id="test"
+    )
+    platform = MockEntityPlatform(hass, domain="test")
+    ent = _RenameTrackingEntity()
+    await platform.async_add_entities([ent])
+    entity_registry.async_update_entity("test.test", new_entity_id="test.test2")
+    await hass.async_block_till_done()
+    assert ent.remove_calls == 0
+
+    update_registry(entity_registry)
+    await hass.async_block_till_done()
+
+    assert ent._platform_state is entity.EntityPlatformState.REMOVED
+    assert ent.remove_calls == 1
+    assert ent.on_remove_calls == 1
+    assert hass.states.async_entity_ids() == []
+    _assert_entity_bookkeeping(hass, platform, ent, [])
+
+
+class _PhaseTrackingEntity(entity.Entity):
+    """Entity recording the phases of an entity_id change."""
+
+    _attr_unique_id = "5678"
+
+    def __init__(self) -> None:
+        """Initialize the entity."""
+        self.phases: list[str] = []
+        self.state_in_finished: State | None = None
+        self._key: str | None = None
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return an attribute derived from the entity_id."""
+        return {"key": self._key}
+
+    async def async_added_to_hass(self) -> None:
+        """Run when the entity has been added to hass."""
+        self._key = self.entity_id
+
+    @callback
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Re-key what the attributes are derived from."""
+        super().async_entity_id_changed(old_entity_id)
+        self.phases.append("changed")
+        self._key = self.entity_id
+
+    @callback
+    def _async_write_ha_state(self) -> None:
+        """Record writing the state."""
+        self.phases.append("write")
+        super()._async_write_ha_state()
+
+    @callback
+    def async_entity_id_change_finished(self, old_entity_id: str) -> None:
+        """Record the state when the change is finished."""
+        super().async_entity_id_change_finished(old_entity_id)
+        self.phases.append("finished")
+        self.state_in_finished = self.hass.states.get(self.entity_id)
+
+
+async def test_change_entity_id_phases(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test the entity_id change hooks run around a single state write."""
+    entity_registry.async_get_or_create(
+        "test", "test_platform", "5678", suggested_object_id="test"
+    )
+    platform = MockEntityPlatform(hass, domain="test")
+    ent = _PhaseTrackingEntity()
+    await platform.async_add_entities([ent])
+    ent.phases.clear()
+    state_changes = async_capture_events(hass, EVENT_STATE_CHANGED)
+
+    entity_registry.async_update_entity("test.test", new_entity_id="test.test2")
+
+    # The change completes synchronously while the registry event is dispatched
+    assert ent.phases == ["changed", "write", "finished"]
+    await hass.async_block_till_done()
+    assert ent.phases == ["changed", "write", "finished"]
+    assert ent.state_in_finished is not None
+    assert ent.state_in_finished.attributes["key"] == "test.test2"
+    # The added state already carries the re-keyed attribute, no extra event
+    assert [
+        (
+            event.data["entity_id"],
+            event.data["old_state"] is None,
+            event.data["new_state"] and event.data["new_state"].attributes["key"],
+        )
+        for event in state_changes
+    ] == [("test.test", False, None), ("test.test2", True, "test.test2")]
+
+
+class _SuspendingEntity(entity.Entity):
+    """Entity whose async_entity_id_change_finished starts a suspending task."""
+
+    _attr_unique_id = "5678"
+
+    def __init__(self) -> None:
+        """Initialize the entity."""
+        self.resume = asyncio.Event()
+        self.calls: list[tuple[str, str]] = []
+        self.entity_ids_after_resume: list[str] = []
+
+    @callback
+    def async_entity_id_change_finished(self, old_entity_id: str) -> None:
+        """Record the change, then start a task which waits until resumed."""
+        super().async_entity_id_change_finished(old_entity_id)
+        self.calls.append((old_entity_id, self.entity_id))
+        self.hass.async_create_task(self._async_wait_for_resume())
+
+    async def _async_wait_for_resume(self) -> None:
+        """Wait until resumed."""
+        await self.resume.wait()
+        self.entity_ids_after_resume.append(self.entity_id)
+
+
+async def test_change_entity_id_again_while_finishing(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test an entity_id change while a task of the finished hook awaits."""
+    entity_registry.async_get_or_create(
+        "test", "test_platform", "5678", suggested_object_id="a"
+    )
+    platform = MockEntityPlatform(hass, domain="test")
+    ent = _SuspendingEntity()
+    await platform.async_add_entities([ent])
+
+    entity_registry.async_update_entity("test.a", new_entity_id="test.b")
+    # Registry events are not serialized with the task started by the first
+    # async_entity_id_change_finished, the second change runs while it awaits
+    entity_registry.async_update_entity("test.b", new_entity_id="test.c")
+    ent.resume.set()
+    await hass.async_block_till_done()
+
+    assert ent.calls == [("test.a", "test.b"), ("test.b", "test.c")]
+    assert ent.entity_ids_after_resume == ["test.c", "test.c"]
+    assert hass.states.async_entity_ids() == ["test.c"]
+    _assert_entity_bookkeeping(hass, platform, ent, ["test.c"])
+
+    # The registry update tracker follows the latest entity_id
+    entity_registry.async_update_entity("test.c", new_entity_id="test.d")
+    await hass.async_block_till_done()
+
+    assert ent.calls[-1] == ("test.c", "test.d")
+    assert hass.states.async_entity_ids() == ["test.d"]
+    _assert_entity_bookkeeping(hass, platform, ent, ["test.d"])
+
+
+async def test_remove_while_finishing_entity_id_change(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test removing the entity while a task of the finished hook awaits."""
+    entity_registry.async_get_or_create(
+        "test", "test_platform", "5678", suggested_object_id="a"
+    )
+    platform = MockEntityPlatform(hass, domain="test")
+    ent = _SuspendingEntity()
+    await platform.async_add_entities([ent])
+
+    entity_registry.async_update_entity("test.a", new_entity_id="test.b")
+    entity_registry.async_remove("test.b")
+    ent.resume.set()
+    await hass.async_block_till_done()
+
+    assert ent.calls == [("test.a", "test.b")]
+    assert ent._platform_state is entity.EntityPlatformState.REMOVED
+    assert hass.states.async_entity_ids() == []
+    _assert_entity_bookkeeping(hass, platform, ent, [])
+
+
+class _RaisingChangedEntity(_PhaseTrackingEntity):
+    """Entity whose async_entity_id_changed raises."""
+
+    @callback
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Raise."""
+        super().async_entity_id_changed(old_entity_id)
+        raise ValueError("Boom")
+
+
+class _RaisingFinishedEntity(_PhaseTrackingEntity):
+    """Entity whose async_entity_id_change_finished raises."""
+
+    @callback
+    def async_entity_id_change_finished(self, old_entity_id: str) -> None:
+        """Raise."""
+        super().async_entity_id_change_finished(old_entity_id)
+        raise ValueError("Boom")
+
+
+@pytest.mark.parametrize(
+    ("entity_class", "message"),
+    [
+        pytest.param(
+            _RaisingChangedEntity,
+            "Error handling entity_id change of test.test2 from test.test",
+            id="changed",
+        ),
+        pytest.param(
+            _RaisingFinishedEntity,
+            "Error finishing entity_id change of test.test2 from test.test",
+            id="finished",
+        ),
+    ],
+)
+async def test_change_entity_id_hook_raises(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+    entity_class: type[_PhaseTrackingEntity],
+    message: str,
+) -> None:
+    """Test a raising hook is logged and still leaves the new state written."""
+    entity_registry.async_get_or_create(
+        "test", "test_platform", "5678", suggested_object_id="test"
+    )
+    platform = MockEntityPlatform(hass, domain="test")
+    ent = entity_class()
+    await platform.async_add_entities([ent])
+    ent.phases.clear()
+
+    entity_registry.async_update_entity("test.test", new_entity_id="test.test2")
+    await hass.async_block_till_done()
+
+    assert ent.phases == ["changed", "write", "finished"]
+    assert hass.states.get("test.test") is None
+    assert hass.states.get("test.test2").attributes["key"] == "test.test2"
+    assert message in caplog.text
+    assert "ValueError: Boom" in caplog.text
+
+
+async def test_change_entity_id_then_update(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test entity and device registry updates still apply after entity id change."""
+
+    class DeviceEntity(entity.Entity):
+        _attr_device_info = dr.DeviceInfo(identifiers={("test", "device")})
+        _attr_has_entity_name = True
+        _attr_name = "Sensor"
+        _attr_unique_id = "5678"
+
+    async def async_setup_entry(
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        async_add_entities: AddConfigEntryEntitiesCallback,
+    ) -> None:
+        """Mock setup entry method."""
+        async_add_entities([ent])
+
+    ent = DeviceEntity()
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("test", "device")},
+        name="Device",
+    )
+    platform = MockEntityPlatform(
+        hass,
+        platform_name=config_entry.domain,
+        platform=MockPlatform(async_setup_entry=async_setup_entry),
+    )
+    assert await platform.async_setup_entry(config_entry)
+    await hass.async_block_till_done()
+    old_entity_id = ent.entity_id
+    assert hass.states.get(old_entity_id).name == "Device Sensor"
+
+    entity_registry.async_update_entity(
+        old_entity_id, new_entity_id="test_domain.renamed"
     )
     await hass.async_block_till_done()
+    assert hass.states.get("test_domain.renamed").name == "Device Sensor"
 
-    assert len(result) == 1
-    assert len(ent.added_calls) == 2
-    assert len(ent.remove_calls) == 1
-    assert ent._platform_state == entity.EntityPlatformState.ADDED
+    device_registry.async_update_device(
+        ent.device_entry.id, name_by_user="Renamed device"
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get("test_domain.renamed").name == "Renamed device Sensor"
 
-    entity_registry.async_update_entity(entry.entity_id, new_entity_id="test.test3")
+    entity_registry.async_update_entity("test_domain.renamed", name="New name")
+    await hass.async_block_till_done()
+    assert hass.states.get("test_domain.renamed").name == "New name"
+    assert hass.states.async_entity_ids() == ["test_domain.renamed"]
+
+
+async def _async_added_to_hass(self: entity.Entity) -> None:
+    """Run when the entity has been added to hass."""
+
+
+def _async_entity_id_changed(self: entity.Entity, old_entity_id: str) -> None:
+    """Run when the entity_id has been changed."""
+
+
+def _entity_class(module: str, methods: dict[str, Any]) -> type[entity.Entity]:
+    """Return an entity class defined in module with the given methods."""
+    return type(
+        "GeneratedEntity",
+        (entity.Entity,),
+        {"__module__": module, "_attr_unique_id": "5678", **methods},
+    )
+
+
+_CORE_MODULE = "homeassistant.components.test.sensor"
+_CUSTOM_MODULE = "custom_components.test.sensor"
+_ADDED_METHODS = {"async_added_to_hass": _async_added_to_hass}
+_ADDED_HOOK_METHODS = _ADDED_METHODS | {
+    "async_entity_id_changed": _async_entity_id_changed
+}
+_CORE_ADDED = _entity_class(_CORE_MODULE, _ADDED_METHODS)
+_CUSTOM_ADDED = _entity_class(_CUSTOM_MODULE, _ADDED_METHODS)
+_CORE_ADDED_HOOK = _entity_class(_CORE_MODULE, _ADDED_HOOK_METHODS)
+_CUSTOM_ADDED_HOOK = _entity_class(_CUSTOM_MODULE, _ADDED_HOOK_METHODS)
+
+
+class _AddedEntity(entity.Entity):
+    """Entity which implements async_added_to_hass."""
+
+    _attr_unique_id = "5678"
+
+    async def async_added_to_hass(self) -> None:
+        """Run when the entity has been added to hass."""
+
+
+class _FinishedOnlyAddedEntity(_AddedEntity):
+    """Entity opting in with only async_entity_id_change_finished."""
+
+    @callback
+    def async_entity_id_change_finished(self, old_entity_id: str) -> None:
+        """Run when the state has been written under the new entity_id."""
+
+
+class _RemovedEntity(entity.Entity):
+    """Entity which implements async_will_remove_from_hass."""
+
+    _attr_unique_id = "5678"
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Run when the entity is about to be removed from hass."""
+
+
+class _PreparedEntity(entity.Entity):
+    """Entity which implements async_prepare_to_add_to_hass."""
+
+    _attr_unique_id = "5678"
+
+    async def async_prepare_to_add_to_hass(self) -> None:
+        """Run before the entity is added to hass."""
+
+
+class _PlainEntity(entity.Entity):
+    """Entity which implements none of the add or remove methods."""
+
+    _attr_unique_id = "5678"
+
+
+class _HookOnly(entity.Entity):
+    """Entity which only implements async_entity_id_changed."""
+
+    _attr_unique_id = "5678"
+
+    @callback
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Run when the entity_id has been changed."""
+
+
+class _HookAboveAdded(_AddedEntity):
+    """Entity whose subclass hook covers the add code of its base."""
+
+    @callback
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Run when the entity_id has been changed."""
+
+
+class _AddedBelowHook(_HookOnly):
+    """Entity adding its own add code below the class with the hook."""
+
+    async def async_added_to_hass(self) -> None:
+        """Run when the entity has been added to hass."""
+
+
+class _AddedMixin(entity.Entity):
+    """Mixin which implements async_added_to_hass calling super()."""
+
+    async def async_added_to_hass(self) -> None:
+        """Run when the entity has been added to hass."""
+        await super().async_added_to_hass()
+
+
+class _HookMixin(entity.Entity):
+    """Mixin which implements async_entity_id_changed calling super()."""
+
+    @callback
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Run when the entity_id has been changed."""
+        super().async_entity_id_changed(old_entity_id)
+
+
+class _AddedMixinBeforeHookMixin(_AddedMixin, _HookMixin):
+    """Entity with a mixin running add code before the hook in the MRO."""
+
+    _attr_unique_id = "5678"
+
+
+class _HookMixinBeforeAddedMixin(_HookMixin, _AddedMixin):
+    """Entity with a sibling hook before a mixin running add code in the MRO."""
+
+    _attr_unique_id = "5678"
+
+
+class _DeadMixin:
+    """Mixin whose async_added_to_hass is shadowed by Entity's."""
+
+    async def async_added_to_hass(self) -> None:
+        """Never called, Entity comes first in the MRO."""
+
+
+class _DeadMixinEntity(entity.Entity, _DeadMixin):
+    """Entity with a mixin after Entity in the MRO."""
+
+    _attr_unique_id = "5678"
+
+
+class _RestoreSubclass(RestoreEntity):
+    """Entity inheriting the add and remove methods of a safe core base."""
+
+    _attr_unique_id = "5678"
+
+
+class _RestoreSubclassAdded(RestoreEntity):
+    """Entity adding its own add code below a safe core base."""
+
+    _attr_unique_id = "5678"
+
+    async def async_added_to_hass(self) -> None:
+        """Run when the entity has been added to hass."""
+
+
+class _CoordinatorSubclass(CoordinatorEntity):
+    """Entity inheriting the add method of a safe core base."""
+
+
+class _CoordinatorSubclassRemoved(CoordinatorEntity):
+    """Entity adding its own remove code below a safe core base."""
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Run when the entity is about to be removed from hass."""
+
+
+class _HookCoveringMixins(_AddedMixin, _HookMixin):
+    """Entity whose own hook covers the add code of its mixins."""
+
+    _attr_unique_id = "5678"
+
+    @callback
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Run when the entity_id has been changed."""
+        super().async_entity_id_changed(old_entity_id)
+
+
+class _CoordinatorCamera(CoordinatorEntity, Camera):
+    """Camera with a coordinator mixin before it in the MRO."""
+
+
+class _CameraCoordinator(Camera, CoordinatorEntity):
+    """Camera with a coordinator mixin after it in the MRO."""
+
+
+class _PlainCamera(Camera):
+    """Camera which runs no add or remove code of its own."""
+
+
+class _HookCamera(Camera):
+    """Camera which opts in to in-place entity_id changes."""
+
+    @callback
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Run when the entity_id has been changed."""
+        super().async_entity_id_changed(old_entity_id)
+
+
+class _RestoreSensor(RestoreEntity, SensorEntity):
+    """Sensor with a restore mixin, both opted in."""
+
+
+class _CoordinatorSensor(CoordinatorEntity, SensorEntity):
+    """Sensor with a coordinator mixin, both opted in."""
+
+
+class _CoordinatorScanner(CoordinatorEntity, ScannerEntity):
+    """Scanner with a coordinator mixin before it in the MRO."""
+
+
+class _PlainScanner(ScannerEntity):
+    """Scanner which runs no add or remove code of its own."""
+
+
+class _AddedCamera(Camera):
+    """Camera extending async_added_to_hass without opting in."""
+
+    async def async_added_to_hass(self) -> None:
+        """Run when the entity has been added to hass."""
+
+
+class _InternalAddedEntity(entity.Entity):
+    """Entity which only extends the internal add and remove methods."""
+
+    _attr_unique_id = "5678"
+
+    async def async_internal_added_to_hass(self) -> None:
+        """Run when entity about to be added to hass."""
+        await super().async_internal_added_to_hass()
+
+    async def async_internal_will_remove_from_hass(self) -> None:
+        """Run when entity will be removed from hass."""
+        await super().async_internal_will_remove_from_hass()
+
+
+class _AddToPlatformEntity(entity.Entity):
+    """Entity which only extends add_to_platform_* methods."""
+
+    _attr_unique_id = "5678"
+
+    async def add_to_platform_finish(self) -> None:
+        """Finish adding an entity to a platform."""
+        await super().add_to_platform_finish()
+
+
+class _InternalAndAddedEntity(_InternalAddedEntity):
+    """Entity which extends both internal and public add methods."""
+
+    async def async_added_to_hass(self) -> None:
+        """Run when the entity has been added to hass."""
+
+
+@pytest.mark.parametrize(
+    ("entity_class", "requires_readd"),
+    [
+        pytest.param(entity.Entity, False, id="entity"),
+        pytest.param(_PlainEntity, False, id="plain"),
+        pytest.param(_AddedEntity, True, id="added"),
+        pytest.param(_RemovedEntity, True, id="removed"),
+        pytest.param(_PreparedEntity, True, id="prepared"),
+        pytest.param(_CORE_ADDED, True, id="core_module_added"),
+        pytest.param(_CUSTOM_ADDED, True, id="custom_module_added"),
+        pytest.param(_CORE_ADDED_HOOK, False, id="core_module_added_hook"),
+        pytest.param(_CUSTOM_ADDED_HOOK, False, id="custom_module_added_hook"),
+        pytest.param(_HookOnly, False, id="hook_only"),
+        pytest.param(_HookAboveAdded, False, id="hook_above_added"),
+        pytest.param(_AddedBelowHook, True, id="added_below_hook"),
+        pytest.param(
+            _AddedMixinBeforeHookMixin, True, id="added_mixin_before_hook_mixin"
+        ),
+        pytest.param(
+            _HookMixinBeforeAddedMixin, True, id="hook_mixin_before_added_mixin"
+        ),
+        pytest.param(_HookCoveringMixins, False, id="hook_covering_mixins"),
+        pytest.param(_DeadMixinEntity, True, id="dead_mixin_after_entity"),
+        pytest.param(_InternalAddedEntity, False, id="internal_only"),
+        pytest.param(_AddToPlatformEntity, False, id="add_to_platform_only"),
+        pytest.param(_InternalAndAddedEntity, True, id="internal_and_added"),
+        pytest.param(_FinishedOnlyAddedEntity, False, id="finished_only"),
+        pytest.param(_CoordinatorCamera, False, id="coordinator_camera"),
+        pytest.param(_CameraCoordinator, False, id="camera_coordinator"),
+        pytest.param(_PlainCamera, False, id="plain_camera"),
+        pytest.param(_HookCamera, False, id="hook_camera"),
+        pytest.param(_AddedCamera, True, id="added_camera"),
+        pytest.param(_RestoreSensor, False, id="restore_sensor"),
+        pytest.param(_CoordinatorSensor, False, id="coordinator_sensor"),
+        pytest.param(_PlainScanner, False, id="plain_scanner"),
+        pytest.param(_CoordinatorScanner, False, id="coordinator_scanner"),
+        pytest.param(RestoreEntity, False, id="restore_entity"),
+        pytest.param(_RestoreSubclass, False, id="restore_subclass"),
+        pytest.param(_RestoreSubclassAdded, True, id="restore_subclass_added"),
+        pytest.param(CoordinatorEntity, False, id="coordinator_entity"),
+        pytest.param(_CoordinatorSubclass, False, id="coordinator_subclass"),
+        pytest.param(
+            _CoordinatorSubclassRemoved, True, id="coordinator_subclass_removed"
+        ),
+    ],
+)
+def test_entity_class_requires_readd(
+    entity_class: type[entity.Entity], requires_readd: bool
+) -> None:
+    """Test which entity classes are removed and re-added on entity_id change."""
+    assert entity._entity_class_requires_readd(entity_class) is requires_readd
+
+
+def _custom_on_remove() -> None:
+    """Remove callback which is not registered by the entity class."""
+
+
+@pytest.mark.parametrize(
+    ("entity_class", "re_added"),
+    [
+        pytest.param(_PlainEntity, False, id="plain"),
+        pytest.param(_AddedEntity, True, id="added"),
+        pytest.param(_RemovedEntity, True, id="removed"),
+        pytest.param(_CUSTOM_ADDED, True, id="custom_module_added"),
+        pytest.param(_CORE_ADDED_HOOK, False, id="core_module_added_hook"),
+        pytest.param(_CUSTOM_ADDED_HOOK, False, id="custom_module_added_hook"),
+        pytest.param(_HookAboveAdded, False, id="hook_above_added"),
+        pytest.param(_AddedBelowHook, True, id="added_below_hook"),
+        pytest.param(
+            _AddedMixinBeforeHookMixin, True, id="added_mixin_before_hook_mixin"
+        ),
+        pytest.param(
+            _HookMixinBeforeAddedMixin, True, id="hook_mixin_before_added_mixin"
+        ),
+        pytest.param(_HookCoveringMixins, False, id="hook_covering_mixins"),
+        pytest.param(_RestoreSubclass, False, id="restore_subclass"),
+        pytest.param(_RestoreSubclassAdded, True, id="restore_subclass_added"),
+        pytest.param(_InternalAddedEntity, False, id="internal_only"),
+        pytest.param(_AddToPlatformEntity, False, id="add_to_platform_only"),
+        pytest.param(_InternalAndAddedEntity, True, id="internal_and_added"),
+        pytest.param(_FinishedOnlyAddedEntity, False, id="finished_only"),
+    ],
+)
+async def test_change_entity_id_opt_in(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    entity_class: type[entity.Entity],
+    re_added: bool,
+) -> None:
+    """Test only entities which have not opted in are removed and re-added."""
+    entity_registry.async_get_or_create(
+        "test", "test_platform", "5678", suggested_object_id="test"
+    )
+    platform = MockEntityPlatform(hass, domain="test")
+    ent = entity_class()
+    await platform.async_add_entities([ent])
+
+    with patch.object(
+        entity.Entity,
+        "_async_readd_on_entity_id_change",
+        autospec=True,
+        side_effect=entity.Entity._async_readd_on_entity_id_change,
+    ) as mock_readd:
+        entity_registry.async_update_entity("test.test", new_entity_id="test.test2")
+        await hass.async_block_till_done()
+
+    assert mock_readd.called is re_added
+    assert ent.entity_id == "test.test2"
+    assert ent._platform_state is entity.EntityPlatformState.ADDED
+    assert hass.states.get("test.test") is None
+    assert hass.states.get("test.test2").state == STATE_UNKNOWN
+    _assert_entity_bookkeeping(hass, platform, ent, ["test.test2"])
+
+    # Registry updates are still tracked after the entity_id change
+    entity_registry.async_remove("test.test2")
+    await hass.async_block_till_done()
+    assert ent._platform_state is entity.EntityPlatformState.REMOVED
+    assert hass.states.async_entity_ids() == []
+    _assert_entity_bookkeeping(hass, platform, ent, [])
+
+
+async def test_change_entity_id_remove_and_add(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test entities which have not opted in are removed and re-added."""
+    entity_registry.async_get_or_create(
+        "test", "test_platform", "5678", suggested_object_id="test"
+    )
+    platform = MockEntityPlatform(hass, domain="test")
+    ent = _LifecycleTrackingEntity()
+    await platform.async_add_entities([ent])
+
+    entity_registry.async_update_entity("test.test", new_entity_id="test.test2")
     await hass.async_block_till_done()
 
-    assert len(result) == 2
-    assert len(ent.added_calls) == 3
-    assert len(ent.remove_calls) == 2
-    assert ent._platform_state == entity.EntityPlatformState.ADDED
+    assert ent.added_calls == 2
+    assert ent.remove_calls == 1
+    assert ent.on_remove_calls == 1
+    assert ent._platform_state is entity.EntityPlatformState.ADDED
+    assert hass.states.get("test.test") is None
+    assert hass.states.get("test.test2").state == STATE_UNKNOWN
+    _assert_entity_bookkeeping(hass, platform, ent, ["test.test2"])
+
+    entity_registry.async_update_entity("test.test2", new_entity_id="test.test3")
+    await hass.async_block_till_done()
+
+    assert ent.added_calls == 3
+    assert ent.remove_calls == 2
+    assert ent.on_remove_calls == 2
+    assert hass.states.get("test.test3").state == STATE_UNKNOWN
+    _assert_entity_bookkeeping(hass, platform, ent, ["test.test3"])
+
+
+async def test_change_entity_id_on_remove_from_setup(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test a remove callback registered by platform code does not cause a re-add."""
+    on_remove = MagicMock()
+    ent = _PlainEntity()
+
+    async def async_setup_entry(
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        async_add_entities: AddConfigEntryEntitiesCallback,
+    ) -> None:
+        """Mock setup entry method."""
+        ent.async_on_remove(on_remove)
+        async_add_entities([ent])
+
+    config_entry = MockConfigEntry(domain="test_platform")
+    config_entry.add_to_hass(hass)
+    platform = MockEntityPlatform(
+        hass,
+        domain="test",
+        platform_name="test_platform",
+        platform=MockPlatform(async_setup_entry=async_setup_entry),
+    )
+    assert await platform.async_setup_entry(config_entry)
+    await hass.async_block_till_done()
+    old_entity_id = ent.entity_id
+
+    entity_registry.async_update_entity(old_entity_id, new_entity_id="test.new")
+    await hass.async_block_till_done()
+
+    # The callback is kept, a re-add would run it and never register it again
+    on_remove.assert_not_called()
+    assert hass.states.get(old_entity_id) is None
+    assert hass.states.get("test.new").state == STATE_UNKNOWN
+
+    entity_registry.async_remove("test.new")
+    await hass.async_block_till_done()
+    on_remove.assert_called_once_with()
 
 
 @pytest.mark.parametrize("config_subentry_id", [None, "mock-subentry-id-1"])
@@ -3105,6 +4113,117 @@ async def test_platform_state_fail_to_add_rollback_raises(
     # (not the synthetic rollback KeyError) is surfaced as the reason.
     assert "Error cleaning up entity test.test" in caplog.text
     assert "Failed to add entity" in caplog.text
+
+
+async def test_async_prepare_to_add_to_hass_runs_before_registration(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test async_prepare_to_add_to_hass runs before registration and the state write.
+
+    It is awaited during the add, before async_added_to_hass, before the entity is
+    registered in the entity registry and before it is written to the state machine.
+    """
+    events: list[str] = []
+    observed: dict[str, Any] = {}
+
+    class MockEntity(entity.Entity):
+        _attr_unique_id = "5678"
+
+        async def async_prepare_to_add_to_hass(self) -> None:
+            await super().async_prepare_to_add_to_hass()
+            events.append("before")
+            observed["registry_entry"] = self.registry_entry
+            observed["registered"] = entity_registry.async_get_entity_id(
+                "test", "test_platform", "5678"
+            )
+            observed["states_before"] = len(hass.states.async_all())
+
+        async def async_added_to_hass(self) -> None:
+            await super().async_added_to_hass()
+            events.append("added")
+
+    platform = MockEntityPlatform(hass, domain="test")
+    ent = MockEntity()
+    await platform.async_add_entities([ent])
+
+    assert events == ["before", "added"]
+    # During the hook the entity was not yet registered nor written to the state machine
+    assert observed["registry_entry"] is None
+    assert observed["registered"] is None
+    assert len(hass.states.async_all()) == observed["states_before"] + 1
+    # After the add it is registered, added and has a state
+    assert entity_registry.async_get_entity_id("test", "test_platform", "5678")
+    assert ent._platform_state is entity.EntityPlatformState.ADDED
+    assert hass.states.get(ent.entity_id) is not None
+
+
+async def test_async_prepare_to_add_to_hass_runs_for_disabled_entity(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test async_prepare_to_add_to_hass runs even for a disabled, aborted entity."""
+    events: list[str] = []
+
+    class MockEntity(entity.Entity):
+        _attr_unique_id = "5678"
+        _attr_entity_registry_enabled_default = False
+
+        async def async_prepare_to_add_to_hass(self) -> None:
+            await super().async_prepare_to_add_to_hass()
+            events.append("before")
+
+        async def async_added_to_hass(self) -> None:
+            await super().async_added_to_hass()
+            events.append("added")
+
+    platform = MockEntityPlatform(hass, domain="test")
+    ent = MockEntity()
+    await platform.async_add_entities([ent])
+
+    # The entity is aborted for being disabled: async_added_to_hass never runs,
+    # but async_prepare_to_add_to_hass still does.
+    assert events == ["before"]
+    entity_id = entity_registry.async_get_entity_id("test", "test_platform", "5678")
+    assert entity_id is not None
+    assert (
+        entity_registry.async_get(entity_id).disabled_by
+        is er.RegistryEntryDisabler.INTEGRATION
+    )
+    assert ent._platform_state is entity.EntityPlatformState.REMOVED
+    assert ent.hass is None
+    assert hass.states.get(entity_id) is None
+
+
+async def test_async_prepare_to_add_to_hass_raising_aborts_add(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a raising async_prepare_to_add_to_hass aborts the add cleanly.
+
+    The entity must be aborted instead of being left stuck in the ADDING state,
+    and it must never be registered or written to the state machine.
+    """
+
+    class MockEntity(entity.Entity):
+        _attr_unique_id = "5678"
+
+        async def async_prepare_to_add_to_hass(self) -> None:
+            raise ValueError("Failed before add")
+
+        async def async_added_to_hass(self) -> None:
+            raise AssertionError("async_added_to_hass must not run")
+
+    platform = MockEntityPlatform(hass, domain="test")
+    ent = MockEntity()
+    assert ent._platform_state is entity.EntityPlatformState.NOT_ADDED
+    await platform.async_add_entities([ent])
+
+    assert ent._platform_state is entity.EntityPlatformState.REMOVED
+    assert ent.hass is None
+    assert ent.platform is None
+    assert entity_registry.async_get_entity_id("test", "test_platform", "5678") is None
+    assert hass.states.async_all() == []
+    assert "Failed before add" in caplog.text
 
 
 async def test_platform_state_write_from_init(

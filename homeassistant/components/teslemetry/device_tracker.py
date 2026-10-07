@@ -47,8 +47,8 @@ DESCRIPTIONS: tuple[TeslemetryDeviceTrackerEntityDescription, ...] = (
     TeslemetryDeviceTrackerEntityDescription(
         key="route",
         polling_prefix="drive_state_active_route",
-        value_listener=lambda vehicle, callback: vehicle.listen_DestinationLocation(
-            callback
+        value_listener=lambda vehicle, callback: (
+            vehicle.listen_ActiveRouteDestinationLocation(callback)
         ),
         streaming_firmware="2024.26",
     ),

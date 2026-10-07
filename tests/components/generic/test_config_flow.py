@@ -8,7 +8,7 @@ import os.path
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
-import httpx
+import httpx2
 import pytest
 import respx
 
@@ -350,7 +350,7 @@ async def test_form_still_template(
     expected_errors,
 ) -> None:
     """Test we can handle various templates."""
-    with contextlib.suppress(httpx.InvalidURL):
+    with contextlib.suppress(httpx2.InvalidURL):
         # There is no need to mock the request if its an
         # invalid url because we will never make the request
         respx.get(url).respond(stream=fakeimgbytes_png)
@@ -432,7 +432,7 @@ async def test_form_only_stream(
     }
 
     with patch(
-        "homeassistant.components.camera._async_get_stream_image",
+        "homeassistant.components.camera.async_get_stream_image",
         return_value=fakeimgbytes_jpg,
     ):
         image_obj = await async_get_image(hass, "camera.127_0_0_1")
@@ -461,29 +461,29 @@ async def test_form_still_and_stream_not_provided(
 @pytest.mark.parametrize(
     ("side_effect", "expected_message"),
     [
-        (httpx.TimeoutException, {"still_image_url": "unable_still_load"}),
+        (httpx2.TimeoutException, {"still_image_url": "unable_still_load"}),
         (
-            httpx.HTTPStatusError("", request=None, response=httpx.Response(401)),
+            httpx2.HTTPStatusError("", request=None, response=httpx2.Response(401)),
             {"still_image_url": "unable_still_load_auth"},
         ),
         (
-            httpx.HTTPStatusError("", request=None, response=httpx.Response(403)),
+            httpx2.HTTPStatusError("", request=None, response=httpx2.Response(403)),
             {"still_image_url": "unable_still_load_auth"},
         ),
         (
-            httpx.HTTPStatusError("", request=None, response=httpx.Response(404)),
+            httpx2.HTTPStatusError("", request=None, response=httpx2.Response(404)),
             {"still_image_url": "unable_still_load_not_found"},
         ),
         (
-            httpx.HTTPStatusError("", request=None, response=httpx.Response(500)),
+            httpx2.HTTPStatusError("", request=None, response=httpx2.Response(500)),
             {"still_image_url": "unable_still_load_server_error"},
         ),
         (
-            httpx.HTTPStatusError("", request=None, response=httpx.Response(503)),
+            httpx2.HTTPStatusError("", request=None, response=httpx2.Response(503)),
             {"still_image_url": "unable_still_load_server_error"},
         ),
         (  # Errors without specific handler should show the general message.
-            httpx.HTTPStatusError("", request=None, response=httpx.Response(507)),
+            httpx2.HTTPStatusError("", request=None, response=httpx2.Response(507)),
             {"still_image_url": "unable_still_load"},
         ),
     ],
@@ -515,7 +515,7 @@ async def test_form_image_http_302(
 ) -> None:
     """Test we handle image http 302 (temporary redirect)."""
     respx.get("http://127.0.0.1/testurl/1").side_effect = [
-        httpx.Response(
+        httpx2.Response(
             status_code=302, headers={"Location": "http://127.0.0.1/testurl2/1"}
         )
     ]

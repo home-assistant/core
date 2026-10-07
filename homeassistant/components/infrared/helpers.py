@@ -106,7 +106,18 @@ def async_subscribe_receiver(
 
 
 class InfraredConsumerEntity(Entity):
-    """Base class for entities that track the availability of an infrared entity."""
+    """Base class for entities that track the availability of infrared entities.
+
+    The entity is available only while all tracked infrared entities are available.
+    """
+
+    _infrared_availability: dict[str, bool]
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Initialize infrared availability tracking."""
+        await super().async_added_to_hass()
+        self._infrared_availability = {}
 
     @callback
     def _async_track_availability(self, infrared_entity_id: str) -> CALLBACK_TYPE:
@@ -122,23 +133,34 @@ class InfraredConsumerEntity(Entity):
             ir_available = (
                 new_state is not None and new_state.state != STATE_UNAVAILABLE
             )
-            if ir_available != self.available:
-                _LOGGER.info(
-                    "Infrared entity %s used by %s is %s",
-                    infrared_entity_id,
-                    self.entity_id,
-                    "available" if ir_available else "unavailable",
-                )
-                self._async_infrared_availability_changed(ir_available)
+            if ir_available == self._infrared_availability[infrared_entity_id]:
+                return
+            _LOGGER.info(
+                "Infrared entity %s used by %s is %s",
+                infrared_entity_id,
+                self.entity_id,
+                "available" if ir_available else "unavailable",
+            )
+            self._infrared_availability[infrared_entity_id] = ir_available
+            available = all(self._infrared_availability.values())
+            if available != self.available:
+                self._async_infrared_availability_changed(available)
+
+        @callback
+        def unsubscribe() -> None:
+            remove_listener()
+            self._infrared_availability.pop(infrared_entity_id, None)
 
         ir_state = self.hass.states.get(infrared_entity_id)
-        self._attr_available = (
+        self._infrared_availability[infrared_entity_id] = (
             ir_state is not None and ir_state.state != STATE_UNAVAILABLE
         )
+        self._attr_available = all(self._infrared_availability.values())
 
-        return async_track_state_change_event(
+        remove_listener = async_track_state_change_event(
             self.hass, [infrared_entity_id], state_changed
         )
+        return unsubscribe
 
     @callback
     def _async_infrared_availability_changed(self, available: bool) -> None:
@@ -155,6 +177,15 @@ class InfraredEmitterConsumerEntity(InfraredConsumerEntity):
 
     _attr_should_poll = False
     _infrared_emitter_entity_id: str
+
+    @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Opt in to in-place entity_id changes.
+
+        This can be removed in Home Assistant Core 2027.11.
+        """
+        super().async_entity_id_changed(old_entity_id)
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -181,6 +212,15 @@ class InfraredReceiverConsumerEntity(InfraredConsumerEntity):
     _attr_should_poll = False
     _infrared_receiver_entity_id: str
     _remove_signal_subscription: CALLBACK_TYPE | None = None
+
+    @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Opt in to in-place entity_id changes.
+
+        This can be removed in Home Assistant Core 2027.11.
+        """
+        super().async_entity_id_changed(old_entity_id)
 
     @override
     async def async_added_to_hass(self) -> None:

@@ -57,7 +57,7 @@ def _backward_compat_schema(value: Any | None) -> Any:
 PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {
         probatio.Required(CONF_SERVICES): probatio.All(
-            cv.ensure_list,
+            probatio.EnsureList(),
             [
                 probatio.All(
                     _backward_compat_schema,

@@ -103,6 +103,16 @@ BROADLINK_DEVICES = {
         10024,
         5,
     ),
+    "Study": (
+        "192.168.0.17",
+        "34ea34b61d2f",
+        "RM5 plus",
+        "Broadlink",
+        "RM5PLUS",
+        0x5224,
+        57,
+        5,
+    ),
 }
 
 
