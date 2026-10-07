@@ -339,6 +339,8 @@ def _async_validate_gas_price_unit_mismatch(
     price_usage_unit = price_unit.partition("/")[2]
     energy_units = GAS_USAGE_UNITS[sensor.SensorDeviceClass.ENERGY]
     volume_units = GAS_USAGE_UNITS[sensor.SensorDeviceClass.GAS]
+    # Unknown price units are reported by _async_validate_price_entity, and the
+    # cost sensor still uses them as a price per meter unit
     if (usage_unit in energy_units and price_usage_unit in volume_units) or (
         usage_unit in volume_units and price_usage_unit in energy_units
     ):
