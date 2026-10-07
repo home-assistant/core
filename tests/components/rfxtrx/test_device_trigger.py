@@ -43,7 +43,7 @@ EVENT_FIREALARM_1 = EventTestData(
     "08200300a109000670", DEVICE_FIREALARM_1, "status", "Panic"
 )
 
-DEVICE_X10SECURITY_1 = ("rfxtrx", "20", "0", "d3dc54:32")
+DEVICE_X10SECURITY_1 = ("rfxtrx", "20_0_d3dc54:32")
 # Status byte 0x84 = Motion (0x04) with the tamper bit (0x80) set.
 EVENT_X10SECURITY_MOTION_TAMPER = "0820004dd3dc548489"
 # Status byte 0x04 = Motion (0x04) without the tamper bit.
