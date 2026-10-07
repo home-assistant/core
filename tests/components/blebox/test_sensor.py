@@ -411,7 +411,7 @@ async def test_sensor_error_does_not_affect_sibling_sensors(
             "sensor.my_tanksensor_liquid_height",
             SensorDeviceClass.DISTANCE,
             UnitOfLength.CENTIMETERS,
-            "100",
+            "62.4",
             id="liquid_height",
         ),
         pytest.param(
@@ -425,7 +425,7 @@ async def test_sensor_error_does_not_affect_sibling_sensors(
             "sensor.my_tanksensor_volume",
             SensorDeviceClass.VOLUME_STORAGE,
             UnitOfVolume.LITERS,
-            "2000",
+            "3660.0",
             id="volume",
         ),
     ],
@@ -451,9 +451,9 @@ async def test_tank_sensor(
         for i, (sensor_type, uniapi_unit, value) in enumerate(
             [
                 ("gaugePressure", "mbar", 98),
-                ("liquidHeight", "cm", 100),
+                ("liquidHeight", "cm", 62.4),
                 ("fillLevel", "percentage", 20.5),
-                ("volume", "L", 2000),
+                ("volume", "L", 3660.0),
             ]
         )
     ]
