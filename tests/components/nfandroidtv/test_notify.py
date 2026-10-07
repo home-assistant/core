@@ -1,6 +1,7 @@
 """Tests for the Notifications for Android TV / Fire TV notify platform."""
 
 from collections.abc import AsyncGenerator
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 from notifications_android_tv.notifications import ConnectError
@@ -343,25 +344,22 @@ async def test_nfandroidtv_send_message_local_media_source(
     assert state
     assert state.state == STATE_UNKNOWN
 
-    with (
-        patch("pathlib.Path.read_bytes", return_value=b"\x89PNG"),
-    ):
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_SEND_MESSAGE,
-            {
-                ATTR_ENTITY_ID: ENTITY_ID,
-                ATTR_MESSAGE: "Hello",
-                ATTR_TITLE: "World",
-                ATTR_ICON: {
-                    "media_content_id": "media-source://media_source/local/screenshot.png",
-                    "media_content_type": "image/png",
-                },
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SEND_MESSAGE,
+        {
+            ATTR_ENTITY_ID: ENTITY_ID,
+            ATTR_MESSAGE: "Hello",
+            ATTR_TITLE: "World",
+            ATTR_ICON: {
+                "media_content_id": "media-source://media_source/local/screenshot.jpg",
+                "media_content_type": "image/jpeg",
             },
-            blocking=True,
-        )
+        },
+        blocking=True,
+    )
     mock_notifications_android_tv.send.assert_called_once_with(
-        message="Hello", title="World", icon=b"\x89PNG"
+        message="Hello", title="World", icon=b"\xff\xd8\xff\xdb\n"
     )
 
     state = hass.states.get(ENTITY_ID)
@@ -416,10 +414,58 @@ async def test_nfandroidtv_send_message_unsupported_source(
     assert err.value.translation_key == "media_source_not_supported"
 
 
+@pytest.mark.usefixtures("mock_notifications_android_tv")
+@pytest.mark.freeze_time("1970-01-01T00:00:00+00:00")
+async def test_nfandroidtv_send_message_media_not_readable(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test sending a message with unreadable media (e.g. file not found) via nfandroidtv.send_message action."""
+    assert await async_setup_component(hass, "media_source", {})
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state == STATE_UNKNOWN
+    with (
+        patch("pathlib.Path.read_bytes", side_effect=FileNotFoundError),
+        pytest.raises(HomeAssistantError) as err,
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SEND_MESSAGE,
+            {
+                ATTR_ENTITY_ID: ENTITY_ID,
+                ATTR_MESSAGE: "Hello",
+                ATTR_TITLE: "World",
+                ATTR_IMAGE: {
+                    "media_content_id": "media-source://media_source/local/screenshot.jpg",
+                    "media_content_type": "image/jpeg",
+                },
+            },
+            blocking=True,
+        )
+    assert err.value.translation_key == "media_not_readable"
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "error_msg"),
+    [
+        (ConnectError, "notify_connection_error"),
+        ([None], "notify_failed"),
+    ],
+)
 async def test_nfandroidtv_send_message_exception(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     mock_notifications_android_tv: AsyncMock,
+    side_effect: list[Any] | type[Exception],
+    error_msg: str,
 ) -> None:
     """Test sending a message via nfandroidtv.send_message action with exception."""
 
@@ -429,7 +475,7 @@ async def test_nfandroidtv_send_message_exception(
 
     assert config_entry.state is ConfigEntryState.LOADED
 
-    mock_notifications_android_tv.send.side_effect = ConnectError
+    mock_notifications_android_tv.send.side_effect = side_effect
 
     with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
@@ -443,7 +489,7 @@ async def test_nfandroidtv_send_message_exception(
             blocking=True,
         )
 
-    assert err.value.translation_key == "notify_connection_error"
+    assert err.value.translation_key == error_msg
     assert err.value.translation_placeholders == {CONF_NAME: NAME}
 
     mock_notifications_android_tv.send.assert_called_once_with(

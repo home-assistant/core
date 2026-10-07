@@ -104,32 +104,37 @@ class NFAndroidTVNotifyEntity(NotifyEntity):
 
     async def nfandroidtv_send_message(self, message: str, **kwargs: Any) -> None:
         """Send a message via nfandroidtv.send_message."""
-        params: dict[str, Any] = kwargs
 
         if ATTR_INTERACTIVE in kwargs:
-            params[ATTR_INTERRUPT] = kwargs.pop(ATTR_INTERACTIVE)
+            kwargs[ATTR_INTERRUPT] = kwargs.pop(ATTR_INTERACTIVE)
         if ATTR_IMAGE in kwargs:
-            params["image_file"] = await _resolve_media(
+            kwargs["image_file"] = await _resolve_media(
                 self.hass, kwargs.pop(ATTR_IMAGE)
             )
         if ATTR_ICON in kwargs:
-            params[ATTR_ICON] = await _resolve_media(self.hass, kwargs.pop(ATTR_ICON))
+            kwargs[ATTR_ICON] = await _resolve_media(self.hass, kwargs.pop(ATTR_ICON))
         if ATTR_DURATION in kwargs:
             duration: timedelta = kwargs.pop(ATTR_DURATION)
-            params[ATTR_DURATION] = int(duration.total_seconds())
+            kwargs[ATTR_DURATION] = int(duration.total_seconds())
         if ATTR_BGCOLOR in kwargs:
-            params[ATTR_BKGCOLOR] = kwargs.pop(ATTR_BGCOLOR)
+            kwargs[ATTR_BKGCOLOR] = kwargs.pop(ATTR_BGCOLOR)
 
         try:
-            await self.hass.async_add_executor_job(
-                lambda: self.client.send(message=message, **params)
+            sent = await self.hass.async_add_executor_job(
+                lambda: self.client.send(message=message, **kwargs)
             )
-        except ConnectError as e:
+        except (ConnectError, requests.RequestException) as e:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="notify_connection_error",
                 translation_placeholders={CONF_NAME: self.entry.title},
             ) from e
+        if not sent:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="notify_failed",
+                translation_placeholders={CONF_NAME: self.entry.title},
+            )
         self._async_record_notification()
 
 
@@ -154,8 +159,14 @@ async def _resolve_media(hass: HomeAssistant, media_source: dict[str, Any]) -> b
             translation_domain=DOMAIN,
             translation_key="media_source_not_supported",
         )
-
-    return await hass.async_add_executor_job(media.path.read_bytes)
+    try:
+        return await hass.async_add_executor_job(media.path.read_bytes)
+    except OSError as e:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="media_not_readable",
+            translation_placeholders={CONF_NAME: media.path.name},
+        ) from e
 
 
 async def async_get_service(
