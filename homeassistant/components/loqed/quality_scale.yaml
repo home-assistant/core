@@ -42,13 +42,13 @@ rules:
   docs-installation-parameters: done
   entity-unavailable:
     status: todo
-    comment: The integration does not yet expose the library's online state as entity availability.
+    comment: The integration does not yet expose Lock.online as entity availability.
   integration-owner: done
   log-when-unavailable:
     status: todo
     comment: >-
-      Depends on entity-unavailable; there is no connectivity signal to log
-      transitions for yet.
+      Depends on entity-unavailable. Lock.online is available from the
+      library, but it is not yet used for availability or logged.
   parallel-updates: todo
   reauthentication-flow: done
   test-coverage: done
