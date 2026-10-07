@@ -13,6 +13,7 @@ from homeassistant.components.logger import DOMAIN, LOGSEVERITY
 from homeassistant.components.logger.helpers import SAVE_DELAY_LONG
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import Unauthorized
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -448,3 +449,65 @@ async def test_services_require_admin(
             context=Context(user_id=hass_read_only_user.id),
             blocking=True,
         )
+
+
+@pytest.mark.parametrize(
+    ("logger_config", "expected_loggers"),
+    [
+        pytest.param(
+            {"logs": {"httpx": "debug"}},
+            "- `httpx` → `httpx2`",
+            id="logs",
+        ),
+        pytest.param(
+            {"filters": {"httpcore.http11": ["ignore me"]}},
+            "- `httpcore.http11` → `httpcore2.http11`",
+            id="filters_submodule",
+        ),
+        pytest.param(
+            {
+                "logs": {"httpx": "debug", "httpcore": "info", "other": "info"},
+                "filters": {"httpx": ["ignore me"]},
+            },
+            "- `httpcore` → `httpcore2`\n- `httpx` → `httpx2`",
+            id="logs_and_filters",
+        ),
+    ],
+)
+async def test_renamed_loggers_issue(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    logger_config: dict[str, Any],
+    expected_loggers: str,
+) -> None:
+    """Test a repair issue is created for renamed httpx logger names."""
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: logger_config})
+
+    issue = issue_registry.async_get_issue(DOMAIN, "renamed_loggers")
+    assert issue is not None
+    assert issue.severity is ir.IssueSeverity.WARNING
+    assert issue.translation_placeholders == {"loggers": expected_loggers}
+
+
+@pytest.mark.parametrize(
+    "logger_config",
+    [
+        pytest.param({}, id="empty"),
+        pytest.param(
+            {
+                "logs": {"httpx2": "debug", "httpxyz": "info"},
+                "filters": {"httpcore2.http11": ["ignore me"]},
+            },
+            id="new_names",
+        ),
+    ],
+)
+async def test_no_renamed_loggers_issue(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    logger_config: dict[str, Any],
+) -> None:
+    """Test no repair issue is created without renamed logger names."""
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: logger_config})
+
+    assert issue_registry.async_get_issue(DOMAIN, "renamed_loggers") is None

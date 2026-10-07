@@ -53,9 +53,11 @@ MSG_FORMATS = ["compressed", "uncompressed", "mic-e", "object"]
 
 PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
-        probatio.Required(CONF_CALLSIGNS): cv.ensure_list,
+        probatio.Required(CONF_CALLSIGNS): probatio.EnsureList(),
         probatio.Required(CONF_USERNAME): cv.string,
-        probatio.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD): cv.string,
+        probatio.Optional(
+            probatio.Secret(CONF_PASSWORD), default=DEFAULT_PASSWORD
+        ): cv.string,
         probatio.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
         probatio.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): probatio.Coerce(
             float

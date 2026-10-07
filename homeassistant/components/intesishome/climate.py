@@ -44,7 +44,7 @@ IH_DEVICE_ANYWAIR = "anywair"
 PLATFORM_SCHEMA = CLIMATE_PLATFORM_SCHEMA.extend(
     {
         probatio.Required(CONF_USERNAME): cv.string,
-        probatio.Required(CONF_PASSWORD): cv.string,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): cv.string,
         probatio.Optional(CONF_DEVICE, default=IH_DEVICE_INTESISHOME): probatio.In(
             [IH_DEVICE_AIRCONWITHME, IH_DEVICE_ANYWAIR, IH_DEVICE_INTESISHOME]
         ),

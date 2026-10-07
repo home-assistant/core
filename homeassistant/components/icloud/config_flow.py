@@ -69,7 +69,8 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
                     CONF_USERNAME, default=user_input.get(CONF_USERNAME, "")
                 ): str,
                 probatio.Required(
-                    CONF_PASSWORD, default=user_input.get(CONF_PASSWORD, "")
+                    probatio.Secret(CONF_PASSWORD),
+                    default=user_input.get(CONF_PASSWORD, ""),
                 ): str,
                 probatio.Optional(
                     CONF_WITH_FAMILY,
@@ -79,7 +80,8 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
         else:
             schema = {
                 probatio.Required(
-                    CONF_PASSWORD, default=user_input.get(CONF_PASSWORD, "")
+                    probatio.Secret(CONF_PASSWORD),
+                    default=user_input.get(CONF_PASSWORD, ""),
                 ): str,
             }
 

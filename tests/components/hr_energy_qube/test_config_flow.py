@@ -3,19 +3,38 @@
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+from python_qube_heatpump import QubeDeviceInfo
 
-from homeassistant.components.hr_energy_qube.const import DOMAIN
+from homeassistant.components.hr_energy_qube.const import DOMAIN, MDNS_LOOKUP_TIMEOUT
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from . import DEVICE_INFO
+
 from tests.common import MockConfigEntry
 
 
+@pytest.mark.parametrize(
+    ("device_info", "unique_id"),
+    [
+        pytest.param(DEVICE_INFO, DEVICE_INFO.uuid, id="mdns"),
+        pytest.param(None, None, id="no_mdns"),
+    ],
+)
 @pytest.mark.usefixtures("mock_setup_entry")
-async def test_full_flow(hass: HomeAssistant, mock_qube_client: MagicMock) -> None:
-    """Test successful config flow."""
+async def test_full_flow(
+    hass: HomeAssistant,
+    mock_qube_client: MagicMock,
+    mock_device_info: AsyncMock,
+    mock_async_zeroconf: MagicMock,
+    device_info: QubeDeviceInfo | None,
+    unique_id: str | None,
+) -> None:
+    """Test the user flow, with and without the controller's mDNS record."""
+    mock_device_info.return_value = device_info
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -30,6 +49,10 @@ async def test_full_flow(hass: HomeAssistant, mock_qube_client: MagicMock) -> No
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Qube heat pump"
     assert result["data"] == {CONF_HOST: "qube.local", CONF_PORT: 502}
+    assert result["result"].unique_id == unique_id
+    mock_device_info.assert_awaited_once_with(
+        "qube.local", mock_async_zeroconf, timeout=MDNS_LOOKUP_TIMEOUT
+    )
 
 
 @pytest.mark.parametrize(
@@ -97,3 +120,31 @@ async def test_already_configured(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_already_configured_by_unique_id(
+    hass: HomeAssistant,
+    mock_qube_client: MagicMock,
+    mock_device_info: AsyncMock,
+) -> None:
+    """Test re-adding the same controller under a new host updates the entry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "qube.local", CONF_PORT: 502},
+        unique_id=DEVICE_INFO.uuid,
+    )
+    entry.add_to_hass(hass)
+    mock_device_info.return_value = DEVICE_INFO
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "1.2.3.4"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.data == {CONF_HOST: "1.2.3.4", CONF_PORT: 502}

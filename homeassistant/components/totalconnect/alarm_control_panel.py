@@ -14,15 +14,11 @@ from homeassistant.components.alarm_control_panel import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import CODE_REQUIRED, DOMAIN
 from .coordinator import TotalConnectConfigEntry, TotalConnectDataUpdateCoordinator
 from .entity import TotalConnectLocationEntity
-
-SERVICE_ALARM_ARM_AWAY_INSTANT = "arm_away_instant"
-SERVICE_ALARM_ARM_HOME_INSTANT = "arm_home_instant"
 
 
 async def async_setup_entry(
@@ -38,21 +34,6 @@ async def async_setup_entry(
         TotalConnectAlarm(coordinator, location, partition_id, code_required)
         for location in coordinator.client.locations.values()
         for partition_id in location.partitions
-    )
-
-    # Set up services
-    platform = entity_platform.async_get_current_platform()
-
-    platform.async_register_entity_service(
-        SERVICE_ALARM_ARM_AWAY_INSTANT,
-        None,
-        "async_alarm_arm_away_instant",
-    )
-
-    platform.async_register_entity_service(
-        SERVICE_ALARM_ARM_HOME_INSTANT,
-        None,
-        "async_alarm_arm_home_instant",
     )
 
 
