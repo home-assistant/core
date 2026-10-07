@@ -14,8 +14,8 @@ from homeassistant.components.skylight.const import (
     CONF_REFRESH_TOKEN,
     DOMAIN,
 )
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
 from homeassistant.components.skylight.coordinator import SkylightData
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
 
 from tests.common import MockConfigEntry
 
