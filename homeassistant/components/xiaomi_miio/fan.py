@@ -499,21 +499,24 @@ class XiaomiAirPurifier(XiaomiGenericAirPurifier):
         if self._device_features & FEATURE_SET_EXTRA_FEATURES == 0:
             return
 
-        await self._try_command(
+        if await self._try_command(
             "Setting the extra features of the miio device failed.",
             self._device.set_extra_features,  # type: ignore[attr-defined]
             features,
-        )
+        ):
+            self._attr_extra_state_attributes[ATTR_EXTRA_FEATURES] = features
+            self.async_write_ha_state()
 
     async def async_reset_filter(self):
         """Reset the filter lifetime and usage."""
         if self._device_features & FEATURE_RESET_FILTER == 0:
             return
 
-        await self._try_command(
+        if await self._try_command(
             "Resetting the filter lifetime of the miio device failed.",
             self._device.reset_filter,
-        )
+        ):
+            await self.coordinator.async_request_refresh()
 
 
 class XiaomiAirPurifierMiot(XiaomiAirPurifier):
@@ -763,21 +766,24 @@ class XiaomiAirFresh(XiaomiGenericAirPurifier):
         if self._device_features & FEATURE_SET_EXTRA_FEATURES == 0:
             return
 
-        await self._try_command(
+        if await self._try_command(
             "Setting the extra features of the miio device failed.",
             self._device.set_extra_features,  # type: ignore[attr-defined]
             features,
-        )
+        ):
+            self._attr_extra_state_attributes[ATTR_EXTRA_FEATURES] = features
+            self.async_write_ha_state()
 
     async def async_reset_filter(self):
         """Reset the filter lifetime and usage."""
         if self._device_features & FEATURE_RESET_FILTER == 0:
             return
 
-        await self._try_command(
+        if await self._try_command(
             "Resetting the filter lifetime of the miio device failed.",
             self._device.reset_filter,
-        )
+        ):
+            await self.coordinator.async_request_refresh()
 
 
 class XiaomiAirFreshA1(XiaomiGenericAirPurifier):
