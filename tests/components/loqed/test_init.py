@@ -3,7 +3,7 @@
 from datetime import timedelta
 from http import HTTPStatus
 from typing import Any
-from unittest.mock import AsyncMock, call, patch
+from unittest.mock import AsyncMock, Mock, call, patch
 
 import aiohttp
 from freezegun.api import FrozenDateTimeFactory
@@ -13,7 +13,7 @@ import pytest
 from homeassistant.components.cloud import CloudNotConnected
 from homeassistant.components.lock import LockState
 from homeassistant.components.loqed.const import DOMAIN
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -533,3 +533,71 @@ async def test_unload_entry_with_unreachable_bridge(
     assert integration.state is ConfigEntryState.NOT_LOADED
     assert not hass.data.get(DOMAIN)
     assert "Could not remove webhook from LOQED bridge" in caplog.text
+
+
+def _response_error(status: HTTPStatus) -> aiohttp.ClientResponseError:
+    """Create a client response error with the given status."""
+    return aiohttp.ClientResponseError(Mock(), (), status=status)
+
+
+@pytest.mark.parametrize("status", [HTTPStatus.UNAUTHORIZED, HTTPStatus.FORBIDDEN])
+@pytest.mark.parametrize(
+    "failing_call", ["async_get_lock", "getWebhooks", "async_get_lock_details"]
+)
+async def test_setup_starts_reauth_when_bridge_rejects_credentials(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    lock: loqed.Lock,
+    failing_call: str,
+    status: HTTPStatus,
+) -> None:
+    """Test a rejected bridge key stops setup and starts reauthentication."""
+    config_entry.add_to_hass(hass)
+    lock_status = await async_load_json_object_fixture(hass, "status_ok.json", DOMAIN)
+    mocks = {
+        "async_get_lock": AsyncMock(return_value=lock),
+        "async_get_lock_details": AsyncMock(return_value=lock_status),
+        "getWebhooks": lock.getWebhooks,
+    }
+    mocks[failing_call].side_effect = _response_error(status)
+
+    with patch.multiple(
+        "loqedAPI.loqed.LoqedAPI",
+        async_get_lock=mocks["async_get_lock"],
+        async_get_lock_details=mocks["async_get_lock_details"],
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert list(config_entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        pytest.param(aiohttp.ClientError, id="client_error"),
+        pytest.param(TimeoutError, id="timeout"),
+        pytest.param(
+            _response_error(HTTPStatus.INTERNAL_SERVER_ERROR), id="server_error"
+        ),
+    ],
+)
+async def test_first_refresh_failure_will_retry(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    lock: loqed.Lock,
+    error: type[Exception] | Exception,
+) -> None:
+    """Test setup retries when fetching the lock status fails."""
+    config_entry.add_to_hass(hass)
+
+    with (
+        patch("loqedAPI.loqed.LoqedAPI.async_get_lock", return_value=lock),
+        patch("loqedAPI.loqed.LoqedAPI.async_get_lock_details", side_effect=error),
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert not list(config_entry.async_get_active_flows(hass, {SOURCE_REAUTH}))

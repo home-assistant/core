@@ -50,7 +50,7 @@ rules:
       Depends on entity-unavailable; there is no connectivity signal to log
       transitions for yet.
   parallel-updates: todo
-  reauthentication-flow: todo
+  reauthentication-flow: done
   test-coverage: done
 
   # Gold

@@ -454,3 +454,78 @@ async def test_zeroconf_flow_recovers_from_error(
     assert error_result["errors"] == {"base": error}
 
     await _async_complete_flow(hass, patch_lock_creation_flow, result["flow_id"])
+
+
+async def test_reauth_flow(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    patch_lock_creation_flow: Callable[[dict[str, Any], loqed.Lock, str], Any],
+) -> None:
+    """Test reauthentication stores the new token."""
+    config_entry.add_to_hass(hass)
+    result = await config_entry.start_reauth_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    all_locks_response = await async_load_json_object_fixture(
+        hass, "get_all_locks.json", DOMAIN
+    )
+
+    with patch_lock_creation_flow(
+        all_locks_response, Mock(spec=loqed.Lock, id="Foo"), TEST_WEBHOOK_ID
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_API_TOKEN: "new_token"}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert config_entry.data[CONF_API_TOKEN] == "new_token"
+
+
+@pytest.mark.parametrize(
+    ("patch_kwargs", "error"),
+    [
+        *CLIENT_ERRORS,
+        pytest.param(
+            {"return_value": {"data": []}}, "lock_not_found", id="lock_not_found"
+        ),
+    ],
+)
+async def test_reauth_flow_recovers_from_error(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    patch_lock_creation_flow: Callable[[dict[str, Any], loqed.Lock, str], Any],
+    patch_kwargs: dict[str, Any],
+    error: str,
+) -> None:
+    """Test reauthentication shows an error and then stores the new token."""
+    config_entry.add_to_hass(hass)
+    result = await config_entry.start_reauth_flow(hass)
+
+    with patch("loqedAPI.cloud_loqed.LoqedCloudAPI.async_get_locks", **patch_kwargs):
+        error_result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_API_TOKEN: "new_token"}
+        )
+
+    assert error_result["type"] is FlowResultType.FORM
+    assert error_result["step_id"] == "reauth_confirm"
+    assert error_result["errors"] == {"base": error}
+
+    all_locks_response = await async_load_json_object_fixture(
+        hass, "get_all_locks.json", DOMAIN
+    )
+
+    with patch_lock_creation_flow(
+        all_locks_response, Mock(spec=loqed.Lock, id="Foo"), TEST_WEBHOOK_ID
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_API_TOKEN: "new_token"}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert config_entry.data[CONF_API_TOKEN] == "new_token"
