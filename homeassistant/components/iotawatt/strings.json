@@ -26,14 +26,17 @@
   "issues": {
     "legacy_energy": {
       "fix_flow": {
+        "abort": {
+          "entry_removed": "The IoTaWatt configuration entry was removed."
+        },
         "step": {
           "confirm": {
-            "description": "The IoTaWatt integration now provides lifetime energy sensors: meter readings counting since the beginning of the device datalog. These are more robust than the legacy period energy sensors, which reset at device-local midnight and will be removed in a future release.\n\nIf the legacy energy sensors are used in the Energy dashboard or in automations, replace them with the new lifetime energy sensors first.\n\nSubmitting removes the legacy period energy sensors from this IoTaWatt device. Already recorded long-term statistics remain available.",
+            "description": "The IoTaWatt integration now provides lifetime energy sensors: meter readings counting since the beginning of the device datalog. These are more robust than the legacy period energy sensors, which reset at device-local midnight and will be removed in a future release.\n\nIf the legacy energy sensors of {name} are used in the Energy dashboard or in automations, replace them with the new lifetime energy sensors first.\n\nSubmitting removes the legacy period energy sensors of {name}. Already recorded long-term statistics remain available.",
             "title": "Switch to the lifetime energy sensors"
           }
         }
       },
-      "title": "Legacy period energy sensors are deprecated"
+      "title": "Legacy period energy sensors of {name} are deprecated"
     }
   },
   "options": {
