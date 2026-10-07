@@ -1,56 +1,38 @@
 """Support for displaying persistent notifications."""
 
-from collections.abc import Callable, Mapping
-from datetime import datetime
-from enum import StrEnum
+from collections.abc import Mapping
 from functools import partial
 import logging
-from typing import Any, Final, TypedDict
+from typing import Any
 
 import probatio
 
 from homeassistant.components import websocket_api
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, ServiceCall, callback
-from homeassistant.helpers import config_validation as cv, singleton
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect,
-    async_dispatcher_send,
-)
+from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util import dt as dt_util
-from homeassistant.util.signal_type import SignalType
-from homeassistant.util.uuid import random_uuid_hex
 
-DOMAIN = "persistent_notification"
-
-ATTR_CREATED_AT: Final = "created_at"
-ATTR_MESSAGE: Final = "message"
-ATTR_NOTIFICATION_ID: Final = "notification_id"
-ATTR_TITLE: Final = "title"
-ATTR_STATUS: Final = "status"
-
-
-class Notification(TypedDict):
-    """Persistent notification."""
-
-    created_at: datetime
-    message: str
-    notification_id: str
-    title: str | None
-
-
-class UpdateType(StrEnum):
-    """Persistent notification update type."""
-
-    CURRENT = "current"
-    ADDED = "added"
-    REMOVED = "removed"
-    UPDATED = "updated"
-
-
-SIGNAL_PERSISTENT_NOTIFICATIONS_UPDATED = SignalType[
-    UpdateType, dict[str, Notification]
-]("persistent_notifications_updated")
+from .const import (  # noqa: F401
+    ATTR_CREATED_AT,
+    ATTR_MESSAGE,
+    ATTR_NOTIFICATION_ID,
+    ATTR_STATUS,
+    ATTR_TITLE,
+    DOMAIN,
+    SIGNAL_PERSISTENT_NOTIFICATIONS_UPDATED,
+    Notification,
+    UpdateType,
+)
+from .helpers import (  # noqa: F401
+    _async_get_or_create_notifications,
+    async_create,
+    async_dismiss,
+    async_dismiss_all,
+    async_register_callback,
+    create,
+    dismiss,
+)
 
 SCHEMA_SERVICE_NOTIFICATION = probatio.Schema(
     {probatio.Required(ATTR_NOTIFICATION_ID): cv.string}
@@ -59,96 +41,6 @@ SCHEMA_SERVICE_NOTIFICATION = probatio.Schema(
 _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
-
-
-@callback
-def async_register_callback(
-    hass: HomeAssistant,
-    _callback: Callable[[UpdateType, dict[str, Notification]], None],
-) -> CALLBACK_TYPE:
-    """Register a callback."""
-    return async_dispatcher_connect(
-        hass, SIGNAL_PERSISTENT_NOTIFICATIONS_UPDATED, _callback
-    )
-
-
-def create(
-    hass: HomeAssistant,
-    message: str,
-    title: str | None = None,
-    notification_id: str | None = None,
-) -> None:
-    """Generate a notification."""
-    hass.add_job(async_create, hass, message, title, notification_id)
-
-
-def dismiss(hass: HomeAssistant, notification_id: str) -> None:
-    """Remove a notification."""
-    hass.add_job(async_dismiss, hass, notification_id)
-
-
-@callback
-def async_create(
-    hass: HomeAssistant,
-    message: str,
-    title: str | None = None,
-    notification_id: str | None = None,
-) -> None:
-    """Generate a notification."""
-    notifications = _async_get_or_create_notifications(hass)
-    if notification_id is None:
-        notification_id = random_uuid_hex()
-    update_type = (
-        UpdateType.UPDATED if notification_id in notifications else UpdateType.ADDED
-    )
-    notifications[notification_id] = {
-        ATTR_MESSAGE: message,
-        ATTR_NOTIFICATION_ID: notification_id,
-        ATTR_TITLE: title,
-        ATTR_CREATED_AT: dt_util.utcnow(),
-    }
-
-    async_dispatcher_send(
-        hass,
-        SIGNAL_PERSISTENT_NOTIFICATIONS_UPDATED,
-        update_type,
-        {notification_id: notifications[notification_id]},
-    )
-
-
-@callback
-@singleton.singleton(DOMAIN)
-def _async_get_or_create_notifications(hass: HomeAssistant) -> dict[str, Notification]:
-    """Get or create notifications data."""
-    return {}
-
-
-@callback
-def async_dismiss(hass: HomeAssistant, notification_id: str) -> None:
-    """Remove a notification."""
-    notifications = _async_get_or_create_notifications(hass)
-    if not (notification := notifications.pop(notification_id, None)):
-        return
-    async_dispatcher_send(
-        hass,
-        SIGNAL_PERSISTENT_NOTIFICATIONS_UPDATED,
-        UpdateType.REMOVED,
-        {notification_id: notification},
-    )
-
-
-@callback
-def async_dismiss_all(hass: HomeAssistant) -> None:
-    """Remove all notifications."""
-    notifications = _async_get_or_create_notifications(hass)
-    notifications_copy = notifications.copy()
-    notifications.clear()
-    async_dispatcher_send(
-        hass,
-        SIGNAL_PERSISTENT_NOTIFICATIONS_UPDATED,
-        UpdateType.REMOVED,
-        notifications_copy,
-    )
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
