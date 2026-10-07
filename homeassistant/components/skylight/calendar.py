@@ -1,6 +1,6 @@
 """Calendar platform for the Skylight integration."""
 
-from datetime import datetime
+from datetime import date, datetime, timedelta
 from typing import override
 
 from homeassistant.components.calendar import CalendarEntity, CalendarEvent
@@ -23,6 +23,13 @@ async def async_setup_entry(
     async_add_entities([SkylightCalendarEntity(entry.runtime_data, entry)])
 
 
+def _as_datetime(value: date | datetime) -> datetime:
+    """Normalise a CalendarEvent start/end (date or datetime) to a datetime."""
+    if isinstance(value, datetime):
+        return value
+    return dt_util.start_of_local_day(value)
+
+
 class SkylightCalendarEntity(SkylightEntity, CalendarEntity):
     """Representation of a Skylight frame calendar."""
 
@@ -36,9 +43,9 @@ class SkylightCalendarEntity(SkylightEntity, CalendarEntity):
         upcoming = [
             event
             for event in self.coordinator.data.events
-            if isinstance(event.start, datetime) and event.end > now
+            if _as_datetime(event.end) > now
         ]
-        upcoming.sort(key=lambda event: event.start)
+        upcoming.sort(key=lambda event: _as_datetime(event.start))
         return upcoming[0] if upcoming else None
 
     @override
@@ -49,5 +56,6 @@ class SkylightCalendarEntity(SkylightEntity, CalendarEntity):
         return [
             event
             for event in self.coordinator.data.events
-            if event.start < end_date and event.end > start_date
+            if _as_datetime(event.start) < end_date + timedelta(days=1)
+            and _as_datetime(event.end) > start_date
         ]

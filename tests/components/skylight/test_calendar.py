@@ -1,6 +1,6 @@
 """Test the Skylight calendar platform."""
 
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta
 import itertools
 from unittest.mock import patch
 
@@ -19,6 +19,20 @@ from homeassistant.core import HomeAssistant
 from .conftest import EVENT_END, EVENT_START
 
 from tests.common import MockConfigEntry, async_fire_time_changed
+
+ALL_DAY_RAW = {
+    "data": [
+        {
+            "id": "event-all-day-multi",
+            "attributes": {
+                "summary": "Trip",
+                # Skylight all-day: bare dates, inclusive last day.
+                "starts_at": "2030-10-10",
+                "ends_at": "2030-10-12",
+            },
+        }
+    ]
+}
 
 
 @pytest.mark.usefixtures("mock_coordinator_data")
@@ -83,6 +97,42 @@ async def test_calendar_is_read_only(
     assert features & CalendarEntityFeature.CREATE_EVENT == 0
     assert features & CalendarEntityFeature.UPDATE_EVENT == 0
     assert features & CalendarEntityFeature.DELETE_EVENT == 0
+
+
+async def test_all_day_event_inclusive_end_and_range_query(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test all-day events: exclusive end keeps the last day, date/datetime mix works."""
+    freezer.move_to(datetime(2030, 10, 10, 12, 0, tzinfo=UTC))
+    with patch(
+        "skylight_api.SkylightAPI.get_calendar_events",
+        return_value=ALL_DAY_RAW,
+    ):
+        mock_config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    result = await hass.services.async_call(
+        CALENDAR_DOMAIN,
+        SERVICE_GET_EVENTS,
+        {
+            "entity_id": "calendar.home_frame_calendar",
+            "start_date_time": datetime(2030, 10, 12, 0, 0, tzinfo=UTC),
+            "end_date_time": datetime(2030, 10, 12, 23, 59, tzinfo=UTC),
+        },
+        blocking=True,
+        return_response=True,
+    )
+    events = result["calendar.home_frame_calendar"]["events"]
+    # The inclusive final day (Oct 12) must be covered by the exclusive end.
+    assert len(events) == 1
+    assert events[0]["start"] == "2030-10-10"
+    assert events[0]["end"] == "2030-10-13"
+
+    state = hass.states.get("calendar.home_frame_calendar")
+    assert state is not None
 
 
 async def test_coordinator_setup_retry_then_recovery(

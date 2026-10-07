@@ -141,9 +141,16 @@ class SkylightConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Let the user pick which frame to set up."""
+        configured = {
+            entry.data[CONF_FRAME_ID]
+            for entry in self._async_current_entries(include_ignore=False)
+        }
+        available = [frame for frame in self._frames if frame["id"] not in configured]
+        if not available:
+            return self.async_abort(reason="all_frames_configured")
         if user_input is not None:
             frame_id = user_input[CONF_FRAME_ID]
-            frame = next(f for f in self._frames if f["id"] == frame_id)
+            frame = next(f for f in available if f["id"] == frame_id)
             return await self._async_create_entry(frame)
 
         return self.async_show_form(
@@ -154,7 +161,7 @@ class SkylightConfigFlow(ConfigFlow, domain=DOMAIN):
                         SelectSelectorConfig(
                             options=[
                                 SelectOptionDict(value=frame["id"], label=frame["name"])
-                                for frame in self._frames
+                                for frame in available
                             ],
                             mode=SelectSelectorMode.DROPDOWN,
                         )

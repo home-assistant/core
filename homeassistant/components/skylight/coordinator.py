@@ -59,10 +59,10 @@ def _event_from_raw(raw: dict[str, Any]) -> CalendarEvent | None:
 
     if not isinstance(start, datetime):
         # All-day: HA wants an exclusive end date. Skylight sends the inclusive
-        # last day (or a timestamp at the frame's midnight) — normalise to date.
+        # last day (or a timestamp at the frame's midnight) — normalise to date
+        # and always advance by one day so the final day is kept.
         end_date = end.date() if isinstance(end, datetime) else end
-        if end_date <= start:
-            end_date = start + timedelta(days=1)
+        end_date = end_date + timedelta(days=1)
         end = end_date
 
     return CalendarEvent(
