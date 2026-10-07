@@ -403,7 +403,7 @@ async def test_form_local_manual_success(hass: HomeAssistant) -> None:
             return_value=True,
         ) as mock_setup_entry,
         patch(
-            "homeassistant.components.adax.config_flow.adax_local.AdaxLocal.get_status",
+            "homeassistant.components.adax.config_flow.AdaxLocal.get_status",
             return_value={"target_temperature": 20.0, "current_temperature": 21.0},
         ),
     ):
