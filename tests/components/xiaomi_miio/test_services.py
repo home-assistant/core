@@ -7,6 +7,7 @@ from unittest.mock import MagicMock, Mock, patch
 
 from miio.integrations.airpurifier.zhimi.airpurifier import OperationMode
 from miio.powerstrip import PowerMode
+import probatio
 import pytest
 
 from homeassistant.components.xiaomi_miio.const import (
@@ -38,7 +39,7 @@ from homeassistant.const import (
     ENTITY_MATCH_ALL,
     Platform,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Context, HomeAssistant
 from homeassistant.util import dt as dt_util
 
 from . import TEST_MAC
@@ -306,3 +307,36 @@ async def test_fan_services(
     )
 
     getattr(mock_fan, device_method).assert_called_once_with(*device_args)
+
+
+async def test_service_forwards_context(
+    hass: HomeAssistant, mock_light: MagicMock
+) -> None:
+    """Test the state change caused by a service call carries its context."""
+    await setup_device(hass, EYECARE_MODEL, Platform.LIGHT)
+    # Report the new scene on the next poll so the entity writes a new state
+    mock_light.set_scene.side_effect = lambda scene: setattr(
+        mock_light.status.return_value, "scene", scene
+    )
+    context = Context()
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_SCENE,
+        {ATTR_ENTITY_ID: EYECARE_ENTITY_ID, "scene": 2},
+        blocking=True,
+        context=context,
+    )
+
+    state = hass.states.get(EYECARE_ENTITY_ID)
+    assert state.attributes["scene"] == 2
+    assert state.context is context
+
+
+@pytest.mark.usefixtures("mock_light")
+async def test_service_requires_target(hass: HomeAssistant) -> None:
+    """Test the services reject calls without a target."""
+    await setup_device(hass, EYECARE_MODEL, Platform.LIGHT)
+
+    with pytest.raises(probatio.Invalid):
+        await hass.services.async_call(DOMAIN, SERVICE_REMINDER_ON, {}, blocking=True)
