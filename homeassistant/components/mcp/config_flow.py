@@ -163,6 +163,8 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
+            # Also covers the OAuth path, which returns before the success check.
+            self._async_abort_entries_match({CONF_URL: user_input[CONF_URL]})
             try:
                 info = await validate_input(self.hass, user_input)
             except InvalidUrl:
@@ -242,6 +244,7 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception")
             return self.async_abort(reason="unknown")
 
+        self._async_abort_entries_match({CONF_URL: self.data[CONF_URL]})
         return self.async_create_entry(title=info["title"], data=self.data)
 
     async def async_step_auth_discovery(
@@ -389,6 +392,8 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             return self.async_update_reload_and_abort(
                 self._get_reauth_entry(), data=config_entry_data
             )
+        # OAuth entries have no unique id, so the server URL is the duplicate check.
+        self._async_abort_entries_match({CONF_URL: config_entry_data[CONF_URL]})
         return self.async_create_entry(
             title=info["title"],
             data=config_entry_data,

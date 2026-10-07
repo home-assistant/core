@@ -1350,3 +1350,93 @@ async def test_hassio_discovery_authentication_flow(
     assert result["result"]
     assert result["result"].unique_id == ADDON_DISCOVERY_INFO.uuid
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+@respx.mock
+async def test_duplicate_url_aborts_before_oauth(
+    hass: HomeAssistant,
+    mock_mcp_client: Mock,
+) -> None:
+    """An already configured URL aborts before OAuth discovery starts."""
+    MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_URL: MCP_SERVER_URL},
+        title=TEST_API_NAME,
+    ).add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    mock_mcp_client.side_effect = httpx2.HTTPStatusError(
+        "Authentication required", request=None, response=httpx2.Response(401)
+    )
+    respx.get(OAUTH_DISCOVERY_ENDPOINT).mock(
+        return_value=OAUTH_SERVER_METADATA_RESPONSE
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_URL: MCP_SERVER_URL},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert not mock_mcp_client.called
+    assert not respx.calls
+
+
+@pytest.mark.usefixtures("current_request_with_host", "mock_setup_entry")
+@respx.mock
+async def test_oauth_create_aborts_duplicate_url(
+    hass: HomeAssistant,
+    mock_mcp_client: Mock,
+    credential: None,
+    aioclient_mock: AiohttpClientMocker,
+    hass_client_no_auth: ClientSessionGenerator,
+) -> None:
+    """OAuth setup aborts when the server URL was configured during the flow."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    mock_mcp_client.side_effect = httpx2.HTTPStatusError(
+        "Authentication required", request=None, response=httpx2.Response(401)
+    )
+    respx.get(OAUTH_DISCOVERY_ENDPOINT).mock(
+        return_value=OAUTH_SERVER_METADATA_RESPONSE
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_URL: MCP_SERVER_URL},
+    )
+    assert result["type"] is FlowResultType.MENU
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"next_step_id": "pick_implementation"},
+    )
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+    await perform_oauth_flow(
+        hass,
+        aioclient_mock,
+        hass_client_no_auth,
+        result,
+        scopes=SCOPES,
+    )
+
+    MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_URL: MCP_SERVER_URL},
+        title=TEST_API_NAME,
+    ).add_to_hass(hass)
+    mock_mcp_client.side_effect = None
+    response = Mock()
+    response.serverInfo.name = TEST_API_NAME
+    mock_mcp_client.return_value.initialize.return_value = response
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
