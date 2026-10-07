@@ -1432,7 +1432,8 @@ async def test_header_resource_metadata_beats_a_mismatched_root_document(
     assert result["reason"] == "missing_credentials"
     fetched = [str(call.request.url) for call in respx.calls]
     assert header_url in fetched
-    assert root_url not in fetched
+    assert f"{auth_server}/.well-known/oauth-authorization-server" in fetched
+    assert not any(call.startswith("https://root-auth.example") for call in fetched)
 
 
 @pytest.mark.parametrize(
