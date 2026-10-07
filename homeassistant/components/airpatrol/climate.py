@@ -63,7 +63,7 @@ class AirPatrolClimate(AirPatrolEntity, ClimateEntity):
     """AirPatrol climate entity."""
 
     _attr_name = None
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.FAN_MODE
@@ -101,7 +101,7 @@ class AirPatrolClimate(AirPatrolEntity, ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         if temp := self.climate_data.get("RoomTemp"):
             return float(temp)
@@ -109,7 +109,7 @@ class AirPatrolClimate(AirPatrolEntity, ClimateEntity):
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the target temperature."""
         if temp := self.params.get("PumpTemp"):
             return float(temp)

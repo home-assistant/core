@@ -53,7 +53,7 @@ class AirobotClimate(AirobotEntity, ClimateEntity):
 
     _attr_name = None
     _attr_translation_key = "thermostat"
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_hvac_modes = [HVACMode.HEAT]
     _attr_preset_modes = [PRESET_HOME, PRESET_AWAY, PRESET_BOOST]
     _attr_supported_features = (
@@ -79,7 +79,7 @@ class AirobotClimate(AirobotEntity, ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature.
 
         If floor temperature is available, thermostat is set up for floor heating.
@@ -96,7 +96,7 @@ class AirobotClimate(AirobotEntity, ClimateEntity):
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the target temperature."""
         if self._settings.is_home_mode:
             return self._settings.setpoint_temp

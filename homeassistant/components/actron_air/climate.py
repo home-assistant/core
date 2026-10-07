@@ -71,7 +71,7 @@ async def async_setup_entry(
 class ActronAirClimateEntity(ClimateEntity):
     """Base class for Actron Air climate entities."""
 
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.FAN_MODE
@@ -147,13 +147,13 @@ class ActronSystemClimate(ActronAirAcEntity, ActronAirClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> float:
+    def native_current_temperature(self) -> float:
         """Return the current temperature."""
         return self._status.master_info.live_temp_c
 
     @property
     @override
-    def target_temperature(self) -> float:
+    def native_target_temperature(self) -> float:
         """Return the target temperature."""
         return self._status.user_aircon_settings.current_setpoint
 
@@ -243,13 +243,13 @@ class ActronZoneClimate(ActronAirZoneEntity, ActronAirClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self._zone.live_temp_c
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the target temperature."""
         return self._zone.current_setpoint
 

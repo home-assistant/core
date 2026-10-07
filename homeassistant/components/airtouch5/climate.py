@@ -120,7 +120,7 @@ async def async_setup_entry(
 class Airtouch5ClimateEntity(ClimateEntity, Airtouch5Entity):
     """Base class for Airtouch5 Climate Entities."""
 
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_translation_key = DOMAIN
     _attr_target_temperature_step = 1
     _attr_name = None
@@ -193,8 +193,8 @@ class Airtouch5AC(Airtouch5ClimateEntity):
             return
         status = data[self._ability.ac_number]
 
-        self._attr_current_temperature = status.temperature
-        self._attr_target_temperature = status.ac_setpoint
+        self._attr_native_current_temperature = status.temperature
+        self._attr_native_target_temperature = status.ac_setpoint
         if status.ac_power_state in [AcPowerState.OFF, AcPowerState.AWAY_OFF]:
             self._attr_hvac_mode = HVACMode.OFF
         else:
@@ -306,8 +306,8 @@ class Airtouch5Zone(Airtouch5ClimateEntity):
         if self._name.zone_number not in data:
             return
         status = data[self._name.zone_number]
-        self._attr_current_temperature = status.temperature
-        self._attr_target_temperature = status.set_point
+        self._attr_native_current_temperature = status.temperature
+        self._attr_native_target_temperature = status.set_point
 
         if status.zone_power_state == ZonePowerState.OFF:
             self._attr_hvac_mode = HVACMode.OFF

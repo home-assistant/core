@@ -57,7 +57,7 @@ class AdaxDevice(CoordinatorEntity[AdaxCloudCoordinator], ClimateEntity):
         | ClimateEntityFeature.TURN_ON
     )
     _attr_target_temperature_step = PRECISION_WHOLE
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
 
     def __init__(
         self,
@@ -96,7 +96,9 @@ class AdaxDevice(CoordinatorEntity[AdaxCloudCoordinator], ClimateEntity):
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set hvac mode."""
         if hvac_mode == HVACMode.HEAT:
-            temperature = max(self.min_temp, self.target_temperature or self.min_temp)
+            temperature = max(
+                self.min_temp, self.native_target_temperature or self.min_temp
+            )
             await self._adax_data_handler.set_room_target_temperature(
                 self._device_id, temperature, True
             )
@@ -129,8 +131,8 @@ class AdaxDevice(CoordinatorEntity[AdaxCloudCoordinator], ClimateEntity):
 
     def _apply_data(self, room: dict[str, Any]) -> None:
         """Update the appropriate attributues based on received data."""
-        self._attr_current_temperature = room.get("temperature")
-        self._attr_target_temperature = room.get("targetTemperature")
+        self._attr_native_current_temperature = room.get("temperature")
+        self._attr_native_target_temperature = room.get("targetTemperature")
         if room["heatingEnabled"]:
             self._attr_hvac_mode = HVACMode.HEAT
             self._attr_icon = "mdi:radiator"
@@ -153,7 +155,7 @@ class LocalAdaxDevice(CoordinatorEntity[AdaxLocalCoordinator], ClimateEntity):
         | ClimateEntityFeature.TURN_ON
     )
     _attr_target_temperature_step = PRECISION_WHOLE
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
 
     def __init__(self, coordinator: AdaxLocalCoordinator, unique_id: str) -> None:
         """Initialize the heater."""
@@ -169,9 +171,9 @@ class LocalAdaxDevice(CoordinatorEntity[AdaxLocalCoordinator], ClimateEntity):
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set hvac mode."""
         if hvac_mode == HVACMode.HEAT:
-            temperature = self._attr_target_temperature or self._attr_min_temp
+            temperature = self._attr_native_target_temperature or self._attr_min_temp
             await self._adax_data_handler.set_target_temperature(temperature)
-            self._attr_target_temperature = temperature
+            self._attr_native_target_temperature = temperature
             self._attr_icon = "mdi:radiator"
         elif hvac_mode == HVACMode.OFF:
             await self._adax_data_handler.set_target_temperature(0)
@@ -192,7 +194,7 @@ class LocalAdaxDevice(CoordinatorEntity[AdaxLocalCoordinator], ClimateEntity):
         if self._attr_hvac_mode == HVACMode.HEAT:
             await self._adax_data_handler.set_target_temperature(temperature)
 
-        self._attr_target_temperature = temperature
+        self._attr_native_target_temperature = temperature
         self.async_write_ha_state()
 
     def _update_hvac_attributes(self) -> None:
@@ -205,16 +207,16 @@ class LocalAdaxDevice(CoordinatorEntity[AdaxLocalCoordinator], ClimateEntity):
         is updated to match the coordinator value.
         """
         if data := self.coordinator.data:
-            self._attr_current_temperature = data["current_temperature"]
+            self._attr_native_current_temperature = data["current_temperature"]
             if (target_temp := data["target_temperature"]) == 0:
                 self._attr_hvac_mode = HVACMode.OFF
                 self._attr_icon = "mdi:radiator-off"
-                if self._attr_target_temperature is None:
-                    self._attr_target_temperature = self._attr_min_temp
+                if self._attr_native_target_temperature is None:
+                    self._attr_native_target_temperature = self._attr_min_temp
             else:
                 self._attr_hvac_mode = HVACMode.HEAT
                 self._attr_icon = "mdi:radiator"
-                self._attr_target_temperature = target_temp
+                self._attr_native_target_temperature = target_temp
 
     @callback
     @override
