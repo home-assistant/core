@@ -55,6 +55,7 @@ from .coordinator import (
     ShellyConfigEntry,
     ShellyEntryData,
     ShellyRestCoordinator,
+    ShellyRpcConfigPollingCoordinator,
     ShellyRpcCoordinator,
     ShellyRpcPollingCoordinator,
 )
@@ -382,6 +383,9 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ShellyConfigEntry) 
                 )
 
         runtime_data.rpc_poll = ShellyRpcPollingCoordinator(hass, entry, device)
+        runtime_data.rpc_config_poll = ShellyRpcConfigPollingCoordinator(
+            hass, entry, device
+        )
         await hass.config_entries.async_forward_entry_setups(
             entry, runtime_data.platforms
         )
