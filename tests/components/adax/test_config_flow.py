@@ -430,30 +430,6 @@ async def test_form_local_manual_success(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_local_manual_invalid_mac(hass: HomeAssistant) -> None:
-    """Test validation failure on invalid MAC address inputs."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONNECTION_TYPE: LOCAL_MANUAL},
-    )
-    assert result["step_id"] == "local_manual"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_IP_ADDRESS: "192.168.1.150",
-            CONF_MAC: "not-a-mac",
-            CONF_TOKEN: "abcdef123456",
-        },
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {CONF_MAC: "invalid_mac"}
-
-
 async def test_form_local_manual_cannot_connect(hass: HomeAssistant) -> None:
     """Test error handling when heater cannot be contacted."""
     result = await hass.config_entries.flow.async_init(
@@ -632,6 +608,41 @@ async def test_form_local_manual_mac_value_error(hass: HomeAssistant) -> None:
                 CONF_TOKEN: "abcdef123456",
             },
         )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {CONF_MAC: "invalid_mac"}
+
+
+@pytest.mark.parametrize(
+    "invalid_mac",
+    [
+        "not-a-mac",
+        "-123456789AB",
+        "AA_BBCCDDEEF",
+        "GG:HH:II:JJ:KK:LL",
+    ],
+)
+async def test_form_local_manual_invalid_mac(
+    hass: HomeAssistant, invalid_mac: str
+) -> None:
+    """Test validation failure on invalid MAC address inputs."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONNECTION_TYPE: LOCAL_MANUAL},
+    )
+    assert result["step_id"] == "local_manual"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_IP_ADDRESS: "192.168.1.150",
+            CONF_MAC: invalid_mac,
+            CONF_TOKEN: "abcdef123456",
+        },
+    )
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {CONF_MAC: "invalid_mac"}
