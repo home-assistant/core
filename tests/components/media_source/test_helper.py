@@ -1,5 +1,7 @@
 """Test media source helpers."""
 
+import asyncio
+from contextlib import suppress
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -13,6 +15,7 @@ from homeassistant.components.media_player import (
 from homeassistant.components.media_source import const, models
 from homeassistant.components.media_source.const import DATA_MEDIA_SOURCE_PLATFORMS
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
 
@@ -192,3 +195,99 @@ async def test_async_search_media_root_not_supported(hass: HomeAssistant) -> Non
         await media_source.async_search_media(
             hass, "", SearchMediaQuery(search_query="test")
         )
+
+
+async def test_async_get_media_image(hass: HomeAssistant) -> None:
+    """Test getting an image from a source that provides images."""
+    assert await async_setup_component(hass, media_source.DOMAIN, {})
+    await hass.async_block_till_done()
+    source = models.MediaSource("plain")
+    source.async_get_media_image = AsyncMock(
+        return_value=media_source.MediaImage(b"image", "image/png")
+    )
+    hass.data[DATA_MEDIA_SOURCE_PLATFORMS].async_get_platform = AsyncMock(
+        return_value=source
+    )
+
+    assert await media_source.async_get_media_image(
+        hass, f"{const.URI_SCHEME}plain/item"
+    ) == media_source.MediaImage(b"image", "image/png")
+
+
+@pytest.mark.parametrize(
+    "media_content_id",
+    [
+        pytest.param("", id="root"),
+        pytest.param("invalid", id="invalid"),
+        pytest.param(f"{const.URI_SCHEME}unknown", id="unknown_source"),
+        pytest.param(
+            f"{const.URI_SCHEME}{media_source.DOMAIN}/local/test.mp3",
+            id="no_image_support",
+        ),
+    ],
+)
+async def test_async_get_media_image_none(
+    hass: HomeAssistant, media_content_id: str
+) -> None:
+    """Test no image is returned if the source can not provide one."""
+    assert await async_setup_component(hass, media_source.DOMAIN, {})
+    await hass.async_block_till_done()
+
+    assert await media_source.async_get_media_image(hass, media_content_id) is None
+
+
+async def test_async_get_media_image_without_setup(hass: HomeAssistant) -> None:
+    """Test no image is returned if media source is not set up."""
+    assert (
+        await media_source.async_get_media_image(
+            hass, f"{const.URI_SCHEME}camera/camera.demo_camera"
+        )
+        is None
+    )
+
+
+async def test_async_get_media_image_error(hass: HomeAssistant) -> None:
+    """Test errors of the source are raised."""
+    assert await async_setup_component(hass, media_source.DOMAIN, {})
+    await hass.async_block_till_done()
+    source = models.MediaSource("plain")
+    source.async_get_media_image = AsyncMock(
+        side_effect=HomeAssistantError("Unable to get image")
+    )
+    hass.data[DATA_MEDIA_SOURCE_PLATFORMS].async_get_platform = AsyncMock(
+        return_value=source
+    )
+
+    with pytest.raises(HomeAssistantError, match="Unable to get image"):
+        await media_source.async_get_media_image(hass, f"{const.URI_SCHEME}plain/item")
+
+
+async def test_async_get_media_image_cancelled(hass: HomeAssistant) -> None:
+    """Test cancellation suppressed by the source is restored."""
+    assert await async_setup_component(hass, media_source.DOMAIN, {})
+    await hass.async_block_till_done()
+    started = asyncio.Event()
+
+    async def _get_media_image(
+        item: media_source.MediaSourceItem,
+    ) -> media_source.MediaImage:
+        # Mimic camera and image suppressing the cancellation
+        with suppress(asyncio.CancelledError):
+            started.set()
+            await asyncio.Event().wait()
+        raise HomeAssistantError("Unable to get image")
+
+    source = models.MediaSource("plain")
+    source.async_get_media_image = _get_media_image
+    hass.data[DATA_MEDIA_SOURCE_PLATFORMS].async_get_platform = AsyncMock(
+        return_value=source
+    )
+
+    task = hass.async_create_task(
+        media_source.async_get_media_image(hass, f"{const.URI_SCHEME}plain/item")
+    )
+    await started.wait()
+    task.cancel()
+
+    with pytest.raises(asyncio.CancelledError):
+        await task

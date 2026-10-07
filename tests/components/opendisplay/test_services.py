@@ -17,8 +17,7 @@ import probatio
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.camera import Image as CameraImage
-from homeassistant.components.image import Image as ImageEntityImage
+from homeassistant.components.media_source import MediaImage
 from homeassistant.components.opendisplay.const import CONF_ENCRYPTION_KEY, DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -131,22 +130,10 @@ async def test_upload_image_remote_url(
 
 
 @pytest.mark.parametrize(
-    ("media_content_id", "patch_target", "entity_id", "image_cls"),
+    "media_content_id",
     [
-        pytest.param(
-            "media-source://image/image.collection",
-            "homeassistant.components.image.async_get_image",
-            "image.collection",
-            ImageEntityImage,
-            id="image_entity",
-        ),
-        pytest.param(
-            "media-source://camera/camera.front_door",
-            "homeassistant.components.camera.async_get_image",
-            "camera.front_door",
-            CameraImage,
-            id="camera_entity",
-        ),
+        pytest.param("media-source://image/image.collection", id="image_entity"),
+        pytest.param("media-source://camera/camera.front_door", id="camera_entity"),
     ],
 )
 async def test_upload_image_from_entity(
@@ -154,11 +141,8 @@ async def test_upload_image_from_entity(
     mock_config_entry: MockConfigEntry,
     mock_upload_device: MagicMock,
     media_content_id: str,
-    patch_target: str,
-    entity_id: str,
-    image_cls: type[ImageEntityImage | CameraImage],
 ) -> None:
-    """Test uploading a snapshot from an image or camera entity."""
+    """Test uploading a single image from an image or camera entity."""
     device_id = _device_id(hass, mock_config_entry)
 
     buf = io.BytesIO()
@@ -166,7 +150,8 @@ async def test_upload_image_from_entity(
 
     with (
         patch(
-            patch_target, return_value=image_cls("image/png", buf.getvalue())
+            "homeassistant.components.opendisplay.services.async_get_media_image",
+            return_value=MediaImage(buf.getvalue(), "image/png"),
         ) as mock_get_image,
         patch(
             "homeassistant.components.opendisplay.services.async_resolve_media"
@@ -185,7 +170,7 @@ async def test_upload_image_from_entity(
             blocking=True,
         )
 
-    mock_get_image.assert_awaited_once_with(hass, entity_id)
+    mock_get_image.assert_awaited_once_with(hass, media_content_id)
     mock_resolve.assert_not_called()
     mock_upload_device.upload_image.assert_called_once()
 
