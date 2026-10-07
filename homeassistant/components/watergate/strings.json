@@ -18,11 +18,6 @@
       }
     }
   },
-  "exceptions": {
-    "valve_action_failed": {
-      "message": "Failed to change the valve state"
-    }
-  },
   "entity": {
     "event": {
       "auto_shut_off_duration": {
@@ -103,6 +98,11 @@
       "auto_shut_off": {
         "name": "Auto shut-off"
       }
+    }
+  },
+  "exceptions": {
+    "valve_action_failed": {
+      "message": "Failed to change the valve state"
     }
   }
 }
