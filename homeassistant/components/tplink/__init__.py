@@ -57,6 +57,7 @@ from .const import (
     PLATFORMS,
 )
 from .coordinator import TPLinkConfigEntry, TPLinkData, TPLinkDataUpdateCoordinator
+from .services import async_setup_services
 
 DISCOVERY_INTERVAL = timedelta(minutes=15)
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
@@ -115,6 +116,7 @@ async def async_discover_devices(hass: HomeAssistant) -> dict[str, Device]:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the TP-Link component."""
+    async_setup_services(hass)
     hass.data.setdefault(DOMAIN, {})
 
     async def _async_discovery(*_: Any) -> None:
