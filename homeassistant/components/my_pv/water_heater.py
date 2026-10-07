@@ -71,7 +71,7 @@ class MyPVWaterHeater(MyPVBaseEntity, WaterHeaterEntity):
         super().__init__(coordinator, entity_description, serial_number)
 
         self._attr_target_temperature_step = configuration["step"]
-        self._attr_temperature_unit = configuration["unit"]
+        self._attr_native_temperature_unit = configuration["unit"]
         self._attr_min_temp = configuration["min"]
         self._attr_max_temp = configuration["max"]
 
@@ -83,13 +83,13 @@ class MyPVWaterHeater(MyPVBaseEntity, WaterHeaterEntity):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self.coordinator.device.current_temperature
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         return self.coordinator.device.target_temperature
 

@@ -97,7 +97,7 @@ class PlugwiseWaterHeaterEntity(PlugwiseEntity, WaterHeaterEntity):
         self._attr_target_temperature_step = max(
             self.device[description.key]["resolution"], 1.0
         )
-        self._attr_temperature_unit = UnitOfTemperature.CELSIUS
+        self._attr_native_temperature_unit = UnitOfTemperature.CELSIUS
         self._attr_unique_id = f"{device_id}-{description.key}"
 
     @property
@@ -119,13 +119,13 @@ class PlugwiseWaterHeaterEntity(PlugwiseEntity, WaterHeaterEntity):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current water temperature."""
         return self.device[self.entity_description.key].get("current")
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the water temperature we try to reach."""
         return self.device[self.entity_description.key].get("setpoint")
 
