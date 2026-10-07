@@ -244,7 +244,11 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
     def _preset_characteristic(self, daikin_mode: str) -> Characteristic[Any] | None:
         """Return a preset characteristic by Daikin API name."""
         cc = self._climate_control()
-        return cc.preset(daikin_mode) if cc is not None else None
+        return (
+            cast(Characteristic[Any] | None, cc.mode_characteristic(daikin_mode))
+            if cc is not None
+            else None
+        )
 
     @property
     def _homekit_fan_mode_aliases_enabled(self) -> bool:
@@ -776,7 +780,7 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
             )
         else:
             result = await self._async_execute_climate_command(
-                lambda climate: climate.set_preset_mode(daikin_mode, False)
+                lambda climate: climate.set_mode_characteristic(daikin_mode, False)
             )
         if result:
             preset = self._preset_characteristic(daikin_mode)
@@ -804,7 +808,7 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
             )
         else:
             result = await self._async_execute_climate_command(
-                lambda climate: climate.set_preset_mode(daikin_mode, True)
+                lambda climate: climate.set_mode_characteristic(daikin_mode, True)
             )
         if result:
             preset = self._preset_characteristic(daikin_mode)

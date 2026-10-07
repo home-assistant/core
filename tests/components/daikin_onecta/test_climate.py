@@ -1055,7 +1055,7 @@ async def test_climate_service_updates_entity_state(
     climate_control.setpoint_types = ["roomTemperature"]
     climate_control.setpoint.return_value = setpoint
     climate_control.fan_operation.return_value = None
-    climate_control.preset.return_value = None
+    climate_control.mode_characteristic.return_value = None
     climate_control.current_temperature.return_value = None
 
     device = MagicMock(id="gateway", available=True)
@@ -1176,7 +1176,7 @@ async def test_climate_platform_services_and_management_points(
         control.setpoint_types = ["roomTemperature"]
         control.setpoint = lambda _target, _mode=None: setpoint
         control.fan_operation = lambda _mode=None: fan_operation
-        control.preset = presets.get
+        control.mode_characteristic = presets.get
         control.current_temperature = lambda _target: None
         return control
 
