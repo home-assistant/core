@@ -6,12 +6,13 @@ import json
 import logging
 from typing import Any, cast
 
-import httpx2
 from mcp.shared.auth import OAuthClientInformationFull, OAuthClientMetadata
 from pydantic import AnyUrl, ValidationError
 from yarl import URL
 
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.util import slugify
 
 from .const import (
@@ -25,6 +26,10 @@ from .const import (
 )
 
 _REGISTERED_CLIENT_VERSION = 1
+# A manual client id may itself be hex-encoded JSON. Only values with this
+# marker are decoded, so that id is not replaced by an embedded one.
+_REGISTERED_CLIENT_ID_PREFIX = "mcp-dcr:"
+_OMITTED = object()
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -130,7 +135,7 @@ def encode_registered_client_id(identity: RegisteredClientIdentity) -> str:
     Application credential storage de-duplicates on a slug of
     ``mcp.{client_id}``. Hex keeps that slug reversible, so two servers that
     issue the same client id, or two ids that slugify the same, cannot share
-    a secret.
+    a secret. The marker prefix keeps a manual client id from being decoded.
     """
     payload: dict[str, Any] = {
         "authorize_url": identity.authorize_url,
@@ -143,16 +148,23 @@ def encode_registered_client_id(identity: RegisteredClientIdentity) -> str:
         payload["redirect_uri"] = identity.redirect_uri
     if identity.scopes is not None:
         payload["scopes"] = list(identity.scopes)
-    return json.dumps(payload, separators=(",", ":"), sort_keys=True).encode().hex()
+    encoded = json.dumps(payload, separators=(",", ":"), sort_keys=True).encode().hex()
+    return f"{_REGISTERED_CLIENT_ID_PREFIX}{encoded}"
 
 
 def decode_registered_client_id(value: str) -> RegisteredClientIdentity | None:
     """Return the identity stored in a client id.
 
-    Manual application credentials are not encoded and return None.
+    Manual application credentials are not encoded and return None. A value
+    without the registration marker is left as a manual client id, even when
+    the remainder is hex-encoded JSON.
     """
+    if not value.startswith(_REGISTERED_CLIENT_ID_PREFIX):
+        return None
     try:
-        payload = json.loads(bytes.fromhex(value))
+        payload = json.loads(
+            bytes.fromhex(value.removeprefix(_REGISTERED_CLIENT_ID_PREFIX))
+        )
     except ValueError:
         return None
     if not isinstance(payload, dict) or payload.get("v") != _REGISTERED_CLIENT_VERSION:
@@ -212,6 +224,7 @@ def resolve_registration_endpoint(auth_server_url: str, endpoint: str) -> str:
 
 
 async def async_register_dynamic_client(
+    hass: HomeAssistant,
     registration_endpoint: str,
     redirect_uri: str,
     *,
@@ -241,12 +254,13 @@ async def async_register_dynamic_client(
     payload = metadata.model_dump(mode="json", exclude_none=True)
     payload["application_type"] = "web"
 
-    async with httpx2.AsyncClient() as client:
-        response = await client.post(
-            registration_endpoint,
-            json=payload,
-            headers={"Accept": "application/json"},
-        )
+    # The default client loads the CA bundle from disk on the event loop.
+    client = get_async_client(hass)
+    response = await client.post(
+        registration_endpoint,
+        json=payload,
+        headers={"Accept": "application/json"},
+    )
 
     if response.status_code not in (200, 201):
         _LOGGER.debug(
@@ -279,10 +293,11 @@ def _parse_registration_response(
         raise ClientRegistrationError("Registration response was not an object")
 
     payload = dict(body)
-    _require_registered_redirect_uri(payload.get("redirect_uris"), redirect_uri)
-    if not payload.get("redirect_uris"):
+    redirect_uris = _field_or_omitted(payload, "redirect_uris")
+    _require_registered_redirect_uri(redirect_uris, redirect_uri)
+    if redirect_uris is _OMITTED:
         payload["redirect_uris"] = [redirect_uri]
-    _require_granted_scopes(payload.get("scope"), requested_scopes)
+    _require_granted_scopes(_field_or_omitted(payload, "scope"), requested_scopes)
 
     client_id = payload.get("client_id")
     if not isinstance(client_id, str) or not client_id:
@@ -349,13 +364,23 @@ def _issued_auth_method(
     )
 
 
+def _field_or_omitted(payload: Mapping[str, Any], key: str) -> Any:
+    """Return a response field, or a sentinel when the key is absent.
+
+    ``Mapping.get`` cannot tell an omitted field from an explicit null.
+    """
+    if key not in payload:
+        return _OMITTED
+    return payload[key]
+
+
 def _require_registered_redirect_uri(value: Any, redirect_uri: str) -> None:
     """Reject a response that does not register the callback we will use.
 
     An omitted list is accepted: some servers return only the client id. An
-    explicit list must include the callback from this registration request.
+    explicit null or list must include the callback from this request.
     """
-    if value is None:
+    if value is _OMITTED:
         return
     if not isinstance(value, list) or any(not isinstance(uri, str) for uri in value):
         raise ClientRegistrationError("Registration response redirect_uris was invalid")
@@ -368,10 +393,10 @@ def _require_registered_redirect_uri(value: Any, redirect_uri: str) -> None:
 def _require_granted_scopes(value: Any, requested_scopes: tuple[str, ...]) -> None:
     """Reject a response whose scope does not cover the request.
 
-    An omitted scope is accepted. An explicit scope must include every scope
-    this registration asked for.
+    An omitted scope is accepted. An explicit null or other non-string is
+    not. A string must include every scope this registration asked for.
     """
-    if value is None:
+    if value is _OMITTED:
         return
     if not isinstance(value, str):
         raise ClientRegistrationError("Registration response scope was invalid")

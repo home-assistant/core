@@ -87,6 +87,7 @@ async def async_get_auth_implementation(
         authorization_server.token_url,
         credential.client_secret,
         token_endpoint_auth_method=identity.method,
+        registered_redirect_uri=identity.redirect_uri,
     )
 
 
@@ -109,6 +110,8 @@ class McpRegisteredOAuth2Implementation(LocalOAuth2ImplementationWithPkce):
         token_url: str,
         client_secret: str,
         token_endpoint_auth_method: str,
+        *,
+        registered_redirect_uri: str | None = None,
     ) -> None:
         """Initialize the implementation."""
         # A public client authenticates with PKCE only. Ignore a secret the
@@ -124,12 +127,26 @@ class McpRegisteredOAuth2Implementation(LocalOAuth2ImplementationWithPkce):
             client_secret,
         )
         self.token_endpoint_auth_method = token_endpoint_auth_method
+        self._registered_redirect_uri = registered_redirect_uri
 
     @property
     @override
     def name(self) -> str:
         """Name of the implementation."""
         return DCR_CLIENT_NAME
+
+    @property
+    @override
+    def redirect_uri(self) -> str:
+        """Return the callback this client was registered with.
+
+        The authorization server rejects a callback that was not registered.
+        Reauth keeps using the stored callback when the external URL changes.
+        A client stored before the callback was recorded uses the current URL.
+        """
+        if self._registered_redirect_uri is not None:
+            return self._registered_redirect_uri
+        return super().redirect_uri
 
     @override
     async def _token_request(self, data: dict) -> dict:

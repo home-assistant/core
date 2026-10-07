@@ -456,6 +456,7 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             if auth_domain is None:
                 try:
                     registered = await async_register_dynamic_client(
+                        self.hass,
                         self.oauth_config.registration_endpoint,
                         redirect_uri,
                         token_endpoint_auth_methods=(

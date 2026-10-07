@@ -2220,10 +2220,10 @@ async def test_different_redirect_uri_registers_another_client(
             {CONF_URL: mcp_url},
         )
 
+    # Authorize uses the callback stored at registration, so each flow looks
+    # the current redirect up once.
     redirects = [
         OAUTH_CALLBACK_URL,
-        OAUTH_CALLBACK_URL,
-        "https://other.example/auth/external/callback",
         "https://other.example/auth/external/callback",
     ]
 
@@ -2258,14 +2258,14 @@ async def test_client_without_recorded_metadata_is_not_reused(
 ) -> None:
     """A client stored before callback and scopes were recorded is not reused."""
     assert await async_setup_component(hass, APPLICATION_CREDENTIALS_DOMAIN, {})
-    legacy = {
-        "authorize_url": OAUTH_AUTHORIZE_URL,
-        "client_id": "legacy-client",
-        "method": "client_secret_post",
-        "token_url": OAUTH_TOKEN_URL,
-        "v": 1,
-    }
-    encoded = json.dumps(legacy, separators=(",", ":"), sort_keys=True).encode().hex()
+    encoded = encode_registered_client_id(
+        RegisteredClientIdentity(
+            authorize_url=OAUTH_AUTHORIZE_URL,
+            token_url=OAUTH_TOKEN_URL,
+            client_id="legacy-client",
+            method="client_secret_post",
+        )
+    )
     await async_import_client_credential(
         hass,
         DOMAIN,
@@ -2432,8 +2432,10 @@ async def test_concurrent_flows_register_one_client(
             {"redirect_uris": "https://example.com/callback"},
             id="callback_not_a_list",
         ),
+        pytest.param({"redirect_uris": None}, id="callback_null"),
         pytest.param({"scope": "read"}, id="scope_too_narrow"),
         pytest.param({"scope": 1}, id="scope_not_a_string"),
+        pytest.param({"scope": None}, id="scope_null"),
     ],
 )
 @pytest.mark.usefixtures("current_request_with_host", "mock_setup_entry")
@@ -3024,6 +3026,81 @@ async def test_registered_client_identity_is_scoped_to_authorization_server(
     assert implementation_a.client_secret == "secret-a"
     assert implementation_b.client_id == client_id_b
     assert implementation_b.client_secret == "secret-b"
+
+
+async def test_manual_hex_client_id_is_not_decoded(
+    hass: HomeAssistant,
+) -> None:
+    """A manual client id that is hex-encoded JSON stays that client id."""
+    manual_payload = {
+        "authorize_url": OAUTH_AUTHORIZE_URL,
+        "client_id": "embedded-client",
+        "method": "client_secret_post",
+        "token_url": OAUTH_TOKEN_URL,
+        "v": 1,
+    }
+    manual_client_id = (
+        json.dumps(manual_payload, separators=(",", ":"), sort_keys=True).encode().hex()
+    )
+    assert decode_registered_client_id(manual_client_id) is None
+    with authorization_server_context(
+        AuthorizationServer(OAUTH_AUTHORIZE_URL, OAUTH_TOKEN_URL)
+    ):
+        implementation = await async_get_auth_implementation(
+            hass,
+            "manual-auth-domain",
+            ClientCredential(manual_client_id, "manual-secret"),
+        )
+    assert not isinstance(implementation, McpRegisteredOAuth2Implementation)
+    assert implementation.client_id == manual_client_id
+
+
+@pytest.mark.parametrize(
+    ("stored_redirect", "expected_redirect"),
+    [
+        pytest.param(
+            "https://old.example/auth/external/callback",
+            "https://old.example/auth/external/callback",
+            id="stored_callback",
+        ),
+        pytest.param(
+            None,
+            "https://current.example/auth/external/callback",
+            id="legacy_without_callback",
+        ),
+    ],
+)
+async def test_reauth_uses_registered_redirect_uri(
+    hass: HomeAssistant,
+    stored_redirect: str | None,
+    expected_redirect: str,
+) -> None:
+    """Reauth keeps the callback the client was registered with."""
+    encoded = encode_registered_client_id(
+        RegisteredClientIdentity(
+            authorize_url=OAUTH_AUTHORIZE_URL,
+            token_url=OAUTH_TOKEN_URL,
+            client_id=REGISTERED_CLIENT_ID,
+            method="client_secret_post",
+            redirect_uri=stored_redirect,
+        )
+    )
+    with (
+        authorization_server_context(
+            AuthorizationServer(OAUTH_AUTHORIZE_URL, OAUTH_TOKEN_URL)
+        ),
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.async_get_redirect_uri",
+            return_value="https://current.example/auth/external/callback",
+        ),
+    ):
+        implementation = await async_get_auth_implementation(
+            hass,
+            "auth-domain",
+            ClientCredential(encoded, REGISTERED_CLIENT_SECRET),
+        )
+        assert isinstance(implementation, McpRegisteredOAuth2Implementation)
+        assert implementation.redirect_uri == expected_redirect
 
 
 async def test_registered_client_is_hidden_from_other_authorization_server(
