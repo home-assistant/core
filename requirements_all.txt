@@ -1891,7 +1891,7 @@ panacotta==0.2
 panasonic-viera==0.4.6
 
 # homeassistant.components.papouch
-pap_spinel==0.1.3
+pap_spinel==0.1.4
 
 # homeassistant.components.dunehd
 pdunehd==1.3.3
