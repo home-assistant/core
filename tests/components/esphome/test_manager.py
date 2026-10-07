@@ -38,6 +38,7 @@ from aioesphomeapi import (
     UserService,
     UserServiceArg,
     UserServiceArgType,
+    VoiceAssistantFeature,
     ZWaveProxyRequest,
     ZWaveProxyRequestType,
     build_device_unique_id,
@@ -77,6 +78,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    Platform,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse
 from homeassistant.data_entry_flow import FlowResultType
@@ -1774,6 +1776,29 @@ async def test_state_subscription(
     hass.states.async_remove("binary_sensor.test")
     await hass.async_block_till_done()
     assert mock_client.send_home_assistant_state.mock_calls == []
+
+
+async def test_state_subscription_entity_added_later(
+    mock_client: APIClient,
+    hass: HomeAssistant,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test the state is sent once a subscribed entity is created."""
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+    )
+    await hass.async_block_till_done()
+    device.mock_home_assistant_state_subscription("cover.garage_door", None)
+    device.mock_home_assistant_state_subscription("cover.garage_door", "position")
+    await hass.async_block_till_done()
+    assert mock_client.send_home_assistant_state.mock_calls == []
+
+    hass.states.async_set("cover.garage_door", "closed", {"position": 0})
+    await hass.async_block_till_done()
+    assert mock_client.send_home_assistant_state.mock_calls == [
+        call("cover.garage_door", None, "closed"),
+        call("cover.garage_door", "position", "0"),
+    ]
 
 
 async def test_state_request(
@@ -4679,6 +4704,57 @@ async def test_bluetooth_proxy_waits_for_scanner_at_startup(
     async with asyncio.timeout(2):
         assert await setup_task is True
     assert entry.runtime_data.first_connect_done.is_set()
+
+
+@pytest.mark.usefixtures("mock_zeroconf")
+async def test_bluetooth_proxy_with_voice_assistant_awaits_forward(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    mock_client: APIClient,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test setup waits for the assist satellite platform of a bluetooth proxy."""
+    entry, device_info = _create_cached_bluetooth_proxy_entry(
+        hass, hass_storage, BluetoothProxyFeature.PASSIVE_SCAN
+    )
+    device_info = DeviceInfo(
+        **{
+            **device_info.to_dict(),
+            "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT,
+        }
+    )
+    connect_event = asyncio.Event()
+    reached_connect = asyncio.Event()
+
+    async def _block_until_released() -> tuple[DeviceInfo, list[Any], list[Any]]:
+        reached_connect.set()
+        await connect_event.wait()
+        return (device_info, [], [])
+
+    mock_client.device_info_and_list_entities = _block_until_released
+
+    async def _slow_satellite_setup(*args: Any) -> None:
+        """Take a moment to set up, like a real assist satellite."""
+        await asyncio.sleep(0.01)
+
+    # Connect only once setup is waiting for the scanner, like at startup
+    with patch(
+        "homeassistant.components.esphome.assist_satellite.async_setup_entry",
+        _slow_satellite_setup,
+    ):
+        setup_task = hass.async_create_task(
+            hass.config_entries.async_setup(entry.entry_id)
+        )
+        async with asyncio.timeout(2):
+            await reached_connect.wait()
+        connect_event.set()
+        async with asyncio.timeout(2):
+            assert await setup_task is True
+            # The connection runs outside of the tasks Home Assistant tracks
+            while Platform.ASSIST_SATELLITE not in entry.runtime_data.loaded_platforms:
+                await asyncio.sleep(0.01)
+
+    assert "without awaiting async_forward_entry_setups" not in caplog.text
 
 
 @pytest.mark.usefixtures("mock_zeroconf")

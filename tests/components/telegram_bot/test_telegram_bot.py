@@ -154,7 +154,7 @@ async def test_polling_platform_init_failed_does_not_log_token(
     api_key = mock_polling_config_entry.data[CONF_API_KEY]
     # The Telegram API URL embeds the bot token, and library errors quote it.
     error = NetworkError(
-        "httpx.HTTPStatusError: Client error '401 Unauthorized' for url "
+        "httpx2.HTTPStatusError: Client error '401 Unauthorized' for url "
         f"'https://api.telegram.org/bot{api_key}/getMe'"
     )
 
@@ -1613,7 +1613,7 @@ async def test_send_video(
 
     with (
         patch(
-            "homeassistant.components.telegram_bot.bot.httpx.AsyncClient.get"
+            "homeassistant.components.telegram_bot.bot.httpx2.AsyncClient.get"
         ) as mock_get,
         patch("homeassistant.components.telegram_bot.bot._RETRY_DELAY", 0),
     ):
@@ -1728,7 +1728,7 @@ async def test_send_video(
     # test: success with url
 
     with patch(
-        "homeassistant.components.telegram_bot.bot.httpx.AsyncClient.get"
+        "homeassistant.components.telegram_bot.bot.httpx2.AsyncClient.get"
     ) as mock_get:
         mock_get.return_value = AsyncMock(status_code=200, content=b"mock content")
 
@@ -2687,7 +2687,7 @@ async def test_send_media_group(
     await hass.async_block_till_done()
 
     with patch(
-        "homeassistant.components.telegram_bot.bot.httpx.AsyncClient.get"
+        "homeassistant.components.telegram_bot.bot.httpx2.AsyncClient.get"
     ) as mock_get:
         mock_get.return_value = AsyncMock(status_code=200, content=b"mock content")
 
@@ -2731,6 +2731,61 @@ async def test_send_media_group(
             }
         ]
     }
+
+
+async def test_send_media_group_caption_parse_mode(
+    hass: HomeAssistant,
+    mock_broadcast_config_entry: MockConfigEntry,
+    mock_external_calls: None,
+) -> None:
+    """Test the parse mode applies to the captions of the media items."""
+    mock_broadcast_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    with (
+        patch(
+            "homeassistant.components.telegram_bot.bot.httpx2.AsyncClient.get"
+        ) as mock_get,
+        patch(
+            "homeassistant.components.telegram_bot.bot.Bot.send_media_group",
+            AsyncMock(
+                return_value=[
+                    Message(
+                        message_id=12345,
+                        date=dt_util.utcnow(),
+                        chat=Chat(id=123456, type=ChatType.PRIVATE),
+                    )
+                ]
+            ),
+        ) as mock_send_media_group,
+    ):
+        mock_get.return_value = AsyncMock(status_code=200, content=b"mock content")
+
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SEND_MEDIA_GROUP,
+            {
+                ATTR_PARSER: PARSER_MD,
+                ATTR_MEDIA: [
+                    {
+                        ATTR_MEDIA_TYPE: InputMediaType.PHOTO,
+                        ATTR_URL: "https://mock/photo.jpg",
+                        ATTR_CAPTION: "*bold*",
+                    },
+                    {
+                        ATTR_MEDIA_TYPE: InputMediaType.PHOTO,
+                        ATTR_URL: "https://mock/photo2.jpg",
+                    },
+                ],
+            },
+            blocking=True,
+            return_response=True,
+        )
+
+    media = mock_send_media_group.call_args.kwargs[ATTR_MEDIA]
+    assert media[0].caption == "*bold*"
+    assert media[0].parse_mode == PARSER_MD
 
 
 @pytest.mark.parametrize(

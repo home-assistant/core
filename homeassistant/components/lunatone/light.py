@@ -41,7 +41,7 @@ async def async_setup_entry(
     """Set up the Lunatone Light platform."""
     coordinator_info = config_entry.runtime_data.coordinator_info
     coordinator_devices = config_entry.runtime_data.coordinator_devices
-    dali_line_broadcasts = config_entry.runtime_data.dali_line_broadcasts
+    auth_api = coordinator_info.info_api.auth
 
     assert config_entry.unique_id is not None
 
@@ -49,10 +49,10 @@ async def async_setup_entry(
         LunatoneLineBroadcastLight(
             coordinator_devices,
             coordinator_info,
-            dali_line_broadcast,
+            DALIBroadcast(auth_api, int(line_id)),
             config_entry.unique_id,
         )
-        for dali_line_broadcast in dali_line_broadcasts
+        for line_id in coordinator_info.data.lines
     ]
     entities.extend(
         LunatoneLight(coordinator_devices, line_id, device_id, config_entry.unique_id)
