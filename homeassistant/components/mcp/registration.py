@@ -315,7 +315,12 @@ def _parse_registration_response(
         info = OAuthClientInformationFull.model_validate(payload)
     except ValidationError as err:
         # Some servers return a client id without the rest of the metadata.
-        _LOGGER.debug("Registration response was only partially valid: %s", err)
+        # Log locations and types only. The error string includes input values,
+        # and a missing field's input is the whole response.
+        _LOGGER.debug(
+            "Registration response was only partially valid: %s",
+            _validation_error_summary(err),
+        )
         return RegisteredClient(client_id, client_secret, method)
 
     if not info.client_id:
@@ -361,6 +366,19 @@ def _issued_auth_method(
         return TOKEN_ENDPOINT_AUTH_BASIC
     raise ClientRegistrationError(
         "Registration response token_endpoint_auth_method is not supported"
+    )
+
+
+def _validation_error_summary(err: ValidationError) -> str:
+    """Return field locations and error types, without input values."""
+    details = err.errors(
+        include_input=False,
+        include_url=False,
+        include_context=False,
+    )
+    return "; ".join(
+        f"{'.'.join(str(part) for part in detail['loc'])}: {detail['type']}"
+        for detail in details
     )
 
 

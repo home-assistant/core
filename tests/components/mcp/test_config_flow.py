@@ -3,6 +3,7 @@
 import asyncio
 from collections.abc import Callable
 import json
+import logging
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -2477,6 +2478,59 @@ async def test_registration_response_metadata_must_match_request(
     assert result["reason"] == "oauth_registration_failed"
     stored = hass.data[APPLICATION_CREDENTIALS_DOMAIN].async_client_credentials(DOMAIN)
     assert stored == {}
+
+
+@pytest.mark.usefixtures("current_request_with_host", "mock_setup_entry")
+@respx.mock
+async def test_partial_registration_response_does_not_log_secrets(
+    hass: HomeAssistant,
+    mock_mcp_client: Mock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """A partial registration response does not log issued secrets."""
+    client_secret = "issued-client-secret"
+    registration_access_token = "issued-registration-access-token"
+    respx.post(f"{MCP_SERVER_BASE_URL}/register").mock(
+        return_value=httpx2.Response(
+            201,
+            json={
+                "client_id": REGISTERED_CLIENT_ID,
+                "client_secret": client_secret,
+                "registration_access_token": registration_access_token,
+                "token_endpoint_auth_method": "client_secret_post",
+                # Invalid URLs force the partial-response path. Their values are
+                # the secrets, which the default validation error would print.
+                "client_uri": client_secret,
+                "logo_uri": registration_access_token,
+            },
+        )
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    mock_mcp_client.side_effect = httpx2.HTTPStatusError(
+        "Authentication required", request=None, response=httpx2.Response(401)
+    )
+    respx.get(OAUTH_DISCOVERY_ENDPOINT).mock(
+        return_value=_authorization_server_metadata(
+            registration_endpoint="/register",
+            auth_methods=["client_secret_post"],
+        )
+    )
+
+    with caplog.at_level(
+        logging.DEBUG, logger="homeassistant.components.mcp.registration"
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_URL: MCP_SERVER_URL},
+        )
+
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+    assert "client_uri: url_parsing" in caplog.text
+    assert "logo_uri: url_parsing" in caplog.text
+    assert client_secret not in caplog.text
+    assert registration_access_token not in caplog.text
 
 
 @pytest.mark.parametrize(
