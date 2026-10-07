@@ -2,15 +2,17 @@
 
 import json
 from pathlib import Path
-from unittest.mock import Mock
+from unittest.mock import AsyncMock, Mock
 
 from freebox_api.exceptions import AuthorizationError, HttpRequestError
 import pytest
 
 from homeassistant.components.freebox.const import STORAGE_KEY, STORAGE_VERSION
 from homeassistant.components.freebox.router import (
+    FreeboxRouter,
     async_forget_registration,
     get_hosts_list_if_supported,
+    is_home_unsupported_error,
     is_invalid_token_error,
     is_json,
 )
@@ -130,6 +132,84 @@ async def test_get_hosts_list_if_supported_bridge_error(
 def test_is_invalid_token_error(error: AuthorizationError, expected: bool) -> None:
     """Only a genuine invalid_token APIResponse must be treated as such."""
     assert is_invalid_token_error(error) is expected
+
+
+@pytest.mark.parametrize(
+    ("response", "expected"),
+    [
+        (
+            '{"success": false, "error_code": "invalid_request", '
+            '"msg": "Requête invalide (404)"}',
+            True,
+        ),
+        (
+            '{"success": false, "error_code": "invalid_request", "msg": "Other error"}',
+            False,
+        ),
+        (
+            '{"success": false, "error_code": "access_denied"}',
+            False,
+        ),
+        (
+            '{"success": false, "error_code": "invalid_request", '
+            '"msg": "Invalid request (404)"}',
+            True,
+        ),
+        (
+            '{"success": false, "error_code": "invalid_request", '
+            '"msg": "Invalid request: cannot parse json"}',
+            False,
+        ),
+        ("not valid JSON", False),
+    ],
+)
+def test_is_home_unsupported_error(response: str, expected: bool) -> None:
+    """Test detection of an unavailable Freebox Home endpoint."""
+    error = HttpRequestError(f"Request failed (APIResponse: {response})")
+    assert is_home_unsupported_error(error) is expected
+
+
+async def test_update_home_devices_unavailable(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """An unavailable Home endpoint disables Home without a warning."""
+    router = Mock(spec=FreeboxRouter)
+    router.home_granted = True
+    router.home = Mock()
+    router.home.get_home_nodes = AsyncMock(
+        side_effect=HttpRequestError(
+            'Request failed (APIResponse: {"success": false, '
+            '"error_code": "invalid_request", '
+            '"msg": "Requête invalide (404)"})'
+        )
+    )
+
+    await FreeboxRouter.update_home_devices(router)
+
+    assert router.home_granted is False
+    router.home.get_home_nodes.assert_awaited_once()
+    assert "Freebox Home API request failed" not in caplog.text
+
+
+async def test_update_home_devices_other_http_error(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Other Home API errors disable Home and log a warning."""
+    router = Mock(spec=FreeboxRouter)
+    router.home_granted = True
+    router.home = Mock()
+    router.home.get_home_nodes = AsyncMock(
+        side_effect=HttpRequestError(
+            'Request failed (APIResponse: {"success": false, '
+            '"error_code": "access_denied"})'
+        )
+    )
+
+    await FreeboxRouter.update_home_devices(router)
+
+    assert router.home_granted is False
+    router.home.get_home_nodes.assert_awaited_once()
+    assert "Freebox Home API request failed" in caplog.text
 
 
 async def test_async_forget_registration(hass: HomeAssistant) -> None:
