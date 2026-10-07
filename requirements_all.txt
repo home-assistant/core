@@ -466,7 +466,7 @@ aiotedee==0.3.0
 aiothreema==0.1.0
 
 # homeassistant.components.tractive
-aiotractive==1.1.0
+aiotractive==1.1.1
 
 # homeassistant.components.unifi
 aiounifi==97
