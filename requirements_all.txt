@@ -3551,7 +3551,7 @@ zhong-hong-hvac==1.0.21
 ziggo-mediabox-xl==1.1.0
 
 # homeassistant.components.zinvolt
-zinvolt==1.0.0
+zinvolt==1.0.1
 
 # homeassistant.components.zoneminder
 zm-py==0.5.4
