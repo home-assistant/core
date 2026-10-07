@@ -114,10 +114,23 @@ async def async_setup_devices(bridge: HueBridge):
             # updates to existing device will also be handled by this call
             add_device(hue_resource)
 
+    def registration_order(hue_device: Device) -> tuple[bool, bool]:
+        """Sort the bridge first, then devices already in the registry.
+
+        A new device claiming a MAC that a known device holds would be merged
+        into that device by the registry.
+        """
+        is_bridge = hue_device.id == api.config.bridge_device.id
+        is_known = (
+            dev_reg.async_get_device_by_identifier(
+                (DOMAIN, hue_device.id), entry.entry_id
+            )
+            is not None
+        )
+        return (not is_bridge, not is_known)
+
     # create/update all current devices found in controllers
-    # sort the devices to ensure bridges are added first
-    hue_devices = list(dev_controller)
-    hue_devices.sort(key=lambda dev: dev.id != api.config.bridge_device.id)
+    hue_devices = sorted(dev_controller, key=registration_order)
     known_devices = [add_device(hue_device) for hue_device in hue_devices]
     known_devices += [add_device(hue_room) for hue_room in api.groups.room]
     known_devices += [add_device(hue_zone) for hue_zone in api.groups.zone]

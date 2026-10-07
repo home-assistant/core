@@ -156,10 +156,21 @@ SHARED_MAC = "00:17:88:01:09:aa:bb:65"
 
 
 @pytest.mark.parametrize(
-    "registered_before",
+    ("registered_before", "mac_owner_id", "other_device_id"),
     [
-        pytest.param(False, id="fresh_install"),
-        pytest.param(True, id="devices_already_registered"),
+        pytest.param({}, SHARED_MAC_DEVICE_ID, SECOND_DEVICE_ID, id="fresh_install"),
+        pytest.param(
+            {SHARED_MAC_DEVICE_ID: False, SECOND_DEVICE_ID: False},
+            SHARED_MAC_DEVICE_ID,
+            SECOND_DEVICE_ID,
+            id="devices_already_registered",
+        ),
+        pytest.param(
+            {SECOND_DEVICE_ID: True},
+            SECOND_DEVICE_ID,
+            SHARED_MAC_DEVICE_ID,
+            id="new_device_listed_before_registered_mac_holder",
+        ),
     ],
 )
 async def test_devices_sharing_a_mac_v2(
@@ -167,7 +178,9 @@ async def test_devices_sharing_a_mac_v2(
     mock_bridge_v2: Mock,
     v2_resources_test_data: JsonArrayType,
     device_registry: dr.DeviceRegistry,
-    registered_before: bool,
+    registered_before: dict[str, bool],
+    mac_owner_id: str,
+    other_device_id: str,
 ) -> None:
     """Test setting up Hue devices that share one Zigbee MAC.
 
@@ -192,26 +205,28 @@ async def test_devices_sharing_a_mac_v2(
     config_entry = create_config_entry(api_version=2)
     config_entry.add_to_hass(hass)
     mock_bridge_v2.config_entry = config_entry
-    if registered_before:
-        for hue_device_id in (SHARED_MAC_DEVICE_ID, SECOND_DEVICE_ID):
-            device_registry.async_get_or_create(
-                config_entry_id=config_entry.entry_id,
-                identifiers={(DOMAIN, hue_device_id)},
-            )
+    for hue_device_id, holds_mac in registered_before.items():
+        device_registry.async_get_or_create(
+            config_entry_id=config_entry.entry_id,
+            identifiers={(DOMAIN, hue_device_id)},
+            connections={(dr.CONNECTION_NETWORK_MAC, SHARED_MAC)}
+            if holds_mac
+            else set(),
+        )
 
     await async_setup_devices(mock_bridge_v2)
 
-    first_device = device_registry.async_get_device_by_identifier(
-        (DOMAIN, SHARED_MAC_DEVICE_ID), config_entry.entry_id
+    mac_owner = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mac_owner_id), config_entry.entry_id
     )
-    second_device = device_registry.async_get_device_by_identifier(
-        (DOMAIN, SECOND_DEVICE_ID), config_entry.entry_id
+    other_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, other_device_id), config_entry.entry_id
     )
-    assert first_device is not None
-    assert second_device is not None
-    assert first_device.id != second_device.id
-    assert first_device.connections == {(dr.CONNECTION_NETWORK_MAC, SHARED_MAC)}
-    assert second_device.connections == set()
+    assert mac_owner is not None
+    assert other_device is not None
+    assert mac_owner.id != other_device.id
+    assert mac_owner.connections == {(dr.CONNECTION_NETWORK_MAC, SHARED_MAC)}
+    assert other_device.connections == set()
 
 
 async def test_device_sharing_a_mac_added_v2(
