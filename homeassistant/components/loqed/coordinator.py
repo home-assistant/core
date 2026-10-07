@@ -3,7 +3,7 @@
 import asyncio
 from http import HTTPStatus
 import logging
-from typing import TypedDict, override
+from typing import Any, TypedDict, override
 
 import aiohttp
 from aiohttp.web import Request, Response
@@ -72,6 +72,19 @@ class StatusMessage(TypedDict):
     ble_strength: int
 
 
+def _lock_connected(message: dict[str, Any]) -> bool | None:
+    """Return the lock connection a signal or battery message reports, if any.
+
+    The bridge reports -1 for the Bluetooth strength and the battery level while the
+    lock is disconnected.
+    """
+    if "ble_strength" in message:
+        return message["ble_strength"] != -1
+    if "battery_percentage" in message:
+        return message["battery_percentage"] != -1
+    return None
+
+
 class LoqedDataCoordinator(DataUpdateCoordinator[StatusMessage]):
     """Data update coordinator for the loqed platform."""
 
@@ -89,12 +102,17 @@ class LoqedDataCoordinator(DataUpdateCoordinator[StatusMessage]):
         self._api = api
         self.lock = lock
         self.device_name = config_entry.data[CONF_NAME]
+        self._lock_offline = False
 
     @override
     async def _async_update_data(self) -> StatusMessage:
         """Fetch data from API endpoint."""
         async with asyncio.timeout(10):
-            return await self._api.async_get_lock_details()
+            data = await self._api.async_get_lock_details()
+        # Webhooks also call the listeners, so the bolt state is applied here only.
+        await self.lock.updateState(data["bolt_state"])
+        self._lock_offline = not data["lock_online"]
+        return data
 
     async def _handle_webhook(
         self, hass: HomeAssistant, webhook_id: str, request: Request
@@ -114,6 +132,17 @@ class LoqedDataCoordinator(DataUpdateCoordinator[StatusMessage]):
         if "error" in event_data:
             _LOGGER.warning("Incorrect callback received:: %s", event_data)
             return None
+
+        # Lock events are not sent while the lock is disconnected from the bridge,
+        # so the status is read once when it reconnects.
+        if "event_type" in event_data:
+            self._lock_offline = False
+        elif (connected := _lock_connected(event_data)) is False:
+            self._lock_offline = True
+        elif connected and self._lock_offline:
+            # A successful read clears the flag; a failed one is retried on the next
+            # message.
+            await self.async_request_refresh()
 
         self.async_update_listeners()
         return None
