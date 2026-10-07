@@ -57,36 +57,32 @@ class StateDemoLawnMower(LawnMowerEntity):
         )
         self._attr_activity = LawnMowerActivity.DOCKED
 
-    @property
-    @override
-    def activity(self) -> LawnMowerActivity | None:
-        """Return the current activity of the lawn mower."""
-        return self._attr_activity
-
     @override
     async def async_start_mowing(self) -> None:
         """Start or resume mowing."""
         self._attr_activity = LawnMowerActivity.MOWING
-        await self.async_update_ha_state()
+        self.async_write_ha_state()
 
     @override
     async def async_dock(self) -> None:
         """Dock the mower."""
         self._attr_activity = LawnMowerActivity.RETURNING
-        await self.async_update_ha_state()
-        event.async_call_later(self.hass, 5, self.__set_state_to_dock)
+        self.async_write_ha_state()
+        self.async_on_remove(
+            event.async_call_later(self.hass, 5, self.__set_state_to_dock)
+        )
 
     @override
     async def async_pause(self) -> None:
         """Pause the lawn mower."""
         self._attr_activity = LawnMowerActivity.PAUSED
-        await self.async_update_ha_state()
+        self.async_write_ha_state()
 
     @override
     async def async_stop(self) -> None:
         """Stop the lawn mower."""
         self._attr_activity = LawnMowerActivity.IDLE
-        await self.async_update_ha_state()
+        self.async_write_ha_state()
 
     def __set_state_to_dock(self, _: datetime) -> None:
         """Called later to set the state to docked."""
