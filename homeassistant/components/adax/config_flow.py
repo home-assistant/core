@@ -128,7 +128,7 @@ class AdaxConfigFlow(ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def async_step_local_manual(
+async def async_step_local_manual(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the local manual step."""
@@ -147,16 +147,19 @@ class AdaxConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
         if user_input is not None:
+            unique_id: str | None = None
             try:
                 formatted_mac = format_mac(user_input[CONF_MAC])
                 mac_parts = formatted_mac.split(":")
                 if len(mac_parts) != 6 or any(len(part) != 2 for part in mac_parts):
                     errors[CONF_MAC] = "invalid_mac"
-                clean_mac = "".join(mac_parts)
-                unique_id = str(int(clean_mac, 16))
+                else:
+                    clean_mac = "".join(mac_parts)
+                    unique_id = str(int(clean_mac, 16))
             except ValueError:
                 errors[CONF_MAC] = "invalid_mac"
-            else:
+
+            if not errors and unique_id is not None:
                 await self.async_set_unique_id(unique_id)
                 self._abort_if_unique_id_configured()
 
