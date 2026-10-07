@@ -1,6 +1,7 @@
 """Support for Envisalink devices."""
 
 import asyncio
+from dataclasses import dataclass
 import logging
 
 import probatio
@@ -18,43 +19,41 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util.hass_dict import HassKey
+
+from .const import (
+    ATTR_CUSTOM_FUNCTION,
+    ATTR_PARTITION,
+    CONF_EVL_KEEPALIVE,
+    CONF_EVL_PORT,
+    CONF_EVL_VERSION,
+    CONF_PANEL_TYPE,
+    CONF_PANIC,
+    CONF_PARTITIONNAME,
+    CONF_PARTITIONS,
+    CONF_PASS,
+    CONF_USERNAME,
+    CONF_ZONEDUMP_INTERVAL,
+    CONF_ZONENAME,
+    CONF_ZONES,
+    CONF_ZONETYPE,
+    DATA_EVL,
+    DEFAULT_EVL_VERSION,
+    DEFAULT_KEEPALIVE,
+    DEFAULT_PANIC,
+    DEFAULT_PORT,
+    DEFAULT_TIMEOUT,
+    DEFAULT_ZONEDUMP_INTERVAL,
+    DEFAULT_ZONETYPE,
+    DOMAIN,
+    PANEL_TYPE_DSC,
+    PANEL_TYPE_HONEYWELL,
+    SERVICE_CUSTOM_FUNCTION,
+    SIGNAL_KEYPAD_UPDATE,
+    SIGNAL_PARTITION_UPDATE,
+    SIGNAL_ZONE_UPDATE,
+)
 
 _LOGGER = logging.getLogger(__name__)
-
-DOMAIN = "envisalink"
-
-DATA_EVL: HassKey[EnvisalinkAlarmPanel] = HassKey(DOMAIN)
-
-CONF_EVL_KEEPALIVE = "keepalive_interval"
-CONF_EVL_PORT = "port"
-CONF_EVL_VERSION = "evl_version"
-CONF_PANEL_TYPE = "panel_type"
-CONF_PANIC = "panic_type"
-CONF_PARTITIONNAME = "name"
-CONF_PARTITIONS = "partitions"
-CONF_PASS = "password"
-CONF_USERNAME = "user_name"
-CONF_ZONEDUMP_INTERVAL = "zonedump_interval"
-CONF_ZONENAME = "name"
-CONF_ZONES = "zones"
-CONF_ZONETYPE = "type"
-
-PANEL_TYPE_HONEYWELL = "HONEYWELL"
-PANEL_TYPE_DSC = "DSC"
-
-DEFAULT_PORT = 4025
-DEFAULT_EVL_VERSION = 3
-DEFAULT_KEEPALIVE = 60
-DEFAULT_ZONEDUMP_INTERVAL = 30
-DEFAULT_ZONETYPE = "opening"
-DEFAULT_PANIC = "Police"
-DEFAULT_TIMEOUT = 10
-
-SIGNAL_ZONE_UPDATE = "envisalink.zones_updated"
-SIGNAL_PARTITION_UPDATE = "envisalink.partition_updated"
-SIGNAL_KEYPAD_UPDATE = "envisalink.keypad_updated"
-SIGNAL_ZONE_BYPASS_UPDATE = "envisalink.zone_bypass_updated"
 
 ZONE_SCHEMA = probatio.Schema(
     {
@@ -100,16 +99,20 @@ CONFIG_SCHEMA = probatio.Schema(
     extra=probatio.ALLOW_EXTRA,
 )
 
-SERVICE_CUSTOM_FUNCTION = "invoke_custom_function"
-ATTR_CUSTOM_FUNCTION = "pgm"
-ATTR_PARTITION = "partition"
-
 SERVICE_SCHEMA = probatio.Schema(
     {
         probatio.Required(ATTR_CUSTOM_FUNCTION): cv.string,
         probatio.Required(ATTR_PARTITION): cv.string,
     }
 )
+
+
+@dataclass
+class EnvisalinkData:
+    """Runtime data for the Envisalink integration."""
+
+    controller: EnvisalinkAlarmPanel
+    code: str | None
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -144,7 +147,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         connection_timeout,
         False,
     )
-    hass.data[DATA_EVL] = controller
+    hass.data[DATA_EVL] = EnvisalinkData(controller, code)
 
     @callback
     def async_login_fail_callback(data):
