@@ -28,7 +28,7 @@ dependencies = [
   # module level in `bootstrap.py` and its requirements thus need to be in
   # requirements.txt to ensure they are always installed
   "aiogithubapi==26.0.0",
-  "aiohttp==3.14.3",
+  "aiohttp==3.14.4",
   "aiohttp_cors==0.8.1",
   "aiohttp-fast-zlib==0.3.0",
   "aiohttp-asyncmdnsresolver==0.2.0",
@@ -48,9 +48,9 @@ dependencies = [
   # hass-nabucasa is imported by helpers which don't depend on the cloud
   # integration
   "hass-nabucasa==2.7.0",
-  # When bumping httpx, please check the version pins of
-  # httpcore, anyio, and h11 in gen_requirements_all
-  "httpx==0.28.1",
+  # When bumping httpx2, please check the version pins of
+  # anyio and h11 in gen_requirements_all
+  "httpx2==2.13.1",
   "home-assistant-bluetooth==2.0.0",
   "ifaddr==0.2.0",
   "Jinja2==3.1.6",
@@ -74,10 +74,12 @@ dependencies = [
   "SQLAlchemy==2.0.54",
   "standard-aifc==3.13.0",
   "standard-telnetlib==3.13.0",
+  # truststore.SSLContext is replaced in homeassistant/__init__.py
+  "truststore==0.10.4",
   "typing-extensions>=4.16.0,<5.0",
   "ulid-transform==2.2.9",
   "urllib3>=2.0",
-  "uv==0.12.20",
+  "uv==0.12.23",
   "probatio==0.13.0",
   "yarl==1.25.1",
   "webrtc-models==0.3.0",
@@ -447,6 +449,9 @@ override-dependencies = ["rich>=13.8.1"]
 
 [tool.pytest.ini_options]
 pythonpath = ["pylint/plugins"]
+# The respx plugin imports httpx before tests/__init__.py can alias it to
+# httpx2 (see homeassistant/__init__.py). Tests use respx directly instead.
+addopts = "-p no:respx"
 testpaths = ["tests"]
 norecursedirs = [".git", "testing_config"]
 log_format = "%(asctime)s.%(msecs)03d %(levelname)-8s %(threadName)s %(name)s:%(filename)s:%(lineno)s %(message)s"
@@ -864,6 +869,8 @@ mark-parentheses = false
 "pytz".msg = "use zoneinfo instead"
 "tests".msg = "You should not import tests"
 "voluptuous".msg = "use probatio instead"
+"httpx".msg = "use httpx2 instead"
+"httpcore".msg = "use httpcore2 instead"
 "homeassistant.helpers.config_validation.ensure_list".msg = "use probatio.EnsureList() instead"
 "homeassistant.helpers.config_validation.port".msg = "use probatio.Port() instead"
 "homeassistant.helpers.config_validation.has_at_least_one_key".msg = "use probatio.AtLeastOne instead"

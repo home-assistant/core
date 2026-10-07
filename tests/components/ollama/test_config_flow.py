@@ -3,7 +3,7 @@
 import asyncio
 from unittest.mock import ANY, AsyncMock, patch
 
-from httpx import HTTPError
+from httpx2 import HTTPError
 from ollama import ResponseError
 import pytest
 

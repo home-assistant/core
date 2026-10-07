@@ -27,6 +27,7 @@ def mock_config_entry() -> MockConfigEntry:
         entry_id="test_entry_id",
         unique_id="000000001",
         version=2,
+        minor_version=2,
     )
 
 

@@ -94,6 +94,15 @@ class RadioFrequencyTransmitterConsumerEntity(Entity):
     _rf_transmitter_entity_id_or_uuid: str
     _rf_unsubscribes: list[CALLBACK_TYPE]
 
+    @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Opt in to in-place entity_id changes.
+
+        This can be removed in Home Assistant Core 2027.11.
+        """
+        super().async_entity_id_changed(old_entity_id)
+
     @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to RF entity state and rename events."""

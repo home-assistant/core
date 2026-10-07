@@ -132,6 +132,7 @@ SUPPORT_DRY_MODE_DEVICES: set[tuple[int, int]] = {
     (0x1209, 0x8028),
     (0x1209, 0x8029),
     (0x138C, 0x0101),
+    (0x138C, 0x3601),
 }
 
 SUPPORT_FAN_MODE_DEVICES: set[tuple[int, int]] = {
@@ -174,6 +175,7 @@ SUPPORT_FAN_MODE_DEVICES: set[tuple[int, int]] = {
     (0x1209, 0x8029),
     (0x131A, 0x1000),
     (0x138C, 0x0101),
+    (0x138C, 0x3601),
 }
 
 SystemModeEnum = clusters.Thermostat.Enums.SystemModeEnum
@@ -210,7 +212,7 @@ class MatterClimateEntityDescription(ClimateEntityDescription, MatterEntityDescr
 class MatterClimate(MatterEntity, ClimateEntity):
     """Representation of a Matter climate entity."""
 
-    _attr_temperature_unit: str = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit: str = UnitOfTemperature.CELSIUS
     _attr_hvac_mode: HVACMode = HVACMode.OFF
     _matter_presets: list[clusters.Thermostat.Structs.PresetStruct]
     _attr_preset_mode: str | None = None
@@ -244,7 +246,7 @@ class MatterClimate(MatterEntity, ClimateEntity):
 
         if target_temperature is not None:
             # single setpoint control
-            if self.target_temperature != target_temperature:
+            if self.native_target_temperature != target_temperature:
                 if current_mode == HVACMode.COOL:
                     matter_attribute = (
                         clusters.Thermostat.Attributes.OccupiedCoolingSetpoint
@@ -261,7 +263,7 @@ class MatterClimate(MatterEntity, ClimateEntity):
 
         if target_temperature_low is not None:
             # multi setpoint control - low setpoint (heat)
-            if self.target_temperature_low != target_temperature_low:
+            if self.native_target_temperature_low != target_temperature_low:
                 await self.write_attribute(
                     value=round(target_temperature_low * TEMPERATURE_SCALING_FACTOR),
                     matter_attribute=clusters.Thermostat.Attributes.OccupiedHeatingSetpoint,
@@ -269,7 +271,7 @@ class MatterClimate(MatterEntity, ClimateEntity):
 
         if target_temperature_high is not None:
             # multi setpoint control - high setpoint (cool)
-            if self.target_temperature_high != target_temperature_high:
+            if self.native_target_temperature_high != target_temperature_high:
                 await self.write_attribute(
                     value=round(target_temperature_high * TEMPERATURE_SCALING_FACTOR),
                     matter_attribute=clusters.Thermostat.Attributes.OccupiedCoolingSetpoint,
@@ -331,7 +333,7 @@ class MatterClimate(MatterEntity, ClimateEntity):
         """Update from device."""
         self._calculate_features()
 
-        self._attr_current_temperature = self._get_temperature_in_degrees(
+        self._attr_native_current_temperature = self._get_temperature_in_degrees(
             clusters.Thermostat.Attributes.LocalTemperature
         )
         self._attr_current_humidity = (
@@ -483,23 +485,25 @@ class MatterClimate(MatterEntity, ClimateEntity):
             & ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
         )
         if supports_range and self._attr_hvac_mode == HVACMode.HEAT_COOL:
-            self._attr_target_temperature = None
-            self._attr_target_temperature_high = self._get_temperature_in_degrees(
-                clusters.Thermostat.Attributes.OccupiedCoolingSetpoint
+            self._attr_native_target_temperature = None
+            self._attr_native_target_temperature_high = (
+                self._get_temperature_in_degrees(
+                    clusters.Thermostat.Attributes.OccupiedCoolingSetpoint
+                )
             )
-            self._attr_target_temperature_low = self._get_temperature_in_degrees(
+            self._attr_native_target_temperature_low = self._get_temperature_in_degrees(
                 clusters.Thermostat.Attributes.OccupiedHeatingSetpoint
             )
         else:
-            self._attr_target_temperature_high = None
-            self._attr_target_temperature_low = None
+            self._attr_native_target_temperature_high = None
+            self._attr_native_target_temperature_low = None
             # update target_temperature
             if self._attr_hvac_mode == HVACMode.COOL:
-                self._attr_target_temperature = self._get_temperature_in_degrees(
+                self._attr_native_target_temperature = self._get_temperature_in_degrees(
                     clusters.Thermostat.Attributes.OccupiedCoolingSetpoint
                 )
             else:
-                self._attr_target_temperature = self._get_temperature_in_degrees(
+                self._attr_native_target_temperature = self._get_temperature_in_degrees(
                     clusters.Thermostat.Attributes.OccupiedHeatingSetpoint
                 )
 

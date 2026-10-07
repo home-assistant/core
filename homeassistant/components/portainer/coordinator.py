@@ -768,9 +768,15 @@ class PortainerCoordinator(
         ):
             return
 
+        if (new_state := CONTAINER_STATE_ACTIONS.get(event.action)) is not None:
+            container_data.container = dataclasses.replace(
+                container_data.container, state=new_state
+            )
+
         updated_containers = dict(endpoint_data.containers)
         updated_containers[container_name] = dataclasses.replace(
             container_data,
+            container=container_data.container,
             last_docker_event=ContainerDockerEvent(
                 action=(
                     f"health_status_{event.action.rsplit(': ', 1)[-1]}"
