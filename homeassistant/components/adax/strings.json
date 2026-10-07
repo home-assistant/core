@@ -27,7 +27,6 @@
       },
       "local_manual": {
         "data": {
-          "name": "Name",
           "ip_address": "IP Address",
           "mac": "MAC Address",
           "token": "Auth Token"

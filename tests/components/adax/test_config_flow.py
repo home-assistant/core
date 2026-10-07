@@ -18,7 +18,6 @@ from homeassistant.components.adax.const import (
 from homeassistant.const import (
     CONF_IP_ADDRESS,
     CONF_MAC,
-    CONF_NAME,
     CONF_PASSWORD,
     CONF_TOKEN,
     CONF_UNIQUE_ID,
@@ -414,7 +413,6 @@ async def test_form_local_manual_success(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                CONF_NAME: "Living Room Heater",
                 CONF_IP_ADDRESS: "192.168.1.150",
                 CONF_MAC: "AA:BB:CC:DD:EE:FF",
                 CONF_TOKEN: "abcdef123456",
@@ -423,7 +421,7 @@ async def test_form_local_manual_success(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Living Room Heater"
+    assert result["title"] == expected_unique_id
     assert result["data"] == {
         CONF_IP_ADDRESS: "192.168.1.150",
         CONF_TOKEN: "abcdef123456",
@@ -447,7 +445,6 @@ async def test_form_local_manual_invalid_mac(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_NAME: "Living Room Heater",
             CONF_IP_ADDRESS: "192.168.1.150",
             CONF_MAC: "not-a-mac",
             CONF_TOKEN: "abcdef123456",
@@ -475,7 +472,6 @@ async def test_form_local_manual_cannot_connect(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                CONF_NAME: "Living Room Heater",
                 CONF_IP_ADDRESS: "192.168.1.150",
                 CONF_MAC: "AA:BB:CC:DD:EE:FF",
                 CONF_TOKEN: "wrong_token",
@@ -514,7 +510,6 @@ async def test_form_local_manual_already_configured(hass: HomeAssistant) -> None
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_NAME: "Living Room Heater",
             CONF_IP_ADDRESS: "192.168.1.150",
             CONF_MAC: mac,
             CONF_TOKEN: "abcdef123456",

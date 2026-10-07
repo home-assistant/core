@@ -13,7 +13,6 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_IP_ADDRESS,
     CONF_MAC,
-    CONF_NAME,
     CONF_PASSWORD,
     CONF_TOKEN,
     CONF_UNIQUE_ID,
@@ -137,7 +136,6 @@ class AdaxConfigFlow(ConfigFlow, domain=DOMAIN):
 
         data_schema = probatio.Schema(
             {
-                probatio.Required(CONF_NAME): str,
                 probatio.Required(CONF_IP_ADDRESS): str,
                 probatio.Required(CONF_MAC): str,
                 probatio.Required(CONF_TOKEN): TextSelector(
@@ -180,7 +178,7 @@ class AdaxConfigFlow(ConfigFlow, domain=DOMAIN):
                 else:
                     if not errors:
                         return self.async_create_entry(
-                            title=user_input[CONF_NAME],
+                            title=unique_id,
                             data={
                                 CONF_IP_ADDRESS: ip_address,
                                 CONF_TOKEN: token,
