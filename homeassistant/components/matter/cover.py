@@ -412,6 +412,21 @@ class MatterClosure(MatterEntity, CoverEntity):
         self._closure_panel_subscriptions: dict[str, Callable[[], None]] = {}
 
     @property
+    def _closure_dimension_children(self) -> list[MatterEndpoint]:
+        """Return all ClosureDimension child endpoints, regardless of Positioning support.
+
+        Used for subscribing to FeatureMap changes: a panel without Positioning
+        may gain it later, so we need to detect those updates even on excluded panels.
+        """
+        node = self._endpoint.node
+        children: list[MatterEndpoint] = []
+        for child_id in node.get_compose_child_ids(self._endpoint.endpoint_id) or ():
+            child = node.endpoints[child_id]
+            if child.has_cluster(clusters.ClosureDimension):
+                children.append(child)
+        return children
+
+    @property
     def _closure_panels(self) -> dict[ClosurePanelRole, MatterEndpoint]:
         """Return the currently applicable ClosurePanel child endpoints."""
         node = self._endpoint.node
@@ -438,24 +453,43 @@ class MatterClosure(MatterEntity, CoverEntity):
 
     @callback
     def _refresh_closure_panel_subscriptions(self) -> None:
-        """Refresh subscriptions for currently active panel endpoints."""
-        current_paths = {
-            create_attribute_path(
-                panel.endpoint_id,
-                clusters.ClosureDimension.Attributes.CurrentState.cluster_id,
-                clusters.ClosureDimension.Attributes.CurrentState.attribute_id,
-            )
-            for panel in self._closure_panels.values()
-        }
-        # Also subscribe to FeatureMap changes on child panels to detect capability changes
-        for panel in self._closure_panels.values():
+        """Refresh subscriptions for panel endpoints.
+
+        Subscribes to FeatureMap changes on ALL ClosureDimension children (including
+        those without Positioning) to detect capability restoration. Subscribes to
+        CurrentState and TargetState only for active panels (those with Positioning
+        and a valid role).
+        """
+        current_paths: set[str] = set()
+
+        # Subscribe to FeatureMap on all ClosureDimension children to detect
+        # capability changes (e.g., Positioning being added to a latch-only panel)
+        for child in self._closure_dimension_children:
             current_paths.add(
                 create_attribute_path(
-                    panel.endpoint_id,
+                    child.endpoint_id,
                     clusters.ClosureDimension.Attributes.FeatureMap.cluster_id,
                     clusters.ClosureDimension.Attributes.FeatureMap.attribute_id,
                 )
             )
+
+        # Subscribe to CurrentState and TargetState only on active panels
+        for panel in self._closure_panels.values():
+            current_paths.add(
+                create_attribute_path(
+                    panel.endpoint_id,
+                    clusters.ClosureDimension.Attributes.CurrentState.cluster_id,
+                    clusters.ClosureDimension.Attributes.CurrentState.attribute_id,
+                )
+            )
+            current_paths.add(
+                create_attribute_path(
+                    panel.endpoint_id,
+                    clusters.ClosureDimension.Attributes.TargetState.cluster_id,
+                    clusters.ClosureDimension.Attributes.TargetState.attribute_id,
+                )
+            )
+
         for path, unsubscribe in list(self._closure_panel_subscriptions.items()):
             if path not in current_paths:
                 unsubscribe()
