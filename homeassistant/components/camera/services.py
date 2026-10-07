@@ -1,6 +1,7 @@
 """Services for the camera integration."""
 
 import asyncio
+import errno
 import os
 from typing import TYPE_CHECKING
 
@@ -20,7 +21,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.network import get_url
 from homeassistant.helpers.template import Template
@@ -34,6 +35,7 @@ from .const import (
     CONF_DURATION,
     CONF_LOOKBACK,
     DATA_COMPONENT,
+    DOMAIN,
     SERVICE_DISABLE_MOTION,
     SERVICE_ENABLE_MOTION,
     SERVICE_PLAY_STREAM,
@@ -60,6 +62,14 @@ CAMERA_SERVICE_RECORD: VolDictType = {
     probatio.Optional(CONF_LOOKBACK, default=0): probatio.Coerce(int),
 }
 
+# OS errors are not translatable, so the common causes get their own message
+WRITE_ERROR_TRANSLATION_KEYS: dict[int | None, str] = {
+    errno.EACCES: "write_permission_denied",
+    errno.EPERM: "write_permission_denied",
+    errno.ENOSPC: "write_no_space",
+    errno.EROFS: "write_read_only",
+}
+
 
 async def _async_handle_snapshot_service(
     camera: Camera, service_call: ServiceCall
@@ -72,10 +82,10 @@ async def _async_handle_snapshot_service(
 
     # check if we allow to access to that file
     if not hass.config.is_allowed_path(snapshot_file):
-        raise HomeAssistantError(
-            f"Cannot write `{snapshot_file}`, no access to path;"
-            " `allowlist_external_dirs` may need to be adjusted"
-            " in `configuration.yaml`"
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="path_not_allowed",
+            translation_placeholders={"filename": snapshot_file},
         )
 
     try:
@@ -87,7 +97,9 @@ async def _async_handle_snapshot_service(
             )
     except TimeoutError as err:
         raise HomeAssistantError(
-            f"Unable to get snapshot: Timed out after {CAMERA_IMAGE_TIMEOUT} seconds"
+            translation_domain=DOMAIN,
+            translation_key="snapshot_timeout",
+            translation_placeholders={"timeout": str(CAMERA_IMAGE_TIMEOUT)},
         ) from err
 
     if image is None:
@@ -102,7 +114,11 @@ async def _async_handle_snapshot_service(
     try:
         await hass.async_add_executor_job(_write_image, snapshot_file, image)
     except OSError as err:
-        raise HomeAssistantError(f"Can't write image to file: {err}") from err
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key=WRITE_ERROR_TRANSLATION_KEYS.get(err.errno, "write_failed"),
+            translation_placeholders={"filename": snapshot_file},
+        ) from err
 
 
 async def _async_handle_play_stream_service(
@@ -134,7 +150,11 @@ async def _async_handle_record_service(
     stream = await camera.async_create_stream()
 
     if not stream:
-        raise HomeAssistantError(f"{camera.entity_id} does not support record service")
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="record_not_supported",
+            translation_placeholders={"entity_id": camera.entity_id},
+        )
 
     filename = service_call.data[CONF_FILENAME]
     video_path = filename.async_render()

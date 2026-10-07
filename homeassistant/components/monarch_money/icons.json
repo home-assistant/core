@@ -1,6 +1,9 @@
 {
   "entity": {
     "sensor": {
+      "budget_actual": { "default": "mdi:cash" },
+      "budget_planned": { "default": "mdi:cash-multiple" },
+      "budget_remaining": { "default": "mdi:cash-clock" },
       "savings": { "default": "mdi:piggy-bank-outline" },
       "savings_rate": { "default": "mdi:cash-sync" },
       "sum_expense": { "default": "mdi:cash-minus" },

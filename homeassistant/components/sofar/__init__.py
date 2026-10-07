@@ -106,14 +106,17 @@ def _async_seed_high_water_marks(
 ) -> None:
     """Prime high-water marks before the first poll has nothing to compare."""
     registry = er.async_get(hass)
-    last_states = restore_state.async_get(hass).last_states
+    restore_state_data = restore_state.async_get(hass)
     for description in SENSOR_DESCRIPTIONS:
         if (total_fn := description.total_fn) is None:
             continue
         entity_id = registry.async_get_entity_id(
             SENSOR_DOMAIN, DOMAIN, f"{serial}_{description.key}"
         )
-        if entity_id is None or (stored := last_states.get(entity_id)) is None:
+        if (
+            entity_id is None
+            or (stored := restore_state_data.async_get_stored_state(entity_id)) is None
+        ):
             continue
         if stored.extra_data is None:
             continue

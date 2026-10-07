@@ -19,13 +19,13 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import (
+from . import PARTITION_SCHEMA
+from .const import (
     CONF_PANIC,
     CONF_PARTITIONNAME,
     CONF_PARTITIONS,
     DATA_EVL,
     DOMAIN,
-    PARTITION_SCHEMA,
     SIGNAL_KEYPAD_UPDATE,
     SIGNAL_PARTITION_UPDATE,
 )
@@ -64,8 +64,8 @@ async def async_setup_platform(
             entity_config_data[CONF_PARTITIONNAME],
             code,
             panic_type,
-            hass.data[DATA_EVL].alarm_state["partition"][part_num],
-            hass.data[DATA_EVL],
+            hass.data[DATA_EVL].controller.alarm_state["partition"][part_num],
+            hass.data[DATA_EVL].controller,
         )
         entities.append(entity)
 
@@ -165,32 +165,40 @@ class EnvisalinkAlarm(EnvisalinkEntity, AlarmControlPanelEntity):
     @override
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
-        self.hass.data[DATA_EVL].disarm_partition(code, self._partition_number)
+        self.hass.data[DATA_EVL].controller.disarm_partition(
+            code, self._partition_number
+        )
 
     @override
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
-        self.hass.data[DATA_EVL].arm_stay_partition(code, self._partition_number)
+        self.hass.data[DATA_EVL].controller.arm_stay_partition(
+            code, self._partition_number
+        )
 
     @override
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
-        self.hass.data[DATA_EVL].arm_away_partition(code, self._partition_number)
+        self.hass.data[DATA_EVL].controller.arm_away_partition(
+            code, self._partition_number
+        )
 
     @override
     async def async_alarm_trigger(self, code: str | None = None) -> None:
         """Alarm trigger command. Will be used to trigger a panic alarm."""
-        self.hass.data[DATA_EVL].panic_alarm(self._panic_type)
+        self.hass.data[DATA_EVL].controller.panic_alarm(self._panic_type)
 
     @override
     async def async_alarm_arm_night(self, code: str | None = None) -> None:
         """Send arm night command."""
-        self.hass.data[DATA_EVL].arm_night_partition(code, self._partition_number)
+        self.hass.data[DATA_EVL].controller.arm_night_partition(
+            code, self._partition_number
+        )
 
     @callback
     def async_alarm_keypress(self, keypress=None):
         """Send custom keypress."""
         if keypress:
-            self.hass.data[DATA_EVL].keypresses_to_partition(
+            self.hass.data[DATA_EVL].controller.keypresses_to_partition(
                 self._partition_number, keypress
             )

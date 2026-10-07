@@ -1,6 +1,5 @@
 """Support for Iperf3 network measurement tool."""
 
-from datetime import timedelta
 import logging
 
 import iperf3
@@ -29,24 +28,24 @@ from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
-DOMAIN = "iperf3"
-DATA_UPDATED = f"{DOMAIN}_data_updated"
+from .const import (
+    ATTR_DOWNLOAD,
+    ATTR_HOST,
+    ATTR_UPLOAD,
+    ATTR_VERSION,
+    CONF_DURATION,
+    CONF_MANUAL,
+    DATA_UPDATED,
+    DEFAULT_DURATION,
+    DEFAULT_INTERVAL,
+    DEFAULT_PARALLEL,
+    DEFAULT_PORT,
+    DEFAULT_PROTOCOL,
+    DOMAIN,
+    PROTOCOLS,
+)
 
 _LOGGER = logging.getLogger(__name__)
-
-CONF_DURATION = "duration"
-CONF_MANUAL = "manual"
-
-DEFAULT_DURATION = 10
-DEFAULT_PORT = 5201
-DEFAULT_PARALLEL = 1
-DEFAULT_PROTOCOL = "tcp"
-DEFAULT_INTERVAL = timedelta(minutes=60)
-
-ATTR_DOWNLOAD = "download"
-ATTR_UPLOAD = "upload"
-ATTR_VERSION = "Version"
-ATTR_HOST = "host"
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
@@ -67,8 +66,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
 )
 SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
-
-PROTOCOLS = ["tcp", "udp"]
 
 HOST_CONFIG_SCHEMA = probatio.Schema(
     {
