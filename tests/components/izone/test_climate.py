@@ -22,13 +22,12 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.components.izone.climate import (
-    ATTR_AIRFLOW,
+from homeassistant.components.izone.const import ATTR_AIRFLOW, DOMAIN
+from homeassistant.components.izone.coordinator import UPDATE_INTERVAL
+from homeassistant.components.izone.services import (
     IZONE_SERVICE_AIRFLOW_MAX,
     IZONE_SERVICE_AIRFLOW_MIN,
 )
-from homeassistant.components.izone.const import DOMAIN
-from homeassistant.components.izone.coordinator import UPDATE_INTERVAL
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError

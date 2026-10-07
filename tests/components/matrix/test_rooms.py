@@ -1,8 +1,9 @@
 """Test MatrixBot._join."""
 
+import probatio
 import pytest
 
-from homeassistant.components.matrix import MatrixBot
+from homeassistant.components.matrix import CONFIG_SCHEMA, MatrixBot
 from homeassistant.components.matrix.const import DOMAIN
 from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.const import EVENT_HOMEASSISTANT_START
@@ -46,3 +47,49 @@ async def test_resolve_aliases(hass: HomeAssistant, matrix_bot: MatrixBot) -> No
 
     await hass.async_start()
     assert matrix_bot._listening_rooms == TEST_JOINABLE_ROOMS
+
+
+@pytest.mark.parametrize(
+    "room",
+    [
+        pytest.param("!roomid:example.com", id="room_id_with_server"),
+        pytest.param("!roomid", id="room_id_v12"),
+        pytest.param("#alias:example.com", id="room_alias"),
+    ],
+)
+def test_config_room_valid(room: str) -> None:
+    """Test room IDs and aliases are accepted in the configuration."""
+    config = {
+        DOMAIN: {
+            "homeserver": "https://matrix.example.com",
+            "username": "@bot:example.com",
+            "password": "password",
+            "rooms": [room],
+        }
+    }
+
+    assert CONFIG_SCHEMA(config)[DOMAIN]["rooms"] == [room]
+
+
+@pytest.mark.parametrize(
+    "room",
+    [
+        pytest.param("#alias", id="alias_without_server"),
+        pytest.param("!", id="empty_room_id"),
+        pytest.param("roomid:example.com", id="no_sigil"),
+        pytest.param("|roomid:example.com", id="pipe_sigil"),
+    ],
+)
+def test_config_room_invalid(room: str) -> None:
+    """Test invalid room IDs and aliases are rejected in the configuration."""
+    config = {
+        DOMAIN: {
+            "homeserver": "https://matrix.example.com",
+            "username": "@bot:example.com",
+            "password": "password",
+            "rooms": [room],
+        }
+    }
+
+    with pytest.raises(probatio.Invalid):
+        CONFIG_SCHEMA(config)

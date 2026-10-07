@@ -18,6 +18,7 @@ from homeassistant.components.light import (
     ATTR_MIN_COLOR_TEMP_KELVIN,
     ATTR_RGB_COLOR,
     ATTR_RGBW_COLOR,
+    ATTR_RGBWW_COLOR,
     ATTR_SUPPORTED_COLOR_MODES,
     ATTR_TRANSITION,
     DOMAIN as LIGHT_DOMAIN,
@@ -467,11 +468,15 @@ async def _async_load_segment(
     mock_config_entry: MockConfigEntry,
     light_capabilities: int,
     color: list[int],
+    led_config: dict[str, Any] | None = None,
 ) -> None:
     """Load the CCT device with one segment of the given capabilities and color."""
     data = await async_load_json_object_fixture(hass, "cct.json", DOMAIN)
     data["info"]["leds"]["seglc"] = [light_capabilities]
     data["state"]["seg"][0]["col"] = [color, [0, 0, 0, 0], [0, 0, 0, 0]]
+    data["state"]["seg"][0]["cct"] = 127
+    if led_config is not None:
+        data["cfg"] = {"hw": {"led": led_config}}
     mock_wled.update.return_value = WLEDDevice.from_dict(data)
     await hass.config_entries.async_reload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -624,3 +629,109 @@ async def test_color_leaves_color_temp_alone(
     mock_wled.segment.assert_called_with(
         color_primary=color_primary, on=True, segment_id=0
     )
+
+
+# A WS2805 strip (RGB plus warm and cold white), blending the whites by 30%.
+WS2805 = {"cb": 30, "ins": [{"start": 0, "len": 178, "type": 32}]}
+
+
+@pytest.mark.parametrize("device_fixture", ["cct"])
+async def test_rgbww_light(
+    hass: HomeAssistant,
+    mock_wled: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test LEDs with warm and cold white show the white split over both."""
+    await _async_load_segment(
+        hass, mock_wled, mock_config_entry, 7, [255, 0, 0, 255], WS2805
+    )
+
+    assert (state := hass.states.get("light.wled_cct_light"))
+    assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [
+        ColorMode.COLOR_TEMP,
+        ColorMode.RGBWW,
+    ]
+    assert state.attributes[ATTR_COLOR_MODE] == ColorMode.RGBWW
+    # WLED splits full white at the middle color temperature into 150 warm
+    # and 149 cold with a 30% blend.
+    assert state.attributes[ATTR_RGBWW_COLOR] == (255, 0, 0, 149, 150)
+
+
+@pytest.mark.parametrize("device_fixture", ["cct"])
+async def test_rgbww_light_color_temp(
+    hass: HomeAssistant,
+    mock_wled: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test LEDs with warm and cold white still show a color temperature."""
+    await _async_load_segment(
+        hass, mock_wled, mock_config_entry, 7, [0, 0, 0, 255], WS2805
+    )
+
+    assert (state := hass.states.get("light.wled_cct_light"))
+    assert state.attributes[ATTR_COLOR_MODE] == ColorMode.COLOR_TEMP
+
+
+@pytest.mark.parametrize("device_fixture", ["cct"])
+async def test_rgbww_light_turn_on(
+    hass: HomeAssistant,
+    mock_wled: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test setting warm and cold white sends the white and color temperature."""
+    await _async_load_segment(
+        hass, mock_wled, mock_config_entry, 7, [255, 0, 0, 255], WS2805
+    )
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {
+            ATTR_ENTITY_ID: "light.wled_cct_light",
+            ATTR_RGBWW_COLOR: (0, 0, 255, 149, 150),
+        },
+        blocking=True,
+    )
+
+    mock_wled.segment.assert_called_with(
+        cct=127, color_primary=(0, 0, 255, 255), on=True, segment_id=0
+    )
+
+
+@pytest.mark.parametrize("device_fixture", ["cct"])
+@pytest.mark.parametrize(
+    "led_config",
+    [
+        # Not known
+        None,
+        # RGBW LEDs (SK6812), which also report color temperature when WLED
+        # corrects their white balance.
+        {"cct": True, "ins": [{"start": 0, "len": 178, "type": 30}]},
+        # WLED calculates the color temperature from the RGB color.
+        {"cr": True, "ins": [{"start": 0, "len": 178, "type": 32}]},
+        # Only part of the segment is on LEDs with warm and cold white.
+        {
+            "ins": [
+                {"start": 0, "len": 100, "type": 32},
+                {"start": 100, "len": 78, "type": 30},
+            ]
+        },
+    ],
+)
+async def test_no_rgbww_light(
+    hass: HomeAssistant,
+    mock_wled: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    led_config: dict[str, Any] | None,
+) -> None:
+    """Test LEDs without (only) warm and cold white stay RGBW."""
+    await _async_load_segment(
+        hass, mock_wled, mock_config_entry, 7, [255, 0, 0, 255], led_config
+    )
+
+    assert (state := hass.states.get("light.wled_cct_light"))
+    assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [
+        ColorMode.COLOR_TEMP,
+        ColorMode.RGBW,
+    ]
+    assert state.attributes[ATTR_COLOR_MODE] == ColorMode.RGBW
