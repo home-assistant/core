@@ -100,6 +100,7 @@ from .utils import (
     get_model_name,
     get_rpc_device_wakeup_period,
     get_ws_context,
+    is_device_supported,
     mac_address_from_name,
 )
 
@@ -443,6 +444,12 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         self.info = await self._async_get_info(host, port, verify_ssl)
         await self.async_set_unique_id(self.info[CONF_MAC], raise_on_progress=False)
         self._abort_if_unique_id_configured({CONF_HOST: host})
+
+        if not is_device_supported(self.info):
+            return self.async_abort(
+                reason="unsupported_device",
+                description_placeholders={"model": get_model_name(self.info)},
+            )
 
         self.host = host
         self.port = port
@@ -1059,6 +1066,12 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
             # Device appeared on network but can't connect - allow retry
             return None
 
+        if not is_device_supported(self.info):
+            return self.async_abort(
+                reason="unsupported_device",
+                description_placeholders={"model": get_model_name(self.info)},
+            )
+
         if get_info_auth(self.info):
             # Device requires authentication - show credentials step
             return await self.async_step_credentials()
@@ -1201,6 +1214,12 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
             # so need to check here since we just got the info
             mac = self.info[CONF_MAC]
             await self._async_handle_zeroconf_mac_discovery(mac, host, port)
+
+        if not is_device_supported(self.info):
+            return self.async_abort(
+                reason="unsupported_device",
+                description_placeholders={"model": get_model_name(self.info)},
+            )
 
         self.host = host
         self.port = port
