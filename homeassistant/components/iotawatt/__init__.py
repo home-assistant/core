@@ -21,6 +21,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: IotawattConfigEntry) -> 
             is_fixable=True,
             severity=ir.IssueSeverity.WARNING,
             translation_key="legacy_energy",
+            translation_placeholders={"name": entry.title},
         )
     else:
         ir.async_delete_issue(hass, DOMAIN, f"legacy_energy_{entry.entry_id}")

@@ -37,3 +37,28 @@ async def test_legacy_energy_fix_flow(
 
     assert entry.options == {CONF_LEGACY_ENERGY: False}
     assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+
+
+async def test_legacy_energy_fix_flow_entry_removed(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_iotawatt: MagicMock,
+    entry: MockConfigEntry,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test the fix flow aborts if the entry is removed while it is open."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+    assert await async_setup_component(hass, "repairs", {})
+
+    issue_id = f"legacy_energy_{entry.entry_id}"
+    client = await hass_client()
+    data = await start_repair_fix_flow(client, DOMAIN, issue_id)
+    assert data["step_id"] == "confirm"
+
+    await hass.config_entries.async_remove(entry.entry_id)
+    await hass.async_block_till_done()
+
+    data = await process_repair_fix_flow(client, data["flow_id"], json={})
+    assert data["type"] == "abort"
+    assert data["reason"] == "entry_removed"
