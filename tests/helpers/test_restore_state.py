@@ -9,7 +9,11 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STARTED,
+    EVENT_HOMEASSISTANT_STOP,
+)
 from homeassistant.core import Context, CoreState, HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -256,6 +260,68 @@ async def test_hass_starting(hass: HomeAssistant) -> None:
 
     # Assert that this session states were written
     assert mock_write_data.called
+
+
+@pytest.mark.parametrize(
+    ("unique_id", "last_states_attr"),
+    [
+        pytest.param(None, "last_states_by_entity_id", id="no_registry_entry"),
+        pytest.param(
+            "abc", "last_states_by_entity_registry_id", id="with_registry_entry"
+        ),
+    ],
+)
+async def test_last_state_kept_until_started(
+    hass: HomeAssistant, unique_id: str | None, last_states_attr: str
+) -> None:
+    """Test the last state can be read until Home Assistant has started."""
+    data = async_get(hass)
+    await hass.async_block_till_done()
+    await data.store.async_save(
+        [StoredState(State("input_boolean.b1", "on"), None, dt_util.utcnow()).as_dict()]
+    )
+
+    # Emulate a fresh load
+    hass.set_state(CoreState.not_running)
+    hass.data.pop(DATA_RESTORE_STATE)
+    await async_load(hass)
+    data = async_get(hass)
+
+    entity = RestoreEntity()
+    entity.entity_id = "input_boolean.b1"
+    entity._attr_unique_id = unique_id
+    platform = MockEntityPlatform(hass, domain="input_boolean")
+    await platform.async_add_entities([entity])
+    assert len(getattr(data, last_states_attr)) == 1
+
+    hass.set_state(CoreState.starting)
+    with patch(
+        "homeassistant.helpers.restore_state.Store.async_save"
+    ) as mock_write_data:
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+        await hass.async_block_till_done()
+    # The initial dump does not drop the state of the running entity
+    assert mock_write_data.called
+    last_state = await entity.async_get_last_state()
+    assert last_state is not None
+    assert last_state.state == "on"
+
+    hass.set_state(CoreState.running)
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
+    last_state = await entity.async_get_last_state()
+    assert last_state is not None
+    assert last_state.state == "on"
+
+    with patch(
+        "homeassistant.helpers.restore_state.Store.async_save"
+    ) as mock_write_data:
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=15))
+        await hass.async_block_till_done()
+    # Dumps after start drop the state of the running entity from memory
+    assert mock_write_data.called
+    assert not getattr(data, last_states_attr)
+    assert await entity.async_get_last_state() is None
 
 
 async def test_dump_data(hass: HomeAssistant) -> None:

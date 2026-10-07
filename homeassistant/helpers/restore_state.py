@@ -6,7 +6,14 @@ import logging
 from typing import Any, Self, cast, override
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, EntityStateAttribute
-from homeassistant.core import Event, HomeAssistant, State, callback, valid_entity_id
+from homeassistant.core import (
+    CoreState,
+    Event,
+    HomeAssistant,
+    State,
+    callback,
+    valid_entity_id,
+)
 from homeassistant.exceptions import HomeAssistantError, UnsupportedStorageVersionError
 from homeassistant.util import dt as dt_util
 from homeassistant.util.hass_dict import HassKey
@@ -254,7 +261,8 @@ class RestoreStateData:
         stored states from the previous run, which have not been created as
         entities on this run, and have not expired.
 
-        Stored states that will not be saved are dropped from memory too.
+        Once Home Assistant is running, stored states that will not be saved
+        are dropped from memory too.
         """
         now = dt_util.utcnow()
         all_states = self.hass.states.async_all()
@@ -311,8 +319,6 @@ class RestoreStateData:
             stored_states.append(stored_state)
             last_states_by_entity_registry_id[entity_registry_id] = stored_state
 
-        self.last_states_by_entity_registry_id = last_states_by_entity_registry_id
-
         last_states: dict[str, StoredState] = {}
 
         for entity_id, stored_state in self.last_states_by_entity_id.items():
@@ -329,7 +335,10 @@ class RestoreStateData:
             stored_states.append(stored_state)
             last_states[entity_id] = stored_state
 
-        self.last_states_by_entity_id = last_states
+        # Entities may read their last state until Home Assistant has started
+        if self.hass.state is CoreState.running:
+            self.last_states_by_entity_registry_id = last_states_by_entity_registry_id
+            self.last_states_by_entity_id = last_states
 
         return stored_states
 
