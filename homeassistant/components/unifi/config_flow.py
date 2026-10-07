@@ -255,7 +255,7 @@ class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
             {
                 probatio.Required(CONF_HOST, default=host): str,
                 probatio.Required(CONF_USERNAME, default=username): str,
-                probatio.Required(CONF_PASSWORD): str,
+                probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
                 probatio.Optional(CONF_PORT, default=port): int,
                 probatio.Optional(
                     CONF_VERIFY_SSL,

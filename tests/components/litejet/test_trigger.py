@@ -30,7 +30,7 @@ async def simulate_press(
     _LOGGER.info("*** simulate press of %d", number)
     callback = mock_litejet.switch_pressed_callbacks.get(number)
     with mock.patch(
-        "homeassistant.helpers.condition.dt_util.utcnow",
+        "homeassistant.helpers.condition.conditions.dt_util.utcnow",
         return_value=mock_litejet.start_time + mock_litejet.last_delta,
     ):
         if callback is not None:
@@ -45,7 +45,7 @@ async def simulate_release(
     _LOGGER.info("*** simulate release of %d", number)
     callback = mock_litejet.switch_released_callbacks.get(number)
     with mock.patch(
-        "homeassistant.helpers.condition.dt_util.utcnow",
+        "homeassistant.helpers.condition.conditions.dt_util.utcnow",
         return_value=mock_litejet.start_time + mock_litejet.last_delta,
     ):
         if callback is not None:
@@ -62,7 +62,7 @@ async def simulate_time(
     )
     mock_litejet.last_delta = delta
     with mock.patch(
-        "homeassistant.helpers.condition.dt_util.utcnow",
+        "homeassistant.helpers.condition.conditions.dt_util.utcnow",
         return_value=mock_litejet.start_time + delta,
     ):
         _LOGGER.info("*** now=%s", dt_util.utcnow())

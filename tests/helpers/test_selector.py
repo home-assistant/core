@@ -44,28 +44,37 @@ def test_invalid_base_schema(schema) -> None:
         selector.validate_selector(schema)
 
 
-def test_allowed_context_keys_not_shared_between_instances() -> None:
-    """Test allowed_context_keys is isolated between selector instances."""
+@pytest.mark.parametrize(
+    "selector_class",
+    [
+        pytest.param(selector.Selector, id="base"),
+        pytest.param(selector.AttributeSelector, id="attribute"),
+        pytest.param(selector.MediaSelector, id="media"),
+        pytest.param(selector.StateSelector, id="state"),
+    ],
+)
+def test_allowed_context_keys_read_only(
+    selector_class: type[selector.Selector],
+) -> None:
+    """Test allowed_context_keys cannot be modified."""
+    with pytest.raises(RuntimeError, match="Cannot modify ReadOnlyDict"):
+        selector_class.allowed_context_keys["some_key"] = frozenset()
 
-    class TestSelectorConfig(selector.BaseSelectorConfig, total=False):
-        """Test selector config class."""
 
-    class TestSelector(selector.Selector):
-        """Test selector used to verify instance isolation."""
-
-        CONFIG_SCHEMA = selector.make_selector_config_schema({})
-
-        selector_type = "test"
-
-        def __call__(self, data: Any) -> Any:
-            """Validate the passed selection."""
-            return data
-
-    test_selector = TestSelector(TestSelectorConfig())
-    other_selector = TestSelector(TestSelectorConfig())
-    test_selector.allowed_context_keys["some_key"] = set()
-    assert test_selector.allowed_context_keys
-    assert not other_selector.allowed_context_keys
+@pytest.mark.parametrize(
+    "selector_class",
+    [
+        pytest.param(selector.AttributeSelector, id="attribute"),
+        pytest.param(selector.MediaSelector, id="media"),
+        pytest.param(selector.StateSelector, id="state"),
+    ],
+)
+def test_allowed_context_keys_values_immutable(
+    selector_class: type[selector.Selector],
+) -> None:
+    """Test allowed_context_keys values cannot be modified."""
+    for allowed_types in selector_class.allowed_context_keys.values():
+        assert isinstance(allowed_types, frozenset)
 
 
 def _test_selector(
@@ -1860,15 +1869,53 @@ def test_attribute_selector_schema(
             (None, {}, {"seconds": -1}),
         ),
         (
+            {"mode": "positive"},
+            ({"seconds": 10},),
+            (None, {}, {"seconds": -1}),
+        ),
+        (
             {"allow_negative": True},
             ({"seconds": 10}, {"seconds": -1}),
             (None, {}),
         ),
+        (
+            {"mode": "signed"},
+            ({"seconds": 10}, {"seconds": -1}, {"hours": -1, "minutes": -30}),
+            (None, {}),
+        ),
+        (
+            {"mode": "offset", "enable_day": True},
+            (
+                {"seconds": 10},
+                {"hours": -1, "minutes": -30},
+                {"days": 0, "hours": 0, "minutes": 0, "seconds": 0},
+            ),
+            (None, {}),
+        ),
     ],
 )
-def test_duration_selector_schema(schema, valid_selections, invalid_selections) -> None:
+def test_duration_selector_schema(
+    schema: dict[str, Any],
+    valid_selections: tuple[Any, ...],
+    invalid_selections: tuple[Any, ...],
+) -> None:
     """Test duration selector."""
     _test_selector("duration", schema, valid_selections, invalid_selections)
+
+
+@pytest.mark.parametrize(
+    "schema",
+    [
+        {"mode": "sideways"},
+        {"mode": "positive", "allow_negative": True},
+        {"mode": "signed", "allow_negative": False},
+        {"mode": "offset", "allow_negative": False},
+    ],
+)
+def test_duration_selector_invalid_config(schema: dict[str, Any]) -> None:
+    """Test duration selector rejects an unknown mode or a conflicting alias."""
+    with pytest.raises(probatio.Invalid):
+        selector.validate_selector({"duration": schema})
 
 
 @pytest.mark.parametrize(

@@ -7,7 +7,6 @@ from typing import override
 from victron_vrm import VictronVRMClient
 from victron_vrm.exceptions import AuthenticationError, VictronVRMError
 from victron_vrm.models.aggregations import ForecastAggregations
-from victron_vrm.utils import dt_now
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_TOKEN
@@ -15,6 +14,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 
 from .const import CONF_SITE_ID, DOMAIN, LOGGER
 
@@ -34,17 +34,18 @@ class VRMForecastStore:
 
 async def get_forecast(client: VictronVRMClient, site_id: int) -> VRMForecastStore:
     """Get the forecast data."""
+    time_zone = dt_util.DEFAULT_TIME_ZONE
+    now = dt_util.now(time_zone)
+    today = now.date()
     start = int(
-        (
-            dt_now().replace(hour=0, minute=0, second=0, microsecond=0)
-            - datetime.timedelta(days=1)
+        datetime.datetime.combine(
+            today - datetime.timedelta(days=1), datetime.time.min, time_zone
         ).timestamp()
     )
     # Get timestamp of the end of 6th day from now
     end = int(
-        (
-            dt_now().replace(hour=0, minute=0, second=0, microsecond=0)
-            + datetime.timedelta(days=6)
+        datetime.datetime.combine(
+            today + datetime.timedelta(days=6), datetime.time.min, time_zone
         ).timestamp()
     )
     stats = await client.installations.stats(
@@ -54,6 +55,7 @@ async def get_forecast(client: VictronVRMClient, site_id: int) -> VRMForecastSto
         interval="hours",
         type="forecast",
         return_aggregations=True,
+        time_zone=time_zone,
     )
     return VRMForecastStore(
         solar=stats["solar_yield"],

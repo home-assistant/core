@@ -44,9 +44,10 @@
           'tariff': 'tariff0',
         }),
         'last_sensor_data': dict({
+          'input_device_class': 'None',
           'last_period': '0',
           'last_reset': '2024-04-05T00:00:00+00:00',
-          'last_valid_state': 3,
+          'last_valid_state': None,
           'native_unit_of_measurement': 'kWh',
           'native_value': dict({
             '__type': "<class 'decimal.Decimal'>",
@@ -70,9 +71,10 @@
           'tariff': 'tariff1',
         }),
         'last_sensor_data': dict({
+          'input_device_class': 'None',
           'last_period': '0',
           'last_reset': '2024-04-05T00:00:00+00:00',
-          'last_valid_state': 7,
+          'last_valid_state': None,
           'native_unit_of_measurement': 'kWh',
           'native_value': dict({
             '__type': "<class 'decimal.Decimal'>",

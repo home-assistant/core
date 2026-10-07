@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from pylamarzocco.exceptions import RequestNotSuccessful
+from pylamarzocco.exceptions import AuthFail, RequestNotSuccessful
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -50,9 +50,18 @@ async def test_start_backflush(
     mock_lamarzocco.start_backflush.assert_called_once()
 
 
+@pytest.mark.parametrize(
+    "side_effect",
+    [
+        pytest.param(RequestNotSuccessful("Boom"), id="request_not_successful"),
+        pytest.param(AuthFail("Boom"), id="auth_fail"),
+        pytest.param(TimeoutError, id="timeout"),
+    ],
+)
 async def test_button_error(
     hass: HomeAssistant,
     mock_lamarzocco: MagicMock,
+    side_effect: Exception | type[Exception],
 ) -> None:
     """Test the La Marzocco button error."""
     serial_number = mock_lamarzocco.serial_number
@@ -60,7 +69,7 @@ async def test_button_error(
     state = hass.states.get(f"button.{serial_number}_start_backflush")
     assert state
 
-    mock_lamarzocco.start_backflush.side_effect = RequestNotSuccessful("Boom.")
+    mock_lamarzocco.start_backflush.side_effect = side_effect
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             BUTTON_DOMAIN,

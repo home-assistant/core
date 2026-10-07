@@ -30,7 +30,7 @@ from yarl import URL
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, EVENT_LOGGING_CHANGED
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import SetupPhases, async_pause_setup
@@ -567,13 +567,19 @@ class Stream:
 
         # Check for file access
         if not self.hass.config.is_allowed_path(video_path):
-            raise HomeAssistantError(f"Can't write {video_path}, no access to path!")
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="path_not_allowed",
+                translation_placeholders={"filename": video_path},
+            )
 
         # Add recorder
         if recorder := self.outputs().get(RECORDER_PROVIDER):
             assert isinstance(recorder, RecorderOutput)
-            raise HomeAssistantError(
-                f"Stream already recording to {recorder.video_path}!"
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="already_recording",
+                translation_placeholders={"filename": recorder.video_path},
             )
         recorder = cast(
             RecorderOutput, self.add_provider(RECORDER_PROVIDER, timeout=duration)
