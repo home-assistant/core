@@ -466,7 +466,7 @@ aiotedee==0.3.0
 aiothreema==0.1.0
 
 # homeassistant.components.tractive
-aiotractive==1.1.0
+aiotractive==1.1.1
 
 # homeassistant.components.unifi
 aiounifi==97
@@ -1316,7 +1316,7 @@ hole==0.9.2
 holidays==0.106
 
 # homeassistant.components.frontend
-home-assistant-frontend==20260930.1
+home-assistant-frontend==20260930.2
 
 # homeassistant.components.conversation
 home-assistant-intents==2026.10.6
@@ -1693,7 +1693,7 @@ mutesync==0.0.1
 mvg==1.6.0
 
 # homeassistant.components.my_pv
-my-pv==0.0.10
+my-pv==0.0.12
 
 # homeassistant.components.myuplink
 myuplink==0.7.0
@@ -2045,7 +2045,7 @@ pyHik==0.4.7
 pyHomee==1.4.4
 
 # homeassistant.components.rfxtrx
-pyRFXtrx==0.31.1
+pyRFXtrx==0.34.0
 
 # homeassistant.components.sony_projector
 pySDCP==1
@@ -2118,7 +2118,7 @@ pybbox==0.0.5-alpha
 pyblackbird==0.10
 
 # homeassistant.components.bluesound
-pyblu==2.0.8
+pyblu==2.2.0
 
 # homeassistant.components.neato
 pybotvac==0.0.29
@@ -2888,7 +2888,7 @@ pyvlx==0.2.36
 pyvolumio==0.1.5
 
 # homeassistant.components.waze_travel_time
-pywaze==1.2.3
+pywaze==1.2.4
 
 # homeassistant.components.weatherflow
 pyweatherflowudp==1.6.3
@@ -3330,7 +3330,7 @@ uasiren==0.0.1
 uhooapi==1.2.8
 
 # homeassistant.components.unifiprotect
-uiprotect==23.0.0
+uiprotect==23.0.1
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.6.1
@@ -3551,7 +3551,7 @@ zhong-hong-hvac==1.0.21
 ziggo-mediabox-xl==1.1.0
 
 # homeassistant.components.zinvolt
-zinvolt==1.0.0
+zinvolt==1.0.1
 
 # homeassistant.components.zoneminder
 zm-py==0.5.4
