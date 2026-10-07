@@ -2744,7 +2744,7 @@ async def test_send_media_group_caption_parse_mode(
 
     with (
         patch(
-            "homeassistant.components.telegram_bot.bot.httpx2.AsyncClient.get"
+            "homeassistant.components.telegram_bot.bot.httpx.AsyncClient.get"
         ) as mock_get,
         patch(
             "homeassistant.components.telegram_bot.bot.Bot.send_media_group",
