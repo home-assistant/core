@@ -136,6 +136,115 @@ async def test_all_day_event_inclusive_end_and_range_query(
     assert state is not None
 
 
+async def test_get_events_outside_window_fetches_live(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a range query past the rolling window fetches events live."""
+    freezer.move_to(datetime(2030, 6, 1, 12, 0, tzinfo=UTC))
+    in_window = {
+        "data": [
+            {
+                "id": "event-1",
+                "attributes": {
+                    "summary": "In window",
+                    "starts_at": "2030-06-02T09:00:00+00:00",
+                    "ends_at": "2030-06-02T10:00:00+00:00",
+                },
+            }
+        ]
+    }
+    far_future = {
+        "data": [
+            {
+                "id": "event-far",
+                "attributes": {
+                    "summary": "Far future",
+                    "starts_at": "2031-01-05T09:00:00+00:00",
+                    "ends_at": "2031-01-05T10:00:00+00:00",
+                },
+            },
+            {
+                "id": "event-1",
+                "attributes": {
+                    "summary": "In window",
+                    "starts_at": "2030-06-02T09:00:00+00:00",
+                    "ends_at": "2030-06-02T10:00:00+00:00",
+                },
+            },
+        ]
+    }
+
+    async def _get_events(_frame_id, *, date_min, date_max):
+        if date_max >= "2031-01-01":
+            return far_future
+        return in_window
+
+    with patch("skylight_api.SkylightAPI.get_calendar_events", side_effect=_get_events):
+        mock_config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        result = await hass.services.async_call(
+            CALENDAR_DOMAIN,
+            SERVICE_GET_EVENTS,
+            {
+                "entity_id": "calendar.home_frame_calendar",
+                "start_date_time": datetime(2031, 1, 1, tzinfo=UTC),
+                "end_date_time": datetime(2031, 1, 31, tzinfo=UTC),
+            },
+            blocking=True,
+            return_response=True,
+        )
+    events = result["calendar.home_frame_calendar"]["events"]
+    assert [event["summary"] for event in events] == ["Far future"]
+
+
+async def test_get_events_outside_window_degrades_to_cache_on_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a failed live fetch for an out-of-window range falls back to cache."""
+    freezer.move_to(datetime(2030, 6, 1, 12, 0, tzinfo=UTC))
+    in_window = {
+        "data": [
+            {
+                "id": "event-1",
+                "attributes": {
+                    "summary": "In window",
+                    "starts_at": "2030-06-02T09:00:00+00:00",
+                    "ends_at": "2030-06-02T10:00:00+00:00",
+                },
+            }
+        ]
+    }
+
+    async def _get_events(_frame_id, *, date_min, date_max):
+        if date_max >= "2031-01-01":
+            raise SkylightAPIError("endpoint down")
+        return in_window
+
+    with patch("skylight_api.SkylightAPI.get_calendar_events", side_effect=_get_events):
+        mock_config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        result = await hass.services.async_call(
+            CALENDAR_DOMAIN,
+            SERVICE_GET_EVENTS,
+            {
+                "entity_id": "calendar.home_frame_calendar",
+                "start_date_time": datetime(2031, 1, 1, tzinfo=UTC),
+                "end_date_time": datetime(2031, 1, 31, tzinfo=UTC),
+            },
+            blocking=True,
+            return_response=True,
+        )
+    assert result["calendar.home_frame_calendar"]["events"] == []
+
+
 async def test_coordinator_setup_retry_then_recovery(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

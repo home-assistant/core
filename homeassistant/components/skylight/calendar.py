@@ -1,6 +1,6 @@
 """Calendar platform for the Skylight integration."""
 
-from datetime import date, datetime
+from datetime import datetime
 from typing import override
 
 from homeassistant.components.calendar import CalendarEntity, CalendarEvent
@@ -8,7 +8,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from .coordinator import SkylightConfigEntry
+from .coordinator import SkylightConfigEntry, _as_datetime
 from .entity import SkylightEntity
 
 PARALLEL_UPDATES = 0
@@ -21,13 +21,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up the calendar platform for entity."""
     async_add_entities([SkylightCalendarEntity(entry.runtime_data, entry)])
-
-
-def _as_datetime(value: date | datetime) -> datetime:
-    """Normalise a CalendarEvent start/end (date or datetime) to a datetime."""
-    if isinstance(value, datetime):
-        return value
-    return dt_util.start_of_local_day(value)
 
 
 class SkylightCalendarEntity(SkylightEntity, CalendarEntity):
@@ -53,9 +46,4 @@ class SkylightCalendarEntity(SkylightEntity, CalendarEntity):
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
     ) -> list[CalendarEvent]:
         """Return all events within a specific time frame."""
-        return [
-            event
-            for event in self.coordinator.data.events
-            if _as_datetime(event.start) < end_date
-            and _as_datetime(event.end) > start_date
-        ]
+        return await self.coordinator.async_events_between(start_date, end_date)
