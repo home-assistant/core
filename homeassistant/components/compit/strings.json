@@ -54,6 +54,13 @@
       },
       "temperature_alert": {
         "name": "Temperature alert"
+      },
+      "ventilation_filter": {
+        "name": "Ventilation filter",
+        "state": {
+          "off": "Clean",
+          "on": "Dirty"
+        }
       }
     },
     "fan": {
