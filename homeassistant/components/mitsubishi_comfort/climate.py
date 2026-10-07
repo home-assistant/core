@@ -85,7 +85,7 @@ class MitsubishiComfortClimate(MitsubishiComfortEntity, ClimateEntity):
     """Climate entity for a Mitsubishi indoor unit."""
 
     _attr_name = None
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, coordinator: MitsubishiComfortCoordinator) -> None:
@@ -132,7 +132,7 @@ class MitsubishiComfortClimate(MitsubishiComfortEntity, ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self._device.status.room_temperature
 
@@ -144,7 +144,7 @@ class MitsubishiComfortClimate(MitsubishiComfortEntity, ClimateEntity):
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the target temperature."""
         mode = self._effective_mode
         if mode in ("cool", "autoCool"):
@@ -159,7 +159,7 @@ class MitsubishiComfortClimate(MitsubishiComfortEntity, ClimateEntity):
 
     @property
     @override
-    def target_temperature_high(self) -> float | None:
+    def native_target_temperature_high(self) -> float | None:
         """Return the upper bound target temperature."""
         if self._effective_mode in ("auto", "autoCool", "autoHeat"):
             return self._optimistic.get(
@@ -169,7 +169,7 @@ class MitsubishiComfortClimate(MitsubishiComfortEntity, ClimateEntity):
 
     @property
     @override
-    def target_temperature_low(self) -> float | None:
+    def native_target_temperature_low(self) -> float | None:
         """Return the lower bound target temperature."""
         if self._effective_mode in ("auto", "autoCool", "autoHeat"):
             return self._optimistic.get(

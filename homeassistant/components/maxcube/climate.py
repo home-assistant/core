@@ -79,7 +79,7 @@ class MaxCubeClimate(ClimateEntity):
         | ClimateEntityFeature.TURN_OFF
         | ClimateEntityFeature.TURN_ON
     )
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
 
     def __init__(self, handler, device):
         """Initialize MAX! Cube ClimateEntity."""
@@ -107,7 +107,7 @@ class MaxCubeClimate(ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> float:
+    def native_current_temperature(self) -> float:
         """Return the current temperature."""
         return self._device.actual_temperature
 
@@ -181,7 +181,7 @@ class MaxCubeClimate(ClimateEntity):
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         temp = self._device.target_temperature
         if temp is None or temp < self.min_temp or temp > self.max_temp:
