@@ -6,6 +6,7 @@
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "invalid_discovery_info": "Invalid discovery information received",
       "missing_capabilities": "The MCP server does not support a required capability (Tools)",
+      "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
       "oauth_registration_failed": "Could not register Home Assistant with the MCP server's authorization server",
       "reauth_account_mismatch": "The authenticated user does not match the MCP Server user that needed re-authentication.",
       "timeout_connect": "[%key:common::config_flow::error::timeout_connect%]",

@@ -413,7 +413,8 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
                             "https://www.home-assistant.io/more-info/no-url-available"
                         )
                     },
-                    translation_domain="homeassistant",
+                    # OAuth helper would otherwise retarget this shared reason.
+                    translation_domain=DOMAIN,
                 )
             try:
                 registered = await async_register_dynamic_client(
