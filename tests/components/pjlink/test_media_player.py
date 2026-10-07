@@ -116,6 +116,7 @@ async def test_initialization(
     source_list = state.attributes["source_list"]
 
     assert set(source_list) == {"HDMI 1", "HDMI 2", "VGA 1"}
+    assert state.attributes["device_class"] == projector
 
 
 @pytest.mark.parametrize("power_state", ["on", "warm-up"])
