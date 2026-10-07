@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from datetime import date, datetime, time, timedelta
 from typing import override
 
-from mawaqit.prayer_times import Prayer, PrayerDay, next_prayer, prayer_day
+from mawaqit.prayer_times import Prayer, PrayerDay, next_prayer, night, prayer_day
 from mawaqit.types import PrayerTimes
 
 from homeassistant.components.sensor import (
@@ -98,12 +98,18 @@ DAY_SENSORS: tuple[MawaqitDaySensorEntityDescription, ...] = (
     *(
         MawaqitDaySensorEntityDescription(
             key=key,
-            translation_key=f"prayer_{key}",
+            translation_key=translation_key,
             value_fn=_jumua(index),
             exists_fn=_has_jumua(index),
             friday=True,
         )
-        for index, key in enumerate(("jumua", "jumua_2", "jumua_3"))
+        for index, (key, translation_key) in enumerate(
+            (
+                ("jumua", "prayer_jumua"),
+                ("jumua 2", "prayer_jumua_2"),
+                ("jumua 3", "prayer_jumua_3"),
+            )
+        )
     ),
     MawaqitDaySensorEntityDescription(
         key="fajr_iqama",
@@ -161,36 +167,40 @@ async def async_setup_entry(
 ) -> None:
     """Set up the MAWAQIT sensors."""
     coordinator = entry.runtime_data
-    prayer_times = coordinator.data.prayer_times
     async_add_entities(
-        [
-            *(
-                MawaqitDaySensor(coordinator, description)
-                for description in DAY_SENSORS
-                if description.exists_fn(prayer_times)
-            ),
-            *(
-                MawaqitNextPrayerSensor(coordinator, description)
-                for description in NEXT_PRAYER_SENSORS
-            ),
-        ]
+        MawaqitNextPrayerSensor(coordinator, description)
+        for description in NEXT_PRAYER_SENSORS
     )
+
+    added: set[str] = set()
+
+    @callback
+    def _async_add_day_sensors() -> None:
+        """Add the sensors of the times the mosque has started publishing."""
+        # Sensors of times the mosque stops publishing are kept, as unknown.
+        prayer_times = coordinator.data.prayer_times
+        if new := [
+            description
+            for description in DAY_SENSORS
+            if description.key not in added and description.exists_fn(prayer_times)
+        ]:
+            added.update(description.key for description in new)
+            async_add_entities(
+                MawaqitDaySensor(coordinator, description) for description in new
+            )
+
+    _async_add_day_sensors()
+    entry.async_on_unload(coordinator.async_add_listener(_async_add_day_sensors))
 
 
 def _day_end(data: MawaqitData, day: date) -> datetime:
     """Return when the sensors move from a day to the next one.
 
-    Halfway between its Isha and the next Fajr, so that an Isha after midnight is
-    shown until it has passed. At midnight without these times.
+    At the middle of its night, from Maghrib to the next Fajr, which can be before
+    00:00. At 00:00 without these times.
     """
-    today = prayer_day(data.prayer_times, day, timezone=data.timezone)
-    tomorrow = prayer_day(
-        data.prayer_times, day + timedelta(days=1), timezone=data.timezone
-    )
-    if today and today.isha and tomorrow and tomorrow.fajr:
-        # In UTC: datetimes of the same time zone subtract in wall-clock time.
-        isha = dt_util.as_utc(today.isha.at)
-        return isha + (dt_util.as_utc(tomorrow.fajr.at) - isha) / 2
+    if tonight := night(data.prayer_times, day, timezone=data.timezone):
+        return tonight.middle
     return datetime.combine(day + timedelta(days=1), time(), data.timezone)
 
 
@@ -212,6 +222,13 @@ class MawaqitSensor[DescriptionT: SensorEntityDescription](
         self._attr_unique_id = (
             f"{coordinator.config_entry.data[CONF_UUID]}_{description.key}"
         )
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return True while there is data, even when the last refresh failed."""
+        # The prayer times of the whole year stay valid when MAWAQIT is down.
+        return self.coordinator.data is not None
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -274,6 +291,18 @@ class MawaqitDaySensor(MawaqitSensor[MawaqitDaySensorEntityDescription]):
 
 class MawaqitNextPrayerSensor(MawaqitSensor[MawaqitNextPrayerSensorEntityDescription]):
     """The next prayer: Jumua instead of Dhuhr on Fridays."""
+
+    def __init__(
+        self,
+        coordinator: MawaqitCoordinator,
+        description: MawaqitNextPrayerSensorEntityDescription,
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator, description)
+        # Like the custom integration, so that its entities are kept.
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.data[CONF_UUID]}_next_prayer_{description.key}"
+        )
 
     @override
     def _compute(

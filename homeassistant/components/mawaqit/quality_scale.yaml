@@ -39,7 +39,11 @@ rules:
     status: exempt
     comment: This integration does not provide an options flow.
   docs-installation-parameters: done
-  entity-unavailable: done
+  entity-unavailable:
+    status: exempt
+    comment: >-
+      The prayer times of the whole year stay valid when MAWAQIT cannot be
+      reached, so the sensors keep using them.
   integration-owner: done
   log-when-unavailable: done
   parallel-updates: done

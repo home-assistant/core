@@ -18,6 +18,8 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+RETRY_AFTER = timedelta(minutes=15)
+
 type MawaqitConfigEntry = ConfigEntry[MawaqitCoordinator]
 
 
@@ -62,6 +64,7 @@ class MawaqitCoordinator(DataUpdateCoordinator[MawaqitData]):
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
                 translation_placeholders={"error": str(err)},
+                retry_after=RETRY_AFTER.total_seconds(),
             ) from err
 
         timezone = await dt_util.async_get_time_zone(prayer_times.timezone)

@@ -602,7 +602,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'next_salat_name',
-    'unique_id': '05b4d393-fb76-4d9b-b2a4-f98ab4c4b64f_next_salat_name',
+    'unique_id': '05b4d393-fb76-4d9b-b2a4-f98ab4c4b64f_next_prayer_next_salat_name',
     'unit_of_measurement': None,
   })
 # ---
@@ -661,7 +661,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'next_salat_time',
-    'unique_id': '05b4d393-fb76-4d9b-b2a4-f98ab4c4b64f_next_salat_time',
+    'unique_id': '05b4d393-fb76-4d9b-b2a4-f98ab4c4b64f_next_prayer_next_salat_time',
     'unit_of_measurement': None,
   })
 # ---
@@ -712,7 +712,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'prayer_jumua_2',
-    'unique_id': '05b4d393-fb76-4d9b-b2a4-f98ab4c4b64f_jumua_2',
+    'unique_id': '05b4d393-fb76-4d9b-b2a4-f98ab4c4b64f_jumua 2',
     'unit_of_measurement': None,
   })
 # ---

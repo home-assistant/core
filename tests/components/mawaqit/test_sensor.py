@@ -19,7 +19,7 @@ from . import setup_integration
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 # Times of the fixture, in Paris (UTC+2): Thursday 9 April 2026 has Fajr at 05:35,
-# Dhuhr at 13:57, Asr at 17:35 and Isha at 22:03. Friday 10 April has Fajr at 05:33
+# Dhuhr at 13:57, Asr at 17:35 and Maghrib at 20:36. Friday 10 April has Fajr at 05:33
 # and Jumua at 13:50 and 14:30.
 
 
@@ -104,18 +104,18 @@ async def test_day_changes_halfway_through_the_night(
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test the prayers of the next day are shown halfway between Isha and Fajr."""
+    """Test the prayers of the next day are shown at the middle of the night."""
     await setup_integration(hass, mock_config_entry)
     assert hass.states.get("sensor.fajr_prayer").state == "2026-04-09T03:35:00+00:00"
     assert hass.states.get("sensor.jumua_prayer").state == "2026-04-10T11:50:00+00:00"
 
-    # Halfway between 22:03 and 05:33 is 01:48.
-    freezer.move_to("2026-04-09 23:47:59+00:00")
+    # Halfway between Maghrib at 20:36 and Fajr at 05:33 is 01:04:30.
+    freezer.move_to("2026-04-09 23:04:29+00:00")
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert hass.states.get("sensor.fajr_prayer").state == "2026-04-09T03:35:00+00:00"
 
-    freezer.move_to("2026-04-09 23:48:00+00:00")
+    freezer.move_to("2026-04-09 23:04:30+00:00")
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert hass.states.get("sensor.fajr_prayer").state == "2026-04-10T03:33:00+00:00"
@@ -199,21 +199,95 @@ async def test_no_times_in_the_calendar(
     assert hass.states.get("sensor.next_salat").state == STATE_UNKNOWN
 
 
-@pytest.mark.freeze_time("2026-04-09 10:00:00+00:00")
-async def test_unavailable_when_update_fails(
+@pytest.mark.parametrize(
+    ("now", "fajr"),
+    [
+        pytest.param(
+            "2026-01-15 10:00:00+00:00", "2026-01-15T06:01:00+00:00", id="winter"
+        ),
+        pytest.param(
+            "2026-04-09 10:00:00+00:00", "2026-04-09T03:35:00+00:00", id="summer"
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_mawaqit_client")
+async def test_times_in_the_mosque_time_zone(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    now: str,
+    fajr: str,
+) -> None:
+    """Test times are read in the time zone of the mosque, not Home Assistant's."""
+    await hass.config.async_set_time_zone("US/Pacific")
+    freezer.move_to(now)
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("sensor.fajr_prayer").state == fajr
+
+
+@pytest.mark.freeze_time("2026-04-09 21:00:00+00:00")
+async def test_available_when_update_fails(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_mawaqit_client: MagicMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test the sensors are unavailable when the prayer times cannot be fetched."""
+    """Test the sensors keep the prayer times of the year while MAWAQIT is down."""
     await setup_integration(hass, mock_config_entry)
-    assert hass.states.get("sensor.fajr_prayer").state != STATE_UNAVAILABLE
 
     mock_mawaqit_client.mosques.prayer_times.side_effect = MawaqitError
     freezer.tick(timedelta(hours=12))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.fajr_prayer").state == STATE_UNAVAILABLE
-    assert hass.states.get("sensor.next_salat").state == STATE_UNAVAILABLE
+    assert mock_mawaqit_client.mosques.prayer_times.await_count == 2
+    assert hass.states.get("sensor.fajr_prayer").state == "2026-04-10T03:33:00+00:00"
+    assert hass.states.get("sensor.next_salat").state != STATE_UNAVAILABLE
+
+    # Retried sooner than the next 12-hour refresh.
+    freezer.tick(timedelta(minutes=15))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert mock_mawaqit_client.mosques.prayer_times.await_count == 3
+
+
+@pytest.mark.freeze_time("2026-04-09 10:00:00+00:00")
+async def test_sensors_added_when_the_mosque_publishes_them(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_mawaqit_client: MagicMock,
+    prayer_times: PrayerTimes,
+    freezer: FrozenDateTimeFactory,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the iqama and Jumua sensors appear when the mosque starts publishing."""
+    mock_mawaqit_client.mosques.prayer_times.return_value = prayer_times.model_copy(
+        update={"iqama_enabled": False, "jumua": None, "jumua_2": None}
+    )
+    await setup_integration(hass, mock_config_entry)
+    assert hass.states.get("sensor.fajr_iqama") is None
+    assert hass.states.get("sensor.jumua_prayer") is None
+
+    mock_mawaqit_client.mosques.prayer_times.return_value = prayer_times
+    freezer.tick(timedelta(hours=12))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.fajr_iqama") is not None
+    assert hass.states.get("sensor.second_jumua_prayer") is not None
+    entities = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
+
+    # Kept, as unknown, when the mosque stops publishing them.
+    mock_mawaqit_client.mosques.prayer_times.return_value = prayer_times.model_copy(
+        update={"iqama_enabled": False}
+    )
+    freezer.tick(timedelta(hours=12))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.fajr_iqama").state == STATE_UNKNOWN
+    assert (
+        er.async_entries_for_config_entry(entity_registry, mock_config_entry.entry_id)
+        == entities
+    )
