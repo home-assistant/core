@@ -99,7 +99,7 @@ async def test_switch_turn_on_off(
     assert entity_state.state == "on"
 
 
-async def test_switch_state_updates_right_after_turn_off(hass: HomeAssistant) -> None:
+async def test_switch_state_updates_right_after_toggling(hass: HomeAssistant) -> None:
     """Test the switch shows the new state without waiting for the next poll."""
     client = create_mock_motioneye_client()
     await setup_mock_motioneye_config_entry(hass, client=client)
@@ -119,6 +119,21 @@ async def test_switch_state_updates_right_after_turn_off(hass: HomeAssistant) ->
 
     assert (entity_state := hass.states.get(TEST_SWITCH_MOTION_DETECTION_ENTITY_ID))
     assert entity_state.state == "off"
+
+    # Toggle again right away, within the cooldown of a requested refresh
+    client.async_get_cameras = AsyncMock(
+        return_value={"cameras": [copy.deepcopy(TEST_CAMERA)]}
+    )
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: TEST_SWITCH_MOTION_DETECTION_ENTITY_ID},
+        blocking=True,
+    )
+
+    assert (entity_state := hass.states.get(TEST_SWITCH_MOTION_DETECTION_ENTITY_ID))
+    assert entity_state.state == "on"
 
 
 async def test_switch_state_update_from_coordinator(
