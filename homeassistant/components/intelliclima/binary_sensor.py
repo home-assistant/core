@@ -2,7 +2,7 @@
 
 from typing import override
 
-from pyintelliclima.intelliclima_types import IntelliClimaECO
+from pyintelliclima import IntelliClimaECO2
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -49,7 +49,7 @@ class IntelliClimaFilterCleaningBinarySensor(
     def __init__(
         self,
         coordinator: IntelliClimaFilterCoordinator,
-        device: IntelliClimaECO,
+        device: IntelliClimaECO2,
     ) -> None:
         """Class initializer."""
         super().__init__(coordinator)

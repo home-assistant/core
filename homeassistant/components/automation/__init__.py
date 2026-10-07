@@ -46,7 +46,6 @@ from homeassistant.core import (
 from homeassistant.exceptions import HomeAssistantError, ServiceNotFound, TemplateError
 from homeassistant.helpers import (
     condition as condition_helper,
-    config_validation as cv,
     trigger as trigger_helper,
 )
 from homeassistant.helpers.entity import ToggleEntity
@@ -80,37 +79,32 @@ from homeassistant.helpers.trace import (
 )
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.dt import parse_datetime
-from homeassistant.util.hass_dict import HassKey
 
 from .config import AutomationConfig, ValidationStatus
 from .const import (
     CONF_INITIAL_STATE,
+    CONF_STOP_ACTIONS,
     CONF_TRACE,
     CONF_TRIGGER_VARIABLES,
+    DATA_COMPONENT,
     DEFAULT_INITIAL_STATE,
+    DEFAULT_STOP_ACTIONS,
     DOMAIN,
     LOGGER,
     AutomationEntityCapabilityAttribute,
     AutomationEntityStateAttribute,
 )
 from .helpers import async_get_blueprints
+from .services import async_setup_services
 from .trace import trace_automation
 
-DATA_COMPONENT: HassKey[EntityComponent[BaseAutomationEntity]] = HassKey(DOMAIN)
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
-
-
-CONF_SKIP_CONDITION = "skip_condition"
-CONF_STOP_ACTIONS = "stop_actions"
-DEFAULT_STOP_ACTIONS = True
 
 EVENT_AUTOMATION_RELOADED = "automation_reloaded"
 EVENT_AUTOMATION_TRIGGERED = "automation_triggered"
 
 ATTR_LAST_TRIGGERED = "last_triggered"
 ATTR_SOURCE = "source"
-ATTR_VARIABLES = "variables"
-SERVICE_TRIGGER = "trigger"
 
 
 class IfAction(condition_helper.ConditionsChecker):
@@ -259,35 +253,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         async_get_blueprints(hass).async_populate(), eager_start=True
     )
 
-    async def trigger_service_handler(
-        entity: BaseAutomationEntity, service_call: ServiceCall
-    ) -> None:
-        """Handle forced automation trigger, e.g. from frontend."""
-        await entity.async_trigger(
-            {**service_call.data[ATTR_VARIABLES], "trigger": {"platform": None}},
-            skip_condition=service_call.data[CONF_SKIP_CONDITION],
-            context=service_call.context,
-        )
-
-    component.async_register_entity_service(
-        SERVICE_TRIGGER,
-        {
-            probatio.Optional(ATTR_VARIABLES, default={}): dict,
-            probatio.Optional(CONF_SKIP_CONDITION, default=True): bool,
-        },
-        trigger_service_handler,
-    )
-    component.async_register_entity_service(SERVICE_TOGGLE, None, "async_toggle")
-    component.async_register_entity_service(SERVICE_TURN_ON, None, "async_turn_on")
-    component.async_register_entity_service(
-        SERVICE_TURN_OFF,
-        {
-            probatio.Optional(
-                CONF_STOP_ACTIONS, default=DEFAULT_STOP_ACTIONS
-            ): cv.boolean
-        },
-        "async_turn_off",
-    )
+    async_setup_services(hass)
 
     async def reload_service_handler(service_call: ServiceCall) -> None:
         """Remove all automations and load new ones from config."""

@@ -2,7 +2,7 @@
 
 import logging
 
-import httpx
+import httpx2
 from pyecoforest.api import EcoforestApi
 from pyecoforest.exceptions import (
     EcoforestAuthenticationRequired,
@@ -24,7 +24,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: EcoforestConfigEntry) ->
     """Set up Ecoforest from a config entry."""
 
     host = entry.data[CONF_HOST]
-    auth = httpx.BasicAuth(entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD])
+    auth = httpx2.BasicAuth(entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD])
     api = EcoforestApi(host, auth)
 
     try:

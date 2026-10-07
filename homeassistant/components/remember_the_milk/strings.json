@@ -15,7 +15,7 @@
     },
     "step": {
       "auth": {
-        "description": "Follow the link to authorize Home Assistant to access your Remember The Milk account. When done, click on the button below to continue.\n\n[Authorize]({url})"
+        "description": "Follow the link to authorize Home Assistant to access your Remember The Milk account. When done, select **Submit** to continue.\n\n[Authorize]({url})"
       },
       "reauth_confirm": {
         "description": "The Remember The Milk integration needs to re-authenticate your account",

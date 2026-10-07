@@ -35,7 +35,7 @@ CONFIG_SCHEMA = probatio.Schema(
                             cv.string
                         ),
                         probatio.Required(CONF_ACCESSPOINT): cv.string,
-                        probatio.Required(CONF_AUTHTOKEN): cv.string,
+                        probatio.Required(probatio.Secret(CONF_AUTHTOKEN)): cv.string,
                     }
                 )
             ],
