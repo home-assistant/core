@@ -845,6 +845,9 @@ async def test_reconfigure_basic_auth(hass: HomeAssistant, ics_content: str) -> 
     assert get_schema_suggested_value(result["data_schema"].schema, CONF_USERNAME) == (
         "user"
     )
+    assert (
+        get_schema_suggested_value(result["data_schema"].schema, CONF_PASSWORD) is None
+    )
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_USERNAME: "user2", CONF_PASSWORD: "wrong"}
