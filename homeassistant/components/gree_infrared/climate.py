@@ -37,7 +37,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.util.unit_conversion import TemperatureConverter
 
-from . import GreeAcState, GreeIrConfigEntry
+from . import GreeIrConfigEntry
 from .const import (
     CONF_HVAC_MODES,
     CONF_INFRARED_EMITTER_ENTITY_ID,
@@ -57,6 +57,13 @@ _HA_FAN_TO_LIB: dict[str, GreeAcFanSpeed] = {
     FAN_HIGH: GreeAcFanSpeed.HIGH,
 }
 _LIB_FAN_TO_HA: dict[GreeAcFanSpeed, str] = {v: k for k, v in _HA_FAN_TO_LIB.items()}
+
+
+def _hvac_mode_changes(hvac_mode: HVACMode) -> dict[str, Any]:
+    """Return the frame fields an HVAC mode sets; off keeps the mode last active."""
+    if hvac_mode is HVACMode.OFF:
+        return {"power": False}
+    return {"power": True, "mode": HA_MODE_TO_LIB[hvac_mode]}
 
 
 @dataclass
@@ -134,15 +141,10 @@ class GreeAcClimateEntity(
         """Return the mode to send a power-off frame with.
 
         Those frames still carry a mode field, since the protocol has no dedicated
-        OFF mode. It is shared rather than held here because recording a frame the
-        receiver picks up sets it too.
+        OFF mode, so the shared state keeps the last active one while the unit is
+        off.
         """
-        return LIB_MODE_TO_HA[self._runtime_data.last_active_mode]
-
-    @_last_active_hvac_mode.setter
-    def _last_active_hvac_mode(self, hvac_mode: HVACMode) -> None:
-        """Record the mode to send a power-off frame with."""
-        self._runtime_data.last_active_mode = HA_MODE_TO_LIB[hvac_mode]
+        return LIB_MODE_TO_HA[self._runtime_data.ac_state.mode]
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -169,21 +171,23 @@ class GreeAcClimateEntity(
                     )
                 )
 
+        last_active_hvac_mode = self._last_active_hvac_mode
         current_mode = self._attr_hvac_mode
         if current_mode is not None and current_mode is not HVACMode.OFF:
-            self._last_active_hvac_mode = current_mode
+            last_active_hvac_mode = current_mode
         elif (last_extra_data := await self.async_get_last_extra_data()) is not None:
             restored = _GreeAcExtraStoredData.from_dict(last_extra_data.as_dict())
             if restored is not None and restored.last_active_hvac_mode in (
                 mode.value for mode in self._attr_hvac_modes if mode is not HVACMode.OFF
             ):
-                self._last_active_hvac_mode = HVACMode(restored.last_active_hvac_mode)
+                last_active_hvac_mode = HVACMode(restored.last_active_hvac_mode)
 
-        self._runtime_data.ac_state = self._state_for(
-            self._attr_hvac_mode is not HVACMode.OFF,
-            self._last_active_hvac_mode,
-            int(self._attr_target_temperature or MIN_TEMP),
-            self._attr_fan_mode or FAN_AUTO,
+        self._runtime_data.ac_state = replace(
+            self._runtime_data.ac_state,
+            power=self._attr_hvac_mode is not HVACMode.OFF,
+            mode=HA_MODE_TO_LIB[last_active_hvac_mode],
+            temperature=int(self._attr_target_temperature or MIN_TEMP),
+            fan=_HA_FAN_TO_LIB[self._attr_fan_mode or FAN_AUTO],
         )
 
     @property
@@ -194,56 +198,34 @@ class GreeAcClimateEntity(
             last_active_hvac_mode=self._last_active_hvac_mode.value
         )
 
-    def _state_for(
-        self, power: bool, hvac_mode: HVACMode, temp: int, fan_mode: str
-    ) -> GreeAcState:
-        """Build a frame state, keeping the fields this entity does not expose."""
-        return replace(
-            self._runtime_data.ac_state,
-            power=power,
-            mode=HA_MODE_TO_LIB[hvac_mode],
-            temperature=temp,
-            fan=_HA_FAN_TO_LIB[fan_mode],
-        )
-
-    async def _async_send_state(
-        self, hvac_mode: HVACMode, temp: int, fan_mode: str
-    ) -> None:
-        """Send a full-state frame for the given target state."""
-        power = hvac_mode is not HVACMode.OFF
-        active_hvac_mode = hvac_mode if power else self._last_active_hvac_mode
+    async def _async_send_changes(self, **changes: Any) -> None:
+        """Send a frame applying the given fields to the shared state."""
         async with self._runtime_data.send_lock:
             await self._send_command(
-                self._state_for(power, active_hvac_mode, temp, fan_mode).to_command()
+                replace(self._runtime_data.ac_state, **changes).to_command()
             )
-            # Rebuilt rather than reused: a frame from the remote may have landed
-            # while this one was going out, and what it carries is not this entity's
-            # to undo.
-            self._runtime_data.ac_state = self._state_for(
-                power, active_hvac_mode, temp, fan_mode
+            # Only the fields asked for are written back: a frame from the remote
+            # may have landed while this one was going out, and the rest of what it
+            # carries is not this call's to undo.
+            self._runtime_data.ac_state = replace(
+                self._runtime_data.ac_state, **changes
             )
-        if power:
-            self._last_active_hvac_mode = hvac_mode
 
-    async def _async_record_state(self, temp: int, fan_mode: str) -> None:
-        """Record a change made while the unit is off, without sending a frame.
+    async def _async_record_changes(self, **changes: Any) -> None:
+        """Record fields changed while the unit is off, without sending a frame.
 
         The shared state is the latest known state of the unit, so it has to hold
         what this entity shows even when no frame goes out.
         """
         async with self._runtime_data.send_lock:
-            self._runtime_data.ac_state = self._state_for(
-                False, self._last_active_hvac_mode, temp, fan_mode
+            self._runtime_data.ac_state = replace(
+                self._runtime_data.ac_state, **changes
             )
 
     @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set HVAC mode."""
-        await self._async_send_state(
-            hvac_mode,
-            int(self._attr_target_temperature or MIN_TEMP),
-            self._attr_fan_mode or FAN_AUTO,
-        )
+        await self._async_send_changes(**_hvac_mode_changes(hvac_mode))
         self._attr_hvac_mode = hvac_mode
         self.async_write_ha_state()
 
@@ -255,14 +237,16 @@ class GreeAcClimateEntity(
         if hvac_mode is not None:
             self._valid_mode_or_raise("hvac", hvac_mode, self.hvac_modes)
 
+        changes: dict[str, Any] = {"temperature": temp}
+        if hvac_mode is not None:
+            changes |= _hvac_mode_changes(hvac_mode)
+
         effective_mode = hvac_mode or self._attr_hvac_mode or HVACMode.OFF
         # A temperature change on its own has nothing to send while the unit is off.
         if effective_mode is not HVACMode.OFF or hvac_mode is HVACMode.OFF:
-            await self._async_send_state(
-                effective_mode, temp, self._attr_fan_mode or FAN_AUTO
-            )
+            await self._async_send_changes(**changes)
         else:
-            await self._async_record_state(temp, self._attr_fan_mode or FAN_AUTO)
+            await self._async_record_changes(**changes)
 
         if hvac_mode is not None:
             self._attr_hvac_mode = hvac_mode
@@ -275,13 +259,9 @@ class GreeAcClimateEntity(
         """Set fan mode."""
         hvac_mode = self._attr_hvac_mode
         if hvac_mode is not None and hvac_mode is not HVACMode.OFF:
-            await self._async_send_state(
-                hvac_mode, int(self._attr_target_temperature or MIN_TEMP), fan_mode
-            )
+            await self._async_send_changes(fan=_HA_FAN_TO_LIB[fan_mode])
         else:
-            await self._async_record_state(
-                int(self._attr_target_temperature or MIN_TEMP), fan_mode
-            )
+            await self._async_record_changes(fan=_HA_FAN_TO_LIB[fan_mode])
         self._attr_fan_mode = fan_mode
         self.async_write_ha_state()
 

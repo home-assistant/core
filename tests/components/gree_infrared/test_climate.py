@@ -657,6 +657,61 @@ async def test_receiver_off_signal_records_the_mode_it_carries(
     )
 
 
+@pytest.mark.parametrize("has_receiver", [True])
+@pytest.mark.usefixtures("init_integration")
+async def test_receiver_off_signal_in_unconfigured_mode_keeps_the_last_active_mode(
+    hass: HomeAssistant,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+    mock_infrared_receiver_entity: MockInfraredReceiverEntity,
+) -> None:
+    """Test an off frame in an unconfigured mode is recorded with the last mode.
+
+    The unit is off either way, so the frame still applies, but its mode is not one
+    this entry may send and the next power-off frame carries the one before it.
+    """
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": HVACMode.DRY},
+        blocking=True,
+    )
+    mock_infrared_receiver_entity._handle_received_signal(
+        InfraredReceivedSignal(
+            timings=GreeAcCommand(
+                power=False,
+                mode=GreeAcMode.HEAT,
+                temperature=24,
+                fan=GreeAcFanSpeed.HIGH,
+            ).get_raw_timings()
+        )
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(_CLIMATE_ENTITY_ID)
+    assert state is not None
+    assert state.state == HVACMode.OFF
+    mock_infrared_emitter_entity.send_command_calls.clear()
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": HVACMode.OFF},
+        blocking=True,
+    )
+
+    assert len(mock_infrared_emitter_entity.send_command_calls) == 1
+    timings = mock_infrared_emitter_entity.send_command_calls[0].get_raw_timings()
+    assert (
+        timings
+        == GreeAcCommand(
+            power=False,
+            mode=GreeAcMode.DRY,
+            temperature=24,
+            fan=GreeAcFanSpeed.HIGH,
+        ).get_raw_timings()
+    )
+
+
 @pytest.mark.usefixtures("mock_infrared_emitter_entity")
 async def test_last_active_mode_restored_on_restart_while_off(
     hass: HomeAssistant,
@@ -832,7 +887,19 @@ async def test_remote_frame_during_send_is_kept(
     mock_infrared_emitter_entity: MockInfraredEmitterEntity,
     mock_infrared_receiver_entity: MockInfraredReceiverEntity,
 ) -> None:
-    """Test a remote frame landing mid-send is not undone once the send finishes."""
+    """Test a remote frame landing mid-send is not undone once the send finishes.
+
+    The send only asked for a temperature, so every other field keeps what the
+    remote set while it was going out, mode included.
+    """
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": HVACMode.COOL},
+        blocking=True,
+    )
+    mock_infrared_emitter_entity.send_command_calls.clear()
+
     sending = asyncio.Event()
     finish_sending = asyncio.Event()
     send_command = mock_infrared_emitter_entity.async_send_command
@@ -846,11 +913,11 @@ async def test_remote_frame_during_send_is_kept(
     with patch.object(
         mock_infrared_emitter_entity, "async_send_command", blocking_send
     ):
-        hvac_mode_call = hass.async_create_task(
+        temperature_call = hass.async_create_task(
             hass.services.async_call(
                 CLIMATE_DOMAIN,
-                SERVICE_SET_HVAC_MODE,
-                {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": HVACMode.COOL},
+                SERVICE_SET_TEMPERATURE,
+                {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, ATTR_TEMPERATURE: 25},
                 blocking=True,
             )
         )
@@ -858,7 +925,7 @@ async def test_remote_frame_during_send_is_kept(
         mock_infrared_receiver_entity._handle_received_signal(
             InfraredReceivedSignal(
                 timings=GreeAcCommand(
-                    mode=GreeAcMode.COOL,
+                    mode=GreeAcMode.DRY,
                     temperature=27,
                     fan=GreeAcFanSpeed.HIGH,
                     swing_v=True,
@@ -866,14 +933,19 @@ async def test_remote_frame_during_send_is_kept(
             )
         )
         finish_sending.set()
-        await hvac_mode_call
+        await temperature_call
 
+    state = hass.states.get(_CLIMATE_ENTITY_ID)
+    assert state is not None
+    assert state.state == HVACMode.DRY
+    assert state.attributes["fan_mode"] == FAN_HIGH
+    assert state.attributes[ATTR_TEMPERATURE] == 25
     mock_infrared_emitter_entity.send_command_calls.clear()
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, ATTR_TEMPERATURE: 25},
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": HVACMode.OFF},
         blocking=True,
     )
 
@@ -882,7 +954,8 @@ async def test_remote_frame_during_send_is_kept(
     assert (
         timings
         == GreeAcCommand(
-            mode=GreeAcMode.COOL,
+            power=False,
+            mode=GreeAcMode.DRY,
             temperature=25,
             fan=GreeAcFanSpeed.HIGH,
             swing_v=True,

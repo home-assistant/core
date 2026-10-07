@@ -79,8 +79,7 @@ class GreeIrRuntimeData:
     """
 
     configured_modes: tuple[GreeAcMode, ...]
-    last_active_mode: GreeAcMode
-    ac_state: GreeAcState = field(default_factory=GreeAcState)
+    ac_state: GreeAcState
     send_lock: asyncio.Lock = field(default_factory=asyncio.Lock)
 
     @callback
@@ -91,18 +90,17 @@ class GreeIrRuntimeData:
         picks up describes the whole unit, not only the part the climate entity
         shows.
         """
-        # Off frames carry a mode field too, so the mode is recorded either way.
-        if command.mode in self.configured_modes:
-            self.last_active_mode = command.mode
-        elif command.power:
-            return False
+        state = GreeAcState.from_command(command)
+        if command.mode not in self.configured_modes:
+            if command.power:
+                return False
+            # Off frames carry a mode field too; one this entry may not send keeps
+            # the mode the next power-off frame goes out with.
+            state = replace(state, mode=self.ac_state.mode)
 
         # The remote's frame is now what the unit last saw, so a later frame has to
-        # carry every field of it rather than the ones sent before it. Only the mode
-        # is kept, having already dropped an unconfigured one.
-        self.ac_state = replace(
-            GreeAcState.from_command(command), mode=self.last_active_mode
-        )
+        # carry every field of it rather than the ones sent before it.
+        self.ac_state = state
         return True
 
 
@@ -117,7 +115,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: GreeIrConfigEntry) -> bo
     )
     entry.runtime_data = GreeIrRuntimeData(
         configured_modes=configured_modes,
-        last_active_mode=configured_modes[0],
+        ac_state=GreeAcState(mode=configured_modes[0]),
     )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
