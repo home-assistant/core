@@ -1,7 +1,8 @@
 """StarLine Account."""
 
 from collections.abc import Callable
-from datetime import datetime, timedelta
+from datetime import timedelta
+import time
 from typing import Any
 
 from starline import StarlineApi, StarlineDevice
@@ -47,7 +48,7 @@ class StarlineAccount:
 
     def _check_slnet_token(self, interval: int) -> None:
         """Check SLNet token expiration and update if needed."""
-        now = datetime.now().timestamp()  # pylint: disable=home-assistant-enforce-naive-now
+        now = time.time()
         slnet_token_expires = self._config_entry.data[DATA_EXPIRES]
 
         if now + interval > slnet_token_expires:

@@ -15,6 +15,9 @@ from homeassistant.util.dt import utcnow
 from . import setup_mikrotik_entry
 from .conftest import MockConfigEntryFactory
 from .const import (
+    DEVICE_1_DHCP,
+    DEVICE_1_WIRELESS,
+    DEVICE_2_DHCP,
     DEVICE_2_WIRELESS,
     DEVICE_3_DHCP_NUMERIC_NAME,
     DEVICE_3_WIRELESS,
@@ -154,32 +157,118 @@ async def test_hub_not_support_wireless(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("mock_device_registry_devices")
+async def test_hub_capsman(hass: HomeAssistant) -> None:
+    """Test device_trackers created when hub is a CAPsMAN manager."""
+
+    await setup_mikrotik_entry(
+        hass,
+        dhcp_data=[DEVICE_1_DHCP],
+        support_wireless=False,
+        support_capsman=True,
+        capsman_data=[DEVICE_1_WIRELESS],
+    )
+
+    device_1 = hass.states.get("device_tracker.device_1")
+    assert device_1
+    assert device_1.state == "home"
+
+
+@pytest.mark.usefixtures("mock_device_registry_devices")
+async def test_hub_wifi(hass: HomeAssistant) -> None:
+    """Test device_trackers created when hub supports the legacy wifi driver."""
+
+    await setup_mikrotik_entry(
+        hass,
+        dhcp_data=[DEVICE_2_DHCP],
+        support_wireless=False,
+        support_wifi=True,
+        wifi_data=[DEVICE_2_WIRELESS],
+    )
+
+    device_2 = hass.states.get("device_tracker.device_2")
+    assert device_2
+    assert device_2.state == "home"
+
+
+@pytest.mark.usefixtures("mock_device_registry_devices")
+async def test_hub_wireless_and_wifi(hass: HomeAssistant) -> None:
+    """Test a hub exposing both the legacy wireless package and the wifi driver.
+
+    The legacy ``wireless`` package can linger on a hub acting as a CAPsMAN for
+    ``wifi`` access points, leaving its registration table empty while the
+    connected clients are only listed on the ``wifi`` interface.
+    """
+    device_2_without_active_address = {
+        key: value for key, value in DEVICE_2_DHCP.items() if key != "active-address"
+    }
+
+    await setup_mikrotik_entry(
+        hass,
+        dhcp_data=[DEVICE_1_DHCP, device_2_without_active_address],
+        support_wireless=True,
+        wireless_data=[],
+        support_wifi=True,
+        wifi_data=[DEVICE_2_WIRELESS],
+    )
+
+    # device_2 is only present on the wifi interface, not in the wireless list
+    device_2 = hass.states.get("device_tracker.device_2")
+    assert device_2
+    assert device_2.state == "home"
+
+
+@pytest.mark.usefixtures("mock_device_registry_devices")
+async def test_wired_device_without_active_address_is_not_home(
+    hass: HomeAssistant,
+) -> None:
+    """Test a wired device without an active-address is marked away."""
+    device_without_active_address = {
+        key: value for key, value in DEVICE_2_DHCP.items() if key != "active-address"
+    }
+
+    await setup_mikrotik_entry(
+        hass,
+        support_wireless=False,
+        dhcp_data=[DEVICE_1_DHCP, device_without_active_address],
+    )
+
+    device_2 = hass.states.get("device_tracker.device_2")
+    assert device_2
+    assert device_2.state == "not_home"
+
+
+@pytest.mark.usefixtures("mock_device_registry_devices")
 async def test_arp_ping_success(hass: HomeAssistant) -> None:
     """Test arp ping devices to confirm they are connected."""
+    ping_replies = [{"seq": "0"}, {"seq": "1"}, {"seq": "2"}]
 
-    with patch.object(
-        mikrotik.coordinator.MikrotikData, "do_arp_ping", return_value=True
-    ):
-        await setup_mikrotik_entry(hass, arp_ping=True, force_dhcp=True)
+    await setup_mikrotik_entry(
+        hass, arp_ping=True, force_dhcp=True, ping_data=ping_replies
+    )
 
-        # test wired device_2 show as home if arp ping returns True
-        device_2 = hass.states.get("device_tracker.device_2")
-        assert device_2
-        assert device_2.state == "home"
+    # test wired device_2 shows as home if at least one arp ping reply is received
+    device_2 = hass.states.get("device_tracker.device_2")
+    assert device_2
+    assert device_2.state == "home"
 
 
 @pytest.mark.usefixtures("mock_device_registry_devices")
 async def test_arp_ping_timeout(hass: HomeAssistant) -> None:
     """Test arp ping timeout so devices are shown away."""
-    with patch.object(
-        mikrotik.coordinator.MikrotikData, "do_arp_ping", return_value=False
-    ):
-        await setup_mikrotik_entry(hass, arp_ping=True, force_dhcp=True)
+    ping_replies = [
+        {"status": "timeout"},
+        {"status": "timeout"},
+        {"status": "timeout"},
+    ]
 
-        # test wired device_2 show as not_home if arp ping times out
-        device_2 = hass.states.get("device_tracker.device_2")
-        assert device_2
-        assert device_2.state == "not_home"
+    await setup_mikrotik_entry(
+        hass, arp_ping=True, force_dhcp=True, ping_data=ping_replies
+    )
+
+    # test wired device_2 shows as not_home if every arp ping reply times out
+    device_2 = hass.states.get("device_tracker.device_2")
+    assert device_2
+    assert device_2.state == "not_home"
 
 
 @pytest.mark.usefixtures("mock_device_registry_devices")

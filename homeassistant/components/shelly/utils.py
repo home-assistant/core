@@ -5,6 +5,8 @@ from ipaddress import IPv4Address, IPv6Address, ip_address
 from typing import TYPE_CHECKING, Any, cast
 
 from aiohttp.web import Request, WebSocketResponse
+from aioshelly.ble import get_device_from_model_id
+from aioshelly.ble.manufacturer_data import parse_shelly_manufacturer_data
 from aioshelly.block_device import COAP, Block, BlockDevice
 from aioshelly.const import (
     BLOCK_GENERATIONS,
@@ -12,8 +14,8 @@ from aioshelly.const import (
     BLU_TRV_MODEL_NAME,
     DEFAULT_COAP_PORT,
     DEFAULT_HTTP_PORT,
+    DEVICES,
     MODEL_1L,
-    MODEL_BLU_GATEWAY_G3,
     MODEL_DIMMER,
     MODEL_DIMMER_2,
     MODEL_EM3,
@@ -21,6 +23,7 @@ from aioshelly.const import (
     MODEL_NAMES,
     MODEL_PLUG,
     RPC_GENERATIONS,
+    ShellyDevice,
 )
 from aioshelly.rpc_device import RpcDevice, WsServer
 from yarl import URL
@@ -72,7 +75,7 @@ from .const import (
     SHBTN_INPUTS_EVENTS_TYPES,
     SHBTN_MODELS,
     SHELLY_EMIT_EVENT_PATTERN,
-    SHELLY_WALL_DISPLAY_MODELS,
+    SHELLY_WALL_DISPLAY_MODEL_PREFIX,
     SHIX3_1_INPUTS_EVENTS_TYPES,
     VIRTUAL_COMPONENTS,
     VIRTUAL_COMPONENTS_MAP,
@@ -322,6 +325,30 @@ def get_model_name(info: dict[str, Any]) -> str:
     return cast(str, MODEL_NAMES.get(info["type"], info["type"]))
 
 
+def is_device_supported(info: dict[str, Any]) -> bool:
+    """Return True if the device model is supported."""
+    if get_info_gen(info) in RPC_GENERATIONS:
+        # Devices with firmware not fully provisioned
+        model = info.get(CONF_MODEL, "")
+    else:
+        model = info["type"]
+    if (device := DEVICES.get(model)) is None:
+        return True
+
+    return device.supported
+
+
+def get_device_from_manufacturer_data(
+    manufacturer_data: dict[int, bytes],
+) -> ShellyDevice | None:
+    """Return the Shelly device matching the advertised BLE model ID."""
+    parsed = parse_shelly_manufacturer_data(manufacturer_data)
+    if not parsed or not isinstance(model_id := parsed.get("model_id"), int):
+        return None
+
+    return get_device_from_model_id(model_id)
+
+
 def get_shelly_model_name(
     model: str,
     sleep_period: int,
@@ -565,7 +592,7 @@ def get_release_url(gen: int, model: str, beta: bool) -> str | None:
     ) or model in DEVICES_WITHOUT_FIRMWARE_CHANGELOG:
         return None
 
-    if model in SHELLY_WALL_DISPLAY_MODELS:
+    if model.startswith(SHELLY_WALL_DISPLAY_MODEL_PREFIX):
         return WALL_DISPLAY_RELEASE_URL
 
     if beta:
@@ -913,11 +940,8 @@ def remove_stale_blu_trv_devices(
     hass: HomeAssistant, rpc_device: RpcDevice, entry: ConfigEntry
 ) -> None:
     """Remove stale BLU TRV devices."""
-    if rpc_device.model != MODEL_BLU_GATEWAY_G3:
-        return
-
     dev_reg = dr.async_get(hass)
-    devices = dev_reg.devices.get_devices_for_config_entry_id(entry.entry_id)
+    devices = dr.async_entries_for_config_entry(dev_reg, entry.entry_id)
     config = rpc_device.config
     blutrv_keys = get_rpc_key_ids(config, BLU_TRV_IDENTIFIER)
     trv_addrs = [config[f"{BLU_TRV_IDENTIFIER}:{key}"]["addr"] for key in blutrv_keys]
@@ -925,6 +949,12 @@ def remove_stale_blu_trv_devices(
     for device in devices:
         if not device.via_device_id:
             # Device is not a sub-device, skip
+            continue
+
+        if not any(
+            connection[0] == CONNECTION_BLUETOOTH for connection in device.connections
+        ):
+            # Channel sub-devices have no Bluetooth connection
             continue
 
         if any(
@@ -943,7 +973,7 @@ def remove_empty_sub_devices(hass: HomeAssistant, entry: ConfigEntry) -> None:
     dev_reg = dr.async_get(hass)
     entity_reg = er.async_get(hass)
 
-    devices = dev_reg.devices.get_devices_for_config_entry_id(entry.entry_id)
+    devices = dr.async_entries_for_config_entry(dev_reg, entry.entry_id)
 
     for device in devices:
         if not device.via_device_id:

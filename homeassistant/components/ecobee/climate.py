@@ -3,8 +3,6 @@
 import collections
 from typing import Any, override
 
-import voluptuous as vol
-
 from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
@@ -27,13 +25,9 @@ from homeassistant.const import (
     STATE_ON,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import (
-    config_validation as cv,
-    device_registry as dr,
-    entity_platform,
-)
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.unit_conversion import TemperatureConverter
@@ -61,13 +55,6 @@ from .services import (
     _async_get_thermostats,
 )
 from .util import is_indefinite_hold
-
-ATTR_DST_ENABLED = "dst_enabled"
-ATTR_MIC_ENABLED = "mic_enabled"
-ATTR_AUTO_AWAY = "auto_away"
-ATTR_FOLLOW_ME = "follow_me"
-ATTR_SENSOR_LIST = "device_ids"
-ATTR_PRESET_MODE = "preset_mode"
 
 PRESET_AWAY_INDEFINITELY = "away_indefinitely"
 PRESET_TEMPERATURE = "temp"
@@ -127,12 +114,6 @@ PRESET_TO_ECOBEE_HOLD = {
     PRESET_HOLD_INDEFINITE: "indefinite",
 }
 
-SERVICE_SET_DST_MODE = "set_dst_mode"
-SERVICE_SET_MIC_MODE = "set_mic_mode"
-SERVICE_SET_OCCUPANCY_MODES = "set_occupancy_modes"
-SERVICE_SET_SENSORS_USED_IN_CLIMATE = "set_sensors_used_in_climate"
-
-
 SUPPORT_FLAGS = (
     ClimateEntityFeature.TARGET_TEMPERATURE
     | ClimateEntityFeature.PRESET_MODE
@@ -168,39 +149,18 @@ async def async_setup_entry(
         entities.append(Thermostat(data, index, thermostat, hass))
 
     async_add_entities(entities, True)
-    _async_get_thermostats(hass).extend(entities)
 
-    platform = entity_platform.async_get_current_platform()
+    # The ecobee actions act on whatever is in this list, so the entities have
+    # to be taken back out again when the entry goes away.
+    thermostats = _async_get_thermostats(hass)
+    thermostats.extend(entities)
 
-    platform.async_register_entity_service(
-        SERVICE_SET_DST_MODE,
-        {vol.Required(ATTR_DST_ENABLED): cv.boolean},
-        "set_dst_mode",
-    )
+    @callback
+    def _remove_thermostats() -> None:
+        for entity in entities:
+            thermostats.remove(entity)
 
-    platform.async_register_entity_service(
-        SERVICE_SET_MIC_MODE,
-        {vol.Required(ATTR_MIC_ENABLED): cv.boolean},
-        "set_mic_mode",
-    )
-
-    platform.async_register_entity_service(
-        SERVICE_SET_OCCUPANCY_MODES,
-        {
-            vol.Optional(ATTR_AUTO_AWAY): cv.boolean,
-            vol.Optional(ATTR_FOLLOW_ME): cv.boolean,
-        },
-        "set_occupancy_modes",
-    )
-
-    platform.async_register_entity_service(
-        SERVICE_SET_SENSORS_USED_IN_CLIMATE,
-        {
-            vol.Optional(ATTR_PRESET_MODE): cv.string,
-            vol.Required(ATTR_SENSOR_LIST): cv.ensure_list,
-        },
-        "set_sensors_used_in_climate",
-    )
+    config_entry.async_on_unload(_remove_thermostats)
 
 
 class Thermostat(ClimateEntity):
@@ -494,7 +454,7 @@ class Thermostat(ClimateEntity):
                 "id": device.id,
                 "name_by_user": device.name_by_user or device.name,
             }
-            for device in device_registry.devices.values()
+            for device in device_registry.devices
             for sensor_info in sensors_info
             if device.name == sensor_info["name"]
             and any(identifier[0] == DOMAIN for identifier in device.identifiers)
@@ -830,7 +790,7 @@ class Thermostat(ClimateEntity):
         return sorted(
             [
                 device.name_by_user or device.name
-                for device in device_registry.devices.values()
+                for device in device_registry.devices
                 for sensor_name in sensor_names
                 if device.name == sensor_name
                 and any(identifier[0] == DOMAIN for identifier in device.identifiers)

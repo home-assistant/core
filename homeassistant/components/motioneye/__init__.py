@@ -47,13 +47,14 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_DEVICE_ID, ATTR_NAME, CONF_URL, CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
 from homeassistant.helpers.network import NoURLAvailableError, get_url
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     ATTR_EVENT_TYPE,
@@ -79,6 +80,7 @@ from .const import (
     WEB_HOOK_SENTINEL_VALUE,
 )
 from .coordinator import MotionEyeConfigEntry, MotionEyeUpdateCoordinator
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [CAMERA_DOMAIN, SENSOR_DOMAIN, SWITCH_DOMAIN]
@@ -272,6 +274,15 @@ def _add_camera(
     )
 
 
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the motionEye integration."""
+    async_setup_services(hass)
+    return True
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: MotionEyeConfigEntry) -> bool:
     """Set up motionEye from a config entry."""
 
@@ -394,7 +405,9 @@ async def handle_webhook(
     device_registry = dr.async_get(hass)
     device_id = data[ATTR_DEVICE_ID]
 
-    if not (device := device_registry.async_get(device_id)):
+    if not (
+        device := device_registry.async_get(device_id, include_child_devices=False)
+    ):
         return Response(
             text=f"Device not found: {device_id}",
             status=HTTPStatus.BAD_REQUEST,
@@ -433,18 +446,14 @@ def _get_media_event_data(
     event_file_path: str,
     event_file_type: int,
 ) -> dict[str, str]:
-    for config_entry_id in device.config_entries:
-        entry = hass.config_entries.async_get_entry(config_entry_id)
-        if (
-            entry is not None
-            and entry.domain == DOMAIN
-            and entry.state is ConfigEntryState.LOADED
-        ):
-            break
-    else:
+    _, config_entry = dr.async_get_device_and_config_entry_for_domain(
+        hass, device.id, domain=DOMAIN
+    )
+    if config_entry is None or config_entry.state is not ConfigEntryState.LOADED:
         return {}
+    config_entry_id = config_entry.entry_id
 
-    coordinator: MotionEyeUpdateCoordinator = entry.runtime_data
+    coordinator: MotionEyeUpdateCoordinator = config_entry.runtime_data
     client = coordinator.client
 
     for identifier in device.identifiers:
@@ -465,7 +474,10 @@ def _get_media_event_data(
     # The file_path in the event is the full local filesystem path to the
     # media. To convert that to the media path that motionEye will
     # understand, we need to strip the root directory from the path.
-    if os.path.commonprefix([root_directory, event_file_path]) != root_directory:
+    try:
+        if os.path.commonpath([root_directory, event_file_path]) != root_directory:
+            return {}
+    except ValueError:
         return {}
 
     file_path = "/" + os.path.relpath(event_file_path, root_directory)

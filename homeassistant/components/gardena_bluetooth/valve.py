@@ -53,7 +53,7 @@ class GardenaBluetoothValve(GardenaBluetoothEntity, ValveEntity):
     ) -> None:
         """Initialize the switch."""
         super().__init__(
-            coordinator, {Valve.state.uuid, Valve.manual_watering_time.uuid}
+            coordinator, {Valve.state.unique_id, Valve.manual_watering_time.unique_id}
         )
         self._attr_unique_id = f"{coordinator.address}-{Valve.state.unique_id}"
 

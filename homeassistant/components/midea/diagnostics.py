@@ -3,13 +3,13 @@
 from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
-from homeassistant.const import CONF_TOKEN
+from homeassistant.const import CONF_MAC, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 
-from .const import CONF_KEY
+from .const import CONF_KEY, CONF_SN
 from .entity import MideaConfigEntry
 
-TO_REDACT = {CONF_TOKEN, CONF_KEY}
+TO_REDACT = {CONF_TOKEN, CONF_KEY, CONF_MAC, CONF_SN}
 
 
 async def async_get_config_entry_diagnostics(

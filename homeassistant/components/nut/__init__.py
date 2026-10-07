@@ -168,7 +168,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: NutConfigEntry) -> bool
 async def async_remove_config_entry_device(
     hass: HomeAssistant,
     config_entry: NutConfigEntry,
-    device_entry: dr.DeviceEntry,
+    device_entry: dr.AnyDeviceEntry,
 ) -> bool:
     """Remove NUT config entry from a device."""
     return not any(
@@ -336,7 +336,11 @@ class PyNUTData:
             self._alias = await self._async_get_alias()
         if TYPE_CHECKING:
             assert self._alias is not None
-        return await self._client.list_vars(self._alias)
+        status = await self._client.list_vars(self._alias)
+        if not status:
+            return status
+        # a driver formatting a missing C string reports the literal (null)
+        return {key: value for key, value in status.items() if value != "(null)"}
 
     async def async_update(self) -> dict[str, str]:
         """Fetch the latest status from NUT."""

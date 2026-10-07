@@ -8,9 +8,9 @@ import threading
 from typing import Any
 from unittest.mock import AsyncMock, Mock, call as mock_call, patch
 
+import probatio
 import pytest
 from pytest_unordered import unordered
-import voluptuous as vol
 
 # To prevent circular import when running just this file
 from homeassistant import config_entries, exceptions
@@ -719,25 +719,25 @@ async def test_extract_entity_ids(hass: HomeAssistant) -> None:
         mode=None,
         object_id=None,
         order=None,
+        context=None,
     )
 
     call = ServiceCall(hass, "light", "turn_on", {ATTR_ENTITY_ID: "light.Bowl"})
 
-    assert {"light.bowl"} == await service.async_extract_entity_ids(hass, call)
+    assert {"light.bowl"} == await service.async_extract_entity_ids(call)
 
     call = ServiceCall(hass, "light", "turn_on", {ATTR_ENTITY_ID: "group.test"})
 
     assert {"light.ceiling", "light.kitchen"} == await service.async_extract_entity_ids(
-        hass, call
+        call
     )
 
     assert {"group.test"} == await service.async_extract_entity_ids(
-        hass, call, expand_group=False
+        call, expand_group=False
     )
 
     assert (
         await service.async_extract_entity_ids(
-            hass,
             ServiceCall(hass, "light", "turn_on", {ATTR_ENTITY_ID: ENTITY_MATCH_NONE}),
         )
         == set()
@@ -752,14 +752,14 @@ async def test_extract_entity_ids_from_area(
 
     assert {
         "light.in_own_area",
-    } == await service.async_extract_entity_ids(hass, call)
+    } == await service.async_extract_entity_ids(call)
 
     call = ServiceCall(hass, "light", "turn_on", {"area_id": "test-area"})
 
     assert {
         "light.in_area",
         "light.assigned_to_area",
-    } == await service.async_extract_entity_ids(hass, call)
+    } == await service.async_extract_entity_ids(call)
 
     call = ServiceCall(
         hass, "light", "turn_on", {"area_id": ["test-area", "diff-area"]}
@@ -769,11 +769,11 @@ async def test_extract_entity_ids_from_area(
         "light.in_area",
         "light.diff_area",
         "light.assigned_to_area",
-    } == await service.async_extract_entity_ids(hass, call)
+    } == await service.async_extract_entity_ids(call)
 
     assert (
         await service.async_extract_entity_ids(
-            hass, ServiceCall(hass, "light", "turn_on", {"area_id": ENTITY_MATCH_NONE})
+            ServiceCall(hass, "light", "turn_on", {"area_id": ENTITY_MATCH_NONE})
         )
         == set()
     )
@@ -784,13 +784,13 @@ async def test_extract_entity_ids_from_devices(
 ) -> None:
     """Test extract_entity_ids method with devices."""
     assert await service.async_extract_entity_ids(
-        hass, ServiceCall(hass, "light", "turn_on", {"device_id": "device-no-area-id"})
+        ServiceCall(hass, "light", "turn_on", {"device_id": "device-no-area-id"})
     ) == {
         "light.no_area",
     }
 
     assert await service.async_extract_entity_ids(
-        hass, ServiceCall(hass, "light", "turn_on", {"device_id": "device-area-a-id"})
+        ServiceCall(hass, "light", "turn_on", {"device_id": "device-area-a-id"})
     ) == {
         "light.in_area_a",
         "light.in_area_b",
@@ -798,7 +798,6 @@ async def test_extract_entity_ids_from_devices(
 
     assert (
         await service.async_extract_entity_ids(
-            hass,
             ServiceCall(hass, "light", "turn_on", {"device_id": "non-existing-id"}),
         )
         == set()
@@ -813,7 +812,7 @@ async def test_extract_entity_ids_from_floor(hass: HomeAssistant) -> None:
     assert {
         "light.in_area",
         "light.assigned_to_area",
-    } == await service.async_extract_entity_ids(hass, call)
+    } == await service.async_extract_entity_ids(call)
 
     call = ServiceCall(
         hass, "light", "turn_on", {"floor_id": ["test-floor", "floor-a"]}
@@ -823,11 +822,11 @@ async def test_extract_entity_ids_from_floor(hass: HomeAssistant) -> None:
         "light.in_area",
         "light.assigned_to_area",
         "light.in_area_a",
-    } == await service.async_extract_entity_ids(hass, call)
+    } == await service.async_extract_entity_ids(call)
 
     assert (
         await service.async_extract_entity_ids(
-            hass, ServiceCall(hass, "light", "turn_on", {"floor_id": ENTITY_MATCH_NONE})
+            ServiceCall(hass, "light", "turn_on", {"floor_id": ENTITY_MATCH_NONE})
         )
         == set()
     )
@@ -842,7 +841,7 @@ async def test_extract_entity_ids_from_labels(hass: HomeAssistant) -> None:
         "light.with_my_label",
         "light.config_with_my_label",
         "light.diag_with_my_label",
-    } == await service.async_extract_entity_ids(hass, call)
+    } == await service.async_extract_entity_ids(call)
 
     call = ServiceCall(hass, "light", "turn_on", {"label_id": "label1"})
 
@@ -851,24 +850,24 @@ async def test_extract_entity_ids_from_labels(hass: HomeAssistant) -> None:
         "light.with_label1_from_device_diff_area",
         "light.with_labels_from_device",
         "light.with_label1_and_label2_from_device",
-    } == await service.async_extract_entity_ids(hass, call)
+    } == await service.async_extract_entity_ids(call)
 
     call = ServiceCall(hass, "light", "turn_on", {"label_id": ["label2"]})
 
     assert {
         "light.with_labels_from_device",
         "light.with_label1_and_label2_from_device",
-    } == await service.async_extract_entity_ids(hass, call)
+    } == await service.async_extract_entity_ids(call)
 
     call = ServiceCall(hass, "light", "turn_on", {"label_id": ["label_area"]})
 
     assert {
         "light.with_labels_from_device",
-    } == await service.async_extract_entity_ids(hass, call)
+    } == await service.async_extract_entity_ids(call)
 
     assert (
         await service.async_extract_entity_ids(
-            hass, ServiceCall(hass, "light", "turn_on", {"label_id": ENTITY_MATCH_NONE})
+            ServiceCall(hass, "light", "turn_on", {"label_id": ENTITY_MATCH_NONE})
         )
         == set()
     )
@@ -1441,7 +1440,7 @@ async def test_async_get_descriptions_with_placeholders(hass: HomeAssistant) -> 
               unit_of_measurement: "seconds"
     """
 
-    service_schema = vol.Schema(
+    service_schema = probatio.Schema(
         {
             "topic": cv.string,
             "duration": cv.positive_int,
@@ -1509,6 +1508,57 @@ async def test_async_get_descriptions_with_placeholders(hass: HomeAssistant) -> 
             }
         }
     }
+
+
+@pytest.mark.parametrize(
+    ("target", "expected"),
+    [
+        pytest.param(
+            {"entity": {"domain": "light"}},
+            {"entity": [{"domain": ["light"]}]},
+            id="normalized",
+        ),
+        pytest.param(
+            {"entity": [{"domain": "light"}]},
+            {"entity": [{"domain": ["light"]}]},
+            id="already_normalized",
+        ),
+    ],
+)
+async def test_set_service_schema_target(
+    hass: HomeAssistant,
+    target: dict[str, Any],
+    expected: dict[str, Any],
+) -> None:
+    """Test the target of a registered description is normalized."""
+    await async_setup_component(hass, LOGGER_DOMAIN, {LOGGER_DOMAIN: {}})
+    hass.services.async_register(LOGGER_DOMAIN, "new_service", lambda x: None, None)
+
+    service.async_set_service_schema(
+        hass, LOGGER_DOMAIN, "new_service", {"target": target}
+    )
+
+    descriptions = await service.async_get_all_descriptions(hass)
+    assert descriptions[LOGGER_DOMAIN]["new_service"]["target"] == expected
+
+
+async def test_set_service_schema_invalid_target(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a target nothing can read is left out of the description."""
+    await async_setup_component(hass, LOGGER_DOMAIN, {LOGGER_DOMAIN: {}})
+    hass.services.async_register(LOGGER_DOMAIN, "new_service", lambda x: None, None)
+
+    service.async_set_service_schema(
+        hass, LOGGER_DOMAIN, "new_service", {"target": {"entity": ["light"]}}
+    )
+
+    descriptions = await service.async_get_all_descriptions(hass)
+    assert "target" not in descriptions[LOGGER_DOMAIN]["new_service"]
+    assert (
+        "Invalid target in the description of service logger.new_service" in caplog.text
+    )
 
 
 async def test_register_with_mixed_case(hass: HomeAssistant) -> None:
@@ -1922,7 +1972,7 @@ async def test_register_admin_service(
         "test",
         "test2",
         mock_service,
-        vol.Schema({vol.Required("required"): cv.boolean}),
+        probatio.Schema({probatio.Required("required"): cv.boolean}),
     )
 
     with pytest.raises(exceptions.UnknownUser):
@@ -1945,7 +1995,7 @@ async def test_register_admin_service(
         )
     assert len(calls) == 0
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             "test",
             "test",
@@ -1955,7 +2005,7 @@ async def test_register_admin_service(
         )
     assert len(calls) == 0
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             "test",
             "test2",
@@ -2034,25 +2084,21 @@ async def test_register_admin_service_return_response(
     assert result == {"test-reply": "test-value1"}
 
 
-_DEPRECATED_VERIFY_DOMAIN_CONTROL_MESSAGE = (
-    "The deprecated argument hass was passed to verify_domain_control. It will be"
-    " removed in HA Core 2026.10. Use verify_domain_control without hass argument"
-    " instead"
-)
-
-
 @pytest.mark.parametrize(
     # Check that with or without hass behaves the same
     ("decorator", "in_caplog"),
     [
         (service.verify_domain_control, True),  # old pass-through
-        (lambda _, domain: service.verify_domain_control(domain), False),  # new
+        (
+            lambda domain: service.verify_domain_control(domain),  # pylint: disable=unnecessary-lambda
+            False,
+        ),  # new
     ],
 )
 async def test_domain_control_not_async(
     hass: HomeAssistant,
     mock_entities,
-    decorator: Callable[[HomeAssistant, str], Any],
+    decorator: Callable[[str], Any],
     in_caplog: bool,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -2064,9 +2110,7 @@ async def test_domain_control_not_async(
         calls.append(call)
 
     with pytest.raises(exceptions.HomeAssistantError):
-        decorator(hass, "test_domain")(mock_service_log)
-
-    assert (_DEPRECATED_VERIFY_DOMAIN_CONTROL_MESSAGE in caplog.text) == in_caplog
+        decorator("test_domain")(mock_service_log)
 
 
 @pytest.mark.parametrize(
@@ -2074,7 +2118,10 @@ async def test_domain_control_not_async(
     ("decorator", "in_caplog"),
     [
         (service.verify_domain_control, True),  # old pass-through
-        (lambda _, domain: service.verify_domain_control(domain), False),  # new
+        (
+            lambda domain: service.verify_domain_control(domain),  # pylint: disable=unnecessary-lambda
+            False,
+        ),  # new
     ],
 )
 async def test_domain_control_unknown(
@@ -2095,7 +2142,7 @@ async def test_domain_control_unknown(
         "homeassistant.helpers.entity_registry.async_get",
         return_value=Mock(entities=mock_entities),
     ):
-        protected_mock_service = decorator(hass, "test_domain")(mock_service_log)
+        protected_mock_service = decorator("test_domain")(mock_service_log)
 
         hass.services.async_register(
             "test_domain", "test_service", protected_mock_service, schema=None
@@ -2111,21 +2158,22 @@ async def test_domain_control_unknown(
             )
         assert len(calls) == 0
 
-    assert (_DEPRECATED_VERIFY_DOMAIN_CONTROL_MESSAGE in caplog.text) == in_caplog
-
 
 @pytest.mark.parametrize(
     # Check that with or without hass behaves the same
     ("decorator", "in_caplog"),
     [
         (service.verify_domain_control, True),  # old pass-through
-        (lambda _, domain: service.verify_domain_control(domain), False),  # new
+        (
+            lambda domain: service.verify_domain_control(domain),  # pylint: disable=unnecessary-lambda
+            False,
+        ),  # new
     ],
 )
 async def test_domain_control_unauthorized(
     hass: HomeAssistant,
     hass_read_only_user: MockUser,
-    decorator: Callable[[HomeAssistant, str], Any],
+    decorator: Callable[[str], Any],
     in_caplog: bool,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -2147,7 +2195,7 @@ async def test_domain_control_unauthorized(
         """Define a protected service."""
         calls.append(call)
 
-    protected_mock_service = decorator(hass, "test_domain")(mock_service_log)
+    protected_mock_service = decorator("test_domain")(mock_service_log)
 
     hass.services.async_register(
         "test_domain", "test_service", protected_mock_service, schema=None
@@ -2164,21 +2212,22 @@ async def test_domain_control_unauthorized(
 
     assert len(calls) == 0
 
-    assert (_DEPRECATED_VERIFY_DOMAIN_CONTROL_MESSAGE in caplog.text) == in_caplog
-
 
 @pytest.mark.parametrize(
     # Check that with or without hass behaves the same
     ("decorator", "in_caplog"),
     [
         (service.verify_domain_control, True),  # old pass-through
-        (lambda _, domain: service.verify_domain_control(domain), False),  # new
+        (
+            lambda domain: service.verify_domain_control(domain),  # pylint: disable=unnecessary-lambda
+            False,
+        ),  # new
     ],
 )
 async def test_domain_control_admin(
     hass: HomeAssistant,
     hass_admin_user: MockUser,
-    decorator: Callable[[HomeAssistant, str], Any],
+    decorator: Callable[[str], Any],
     in_caplog: bool,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -2200,7 +2249,7 @@ async def test_domain_control_admin(
         """Define a protected service."""
         calls.append(call)
 
-    protected_mock_service = decorator(hass, "test_domain")(mock_service_log)
+    protected_mock_service = decorator("test_domain")(mock_service_log)
 
     hass.services.async_register(
         "test_domain", "test_service", protected_mock_service, schema=None
@@ -2216,20 +2265,21 @@ async def test_domain_control_admin(
 
     assert len(calls) == 1
 
-    assert (_DEPRECATED_VERIFY_DOMAIN_CONTROL_MESSAGE in caplog.text) == in_caplog
-
 
 @pytest.mark.parametrize(
     # Check that with or without hass behaves the same
     ("decorator", "in_caplog"),
     [
         (service.verify_domain_control, True),  # old pass-through
-        (lambda _, domain: service.verify_domain_control(domain), False),  # new
+        (
+            lambda domain: service.verify_domain_control(domain),  # pylint: disable=unnecessary-lambda
+            False,
+        ),  # new
     ],
 )
 async def test_domain_control_no_user(
     hass: HomeAssistant,
-    decorator: Callable[[HomeAssistant, str], Any],
+    decorator: Callable[[str], Any],
     in_caplog: bool,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -2251,7 +2301,7 @@ async def test_domain_control_no_user(
         """Define a protected service."""
         calls.append(call)
 
-    protected_mock_service = decorator(hass, "test_domain")(mock_service_log)
+    protected_mock_service = decorator("test_domain")(mock_service_log)
 
     hass.services.async_register(
         "test_domain", "test_service", protected_mock_service, schema=None
@@ -2267,8 +2317,6 @@ async def test_domain_control_no_user(
 
     assert len(calls) == 1
 
-    assert (_DEPRECATED_VERIFY_DOMAIN_CONTROL_MESSAGE in caplog.text) == in_caplog
-
 
 async def test_extract_from_service_available_device(hass: HomeAssistant) -> None:
     """Test the extraction of entity from service and device is available."""
@@ -2283,7 +2331,7 @@ async def test_extract_from_service_available_device(hass: HomeAssistant) -> Non
 
     assert [
         ent.entity_id
-        for ent in (await service.async_extract_entities(hass, entities, call_1))
+        for ent in (await service.async_extract_entities(entities, call_1))
     ] == ["test_domain.test_1", "test_domain.test_3"]
 
     call_2 = ServiceCall(
@@ -2295,12 +2343,11 @@ async def test_extract_from_service_available_device(hass: HomeAssistant) -> Non
 
     assert [
         ent.entity_id
-        for ent in (await service.async_extract_entities(hass, entities, call_2))
+        for ent in (await service.async_extract_entities(entities, call_2))
     ] == ["test_domain.test_3"]
 
     assert (
         await service.async_extract_entities(
-            hass,
             entities,
             ServiceCall(
                 hass,
@@ -2322,8 +2369,7 @@ async def test_extract_from_service_empty_if_no_entity_id(hass: HomeAssistant) -
     call = ServiceCall(hass, "test", "service")
 
     assert [
-        ent.entity_id
-        for ent in (await service.async_extract_entities(hass, entities, call))
+        ent.entity_id for ent in (await service.async_extract_entities(entities, call))
     ] == []
 
 
@@ -2344,8 +2390,7 @@ async def test_extract_from_service_filter_out_non_existing_entities(
     )
 
     assert [
-        ent.entity_id
-        for ent in (await service.async_extract_entities(hass, entities, call))
+        ent.entity_id for ent in (await service.async_extract_entities(entities, call))
     ] == ["test_domain.test_2"]
 
 
@@ -2360,14 +2405,14 @@ async def test_extract_from_service_area_id(
     ]
 
     call = ServiceCall(hass, "light", "turn_on", {"area_id": "test-area"})
-    extracted = await service.async_extract_entities(hass, entities, call)
+    extracted = await service.async_extract_entities(entities, call)
     assert len(extracted) == 1
     assert extracted[0].entity_id == "light.in_area"
 
     call = ServiceCall(
         hass, "light", "turn_on", {"area_id": ["test-area", "diff-area"]}
     )
-    extracted = await service.async_extract_entities(hass, entities, call)
+    extracted = await service.async_extract_entities(entities, call)
     assert len(extracted) == 2
     assert sorted(ent.entity_id for ent in extracted) == [
         "light.diff_area",
@@ -2380,7 +2425,7 @@ async def test_extract_from_service_area_id(
         "turn_on",
         {"area_id": ["test-area", "diff-area"], "device_id": "device-no-area-id"},
     )
-    extracted = await service.async_extract_entities(hass, entities, call)
+    extracted = await service.async_extract_entities(entities, call)
     assert len(extracted) == 3
     assert sorted(ent.entity_id for ent in extracted) == [
         "light.diff_area",
@@ -2401,17 +2446,17 @@ async def test_extract_from_service_label_id(hass: HomeAssistant) -> None:
     ]
 
     call = ServiceCall(hass, "light", "turn_on", {"label_id": "label_area"})
-    extracted = await service.async_extract_entities(hass, entities, call)
+    extracted = await service.async_extract_entities(entities, call)
     assert len(extracted) == 1
     assert extracted[0].entity_id == "light.with_labels_from_device"
 
     call = ServiceCall(hass, "light", "turn_on", {"label_id": "my-label"})
-    extracted = await service.async_extract_entities(hass, entities, call)
+    extracted = await service.async_extract_entities(entities, call)
     assert len(extracted) == 1
     assert extracted[0].entity_id == "light.with_my_label"
 
     call = ServiceCall(hass, "light", "turn_on", {"label_id": ["my-label", "label1"]})
-    extracted = await service.async_extract_entities(hass, entities, call)
+    extracted = await service.async_extract_entities(entities, call)
     assert len(extracted) == 2
     assert sorted(ent.entity_id for ent in extracted) == [
         "light.with_labels_from_device",
@@ -2424,7 +2469,7 @@ async def test_extract_from_service_label_id(hass: HomeAssistant) -> None:
         "turn_on",
         {"label_id": ["my-label", "label1"], "device_id": "device-no-labels"},
     )
-    extracted = await service.async_extract_entities(hass, entities, call)
+    extracted = await service.async_extract_entities(entities, call)
     assert len(extracted) == 3
     assert sorted(ent.entity_id for ent in extracted) == [
         "light.no_labels",
@@ -2495,7 +2540,7 @@ async def test_async_extract_entities_warn_referenced(
             "label_id": "non-existent-label",
         },
     )
-    extracted = await service.async_extract_entities(hass, {}, call)
+    extracted = await service.async_extract_entities({}, call)
     assert len(extracted) == 0
     assert (
         "Referenced floors non-existent-floor, areas non-existent-area, "
@@ -2528,7 +2573,7 @@ async def test_async_extract_config_entry_ids(hass: HomeAssistant) -> None:
         },
     )
 
-    assert await service.async_extract_config_entry_ids(hass, call) == {"abc"}
+    assert await service.async_extract_config_entry_ids(call) == {"abc"}
 
 
 async def test_reload_service_helper(hass: HomeAssistant) -> None:
@@ -3270,9 +3315,9 @@ async def test_register_platform_entity_service_non_entity_service_schema(
 
     for idx, schema in enumerate(
         (
-            vol.Schema({"some": str}),
-            vol.All(vol.Schema({"some": str})),
-            vol.Any(vol.Schema({"some": str})),
+            probatio.Schema({"some": str}),
+            probatio.All(probatio.Schema({"some": str})),
+            probatio.Any(probatio.Schema({"some": str})),
         )
     ):
         with pytest.raises(HomeAssistantError, match=expected_message):
@@ -3297,8 +3342,8 @@ async def test_register_platform_entity_service_non_entity_service_schema(
     for idx, schema in enumerate(
         (
             cv.make_entity_service_schema({"some": str}),
-            vol.Schema(cv.make_entity_service_schema({"some": str})),
-            vol.All(cv.make_entity_service_schema({"some": str})),
+            probatio.Schema(cv.make_entity_service_schema({"some": str})),
+            probatio.All(cv.make_entity_service_schema({"some": str})),
         )
     ):
         service.async_register_platform_entity_service(
@@ -3419,3 +3464,149 @@ async def test_get_service_config_entry_none(hass: HomeAssistant) -> None:
     with pytest.raises(exceptions.ServiceValidationError) as err:
         service.async_get_config_entry(hass, domain, None)
     assert err.value.translation_key == "service_config_entry_not_loaded"
+
+
+async def test_get_service_device_and_config_entry(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """Test that we can get a device and its config entry."""
+    domain = "mock_integration"
+    entry = MockConfigEntry(domain=domain)
+    entry.add_to_hass(hass)
+    entry.mock_state(hass, config_entries.ConfigEntryState.LOADED)
+    device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(domain, "unique_id")},
+        name="Mock device",
+    )
+
+    assert service.async_get_device_and_config_entry(hass, domain, device.id) == (
+        device,
+        entry,
+    )
+
+    # Device doesn't exist
+    with pytest.raises(exceptions.ServiceValidationError) as err:
+        service.async_get_device_and_config_entry(hass, domain, "unknown_device_id")
+    assert err.value.translation_key == "service_device_not_found"
+
+    # Device exists, but is not owned by a config entry of the domain
+    with pytest.raises(exceptions.ServiceValidationError) as err:
+        service.async_get_device_and_config_entry(hass, "another_domain", device.id)
+    assert err.value.translation_key == "service_device_wrong_domain"
+    assert err.value.translation_placeholders == {
+        "device_name": "Mock device",
+        "domain": "another_domain",
+    }
+
+    # Device exists, but its config entry is not loaded
+    entry.mock_state(hass, config_entries.ConfigEntryState.NOT_LOADED)
+    with pytest.raises(exceptions.ServiceValidationError) as err:
+        service.async_get_device_and_config_entry(hass, domain, device.id)
+    assert err.value.translation_key == "service_config_entry_not_loaded"
+
+
+async def test_get_service_device_and_config_entry_child_devices(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """Test that we can get a child device and its config entry."""
+    domain = "mock_integration"
+    entry = MockConfigEntry(domain=domain)
+    entry.add_to_hass(hass)
+    entry.mock_state(hass, config_entries.ConfigEntryState.LOADED)
+    parent = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(domain, "unique_id")},
+        name="Mock device",
+    )
+    child = device_registry.async_get_or_create_child(
+        config_entry_id=entry.entry_id,
+        identifiers={(domain, "unique_id_child")},
+        parent_device_id=parent.id,
+        name="Mock child device",
+    )
+
+    # A child device is paired with the entry owning it
+    assert service.async_get_device_and_config_entry(hass, domain, child.id) == (
+        child,
+        entry,
+    )
+
+    # With include_child_devices=False the child raises as an unknown device
+    with pytest.raises(exceptions.ServiceValidationError) as err:
+        service.async_get_device_and_config_entry(
+            hass, domain, child.id, include_child_devices=False
+        )
+    assert err.value.translation_key == "service_device_not_found"
+    assert err.value.translation_placeholders == {"device_id": child.id}
+
+    # The child exists, but is not owned by a config entry of the domain
+    with pytest.raises(exceptions.ServiceValidationError) as err:
+        service.async_get_device_and_config_entry(hass, "another_domain", child.id)
+    assert err.value.translation_key == "service_device_wrong_domain"
+    assert err.value.translation_placeholders == {
+        "device_name": "Mock child device",
+        "domain": "another_domain",
+    }
+
+    # The child exists, but its config entry is not loaded
+    entry.mock_state(hass, config_entries.ConfigEntryState.NOT_LOADED)
+    with pytest.raises(exceptions.ServiceValidationError) as err:
+        service.async_get_device_and_config_entry(hass, domain, child.id)
+    assert err.value.translation_key == "service_config_entry_not_loaded"
+
+
+async def test_get_service_device_and_config_entry_no_main_devices(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """Test getting a device and its config entry with main devices excluded."""
+    domain = "mock_integration"
+    entry = MockConfigEntry(domain=domain)
+    entry.add_to_hass(hass)
+    entry.mock_state(hass, config_entries.ConfigEntryState.LOADED)
+    parent = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(domain, "unique_id")},
+        name="Mock device",
+    )
+    child = device_registry.async_get_or_create_child(
+        config_entry_id=entry.entry_id,
+        identifiers={(domain, "unique_id_child")},
+        parent_device_id=parent.id,
+        name="Mock child device",
+    )
+
+    # A main device raises as an unknown device
+    with pytest.raises(exceptions.ServiceValidationError) as err:
+        service.async_get_device_and_config_entry(
+            hass, domain, parent.id, include_main_devices=False
+        )
+    assert err.value.translation_key == "service_device_not_found"
+    assert err.value.translation_placeholders == {"device_id": parent.id}
+
+    # A child-only lookup resolves the child
+    assert service.async_get_device_and_config_entry(
+        hass, domain, child.id, include_main_devices=False
+    ) == (child, entry)
+
+    # A child device raises as an unknown device with both flags off
+    with pytest.raises(exceptions.ServiceValidationError) as err:
+        service.async_get_device_and_config_entry(
+            hass,
+            domain,
+            child.id,
+            include_child_devices=False,
+            include_main_devices=False,
+        )
+    assert err.value.translation_key == "service_device_not_found"
+
+    # Neither does a main device with both flags off
+    with pytest.raises(exceptions.ServiceValidationError) as err:
+        service.async_get_device_and_config_entry(
+            hass,
+            domain,
+            parent.id,
+            include_child_devices=False,
+            include_main_devices=False,
+        )
+    assert err.value.translation_key == "service_device_not_found"

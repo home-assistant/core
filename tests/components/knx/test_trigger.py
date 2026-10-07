@@ -1,6 +1,8 @@
 """Tests for KNX integration specific triggers."""
 
+from collections.abc import Callable
 import logging
+from typing import Any
 
 import pytest
 
@@ -8,15 +10,56 @@ from homeassistant.components import automation
 from homeassistant.components.knx import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF
 from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.helpers.trigger import async_get_all_descriptions
 from homeassistant.setup import async_setup_component
 
 from .conftest import KNXTestKit
 
+TriggerStyle = Callable[[dict[str, Any]], dict[str, Any]]
 
+# The telegram trigger accepts its options both at the top level - the config
+# format from before the trigger was migrated to a trigger platform - and
+# nested in `options`, which is what the automation editor writes.
+TRIGGER_STYLES = [
+    pytest.param(lambda options: options, id="top_level_options"),
+    pytest.param(lambda options: {"options": options}, id="nested_options"),
+]
+
+
+async def test_telegram_trigger_description(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+) -> None:
+    """Test the telegram trigger is offered to the automation editor."""
+    await knx.setup_integration()
+
+    descriptions = await async_get_all_descriptions(hass)
+    assert descriptions["knx.telegram"] is not None
+    assert set(descriptions["knx.telegram"]["fields"]) == {
+        "destination",
+        "group_value_write",
+        "group_value_response",
+        "group_value_read",
+        "incoming",
+        "outgoing",
+        "type",
+    }
+
+
+@pytest.mark.parametrize("trigger_style", TRIGGER_STYLES)
+@pytest.mark.parametrize(
+    "catch_all_options",
+    [
+        pytest.param({}, id="destination_omitted"),
+        pytest.param({"destination": []}, id="destination_empty"),
+    ],
+)
 async def test_telegram_trigger(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
     knx: KNXTestKit,
+    catch_all_options: dict[str, Any],
+    trigger_style: TriggerStyle,
 ) -> None:
     """Test telegram triggers firing."""
     await knx.setup_integration()
@@ -32,6 +75,7 @@ async def test_telegram_trigger(
                 {
                     "trigger": {
                         "platform": "knx.telegram",
+                        **trigger_style(catch_all_options),
                     },
                     "action": {
                         "service": "test.automation",
@@ -46,12 +90,17 @@ async def test_telegram_trigger(
                     "trigger": {
                         "platform": "knx.telegram",
                         "id": "test-id",
-                        "destination": ["1/2/3", 2564],  # 2564 -> "1/2/4" in raw format
-                        "group_value_write": True,
-                        "group_value_response": False,
-                        "group_value_read": False,
-                        "incoming": True,
-                        "outgoing": True,
+                        **trigger_style(
+                            {
+                                # 2564 -> "1/2/4" in raw format
+                                "destination": ["1/2/3", 2564],
+                                "group_value_write": True,
+                                "group_value_response": False,
+                                "group_value_read": False,
+                                "incoming": True,
+                                "outgoing": True,
+                            }
+                        ),
                     },
                     "action": {
                         "service": "test.automation",
@@ -89,11 +138,12 @@ async def test_telegram_trigger(
     assert test_call.data["id"] == 0
 
 
+@pytest.mark.parametrize("trigger_style", TRIGGER_STYLES)
 @pytest.mark.parametrize(
     ("payload", "type_option", "expected_value", "expected_unit"),
     [
         ((0x4C,), {"type": "percent"}, 30, "%"),
-        ((0x03,), {}, None, None),  # "dpt" omitted defaults to None
+        ((0x03,), {}, None, None),  # "type" omitted defaults to None
         ((0x0C, 0x1A), {"type": "temperature"}, 21.00, "°C"),
     ],
 )
@@ -102,9 +152,10 @@ async def test_telegram_trigger_dpt_option(
     service_calls: list[ServiceCall],
     knx: KNXTestKit,
     payload: tuple[int, ...],
-    type_option: dict[str, bool],
+    type_option: dict[str, str],
     expected_value: int | None,
     expected_unit: str | None,
+    trigger_style: TriggerStyle,
 ) -> None:
     """Test telegram trigger type option."""
     await knx.setup_integration()
@@ -117,7 +168,7 @@ async def test_telegram_trigger_dpt_option(
                 {
                     "trigger": {
                         "platform": "knx.telegram",
-                        **type_option,
+                        **trigger_style(type_option),
                     },
                     "action": {
                         "service": "test.automation",
@@ -147,6 +198,7 @@ async def test_telegram_trigger_dpt_option(
     assert test_call.data["trigger"]["unit"] is None
 
 
+@pytest.mark.parametrize("trigger_style", TRIGGER_STYLES)
 @pytest.mark.parametrize(
     "group_value_options",
     [
@@ -190,6 +242,7 @@ async def test_telegram_trigger_options(
     knx: KNXTestKit,
     group_value_options: dict[str, bool],
     direction_options: dict[str, bool],
+    trigger_style: TriggerStyle,
 ) -> None:
     """Test telegram trigger options."""
     await knx.setup_integration()
@@ -202,8 +255,7 @@ async def test_telegram_trigger_options(
                 {
                     "trigger": {
                         "platform": "knx.telegram",
-                        **group_value_options,
-                        **direction_options,
+                        **trigger_style({**group_value_options, **direction_options}),
                     },
                     "action": {
                         "service": "test.automation",
@@ -338,6 +390,5 @@ async def test_invalid_trigger(
         )
         assert (
             "Unnamed automation failed to setup triggers and has been disabled: "
-            "extra keys not allowed @ data['invalid']. Got None"
-            in caplog.records[0].message
+            "not a valid option at 'invalid'. Got None" in caplog.records[0].message
         )

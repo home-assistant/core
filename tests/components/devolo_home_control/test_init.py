@@ -118,7 +118,7 @@ async def test_remove_device(
         assert device_entry
 
         client = await hass_ws_client(hass)
-        response = await client.remove_device(device_entry.id, entry.entry_id)
+        response = await client.remove_device(device_entry.id)
         assert response["success"]
         assert (
             device_registry.async_get_device_by_identifier(

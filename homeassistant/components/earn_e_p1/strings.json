@@ -28,8 +28,8 @@
   },
   "entity": {
     "sensor": {
-      "current_l1": {
-        "name": "Current L1"
+      "current_phase": {
+        "name": "Current phase {phase}"
       },
       "energy_exported_tariff1": {
         "name": "Energy exported tariff 1"
@@ -52,8 +52,8 @@
       "power_imported": {
         "name": "Power imported"
       },
-      "voltage_l1": {
-        "name": "Voltage L1"
+      "voltage_phase": {
+        "name": "Voltage phase {phase}"
       },
       "wifi_rssi": {
         "name": "Wi-Fi RSSI"

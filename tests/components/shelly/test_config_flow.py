@@ -11,6 +11,8 @@ from aioshelly.const import (
     DEFAULT_HTTP_PORT,
     DEFAULT_HTTPS_PORT,
     MODEL_1,
+    MODEL_4PRO,
+    MODEL_AZ_HT,
     MODEL_PLUS_2PM,
 )
 from aioshelly.exceptions import (
@@ -101,6 +103,15 @@ DISCOVERY_INFO_WRONG_NAME = ZeroconfServiceInfo(
     properties={ATTR_PROPERTIES_ID: "shelly2pm-AABBCCDDEEFF"},
     type="mock_type",
 )
+DISCOVERY_INFO_HTTPS = ZeroconfServiceInfo(
+    ip_address=ip_address("1.1.1.1"),
+    ip_addresses=[ip_address("1.1.1.1")],
+    hostname="mock_hostname",
+    name="shelly1pm-12345",
+    port=DEFAULT_HTTPS_PORT,
+    properties={ATTR_PROPERTIES_ID: "shelly1pm-12345"},
+    type="mock_type",
+)
 
 # BLE manufacturer data with RPC-over-BLE enabled (flag bit 2 set)
 BLE_MANUFACTURER_DATA_RPC = {
@@ -122,6 +133,12 @@ BLE_MANUFACTURER_DATA_WITH_MAC_UNKNOWN_MODEL = {
 }
 # Flags (0x01, 0x05, 0x00), Model (0x0b, 0x99, 0x99) -
 # unknown model ID, MAC (0x0a, 0x70, 0xd6, 0xc2, 0x97, 0xba, 0xcc)
+
+BLE_MANUFACTURER_DATA_UNSUPPORTED_MODEL = {
+    0x0BA9: bytes.fromhex("0105000b16180a70d6c297bacc")
+}
+# Flags (0x01, 0x05, 0x00), Model (0x0b, 0x16, 0x18) - Shelly AZ H&T (0x1816),
+# unsupported model, MAC (0x0a, 0x70, 0xd6, 0xc2, 0x97, 0xba, 0xcc)
 
 BLE_MANUFACTURER_DATA_FOR_CLEAR_TEST = {
     0x0BA9: bytes.fromhex("0105000b30100a00eeddccbbaa")
@@ -244,6 +261,26 @@ BLE_DISCOVERY_INFO_MAC_UNKNOWN_MODEL = BluetoothServiceInfoBleak(
     ),
     advertisement=generate_advertisement_data(
         manufacturer_data=BLE_MANUFACTURER_DATA_WITH_MAC_UNKNOWN_MODEL,
+    ),
+    time=0,
+    connectable=True,
+    tx_power=-127,
+)
+
+BLE_DISCOVERY_INFO_UNSUPPORTED_MODEL = BluetoothServiceInfoBleak(
+    name="CC:BA:97:C2:D6:72",  # BLE address as name (newer devices)
+    address="CC:BA:97:C2:D6:72",  # BLE address may differ from device MAC
+    rssi=-32,
+    manufacturer_data=BLE_MANUFACTURER_DATA_UNSUPPORTED_MODEL,
+    service_uuids=[],
+    service_data={},
+    source="local",
+    device=generate_ble_device(
+        address="CC:BA:97:C2:D6:72",
+        name="CC:BA:97:C2:D6:72",
+    ),
+    advertisement=generate_advertisement_data(
+        manufacturer_data=BLE_MANUFACTURER_DATA_UNSUPPORTED_MODEL,
     ),
     time=0,
     connectable=True,
@@ -569,7 +606,7 @@ async def test_form_enhanced_security(
     mock_setup_entry: AsyncMock,
     mock_setup: AsyncMock,
 ) -> None:
-    """Test manual setup on port 80 with enhanced_security upgrades to 443."""
+    """Test manual setup on port 80 with enhanced_security keeps port 80."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -593,11 +630,10 @@ async def test_form_enhanced_security(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         CONF_HOST: "1.1.1.1",
-        CONF_PORT: DEFAULT_HTTPS_PORT,
+        CONF_PORT: DEFAULT_HTTP_PORT,
         CONF_MODEL: model,
         CONF_SLEEP_PERIOD: 0,
         CONF_GEN: gen,
-        CONF_VERIFY_SSL: False,
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
@@ -636,6 +672,46 @@ async def test_form_enhanced_security_older_firmware(
         CONF_MODEL: MODEL_PLUS_2PM,
         CONF_SLEEP_PERIOD: 0,
         CONF_GEN: 2,
+    }
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_form_enhanced_security_with_https_port(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    mock_setup_entry: AsyncMock,
+    mock_setup: AsyncMock,
+) -> None:
+    """Test manual setup on port 443 with enhanced_security keeps port as 443."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+
+    with patch(
+        "homeassistant.components.shelly.config_flow.get_info",
+        return_value={
+            "mac": "test-mac",
+            "model": MODEL_PLUS_2PM,
+            "auth": False,
+            "gen": 2,
+            "enhanced_security": True,
+        },
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: "1.1.1.1", CONF_PORT: DEFAULT_HTTPS_PORT},
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        CONF_HOST: "1.1.1.1",
+        CONF_PORT: DEFAULT_HTTPS_PORT,
+        CONF_MODEL: MODEL_PLUS_2PM,
+        CONF_SLEEP_PERIOD: 0,
+        CONF_GEN: 2,
+        CONF_VERIFY_SSL: False,
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
@@ -975,7 +1051,7 @@ async def test_form_errors_test_connection(
     with (
         patch(
             "homeassistant.components.shelly.config_flow.get_info",
-            return_value={"mac": "test-mac", "auth": False},
+            return_value={"mac": "test-mac", "type": MODEL_1, "auth": False},
         ),
         patch(
             "aioshelly.block_device.BlockDevice.create", new=AsyncMock(side_effect=exc)
@@ -991,7 +1067,7 @@ async def test_form_errors_test_connection(
 
     with patch(
         "homeassistant.components.shelly.config_flow.get_info",
-        return_value={"mac": "test-mac", "auth": False},
+        return_value={"mac": "test-mac", "type": MODEL_1, "auth": False},
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -1689,7 +1765,7 @@ async def test_user_flow_zeroconf_device_requires_auth(
         "homeassistant.components.shelly.config_flow.get_info",
         return_value={
             "mac": "AABBCCDDEEFF",
-            "model": MODEL_1,
+            "type": MODEL_1,
             "auth": True,  # Requires auth
             "gen": 1,
         },
@@ -1709,7 +1785,7 @@ async def test_user_flow_zeroconf_device_requires_auth(
             "homeassistant.components.shelly.config_flow.get_info",
             return_value={
                 "mac": "AABBCCDDEEFF",
-                "model": MODEL_1,
+                "type": MODEL_1,
                 "auth": False,  # Auth passed with credentials
                 "gen": 1,
                 "port": 80,
@@ -2170,7 +2246,7 @@ async def test_form_auth_errors_test_connection_gen1(
 
     with patch(
         "homeassistant.components.shelly.config_flow.get_info",
-        return_value={"mac": "test-mac", "auth": True},
+        return_value={"mac": "test-mac", "type": MODEL_1, "auth": True},
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -2372,13 +2448,65 @@ async def test_zeroconf_enhanced_security(
     mock_setup_entry: AsyncMock,
     mock_setup: AsyncMock,
 ) -> None:
-    """Test zeroconf discovery with enhanced_security upgrades port to 443."""
+    """Test zeroconf discovery with enhanced_security does not upgrade port from 80."""
     with patch(
         "homeassistant.components.shelly.config_flow.get_info", return_value=get_info
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             data=DISCOVERY_INFO,
+            context={"source": config_entries.SOURCE_ZEROCONF},
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["errors"] == {}
+        context = next(
+            flow["context"]
+            for flow in hass.config_entries.flow.async_progress()
+            if flow["flow_id"] == result["flow_id"]
+        )
+        assert context["title_placeholders"]["name"] == "shelly1pm-12345"
+        assert context["confirm_only"] is True
+        assert context["configuration_url"] == "http://1.1.1.1"
+        assert result["step_id"] == "confirm_discovery"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Test name"
+    assert result["data"] == {
+        CONF_HOST: "1.1.1.1",
+        CONF_PORT: DEFAULT_HTTP_PORT,
+        CONF_MODEL: model,
+        CONF_SLEEP_PERIOD: 0,
+        CONF_GEN: gen,
+    }
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_zeroconf_enhanced_security_with_https_port(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    mock_setup_entry: AsyncMock,
+    mock_setup: AsyncMock,
+) -> None:
+    """Test zeroconf discovery with enhanced_security and HTTPS port keeps port as 443."""
+    with patch(
+        "homeassistant.components.shelly.config_flow.get_info",
+        return_value={
+            "mac": "test-mac",
+            "model": MODEL_PLUS_2PM,
+            "auth": False,
+            "gen": 2,
+            "enhanced_security": True,
+        },
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            data=DISCOVERY_INFO_HTTPS,
             context={"source": config_entries.SOURCE_ZEROCONF},
         )
         assert result["type"] is FlowResultType.FORM
@@ -2404,9 +2532,9 @@ async def test_zeroconf_enhanced_security(
         CONF_HOST: "1.1.1.1",
         CONF_PORT: DEFAULT_HTTPS_PORT,
         CONF_VERIFY_SSL: False,
-        CONF_MODEL: model,
+        CONF_MODEL: MODEL_PLUS_2PM,
         CONF_SLEEP_PERIOD: 0,
-        CONF_GEN: gen,
+        CONF_GEN: 2,
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
@@ -2538,11 +2666,20 @@ async def test_options_flow_abort_zigbee_firmware(
     assert result["reason"] == "zigbee_firmware"
 
 
-async def test_zeroconf_already_configured(hass: HomeAssistant) -> None:
-    """Test we get the form."""
+@pytest.mark.parametrize(
+    ("configured_host", "expected_host"),
+    [
+        pytest.param("0.0.0.0", "1.1.1.1", id="ip_updated"),
+        pytest.param("shelly1pm.local", "shelly1pm.local", id="hostname_kept"),
+    ],
+)
+async def test_zeroconf_already_configured(
+    hass: HomeAssistant, configured_host: str, expected_host: str
+) -> None:
+    """Test zeroconf updates a configured IP but keeps a configured hostname."""
 
     entry = MockConfigEntry(
-        domain=DOMAIN, unique_id="test-mac", data={CONF_HOST: "0.0.0.0"}
+        domain=DOMAIN, unique_id="test-mac", data={CONF_HOST: configured_host}
     )
     entry.add_to_hass(hass)
 
@@ -2559,8 +2696,7 @@ async def test_zeroconf_already_configured(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
-    # Test config entry got updated with latest IP
-    assert entry.data[CONF_HOST] == "1.1.1.1"
+    assert entry.data[CONF_HOST] == expected_host
 
 
 async def test_zeroconf_ignored(hass: HomeAssistant) -> None:
@@ -2796,7 +2932,7 @@ async def test_reauth_enhanced_security(
     hass: HomeAssistant,
     mock_rpc_device: Mock,
 ) -> None:
-    """Test reauth flow with enhanced_security upgrades port to 443."""
+    """Test reauth flow with enhanced_security does not upgrade port from 80."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="test-mac",
@@ -2827,11 +2963,10 @@ async def test_reauth_enhanced_security(
     assert result["reason"] == "reauth_successful"
     assert entry.data == {
         CONF_HOST: "0.0.0.0",
-        CONF_PORT: DEFAULT_HTTPS_PORT,
+        CONF_PORT: DEFAULT_HTTP_PORT,
         CONF_GEN: 2,
         CONF_USERNAME: "admin",
         CONF_PASSWORD: "test password",
-        CONF_VERIFY_SSL: False,
     }
 
 
@@ -2961,6 +3096,11 @@ async def test_options_flow_ble(hass: HomeAssistant, mock_rpc_device: Mock) -> N
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_BLE_SCANNER_MODE] is BLEScannerMode.AUTO
 
+    # Initial setup plus one reload per options change
+    await hass.async_block_till_done()
+    assert len(mock_rpc_device.initialize.mock_calls) == 5
+    assert entry.state is ConfigEntryState.LOADED
+
     await hass.config_entries.async_unload(entry.entry_id)
 
 
@@ -3005,15 +3145,25 @@ async def test_zeroconf_already_configured_triggers_refresh_mac_in_name(
     assert len(mock_rpc_device.initialize.mock_calls) == 2
 
 
+@pytest.mark.parametrize(
+    "configured_host",
+    [
+        pytest.param("1.1.1.1", id="ip"),
+        pytest.param("shelly1pm.local", id="hostname"),
+    ],
+)
 async def test_zeroconf_already_configured_triggers_refresh(
-    hass: HomeAssistant, mock_rpc_device: Mock, monkeypatch: pytest.MonkeyPatch
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    configured_host: str,
 ) -> None:
     """Test zeroconf discovery triggers refresh via get_info mac."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="AABBCCDDEEFF",
         data={
-            CONF_HOST: "1.1.1.1",
+            CONF_HOST: configured_host,
             CONF_GEN: 2,
             CONF_SLEEP_PERIOD: 0,
             CONF_MODEL: MODEL_1,
@@ -3044,6 +3194,43 @@ async def test_zeroconf_already_configured_triggers_refresh(
     )
     await hass.async_block_till_done()
     assert len(mock_rpc_device.initialize.mock_calls) == 2
+
+
+async def test_zeroconf_host_update_loaded_entry(
+    hass: HomeAssistant, mock_rpc_device: Mock, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test zeroconf updating the host of a loaded entry reloads it without warning."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="AABBCCDDEEFF",
+        data={
+            CONF_HOST: "0.0.0.0",
+            CONF_GEN: 2,
+            CONF_SLEEP_PERIOD: 0,
+            CONF_MODEL: MODEL_1,
+        },
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert len(mock_rpc_device.initialize.mock_calls) == 1
+
+    with patch(
+        "homeassistant.components.shelly.config_flow.get_info",
+        return_value={"mac": "AABBCCDDEEFF", "type": MODEL_1, "auth": False},
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            data=DISCOVERY_INFO,
+            context={"source": config_entries.SOURCE_ZEROCONF},
+        )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.data[CONF_HOST] == "1.1.1.1"
+    assert len(mock_rpc_device.initialize.mock_calls) == 2
+    assert "has an update listener" not in caplog.text
 
 
 async def test_zeroconf_sleeping_device_not_triggers_refresh(
@@ -3465,15 +3652,39 @@ async def test_reconfigure_with_exception(
     assert entry.data == {CONF_HOST: "10.10.10.10", CONF_PORT: 99, CONF_GEN: 2}
 
 
+@pytest.mark.parametrize(
+    ("port", "entry_data"),
+    [
+        (
+            DEFAULT_HTTP_PORT,
+            {
+                CONF_HOST: "10.10.10.10",
+                CONF_PORT: 80,
+                CONF_GEN: 2,
+            },
+        ),
+        (
+            DEFAULT_HTTPS_PORT,
+            {
+                CONF_HOST: "10.10.10.10",
+                CONF_PORT: 443,
+                CONF_GEN: 2,
+                CONF_VERIFY_SSL: False,
+            },
+        ),
+    ],
+)
 async def test_reconfigure_enhanced_security(
     hass: HomeAssistant,
     mock_rpc_device: Mock,
+    port: int,
+    entry_data: dict[str, int | str],
 ) -> None:
-    """Test reconfigure flow with enhanced_security upgrades port to 443."""
+    """Test reconfigure flow with enhanced_security does not upgrade port from 80 or 443."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="test-mac",
-        data={CONF_HOST: "0.0.0.0", CONF_GEN: 2},
+        data={CONF_HOST: "0.0.0.0", CONF_PORT: port, CONF_GEN: 2},
     )
     entry.add_to_hass(hass)
 
@@ -3494,17 +3705,12 @@ async def test_reconfigure_enhanced_security(
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input={CONF_HOST: "10.10.10.10", CONF_PORT: DEFAULT_HTTP_PORT},
+            user_input={CONF_HOST: "10.10.10.10", CONF_PORT: port},
         )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
-    assert entry.data == {
-        CONF_HOST: "10.10.10.10",
-        CONF_PORT: DEFAULT_HTTPS_PORT,
-        CONF_GEN: 2,
-        CONF_VERIFY_SSL: False,
-    }
+    assert entry.data == entry_data
 
 
 async def test_zeroconf_rejects_ipv6(hass: HomeAssistant) -> None:
@@ -5599,3 +5805,130 @@ async def test_bluetooth_provision_ble_reconnect_fails_during_ip_fetch(
         # Abort flow to reach terminal state
         hass.config_entries.flow.async_abort(result["flow_id"])
         await hass.async_block_till_done(wait_background_tasks=True)
+
+
+@pytest.mark.parametrize(
+    ("get_info", "model_name"),
+    [
+        (
+            {"mac": "test-mac", "model": MODEL_AZ_HT, "auth": False, "gen": 3},
+            "Shelly AZ H&T",
+        ),
+        (
+            {"mac": "test-mac", "type": MODEL_4PRO, "auth": False, "gen": 1},
+            "Shelly 4Pro",
+        ),
+    ],
+)
+async def test_form_unsupported_device(
+    hass: HomeAssistant, get_info: dict[str, Any], model_name: str
+) -> None:
+    """Test user flow aborts for a device model not supported by aioshelly."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.shelly.config_flow.get_info",
+        return_value=get_info,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: "1.1.1.1", CONF_PORT: DEFAULT_HTTP_PORT},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unsupported_device"
+    assert result["description_placeholders"] == {"model": model_name}
+
+
+async def test_zeroconf_unsupported_device(hass: HomeAssistant) -> None:
+    """Test zeroconf discovery aborts for a device model not supported by aioshelly."""
+    with patch(
+        "homeassistant.components.shelly.config_flow.get_info",
+        return_value={
+            "mac": "test-mac",
+            "model": MODEL_AZ_HT,
+            "auth": False,
+            "gen": 3,
+        },
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            data=DISCOVERY_INFO,
+            context={"source": config_entries.SOURCE_ZEROCONF},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unsupported_device"
+    assert result["description_placeholders"] == {"model": "Shelly AZ H&T"}
+
+
+@pytest.mark.usefixtures("mock_zeroconf")
+async def test_bluetooth_discovery_unsupported_device(hass: HomeAssistant) -> None:
+    """Test bluetooth discovery aborts before provisioning for unsupported model."""
+    await _async_inject_ble_discovery(hass, BLE_DISCOVERY_INFO_UNSUPPORTED_MODEL)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        data=BLE_DISCOVERY_INFO_UNSUPPORTED_MODEL,
+        context={"source": config_entries.SOURCE_BLUETOOTH},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unsupported_device"
+    assert result["description_placeholders"] == {"model": "Shelly AZ H&T"}
+
+
+@pytest.mark.usefixtures("mock_zeroconf")
+async def test_bluetooth_discovery_unsupported_device_already_configured(
+    hass: HomeAssistant,
+) -> None:
+    """Test already configured check runs before the unsupported model check."""
+    await _async_inject_ble_discovery(hass, BLE_DISCOVERY_INFO_UNSUPPORTED_MODEL)
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="CCBA97C2D670",  # MAC from manufacturer data
+        data={
+            CONF_HOST: "1.1.1.1",
+            CONF_MODEL: MODEL_AZ_HT,
+            CONF_SLEEP_PERIOD: 0,
+            CONF_GEN: 3,
+        },
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        data=BLE_DISCOVERY_INFO_UNSUPPORTED_MODEL,
+        context={"source": config_entries.SOURCE_BLUETOOTH},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_user_flow_select_ble_unsupported_device(
+    hass: HomeAssistant,
+    mock_discovery: AsyncMock,
+) -> None:
+    """Test selecting an unsupported BLE device aborts before provisioning."""
+    mock_discovery.return_value = []
+    await _async_inject_ble_discovery(hass, BLE_DISCOVERY_INFO_UNSUPPORTED_MODEL)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_DEVICE: "CCBA97C2D670"},  # MAC from manufacturer data
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unsupported_device"
+    assert result["description_placeholders"] == {"model": "Shelly AZ H&T"}
