@@ -18,7 +18,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Context, CoreState, HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.event import async_track_state_change
+from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockUser, mock_component, mock_restore_cache
@@ -212,13 +212,15 @@ async def test_reload_not_changing_state(hass: HomeAssistant, storage_setup) -> 
     assert await storage_setup()
     state_changes = []
 
-    def state_changed_listener(entity_id, from_s, to_s):
-        state_changes.append(to_s)
+    def state_changed_listener(event):
+        state_changes.append(event.data.get("new_state"))
 
     state = hass.states.get(f"{DOMAIN}.from_storage")
     assert state is not None
 
-    async_track_state_change(hass, [f"{DOMAIN}.from_storage"], state_changed_listener)
+    async_track_state_change_event(
+        hass, [f"{DOMAIN}.from_storage"], state_changed_listener
+    )
 
     # Pressing button changes state
     await hass.services.async_call(

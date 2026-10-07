@@ -35,7 +35,7 @@ from homeassistant.helpers import (
     entity_registry as er,
     issue_registry as ir,
 )
-from homeassistant.helpers.event import async_track_state_change
+from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.script import (
     SCRIPT_MODE_CHOICES,
     SCRIPT_MODE_PARALLEL,
@@ -134,11 +134,11 @@ async def test_turn_on_off_toggle(
     was_on = False
 
     @callback
-    def state_listener(entity_id, old_state, new_state):
+    def state_listener(event):
         nonlocal was_on
         was_on = True
 
-    async_track_state_change(hass, ENTITY_ID, state_listener, to_state="on")
+    async_track_state_change_event(hass, ENTITY_ID, state_listener)
 
     if toggle:
         turn_off_step = {

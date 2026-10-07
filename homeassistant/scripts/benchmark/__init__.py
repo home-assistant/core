@@ -10,10 +10,7 @@ from timeit import default_timer as timer
 from homeassistant import core
 from homeassistant.const import EVENT_STATE_CHANGED
 from homeassistant.helpers.entityfilter import convert_include_exclude_filter
-from homeassistant.helpers.event import (
-    async_track_state_change,
-    async_track_state_change_event,
-)
+from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.json import JSON_DUMP
 from homeassistant.runner import create_event_loop
 
@@ -111,40 +108,6 @@ async def fire_events_with_filter(hass: core.HomeAssistant) -> float:
     await hass.async_block_till_done()
 
     assert count == 0
-
-    return timer() - start
-
-
-@benchmark
-async def state_changed_helper(hass: core.HomeAssistant) -> float:
-    """Run a million events through state changed helper with 1000 entities."""
-    count = 0
-    entity_id = "light.kitchen"
-    event = asyncio.Event()
-
-    @core.callback
-    def listener(*args):
-        """Handle event."""
-        nonlocal count
-        count += 1
-
-        if count == 10**6:
-            event.set()
-
-    for idx in range(1000):
-        async_track_state_change(hass, f"{entity_id}{idx}", listener, "off", "on")
-    event_data = {
-        "entity_id": f"{entity_id}0",
-        "old_state": core.State(entity_id, "off"),
-        "new_state": core.State(entity_id, "on"),
-    }
-
-    for _ in range(10**6):
-        hass.bus.async_fire(EVENT_STATE_CHANGED, event_data)  # type: ignore[misc]
-
-    start = timer()
-
-    await event.wait()
 
     return timer() - start
 
