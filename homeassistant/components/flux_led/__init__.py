@@ -46,6 +46,7 @@ from .discovery import (
     async_trigger_discovery,
     async_update_entry_from_discovery,
 )
+from .services import async_setup_services
 from .util import mac_matches_by_one
 
 _LOGGER = logging.getLogger(__name__)
@@ -85,6 +86,7 @@ def async_wifi_bulb_for_host(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the flux_led component."""
+    async_setup_services(hass)
     hass.data[FLUX_LED_DISCOVERY] = []
 
     @callback

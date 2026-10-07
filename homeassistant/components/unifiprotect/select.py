@@ -169,12 +169,6 @@ def _get_viewer_current(obj: Viewer) -> str:
     return obj.liveview_id
 
 
-def _get_doorbell_current(obj: Camera) -> str | None:
-    if obj.lcd_message is None:
-        return None
-    return obj.lcd_message.text
-
-
 async def _set_light_mode(obj: PublicLight, mode: str) -> None:
     lightmode, timing = LIGHT_MODE_TO_SETTINGS[mode]
     await obj.set_light_mode(
@@ -191,17 +185,19 @@ async def _set_paired_camera(obj: Light | Sensor, camera_id: str) -> None:
     await obj.set_paired_camera(camera)
 
 
-async def _set_doorbell_message(obj: Camera, message: str) -> None:
-    if message.startswith(DoorbellMessageType.CUSTOM_MESSAGE.value):
-        message = message.rsplit(":", maxsplit=1)[-1]
+async def _set_doorbell_message(obj: PublicCamera, message: str) -> None:
+    custom_prefix = f"{DoorbellMessageType.CUSTOM_MESSAGE.value}:"
+    if message.startswith(custom_prefix):
         # reset_at=None keeps the message up until it is changed
-        await obj.set_lcd_message_public(
-            DoorbellMessageType.CUSTOM_MESSAGE, text=message, reset_at=None
+        await obj.set_lcd_message(
+            DoorbellMessageType.CUSTOM_MESSAGE,
+            text=message.removeprefix(custom_prefix),
+            reset_at=None,
         )
     elif message == TYPE_EMPTY_VALUE:
-        await obj.set_lcd_message_public(None)
+        await obj.set_lcd_message(None)
     else:
-        await obj.set_lcd_message_public(DoorbellMessageType(message), reset_at=None)
+        await obj.set_lcd_message(DoorbellMessageType(message), reset_at=None)
 
 
 async def _set_liveview(obj: Viewer, liveview_id: str) -> None:
@@ -210,13 +206,12 @@ async def _set_liveview(obj: Viewer, liveview_id: str) -> None:
     await obj.set_liveview(liveview)
 
 
-async def _set_ptz_patrol(obj: Camera, patrol_slot: str) -> None:
+async def _set_ptz_patrol(obj: PublicCamera, patrol_slot: str) -> None:
     """Start or stop PTZ patrol."""
     if patrol_slot == PTZ_PATROL_STOP:
-        await obj.ptz_patrol_stop_public()
+        await obj.ptz_patrol_stop()
     else:
-        slot = int(patrol_slot)
-        await obj.ptz_patrol_start_public(slot=slot)
+        await obj.ptz_patrol_start(int(patrol_slot))
 
 
 _HDR_MODE_MAP = {
@@ -267,7 +262,7 @@ CAMERA_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
         translation_key="doorbell_text",
         entity_category=EntityCategory.CONFIG,
         ufp_required_field="feature_flags.has_lcd_screen",
-        ufp_value_fn=_get_doorbell_current,
+        ufp_public_value="lcd_message_text",
         ufp_options_fn=_get_doorbell_options,
         ufp_set_method_fn=_set_doorbell_message,
         ufp_perm=PermRequired.WRITE,
@@ -503,8 +498,12 @@ class ProtectPTZPatrolSelect(ProtectDeviceEntity, SelectEntity):
     """A UniFi Protect PTZ Patrol Select Entity."""
 
     device: Camera
+    entity_description: ProtectSelectEntityDescription
     _attr_current_option: str | None = None
     _state_attrs = ("_attr_available", "_attr_options", "_attr_current_option")
+    # Patrols are listed from the private API; the active slot and the
+    # commands are public.
+    _ufp_uses_public = True
 
     def __init__(
         self,
@@ -524,14 +523,13 @@ class ProtectPTZPatrolSelect(ProtectDeviceEntity, SelectEntity):
         self._attr_options = list(self._hass_to_unifi_options)
 
         super().__init__(data, device, PTZ_PATROL_DESCRIPTION)
-        # Set initial state based on active patrol
-        self._update_patrol_state()
 
     def _update_patrol_state(self) -> None:
         """Update the patrol state based on active_patrol_slot."""
-        if self.device.active_patrol_slot is not None:
+        public = cast(PublicCamera | None, self._ufp_public_obj)
+        if public is not None and public.active_patrol_slot is not None:
             # A patrol is running - show which one
-            slot_str = str(self.device.active_patrol_slot)
+            slot_str = str(public.active_patrol_slot)
             self._attr_current_option = self._unifi_to_hass_options.get(slot_str)
         else:
             # No patrol running - show Stop
@@ -551,7 +549,7 @@ class ProtectPTZPatrolSelect(ProtectDeviceEntity, SelectEntity):
         # Home Assistant validates options before calling this method,
         # so we can safely assume the option is valid
         unifi_value = self._hass_to_unifi_options[option]
-        await _set_ptz_patrol(self.device, unifi_value)
+        await self.entity_description.ufp_set(self._ufp_set_target(), unifi_value)
         # State will be updated via websocket when active_patrol_slot changes
 
 

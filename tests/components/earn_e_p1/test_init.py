@@ -1,16 +1,25 @@
 """Tests for the EARN-E P1 Meter integration setup."""
 
+import asyncio
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_MAC
+from homeassistant.const import CONF_HOST, CONF_MAC
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from .conftest import DOMAIN, MOCK_MAC, MOCK_SERIAL, trigger_callback
+from .conftest import (
+    CONF_SERIAL,
+    DOMAIN,
+    MOCK_HOST_2,
+    MOCK_MAC,
+    MOCK_SERIAL,
+    MOCK_SERIAL_2,
+    trigger_callback,
+)
 
 from tests.common import MockConfigEntry
 
@@ -54,6 +63,91 @@ async def test_unload_entry(
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
     mock_listener.unregister.assert_called()
     mock_listener.stop.assert_awaited()
+
+
+async def test_unload_entry_keeps_listener_for_remaining_entry(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_config_entry_2: MockConfigEntry,
+    mock_listener: MagicMock,
+) -> None:
+    """Test the shared listener survives until the last entry is unloaded."""
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_config_entry_2.state is ConfigEntryState.LOADED
+    mock_listener.start.assert_awaited_once()
+
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    mock_listener.stop.assert_not_awaited()
+
+    await hass.config_entries.async_unload(mock_config_entry_2.entry_id)
+    await hass.async_block_till_done()
+
+    mock_listener.stop.assert_awaited_once()
+
+
+async def test_unload_entry_keeps_listener_while_other_entry_sets_up(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_listener: MagicMock
+) -> None:
+    """Test unloading an entry leaves a listener another setup already claimed."""
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    second_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: MOCK_HOST_2, CONF_SERIAL: MOCK_SERIAL_2},
+        unique_id=MOCK_SERIAL_2,
+    )
+    second_entry.add_to_hass(hass)
+
+    def unload_first_entry(*_: object) -> None:
+        """Unload the first entry while the second one is still setting up."""
+        hass.async_create_task(
+            hass.config_entries.async_unload(mock_config_entry.entry_id)
+        )
+
+    # The coordinator registers with the listener right after claiming it.
+    mock_listener.register.side_effect = unload_first_entry
+
+    await hass.config_entries.async_setup(second_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+    assert second_entry.state is ConfigEntryState.LOADED
+    mock_listener.stop.assert_not_awaited()
+
+
+async def test_concurrent_setup_starts_listener_once(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_config_entry_2: MockConfigEntry,
+    mock_listener: MagicMock,
+) -> None:
+    """Test entries setting up at the same time share a single listener."""
+    starting = asyncio.Event()
+    resume = asyncio.Event()
+
+    async def blocked_start() -> None:
+        starting.set()
+        await resume.wait()
+
+    mock_listener.start.side_effect = blocked_start
+
+    setup = hass.async_create_task(
+        hass.config_entries.async_setup(mock_config_entry.entry_id)
+    )
+    await starting.wait()
+    resume.set()
+    await setup
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_config_entry_2.state is ConfigEntryState.LOADED
+    mock_listener.start.assert_awaited_once()
 
 
 async def test_device_info(
