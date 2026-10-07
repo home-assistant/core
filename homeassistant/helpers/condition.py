@@ -4,12 +4,12 @@ import abc
 import asyncio
 from collections import deque
 from collections.abc import Callable, Container, Coroutine, Iterable, Mapping
+from contextvars import copy_context
 from dataclasses import dataclass
 from datetime import datetime, time as dt_time, timedelta
 import functools as ft
 import inspect
 import logging
-import re
 import sys
 from typing import (
     TYPE_CHECKING,
@@ -27,7 +27,7 @@ from typing import (
     override,
 )
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import (
     CONF_ABOVE,
@@ -57,6 +57,9 @@ from homeassistant.const import (
     EntityStateAttribute,
 )
 from homeassistant.core import (
+    CALLBACK_TYPE,
+    Event,
+    EventStateChangedData,
     HomeAssistant,
     State,
     callback,
@@ -92,6 +95,7 @@ from .automation import (
     get_relative_description_key,
     move_options_fields_to_top_level,
 )
+from .event import async_track_state_change_event
 from .integration_platform import async_process_integration_platforms
 from .recorder import get_instance
 from .selector import (
@@ -151,10 +155,6 @@ _PLATFORM_ALIASES: dict[str | None, str | None] = {
     "trigger": None,
 }
 
-INPUT_ENTITY_ID = re.compile(
-    r"^input_(?:select|text|number|boolean|datetime)\.(?!.+__)(?!_)[\da-z_]+(?<!_)$"
-)
-
 
 CONDITION_DESCRIPTION_CACHE: HassKey[dict[str, dict[str, Any] | None]] = HassKey(
     "condition_description_cache"
@@ -167,33 +167,33 @@ CONDITIONS: HassKey[dict[str, str]] = HassKey("conditions")
 
 # Basic schemas to sanity check the condition descriptions,
 # full validation is done by hassfest.conditions
-_FIELD_DESCRIPTION_SCHEMA = vol.Schema(
+_FIELD_DESCRIPTION_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_SELECTOR): selector.validate_selector,
+        probatio.Optional(CONF_SELECTOR): selector.validate_selector,
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
-_CONDITION_DESCRIPTION_SCHEMA = vol.Schema(
+_CONDITION_DESCRIPTION_SCHEMA = probatio.Schema(
     {
-        vol.Optional("target"): TargetSelector.CONFIG_SCHEMA,
-        vol.Optional("fields"): vol.Schema({str: _FIELD_DESCRIPTION_SCHEMA}),
+        probatio.Optional("target"): TargetSelector.CONFIG_SCHEMA,
+        probatio.Optional("fields"): probatio.Schema({str: _FIELD_DESCRIPTION_SCHEMA}),
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 
 def starts_with_dot(key: str) -> str:
     """Check if key starts with dot."""
     if not key.startswith("."):
-        raise vol.Invalid("Key does not start with .")
+        raise probatio.Invalid("Key does not start with .")
     return key
 
 
-_CONDITIONS_DESCRIPTION_SCHEMA = vol.Schema(
+_CONDITIONS_DESCRIPTION_SCHEMA = probatio.Schema(
     {
-        vol.Remove(vol.All(str, starts_with_dot)): object,
-        cv.underscore_slug: vol.Any(None, _CONDITION_DESCRIPTION_SCHEMA),
+        probatio.Remove(probatio.All(str, starts_with_dot)): object,
+        cv.underscore_slug: probatio.Any(None, _CONDITION_DESCRIPTION_SCHEMA),
     }
 )
 
@@ -270,18 +270,23 @@ async def _register_condition_platform(
             _LOGGER.exception("Error while notifying condition platform listener")
 
 
-_CONDITION_BASE_SCHEMA = vol.Schema(
+_CONDITION_BASE_SCHEMA = probatio.Schema(
     {
         **cv.CONDITION_BASE_SCHEMA,
-        vol.Required(CONF_CONDITION): str,
+        probatio.Required(CONF_CONDITION): str,
     }
 )
 _CONDITION_SCHEMA = _CONDITION_BASE_SCHEMA.extend(
     {
-        vol.Optional(CONF_OPTIONS): object,
-        vol.Optional(CONF_TARGET): cv.TARGET_FIELDS,
+        probatio.Optional(CONF_OPTIONS): object,
+        probatio.Optional(CONF_TARGET): cv.TARGET_FIELDS,
     }
 )
+
+
+@callback
+def _async_noop() -> None:
+    """Do nothing."""
 
 
 class ConditionChecker(abc.ABC):
@@ -344,6 +349,35 @@ class ConditionChecker(abc.ABC):
         Intended to be overridden in derived classes that need to do unloading.
         """
 
+    @property
+    def needs_polling(self) -> bool:
+        """Return if the result can change without async_track_changes reporting it."""
+        return True
+
+    @final
+    async def async_track_changes(self, action: Callable[[], None]) -> CALLBACK_TYPE:
+        """Call action when the result of the condition may have changed.
+
+        Returns a callback to stop tracking. When needs_polling is True, the
+        result can also change without action being called (time, templates).
+        """
+        if not self._set_up:
+            raise HomeAssistantError("Condition checker is not set up")
+
+        @callback
+        def isolated_action() -> None:
+            # Run in a copied context so the trace of the run that changed the state is kept
+            copy_context().run(action)
+
+        return await self._async_track_changes(isolated_action)
+
+    async def _async_track_changes(self, action: Callable[[], None]) -> CALLBACK_TYPE:
+        """Call action when the result of the condition may have changed.
+
+        Intended to be overridden in derived classes that can track changes.
+        """
+        return _async_noop
+
     @final
     def async_check(
         self, *, variables: TemplateVarsType = None, **kwargs: Never
@@ -373,6 +407,27 @@ class LegacyConditionChecker(ConditionChecker):
     def _async_check(self, variables: TemplateVarsType = None, **kwargs: Any) -> bool:
         return self._checker(self._hass, variables)
 
+    @property
+    @override
+    def needs_polling(self) -> bool:
+        return (
+            not isinstance(self._checker, _StateDependentChecker)
+            or self._checker.needs_polling
+        )
+
+    @override
+    async def _async_track_changes(self, action: Callable[[], None]) -> CALLBACK_TYPE:
+        if not isinstance(self._checker, _StateDependentChecker):
+            return _async_noop
+
+        @callback
+        def state_changed(_: Event[EventStateChangedData]) -> None:
+            action()
+
+        return async_track_state_change_event(
+            self._hass, self._checker.entity_ids, state_changed
+        )
+
 
 class DisabledConditionChecker(ConditionChecker):
     """Condition checker for disabled conditions."""
@@ -380,6 +435,11 @@ class DisabledConditionChecker(ConditionChecker):
     @override
     def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> None:
         return None
+
+    @property
+    @override
+    def needs_polling(self) -> bool:
+        return False
 
 
 class CompoundConditionChecker(ConditionChecker):
@@ -389,6 +449,25 @@ class CompoundConditionChecker(ConditionChecker):
         """Initialize condition checker."""
         super().__init__(hass)
         self._conditions = conditions
+
+    @property
+    @override
+    def needs_polling(self) -> bool:
+        return any(condition.needs_polling for condition in self._conditions)
+
+    @override
+    async def _async_track_changes(self, action: Callable[[], None]) -> CALLBACK_TYPE:
+        unsubs = [
+            await condition.async_track_changes(action)
+            for condition in self._conditions
+        ]
+
+        @callback
+        def unsubscribe() -> None:
+            for unsub in unsubs:
+                unsub()
+
+        return unsubscribe
 
     @override
     def _async_unload(self) -> None:
@@ -441,14 +520,14 @@ ATTR_BEHAVIOR: Final = "behavior"
 BEHAVIOR_ANY: Final = "any"
 BEHAVIOR_ALL: Final = "all"
 
-ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL = vol.Schema(
+ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL = probatio.Schema(
     {
-        vol.Required(CONF_TARGET): cv.TARGET_FIELDS,
-        vol.Required(CONF_OPTIONS, default={}): {
-            vol.Required(ATTR_BEHAVIOR, default=BEHAVIOR_ANY): vol.In(
+        probatio.Required(CONF_TARGET): cv.TARGET_FIELDS,
+        probatio.Required(CONF_OPTIONS, default={}): {
+            probatio.Required(ATTR_BEHAVIOR, default=BEHAVIOR_ANY): probatio.In(
                 [BEHAVIOR_ANY, BEHAVIOR_ALL]
             ),
-            vol.Optional(CONF_FOR): cv.positive_time_period,
+            probatio.Optional(CONF_FOR): cv.positive_time_period,
         },
     }
 )
@@ -542,7 +621,7 @@ class EntityConditionBase(Condition):
     _excluded_states: Final[frozenset[str]] = frozenset(
         {STATE_UNAVAILABLE, STATE_UNKNOWN}
     )
-    _schema: vol.Schema = ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL
+    _schema: probatio.Schema = ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL
     # When True, indirect target expansion (via device/area/floor) skips
     # entities with an entity_category.
     _primary_entities_only: ClassVar[bool] = True
@@ -630,6 +709,63 @@ class EntityConditionBase(Condition):
             # entity is now stale; stop priming it and let live tracking own it.
             self._priming.discard(entity_id)
             self._valid_since.pop(entity_id, None)
+
+    @property
+    @override
+    def needs_polling(self) -> bool:
+        """Return if the result can change without async_track_changes reporting it.
+
+        Subclasses whose result depends on anything else than the states of the
+        targeted entities must override this.
+        """
+        return self._duration is not None
+
+    @override
+    async def _async_track_changes(self, action: Callable[[], None]) -> CALLBACK_TYPE:
+        @callback
+        def state_changed(
+            _: Event[EventStateChangedData] | TargetStateChangedData,
+        ) -> None:
+            action()
+
+        selection = self._target_selection
+        # Explicit entity ids don't depend on the registries, skip the target tracker
+        if not (
+            selection.area_ids
+            or selection.device_ids
+            or selection.floor_ids
+            or selection.label_ids
+        ):
+            return async_track_state_change_event(
+                self._hass,
+                {
+                    entity_id
+                    for entity_id in selection.entity_ids
+                    if split_entity_id(entity_id)[0] in self._domain_specs
+                },
+                state_changed,
+            )
+
+        tracking = False
+
+        @callback
+        def entities_updated(
+            _added: set[str], _removed: set[str], _states: Mapping[str, State | None]
+        ) -> None:
+            # The tracker also reports the initial entities while it is set up
+            if tracking:
+                action()
+
+        unsub = await async_track_target_selector_state_change_event(
+            self._hass,
+            self._target,
+            state_changed,
+            self.entity_filter,
+            entities_updated,
+            primary_entities_only=self._primary_entities_only,
+        )
+        tracking = True
+        return unsub
 
     @override
     async def _async_setup(self) -> None:
@@ -947,8 +1083,8 @@ def make_entity_state_condition(
 
 NUMERICAL_CONDITION_SCHEMA = ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL.extend(
     {
-        vol.Required(CONF_OPTIONS): {
-            vol.Required("threshold"): NumericThresholdSelector(
+        probatio.Required(CONF_OPTIONS): {
+            probatio.Required("threshold"): NumericThresholdSelector(
                 NumericThresholdSelectorConfig(mode=NumericThresholdMode.IS)
             ),
         },
@@ -976,6 +1112,34 @@ class EntityNumericalConditionBase(EntityConditionBase):
             threshold_options.get("value_max")
         )
         self._threshold_type = threshold_options["type"]
+        self._threshold_entity_ids = {
+            threshold.entity
+            for threshold in (
+                self.threshold,
+                self.lower_threshold,
+                self.upper_threshold,
+            )
+            if threshold is not None and threshold.entity is not None
+        }
+
+    @override
+    async def _async_track_changes(self, action: Callable[[], None]) -> CALLBACK_TYPE:
+        unsub_target = await super()._async_track_changes(action)
+
+        @callback
+        def threshold_changed(_: Event[EventStateChangedData]) -> None:
+            action()
+
+        unsub_thresholds = async_track_state_change_event(
+            self._hass, self._threshold_entity_ids, threshold_changed
+        )
+
+        @callback
+        def unsubscribe() -> None:
+            unsub_target()
+            unsub_thresholds()
+
+        return unsubscribe
 
     def _is_valid_unit(self, unit: str | None) -> bool:
         """Check if the given unit is valid for this condition."""
@@ -1070,12 +1234,12 @@ def make_entity_numerical_condition(
 
 def _make_numerical_condition_with_unit_schema(
     unit_converter: type[BaseUnitConverter],
-) -> vol.Schema:
+) -> probatio.Schema:
     """Factory for numerical condition schema with unit option."""
     return ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL.extend(
         {
-            vol.Required(CONF_OPTIONS): {
-                vol.Required("threshold"): NumericThresholdSelector(
+            probatio.Required(CONF_OPTIONS): {
+                probatio.Required("threshold"): NumericThresholdSelector(
                     NumericThresholdSelectorConfig(
                         mode=NumericThresholdMode.IS,
                         unit_of_measurement=list(unit_converter.VALID_UNITS),
@@ -1200,6 +1364,19 @@ type ConditionCheckerType = Callable[[HomeAssistant, TemplateVarsType], bool]
 type ConditionCheckerTypeOptional = Callable[
     [HomeAssistant, TemplateVarsType], bool | None
 ]
+
+
+@dataclass(slots=True)
+class _StateDependentChecker:
+    """Legacy condition checker whose result depends on entity states."""
+
+    checker: ConditionCheckerType
+    entity_ids: set[str]
+    needs_polling: bool
+
+    def __call__(self, hass: HomeAssistant, variables: TemplateVarsType = None) -> bool:
+        """Check the condition."""
+        return self.checker(hass, variables)
 
 
 def condition_trace_append(variables: TemplateVarsType, path: str) -> TraceElement:
@@ -1683,7 +1860,11 @@ def async_numeric_state_from_config(config: ConfigType) -> ConditionCheckerType:
 
         return True
 
-    return if_numeric_state
+    return _StateDependentChecker(
+        if_numeric_state,
+        {*entity_ids, *(value for value in (below, above) if isinstance(value, str))},
+        needs_polling=value_template is not None,
+    )
 
 
 def state(
@@ -1732,7 +1913,7 @@ def state(
         state_value = req_state_value
         if (
             isinstance(req_state_value, str)
-            and INPUT_ENTITY_ID.match(req_state_value) is not None
+            and cv.INPUT_ENTITY_ID.match(req_state_value) is not None
         ):
             if not (state_entity := hass.states.get(req_state_value)):
                 raise ConditionErrorMessage(
@@ -1751,10 +1932,10 @@ def state(
         for_period = cv.positive_time_period(render_complex(for_period, variables))
     except TemplateError as ex:
         raise ConditionErrorMessage("state", f"template error: {ex}") from ex
-    except vol.Invalid as ex:
+    except probatio.Invalid as ex:
         raise ConditionErrorMessage("state", f"schema error: {ex}") from ex
 
-    duration = dt_util.utcnow() - cast(timedelta, for_period)
+    duration = dt_util.utcnow() - for_period
     duration_ok = duration > entity.last_changed
     condition_trace_set_result(duration_ok, state=value, duration=duration)
     return duration_ok
@@ -1797,7 +1978,18 @@ def state_from_config(config: ConfigType) -> ConditionCheckerType:
 
         return result
 
-    return if_state
+    return _StateDependentChecker(
+        if_state,
+        {
+            *entity_ids,
+            *(
+                req_state
+                for req_state in req_states
+                if isinstance(req_state, str) and cv.INPUT_ENTITY_ID.match(req_state)
+            ),
+        },
+        needs_polling=for_period is not None,
+    )
 
 
 def template(
@@ -2019,7 +2211,7 @@ async def async_validate_condition_config(
             platform_domain, condition_key
         )
         if not (condition_class := condition_descriptors.get(relative_condition_key)):
-            raise vol.Invalid(f"Invalid condition '{condition_key}' specified")
+            raise probatio.Invalid(f"Invalid condition '{condition_key}' specified")
         return await condition_class.async_validate_complete_config(hass, config)
 
     config = move_options_fields_to_top_level(config, _CONDITION_BASE_SCHEMA)
@@ -2262,7 +2454,7 @@ def _load_conditions_file(integration: Integration) -> dict[str, Any]:
             "Unable to find conditions.yaml for the %s integration", integration.domain
         )
         return {}
-    except (HomeAssistantError, vol.Invalid) as ex:
+    except (HomeAssistantError, probatio.Invalid) as ex:
         _LOGGER.warning(
             "Unable to parse conditions.yaml for the %s integration: %s",
             integration.domain,

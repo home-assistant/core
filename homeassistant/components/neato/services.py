@@ -1,6 +1,6 @@
 """Neato services."""
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.vacuum import DOMAIN as VACUUM_DOMAIN
 from homeassistant.const import ATTR_MODE
@@ -25,10 +25,10 @@ def async_setup_services(hass: HomeAssistant) -> None:
         "custom_cleaning",
         entity_domain=VACUUM_DOMAIN,
         schema={
-            vol.Optional(ATTR_MODE, default=2): cv.positive_int,
-            vol.Optional(ATTR_NAVIGATION, default=1): cv.positive_int,
-            vol.Optional(ATTR_CATEGORY, default=4): cv.positive_int,
-            vol.Optional(ATTR_ZONE): cv.string,
+            probatio.Optional(ATTR_MODE, default=2): cv.positive_int,
+            probatio.Optional(ATTR_NAVIGATION, default=1): cv.positive_int,
+            probatio.Optional(ATTR_CATEGORY, default=4): cv.positive_int,
+            probatio.Optional(ATTR_ZONE): cv.string,
         },
         func="neato_custom_cleaning",
     )

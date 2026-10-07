@@ -18,12 +18,13 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     UnitOfEnergy,
     UnitOfPower,
+    UnitOfReactivePower,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from . import INPUT_SENSOR, OUTPUT_SENSOR
+from . import INPUT_SENSOR, OUTPUT_SENSOR, VAR_OUTPUT_SENSOR
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -122,3 +123,24 @@ async def test_output_sensor_not_attached_to_device(
     assert entity_registry.async_get("sensor.my_watthour_sensor") is None
 
     assert "attempts to attach a device to an entity" not in caplog.text
+
+
+async def test_sensor_type_output_reactive_power(
+    hass: HomeAssistant, mock_iotawatt: MagicMock
+) -> None:
+    """Test reactive power output sensors work."""
+    mock_iotawatt.getSensors.return_value["sensors"]["my_var_sensor_key"] = (
+        VAR_OUTPUT_SENSOR
+    )
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.my_var_sensor")
+    assert state is not None
+    assert state.state == "500"
+    assert state.attributes[ATTR_STATE_CLASS] is SensorStateClass.MEASUREMENT
+    assert (
+        state.attributes[ATTR_UNIT_OF_MEASUREMENT]
+        == UnitOfReactivePower.VOLT_AMPERE_REACTIVE
+    )
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.REACTIVE_POWER

@@ -2,8 +2,8 @@
 
 from typing import Any
 
+import probatio
 from python_otbr_api.tlv_parser import TLVError
-import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
@@ -26,9 +26,9 @@ def async_setup(hass: HomeAssistant) -> None:
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "thread/add_dataset_tlv",
-        vol.Required("source"): str,
-        vol.Required("tlv"): str,
+        probatio.Required("type"): "thread/add_dataset_tlv",
+        probatio.Required("source"): str,
+        probatio.Required("tlv"): str,
     }
 )
 @websocket_api.async_response
@@ -55,10 +55,10 @@ async def ws_add_dataset(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "thread/set_preferred_border_agent",
-        vol.Required("dataset_id"): str,
-        vol.Required("border_agent_id"): vol.Any(str, None),
-        vol.Required("extended_address"): str,
+        probatio.Required("type"): "thread/set_preferred_border_agent",
+        probatio.Required("dataset_id"): str,
+        probatio.Required("border_agent_id"): probatio.Any(str, None),
+        probatio.Required("extended_address"): str,
     }
 )
 @websocket_api.async_response
@@ -79,8 +79,8 @@ async def ws_set_preferred_border_agent(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "thread/set_preferred_dataset",
-        vol.Required("dataset_id"): str,
+        probatio.Required("type"): "thread/set_preferred_dataset",
+        probatio.Required("dataset_id"): str,
     }
 )
 @websocket_api.async_response
@@ -103,8 +103,8 @@ async def ws_set_preferred_dataset(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "thread/delete_dataset",
-        vol.Required("dataset_id"): str,
+        probatio.Required("type"): "thread/delete_dataset",
+        probatio.Required("dataset_id"): str,
     }
 )
 @websocket_api.async_response
@@ -130,8 +130,8 @@ async def ws_delete_dataset(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "thread/get_dataset_tlv",
-        vol.Required("dataset_id"): str,
+        probatio.Required("type"): "thread/get_dataset_tlv",
+        probatio.Required("dataset_id"): str,
     }
 )
 @websocket_api.async_response
@@ -152,7 +152,7 @@ async def ws_get_dataset(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "thread/list_datasets",
+        probatio.Required("type"): "thread/list_datasets",
     }
 )
 @websocket_api.async_response
@@ -185,7 +185,7 @@ async def ws_list_datasets(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "thread/discover_routers",
+        probatio.Required("type"): "thread/discover_routers",
     }
 )
 @websocket_api.async_response

@@ -4,7 +4,6 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_token": "[%key:common::config_flow::error::invalid_access_token%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "error": {
@@ -15,7 +14,7 @@
     "flow_title": "{name}",
     "step": {
       "link": {
-        "description": "Press and hold the power button on your Nanoleaf for 5 seconds until the button LEDs start flashing, then select **Submit** within 30 seconds.",
+        "description": "Press and hold the power button on your Nanoleaf for 5 seconds until the button LEDs start flashing. For devices without a power button, such as the Skylight, select **Connect to API** in the device settings of the Nanoleaf app instead. Then select **Submit** within 30 seconds.",
         "title": "Link Nanoleaf"
       },
       "user": {

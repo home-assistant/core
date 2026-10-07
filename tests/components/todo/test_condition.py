@@ -4,13 +4,16 @@ from typing import Any
 
 import pytest
 
+from homeassistant.components.todo.condition import CONDITIONS
 from homeassistant.core import HomeAssistant
 
 from tests.components.common import (
     ConditionStateDescription,
+    TargetSupport,
     assert_condition_behavior_all,
     assert_condition_behavior_any,
     assert_condition_options_supported,
+    assert_conditions_target_support,
     parametrize_condition_states_all,
     parametrize_condition_states_any,
     parametrize_target_entities,
@@ -25,6 +28,12 @@ async def target_todos(hass: HomeAssistant) -> dict[str, list[str]]:
 
 
 _TODO_THRESHOLD = {"threshold": {"type": "above", "value": {"number": 5}}}
+
+
+_CONDITION_TARGET_SUPPORT: dict[str, TargetSupport] = {
+    "all_completed": TargetSupport.STANDARD,
+    "incomplete": TargetSupport.STANDARD,
+}
 
 
 @pytest.mark.parametrize(
@@ -49,6 +58,11 @@ async def test_todo_condition_options_validation(
         supports_behavior=supports_behavior,
         supports_duration=supports_duration,
     )
+
+
+def test_condition_target_support() -> None:
+    """Certify the condition registry matches its declared target support."""
+    assert_conditions_target_support(CONDITIONS, _CONDITION_TARGET_SUPPORT)
 
 
 @pytest.mark.parametrize(

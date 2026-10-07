@@ -6,9 +6,9 @@ import logging
 import mimetypes
 from typing import Any, override
 
+import probatio
 import requests
 from requests.auth import HTTPBasicAuth
-import voluptuous as vol
 
 from homeassistant.components.notify import (
     ATTR_DATA,
@@ -54,7 +54,7 @@ ATTR_PICTURE1_PASSWORD = "password"
 ATTR_PICTURE1_AUTH = "auth"
 
 PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_DEVICE_KEY): cv.string}
+    {probatio.Required(CONF_DEVICE_KEY): cv.string}
 )
 
 
@@ -136,7 +136,7 @@ class PushsaferNotificationService(BaseNotificationService):
             if response.status_code != HTTPStatus.OK:
                 _LOGGER.error("Pushsafer failed with: %s", response.text)
             else:
-                _LOGGER.debug("Push send: %s", response.json())
+                _LOGGER.debug("Push send: %s", response.text)
 
     @classmethod
     def get_base64(cls, filebyte, mimetype):

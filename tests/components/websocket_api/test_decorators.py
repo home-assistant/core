@@ -2,10 +2,15 @@
 
 from typing import Any
 
-import voluptuous as vol
+import probatio
+import pytest
 
 from homeassistant.components import http, websocket_api
+from homeassistant.const import HASSIO_USER_NAME
 from homeassistant.core import HomeAssistant
+
+from tests.common import MockUser
+from tests.typing import MockHAClientWebSocket, WebSocketGenerator
 
 
 async def test_async_response_request_context(
@@ -48,7 +53,7 @@ async def test_async_response_request_context(
         handle_request(http.current_request.get(), connection, msg)
 
     @websocket_api.websocket_command(
-        {"type": "test-get-request-with-arg", vol.Required("arg"): str}
+        {"type": "test-get-request-with-arg", probatio.Required("arg"): str}
     )
     def get_with_arg_request(
         hass: HomeAssistant,
@@ -156,8 +161,18 @@ async def test_async_response_request_context(
     )
 
 
-async def test_supervisor_only(hass: HomeAssistant, websocket_client) -> None:
-    """Test that only the Supervisor can make requests."""
+@pytest.mark.usefixtures("hass_supervisor_user")
+async def test_supervisor_only(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    hass_admin_user: MockUser,
+) -> None:
+    """Test that only the Supervisor can make requests.
+
+    With the Supervisor user registered, an admin that is merely named like
+    the Supervisor user must still be rejected.
+    """
+    await hass.auth.async_update_user(hass_admin_user, name=HASSIO_USER_NAME)
 
     @websocket_api.ws_require_user(only_supervisor=True)
     @websocket_api.websocket_command({"type": "test-require-supervisor-user"})
@@ -181,3 +196,29 @@ async def test_supervisor_only(hass: HomeAssistant, websocket_client) -> None:
     assert msg["id"] == 5
     assert not msg["success"]
     assert msg["error"]["code"] == "only_supervisor"
+
+
+async def test_supervisor_only_allows_supervisor(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_supervisor_access_token: str,
+) -> None:
+    """Test that the Supervisor user can make Supervisor-only requests."""
+
+    @websocket_api.ws_require_user(only_supervisor=True)
+    @websocket_api.websocket_command({"type": "test-require-supervisor-user"})
+    def require_supervisor_request(
+        hass: HomeAssistant,
+        connection: websocket_api.ActiveConnection,
+        msg: dict[str, Any],
+    ) -> None:
+        connection.send_result(msg["id"])
+
+    websocket_api.async_register_command(hass, require_supervisor_request)
+
+    client = await hass_ws_client(hass, hass_supervisor_access_token)
+    await client.send_json({"id": 5, "type": "test-require-supervisor-user"})
+
+    msg = await client.receive_json()
+    assert msg["id"] == 5
+    assert msg["success"]

@@ -155,7 +155,7 @@ async def test_service_message(
     assert len(notification.model.frames) == 1
     frame = notification.model.frames[0]
     assert type(frame) is Simple
-    assert frame.icon is None
+    assert frame.icon == "a7956"
     assert frame.text == "Hi!"
 
     await hass.services.async_call(

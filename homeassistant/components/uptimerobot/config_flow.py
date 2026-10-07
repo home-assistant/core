@@ -3,6 +3,7 @@
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, override
 
+import probatio
 from pyuptimerobot import (
     UptimeRobot,
     UptimeRobotAccount,
@@ -10,7 +11,6 @@ from pyuptimerobot import (
     UptimeRobotAuthenticationException,
     UptimeRobotException,
 )
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY
@@ -18,7 +18,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN, LOGGER
 
-STEP_USER_DATA_SCHEMA = vol.Schema({vol.Required(CONF_API_KEY): str})
+STEP_USER_DATA_SCHEMA = probatio.Schema({probatio.Required(CONF_API_KEY): str})
 
 
 class UptimeRobotConfigFlow(ConfigFlow, domain=DOMAIN):

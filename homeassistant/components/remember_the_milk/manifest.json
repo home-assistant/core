@@ -1,7 +1,7 @@
 {
   "domain": "remember_the_milk",
   "name": "Remember The Milk",
-  "codeowners": [],
+  "codeowners": ["@MartinHjelmare"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/remember_the_milk",
   "integration_type": "service",

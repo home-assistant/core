@@ -3,7 +3,7 @@
 from datetime import timedelta
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.core import HomeAssistant
@@ -20,9 +20,9 @@ GH_ON_OFF_ZONE = "on / off"
 SVC_SET_SWITCH_OVERRIDE = "set_switch_override"
 
 SET_SWITCH_OVERRIDE_SCHEMA: VolDictType = {
-    vol.Optional(ATTR_DURATION): vol.All(
+    probatio.Optional(ATTR_DURATION): probatio.All(
         cv.time_period,
-        vol.Range(min=timedelta(minutes=5), max=timedelta(days=1)),
+        probatio.Range(min=timedelta(minutes=5), max=timedelta(days=1)),
     ),
 }
 
@@ -84,4 +84,5 @@ class GeniusSwitch(GeniusZone, SwitchEntity):
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Set the zone to override/on ({'setpoint': true}) for x seconds."""
-        await self._zone.set_override(1, kwargs.get(ATTR_DURATION, 3600))
+        duration: timedelta = kwargs.get(ATTR_DURATION, timedelta(hours=1))
+        await self._zone.set_override(1, int(duration.total_seconds()))

@@ -5,8 +5,8 @@ import logging
 from re import sub
 from typing import Any, override
 
+import probatio
 import pyotp
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_CODE, CONF_NAME, CONF_TOKEN
@@ -22,17 +22,17 @@ from .const import CONF_NEW_TOKEN, DEFAULT_NAME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_TOKEN): str,
-        vol.Optional(CONF_NEW_TOKEN): BooleanSelector(BooleanSelectorConfig()),
+        probatio.Optional(CONF_TOKEN): str,
+        probatio.Optional(CONF_NEW_TOKEN): BooleanSelector(BooleanSelectorConfig()),
         # Name field is no longer allowed in config flow schemas
         # pylint: disable-next=home-assistant-config-flow-name-field
-        vol.Required(CONF_NAME, default=DEFAULT_NAME): str,
+        probatio.Required(CONF_NAME, default=DEFAULT_NAME): str,
     }
 )
 
-STEP_CONFIRM_DATA_SCHEMA = vol.Schema({vol.Required(CONF_CODE): str})
+STEP_CONFIRM_DATA_SCHEMA = probatio.Schema({probatio.Required(CONF_CODE): str})
 
 
 class TOTPConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -111,7 +111,7 @@ class TOTPConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         data_schema = STEP_CONFIRM_DATA_SCHEMA.extend(
             {
-                vol.Optional("qr_code"): QrCodeSelector(
+                probatio.Optional("qr_code"): QrCodeSelector(
                     config=QrCodeSelectorConfig(
                         data=provisioning_uri,
                         scale=6,

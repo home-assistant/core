@@ -15,7 +15,7 @@ from midealocal.device import MideaDevice
 from midealocal.devices import device_selector
 from midealocal.discover import discover
 from midealocal.exceptions import MideaCloudError
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
@@ -32,7 +32,9 @@ from homeassistant.const import (
     CONF_TYPE,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import (
     CONF_ACCOUNT,
@@ -75,7 +77,7 @@ def _select_and_connect(
 
     Returns None if there is no device implementation for device_type.
     """
-    dm = device_selector(
+    dm: MideaDevice | None = device_selector(
         "",
         device_id,
         device_type,
@@ -239,11 +241,11 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
         error: str | None = None,
     ) -> ConfigFlowResult:
         """Show the login form, retaining any previously entered values."""
-        schema = vol.Schema(
+        schema = probatio.Schema(
             {
-                vol.Required(CONF_ACCOUNT): str,
-                vol.Required(CONF_PASSWORD): str,
-                vol.Required(
+                probatio.Required(CONF_ACCOUNT): str,
+                probatio.Required(CONF_PASSWORD): str,
+                probatio.Required(
                     CONF_SERVER,
                     default=default_server,
                 ): SelectSelector(
@@ -290,9 +292,9 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="auth_method",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         "login_mode",
                         default=LOGIN_MODE_PRESET,
                     ): SelectSelector(
@@ -379,8 +381,8 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
         # show discovery device input form with auto or ip address in web UI
         return self.async_show_form(
             step_id="search",
-            data_schema=vol.Schema(
-                {vol.Required(CONF_IP_ADDRESS, default="auto"): str},
+            data_schema=probatio.Schema(
+                {probatio.Required(CONF_IP_ADDRESS, default="auto"): str},
             ),
             errors={"base": error} if error else None,
         )
@@ -590,12 +592,12 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
         # show available device list in UI
         return self.async_show_form(
             step_id="auto",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_DEVICE,
                         default=next(iter(self.available_device.keys())),
-                    ): vol.In(self.available_device),
+                    ): probatio.In(self.available_device),
                 },
             ),
             **self._form_error(error),
@@ -777,6 +779,42 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
             return await self._async_create_midea_entry(user_input)
         return self._show_manually_form(user_input, error)
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Allow reconfiguration of a Midea config entry."""
+        entry = self._get_reconfigure_entry()
+        error = None
+        if user_input is not None:
+            devices = await self.hass.async_add_executor_job(
+                lambda: discover(
+                    list(self.supports.keys()), ip_address=user_input[CONF_IP_ADDRESS]
+                ),
+            )
+            entry_device_id = entry.data[CONF_DEVICE_ID]
+            device = devices.get(entry_device_id)
+            if len(devices) == 0:
+                error = "invalid_device_ip"
+            elif device is None:
+                error = "invalid_device_id_for_ip"
+            else:
+                return self.async_update_reload_and_abort(
+                    entry,
+                    data_updates={CONF_IP_ADDRESS: device.get(CONF_IP_ADDRESS)},
+                )
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=probatio.Schema(
+                {
+                    probatio.Required(
+                        CONF_IP_ADDRESS,
+                        default=(user_input or entry.data)[CONF_IP_ADDRESS],
+                    ): str
+                }
+            ),
+            errors={"base": error} if error else None,
+        )
+
     def _show_manually_form(
         self,
         user_input: dict[str, Any] | None,
@@ -784,43 +822,43 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Show the manual step form, retaining any previously entered values."""
         protocol = self.found_device.get(CONF_PROTOCOL)
-        schema = vol.Schema(
+        schema = probatio.Schema(
             {
-                vol.Required(
+                probatio.Required(
                     CONF_DEVICE_ID,
                     default=self.found_device.get(CONF_DEVICE_ID),
                 ): int,
-                vol.Required(
+                probatio.Required(
                     CONF_TYPE,
                     default=(self.found_device.get(CONF_TYPE) or DeviceType.AC),
-                ): vol.In(self.supports),
-                vol.Required(
+                ): probatio.In(self.supports),
+                probatio.Required(
                     CONF_IP_ADDRESS,
                     default=self.found_device.get(CONF_IP_ADDRESS),
                 ): str,
-                vol.Required(
+                probatio.Required(
                     CONF_PORT,
                     default=(self.found_device.get(CONF_PORT) or 6444),
                 ): int,
-                vol.Required(
+                probatio.Required(
                     CONF_PROTOCOL,
                     default=(protocol or ProtocolVersion.V3),
-                ): vol.In(
+                ): probatio.In(
                     [protocol] if protocol else ProtocolVersion,
                 ),
-                vol.Required(
+                probatio.Required(
                     CONF_MODEL,
                     default=(self.found_device.get(CONF_MODEL) or "Unknown"),
                 ): str,
-                vol.Required(
+                probatio.Required(
                     CONF_SUBTYPE,
                     default=(self.found_device.get(CONF_SUBTYPE) or 0),
                 ): int,
-                vol.Optional(
+                probatio.Optional(
                     CONF_TOKEN,
                     default=(self.found_device.get(CONF_TOKEN) or ""),
                 ): str,
-                vol.Optional(
+                probatio.Optional(
                     CONF_KEY,
                     default=(self.found_device.get(CONF_KEY) or ""),
                 ): str,
@@ -833,3 +871,29 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=schema,
             **self._form_error(error),
         )
+
+    @override
+    async def async_step_dhcp(
+        self, discovery_info: DhcpServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle DHCP discovery of a known Midea device.
+
+        Only devices already configured (matched via ``registered_devices``)
+        reach this step. It is used to keep the stored host in sync with the
+        current IP address of the device.
+        """
+        mac = format_mac(discovery_info.macaddress)
+        for entry in self._async_current_entries():
+            if (entry_mac := entry.data.get(CONF_MAC)) is None or format_mac(
+                entry_mac
+            ) != mac:
+                continue
+            if entry.data[CONF_IP_ADDRESS] != discovery_info.ip:
+                self.hass.config_entries.async_update_entry(
+                    entry,
+                    data=entry.data | {CONF_IP_ADDRESS: discovery_info.ip},
+                )
+                self.hass.config_entries.async_schedule_reload(entry.entry_id)
+            return self.async_abort(reason="already_configured")
+
+        return self.async_abort(reason="no_devices_found")

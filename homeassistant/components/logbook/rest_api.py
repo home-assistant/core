@@ -6,7 +6,7 @@ from http import HTTPStatus
 from typing import Any
 
 from aiohttp import web
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.components.recorder import get_instance
@@ -68,7 +68,7 @@ class LogbookView(HomeAssistantView):
         if entity_ids_str := request.query.get("entity"):
             try:
                 entity_ids = cv.entity_ids(entity_ids_str)
-            except vol.Invalid as ex:
+            except probatio.Invalid as ex:
                 raise InvalidEntityFormatError(
                     f"Invalid entity id(s) encountered: {entity_ids_str}. "
                     "Format should be <domain>.<object_id>"

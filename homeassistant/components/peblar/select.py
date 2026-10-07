@@ -4,14 +4,24 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Any, override
 
-from peblar import Peblar, PeblarUserConfiguration, SmartChargingMode
+from peblar import (
+    LedBrightness,
+    Peblar,
+    PeblarUserConfiguration,
+    SmartChargingMode,
+    SoundVolume,
+)
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import PeblarConfigEntry, PeblarUserConfigurationDataUpdateCoordinator
+from .coordinator import (
+    PeblarConfigEntry,
+    PeblarRuntimeData,
+    PeblarUserConfigurationDataUpdateCoordinator,
+)
 from .entity import PeblarEntity
 from .helpers import peblar_exception_handler
 
@@ -22,6 +32,7 @@ PARALLEL_UPDATES = 1
 class PeblarSelectEntityDescription(SelectEntityDescription):
     """Class describing Peblar select entities."""
 
+    has_fn: Callable[[PeblarRuntimeData], bool] = lambda _: True
     options_fn: Callable[[PeblarUserConfiguration], list[str]] | None = None
     current_fn: Callable[[PeblarUserConfiguration], str | None]
     select_fn: Callable[[Peblar, str], Awaitable[Any]]
@@ -33,11 +44,17 @@ def _smart_charging_options(configuration: PeblarUserConfiguration) -> list[str]
     A charger without a power meter configured rejects solar charging, and
     scheduled charging can be switched off during commissioning. Offering
     those anyway lands the user on a mode the charger quietly ignores.
+
+    Custom solar arrived with firmware 1.10. Rather than check the version,
+    take the charger at its word: it reports the settings that go with the
+    mode, and leaves them out when it has never heard of it.
     """
     solar = configuration.solar_charging_allowed
+    custom = solar and configuration.solar_charging_custom_power_target is not None
     return [
         option
         for option, allowed in (
+            ("custom_solar", custom),
             ("default", True),
             ("fast_solar", solar),
             ("pure_solar", solar),
@@ -57,6 +74,44 @@ DESCRIPTIONS = [
         current_fn=lambda x: x.smart_charging.value if x.smart_charging else None,
         select_fn=lambda x, mode: x.smart_charging(SmartChargingMode(mode)),
     ),
+    PeblarSelectEntityDescription(
+        key="buzzer_volume",
+        translation_key="buzzer_volume",
+        entity_category=EntityCategory.CONFIG,
+        has_fn=lambda x: x.system_information.hardware_has_buzzer,
+        options=[
+            "off",
+            "low",
+            "low_medium",
+            "medium",
+            "high",
+        ],
+        current_fn=lambda x: x.buzzer_volume.name.lower(),
+        select_fn=lambda x, option: x.set_buzzer_volume(
+            volume=SoundVolume[option.upper()]
+        ),
+    ),
+    PeblarSelectEntityDescription(
+        key="led_brightness",
+        translation_key="led_brightness",
+        entity_category=EntityCategory.CONFIG,
+        has_fn=lambda x: x.system_information.hardware_has_led,
+        options=[
+            "automatic",
+            "off",
+            "dim",
+            "medium",
+            "bright",
+        ],
+        # None when the charger reports a manual intensity that the UI has
+        # no name for, which someone can set straight through the API.
+        current_fn=lambda x: (
+            x.led_brightness.name.lower() if x.led_brightness is not None else None
+        ),
+        select_fn=lambda x, option: x.set_led_brightness(
+            brightness=LedBrightness[option.upper()]
+        ),
+    ),
 ]
 
 
@@ -73,6 +128,7 @@ async def async_setup_entry(
             description=description,
         )
         for description in DESCRIPTIONS
+        if description.has_fn(entry.runtime_data)
     )
 
 

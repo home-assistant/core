@@ -9,7 +9,7 @@ import requests_mock
 
 from homeassistant import config_entries
 from homeassistant.components.metoffice.const import DOMAIN
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr
@@ -22,7 +22,7 @@ from .const import (
     TEST_SITE_NAME_WAVERTREE,
 )
 
-from tests.common import MockConfigEntry, async_load_fixture
+from tests.common import MockConfigEntry, async_load_json_object_fixture
 
 
 async def test_form(hass: HomeAssistant, requests_mock: requests_mock.Mocker) -> None:
@@ -31,7 +31,7 @@ async def test_form(hass: HomeAssistant, requests_mock: requests_mock.Mocker) ->
     hass.config.longitude = TEST_LONGITUDE_WAVERTREE
 
     # all metoffice test data encapsulated in here
-    mock_json = json.loads(await async_load_fixture(hass, "metoffice.json", DOMAIN))
+    mock_json = await async_load_json_object_fixture(hass, "metoffice.json", DOMAIN)
     wavertree_daily = json.dumps(mock_json["wavertree_daily"])
     requests_mock.get(
         "https://data.hub.api.metoffice.gov.uk/sitespecific/v0/point/daily",
@@ -72,7 +72,7 @@ async def test_form_already_configured(
     hass.config.longitude = TEST_LONGITUDE_WAVERTREE
 
     # all metoffice test data encapsulated in here
-    mock_json = json.loads(await async_load_fixture(hass, "metoffice.json", DOMAIN))
+    mock_json = await async_load_json_object_fixture(hass, "metoffice.json", DOMAIN)
     wavertree_daily = json.dumps(mock_json["wavertree_daily"])
     requests_mock.get(
         "https://data.hub.api.metoffice.gov.uk/sitespecific/v0/point/daily",
@@ -86,9 +86,19 @@ async def test_form_already_configured(
     ).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-        data=METOFFICE_CONFIG_WAVERTREE,
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_API_KEY: TEST_API_KEY,
+            CONF_LATITUDE: TEST_LATITUDE_WAVERTREE,
+            CONF_LONGITUDE: TEST_LONGITUDE_WAVERTREE,
+        },
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -146,7 +156,7 @@ async def test_reauth_flow(
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test handling authentication errors and reauth flow."""
-    mock_json = json.loads(await async_load_fixture(hass, "metoffice.json", DOMAIN))
+    mock_json = await async_load_json_object_fixture(hass, "metoffice.json", DOMAIN)
     wavertree_daily = json.dumps(mock_json["wavertree_daily"])
     wavertree_hourly = json.dumps(mock_json["wavertree_hourly"])
     requests_mock.get(

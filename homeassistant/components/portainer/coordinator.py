@@ -16,6 +16,7 @@ from pyportainer import (
     Portainer,
     PortainerAuthenticationError,
     PortainerConnectionError,
+    PortainerError,
     PortainerEventListener,
     PortainerEventListenerResult,
     PortainerTimeoutError,
@@ -217,9 +218,14 @@ class PortainerCoordinator(
         self._image_cache: dict[
             tuple[int, str], tuple[float, LocalImageInformation]
         ] = {}
+        self._image_status_cache: dict[
+            tuple[int, str], tuple[float, PortainerImageUpdateStatus]
+        ] = {}
         self._event_listeners: dict[int, PortainerEventListener] = {}
         self._event_listeners_enabled = False
         self._container_ids_by_endpoint: dict[int, dict[str, str]] = {}
+        # Last successful fetch per endpoint, kept across timed-out polls
+        self._last_endpoint_data: dict[int, PortainerCoordinatorData] = {}
 
     @override
     async def update_data(self) -> dict[int, PortainerCoordinatorData]:
@@ -242,6 +248,7 @@ class PortainerCoordinator(
             ) from err
 
         mapped_endpoints: dict[int, PortainerCoordinatorData] = {}
+        timed_out_endpoints: set[int] = set()
         for endpoint in endpoints:
             if endpoint.status == EndpointStatus.DOWN:
                 _LOGGER.debug(
@@ -289,7 +296,7 @@ class PortainerCoordinator(
                     for stack in result
                 ]
 
-                prev_endpoint = self.data.get(endpoint.id) if self.data else None
+                prev_endpoint = self._last_endpoint_data.get(endpoint.id)
                 container_map: dict[str, PortainerContainerData] = {}
                 stack_map: dict[str, PortainerStackData] = {
                     stack.name: PortainerStackData(stack=stack, container_count=0)
@@ -341,19 +348,7 @@ class PortainerCoordinator(
                     container_inspect = container_inspects[container_name]
                     local_image = local_images[container_name]
 
-                    image_status = (
-                        (
-                            result.status
-                            if (
-                                result := self.watcher.results.get(
-                                    (endpoint.id, container.id)
-                                )
-                            )
-                            else None
-                        )
-                        if self.watcher
-                        else None
-                    )
+                    image_status = await self._get_image_status(endpoint.id, container)
 
                     # Check if container belongs to a stack via docker compose label
                     stack_name: str | None = (
@@ -441,9 +436,15 @@ class PortainerCoordinator(
                     endpoint.name,
                     endpoint.id,
                 )
+                timed_out_endpoints.add(endpoint.id)
                 continue
 
-        self._async_add_remove_endpoints(mapped_endpoints)
+        self._last_endpoint_data = {
+            endpoint_id: data
+            for endpoint_id, data in self._last_endpoint_data.items()
+            if endpoint_id in timed_out_endpoints
+        } | mapped_endpoints
+        self._async_add_remove_endpoints(mapped_endpoints, timed_out_endpoints)
         self._async_sync_event_listeners(mapped_endpoints)
 
         return mapped_endpoints
@@ -500,11 +501,17 @@ class PortainerCoordinator(
             )
 
     def _async_add_remove_endpoints(
-        self, mapped_endpoints: dict[int, PortainerCoordinatorData]
+        self,
+        mapped_endpoints: dict[int, PortainerCoordinatorData],
+        timed_out_endpoints: set[int],
     ) -> None:
-        """Add new endpoints, remove non-existing endpoints."""
+        """Add new endpoints, remove non-existing endpoints.
+
+        Timed-out endpoints keep their known entities, so they aren't added
+        again once the endpoint answers.
+        """
         current_endpoints = {endpoint.id for endpoint in mapped_endpoints.values()}
-        self.known_endpoints &= current_endpoints
+        self.known_endpoints &= current_endpoints | timed_out_endpoints
         new_endpoints = current_endpoints - self.known_endpoints
 
         # The stack ID is part of the key because it is part of the stack device
@@ -515,7 +522,11 @@ class PortainerCoordinator(
             for endpoint in mapped_endpoints.values()
             for stack_name, stack_data in endpoint.stacks.items()
         }
-        self.known_stacks &= current_stacks
+        self.known_stacks = {
+            stack
+            for stack in self.known_stacks
+            if stack in current_stacks or stack[0] in timed_out_endpoints
+        }
         new_stacks = current_stacks - self.known_stacks
 
         if new_endpoints or new_stacks:
@@ -542,7 +553,11 @@ class PortainerCoordinator(
         }
         # Prune departed containers so a recreated container is detected as new
         # and its entity is rebuilt with the fresh (ephemeral) Docker container ID.
-        self.known_containers &= current_containers
+        self.known_containers = {
+            container
+            for container in self.known_containers
+            if container in current_containers or container[0] in timed_out_endpoints
+        }
         new_containers = current_containers - self.known_containers
         if new_containers:
             _LOGGER.debug("New containers found: %s", new_containers)
@@ -564,7 +579,11 @@ class PortainerCoordinator(
             for volume_name in endpoint.volumes
         }
 
-        self.known_volumes &= current_volumes
+        self.known_volumes = {
+            volume
+            for volume in self.known_volumes
+            if volume in current_volumes or volume[0] in timed_out_endpoints
+        }
         new_volumes = current_volumes - self.known_volumes
         if new_volumes:
             _LOGGER.debug("New volumes found: %s", new_volumes)
@@ -617,6 +636,47 @@ class PortainerCoordinator(
             local_image,
         )
         return local_image
+
+    async def _get_image_status(
+        self, endpoint_id: int, container: DockerContainer
+    ) -> PortainerImageUpdateStatus | None:
+        """Return the image update status, checking containers the watcher has not seen."""
+        if self.watcher is None:
+            return None
+
+        if result := self.watcher.results.get((endpoint_id, container.id)):
+            return result.status
+
+        # A recreated container gets a new ID, which the watcher only picks up on
+        # its next run. Check its image now instead of reporting unknown until then.
+        if (
+            self.watcher.last_check is None
+            or container.state != DockerContainerState.RUNNING
+            or not container.image
+        ):
+            return None
+
+        cache_key = (endpoint_id, container.image)
+        if cached := self._image_status_cache.get(cache_key):
+            cached_at, image_status = cached
+            if cached_at >= self.watcher.last_check:
+                return image_status
+
+        try:
+            image_status = await self.portainer.container_image_status(
+                endpoint_id, container.image
+            )
+        except PortainerError as err:
+            _LOGGER.debug(
+                "Failed to check image %s on endpoint %d: %s",
+                container.image,
+                endpoint_id,
+                err,
+            )
+            return None
+
+        self._image_status_cache[cache_key] = (time.time(), image_status)
+        return image_status
 
     def _async_sync_event_listeners(
         self, mapped_endpoints: dict[int, PortainerCoordinatorData]
