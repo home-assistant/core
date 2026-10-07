@@ -21,13 +21,14 @@ class CyncBaseEntity(CoordinatorEntity[CyncCoordinator]):
         device: CyncDevice,
         coordinator: CyncCoordinator,
         room_name: str | None = None,
+        *,
+        unique_id: str | None = None,
     ) -> None:
         """Pass coordinator to CoordinatorEntity."""
         super().__init__(coordinator)
 
         self._cync_unique_id = device.unique_id
-        # Keep registry identifiers stable across pycync ID format changes.
-        self._attr_unique_id = f"{device.parent_home_id}-{device.device_id}"
+        self._attr_unique_id = device.unique_id if unique_id is None else unique_id
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._attr_unique_id)},
