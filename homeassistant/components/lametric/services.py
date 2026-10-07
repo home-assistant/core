@@ -90,7 +90,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
             call,
             [
                 Simple(
-                    icon=call.data.get(CONF_ICON),
+                    icon=call.data.get(CONF_ICON, "a7956"),
                     text=call.data[CONF_MESSAGE],
                 )
             ],
