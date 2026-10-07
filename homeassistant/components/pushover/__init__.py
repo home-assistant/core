@@ -3,30 +3,19 @@
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-import probatio
 from pushover_complete import BadAPIRequestError, PushoverAPI
 from requests.exceptions import RequestException
 from urllib3.exceptions import HTTPError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_NAME, Platform
-from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.exceptions import (
-    ConfigEntryAuthFailed,
-    ConfigEntryNotReady,
-    ServiceValidationError,
-)
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.typing import ConfigType
 
-from .const import (
-    ATTR_ENTRY_ID,
-    ATTR_TAG,
-    CONF_USER_KEY,
-    DATA_HASS_CONFIG,
-    DOMAIN,
-    SERVICE_CANCEL,
-)
+from .const import CONF_USER_KEY, DATA_HASS_CONFIG, DOMAIN
+from .services import async_setup_services
 
 if TYPE_CHECKING:
     from .notify import PushoverNotificationService
@@ -34,13 +23,6 @@ if TYPE_CHECKING:
 PLATFORMS = [Platform.NOTIFY]
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
-
-SERVICE_CANCEL_SCHEMA = probatio.Schema(
-    {
-        probatio.Required(ATTR_ENTRY_ID): cv.string,
-        probatio.Optional(ATTR_TAG): cv.string,
-    }
-)
 
 
 @dataclass
@@ -59,32 +41,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     hass.data[DATA_HASS_CONFIG] = config
 
-    async def _async_cancel_service_handler(call: ServiceCall) -> None:
-        """Cancel emergency notifications for the targeted config entry."""
-        entry_id: str = call.data[ATTR_ENTRY_ID]
-        entry: PushoverConfigEntry | None = hass.config_entries.async_get_entry(
-            entry_id
-        )
-        if entry is None:
-            raise ServiceValidationError(
-                f"Pushover config entry {entry_id} does not exist"
-            )
-
-        notify_service = entry.runtime_data.notify_service
-        if notify_service is None:
-            raise ServiceValidationError(
-                f"Pushover config entry {entry_id} has no notify service set up"
-            )
-
-        tag: str = call.data.get(ATTR_TAG, "")
-        await hass.async_add_executor_job(notify_service.cancel_by_tag, tag)
-
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_CANCEL,
-        _async_cancel_service_handler,
-        schema=SERVICE_CANCEL_SCHEMA,
-    )
+    async_setup_services(hass)
 
     return True
 

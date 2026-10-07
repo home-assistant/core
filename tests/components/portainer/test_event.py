@@ -10,7 +10,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.portainer.const import CONTAINER_STATE_EVENT_TYPES, DOMAIN
-from homeassistant.const import STATE_UNKNOWN, Platform
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
@@ -148,3 +148,54 @@ async def test_unknown_container_id_does_not_change_data(
     )
 
     assert coordinator.data is data_before
+
+
+TEST_CONTAINER_SWITCH = f"switch.{TEST_CONTAINER_NAME}_container"
+
+
+@pytest.mark.parametrize(
+    ("action", "expected_state"),
+    [
+        pytest.param("stop", STATE_OFF, id="stop"),
+        pytest.param("die", STATE_OFF, id="die"),
+        pytest.param("pause", STATE_ON, id="pause"),
+        pytest.param("kill", STATE_ON, id="kill_keeps_state"),
+        pytest.param("oom", STATE_ON, id="oom_keeps_state"),
+        pytest.param("health_status: unhealthy", STATE_ON, id="health_keeps_state"),
+    ],
+)
+@pytest.mark.usefixtures("mock_portainer_client")
+async def test_docker_event_updates_container_switch(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_portainer_event_listeners: dict[int, MagicMock],
+    action: str,
+    expected_state: str,
+) -> None:
+    """Test a Docker event updates the container switch without a refresh."""
+    await setup_integration(hass, mock_config_entry)
+    assert hass.states.get(TEST_CONTAINER_SWITCH).state == STATE_ON
+
+    await _fire_event(
+        hass, mock_portainer_event_listeners, 1, action, TEST_CONTAINER_ID
+    )
+
+    assert hass.states.get(TEST_CONTAINER_SWITCH).state == expected_state
+
+
+@pytest.mark.usefixtures("mock_portainer_client")
+async def test_docker_start_event_turns_container_switch_on(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_portainer_event_listeners: dict[int, MagicMock],
+) -> None:
+    """Test a start event after a stop event turns the container switch back on."""
+    await setup_integration(hass, mock_config_entry)
+
+    await _fire_event(hass, mock_portainer_event_listeners, 1, "die", TEST_CONTAINER_ID)
+    assert hass.states.get(TEST_CONTAINER_SWITCH).state == STATE_OFF
+
+    await _fire_event(
+        hass, mock_portainer_event_listeners, 1, "start", TEST_CONTAINER_ID
+    )
+    assert hass.states.get(TEST_CONTAINER_SWITCH).state == STATE_ON

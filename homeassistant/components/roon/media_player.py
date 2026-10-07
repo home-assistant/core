@@ -67,7 +67,9 @@ async def async_setup_entry(
             )
 
     # start listening for players to be added or changed by the server component
-    async_dispatcher_connect(hass, "roon_media_player", async_update_media_player)
+    config_entry.async_on_unload(
+        async_dispatcher_connect(hass, "roon_media_player", async_update_media_player)
+    )
 
 
 class RoonDevice(MediaPlayerEntity):

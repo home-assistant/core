@@ -1722,6 +1722,64 @@ async def test_pipeline_language_used_instead_of_conversation_language(
             8,
             "hello, how are you? I'm doing well, thank you.",
         ),
+        # Text ending without whitespace, a tool call, then more text
+        (
+            (
+                [
+                    "Let me check the temperature.",
+                ],
+                {
+                    "tool_calls": [
+                        llm.ToolInput(
+                            tool_name="test_tool",
+                            tool_args={},
+                            id="test_tool_id",
+                        )
+                    ],
+                },
+                [
+                    "It is ",
+                    "25 degrees.",
+                ],
+            ),
+            # 1 chunk before tool call, the separator, then 2 after
+            4,
+            "Let me check the temperature. It is 25 degrees.",
+        ),
+        # Text, then an assistant message with only another tool call
+        (
+            (
+                [
+                    "Let me check the temperature.",
+                ],
+                {
+                    "tool_calls": [
+                        llm.ToolInput(
+                            tool_name="test_tool",
+                            tool_args={},
+                            id="test_tool_id",
+                        )
+                    ],
+                },
+                [],
+                {
+                    "tool_calls": [
+                        llm.ToolInput(
+                            tool_name="test_tool",
+                            tool_args={},
+                            id="test_tool_id_2",
+                        )
+                    ],
+                },
+                [
+                    "It is ",
+                    "25 degrees.",
+                ],
+            ),
+            # 1 chunk before the tool calls, one separator, then 2 after
+            4,
+            "Let me check the temperature. It is 25 degrees.",
+        ),
     ],
 )
 @freeze_time("2025-10-31 12:00:00")
@@ -1869,7 +1927,7 @@ async def test_chat_log_tts_streaming(
     mock_tool.name = "test_tool"
     mock_tool.description = "Test function"
     mock_tool.parameters = probatio.Schema({})
-    mock_tool.async_call.return_value = "Test response"
+    mock_tool.async_call.return_value = llm.ToolResult(data="Test response")
 
     with (
         patch(
@@ -1890,8 +1948,7 @@ async def test_chat_log_tts_streaming(
         [chunk.decode() async for chunk in stream.async_stream_result()]
     )
 
-    streamed_text = "".join(text_deltas)
-    assert tts_result == streamed_text
+    assert tts_result == chunk_text
     assert len(received_tts) == expected_chunks
     assert "".join(received_tts) == chunk_text
 

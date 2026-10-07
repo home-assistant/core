@@ -3,10 +3,17 @@
   "name": "Qube heat pump",
   "codeowners": ["@MattieGit"],
   "config_flow": true,
+  "dependencies": ["zeroconf"],
   "documentation": "https://www.home-assistant.io/integrations/hr_energy_qube",
   "integration_type": "hub",
   "iot_class": "local_polling",
   "loggers": ["python_qube_heatpump"],
-  "quality_scale": "bronze",
-  "requirements": ["python-qube-heatpump==1.12.0"]
+  "quality_scale": "silver",
+  "requirements": ["python-qube-heatpump==1.16.0"],
+  "zeroconf": [
+    {
+      "properties": { "ProjectName": "deqsihpb*", "Vendor": "000a5c" },
+      "type": "_workstation._tcp.local."
+    }
+  ]
 }

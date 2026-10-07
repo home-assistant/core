@@ -2,7 +2,7 @@
 
 from collections.abc import Callable, Coroutine
 from typing import Any
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, call, patch
 
 from hass_nabucasa import (
     AutoLoginController,
@@ -277,6 +277,39 @@ async def test_remote_ui_url(hass: HomeAssistant) -> None:
         cl.client.prefs._prefs["remote_domain"] = "example.com"
 
         assert async_remote_ui_url(hass) == "https://example.com"
+
+        # Remote backend loaded after a login, stored domain not refreshed
+        cl.client.prefs._prefs["remote_domain"] = None
+        with patch.object(cl.remote, "_instance_domain", "live.example.com"):
+            assert async_remote_ui_url(hass) == "https://live.example.com"
+
+
+@pytest.mark.parametrize(
+    ("stored_domain", "expected_calls"),
+    [
+        pytest.param(None, 1, id="changed"),
+        pytest.param("example.ui.nabu.casa", 0, id="unchanged"),
+    ],
+)
+@pytest.mark.usefixtures("mock_cloud_fixture")
+async def test_on_initialized_updates_remote_domain(
+    hass: HomeAssistant, stored_domain: str | None, expected_calls: int
+) -> None:
+    """Test the remote domain preference is synced when cloud is initialized."""
+    cl = hass.data[DATA_CLOUD]
+    cl.client.prefs._prefs["remote_domain"] = stored_domain
+    (on_initialized,) = cl._on_initialized
+
+    with (
+        patch.object(cl.remote, "_instance_domain", "example.ui.nabu.casa"),
+        patch.object(cl.client.prefs, "async_update") as mock_update,
+    ):
+        await on_initialized()
+
+    assert (
+        mock_update.call_args_list
+        == [call(remote_domain="example.ui.nabu.casa")] * expected_calls
+    )
 
 
 async def test_async_get_or_create_cloudhook(

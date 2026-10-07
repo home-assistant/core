@@ -258,6 +258,27 @@
     }
   },
   "exceptions": {
+    "dashboard_display_not_available": {
+      "message": "The display {display} is not available."
+    },
+    "dashboard_invalid_media_type": {
+      "message": "Dashboard displays only accept the media content type {expected}, got {media_type}."
+    },
+    "dashboard_media_not_found": {
+      "message": "The media {media_content_id} was not found."
+    },
+    "dashboard_now_playing_requires_player": {
+      "message": "The dashboard {dashboard} requires a player, expected {expected}."
+    },
+    "dashboard_player_not_available": {
+      "message": "The player {player_id} is unknown or not exposed to Home Assistant."
+    },
+    "dashboard_type_not_supported": {
+      "message": "The display {display} does not support the dashboard {dashboard}, expected one of: {valid_ids}."
+    },
+    "dashboard_unknown_type": {
+      "message": "The dashboard {dashboard} is unknown, expected one of: {valid_ids}."
+    },
     "invalid_username": {
       "message": "The username {username} does not exist on the Music Assistant server."
     },

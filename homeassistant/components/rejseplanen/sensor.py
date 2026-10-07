@@ -54,11 +54,12 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         probatio.Required(CONF_AUTHENTICATION): cv.string,
         probatio.Required(CONF_STOP_ID): probatio.All(
-            cv.ensure_list, [cv.positive_int]
+            probatio.EnsureList(), [cv.positive_int]
         ),
         probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         probatio.Optional(CONF_DEPARTURE_TYPE, default=[]): probatio.All(
-            cv.ensure_list, [probatio.In([*BUS_TYPES, *TRAIN_TYPES, *METRO_TYPES])]
+            probatio.EnsureList(),
+            [probatio.In([*BUS_TYPES, *TRAIN_TYPES, *METRO_TYPES])],
         ),
     }
 )

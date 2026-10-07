@@ -11,9 +11,10 @@ from matter_server.common.models import EventType, MatterNodeData
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.matter import DOMAIN
+from homeassistant.components.matter.const import ID_TYPE_DEVICE_ID
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import MockConfigEntry, load_fixture
 
@@ -54,6 +55,8 @@ FIXTURES = [
     "mock_air_purifier",
     "mock_battery_storage",
     "mock_chime",
+    "mock_closure_covering_lift",
+    "mock_closure_roof_window",
     "mock_cooktop",
     "mock_dimmable_light",
     "mock_dimmable_plugin_unit",
@@ -83,6 +86,7 @@ FIXTURES = [
     "mock_pump",
     "mock_room_airconditioner",
     "mock_soil_sensor",
+    "mock_solar_battery_storage",
     "mock_solar_inverter",
     "mock_speaker",
     "mock_switch_unit",
@@ -286,3 +290,67 @@ def snapshot_matter_entities(
         assert entity_state == snapshot(
             name=f"{fixture_name}][{entity_entry.entity_id}-state"
         )
+
+
+def _matter_device_id(device: dr.AnyDeviceEntry) -> str:
+    """Return the stable Matter device-id portion of a device's identifiers."""
+    prefix = f"{ID_TYPE_DEVICE_ID}_"
+    return next(
+        identifier[1].removeprefix(prefix)
+        for identifier in device.identifiers
+        if identifier[0] == DOMAIN and identifier[1].startswith(prefix)
+    )
+
+
+def _device_entity_names(
+    entity_registry: er.EntityRegistry, device_id: str
+) -> dict[str, str | None]:
+    """Return a device's entities as a sorted entity_id -> name mapping."""
+    return {
+        entry.entity_id: entry.original_name
+        for entry in sorted(
+            er.async_entries_for_device(
+                entity_registry, device_id, include_disabled_entities=True
+            ),
+            key=lambda entry: entry.entity_id,
+        )
+    }
+
+
+def snapshot_matter_devices(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Snapshot the Matter device topology and entity names.
+
+    Produces a stable tree keyed by the Matter device id, showing each node
+    device, its child devices, its bridge (``via_device``) link and the entity
+    names on each device, so the effect of multi-endpoint changes (child devices,
+    entity naming) are asserted.
+    """
+    entry_id = hass.config_entries.async_entries(DOMAIN)[0].entry_id
+    devices = dr.async_entries_for_config_entry(device_registry, entry_id)
+    matter_id_by_device_id = {
+        device.id: _matter_device_id(device) for device in devices
+    }
+
+    tree = {
+        _matter_device_id(device): {
+            "name": device.name,
+            "via_device": matter_id_by_device_id.get(device.via_device_id),
+            "entities": _device_entity_names(entity_registry, device.id),
+            "children": {
+                _matter_device_id(child): {
+                    "name": child.name,
+                    "entities": _device_entity_names(entity_registry, child.id),
+                }
+                for child in dr.async_entries_for_parent_device(
+                    device_registry, device.id
+                )
+            },
+        }
+        for device in devices
+    }
+    assert tree == snapshot

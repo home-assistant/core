@@ -32,9 +32,7 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions:
-    status: exempt
-    comment: Integration does not register custom actions.
+  action-exceptions: done
   config-entry-unloading: done
   docs-configuration-parameters:
     status: exempt
@@ -51,9 +49,9 @@ rules:
 
   # Gold
   devices: done
-  diagnostics: todo
-  discovery-update-info: todo
-  discovery: todo
+  diagnostics: done
+  discovery-update-info: done
+  discovery: done
   docs-data-update: todo
   docs-examples: todo
   docs-known-limitations: todo
@@ -68,10 +66,15 @@ rules:
   entity-device-class: done
   entity-disabled-by-default: done
   entity-translations: done
-  exception-translations: todo
-  icon-translations: todo
+  exception-translations: done
+  icon-translations: done
   reconfiguration-flow: todo
-  repair-issues: todo
+  repair-issues:
+    status: exempt
+    comment: |
+      The integration has no conditions the user can fix from Home Assistant.
+      Connection problems make the entities unavailable and are logged once;
+      the heat pump has no authentication and its settings are managed on its panel.
   stale-devices:
     status: exempt
     comment: Single device per config entry.

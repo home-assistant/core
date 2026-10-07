@@ -145,6 +145,35 @@ async def test_polling_platform_init_failed(
     assert mock_polling_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
+async def test_polling_platform_init_failed_does_not_log_token(
+    hass: HomeAssistant,
+    mock_polling_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that a connection failure does not put the bot token in the log."""
+    api_key = mock_polling_config_entry.data[CONF_API_KEY]
+    # The Telegram API URL embeds the bot token, and library errors quote it.
+    error = NetworkError(
+        "httpx2.HTTPStatusError: Client error '401 Unauthorized' for url "
+        f"'https://api.telegram.org/bot{api_key}/getMe'"
+    )
+
+    with patch(
+        "homeassistant.components.telegram_bot.bot.Bot.get_me", side_effect=error
+    ):
+        mock_polling_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_polling_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_polling_config_entry.state is ConfigEntryState.SETUP_RETRY
+    # Home Assistant strips the trailing period from translated messages.
+    assert mock_polling_config_entry.reason == "Could not connect to Telegram"
+
+    # Nothing at any level may carry the token: not the info line, not the
+    # traceback config entry setup logs, not the library's own debug output.
+    assert api_key not in caplog.text
+
+
 @pytest.mark.parametrize(
     ("service", "input"),
     [
@@ -445,6 +474,16 @@ def _read_file_as_bytesio_mock(file_path):
     _file.seek(0)
 
     return _file
+
+
+@pytest.fixture
+def allowlist_tmp_path(hass: HomeAssistant, tmp_path: Path) -> Path:
+    """Allow download_file to write into the temporary directory."""
+    hass.config.allowlist_external_dirs = {
+        *hass.config.allowlist_external_dirs,
+        tmp_path.resolve().as_posix(),
+    }
+    return tmp_path
 
 
 async def _run_download_file_service_with_mocks(
@@ -1437,6 +1476,7 @@ async def test_async_setup_entry_failed(
 
     await hass.async_block_till_done()
     assert mock_broadcast_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_broadcast_config_entry.error_reason_translation_key == "invalid_api_key"
 
 
 async def test_answer_callback_query(
@@ -1573,7 +1613,7 @@ async def test_send_video(
 
     with (
         patch(
-            "homeassistant.components.telegram_bot.bot.httpx.AsyncClient.get"
+            "homeassistant.components.telegram_bot.bot.httpx2.AsyncClient.get"
         ) as mock_get,
         patch("homeassistant.components.telegram_bot.bot._RETRY_DELAY", 0),
     ):
@@ -1688,7 +1728,7 @@ async def test_send_video(
     # test: success with url
 
     with patch(
-        "homeassistant.components.telegram_bot.bot.httpx.AsyncClient.get"
+        "homeassistant.components.telegram_bot.bot.httpx2.AsyncClient.get"
     ) as mock_get:
         mock_get.return_value = AsyncMock(status_code=200, content=b"mock content")
 
@@ -2317,6 +2357,7 @@ async def test_download_file_no_custom_dir(
         ),
     ],
 )
+@pytest.mark.usefixtures("allowlist_tmp_path")
 async def test_download_file_custom_dir(
     tmp_path: Path,
     hass: HomeAssistant,
@@ -2364,6 +2405,7 @@ async def test_download_file_custom_dir(
     _assert_download_file_response(response, expected_path)
 
 
+@pytest.mark.usefixtures("allowlist_tmp_path")
 async def test_download_file_directory_created_successfully(
     tmp_path: Path,
     hass: HomeAssistant,
@@ -2411,6 +2453,7 @@ async def test_download_file_directory_created_successfully(
     _assert_download_file_response(response, expected_path)
 
 
+@pytest.mark.usefixtures("allowlist_tmp_path")
 async def test_download_file_when_bot_failed_to_get_file(
     tmp_path: Path,
     hass: HomeAssistant,
@@ -2448,6 +2491,7 @@ async def test_download_file_when_bot_failed_to_get_file(
     assert "failed to get file" in str(err.value)
 
 
+@pytest.mark.usefixtures("allowlist_tmp_path")
 async def test_download_file_when_empty_file_path(
     tmp_path: Path,
     hass: HomeAssistant,
@@ -2490,6 +2534,7 @@ async def test_download_file_when_empty_file_path(
         TelegramError,
     ],
 )
+@pytest.mark.usefixtures("allowlist_tmp_path")
 async def test_download_file_when_error_when_downloading(
     tmp_path: Path,
     hass: HomeAssistant,
@@ -2593,6 +2638,7 @@ async def test_download_file_rejects_invalid_directory_path(
         "windows\\style.txt",
     ],
 )
+@pytest.mark.usefixtures("allowlist_tmp_path")
 async def test_download_file_rejects_invalid_file_name(
     tmp_path: Path,
     hass: HomeAssistant,
@@ -2641,7 +2687,7 @@ async def test_send_media_group(
     await hass.async_block_till_done()
 
     with patch(
-        "homeassistant.components.telegram_bot.bot.httpx.AsyncClient.get"
+        "homeassistant.components.telegram_bot.bot.httpx2.AsyncClient.get"
     ) as mock_get:
         mock_get.return_value = AsyncMock(status_code=200, content=b"mock content")
 
@@ -2685,3 +2731,148 @@ async def test_send_media_group(
             }
         ]
     }
+
+
+async def test_send_media_group_caption_parse_mode(
+    hass: HomeAssistant,
+    mock_broadcast_config_entry: MockConfigEntry,
+    mock_external_calls: None,
+) -> None:
+    """Test the parse mode applies to the captions of the media items."""
+    mock_broadcast_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    with (
+        patch(
+            "homeassistant.components.telegram_bot.bot.httpx2.AsyncClient.get"
+        ) as mock_get,
+        patch(
+            "homeassistant.components.telegram_bot.bot.Bot.send_media_group",
+            AsyncMock(
+                return_value=[
+                    Message(
+                        message_id=12345,
+                        date=dt_util.utcnow(),
+                        chat=Chat(id=123456, type=ChatType.PRIVATE),
+                    )
+                ]
+            ),
+        ) as mock_send_media_group,
+    ):
+        mock_get.return_value = AsyncMock(status_code=200, content=b"mock content")
+
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SEND_MEDIA_GROUP,
+            {
+                ATTR_PARSER: PARSER_MD,
+                ATTR_MEDIA: [
+                    {
+                        ATTR_MEDIA_TYPE: InputMediaType.PHOTO,
+                        ATTR_URL: "https://mock/photo.jpg",
+                        ATTR_CAPTION: "*bold*",
+                    },
+                    {
+                        ATTR_MEDIA_TYPE: InputMediaType.PHOTO,
+                        ATTR_URL: "https://mock/photo2.jpg",
+                    },
+                ],
+            },
+            blocking=True,
+            return_response=True,
+        )
+
+    media = mock_send_media_group.call_args.kwargs[ATTR_MEDIA]
+    assert media[0].caption == "*bold*"
+    assert media[0].parse_mode == PARSER_MD
+
+
+@pytest.mark.parametrize(
+    "subdirectory",
+    ["outside", "nested/deeper"],
+)
+async def test_download_file_rejects_directory_outside_allowlist(
+    tmp_path: Path,
+    hass: HomeAssistant,
+    mock_broadcast_config_entry: MockConfigEntry,
+    mock_external_calls: None,
+    subdirectory: str,
+) -> None:
+    """Test download_file rejects an absolute path outside the allowlist."""
+    mock_broadcast_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # tmp_path is deliberately not allowlisted here.
+    directory = tmp_path / subdirectory
+    target = directory / "payload.jpg"
+
+    with (
+        patch(
+            "homeassistant.components.telegram_bot.bot.Bot.get_file",
+        ) as get_file_mock,
+        pytest.raises(ServiceValidationError) as err,
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            "download_file",
+            {
+                ATTR_FILE_ID: "some-file-id",
+                ATTR_DIRECTORY_PATH: directory.as_posix(),
+                ATTR_FILE_NAME: "payload.jpg",
+            },
+            blocking=True,
+            return_response=True,
+        )
+
+    assert err.value.translation_key == "allowlist_external_dirs_error"
+    get_file_mock.assert_not_called()
+    # Nothing reached the disk and no directory was created on the way.
+    assert not target.exists()
+    assert not directory.exists()
+
+
+async def test_download_file_rejects_symlink_out_of_allowlist(
+    tmp_path: Path,
+    hass: HomeAssistant,
+    mock_broadcast_config_entry: MockConfigEntry,
+    mock_external_calls: None,
+) -> None:
+    """Test download_file rejects a symlink leaving the allowlist."""
+    mock_broadcast_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    allowed = tmp_path / "allowed"
+    allowed.mkdir()
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    hass.config.allowlist_external_dirs = {allowed.resolve().as_posix()}
+
+    # A path that passes a plain string check but resolves out of the allowlist.
+    escape = allowed / "escape"
+    escape.symlink_to(outside, target_is_directory=True)
+    target = outside / "payload.jpg"
+
+    with (
+        patch(
+            "homeassistant.components.telegram_bot.bot.Bot.get_file",
+        ) as get_file_mock,
+        pytest.raises(ServiceValidationError) as err,
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            "download_file",
+            {
+                ATTR_FILE_ID: "some-file-id",
+                ATTR_DIRECTORY_PATH: escape.as_posix(),
+                ATTR_FILE_NAME: "payload.jpg",
+            },
+            blocking=True,
+            return_response=True,
+        )
+
+    assert err.value.translation_key == "allowlist_external_dirs_error"
+    get_file_mock.assert_not_called()
+    assert not target.exists()
