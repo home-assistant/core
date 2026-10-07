@@ -396,6 +396,82 @@ async def test_function_call_without_reasoning(
 
 
 @freeze_time("2025-10-31 18:00:00")
+@pytest.mark.usefixtures("mock_config_entry_with_assist", "mock_init_component")
+@pytest.mark.parametrize(
+    "text",
+    [pytest.param("", id="empty-delta"), pytest.param([], id="no-text-deltas")],
+)
+async def test_function_call_with_silent_response(
+    hass: HomeAssistant,
+    mock_create_stream: AsyncMock,
+    mock_chat_log: MockChatLog,  # noqa: F811
+    snapshot: SnapshotAssertion,
+    text: str | list[str],
+) -> None:
+    """Test a completed empty response acknowledges tool results without retries."""
+    mock_create_stream.return_value = [
+        create_function_tool_call_item(
+            id="fc_1",
+            arguments=['{"param1":"call1"}'],
+            call_id="call_call_1",
+            name="test_tool",
+            output_index=0,
+        ),
+        create_message_item(id="msg_A", text=text, output_index=0),
+    ]
+    mock_chat_log.mock_tool_results({"call_call_1": "value1"})
+
+    result = await conversation.async_converse(
+        hass,
+        "Please call the test function silently",
+        mock_chat_log.conversation_id,
+        Context(),
+        agent_id="conversation.openai_conversation",
+    )
+
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
+    assert result.response.speech["plain"]["speech"] == ""
+    assert not result.continue_conversation
+    assert mock_create_stream.await_count == 2
+    assert not mock_chat_log.unresponded_tool_results
+    assert mock_chat_log.content[1:] == snapshot
+
+
+@pytest.mark.usefixtures("mock_init_component")
+@pytest.mark.parametrize(
+    ("events", "speech"),
+    [
+        pytest.param([], "Unable to get response", id="missing-message"),
+        pytest.param(
+            [
+                *create_message_item(id="msg_A", text=[], output_index=0),
+                IncompleteDetails(reason="max_output_tokens"),
+            ],
+            "OpenAI response incomplete: max output tokens reached",
+            id="incomplete-empty-response",
+        ),
+    ],
+)
+async def test_missing_or_incomplete_empty_response(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_create_stream: AsyncMock,
+    events: list[ResponseStreamEvent | IncompleteDetails],
+    speech: str,
+) -> None:
+    """Test absent and incomplete responses are not treated as silent success."""
+    mock_create_stream.return_value = [events]
+
+    result = await conversation.async_converse(
+        hass, "hello", None, Context(), agent_id=mock_config_entry.entry_id
+    )
+
+    assert result.response.response_type is intent.IntentResponseType.ERROR
+    assert result.response.speech["plain"]["speech"] == speech
+    assert mock_create_stream.await_count == 1
+
+
+@freeze_time("2025-10-31 18:00:00")
 async def test_reasoning_summary_off_omits_summary_key(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

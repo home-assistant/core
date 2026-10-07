@@ -175,7 +175,7 @@ aio-georss-gdacs==0.10
 aio-ownet==0.1.0
 
 # homeassistant.components.wattwaechter
-aio-wattwaechter==1.0.0
+aio-wattwaechter==1.2.0
 
 # homeassistant.components.acaia
 aioacaia==0.2.2
@@ -190,7 +190,7 @@ aioairzone-cloud==0.7.2
 aioairzone==1.0.5
 
 # homeassistant.components.alexa_devices
-aioamazondevices==16.3.1
+aioamazondevices==16.3.2
 
 # homeassistant.components.ambient_network
 # homeassistant.components.ambient_station
@@ -466,7 +466,7 @@ aiotedee==0.3.0
 aiothreema==0.1.0
 
 # homeassistant.components.tractive
-aiotractive==1.1.0
+aiotractive==1.1.1
 
 # homeassistant.components.unifi
 aiounifi==97
@@ -792,7 +792,7 @@ colorlog==6.10.1
 colorthief==0.2.1
 
 # homeassistant.components.compit
-compit-inext-api==0.9.1
+compit-inext-api==0.9.2
 
 # homeassistant.components.concord232
 concord232==0.15.1
@@ -1316,10 +1316,10 @@ hole==0.9.2
 holidays==0.106
 
 # homeassistant.components.frontend
-home-assistant-frontend==20260930.1
+home-assistant-frontend==20260930.2
 
 # homeassistant.components.conversation
-home-assistant-intents==2026.9.30
+home-assistant-intents==2026.10.6
 
 # homeassistant.components.homekit
 homekit-audio-proxy==1.2.1
@@ -1533,7 +1533,7 @@ librouteros==4.2.2
 libsoundtouch==0.8
 
 # homeassistant.components.lifx
-lifx-async==7.6.5
+lifx-async==7.8.1
 
 # homeassistant.components.osramlightify
 lightify==1.0.7.3
@@ -1693,7 +1693,7 @@ mutesync==0.0.1
 mvg==1.6.0
 
 # homeassistant.components.my_pv
-my-pv==0.0.10
+my-pv==0.0.12
 
 # homeassistant.components.myuplink
 myuplink==0.7.0
@@ -2045,7 +2045,7 @@ pyHik==0.4.7
 pyHomee==1.4.4
 
 # homeassistant.components.rfxtrx
-pyRFXtrx==0.31.1
+pyRFXtrx==0.34.0
 
 # homeassistant.components.sony_projector
 pySDCP==1
@@ -2118,7 +2118,7 @@ pybbox==0.0.5-alpha
 pyblackbird==0.10
 
 # homeassistant.components.bluesound
-pyblu==2.0.8
+pyblu==2.2.0
 
 # homeassistant.components.neato
 pybotvac==0.0.29
@@ -2785,7 +2785,7 @@ python-opensky==1.0.1
 
 # homeassistant.components.otbr
 # homeassistant.components.thread
-python-otbr-api==3.0.0
+python-otbr-api==3.1.0
 
 # homeassistant.components.overseerr
 python-overseerr==0.9.0
@@ -2797,7 +2797,7 @@ python-picnic-api2==2.0.1
 python-pooldose==0.9.10
 
 # homeassistant.components.hr_energy_qube
-python-qube-heatpump==1.16.0
+python-qube-heatpump==1.17.0
 
 # homeassistant.components.rabbitair
 python-rabbitair==0.0.8
@@ -2888,7 +2888,7 @@ pyvlx==0.2.36
 pyvolumio==0.1.5
 
 # homeassistant.components.waze_travel_time
-pywaze==1.2.3
+pywaze==1.2.4
 
 # homeassistant.components.weatherflow
 pyweatherflowudp==1.6.3
@@ -3330,7 +3330,7 @@ uasiren==0.0.1
 uhooapi==1.2.8
 
 # homeassistant.components.unifiprotect
-uiprotect==23.0.0
+uiprotect==23.0.1
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.6.1
@@ -3461,7 +3461,7 @@ wiim==0.1.7
 wirelesstagpy==0.8.1
 
 # homeassistant.components.wled
-wled==1.0.0
+wled==1.1.0
 
 # homeassistant.components.wolflink
 wolf-comm==0.0.52
@@ -3551,7 +3551,7 @@ zhong-hong-hvac==1.0.21
 ziggo-mediabox-xl==1.1.0
 
 # homeassistant.components.zinvolt
-zinvolt==1.0.0
+zinvolt==1.0.1
 
 # homeassistant.components.zoneminder
 zm-py==0.5.4
