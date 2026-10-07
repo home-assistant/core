@@ -72,9 +72,9 @@ httplib2>=0.19.0
 # gRPC is an implicit dependency that we want to make explicit so we manage
 # upgrades intentionally. It is a large package to build from source and we
 # want to ensure we have wheels built.
-grpcio==1.78.0
-grpcio-status==1.78.0
-grpcio-reflection==1.78.0
+grpcio==1.83.1
+grpcio-status==1.83.1
+grpcio-reflection==1.83.1
 
 # boto3 and botocore are shared requirements of multiple integrations,
 # with botocore also being a transitive dependency of aiobotocore, which
@@ -99,19 +99,17 @@ enum34==1000000000.0.0
 typing==1000000000.0.0
 uuid==1000000000.0.0
 
-# httpx requires httpcore, and httpcore requires anyio and h11,
-# but the version constraints on these requirements are quite
-# loose. As the entire stack has some outstanding issues, and
-# even newer versions seem to introduce new issues, it's useful
-# for us to pin all these
-# requirements so we can directly link HA versions to these library versions.
-anyio==4.13.0
+# httpx2 requires httpcore2 and anyio, while httpcore2 requires h11. The
+# version constraints on anyio and h11 are quite loose. Pin them so we can
+# directly link HA versions to these library versions.
+anyio==4.14.2
 h11==0.16.0
-httpcore==1.0.9
 
-# Ensure we have a hyperframe version that works in Python 3.10
-# 5.2.0 fixed a collections abc deprecation
-hyperframe>=5.2.0
+# Many libraries still depend on httpx/httpcore. Those imports are aliased to
+# httpx2/httpcore2 at runtime, but pin the installed packages so a dependency
+# cannot pull in an untested httpx version alongside httpx2.
+httpcore==1.0.9
+httpx==0.28.1
 
 # Ensure we run compatible with musllinux build env
 numpy==2.3.2
@@ -125,7 +123,7 @@ multidict>=6.0.2
 Brotli>=1.2.0
 
 # ensure pydantic version does not float since it might have breaking changes
-pydantic==2.13.4
+pydantic==2.13.5
 
 # Required for Python 3.14.0 compatibility (#119223).
 mashumaro>=3.17.0
@@ -140,7 +138,7 @@ iso4217!=1.10.20220401
 
 # protobuf must be in package constraints for the wheel
 # builder to build binary wheels
-protobuf==6.32.0
+protobuf==7.36.0
 
 # faust-cchardet: Ensure we have a version we can build wheels
 # 2.1.18 is the first version that works with our wheel builder
@@ -237,9 +235,6 @@ caio<0.12.3
 # https://github.com/auth0/auth0-python/releases/tag/5.0.0
 auth0-python<5.0
 
-# Setuptools >=82.0.0 doesn't contain pkg_resources anymore
-setuptools<82.0.0
-
 # backoff and python-backoff share the same package name
 # pin versions which are mostly compatible to each other
 backoff==2.2.1
@@ -252,7 +247,7 @@ python-backoff<2.4.0
 azure-kusto-data==4.5.1
 azure-kusto-ingest==4.5.1
 coloredlogs==15.0.1
-setuptools==81.0.0
+setuptools==84.0.0
 
 # Pin cffi to 2.0.0 to avoid version mismatch with the pre-baked _cffi_backend in the base image.
 # https://github.com/home-assistant/core/issues/175832
@@ -272,7 +267,6 @@ IGNORE_PRE_COMMIT_HOOK_ID = (
     "check-json",
     "no-commit-to-branch",
     "prettier",
-    "python-typing-update",
     "ruff-format",  # it's just ruff
 )
 

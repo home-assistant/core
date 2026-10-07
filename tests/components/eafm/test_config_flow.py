@@ -2,8 +2,8 @@
 
 from unittest.mock import patch
 
+from probatio.error import Invalid
 import pytest
-from voluptuous.error import Invalid
 
 from homeassistant import config_entries
 from homeassistant.components.eafm import const

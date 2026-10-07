@@ -116,6 +116,13 @@ class WizBulbEntity(WizToggleEntity, LightEntity):
         elif ColorMode.RGBW in color_modes and (rgbw := state.get_rgbw()) is not None:
             self._attr_color_mode = ColorMode.RGBW
             self._attr_rgbw_color = rgbw
+        elif len(color_modes) == 1:
+            self._attr_color_mode = next(iter(color_modes))
+        else:
+            # The bulb reports none of the values a color mode is picked from,
+            # so with more than one to choose from it cannot be told which is
+            # active.
+            self._attr_color_mode = ColorMode.UNKNOWN
 
         self._attr_effect = effect = state.get_scene()
         if effect is not None:

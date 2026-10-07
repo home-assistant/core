@@ -119,7 +119,8 @@ async def async_setup_entry(
         )
 
     for coordinator in coordinators.values():
-        await coordinator.async_config_entry_first_refresh()
+        if not coordinator.expensive:
+            await coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data.coordinators = coordinators
 

@@ -11,13 +11,10 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import (
-    AddConfigEntryEntitiesCallback,
-    async_get_current_platform,
-)
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_GIID, DOMAIN, LOGGER, SERVICE_CAPTURE_SMARTCAM
+from .const import CONF_GIID, DOMAIN, LOGGER
 from .coordinator import VerisureConfigEntry, VerisureDataUpdateCoordinator
 
 
@@ -28,13 +25,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up Verisure sensors based on a config entry."""
     coordinator = entry.runtime_data
-
-    platform = async_get_current_platform()
-    platform.async_register_entity_service(
-        SERVICE_CAPTURE_SMARTCAM,
-        None,
-        VerisureSmartcam.capture_smartcam.__name__,
-    )
 
     async_add_entities(
         VerisureSmartcam(coordinator, serial_number, hass.config.config_dir)

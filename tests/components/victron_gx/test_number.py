@@ -1,10 +1,13 @@
 """Tests for Victron GX MQTT number entities."""
 
+from unittest.mock import MagicMock
+
 from victron_mqtt import Hub as VictronVenusHub
 from victron_mqtt.testing import finalize_injection, inject_message
 
 from homeassistant.components.number import NumberDeviceClass
 from homeassistant.components.victron_gx.const import DOMAIN
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -96,6 +99,54 @@ async def test_victron_number_update(
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == "58.0"
+
+
+async def test_nullable_number_availability(
+    hass: HomeAssistant,
+    init_integration: tuple[VictronVenusHub, MockConfigEntry],
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test nullable values remain distinct from source unavailability."""
+    victron_hub, mock_config_entry = init_integration
+    topic = f"N/{MOCK_INSTALLATION_ID}/hub4/0/Overrides/MaxChargePower"
+
+    await inject_message(victron_hub, topic, '{"value": 1200.0}')
+    await finalize_injection(victron_hub, disconnect=False)
+    await hass.async_block_till_done()
+
+    entity = next(
+        entity
+        for entity in er.async_entries_for_config_entry(
+            entity_registry, mock_config_entry.entry_id
+        )
+        if entity.translation_key == "hub4_max_charge_power"
+    )
+    state = hass.states.get(entity.entity_id)
+    assert state is not None
+    assert state.state == "1200.0"
+
+    await inject_message(victron_hub, topic, '{"value": null}')
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity.entity_id)
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+    metric = victron_hub.devices["hub4_0"].get_metric("hub4_max_charge_power")
+    assert metric is not None
+    metric._keepalive(force_invalidate=True, log_debug=MagicMock())
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity.entity_id)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+    await inject_message(victron_hub, topic, '{"value": 1300.0}')
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity.entity_id)
+    assert state is not None
+    assert state.state == "1300.0"
 
 
 async def test_victron_number_actions(

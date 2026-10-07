@@ -1,6 +1,7 @@
 """Coordinator for handling data fetching and updates."""
 
-from dataclasses import dataclass
+from collections import defaultdict
+from dataclasses import dataclass, field
 from datetime import timedelta
 import logging
 from typing import override
@@ -15,7 +16,7 @@ from lunatone_rest_api_client import (
     Sensor,
     Sensors,
 )
-from lunatone_rest_api_client.models import InfoData, ScanData
+from lunatone_rest_api_client.models import InfoData, ScanData, ScanLineData
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -37,9 +38,9 @@ class LunatoneData:
 
     coordinator_info: LunatoneInfoDataUpdateCoordinator
     coordinator_devices: LunatoneDevicesDataUpdateCoordinator
-    coordinator_sensors: LunatoneSensorsDataUpdateCoordinator
     coordinator_scan: LunatoneScanDataUpdateCoordinator
-    dali_line_broadcasts: list[DALIBroadcast]
+    coordinator_sensors: LunatoneSensorsDataUpdateCoordinator | None = None
+    dali_line_broadcasts: list[DALIBroadcast] = field(default_factory=list)
 
 
 type LunatoneConfigEntry = ConfigEntry[LunatoneData]
@@ -79,7 +80,9 @@ class LunatoneInfoDataUpdateCoordinator(DataUpdateCoordinator[InfoData]):
         return self.info_api.data
 
 
-class LunatoneDevicesDataUpdateCoordinator(DataUpdateCoordinator[dict[int, Device]]):
+class LunatoneDevicesDataUpdateCoordinator(
+    DataUpdateCoordinator[dict[int, dict[int, Device]]]
+):
     """Data update coordinator for Lunatone devices."""
 
     config_entry: LunatoneConfigEntry
@@ -102,7 +105,7 @@ class LunatoneDevicesDataUpdateCoordinator(DataUpdateCoordinator[dict[int, Devic
         self.devices_api = devices_api
 
     @override
-    async def _async_update_data(self) -> dict[int, Device]:
+    async def _async_update_data(self) -> dict[int, dict[int, Device]]:
         """Update devices data."""
         try:
             await self.devices_api.async_update()
@@ -113,7 +116,11 @@ class LunatoneDevicesDataUpdateCoordinator(DataUpdateCoordinator[dict[int, Devic
 
         if self.devices_api.data is None:
             raise UpdateFailed("Did not receive devices data from Lunatone REST API")
-        return {device.id: device for device in self.devices_api.devices}
+
+        data: dict[int, dict[int, Device]] = defaultdict(dict)
+        for device in self.devices_api.devices:
+            data[device.data.line].update({device.data.id: device})
+        return dict(data)
 
 
 class LunatoneSensorsDataUpdateCoordinator(DataUpdateCoordinator[dict[int, Sensor]]):
@@ -151,7 +158,7 @@ class LunatoneSensorsDataUpdateCoordinator(DataUpdateCoordinator[dict[int, Senso
 
         if self.sensors_api.data is None:
             raise UpdateFailed("Did not receive sensors data from Lunatone REST API")
-        return {sensor.id: sensor for sensor in self.sensors_api.sensors}
+        return {sensor.data.id: sensor for sensor in self.sensors_api.sensors}
 
 
 class LunatoneScanDataUpdateCoordinator(DataUpdateCoordinator[ScanData]):
@@ -175,6 +182,7 @@ class LunatoneScanDataUpdateCoordinator(DataUpdateCoordinator[ScanData]):
             update_interval=DEFAULT_SCAN_UPDATE_INTERVAL,
         )
         self.dali_scan_api = dali_scan_api
+        self.line_scan_status: dict[int, ScanLineData] = {}
 
     @override
     async def _async_update_data(self) -> ScanData:
@@ -190,8 +198,11 @@ class LunatoneScanDataUpdateCoordinator(DataUpdateCoordinator[ScanData]):
             raise UpdateFailed("Did not receive scan data from Lunatone REST API")
 
         update_interval = DEFAULT_SCAN_UPDATE_INTERVAL
-        if self.dali_scan_api.is_busy:
+        if self.dali_scan_api.data.busy:
             update_interval = timedelta(seconds=1)
         self.update_interval = update_interval
 
+        self.line_scan_status = {
+            scan_data.line: scan_data for scan_data in self.dali_scan_api.data.lines
+        }
         return self.dali_scan_api.data

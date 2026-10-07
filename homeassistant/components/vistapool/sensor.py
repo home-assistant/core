@@ -23,6 +23,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import VistapoolConfigEntry
 from .const import (
+    GRAMS_PER_HOUR,
     PATH_HASCD,
     PATH_HASCL,
     PATH_HASHIDRO,
@@ -89,6 +90,7 @@ SENSOR_DESCRIPTIONS: tuple[VistapoolSensorEntityDescription, ...] = (
     VistapoolSensorEntityDescription(
         key="redox_potential",
         translation_key="redox_potential",
+        device_class=SensorDeviceClass.VOLTAGE,
         native_unit_of_measurement=UnitOfElectricPotential.MILLIVOLT,
         state_class=SensorStateClass.MEASUREMENT,
         value_path="modules.rx.current",
@@ -141,16 +143,18 @@ def _build_sensor_entities(
 
     # Electrolysis/hydrolysis: dynamic key based on hardware type
     if coordinator.get_value(PATH_HASHIDRO):
-        is_electrolysis = coordinator.get_value("hidro.is_electrolysis")
+        key = (
+            "electrolysis"
+            if coordinator.get_value("hidro.is_electrolysis")
+            else "hydrolysis"
+        )
         entities.append(
             VistapoolSensorEntity(
                 coordinator,
                 VistapoolSensorEntityDescription(
-                    key="electrolysis" if is_electrolysis else "hydrolysis",
-                    translation_key=(
-                        "electrolysis" if is_electrolysis else "hydrolysis"
-                    ),
-                    native_unit_of_measurement="g/h",
+                    key=key,
+                    translation_key=key,
+                    native_unit_of_measurement=GRAMS_PER_HOUR,
                     state_class=SensorStateClass.MEASUREMENT,
                     value_path="hidro.current",
                     value_fn=_convert_tenths,

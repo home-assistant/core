@@ -16673,7 +16673,7 @@
               'object_id_base': 'Reserve battery level',
               'options': dict({
               }),
-              'original_device_class': 'battery',
+              'original_device_class': None,
               'original_icon': None,
               'original_name': 'Reserve battery level',
               'platform': 'enphase_envoy',
@@ -16686,7 +16686,6 @@
             }),
             'state': dict({
               'attributes': dict({
-                'device_class': 'battery',
                 'friendly_name': 'Envoy <<envoyserial>> Reserve battery level',
                 'state_class': 'measurement',
                 'unit_of_measurement': '%',
@@ -19923,6 +19922,7 @@
       'supported_features': list([
         'INVERTERS',
         'METERING',
+        'TOTAL_CONSUMPTION',
         'NET_CONSUMPTION',
         'ENCHARGE',
         'ENPOWER',

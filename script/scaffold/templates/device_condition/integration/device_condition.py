@@ -1,6 +1,6 @@
 """Provide the device conditions for NEW_NAME."""
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -27,8 +27,8 @@ CONDITION_TYPES = {"is_on", "is_off"}
 
 CONDITION_SCHEMA = cv.DEVICE_CONDITION_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_ENTITY_ID): cv.entity_id,
-        vol.Required(CONF_TYPE): vol.In(CONDITION_TYPES),
+        probatio.Required(CONF_ENTITY_ID): cv.entity_id,
+        probatio.Required(CONF_TYPE): probatio.In(CONDITION_TYPES),
     }
 )
 

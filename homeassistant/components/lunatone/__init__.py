@@ -11,6 +11,7 @@ from lunatone_rest_api_client import (
     Info,
     Sensors,
 )
+from lunatone_rest_api_client.models import DeviceCapabilities
 
 from homeassistant.const import CONF_URL, Platform
 from homeassistant.core import HomeAssistant
@@ -81,50 +82,78 @@ async def _update_unique_id(
 async def async_setup_entry(hass: HomeAssistant, entry: LunatoneConfigEntry) -> bool:
     """Set up Lunatone from a config entry."""
     auth_api = Auth(async_get_clientsession(hass), entry.data[CONF_URL])
-    info_api = Info(auth_api)
-    dali_scan_api = DALIScan(auth_api)
-    devices_api = Devices(info_api)
-    sensors_api = Sensors(auth_api)
 
+    info_api = Info(auth_api)
     coordinator_info = LunatoneInfoDataUpdateCoordinator(hass, entry, info_api)
     await coordinator_info.async_config_entry_first_refresh()
 
-    if info_api.data is None or info_api.serial_number is None:
+    if info_api.data is None:
         raise ConfigEntryError(
             translation_domain=DOMAIN, translation_key="missing_device_info"
         )
 
-    if info_api.uid is not None:
-        new_unique_id = info_api.uid.replace("-", "")
+    if info_api.data.uid is not None:
+        new_unique_id = info_api.data.uid.replace("-", "")
         if new_unique_id != entry.unique_id:
             await _update_unique_id(hass, entry, new_unique_id)
 
     assert entry.unique_id
 
     device_registry = dr.async_get(hass)
+
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, entry.unique_id)},
-        name=info_api.name,
+        name=info_api.data.name,
         manufacturer=MANUFACTURER,
-        sw_version=info_api.version,
+        sw_version=info_api.data.version,
         hw_version=coordinator_info.data.device.pcb,
         configuration_url=entry.data[CONF_URL],
-        serial_number=str(info_api.serial_number),
-        model=info_api.product_name,
+        serial_number=str(info_api.data.device.serial),
+        model=info_api.data.product_name,
         model_id=(
-            f"{coordinator_info.data.device.article_number}{coordinator_info.data.device.article_info}"
+            f"{coordinator_info.data.device.article_number}{coordinator_info.data.article_suffix}"
         ),
     )
 
+    for line_id, line_info in info_api.data.lines.items():
+        line_unique_id = f"{entry.unique_id}-line{line_id}"
+
+        extra_info: dict = {}
+        if line_info.device.serial != info_api.data.device.serial:
+            extra_info.update(
+                serial_number=str(line_info.device.serial),
+                hw_version=line_info.device.pcb,
+                model_id=(
+                    f"{line_info.device.article_number}{line_info.device.article_info}"
+                ),
+            )
+
+        device_registry.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            identifiers={(DOMAIN, line_unique_id)},
+            name=f"DALI Line {line_id}",
+            via_device_id=dr.async_get_device_id_by_identifier(
+                hass, (DOMAIN, entry.unique_id), config_entry_id=entry.entry_id
+            ),
+            **extra_info,
+        )
+
+    devices_api = Devices(auth_api, info_api.data.version)
     coordinator_devices = LunatoneDevicesDataUpdateCoordinator(hass, entry, devices_api)
     await coordinator_devices.async_config_entry_first_refresh()
 
-    coordinator_sensors = LunatoneSensorsDataUpdateCoordinator(hass, entry, sensors_api)
-    await coordinator_sensors.async_config_entry_first_refresh()
-
+    dali_scan_api = DALIScan(auth_api)
     coordinator_scan = LunatoneScanDataUpdateCoordinator(hass, entry, dali_scan_api)
     await coordinator_scan.async_config_entry_first_refresh()
+
+    coordinator_sensors = None
+    if DeviceCapabilities.SENSORS in info_api.data.device_capabilities:
+        sensors_api = Sensors(auth_api)
+        coordinator_sensors = LunatoneSensorsDataUpdateCoordinator(
+            hass, entry, sensors_api
+        )
+        await coordinator_sensors.async_config_entry_first_refresh()
 
     dali_line_broadcasts = [
         DALIBroadcast(auth_api, int(line)) for line in coordinator_info.data.lines
@@ -133,8 +162,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: LunatoneConfigEntry) -> 
     entry.runtime_data = LunatoneData(
         coordinator_info,
         coordinator_devices,
-        coordinator_sensors,
         coordinator_scan,
+        coordinator_sensors,
         dali_line_broadcasts,
     )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

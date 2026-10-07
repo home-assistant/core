@@ -131,6 +131,29 @@ async def test_loading_parallel(
     assert caplog.text.count(f"Loading data for {store.key}")
 
 
+async def test_loading_parallel_waiter_cancelled(
+    hass: HomeAssistant, store: storage.Store
+) -> None:
+    """Verify cancelling a waiting caller does not break the in-progress load."""
+    load_started = asyncio.Event()
+    finish_load = asyncio.Event()
+
+    async def _async_load() -> dict[str, str]:
+        load_started.set()
+        await finish_load.wait()
+        return MOCK_DATA
+
+    with patch.object(store, "_async_load", _async_load):
+        load_task1 = asyncio.create_task(store.async_load())
+        load_task2 = asyncio.create_task(store.async_load())
+        await load_started.wait()
+        load_task2.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await load_task2
+        finish_load.set()
+        assert await load_task1 == MOCK_DATA
+
+
 async def test_saving_with_delay(
     hass: HomeAssistant, store: storage.Store, hass_storage: dict[str, Any]
 ) -> None:
@@ -891,7 +914,7 @@ async def test_loading_corrupt_core_file(
         assert issue_entry.translation_placeholders["storage_key"] == storage_key
         assert issue_entry.issue_domain == HOMEASSISTANT_DOMAIN
         assert (
-            "unexpected character, expected a JSON value: line 1 column 1 (char 0)"
+            "unexpected character: line 1 column 1 (char 0)"
             in issue_entry.translation_placeholders["error"]
         )
 

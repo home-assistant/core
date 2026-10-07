@@ -5,7 +5,10 @@ from typing import Any, override
 from xknx.devices import BinarySensor as XknxBinarySensor
 
 from homeassistant import config_entries
-from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    BinarySensorDeviceClass,
+    BinarySensorEntity,
+)
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_NAME,
@@ -31,9 +34,9 @@ from .const import (
     CONF_RESET_AFTER,
     CONF_STATE_ADDRESS,
     CONF_SYNC_STATE,
-    DOMAIN,
     KNX_MODULE_KEY,
 )
+from .dpt import get_binary_sensor_device_class
 from .entity import (
     KnxUiEntity,
     KnxUiEntityPlatformController,
@@ -41,8 +44,8 @@ from .entity import (
     build_yaml_unique_id,
 )
 from .knx_module import KNXModule
-from .storage.const import CONF_ENTITY, CONF_GA_SENSOR
-from .storage.util import ConfigExtractor
+from .storage.entity_store_schema import BinarySensorKnxConfig, KnxEntityData
+from .storage.knx_selector import state_and_passive
 
 
 async def async_setup_entry(
@@ -68,8 +71,8 @@ async def async_setup_entry(
             KnxYamlBinarySensor(knx_module, entity_config)
             for entity_config in yaml_platform_config
         )
-    if ui_config := knx_module.config_store.data["entities"].get(
-        Platform.BINARY_SENSOR
+    if ui_config := knx_module.config_store.get_entity_configs(
+        Platform.BINARY_SENSOR, BinarySensorKnxConfig
     ):
         entities.extend(
             KnxUiBinarySensor(knx_module, unique_id, config)
@@ -83,6 +86,16 @@ class _KnxBinarySensor(BinarySensorEntity, RestoreEntity):
     """Representation of a KNX binary sensor."""
 
     _device: XknxBinarySensor
+    _knx_module: KNXModule
+
+    def _project_device_class(self) -> BinarySensorDeviceClass | None:
+        """Return the device class derived from the state address DPT of the KNX project."""
+        if (address := self._device.remote_value.group_address_state) is None:
+            return None
+        ga_info = self._knx_module.project.group_addresses.get(str(address))
+        if ga_info is None or ga_info.transcoder is None:
+            return None
+        return get_binary_sensor_device_class(ga_info.transcoder)
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -138,7 +151,9 @@ class KnxYamlBinarySensor(_KnxBinarySensor, KnxYamlEntity):
             entity_config=config,
         )
 
-        self._attr_device_class = config.get(CONF_DEVICE_CLASS)
+        self._attr_device_class = config.get(
+            CONF_DEVICE_CLASS, self._project_device_class()
+        )
         self._attr_force_update = self._device.ignore_internal_state
 
 
@@ -148,26 +163,28 @@ class KnxUiBinarySensor(_KnxBinarySensor, KnxUiEntity):
     _device: XknxBinarySensor
 
     def __init__(
-        self, knx_module: KNXModule, unique_id: str, config: dict[str, Any]
+        self,
+        knx_module: KNXModule,
+        unique_id: str,
+        config: KnxEntityData[BinarySensorKnxConfig],
     ) -> None:
         """Initialize KNX binary sensor."""
         super().__init__(
             knx_module=knx_module,
             unique_id=unique_id,
-            entity_config=config[CONF_ENTITY],
+            entity_config=config.entity,
         )
-        knx_conf = ConfigExtractor(config[DOMAIN])
+        knx_conf = config.knx
         self._device = XknxBinarySensor(
             xknx=knx_module.xknx,
-            name=config[CONF_ENTITY][CONF_NAME],
-            group_address_state=knx_conf.get_state_and_passive(CONF_GA_SENSOR),
-            sync_state=knx_conf.get(CONF_SYNC_STATE),
-            invert=knx_conf.get(CONF_INVERT, default=False),
-            ignore_internal_state=knx_conf.get(
-                CONF_IGNORE_INTERNAL_STATE, default=False
-            ),
-            context_timeout=knx_conf.get(CONF_CONTEXT_TIMEOUT),
-            reset_after=knx_conf.get(CONF_RESET_AFTER),
+            name=config.entity.xknx_name,
+            group_address_state=state_and_passive(knx_conf.ga_sensor),
+            sync_state=knx_conf.sync_state,
+            invert=knx_conf.invert,
+            ignore_internal_state=knx_conf.ignore_internal_state,
+            context_timeout=knx_conf.context_timeout,
+            reset_after=knx_conf.reset_after,
             always_callback=True,
         )
+        self._attr_device_class = self._project_device_class()
         self._attr_force_update = self._device.ignore_internal_state

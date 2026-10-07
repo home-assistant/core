@@ -1,13 +1,13 @@
 """Common fixtures for the Monarch Money tests."""
 
 from collections.abc import Generator
-import json
 from typing import Any
 from unittest.mock import AsyncMock, PropertyMock, patch
 
 import pytest
 from typedmonarchmoney.models import (
     MonarchAccount,
+    MonarchBudget,
     MonarchCashflowSummary,
     MonarchSubscription,
 )
@@ -15,7 +15,24 @@ from typedmonarchmoney.models import (
 from homeassistant.components.monarch_money.const import DOMAIN
 from homeassistant.const import CONF_TOKEN
 
-from tests.common import MockConfigEntry, load_fixture, load_json_object_fixture
+from tests.common import MockConfigEntry, load_json_object_fixture
+
+
+def _typed_budgets(data: dict[str, Any]) -> dict[str, MonarchBudget]:
+    """Build the typed response returned by the Monarch client."""
+    monthly_amounts = {
+        category["category"]["id"]: category["monthlyAmounts"]
+        for category in data["budgetData"]["monthlyAmountsByCategory"]
+    }
+    return {
+        category["id"]: MonarchBudget(
+            category,
+            group_name=group["name"],
+            monthly_amounts=monthly_amounts.get(category["id"]),
+        )
+        for group in data["categoryGroups"]
+        for category in group["categories"]
+    }
 
 
 @pytest.fixture
@@ -48,12 +65,13 @@ def mock_config_api() -> Generator[AsyncMock]:
         acc["id"]: MonarchAccount(acc) for acc in account_json["accounts"]
     }
 
-    cashflow_json: dict[str, Any] = json.loads(
-        load_fixture("get_cashflow_summary.json", DOMAIN)
+    cashflow_json: dict[str, Any] = load_json_object_fixture(
+        "get_cashflow_summary.json", DOMAIN
     )
     cashflow_summary = MonarchCashflowSummary(cashflow_json)
+    budget_data = _typed_budgets(load_json_object_fixture("get_budgets.json", DOMAIN))
     subscription_details = MonarchSubscription(
-        json.loads(load_fixture("get_subscription_details.json", DOMAIN))
+        load_json_object_fixture("get_subscription_details.json", DOMAIN)
     )
 
     with (
@@ -75,5 +93,5 @@ def mock_config_api() -> Generator[AsyncMock]:
             return_value=account_data_dict
         )
         instance.get_cashflow_summary = AsyncMock(return_value=cashflow_summary)
-        instance.get_subscription_details = AsyncMock(return_value=subscription_details)
+        instance.get_budgets_as_dict_with_id_key = AsyncMock(return_value=budget_data)
         yield mock_class

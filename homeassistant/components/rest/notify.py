@@ -4,8 +4,8 @@ from http import HTTPStatus
 import logging
 from typing import Any, override
 
-import httpx
-import voluptuous as vol
+import httpx2
+import probatio
 
 from homeassistant.components.notify import (
     ATTR_MESSAGE,
@@ -45,26 +45,26 @@ DEFAULT_VERIFY_SSL = True
 
 PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_RESOURCE): cv.url,
-        vol.Optional(
+        probatio.Required(CONF_RESOURCE): cv.url,
+        probatio.Optional(
             CONF_MESSAGE_PARAMETER_NAME, default=DEFAULT_MESSAGE_PARAM_NAME
         ): cv.string,
-        vol.Optional(CONF_METHOD, default=DEFAULT_METHOD): vol.In(
+        probatio.Optional(CONF_METHOD, default=DEFAULT_METHOD): probatio.In(
             ["POST", "GET", "POST_JSON"]
         ),
-        vol.Optional(CONF_HEADERS): vol.Schema({cv.string: cv.string}),
-        vol.Optional(CONF_PARAMS): vol.Schema({cv.string: cv.string}),
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_TARGET_PARAMETER_NAME): cv.string,
-        vol.Optional(CONF_TITLE_PARAMETER_NAME): cv.string,
-        vol.Optional(CONF_DATA): vol.All(dict, cv.template_complex),
-        vol.Optional(CONF_DATA_TEMPLATE): vol.All(dict, cv.template_complex),
-        vol.Optional(CONF_AUTHENTICATION): vol.In(
+        probatio.Optional(CONF_HEADERS): probatio.Schema({cv.string: cv.string}),
+        probatio.Optional(CONF_PARAMS): probatio.Schema({cv.string: cv.string}),
+        probatio.Optional(CONF_NAME): cv.string,
+        probatio.Optional(CONF_TARGET_PARAMETER_NAME): cv.string,
+        probatio.Optional(CONF_TITLE_PARAMETER_NAME): cv.string,
+        probatio.Optional(CONF_DATA): probatio.All(dict, cv.template_complex),
+        probatio.Optional(CONF_DATA_TEMPLATE): probatio.All(dict, cv.template_complex),
+        probatio.Optional(CONF_AUTHENTICATION): probatio.In(
             [HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION]
         ),
-        vol.Optional(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_USERNAME): cv.string,
-        vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
+        probatio.Optional(probatio.Secret(CONF_PASSWORD)): cv.string,
+        probatio.Optional(CONF_USERNAME): cv.string,
+        probatio.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
     }
 )
 
@@ -90,12 +90,12 @@ async def async_get_service(
     password: str | None = config.get(CONF_PASSWORD)
     verify_ssl: bool = config[CONF_VERIFY_SSL]
 
-    auth: httpx.Auth | None = None
+    auth: httpx2.Auth | None = None
     if username and password:
         if config.get(CONF_AUTHENTICATION) == HTTP_DIGEST_AUTHENTICATION:
-            auth = httpx.DigestAuth(username, password)
+            auth = httpx2.DigestAuth(username, password)
         else:
-            auth = httpx.BasicAuth(username, password)
+            auth = httpx2.BasicAuth(username, password)
 
     return RestNotificationService(
         hass,
@@ -128,7 +128,7 @@ class RestNotificationService(BaseNotificationService):
         target_param_name: str | None,
         data: dict[str, Any] | None,
         data_template: dict[str, Any] | None,
-        auth: httpx.Auth | None,
+        auth: httpx2.Auth | None,
         verify_ssl: bool,
     ) -> None:
         """Initialize the service."""
@@ -186,7 +186,7 @@ class RestNotificationService(BaseNotificationService):
                 params=self._params,
                 data=data,
                 timeout=10,
-                auth=self._auth or httpx.USE_CLIENT_DEFAULT,
+                auth=self._auth or httpx2.USE_CLIENT_DEFAULT,
             )
         elif self._method == "POST_JSON":
             response = await websession.post(
@@ -195,7 +195,7 @@ class RestNotificationService(BaseNotificationService):
                 params=self._params,
                 json=data,
                 timeout=10,
-                auth=self._auth or httpx.USE_CLIENT_DEFAULT,
+                auth=self._auth or httpx2.USE_CLIENT_DEFAULT,
             )
         else:  # default GET
             response = await websession.get(

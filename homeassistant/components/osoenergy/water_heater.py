@@ -5,7 +5,6 @@ from typing import Any, override
 
 from apyosoenergyapi import OSOEnergy
 from apyosoenergyapi.helper.const import OSOEnergyWaterHeaterData
-import voluptuous as vol
 
 from homeassistant.components.water_heater import (
     STATE_ECO,
@@ -15,9 +14,8 @@ from homeassistant.components.water_heater import (
     WaterHeaterEntity,
     WaterHeaterEntityFeature,
 )
-from homeassistant.const import SERVICE_TURN_OFF, SERVICE_TURN_ON, UnitOfTemperature
-from homeassistant.core import HomeAssistant, ServiceResponse, SupportsResponse
-from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.const import UnitOfTemperature
+from homeassistant.core import HomeAssistant, ServiceResponse
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 from homeassistant.util.json import JsonValueType
@@ -25,9 +23,6 @@ from homeassistant.util.json import JsonValueType
 from . import OSOEnergyConfigEntry
 from .entity import OSOEnergyEntity
 
-ATTR_DURATION_DAYS = "duration_days"
-ATTR_UNTIL_TEMP_LIMIT = "until_temp_limit"
-ATTR_V40MIN = "v40_min"
 CURRENT_OPERATION_MAP: dict[str, Any] = {
     "default": {
         "off": STATE_OFF,
@@ -41,10 +36,6 @@ CURRENT_OPERATION_MAP: dict[str, Any] = {
         "extraenergy": STATE_HIGH_DEMAND,
     },
 }
-SERVICE_GET_PROFILE = "get_profile"
-SERVICE_SET_PROFILE = "set_profile"
-SERVICE_SET_V40MIN = "set_v40_min"
-SERVICE_TURN_AWAY_MODE_ON = "turn_away_mode_on"
 
 
 async def async_setup_entry(
@@ -58,62 +49,6 @@ async def async_setup_entry(
     if not devices:
         return
     async_add_entities((OSOEnergyWaterHeater(osoenergy, dev) for dev in devices), True)
-
-    platform = entity_platform.async_get_current_platform()
-
-    platform.async_register_entity_service(
-        SERVICE_GET_PROFILE,
-        {},
-        OSOEnergyWaterHeater.async_get_profile.__name__,
-        supports_response=SupportsResponse.ONLY,
-    )
-
-    platform.async_register_entity_service(
-        SERVICE_TURN_AWAY_MODE_ON,
-        {
-            vol.Required(ATTR_DURATION_DAYS): vol.All(
-                vol.Coerce(int), vol.Range(min=1, max=365)
-            ),
-        },
-        OSOEnergyWaterHeater.async_oso_turn_away_mode_on.__name__,
-    )
-
-    service_set_profile_schema = cv.make_entity_service_schema(
-        {
-            vol.Optional(f"hour_{hour:02d}"): vol.All(
-                vol.Coerce(int), vol.Range(min=10, max=75)
-            )
-            for hour in range(24)
-        }
-    )
-
-    platform.async_register_entity_service(
-        SERVICE_SET_PROFILE,
-        service_set_profile_schema,
-        OSOEnergyWaterHeater.async_set_profile.__name__,
-    )
-
-    platform.async_register_entity_service(
-        SERVICE_SET_V40MIN,
-        {
-            vol.Required(ATTR_V40MIN): vol.All(
-                vol.Coerce(float), vol.Range(min=200, max=550)
-            ),
-        },
-        OSOEnergyWaterHeater.async_set_v40_min.__name__,
-    )
-
-    platform.async_register_entity_service(
-        SERVICE_TURN_OFF,
-        {vol.Required(ATTR_UNTIL_TEMP_LIMIT): vol.All(cv.boolean)},
-        OSOEnergyWaterHeater.async_oso_turn_off.__name__,
-    )
-
-    platform.async_register_entity_service(
-        SERVICE_TURN_ON,
-        {vol.Required(ATTR_UNTIL_TEMP_LIMIT): vol.All(cv.boolean)},
-        OSOEnergyWaterHeater.async_oso_turn_on.__name__,
-    )
 
 
 def _get_utc_hour(local_hour: int) -> dt.datetime:

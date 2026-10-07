@@ -47,7 +47,7 @@ async def async_setup_entry(
         GoveeLight(coordinator, device) for device in coordinator.devices
     )
 
-    await coordinator.set_discovery_callback(discovery_callback)
+    coordinator.set_discovery_callback(discovery_callback)
 
 
 class GoveeLight(CoordinatorEntity[GoveeLocalApiCoordinator], LightEntity):
@@ -129,7 +129,7 @@ class GoveeLight(CoordinatorEntity[GoveeLocalApiCoordinator], LightEntity):
         """
         if not super().available:
             return False
-        return dt_util.naive_now() - self._device.lastseen < DEVICE_TIMEOUT
+        return dt_util.utcnow() - self._device.lastseen < DEVICE_TIMEOUT
 
     @property
     @override

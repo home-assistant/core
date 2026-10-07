@@ -1,42 +1,20 @@
 """The template component."""
 
-import asyncio
-from collections.abc import Coroutine
 import logging
-from typing import Any
 
-from homeassistant import config as conf_util
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_DEVICE_ID,
-    CONF_NAME,
-    CONF_TRIGGERS,
-    CONF_UNIQUE_ID,
-    SERVICE_RELOAD,
-)
-from homeassistant.core import Event, HomeAssistant, ServiceCall
-from homeassistant.exceptions import ConfigEntryError, HomeAssistantError
-from homeassistant.helpers import device_registry as dr, discovery, issue_registry as ir
+from homeassistant.const import CONF_DEVICE_ID, CONF_NAME
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
+from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.helpers.helper_integration import async_remove_helper_devices
-from homeassistant.helpers.reload import async_reload_integration_platforms
-from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import async_get_integration
-from homeassistant.util.hass_dict import HassKey
 
-from .const import (
-    CONF_ADDITIONAL_OPTIONS,
-    CONF_MAX,
-    CONF_MIN,
-    CONF_STEP,
-    DOMAIN,
-    PLATFORMS,
-)
-from .coordinator import TriggerUpdateCoordinator
-from .helpers import async_get_blueprints
+from .const import CONF_ADDITIONAL_OPTIONS, CONF_MAX, CONF_MIN, CONF_STEP, DOMAIN
+from .helpers import async_get_blueprints, process_config
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
-DATA_COORDINATORS: HassKey[list[TriggerUpdateCoordinator]] = HassKey(DOMAIN)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -53,37 +31,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.async_create_task(blueprints.async_populate(), eager_start=True)
 
     if DOMAIN in config:
-        await _process_config(hass, config)
+        await process_config(hass, config)
 
-    async def _reload_config(call: Event | ServiceCall) -> None:
-        """Reload top-level + platforms."""
-
-        await async_get_blueprints(hass).async_reset_cache()
-        try:
-            unprocessed_conf = await conf_util.async_hass_config_yaml(hass)
-        except HomeAssistantError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="failed_to_reload_template_entities",
-                translation_placeholders={"error": str(err)},
-            ) from err
-
-        integration = await async_get_integration(hass, DOMAIN)
-        conf = await conf_util.async_process_component_and_handle_errors(
-            hass, unprocessed_conf, integration
-        )
-
-        if conf is None:
-            return
-
-        await async_reload_integration_platforms(hass, DOMAIN, PLATFORMS)
-
-        if DOMAIN in conf:
-            await _process_config(hass, conf)
-
-        hass.bus.async_fire(f"event_{DOMAIN}_reloaded", context=call.context)
-
-    async_register_admin_service(hass, DOMAIN, SERVICE_RELOAD, _reload_config)
+    async_setup_services(hass)
 
     return True
 
@@ -102,8 +52,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         remove_all_devices=True,
     )
 
-    if device_id is not None and dr.async_get(hass).async_is_composite_device_id(
-        device_id
+    device_registry = dr.async_get(hass)
+    if (
+        device_id is not None
+        and device_registry.async_get(
+            device_id, include_main_devices=False, include_child_devices=False
+        )
+        is not None
     ):
         # The device was split into one device per config entry; ask the user to
         # select a device again
@@ -185,55 +140,3 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
     )
 
     return True
-
-
-async def _process_config(hass: HomeAssistant, hass_config: ConfigType) -> None:
-    """Process config."""
-    coordinators = hass.data.pop(DATA_COORDINATORS, None)
-
-    # Remove old ones
-    if coordinators:
-        for coordinator in coordinators:
-            await coordinator.async_shutdown()
-
-    async def init_coordinator(
-        hass: HomeAssistant, conf_section: dict[str, Any]
-    ) -> TriggerUpdateCoordinator:
-        coordinator = TriggerUpdateCoordinator(hass, conf_section)
-        await coordinator.async_setup(hass_config)
-        return coordinator
-
-    coordinator_tasks: list[Coroutine[Any, Any, TriggerUpdateCoordinator]] = []
-
-    for conf_section in hass_config[DOMAIN]:
-        if CONF_TRIGGERS in conf_section:
-            coordinator_tasks.append(init_coordinator(hass, conf_section))
-            continue
-
-        for platform_domain in PLATFORMS:
-            if platform_domain in conf_section:
-                hass.async_create_task(
-                    discovery.async_load_platform(
-                        hass,
-                        platform_domain,
-                        DOMAIN,
-                        {
-                            "unique_id": conf_section.get(CONF_UNIQUE_ID),
-                            "entities": [
-                                {
-                                    **entity_conf,
-                                    "raw_blueprint_inputs": (
-                                        conf_section.raw_blueprint_inputs
-                                    ),
-                                    "raw_configs": conf_section.raw_config,
-                                }
-                                for entity_conf in conf_section[platform_domain]
-                            ],
-                        },
-                        hass_config,
-                    ),
-                    eager_start=True,
-                )
-
-    if coordinator_tasks:
-        hass.data[DATA_COORDINATORS] = await asyncio.gather(*coordinator_tasks)

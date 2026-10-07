@@ -142,7 +142,7 @@ async def test_migrate_device_id_no_serial_skip_if_other_owner(
     bridge = device_registry.async_get(bridge.id)
 
     assert bridge.identifiers == variant.before
-    assert bridge.config_entries == {entry.entry_id}
+    assert bridge.config_entry_id == entry.entry_id
 
 
 @pytest.mark.parametrize("variant", DEVICE_MIGRATION_TESTS)
@@ -251,8 +251,10 @@ async def test_migrate_device_id_shared_identifier_only_migrates_own(
         name="Other",
     )
     old_id = "composite00000000000000000000ab"
-    device_registry.devices[device.id] = attr.evolve(device, composite_device_id=old_id)
-    device_registry.devices[other_device.id] = attr.evolve(
+    device_registry._devices[device.id] = attr.evolve(
+        device, composite_device_id=old_id
+    )
+    device_registry._devices[other_device.id] = attr.evolve(
         other_device, composite_device_id=old_id
     )
     # The shared identifier now resolves to the read-only composite

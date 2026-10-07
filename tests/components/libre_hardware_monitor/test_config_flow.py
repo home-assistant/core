@@ -1,5 +1,6 @@
 """Test the LibreHardwareMonitor config flow."""
 
+from dataclasses import replace
 from unittest.mock import AsyncMock
 
 from librehardwaremonitor_api import (
@@ -266,3 +267,58 @@ async def test_reauth_errors(
     assert result["reason"] == "reauth_successful"
     assert mock_config_entry.data == {**VALID_CONFIG, **REAUTH_INPUT}
     assert len(hass.config_entries.async_entries()) == 1
+
+
+async def test_deprecated_version_is_rejected_and_flow_recovery(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_lhm_client: AsyncMock,
+) -> None:
+    """Test that a deprecated LHM version cannot be configured."""
+    mock_lhm_client.get_data.return_value = replace(
+        mock_lhm_client.get_data.return_value, is_deprecated_version=True
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=VALID_CONFIG
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "deprecated_version"}
+    assert mock_setup_entry.call_count == 0
+
+    mock_lhm_client.get_data.return_value = replace(
+        mock_lhm_client.get_data.return_value, is_deprecated_version=False
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=VALID_CONFIG
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert mock_setup_entry.call_count == 1
+
+
+@pytest.mark.usefixtures("mock_deprecated_lhm_client")
+async def test_reauth_deprecated_version_is_rejected(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that reauth does not complete for a deprecated LHM version."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], REAUTH_INPUT
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {"base": "deprecated_version"}
+    assert mock_config_entry.data == VALID_CONFIG
