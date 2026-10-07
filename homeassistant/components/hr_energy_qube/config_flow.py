@@ -8,11 +8,12 @@ from python_qube_heatpump import QubeClient, async_get_device_info, parse_device
 from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.helpers.selector import TextSelector
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import DEFAULT_PORT, DOMAIN, MDNS_LOOKUP_TIMEOUT
 
-HOST_SCHEMA = probatio.Schema({probatio.Required(CONF_HOST): str})
+HOST_SCHEMA = probatio.Schema({probatio.Required(CONF_HOST): TextSelector()})
 
 
 async def _async_validate_device(host: str) -> str | None:
