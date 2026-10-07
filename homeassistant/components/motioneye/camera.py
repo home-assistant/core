@@ -38,7 +38,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import get_camera_from_cameras, is_acceptable_camera, listen_for_new_cameras
