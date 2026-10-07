@@ -109,10 +109,12 @@ ENTITY_DESCRIPTION_KEY_MAP: dict[str, IotaWattSensorEntityDescription] = {
     ),
 }
 
+# IoTaWatt counters are signed and can decrease, e.g. when metering
+# net energy of a channel that exports, so TOTAL rather than TOTAL_INCREASING.
 LIFETIME_ENERGY_DESCRIPTION = IotaWattSensorEntityDescription(
     key="lifetime_energy",
     native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
-    state_class=SensorStateClass.TOTAL_INCREASING,
+    state_class=SensorStateClass.TOTAL,
     device_class=SensorDeviceClass.ENERGY,
 )
 

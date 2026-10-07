@@ -161,7 +161,7 @@ async def test_sensor_lifetime_energy(
     state = hass.states.get("sensor.test_device_my_sensor_wh_lifetime")
     assert state is not None
     assert state.state == "100.0"
-    assert state.attributes[ATTR_STATE_CLASS] is SensorStateClass.TOTAL_INCREASING
+    assert state.attributes[ATTR_STATE_CLASS] is SensorStateClass.TOTAL
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfEnergy.WATT_HOUR
     assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.ENERGY
     assert state.attributes["metering_since"] == "2023-07-20T12:52:00"
