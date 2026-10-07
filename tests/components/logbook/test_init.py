@@ -83,7 +83,7 @@ async def set_utc(hass: HomeAssistant) -> None:
 
 async def test_service_call_create_logbook_entry(hass_: HomeAssistant) -> None:
     """Test if service call create log book entry."""
-    calls = async_capture_events(hass_, logbook.EVENT_LOGBOOK_ENTRY)
+    calls = async_capture_events(hass_, EVENT_LOGBOOK_ENTRY)
 
     await hass_.services.async_call(
         logbook.DOMAIN,
@@ -142,7 +142,7 @@ async def test_service_call_create_logbook_entry_invalid_entity_id(
     await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
     hass.bus.async_fire(
-        logbook.EVENT_LOGBOOK_ENTRY,
+        EVENT_LOGBOOK_ENTRY,
         {
             logbook.ATTR_NAME: "Alarm",
             logbook.ATTR_MESSAGE: "is triggered",
@@ -169,7 +169,7 @@ async def test_service_call_create_log_book_entry_no_message(
     hass_: HomeAssistant,
 ) -> None:
     """Test if service call create log book entry without message."""
-    calls = async_capture_events(hass_, logbook.EVENT_LOGBOOK_ENTRY)
+    calls = async_capture_events(hass_, EVENT_LOGBOOK_ENTRY)
 
     with pytest.raises(probatio.Invalid):
         await hass_.services.async_call(logbook.DOMAIN, "log", {}, True)
@@ -278,7 +278,7 @@ def test_process_custom_logbook_entries(hass_: HomeAssistant) -> None:
         hass_,
         (
             MockRow(
-                logbook.EVENT_LOGBOOK_ENTRY,
+                EVENT_LOGBOOK_ENTRY,
                 {
                     logbook.ATTR_NAME: name,
                     logbook.ATTR_MESSAGE: message,
@@ -1909,7 +1909,7 @@ async def test_fire_logbook_entries(
 
     for _ in range(10):
         hass.bus.async_fire(
-            logbook.EVENT_LOGBOOK_ENTRY,
+            EVENT_LOGBOOK_ENTRY,
             {
                 logbook.ATTR_NAME: "Alarm",
                 logbook.ATTR_MESSAGE: "is triggered",
@@ -1918,11 +1918,11 @@ async def test_fire_logbook_entries(
             },
         )
         hass.bus.async_fire(
-            logbook.EVENT_LOGBOOK_ENTRY,
+            EVENT_LOGBOOK_ENTRY,
             {},
         )
     hass.bus.async_fire(
-        logbook.EVENT_LOGBOOK_ENTRY,
+        EVENT_LOGBOOK_ENTRY,
         {
             logbook.ATTR_NAME: "Alarm",
             logbook.ATTR_MESSAGE: "is triggered",
@@ -2173,7 +2173,7 @@ async def test_include_events_domain_glob(
     await async_recorder_block_till_done(hass)
 
     hass.bus.async_fire(
-        logbook.EVENT_LOGBOOK_ENTRY,
+        EVENT_LOGBOOK_ENTRY,
         {
             logbook.ATTR_NAME: "Alarm",
             logbook.ATTR_MESSAGE: "is triggered",

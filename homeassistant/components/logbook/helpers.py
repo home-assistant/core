@@ -19,6 +19,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import (
     CALLBACK_TYPE,
+    Context,
     Event,
     EventStateChangedData,
     HomeAssistant,
@@ -36,6 +37,10 @@ from .const import (
     AUTOMATION_EVENTS,
     BUILT_IN_EVENTS,
     DOMAIN,
+    LOGBOOK_ENTRY_DOMAIN,
+    LOGBOOK_ENTRY_ENTITY_ID,
+    LOGBOOK_ENTRY_MESSAGE,
+    LOGBOOK_ENTRY_NAME,
     SENSOR_DOMAIN,
 )
 from .models import LogbookConfig
@@ -314,3 +319,34 @@ def _is_state_filtered(new_state: State, old_state: State) -> bool:
             )
         )
     )
+
+
+def log_entry(
+    hass: HomeAssistant,
+    name: str,
+    message: str,
+    domain: str | None = None,
+    entity_id: str | None = None,
+    context: Context | None = None,
+) -> None:
+    """Add an entry to the logbook."""
+    hass.add_job(async_log_entry, hass, name, message, domain, entity_id, context)
+
+
+@callback
+def async_log_entry(
+    hass: HomeAssistant,
+    name: str,
+    message: str,
+    domain: str | None = None,
+    entity_id: str | None = None,
+    context: Context | None = None,
+) -> None:
+    """Add an entry to the logbook."""
+    data = {LOGBOOK_ENTRY_NAME: name, LOGBOOK_ENTRY_MESSAGE: message}
+
+    if domain is not None:
+        data[LOGBOOK_ENTRY_DOMAIN] = domain
+    if entity_id is not None:
+        data[LOGBOOK_ENTRY_ENTITY_ID] = entity_id
+    hass.bus.async_fire(EVENT_LOGBOOK_ENTRY, data, context=context)
