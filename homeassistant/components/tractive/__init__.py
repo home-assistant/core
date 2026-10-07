@@ -41,6 +41,7 @@ from .const import (
     TRACKER_HARDWARE_STATUS_UPDATED,
     TRACKER_HEALTH_OVERVIEW_UPDATED,
     TRACKER_POSITION_UPDATED,
+    TRACKER_STATE_UPDATED,
     TRACKER_SWITCH_STATUS_UPDATED,
 )
 
@@ -262,6 +263,9 @@ class TractiveClient:
                     if event["message"] == "health_overview":
                         self.send_health_overview_update(event)
                         continue
+                    # Tracker state can change without a new hardware report.
+                    if "tracker_state" in event:
+                        self._send_tracker_state_update(event)
                     if (
                         "hardware" in event
                         and self._last_hw_time != event["hardware"]["time"]
@@ -311,12 +315,22 @@ class TractiveClient:
         # Sometimes hardware event doesn't contain complete data.
         payload = {
             ATTR_BATTERY_LEVEL: event["hardware"]["battery_level"],
-            ATTR_TRACKER_STATE: event["tracker_state"].lower(),
             ATTR_POWER_SAVING: event.get("tracker_state_reason") == "POWER_SAVING",
             ATTR_BATTERY_CHARGING: event["charging_state"] == "CHARGING",
         }
         self._dispatch_tracker_event(
             TRACKER_HARDWARE_STATUS_UPDATED, event["tracker_id"], payload
+        )
+
+    def _send_tracker_state_update(self, event: dict[str, Any]) -> None:
+        state = event["tracker_state"].lower()
+        if (
+            state == "not_reporting"
+            and event.get("tracker_state_reason") == "SHUTDOWN_BY_USER"
+        ):
+            state = "system_shutdown_user"
+        self._dispatch_tracker_event(
+            TRACKER_STATE_UPDATED, event["tracker_id"], {ATTR_TRACKER_STATE: state}
         )
 
     def _send_switch_update(self, event: dict[str, Any]) -> None:
