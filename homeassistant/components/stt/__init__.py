@@ -261,7 +261,8 @@ class SpeechToTextEntity(RestoreEntity):
         """Process an audio stream with an STT service, yielding partial transcripts.
 
         Yield zero or more partial transcripts followed by exactly one final
-        speech result. Each partial contains the complete transcript so far.
+        speech result. Each partial contains the complete transcript so far for
+        its speaker, and replaces the previous partial with the same speaker id.
 
         The default implementation falls back to async_process_audio_stream and
         yields only the final result.

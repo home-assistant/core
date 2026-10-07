@@ -134,6 +134,24 @@ class MockSTTProviderPartialEntity(BaseProvider, SpeechToTextEntity):
             self.closed = True
 
 
+class MockSTTProviderSpeakersEntity(BaseProvider, SpeechToTextEntity):
+    """Mock provider entity that identifies speakers in partial transcripts."""
+
+    url_path = "stt.test_speakers"
+    _attr_name = "test speakers"
+
+    async def async_process_audio_stream_partial(
+        self, metadata: SpeechMetadata, stream: AsyncIterable[bytes]
+    ) -> AsyncGenerator[PartialSpeechResult | SpeechResult]:
+        """Process an audio stream, yielding partials for two interleaved speakers."""
+        yield PartialSpeechResult("turn", speaker_id="speaker_0")
+        yield PartialSpeechResult("no", speaker_id="speaker_1")
+        yield PartialSpeechResult("turn on the lights", speaker_id="speaker_0")
+        yield PartialSpeechResult("no wait", speaker_id="speaker_1")
+
+        yield await self.async_process_audio_stream(metadata=metadata, stream=stream)
+
+
 class MockSTTPlatform(MockPlatform):
     """Help to set up test stt service."""
 

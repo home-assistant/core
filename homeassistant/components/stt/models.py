@@ -39,6 +39,12 @@ class PartialSpeechResult:
     text: str
     """Full transcript up to this point. Words may change."""
 
+    speaker_id: str | None = None
+    """Speaker this transcript belongs to, or None if speakers are not identified.
+
+    A partial result replaces the previous partial result with the same speaker id.
+    """
+
 
 @dataclass
 class SpeechAudioProcessing:

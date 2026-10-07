@@ -35,6 +35,7 @@ from .common import (
     MockSTTProvider,
     MockSTTProviderEntity,
     MockSTTProviderPartialEntity,
+    MockSTTProviderSpeakersEntity,
     mock_stt_entity_platform,
     mock_stt_platform,
 )
@@ -80,6 +81,12 @@ def mock_provider_entity() -> MockSTTProviderEntity:
 def mock_provider_partial_entity() -> MockSTTProviderPartialEntity:
     """Test provider entity fixture emitting partial transcripts."""
     return MockSTTProviderPartialEntity(text="hello world again")
+
+
+@pytest.fixture
+def mock_provider_speakers_entity() -> MockSTTProviderSpeakersEntity:
+    """Test provider entity fixture identifying speakers."""
+    return MockSTTProviderSpeakersEntity(text="turn on the lights no wait")
 
 
 class STTFlow(ConfigFlow):
@@ -482,6 +489,53 @@ async def test_partial_results_closed_when_consumer_stops_early(
     await results.aclose()
 
     assert mock_provider_partial_entity.closed is True
+
+
+async def test_partial_results_without_speaker_id(
+    hass: HomeAssistant,
+    tmp_path: Path,
+    mock_provider_partial_entity: MockSTTProviderPartialEntity,
+) -> None:
+    """Test partial transcripts leave the speaker unidentified by default."""
+    await mock_config_entry_setup(hass, tmp_path, mock_provider_partial_entity)
+
+    results = [
+        result
+        async for result in mock_provider_partial_entity.internal_async_process_audio_stream_partial(
+            _TEST_METADATA, _one_chunk_stream()
+        )
+    ]
+
+    assert all(
+        result.speaker_id is None
+        for result in results
+        if isinstance(result, PartialSpeechResult)
+    )
+
+
+async def test_partial_results_with_speaker_id(
+    hass: HomeAssistant,
+    tmp_path: Path,
+    mock_provider_speakers_entity: MockSTTProviderSpeakersEntity,
+) -> None:
+    """Test partials of interleaved speakers are tagged with their speaker."""
+    await mock_config_entry_setup(hass, tmp_path, mock_provider_speakers_entity)
+
+    results = [
+        result
+        async for result in mock_provider_speakers_entity.internal_async_process_audio_stream_partial(
+            _TEST_METADATA, _one_chunk_stream()
+        )
+    ]
+
+    assert results == [
+        PartialSpeechResult("turn", speaker_id="speaker_0"),
+        PartialSpeechResult("no", speaker_id="speaker_1"),
+        # Each partial supersedes the previous one for the same speaker only.
+        PartialSpeechResult("turn on the lights", speaker_id="speaker_0"),
+        PartialSpeechResult("no wait", speaker_id="speaker_1"),
+        SpeechResult("turn on the lights no wait", SpeechResultState.SUCCESS),
+    ]
 
 
 @pytest.mark.parametrize(
