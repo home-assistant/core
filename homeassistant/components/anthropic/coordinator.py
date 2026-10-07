@@ -127,6 +127,7 @@ class AnthropicCoordinator(DataUpdateCoordinator[list[anthropic.types.ModelInfo]
         return anthropic.types.ModelInfo(
             type="model",
             id=model_id,
+            lifecycle="retired",
             created_at=datetime.datetime(1970, 1, 1, tzinfo=datetime.UTC),
             display_name=alias,
         ), False
