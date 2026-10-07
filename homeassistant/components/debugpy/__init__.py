@@ -3,13 +3,13 @@
 import probatio
 
 from homeassistant.const import CONF_HOST, CONF_PORT
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_START, CONF_WAIT, DATA_DEBUGPY_CONFIG, DOMAIN, SERVICE_START
+from .const import CONF_START, CONF_WAIT, DATA_DEBUGPY_CONFIG, DOMAIN
 from .helpers import async_start_debugger
+from .services import async_setup_services
 
 CONFIG_SCHEMA = probatio.Schema(
     {
@@ -31,13 +31,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     conf = config[DOMAIN]
     hass.data[DATA_DEBUGPY_CONFIG] = conf
 
-    async def debug_start(call: ServiceCall) -> None:
-        """Enable asyncio debugging and start the debugger."""
-        await async_start_debugger(call.hass)
-
-    async_register_admin_service(
-        hass, DOMAIN, SERVICE_START, debug_start, schema=probatio.Schema({})
-    )
+    async_setup_services(hass)
 
     # If set to start the debugger on startup, do so
     if conf[CONF_START]:
