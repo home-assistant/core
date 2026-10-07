@@ -1435,13 +1435,30 @@ async def test_header_resource_metadata_beats_a_mismatched_root_document(
     assert root_url not in fetched
 
 
+@pytest.mark.parametrize(
+    "header_document",
+    [
+        pytest.param(httpx2.Response(200, text="not-json"), id="not_json"),
+        pytest.param(
+            httpx2.Response(
+                200,
+                json={
+                    "resource": "http://1.1.1.1:8080/other",
+                    "authorization_servers": ["https://other.example"],
+                },
+            ),
+            id="mismatched_resource",
+        ),
+    ],
+)
 @pytest.mark.usefixtures("mock_setup_entry")
 @respx.mock
 async def test_resource_metadata_falls_back_after_an_unusable_header_document(
     hass: HomeAssistant,
     mock_mcp_client: Mock,
+    header_document: httpx2.Response,
 ) -> None:
-    """A header document for another resource is skipped."""
+    """An unusable header document is skipped in favor of the path document."""
     header_url = "https://example.com/custom-discovery"
     path_url, root_url = _resource_metadata_fallbacks()
 
@@ -1456,7 +1473,7 @@ async def test_resource_metadata_falls_back_after_an_unusable_header_document(
             headers={"WWW-Authenticate": f'Bearer resource_metadata="{header_url}"'},
         ),
     )
-    respx.get(header_url).mock(return_value=httpx2.Response(200, text="not-json"))
+    respx.get(header_url).mock(return_value=header_document)
     respx.get(path_url).mock(return_value=OAUTH_PROTECTED_RESOURCE_METADATA_RESPONSE)
     respx.get(root_url).mock(return_value=httpx2.Response(status_code=404))
     respx.get(OAUTH_AUTHORIZATION_SERVER_DISCOVERY_ENDPOINT).mock(
@@ -1470,6 +1487,9 @@ async def test_resource_metadata_falls_back_after_an_unusable_header_document(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "missing_credentials"
+    fetched = [str(call.request.url) for call in respx.calls]
+    assert header_url in fetched
+    assert path_url in fetched
 
 
 @pytest.mark.parametrize(
