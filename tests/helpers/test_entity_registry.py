@@ -3017,17 +3017,14 @@ async def test_update_entity_own_area_without_own_name(
         entity_registry.async_update_entity(entry.entity_id, area_id="kitchen")
     assert entity_registry.async_get(entry.entity_id).area_id is None
 
-    # A name equal to the device name is not a name of its own
-    with pytest.raises(ValueError, match="without a name of its own"):
-        entity_registry.async_update_entity(
-            entry.entity_id, area_id="kitchen", name="Device"
-        )
-
-    # Naming the entity in the same update makes the area valid
+    # Naming the entity in the same update makes the area valid, also with a
+    # name equal to the device name, which is not consulted for an own area
     entry = entity_registry.async_update_entity(
-        entry.entity_id, area_id="kitchen", name="Light"
+        entry.entity_id, area_id="kitchen", name="Device"
     )
     assert entry.area_id == "kitchen"
+
+    entry = entity_registry.async_update_entity(entry.entity_id, name="Light")
 
     # Clearing the name would leave the area without a name
     with pytest.raises(ValueError, match="without a name of its own"):
