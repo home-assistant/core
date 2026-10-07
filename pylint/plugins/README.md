@@ -1071,5 +1071,7 @@ Detects entity device info being set to a plain dict.
 ### `W7439`: `home-assistant-device-info-dict`
 
 `_attr_device_info` is set to a dict literal or `dict(...)` call, or the
-`device_info` property of an entity class returns one. Use the `DeviceInfo`
+`device_info` property of an entity class returns one. Local variables and
+helper calls that evaluate to a dict are detected through astroid inference.
+Use the `DeviceInfo`
 object instead, as it is type-safe.

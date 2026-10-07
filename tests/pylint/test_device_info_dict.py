@@ -106,6 +106,27 @@ class NotAnEntity:
             f"""
 {_ENTITY_IMPORT}
 class MyEntity(Entity):
+    @property
+    def device_info(self):
+        info = DeviceInfo(identifiers={{("test", "1")}})
+        return info
+""",
+            id="property_device_info_local_variable",
+        ),
+        pytest.param(
+            f"""
+{_ENTITY_IMPORT}
+class MyEntity(Entity):
+    @property
+    def device_info(self):
+        return self.unknown
+""",
+            id="property_uninferable",
+        ),
+        pytest.param(
+            f"""
+{_ENTITY_IMPORT}
+class MyEntity(Entity):
     def other(self):
         return {{"a": 1}}
 """,
@@ -185,6 +206,40 @@ class MyEntity(Entity):
         return dict(identifiers={{("test", "1")}})
 """,
             id="property_dict_call",
+        ),
+        pytest.param(
+            f"""
+{_ENTITY_IMPORT}
+class MyEntity(Entity):
+    @property
+    def device_info(self):
+        info = {{"identifiers": {{("test", "1")}}}}
+        return info
+""",
+            id="property_local_variable",
+        ),
+        pytest.param(
+            f"""
+{_ENTITY_IMPORT}
+def _build():
+    return {{"identifiers": {{("test", "1")}}}}
+
+class MyEntity(Entity):
+    @property
+    def device_info(self):
+        return _build()
+""",
+            id="property_helper_function",
+        ),
+        pytest.param(
+            f"""
+{_ENTITY_IMPORT}
+class MyEntity(Entity):
+    def __init__(self):
+        info = {{"identifiers": {{("test", "1")}}}}
+        self._attr_device_info = info
+""",
+            id="attr_local_variable",
         ),
     ],
 )

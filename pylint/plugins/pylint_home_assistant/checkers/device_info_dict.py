@@ -2,12 +2,14 @@
 
 ``_attr_device_info`` and the ``device_info`` property of an entity should
 use the ``DeviceInfo`` object, as that is type-safe, instead of a dict
-literal or ``dict(...)`` call.
+literal, a ``dict(...)`` call, or a local variable or helper call that
+evaluates to one.
 
 ``W7439`` (``home-assistant-device-info-dict``)
 """
 
 from astroid import nodes
+from astroid.exceptions import InferenceError
 from pylint.checkers import BaseChecker
 from pylint.lint import PyLinter
 
@@ -16,13 +18,13 @@ from pylint_home_assistant.helpers.module_info import is_integration_module
 
 
 def _is_dict(node: nodes.NodeNG | None) -> bool:
-    """Check if a node is a dict literal or a ``dict(...)`` call."""
-    match node:
-        case nodes.Dict():
-            return True
-        case nodes.Call(func=nodes.Name(name="dict")):
-            return True
-    return False
+    """Check if a node is, or may evaluate to, a dict."""
+    if node is None:
+        return False
+    try:
+        return any(isinstance(value, nodes.Dict) for value in node.infer())
+    except InferenceError:
+        return False
 
 
 def _is_device_info_target(node: nodes.NodeNG) -> bool:
