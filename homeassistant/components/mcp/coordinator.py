@@ -1,7 +1,7 @@
 """Types for the Model Context Protocol integration."""
 
 import asyncio
-from collections.abc import AsyncGenerator, Awaitable, Callable
+from collections.abc import AsyncGenerator, Awaitable, Callable, Iterator
 from contextlib import asynccontextmanager
 import datetime
 import logging
@@ -40,6 +40,53 @@ UPDATE_INTERVAL = datetime.timedelta(minutes=30)
 TIMEOUT = 10
 
 type TokenManager = Callable[[], Awaitable[str]]
+
+
+def _iter_wrapped_errors(exc: BaseException) -> Iterator[BaseException]:
+    """Yield an exception and errors nested in groups or causes."""
+    seen: set[int] = set()
+    stack = [exc]
+    while stack:
+        current = stack.pop()
+        if id(current) in seen:
+            continue
+        seen.add(id(current))
+        if isinstance(current, BaseExceptionGroup):
+            stack.extend(reversed(current.exceptions))
+            if current.__cause__ is not None:
+                stack.append(current.__cause__)
+            continue
+        yield current
+        if current.__cause__ is not None:
+            stack.append(current.__cause__)
+
+
+def _representative_mcp_error(exc: BaseException) -> BaseException:
+    """Return the HTTP or MCP error inside an ExceptionGroup.
+
+    anyio may hide an httpx status error in a nested group or on ``__cause__``.
+    A 401 has to stay an authentication failure.
+    """
+    status_error: BaseException | None = None
+    mcp_error: BaseException | None = None
+    http_error: BaseException | None = None
+    fallback: BaseException | None = None
+    for nested in _iter_wrapped_errors(exc):
+        if fallback is None:
+            fallback = nested
+        if status_error is None and isinstance(nested, httpx2.HTTPStatusError):
+            status_error = nested
+        elif mcp_error is None and isinstance(nested, McpError):
+            mcp_error = nested
+        elif http_error is None and isinstance(nested, httpx2.HTTPError):
+            http_error = nested
+    if status_error is not None:
+        return status_error
+    if mcp_error is not None:
+        return mcp_error
+    if http_error is not None:
+        return http_error
+    return fallback if fallback is not None else exc
 
 
 def _create_sse_httpx_client(
@@ -89,7 +136,7 @@ async def mcp_client(
             result = await session.initialize()
             yield session, result
     except ExceptionGroup as streamable_err:
-        main_error = streamable_err.exceptions[0]
+        main_error = _representative_mcp_error(streamable_err)
         # Method not Allowed likely means this is not a streamable HTTP server,
         # but it may be an SSE server. This is part of the MCP Transport
         # backwards compatibility specification.
@@ -115,7 +162,7 @@ async def mcp_client(
                     yield session, result
             except ExceptionGroup as sse_err:
                 _LOGGER.debug("Error creating SSE MCP client: %s", sse_err)
-                raise sse_err.exceptions[0] from sse_err
+                raise _representative_mcp_error(sse_err) from sse_err
         else:
             _LOGGER.debug("Error creating MCP client: %s", streamable_err)
             raise main_error from streamable_err

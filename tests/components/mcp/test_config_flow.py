@@ -1350,3 +1350,67 @@ async def test_hassio_discovery_authentication_flow(
     assert result["result"]
     assert result["result"].unique_id == ADDON_DISCOVERY_INFO.uuid
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+def _unauthorized() -> httpx2.HTTPStatusError:
+    """Return the 401 the MCP client raises when a server requires OAuth."""
+    return httpx2.HTTPStatusError(
+        "Authentication required",
+        request=None,
+        response=httpx2.Response(401),
+    )
+
+
+def _nested_unauthorized() -> ExceptionGroup:
+    """Wrap a 401 the way the streamable HTTP client does."""
+    return ExceptionGroup(
+        "unhandled errors in a TaskGroup",
+        [ExceptionGroup("mcp.client.streamable_http", [_unauthorized()])],
+    )
+
+
+def _cause_unauthorized() -> ExceptionGroup:
+    """Hide a 401 on the cause of the task-group exception."""
+    wrapper = RuntimeError("streamable http task failed")
+    wrapper.__cause__ = _unauthorized()
+    return ExceptionGroup("unhandled errors in a TaskGroup", [wrapper])
+
+
+def _group_cause_unauthorized() -> ExceptionGroup:
+    """Hide a 401 on the exception group's own cause."""
+    group = ExceptionGroup("unhandled errors in a TaskGroup", [RuntimeError("other")])
+    group.__cause__ = _unauthorized()
+    return group
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        pytest.param(_nested_unauthorized(), id="nested_group"),
+        pytest.param(_cause_unauthorized(), id="hidden_on_cause"),
+        pytest.param(_group_cause_unauthorized(), id="group_cause"),
+    ],
+)
+@pytest.mark.usefixtures("mock_setup_entry")
+@respx.mock
+async def test_wrapped_unauthorized_starts_auth_discovery(
+    hass: HomeAssistant,
+    mock_mcp_client: Mock,
+    error: ExceptionGroup,
+) -> None:
+    """A 401 nested in an ExceptionGroup starts OAuth discovery."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    mock_mcp_client.side_effect = error
+    respx.get(OAUTH_DISCOVERY_ENDPOINT).mock(
+        return_value=OAUTH_SERVER_METADATA_RESPONSE
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_URL: MCP_SERVER_URL},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "missing_credentials"
