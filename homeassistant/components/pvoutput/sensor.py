@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import override
 
-from pvo import Status, System
+from pvo import Status
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -102,14 +102,12 @@ async def async_setup_entry(
 ) -> None:
     """Set up a PVOutput sensors based on a config entry."""
     coordinator = entry.runtime_data
-    system = await coordinator.pvoutput.system()
 
     async_add_entities(
         PVOutputSensorEntity(
             coordinator=coordinator,
             description=description,
             system_id=entry.data[CONF_SYSTEM_ID],
-            system=system,
         )
         for description in SENSORS
     )
@@ -129,7 +127,6 @@ class PVOutputSensorEntity(
         coordinator: PVOutputDataUpdateCoordinator,
         description: PVOutputSensorEntityDescription,
         system_id: str,
-        system: System,
     ) -> None:
         """Initialize a PVOutput sensor."""
         super().__init__(coordinator=coordinator)
@@ -139,8 +136,8 @@ class PVOutputSensorEntity(
             configuration_url=f"https://pvoutput.org/list.jsp?sid={system_id}",
             identifiers={(DOMAIN, str(system_id))},
             manufacturer="PVOutput",
-            model=system.inverter_brand,
-            name=system.system_name,
+            model=coordinator.system.inverter_brand,
+            name=coordinator.system.system_name,
         )
 
     @property
