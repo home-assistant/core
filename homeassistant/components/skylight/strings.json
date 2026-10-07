@@ -40,5 +40,10 @@
         "name": "Calendar"
       }
     }
+  },
+  "exceptions": {
+    "update_error": {
+      "message": "Error fetching skylight data: {error}"
+    }
   }
 }

@@ -39,9 +39,13 @@ ALL_DAY_RAW = {
 @pytest.mark.usefixtures("mock_coordinator_data")
 async def test_calendar_entity(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test the calendar entity is set up."""
+    # Freeze outside the fixture event window so the on/off assertion does
+    # not depend on wall-clock time.
+    freezer.move_to(datetime(2030, 6, 1, 12, 0, tzinfo=UTC))
     mock_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()

@@ -54,8 +54,8 @@ rules:
   # Gold
   devices: done
   diagnostics:
-    status: exempt
-    comment: Diagnostics are not planned for the initial release.
+    status: todo
+    comment: Diagnostics are planned for a future release.
   discovery:
     status: exempt
     comment: This is a cloud service that cannot be discovered.

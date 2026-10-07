@@ -125,7 +125,11 @@ class SkylightDataUpdateCoordinator(DataUpdateCoordinator[SkylightData]):
         except SkylightAuthError as err:
             raise ConfigEntryAuthFailed from err
         except SkylightAPIError as err:
-            raise UpdateFailed from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_error",
+                translation_placeholders={"error": str(err)},
+            ) from err
 
         return [
             event
