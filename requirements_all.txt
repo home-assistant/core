@@ -2888,7 +2888,7 @@ pyvlx==0.2.36
 pyvolumio==0.1.5
 
 # homeassistant.components.waze_travel_time
-pywaze==1.2.3
+pywaze==1.2.4
 
 # homeassistant.components.weatherflow
 pyweatherflowudp==1.6.3
