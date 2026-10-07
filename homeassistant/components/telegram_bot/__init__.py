@@ -166,8 +166,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: TelegramBotConfigEntry) 
     try:
         await bot.get_me()
     except InvalidToken as err:
-        # pylint: disable-next=home-assistant-exception-not-translated
-        raise ConfigEntryAuthFailed("Invalid API token for Telegram Bot.") from err
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="invalid_api_key",
+        ) from err
     except TelegramError as err:
         # Do not let the message through: the Telegram API URL embeds the bot
         # token, and library errors quote that URL.

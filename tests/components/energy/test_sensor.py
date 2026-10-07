@@ -1126,6 +1126,90 @@ async def test_cost_sensor_handle_gas_kwh(
 
 
 @pytest.mark.parametrize(
+    ("usage_unit", "price_unit"),
+    [
+        pytest.param(
+            UnitOfVolume.CUBIC_METERS,
+            UnitOfEnergy.KILO_WATT_HOUR,
+            id="volume_usage_energy_price",
+        ),
+        pytest.param(
+            UnitOfEnergy.KILO_WATT_HOUR,
+            UnitOfVolume.CUBIC_METERS,
+            id="energy_usage_volume_price",
+        ),
+    ],
+)
+async def test_cost_sensor_gas_price_unit_mismatch(
+    setup_integration: Callable[[HomeAssistant], Coroutine[Any, Any, None]],
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    caplog: pytest.LogCaptureFixture,
+    usage_unit: str,
+    price_unit: str,
+) -> None:
+    """Test a gas price unit that cannot be converted to the usage unit."""
+    energy_attributes = {
+        ATTR_UNIT_OF_MEASUREMENT: usage_unit,
+        ATTR_STATE_CLASS: SensorStateClass.TOTAL_INCREASING,
+    }
+    energy_data = data.EnergyManager.default_preferences()
+    energy_data["energy_sources"].append(
+        {
+            "type": "gas",
+            "stat_energy_from": "sensor.gas_consumption",
+            "stat_cost": None,
+            "entity_energy_price": "sensor.gas_price",
+            "number_energy_price": None,
+        }
+    )
+
+    hass_storage[data.STORAGE_KEY] = {
+        "version": 1,
+        "data": energy_data,
+    }
+
+    hass.states.async_set(
+        "sensor.gas_price", "0.5", {ATTR_UNIT_OF_MEASUREMENT: f"EUR/{price_unit}"}
+    )
+    hass.states.async_set("sensor.gas_consumption", 100, energy_attributes)
+
+    await setup_integration(hass)
+
+    state = hass.states.get("sensor.gas_consumption_cost")
+    assert state.state == "0.0"
+
+    hass.states.async_set("sensor.gas_consumption", 200, energy_attributes)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.gas_consumption_cost")
+    assert state.state == "0.0"
+    assert (
+        f"Not updating cost of sensor.gas_consumption: unit {usage_unit} does not "
+        f"match price unit per {price_unit} of sensor.gas_price" in caplog.text
+    )
+    assert "Error while dispatching event" not in caplog.text
+
+    # Warned once only
+    caplog.clear()
+    hass.states.async_set("sensor.gas_consumption", 300, energy_attributes)
+    await hass.async_block_till_done()
+
+    assert "Not updating cost" not in caplog.text
+    assert "Error while dispatching event" not in caplog.text
+
+    # Usage since the last update is priced once the units match
+    hass.states.async_set(
+        "sensor.gas_price", "0.5", {ATTR_UNIT_OF_MEASUREMENT: f"EUR/{usage_unit}"}
+    )
+    hass.states.async_set("sensor.gas_consumption", 310, energy_attributes)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.gas_consumption_cost")
+    assert state.state == "105.0"
+
+
+@pytest.mark.parametrize(
     ("unit_system", "usage_unit", "growth"),
     [
         # 1 cubic foot = 7.47 gl, 100 ft3 growth @ 0.5/ft3:

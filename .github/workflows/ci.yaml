@@ -772,9 +772,10 @@ jobs:
         with:
           mode: simulation,memory
           # No token: auth uses the OIDC id-token minted by the job permissions.
+          # Keep respx disabled: it imports httpx before it can be aliased to httpx2.
           run: |
             . venv/bin/activate
-            pytest benchmarks --codspeed --no-cov -o addopts=""
+            pytest benchmarks --codspeed --no-cov -o addopts="-p no:respx"
 
   prepare-pytest-full:
     name: Split tests for full run

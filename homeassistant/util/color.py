@@ -728,21 +728,9 @@ def check_valid_gamut(Gamut: GamutType) -> bool:
     not_on_line = cross_product(v1, v2) > 0.0001
 
     # Check if all six coordinates of the gamut lie between 0 and 1.
-    red_valid = (
-        Gamut.red.x >= 0 and Gamut.red.x <= 1 and Gamut.red.y >= 0 and Gamut.red.y <= 1
-    )
-    green_valid = (
-        Gamut.green.x >= 0
-        and Gamut.green.x <= 1
-        and Gamut.green.y >= 0
-        and Gamut.green.y <= 1
-    )
-    blue_valid = (
-        Gamut.blue.x >= 0
-        and Gamut.blue.x <= 1
-        and Gamut.blue.y >= 0
-        and Gamut.blue.y <= 1
-    )
+    red_valid = 0 <= Gamut.red.x <= 1 and 0 <= Gamut.red.y <= 1
+    green_valid = 0 <= Gamut.green.x <= 1 and 0 <= Gamut.green.y <= 1
+    blue_valid = 0 <= Gamut.blue.x <= 1 and 0 <= Gamut.blue.y <= 1
 
     return not_on_line and red_valid and green_valid and blue_valid
 

@@ -1,16 +1,20 @@
 """Support for Portainer container updates."""
 
-from collections.abc import Awaitable, Callable
+import asyncio
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
-from typing import Any, override
+import logging
+from typing import TYPE_CHECKING, Any, override
 
-from pyportainer import Portainer
-from pyportainer.models.docker import (
-    DockerContainer,
-    LocalImageInformation,
-    PortainerImageUpdateStatus,
+from pyportainer import (
+    ImagePullProgress,
+    PortainerAuthenticationError,
+    PortainerError,
+    PortainerTimeoutError,
 )
+from pyportainer.models.docker import LocalImageInformation, PortainerImageUpdateStatus
+from pyportainer.models.portainer import PortainerSystemVersion
 
 from homeassistant.components.update import (
     UpdateEntity,
@@ -19,15 +23,19 @@ from homeassistant.components.update import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import DOMAIN
 from .coordinator import (
     PortainerConfigEntry,
     PortainerContainerData,
     PortainerCoordinator,
     PortainerCoordinatorData,
 )
-from .entity import PortainerContainerEntity
+from .entity import PortainerContainerEntity, PortainerServerEntity
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -36,14 +44,12 @@ class PortainerContainerUpdateEntityDescription(UpdateEntityDescription):
 
     installed_version: Callable[[LocalImageInformation], str | None]
     latest_version: Callable[[PortainerImageUpdateStatus | None], str | None]
-    update_func: Callable[
-        [Portainer, int, str],
-        Awaitable[DockerContainer],
-    ]
 
 
 PARALLEL_UPDATES = 1
 DEFAULT_RECREATE_TIMEOUT = timedelta(minutes=10)
+# Share of the install progress taken by the image pull, the rest is the recreate
+PULL_PERCENTAGE = 90
 
 
 def _short_digest(digest: str) -> str:
@@ -67,13 +73,31 @@ CONTAINER_IMAGE: tuple[PortainerContainerUpdateEntityDescription] = (
             if data is not None and (digest := data.registry_digest)
             else None
         ),
-        update_func=(
-            lambda portainer, endpoint_id, container_id: portainer.container_recreate(
-                endpoint_id=endpoint_id,
-                container_id=container_id,
-                timeout=DEFAULT_RECREATE_TIMEOUT,
-                pull_image=True,
-            )
+    ),
+)
+
+
+@dataclass(frozen=True, kw_only=True)
+class PortainerServerUpdateEntityDescription(UpdateEntityDescription):
+    """Describes Portainer server update entity."""
+
+    installed_version: Callable[[PortainerSystemVersion], str | None]
+    latest_version: Callable[[PortainerSystemVersion], str | None]
+    release_url: Callable[[PortainerSystemVersion], str | None]
+
+
+SERVER_UPDATES: tuple[PortainerServerUpdateEntityDescription, ...] = (
+    PortainerServerUpdateEntityDescription(
+        key="server_update",
+        translation_key="server_update",
+        entity_category=EntityCategory.CONFIG,
+        installed_version=lambda data: data.server_version,
+        # Portainer only reports the latest version when it is newer
+        latest_version=lambda data: data.latest_version or data.server_version,
+        release_url=lambda data: (
+            f"https://github.com/portainer/portainer/releases/tag/{data.latest_version}"
+            if data.latest_version
+            else None
         ),
     ),
 )
@@ -86,6 +110,12 @@ async def async_setup_entry(
 ) -> None:
     """Set up Portainer update entities based on a config entry."""
     coordinator = entry.runtime_data
+    if TYPE_CHECKING:
+        assert coordinator.system_version is not None
+    async_add_entities(
+        PortainerServerUpdateEntity(coordinator.system_version, entity_description)
+        for entity_description in SERVER_UPDATES
+    )
 
     def _async_add_new_containers(
         containers: list[tuple[PortainerCoordinatorData, PortainerContainerData]],
@@ -116,7 +146,9 @@ async def async_setup_entry(
 class PortainerContainerImageUpdateEntity(PortainerContainerEntity, UpdateEntity):
     """Representation of a Portainer container update."""
 
-    _attr_supported_features = UpdateEntityFeature.INSTALL
+    _attr_supported_features = (
+        UpdateEntityFeature.INSTALL | UpdateEntityFeature.PROGRESS
+    )
 
     entity_description: PortainerContainerUpdateEntityDescription
 
@@ -158,11 +190,81 @@ class PortainerContainerImageUpdateEntity(PortainerContainerEntity, UpdateEntity
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
         """Install update."""
-        await self.coordinator.async_call_portainer(
-            self.entity_description.update_func(
-                self.coordinator.portainer,
-                self.endpoint_id,
-                self.container_data.container.id,
-            ),
-        )
+        self._attr_in_progress = True
+        self.async_write_ha_state()
+        try:
+            await self.coordinator.async_call_portainer(self._async_pull_and_recreate())
+        finally:
+            self._attr_update_percentage = None
         await self.coordinator.async_request_refresh()
+
+    async def _async_pull_and_recreate(self) -> None:
+        """Pull the image with progress, then recreate the container with it."""
+        config = self.container_data.container_inspect.config
+        pulled = bool(config and config.image and await self._async_pull(config.image))
+        if pulled:
+            self._attr_update_percentage = PULL_PERCENTAGE
+            self.async_write_ha_state()
+
+        await self.coordinator.portainer.container_recreate(
+            endpoint_id=self.endpoint_id,
+            container_id=self.container_data.container.id,
+            timeout=DEFAULT_RECREATE_TIMEOUT,
+            pull_image=not pulled,
+        )
+
+    async def _async_pull(self, image: str) -> bool:
+        """Pull the image with progress.
+
+        Return False when Portainer has to pull it instead, for example from a
+        private registry, whose credentials Portainer only adds to its own pulls.
+        """
+        progress = ImagePullProgress()
+        try:
+            async with asyncio.timeout(DEFAULT_RECREATE_TIMEOUT.total_seconds()):
+                async for event in self.coordinator.portainer.image_pull(
+                    self.endpoint_id, image
+                ):
+                    percentage = int(progress.update(event) * PULL_PERCENTAGE / 100)
+                    if percentage != self._attr_update_percentage:
+                        self._attr_update_percentage = percentage
+                        self.async_write_ha_state()
+        except TimeoutError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="timeout_connect",
+            ) from err
+        except PortainerAuthenticationError, PortainerTimeoutError:
+            raise
+        except PortainerError as err:
+            _LOGGER.debug("Letting Portainer pull %s instead: %s", image, err)
+            self._attr_update_percentage = None
+            self.async_write_ha_state()
+            return False
+        return True
+
+
+class PortainerServerUpdateEntity(PortainerServerEntity, UpdateEntity):
+    """Representation of an update of Portainer itself."""
+
+    _attr_title = "Portainer"
+
+    entity_description: PortainerServerUpdateEntityDescription
+
+    @override
+    @property
+    def installed_version(self) -> str | None:
+        """Return the running Portainer version."""
+        return self.entity_description.installed_version(self.coordinator.data)
+
+    @override
+    @property
+    def latest_version(self) -> str | None:
+        """Return the latest Portainer version."""
+        return self.entity_description.latest_version(self.coordinator.data)
+
+    @override
+    @property
+    def release_url(self) -> str | None:
+        """Return the release notes of the latest version."""
+        return self.entity_description.release_url(self.coordinator.data)
