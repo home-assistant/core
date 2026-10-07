@@ -9,6 +9,7 @@ from pypjlink.projector import ProjectorError
 
 from homeassistant.components.media_player import (
     PLATFORM_SCHEMA as MEDIA_PLAYER_PLATFORM_SCHEMA,
+    MediaPlayerDeviceClass.
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
@@ -104,6 +105,7 @@ def format_input_source(input_source_name, input_source_number):
 class PjLinkDevice(MediaPlayerEntity):
     """Representation of a PJLink device."""
 
+    _attr_device_class = MediaPlayerDeviceClass.PROJECTOR
     _attr_supported_features = (
         MediaPlayerEntityFeature.VOLUME_MUTE
         | MediaPlayerEntityFeature.TURN_ON
