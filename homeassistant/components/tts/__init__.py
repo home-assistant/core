@@ -511,6 +511,18 @@ class ResultStream:
         return asyncio.Future()
 
     @callback
+    def _async_mark_used(self) -> None:
+        """Keep the stream available now that its result is about to be used.
+
+        A pipeline creates its stream when the run starts, for example before
+        waiting for a wake word, which can be longer ago than the memory cache
+        keeps an unused stream around.
+        """
+        self.last_used = monotonic()
+        self._manager.token_to_stream[self.token] = self
+        self._manager.token_to_stream_cleanup.schedule()
+
+    @callback
     def async_set_message(self, message: str) -> None:
         """Set message to be generated.
 
@@ -518,6 +530,7 @@ class ResultStream:
         """
         if self._result_cache.done():
             return
+        self._async_mark_used()
         self._result_cache.set_result(
             self._manager.async_cache_message_in_memory(
                 engine=self.engine,
@@ -536,6 +549,7 @@ class ResultStream:
         """
         if self._result_cache.done():
             return
+        self._async_mark_used()
         self._result_cache.set_result(
             self._manager.async_cache_message_stream_in_memory(
                 engine=self.engine,
@@ -563,6 +577,7 @@ class ResultStream:
 
     def async_override_result(self, media_path: str | Path) -> None:
         """Override the TTS stream with a different media path."""
+        self._async_mark_used()
         self._override_media_path = Path(media_path)
 
     @property
