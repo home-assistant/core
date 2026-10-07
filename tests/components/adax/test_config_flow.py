@@ -463,7 +463,7 @@ async def test_form_local_manual_cannot_connect(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.adax.config_flow.adax_local.AdaxLocal.get_status",
+        "homeassistant.components.adax.config_flow.AdaxLocal.get_status",
         return_value={"target_temperature": None, "current_temperature": None},
     ):
         result = await hass.config_entries.flow.async_configure(
