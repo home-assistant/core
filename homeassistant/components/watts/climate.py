@@ -114,19 +114,19 @@ class WattsVisionClimate(WattsVisionEntity[ThermostatDevice], ClimateEntity):
         self._attr_max_temp = thermostat.max_allowed_temperature
 
         if thermostat.temperature_unit.upper() == "C":
-            self._attr_temperature_unit = UnitOfTemperature.CELSIUS
+            self._attr_native_temperature_unit = UnitOfTemperature.CELSIUS
         else:
-            self._attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
+            self._attr_native_temperature_unit = UnitOfTemperature.FAHRENHEIT
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self.device.current_temperature
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the temperature setpoint."""
         return self.device.setpoint
 
@@ -235,7 +235,7 @@ class WattsVisionClimate(WattsVisionEntity[ThermostatDevice], ClimateEntity):
         _LOGGER.debug(
             "Successfully activated timer mode: %s%s for %d min on %s",
             temperature,
-            self.temperature_unit,
+            self.native_temperature_unit,
             duration_minutes,
             self.device_id,
         )

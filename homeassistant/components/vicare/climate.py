@@ -113,7 +113,7 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
         | ClimateEntityFeature.TURN_OFF
         | ClimateEntityFeature.TURN_ON
     )
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_min_temp = VICARE_TEMP_HEATING_MIN
     _attr_max_temp = VICARE_TEMP_HEATING_MAX
     _attr_target_temperature_step = PRECISION_WHOLE
@@ -156,11 +156,11 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
                 _supply_temperature = self._api.getSupplyTemperature()
 
             if _room_temperature is not None:
-                self._attr_current_temperature = _room_temperature
+                self._attr_native_current_temperature = _room_temperature
             elif _supply_temperature is not None:
-                self._attr_current_temperature = _supply_temperature
+                self._attr_native_current_temperature = _supply_temperature
             else:
-                self._attr_current_temperature = None
+                self._attr_native_current_temperature = None
 
             with suppress(PyViCareNotSupportedFeatureError):
                 self._attributes["active_vicare_program"] = self._current_program = (
@@ -168,7 +168,9 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
                 )
 
             with suppress(PyViCareNotSupportedFeatureError):
-                self._attr_target_temperature = self._api.getCurrentDesiredTemperature()
+                self._attr_native_target_temperature = (
+                    self._api.getCurrentDesiredTemperature()
+                )
 
             with suppress(PyViCareNotSupportedFeatureError):
                 self._attributes["active_vicare_mode"] = self._current_mode = (
@@ -283,7 +285,7 @@ class ViCareClimate(ViCareEntity, ClimateEntity):
         """Set new target temperatures."""
         if (temp := kwargs.get(ATTR_TEMPERATURE)) is not None:
             self._api.setProgramTemperature(self._current_program, temp)
-            self._attr_target_temperature = temp
+            self._attr_native_target_temperature = temp
 
     @property
     @override
