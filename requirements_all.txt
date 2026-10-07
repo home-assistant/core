@@ -2033,7 +2033,7 @@ pyControl4==2.0.2
 pyDuotecno==2024.10.1
 
 # homeassistant.components.electrasmart
-pyElectra==1.2.5
+pyElectra==1.2.6
 
 # homeassistant.components.emby
 pyEmby==1.10
