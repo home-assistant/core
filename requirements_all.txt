@@ -2045,7 +2045,7 @@ pyHik==0.4.7
 pyHomee==1.4.4
 
 # homeassistant.components.rfxtrx
-pyRFXtrx==0.31.1
+pyRFXtrx==0.34.0
 
 # homeassistant.components.sony_projector
 pySDCP==1
@@ -2888,7 +2888,7 @@ pyvlx==0.2.36
 pyvolumio==0.1.5
 
 # homeassistant.components.waze_travel_time
-pywaze==1.2.3
+pywaze==1.2.4
 
 # homeassistant.components.weatherflow
 pyweatherflowudp==1.6.3
@@ -3551,7 +3551,7 @@ zhong-hong-hvac==1.0.21
 ziggo-mediabox-xl==1.1.0
 
 # homeassistant.components.zinvolt
-zinvolt==1.0.0
+zinvolt==1.0.1
 
 # homeassistant.components.zoneminder
 zm-py==0.5.4
