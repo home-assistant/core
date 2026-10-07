@@ -1,6 +1,6 @@
 """Constants for the Model Context Protocol integration."""
 
-from typing import Literal
+from typing import Final, Literal
 
 DOMAIN = "mcp"
 
@@ -12,9 +12,9 @@ CONF_SLUG = "slug"
 # Shown on the authorization server and in Application Credentials.
 DCR_CLIENT_NAME = "Home Assistant"
 
-TOKEN_ENDPOINT_AUTH_NONE = "none"
-TOKEN_ENDPOINT_AUTH_POST = "client_secret_post"
-TOKEN_ENDPOINT_AUTH_BASIC = "client_secret_basic"
+TOKEN_ENDPOINT_AUTH_NONE: Final = "none"
+TOKEN_ENDPOINT_AUTH_POST: Final = "client_secret_post"
+TOKEN_ENDPOINT_AUTH_BASIC: Final = "client_secret_basic"
 
 type TokenEndpointAuthMethod = Literal[
     "none",

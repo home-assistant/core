@@ -420,7 +420,7 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
                 redirect_uri=redirect_uri,
                 scopes=scopes,
             ):
-                return item[CONF_ID]
+                return cast(str, item[CONF_ID])
         return None
 
     async def _async_register_dynamic_client(self) -> ConfigFlowResult:

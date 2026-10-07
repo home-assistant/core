@@ -27,7 +27,9 @@ from homeassistant.components.mcp.application_credentials import (
     authorization_server_context,
 )
 from homeassistant.components.mcp.auth import AuthenticateHeader
-from homeassistant.components.mcp.config_flow import _REGISTRATION_LOCKS
+from homeassistant.components.mcp.config_flow import (
+    _async_registration_lock as config_flow_registration_lock,
+)
 from homeassistant.components.mcp.const import (
     CONF_AUTHORIZATION_URL,
     CONF_SCOPE,
@@ -2303,6 +2305,39 @@ async def test_client_without_recorded_metadata_is_not_reused(
     assert URL(result["url"]).query["client_id"] == REGISTERED_CLIENT_ID
 
 
+class _RegistrationLockGate:
+    """Wrap the production lock and signal when a second flow reaches it."""
+
+    def __init__(
+        self,
+        inner: asyncio.Lock,
+        second_waiting: asyncio.Event,
+        entries: list[int],
+    ) -> None:
+        """Initialize the gate around one authorization-server lock."""
+        self._inner = inner
+        self._second_waiting = second_waiting
+        self._entries = entries
+
+    async def __aenter__(self) -> None:
+        """Enter the production lock, after noting a second waiter."""
+        self._entries[0] += 1
+        if self._entries[0] == 2:
+            # Set before acquiring. The current task then waits on the real
+            # lock, so the test resumes only once this flow is blocked.
+            self._second_waiting.set()
+        await self._inner.acquire()
+
+    async def __aexit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc: BaseException | None,
+        tb: object,
+    ) -> None:
+        """Release the production lock."""
+        self._inner.release()
+
+
 @pytest.mark.usefixtures("current_request_with_host", "mock_setup_entry")
 @respx.mock
 async def test_concurrent_flows_register_one_client(
@@ -2312,7 +2347,10 @@ async def test_concurrent_flows_register_one_client(
     """Two flows for one authorization server share a single registration."""
     release = asyncio.Event()
     entered = asyncio.Event()
+    second_waiting = asyncio.Event()
+    entries = [0]
     calls = 0
+    original_lock = config_flow_registration_lock
 
     async def _register(*args: Any, **kwargs: Any) -> RegisteredClient:
         nonlocal calls
@@ -2323,6 +2361,15 @@ async def test_concurrent_flows_register_one_client(
             REGISTERED_CLIENT_ID,
             REGISTERED_CLIENT_SECRET,
             "client_secret_post",
+        )
+
+    def _lock(
+        lock_hass: HomeAssistant, authorize_url: str, token_url: str
+    ) -> _RegistrationLockGate:
+        return _RegistrationLockGate(
+            original_lock(lock_hass, authorize_url, token_url),
+            second_waiting,
+            entries,
         )
 
     def _metadata(_request: httpx2.Request) -> httpx2.Response:
@@ -2348,18 +2395,20 @@ async def test_concurrent_flows_register_one_client(
             {CONF_URL: mcp_url},
         )
 
-    with patch(
-        "homeassistant.components.mcp.config_flow.async_register_dynamic_client",
-        side_effect=_register,
+    with (
+        patch(
+            "homeassistant.components.mcp.config_flow._async_registration_lock",
+            side_effect=_lock,
+        ),
+        patch(
+            "homeassistant.components.mcp.config_flow.async_register_dynamic_client",
+            side_effect=_register,
+        ),
     ):
         first = asyncio.create_task(_start(MCP_SERVER_URL))
         await entered.wait()
         second = asyncio.create_task(_start(PATH_MCP_URL))
-        for _ in range(50):
-            await asyncio.sleep(0)
-        lock = next(iter(hass.data[_REGISTRATION_LOCKS].values()))
-        assert lock.locked()
-        assert lock._waiters
+        await second_waiting.wait()
         assert calls == 1
         release.set()
         first_result, second_result = await asyncio.gather(first, second)
@@ -2787,6 +2836,45 @@ async def test_public_registration_may_omit_client_secret(
             json={
                 "client_id": REGISTERED_CLIENT_ID,
                 "token_endpoint_auth_method": "none",
+            },
+        )
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    mock_mcp_client.side_effect = httpx2.HTTPStatusError(
+        "Authentication required", request=None, response=httpx2.Response(401)
+    )
+    respx.get(OAUTH_DISCOVERY_ENDPOINT).mock(
+        return_value=_authorization_server_metadata(
+            registration_endpoint="/register",
+            auth_methods=["none"],
+        )
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_URL: MCP_SERVER_URL},
+    )
+
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+
+
+@pytest.mark.usefixtures("current_request_with_host", "mock_setup_entry")
+@respx.mock
+async def test_public_client_ignores_echoed_secret_expiry(
+    hass: HomeAssistant,
+    mock_mcp_client: Mock,
+) -> None:
+    """A public client does not abort when an unused secret has an expiry."""
+    respx.post(f"{MCP_SERVER_BASE_URL}/register").mock(
+        return_value=httpx2.Response(
+            201,
+            json={
+                "client_id": REGISTERED_CLIENT_ID,
+                "client_secret": REGISTERED_CLIENT_SECRET,
+                "token_endpoint_auth_method": "none",
+                "client_secret_expires_at": 1_700_000_000,
             },
         )
     )

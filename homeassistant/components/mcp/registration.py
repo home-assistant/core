@@ -294,7 +294,8 @@ def _parse_registration_response(
     client_secret = _client_secret_from_response(payload.get("client_secret"), method)
     # Application credentials are not rotated. A finite secret lifetime would
     # leave refresh and reauth on a credential that can no longer be replaced.
-    _reject_expiring_client_secret(payload.get("client_secret_expires_at"))
+    # Public clients never send the secret, so an echoed expiry is ignored.
+    _reject_expiring_client_secret(payload.get("client_secret_expires_at"), method)
     try:
         info = OAuthClientInformationFull.model_validate(payload)
     except ValidationError as err:
@@ -381,13 +382,15 @@ def _require_granted_scopes(value: Any, requested_scopes: tuple[str, ...]) -> No
         )
 
 
-def _reject_expiring_client_secret(value: Any) -> None:
-    """Reject a client secret that will expire.
+def _reject_expiring_client_secret(value: Any, method: TokenEndpointAuthMethod) -> None:
+    """Reject a confidential client secret that will expire.
 
     RFC 7591 uses 0 when the secret does not expire. Any other timestamp is a
-    finite lifetime, which is refused until credential rotation exists.
+    finite lifetime, which is refused until credential rotation exists. Public
+    clients authenticate with PKCE and do not send a client secret, so an
+    expiry echoed for that unused secret is ignored.
     """
-    if value is None:
+    if method == TOKEN_ENDPOINT_AUTH_NONE or value is None:
         return
     if isinstance(value, bool) or not isinstance(value, int) or value < 0:
         raise ClientRegistrationError("client_secret_expires_at was invalid")
