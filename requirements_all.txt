@@ -930,7 +930,7 @@ elevenlabs==2.51.0
 elgato==6.1.1
 
 # homeassistant.components.elke27
-elke27==0.3.7
+elke27==0.3.8
 
 # homeassistant.components.elkm1
 elkm1-lib==2.2.15
