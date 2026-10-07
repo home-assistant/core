@@ -94,6 +94,7 @@ from .utils import (
     get_block_device_sleep_period,
     get_coap_context,
     get_device_entry_gen,
+    get_device_from_manufacturer_data,
     get_http_port,
     get_info_auth,
     get_info_gen,
@@ -514,6 +515,15 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
             self.device_name = device_data.name
             await self.async_set_unique_id(device_data.mac, raise_on_progress=False)
             self._abort_if_unique_id_configured()
+            if (
+                device := get_device_from_manufacturer_data(
+                    device_data.discovery_info.manufacturer_data
+                )
+            ) and not device.supported:
+                return self.async_abort(
+                    reason="unsupported_device",
+                    description_placeholders={"model": device.name},
+                )
             self.context.update(
                 {
                     "title_placeholders": {"name": self.device_name},
@@ -789,6 +799,15 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         # Check if already configured - abort if device is already set up
         await self.async_set_unique_id(mac)
         self._abort_if_unique_id_configured()
+        if (
+            device := get_device_from_manufacturer_data(
+                discovery_info.manufacturer_data
+            )
+        ) and not device.supported:
+            return self.async_abort(
+                reason="unsupported_device",
+                description_placeholders={"model": device.name},
+            )
 
         # Store BLE device and name for WiFi provisioning
         self.ble_device = async_ble_device_from_address(
@@ -1065,12 +1084,6 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
             LOGGER.debug("Failed to connect to device after WiFi provisioning: %s", err)
             # Device appeared on network but can't connect - allow retry
             return None
-
-        if not is_device_supported(self.info):
-            return self.async_abort(
-                reason="unsupported_device",
-                description_placeholders={"model": get_model_name(self.info)},
-            )
 
         if get_info_auth(self.info):
             # Device requires authentication - show credentials step
