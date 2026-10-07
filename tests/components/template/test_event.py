@@ -164,6 +164,38 @@ async def test_setup_config_entry(
 
 
 @pytest.mark.freeze_time(TEST_FROZEN_INPUT)
+async def test_doorbell_with_ring_event_type_in_template(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a templated doorbell entity with 'ring' does not log a warning.
+
+    event_types is resolved asynchronously by the template after the entity
+    is added to hass, so the warning must not be based on its not-yet-rendered
+    initial value.
+    """
+
+    template_config_entry = MockConfigEntry(
+        data={},
+        domain=template.DOMAIN,
+        options={
+            "name": TEST_EVENT.object_id,
+            "device_class": "doorbell",
+            "event_type": "{{ 'ring' }}",
+            "event_types": "{{ ['ring', 'rung'] }}",
+            "template_type": event.DOMAIN,
+        },
+        title="My template",
+    )
+    template_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(template_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert "does not support the 'ring' event type" not in caplog.text
+
+
+@pytest.mark.freeze_time(TEST_FROZEN_INPUT)
 async def test_device_id(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
