@@ -1,5 +1,6 @@
 """Tests for the everHome/EcoTracker integration."""
 
+from dataclasses import replace
 from ipaddress import ip_address
 from typing import Any
 from unittest.mock import AsyncMock
@@ -91,6 +92,28 @@ async def test_user_flow_error(
     assert result["result"].unique_id == DEVICE_ID
 
 
+@pytest.mark.usefixtures("mock_everhome_client")
+async def test_user_flow_already_configured(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the user flow aborts when the device is already configured."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: IP_ADDRESS},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+
+
 async def test_zeroconf_flow(
     hass: HomeAssistant,
     mock_everhome_client: AsyncMock,
@@ -115,6 +138,29 @@ async def test_zeroconf_flow(
     assert result["data"] == {CONF_HOST: IP_ADDRESS}
     assert result["options"] == {CONF_FAST_POLLING: False}
     assert result["result"].unique_id == DEVICE_ID
+
+
+async def test_zeroconf_flow_already_configured(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test rediscovering a configured device updates its host and aborts."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=replace(
+            ZEROCONF_DISCOVERY,
+            ip_address=ip_address(NEW_IP_ADDRESS),
+            ip_addresses=[ip_address(NEW_IP_ADDRESS)],
+        ),
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert mock_config_entry.data == {CONF_HOST: NEW_IP_ADDRESS}
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
 
 @pytest.mark.parametrize(
