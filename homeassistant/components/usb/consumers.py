@@ -34,14 +34,7 @@ SERIAL_PORT_KEY_PATHS: tuple[tuple[str, ...], ...] = (
 )
 
 # Integrations configured with a serial port but not depending on `usb`
-NON_USB_SERIAL_DOMAINS = (
-    "alarmdecoder",
-    "bryant_evolution",
-    "elkm1",
-    "litejet",
-    "mysensors",
-    "opentherm_gw",
-)
+NON_USB_SERIAL_DOMAINS = ("alarmdecoder", "bryant_evolution", "elkm1", "mysensors")
 
 # States in which the entry claims its configured port, even if the port is not
 # open right now: a retrying setup typically failed to open the port, while an

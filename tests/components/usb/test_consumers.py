@@ -288,9 +288,7 @@ async def test_socket_path_psk_not_exposed(
         pytest.param("alarmdecoder", {"device_path": TTY_USB0}, id="alarmdecoder"),
         pytest.param("bryant_evolution", {"filename": TTY_USB0}, id="bryant_evolution"),
         pytest.param("elkm1", {"host": f"serial://{TTY_USB0}:115200"}, id="elkm1"),
-        pytest.param("litejet", {"port": TTY_USB0}, id="litejet"),
         pytest.param("mysensors", {"device": TTY_USB0}, id="mysensors"),
-        pytest.param("opentherm_gw", {"device": TTY_USB0}, id="opentherm_gw"),
     ],
 )
 async def test_non_usb_serial_domains(
