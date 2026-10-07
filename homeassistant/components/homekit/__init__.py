@@ -34,7 +34,7 @@ from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.components.humidifier import DOMAIN as HUMIDIFIER_DOMAIN
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_BATTERY_CHARGING,
     ATTR_BATTERY_LEVEL,
@@ -113,7 +113,6 @@ from .const import (
     BRIDGE_SERIAL_NUMBER,
     CONF_ADVERTISE_IP,
     CONF_ENTITY_CONFIG,
-    CONF_ENTRY_INDEX,
     CONF_EXCLUDE_ACCESSORY_MODE,
     CONF_FILTER,
     CONF_HOMEKIT_MODE,
@@ -137,12 +136,18 @@ from .const import (
     SERVICE_HOMEKIT_UNPAIR,
     SHUTDOWN_TIMEOUT,
     SIGNAL_RELOAD_ENTITIES,
+    STATUS_READY,
+    STATUS_RUNNING,
+    STATUS_STOPPED,
+    STATUS_WAIT,
     TYPE_AIR_PURIFIER,
 )
 from .iidmanager import AccessoryIIDStorage
 from .models import HomeKitConfigEntry, HomeKitEntryData
 from .type_triggers import DeviceTriggerAccessory
 from .util import (
+    _async_all_homekit_instances,
+    _async_update_entries_from_yaml,
     accessory_friendly_name,
     async_dismiss_setup_message,
     async_port_is_available,
@@ -156,12 +161,6 @@ from .util import (
 _LOGGER = logging.getLogger(__name__)
 
 MAX_DEVICES = 150  # includes the bridge
-
-# #### Driver Status ####
-STATUS_READY = 0
-STATUS_RUNNING = 1
-STATUS_STOPPED = 2
-STATUS_WAIT = 3
 
 PORT_CLEANUP_CHECK_INTERVAL_SECS = 1
 
@@ -240,61 +239,6 @@ UNPAIR_SERVICE_SCHEMA = probatio.Schema(
 )
 
 
-@callback
-def _async_update_entries_from_yaml(
-    hass: HomeAssistant, config: ConfigType, start_import_flow: bool
-) -> None:
-    current_entries = hass.config_entries.async_entries(DOMAIN)
-    entries_by_name, entries_by_port = _async_get_imported_entries_indices(
-        current_entries
-    )
-    hk_config: list[dict[str, Any]] = config[DOMAIN]
-
-    for index, conf in enumerate(hk_config):
-        if _async_update_config_entry_from_yaml(
-            hass, entries_by_name, entries_by_port, conf
-        ):
-            continue
-
-        if start_import_flow:
-            conf[CONF_ENTRY_INDEX] = index
-            hass.async_create_task(
-                hass.config_entries.flow.async_init(
-                    DOMAIN,
-                    context={"source": SOURCE_IMPORT},
-                    data=conf,
-                ),
-                eager_start=True,
-            )
-
-
-def _async_all_homekit_instances(hass: HomeAssistant) -> list[HomeKit]:
-    """All active HomeKit instances."""
-    hk_data: HomeKitEntryData | None
-    return [
-        hk_data.homekit
-        for entry in hass.config_entries.async_entries(DOMAIN)
-        if (hk_data := getattr(entry, "runtime_data", None))
-    ]
-
-
-def _async_get_imported_entries_indices(
-    current_entries: list[ConfigEntry],
-) -> tuple[dict[str, ConfigEntry], dict[int, ConfigEntry]]:
-    """Return a dicts of the entries by name and port."""
-
-    # For backwards compat, its possible the first bridge is using the default
-    # name.
-    entries_by_name: dict[str, ConfigEntry] = {}
-    entries_by_port: dict[int, ConfigEntry] = {}
-    for entry in current_entries:
-        if entry.source != SOURCE_IMPORT:
-            continue
-        entries_by_name[entry.data.get(CONF_NAME, BRIDGE_NAME)] = entry
-        entries_by_port[entry.data.get(CONF_PORT, DEFAULT_PORT)] = entry
-    return entries_by_name, entries_by_port
-
-
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the HomeKit from yaml."""
     hass.data[PERSIST_LOCK_DATA] = asyncio.Lock()
@@ -309,39 +253,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         return True
 
     _async_update_entries_from_yaml(hass, config, start_import_flow=True)
-    return True
-
-
-@callback
-def _async_update_config_entry_from_yaml(
-    hass: HomeAssistant,
-    entries_by_name: dict[str, ConfigEntry],
-    entries_by_port: dict[int, ConfigEntry],
-    conf: ConfigType,
-) -> bool:
-    """Update a config entry with the latest yaml.
-
-    Returns True if a matching config entry was found
-
-    Returns False if there is no matching config entry
-    """
-    if not (
-        matching_entry := entries_by_name.get(conf.get(CONF_NAME, BRIDGE_NAME))
-        or entries_by_port.get(conf.get(CONF_PORT, DEFAULT_PORT))
-    ):
-        return False
-
-    # If they alter the yaml config we import the changes
-    # since there currently is no practical way to support
-    # all the options in the UI at this time.
-    data = conf.copy()
-    options = {}
-    for key in CONFIG_OPTIONS:
-        if key in data:
-            options[key] = data[key]
-            del data[key]
-
-    hass.config_entries.async_update_entry(matching_entry, data=data, options=options)
     return True
 
 
