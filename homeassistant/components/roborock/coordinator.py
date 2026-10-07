@@ -709,6 +709,7 @@ class RoborockB01Q7UpdateCoordinator(RoborockDataUpdateCoordinatorB01):
                 translation_domain=DOMAIN,
                 translation_key="update_data_fail",
             )
+        await self.async_refresh_q7_map()
         return data
 
     async def async_refresh_q7_map(self) -> bool:

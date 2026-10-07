@@ -6,8 +6,10 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.environment_canada.camera import SERVICE_SET_RADAR_TYPE
-from homeassistant.components.environment_canada.const import DOMAIN
+from homeassistant.components.environment_canada.const import (
+    DOMAIN,
+    SERVICE_SET_RADAR_TYPE,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.util.dt import UTC
 

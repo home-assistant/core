@@ -493,3 +493,33 @@ async def test_error_swallowing(
     else:
         with pytest.raises(SongpalException):
             await _call(hass, service)
+
+
+@pytest.mark.parametrize(
+    ("max_volume", "volume", "service", "expected_volume"),
+    [
+        pytest.param(95, 28, media_player.SERVICE_VOLUME_UP, 29, id="up_max_95"),
+        pytest.param(14, 4, media_player.SERVICE_VOLUME_UP, 5, id="up_max_14"),
+        pytest.param(95, 30, media_player.SERVICE_VOLUME_DOWN, 29, id="down_max_95"),
+    ],
+)
+async def test_volume_step(
+    hass: HomeAssistant,
+    max_volume: int,
+    volume: int,
+    service: str,
+    expected_volume: int,
+) -> None:
+    """Test a volume step moves exactly one device volume step."""
+    mocked_device = _create_mocked_device()
+    mocked_device.volume1.maxVolume = max_volume
+    mocked_device.volume1.volume = volume
+    entry = MockConfigEntry(domain=songpal.DOMAIN, data=CONF_DATA)
+    entry.add_to_hass(hass)
+
+    with _patch_media_player_device(mocked_device):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    await _call(hass, service)
+    mocked_device.volume1.set_volume.assert_called_once_with(expected_volume)

@@ -167,3 +167,26 @@ async def test_entity_id_change_other_domain(
     await hass.async_block_till_done()
 
     assert (await prefs.get_dynamic_stream_settings("sensor.new")).preload_stream
+
+
+@pytest.mark.parametrize(
+    "orientation", [Orientation.NO_TRANSFORM, Orientation.ROTATE_LEFT]
+)
+async def test_get_dynamic_camera_stream_settings_stored_orientation(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    orientation: Orientation,
+) -> None:
+    """Test a stored orientation is loaded as an Orientation."""
+    prefs = CameraPreferences(hass)
+    await prefs.async_load()
+    hass.data[DATA_CAMERA_PREFS] = prefs
+
+    entry = entity_registry.async_get_or_create("camera", "test", "unique_id")
+    # Entity registry options are loaded from JSON as a plain int
+    entity_registry.async_update_entity_options(
+        entry.entity_id, "camera", {"orientation": int(orientation)}
+    )
+
+    settings = await get_dynamic_camera_stream_settings(hass, entry.entity_id)
+    assert settings.orientation is orientation

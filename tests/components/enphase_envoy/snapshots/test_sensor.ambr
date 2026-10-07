@@ -9578,7 +9578,7 @@
     'object_id_base': 'Reserve battery level',
     'options': dict({
     }),
-    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Reserve battery level',
     'platform': 'enphase_envoy',
@@ -9593,7 +9593,6 @@
 # name: test_sensor[envoy_acb_batt][sensor.envoy_1234_reserve_battery_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Envoy 1234 Reserve battery level',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
@@ -15749,7 +15748,7 @@
     'object_id_base': 'Reserve battery level',
     'options': dict({
     }),
-    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Reserve battery level',
     'platform': 'enphase_envoy',
@@ -15764,7 +15763,6 @@
 # name: test_sensor[envoy_eu_batt][sensor.envoy_1234_reserve_battery_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Envoy 1234 Reserve battery level',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
@@ -33327,7 +33325,7 @@
     'object_id_base': 'Reserve battery level',
     'options': dict({
     }),
-    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Reserve battery level',
     'platform': 'enphase_envoy',
@@ -33342,7 +33340,6 @@
 # name: test_sensor[envoy_metered_batt_relay][sensor.envoy_1234_reserve_battery_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Envoy 1234 Reserve battery level',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',

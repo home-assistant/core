@@ -75,6 +75,7 @@ class Thermostat(ClimateEntity, BaseCoordinatorEntity):
         self._thermostat = nasweb_thermostat
         self._attr_available = False
         self._attr_name = nasweb_thermostat.name
+        # Legacy format, kept as migrating existing unique IDs is not worth the risk
         self._attr_unique_id = f"{DOMAIN}.{self._thermostat.webio_serial}.thermostat"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._thermostat.webio_serial)}
@@ -143,8 +144,9 @@ class Thermostat(ClimateEntity, BaseCoordinatorEntity):
         if (
             self._thermostat.temp_target_min is not None
             and self._thermostat.temp_target_max is not None
-            and self._thermostat.current_temp >= self._thermostat.temp_target_min
-            and self._thermostat.current_temp <= self._thermostat.temp_target_max
+            and self._thermostat.temp_target_min
+            <= self._thermostat.current_temp
+            <= self._thermostat.temp_target_max
             and self._thermostat.enabled_inrange_output
         ):
             return HVACAction.FAN

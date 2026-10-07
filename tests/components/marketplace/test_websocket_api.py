@@ -1,0 +1,2109 @@
+"""Tests for the Marketplace WebSocket API."""
+
+import asyncio
+from datetime import timedelta
+from http import HTTPStatus
+from pathlib import Path
+from typing import Any
+from unittest.mock import AsyncMock, patch
+
+from freezegun.api import FrozenDateTimeFactory
+import pytest
+from syrupy.assertion import SnapshotAssertion
+from syrupy.filters import props
+
+from homeassistant.components.marketplace.base import MarketplaceManager
+from homeassistant.components.marketplace.const import (
+    CONF_WARNING_ACCEPTED,
+    DOMAIN,
+    WARNING_VERSION,
+)
+from homeassistant.components.marketplace.enums import (
+    MarketplaceSignal,
+    RepositoryCategory,
+)
+from homeassistant.components.marketplace.exceptions import MarketplaceError
+from homeassistant.components.marketplace.repositories.base import RepositoryManifest
+from homeassistant.components.marketplace.repositories.integration import (
+    IntegrationRepository,
+)
+from homeassistant.components.marketplace.utils.storage import async_save_to_storage
+from homeassistant.config_entries import (
+    SOURCE_IGNORE,
+    SOURCE_RECONFIGURE,
+    SOURCE_SYSTEM,
+    SOURCE_USER,
+    ConfigEntryDisabler,
+    ConfigEntryState,
+)
+from homeassistant.const import CONF_TOKEN, __version__ as HA_VERSION
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
+from homeassistant.setup import async_setup_component
+
+from . import get_marketplace, github_api_calls, mocked_response
+from .conftest import MarketplaceResponses
+from .const import (
+    FROZEN_TIME,
+    REPOSITORY_INTEGRATION,
+    REPOSITORY_INTEGRATION_ID,
+    REPOSITORY_PLUGIN_ID,
+    TOKEN,
+    WARNING_ACCEPTANCE,
+)
+
+from tests.common import MockConfigEntry, MockUser
+from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.typing import WebSocketGenerator
+
+CRITICAL_REPOSITORY = {
+    "repository": "critical/repository",
+    "reason": "It eats your configuration",
+    "link": "https://example.com/critical",
+    "acknowledged": False,
+}
+
+# One valid message per registered command, used to check the admin requirement.
+COMMANDS: tuple[dict[str, Any], ...] = (
+    {"type": "marketplace/info"},
+    {"type": "marketplace/github/connect"},
+    {"type": "marketplace/warning/accept"},
+    {"type": "marketplace/subscribe", "signal": MarketplaceSignal.REPOSITORY},
+    {"type": "marketplace/critical/list"},
+    {"type": "marketplace/critical/acknowledge", "repository": REPOSITORY_INTEGRATION},
+    {"type": "marketplace/repositories/list"},
+    {"type": "marketplace/repositories/removed"},
+    {"type": "marketplace/repositories/clear_new"},
+    {
+        "type": "marketplace/repositories/add",
+        "repository": REPOSITORY_INTEGRATION,
+        "category": "integration",
+    },
+    {
+        "type": "marketplace/repositories/detect",
+        "repository": REPOSITORY_INTEGRATION,
+    },
+    {
+        "type": "marketplace/repositories/remove",
+        "repository": REPOSITORY_INTEGRATION_ID,
+    },
+    {"type": "marketplace/repository/info", "repository_id": REPOSITORY_INTEGRATION_ID},
+    {
+        "type": "marketplace/repository/install",
+        "repository": REPOSITORY_INTEGRATION_ID,
+    },
+    {"type": "marketplace/repository/ignore", "repository": REPOSITORY_INTEGRATION_ID},
+    {
+        "type": "marketplace/repository/version",
+        "repository": REPOSITORY_INTEGRATION_ID,
+        "version": "1.0.0",
+    },
+    {
+        "type": "marketplace/repository/beta",
+        "repository": REPOSITORY_INTEGRATION_ID,
+        "show_beta": True,
+    },
+    {"type": "marketplace/repository/refresh", "repository": REPOSITORY_INTEGRATION_ID},
+    {
+        "type": "marketplace/repository/uninstall",
+        "repository": REPOSITORY_INTEGRATION_ID,
+    },
+    {
+        "type": "marketplace/repository/releases",
+        "repository_id": REPOSITORY_INTEGRATION_ID,
+    },
+)
+
+# The commands that work without a loaded Marketplace.
+COMMANDS_WITHOUT_MARKETPLACE = {
+    "marketplace/critical/acknowledge",
+    "marketplace/critical/list",
+    "marketplace/subscribe",
+}
+
+# The commands that need a GitHub connection, with a valid message.
+GITHUB_COMMANDS: tuple[dict[str, Any], ...] = (
+    {
+        "type": "marketplace/repositories/add",
+        "repository": "hacs-test-org/integration-basic-custom",
+        "category": "integration",
+    },
+    {
+        "type": "marketplace/repositories/detect",
+        "repository": "hacs-test-org/integration-basic-custom",
+    },
+)
+
+# The commands that reach GitHub anonymously without a connection. Installing
+# the version the catalog names skips the API, so the install picks another.
+ANONYMOUS_GITHUB_COMMANDS: tuple[dict[str, Any], ...] = (
+    {
+        "type": "marketplace/repository/install",
+        "repository": REPOSITORY_INTEGRATION_ID,
+        "version": "2.0.0",
+    },
+    {
+        "type": "marketplace/repository/version",
+        "repository": REPOSITORY_INTEGRATION_ID,
+        "version": "1.0.0",
+    },
+    {
+        "type": "marketplace/repository/beta",
+        "repository": REPOSITORY_INTEGRATION_ID,
+        "show_beta": True,
+    },
+    {"type": "marketplace/repository/refresh", "repository": REPOSITORY_INTEGRATION_ID},
+)
+
+# Dot segments collapse in the URL, this installs another repository
+VERSION_ESCAPE = "../../other/repo/archive/refs/heads/main"
+
+# The commands that need the first-run warning accepted, with a valid message.
+WARNING_COMMANDS: tuple[dict[str, Any], ...] = (
+    {
+        "type": "marketplace/repository/install",
+        "repository": REPOSITORY_INTEGRATION_ID,
+    },
+    {
+        "type": "marketplace/repository/version",
+        "repository": REPOSITORY_INTEGRATION_ID,
+        "version": "1.0.0",
+    },
+    {
+        "type": "marketplace/repository/beta",
+        "repository": REPOSITORY_INTEGRATION_ID,
+        "show_beta": True,
+    },
+    {
+        "type": "marketplace/repositories/add",
+        "repository": "hacs-test-org/integration-basic-custom",
+        "category": "integration",
+    },
+    {
+        "type": "marketplace/repositories/detect",
+        "repository": "hacs-test-org/integration-basic-custom",
+    },
+)
+
+# The commands that work before the first-run warning is accepted.
+COMMANDS_WITHOUT_WARNING: tuple[dict[str, Any], ...] = (
+    {"type": "marketplace/info"},
+    {"type": "marketplace/repositories/list"},
+    {"type": "marketplace/repository/info", "repository_id": REPOSITORY_INTEGRATION_ID},
+    {"type": "marketplace/repository/refresh", "repository": REPOSITORY_INTEGRATION_ID},
+    {
+        "type": "marketplace/repository/releases",
+        "repository_id": REPOSITORY_INTEGRATION_ID,
+    },
+    {
+        "type": "marketplace/repository/uninstall",
+        "repository": REPOSITORY_INTEGRATION_ID,
+    },
+    {"type": "marketplace/github/connect"},
+)
+
+RATE_LIMITED = {"message": "API rate limit exceeded for 127.0.0.1."}
+
+
+def translated_error(
+    code: str, translation_key: str, message: str, **placeholders: str
+) -> dict[str, Any]:
+    """Return an error the Marketplace answers with, translated for the panel."""
+    return {
+        "code": code,
+        "message": message,
+        "translation_key": translation_key,
+        "translation_domain": DOMAIN,
+        "translation_placeholders": placeholders or None,
+    }
+
+
+# Every command that resolves a repository by id, with the field it uses.
+REPOSITORY_COMMANDS: tuple[tuple[str, str, dict[str, Any]], ...] = (
+    ("marketplace/repository/info", "repository_id", {}),
+    ("marketplace/repository/install", "repository", {}),
+    ("marketplace/repository/ignore", "repository", {}),
+    ("marketplace/repository/version", "repository", {"version": "1.0.0"}),
+    ("marketplace/repository/beta", "repository", {"show_beta": True}),
+    ("marketplace/repository/refresh", "repository", {}),
+    ("marketplace/repository/uninstall", "repository", {}),
+    ("marketplace/repository/releases", "repository_id", {}),
+    ("marketplace/repositories/remove", "repository", {}),
+    ("marketplace/repositories/clear_new", "repository", {}),
+)
+
+
+@pytest.mark.parametrize(
+    "message", [pytest.param(command, id=command["type"]) for command in COMMANDS]
+)
+@pytest.mark.usefixtures("init_integration")
+async def test_commands_require_admin(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_read_only_access_token: str,
+    message: dict[str, Any],
+) -> None:
+    """Test that every command is refused for a non admin user."""
+    client = await hass_ws_client(hass, hass_read_only_access_token)
+
+    await client.send_json_auto_id(message)
+    response = await client.receive_json()
+
+    assert not response["success"]
+    assert response["error"]["code"] == "unauthorized"
+
+
+@pytest.mark.parametrize(
+    ("command", "field", "extra"),
+    [
+        pytest.param(command, field, extra, id=command)
+        for command, field, extra in REPOSITORY_COMMANDS
+    ],
+)
+@pytest.mark.usefixtures("init_integration")
+async def test_unknown_repository(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    command: str,
+    field: str,
+    extra: dict[str, Any],
+) -> None:
+    """Test that every repository command reports an unknown repository."""
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id({"type": command, field: "0", **extra})
+    response = await client.receive_json()
+
+    assert not response["success"]
+    assert response["error"] == translated_error(
+        "repository_not_found",
+        "repository_not_found",
+        "The Marketplace does not know the repository with ID 0",
+        repository="0",
+    )
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_info(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the information about the Marketplace itself."""
+    client = await hass_ws_client(hass)
+    freezer.move_to(WARNING_ACCEPTANCE["accepted_at"])
+
+    await client.send_json_auto_id({"type": "marketplace/info"})
+    response = await client.receive_json()
+
+    assert response["success"]
+    # The categories are a set, so they are asserted separately in their own test
+    assert response["result"] | {"categories": None} == {
+        "categories": None,
+        "disabled_reason": None,
+        "github_connected": True,
+        "has_pending_tasks": False,
+        "lovelace_mode": "storage",
+        "stage": "running",
+        "startup": False,
+        "version": HA_VERSION,
+        "warning_accepted": True,
+    }
+
+
+async def test_info_follows_the_loaded_entry(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test the commands registered at start keep working across a reload."""
+    client = await hass_ws_client(hass)
+
+    assert await hass.config_entries.async_reload(init_integration.entry_id)
+    await hass.async_block_till_done()
+
+    await client.send_json_auto_id({"type": "marketplace/info"})
+    assert (await client.receive_json())["success"]
+
+    assert await hass.config_entries.async_unload(init_integration.entry_id)
+    await hass.async_block_till_done()
+
+    await client.send_json_auto_id({"type": "marketplace/info"})
+    response = await client.receive_json()
+
+    assert not response["success"]
+    assert response["error"] == translated_error(
+        "not_loaded", "not_loaded", "The Marketplace is not loaded"
+    )
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_subscribe(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test that a subscription forwards the Marketplace events."""
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {"type": "marketplace/subscribe", "signal": MarketplaceSignal.REPOSITORY}
+    )
+    assert (await client.receive_json())["success"]
+
+    async_dispatcher_send(
+        hass, MarketplaceSignal.REPOSITORY, {"action": "update", "id": 1337}
+    )
+
+    response = await client.receive_json()
+    assert response["type"] == "event"
+    assert response["event"] == {"action": "update", "id": 1337}
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_subscribe_to_another_signal(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test a subscription only forwards the signals of the Marketplace."""
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {"type": "marketplace/subscribe", "signal": "homeassistant_stop"}
+    )
+    response = await client.receive_json()
+
+    assert response["error"]["code"] == "invalid_format"
+
+
+@pytest.mark.parametrize(
+    "message",
+    [
+        pytest.param(
+            {"type": "marketplace/repository/install", "version": VERSION_ESCAPE},
+            id="install",
+        ),
+        pytest.param(
+            {"type": "marketplace/repository/version", "version": VERSION_ESCAPE},
+            id="version",
+        ),
+    ],
+)
+async def test_commands_refuse_a_version_that_is_a_path(
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
+    message: dict[str, Any],
+) -> None:
+    """Test a version can not point the install at another repository."""
+    repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(message | {"repository": REPOSITORY_INTEGRATION_ID})
+    response = await client.receive_json()
+
+    assert response["error"]["code"] == "invalid_format"
+    assert repository.data.selected_tag is None
+    assert not repository.data.installed
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_repository_info(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the information about a single repository."""
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {
+            "type": "marketplace/repository/info",
+            "repository_id": REPOSITORY_INTEGRATION_ID,
+        }
+    )
+    response = await client.receive_json()
+
+    assert response["success"]
+    assert response["result"] == snapshot(exclude=props("local_path"))
+
+
+@pytest.mark.usefixtures("stored_repositories")
+@pytest.mark.parametrize(
+    ("repository_id", "has_entity"),
+    [
+        pytest.param(REPOSITORY_INTEGRATION_ID, True, id="installed"),
+        pytest.param("1296266", False, id="not_installed"),
+    ],
+)
+async def test_repository_info_names_the_update_entity(
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
+    entity_registry: er.EntityRegistry,
+    repository_id: str,
+    has_entity: bool,
+) -> None:
+    """Test the page learns which update entity to open for an update."""
+    marketplace.repositories.get_by_id(repository_id).updated_info = True
+    entity_id = entity_registry.async_get_entity_id("update", DOMAIN, repository_id)
+    assert (entity_id is not None) is has_entity
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {"type": "marketplace/repository/info", "repository_id": repository_id}
+    )
+    response = await client.receive_json()
+
+    assert response["success"]
+    assert response["result"]["update_entity_id"] == entity_id
+
+
+@pytest.mark.parametrize(
+    ("domain", "replaces_built_in"),
+    [
+        pytest.param("light", True, id="built_in"),
+        pytest.param("example", False, id="custom"),
+        pytest.param(None, False, id="no_domain"),
+    ],
+)
+async def test_repository_info_replaces_built_in(
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
+    domain: str | None,
+    replaces_built_in: bool,
+) -> None:
+    """Test the information tells when an integration takes a built-in domain."""
+    repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
+    repository.data.domain = domain
+    repository.updated_info = True
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {
+            "type": "marketplace/repository/info",
+            "repository_id": REPOSITORY_INTEGRATION_ID,
+        }
+    )
+    response = await client.receive_json()
+
+    assert response["success"]
+    assert response["result"]["replaces_built_in"] is replaces_built_in
+
+
+async def test_repository_info_clears_new(
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test that looking at a repository stops it from being new."""
+    repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
+    repository.data.new = True
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {
+            "type": "marketplace/repository/info",
+            "repository_id": REPOSITORY_INTEGRATION_ID,
+        }
+    )
+    assert (await client.receive_json())["success"]
+
+    assert repository.data.new is False
+
+
+async def test_repository_info_survives_a_broken_update(
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that a repository that can not be refreshed still reports back."""
+    repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
+
+    client = await hass_ws_client(hass)
+    with patch.object(
+        repository, "update_repository", side_effect=MarketplaceError("Nope")
+    ):
+        await client.send_json_auto_id(
+            {
+                "type": "marketplace/repository/info",
+                "repository_id": REPOSITORY_INTEGRATION_ID,
+            }
+        )
+        response = await client.receive_json()
+
+    assert response["success"]
+    assert "Nope" in caplog.text
+
+
+async def test_repositories_list(
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test listing every known repository."""
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id({"type": "marketplace/repositories/list"})
+    response = await client.receive_json()
+
+    assert response["success"]
+    assert {repository["full_name"] for repository in response["result"]} == {
+        repository.data.full_name for repository in marketplace.repositories.list_all
+    }
+
+
+async def test_repositories_list_without_a_description(
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test a repository the catalog has no description for lists an empty one."""
+    marketplace.repositories.get_by_id(
+        REPOSITORY_INTEGRATION_ID
+    ).data.description = None
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id({"type": "marketplace/repositories/list"})
+    response = await client.receive_json()
+
+    listed = next(
+        repository
+        for repository in response["result"]
+        if repository["id"] == REPOSITORY_INTEGRATION_ID
+    )
+    assert listed["description"] == ""
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_repositories_list_by_category(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test listing the repositories of a single category."""
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {"type": "marketplace/repositories/list", "categories": ["integration"]}
+    )
+    response = await client.receive_json()
+
+    assert response["success"]
+    assert [repository["full_name"] for repository in response["result"]] == [
+        REPOSITORY_INTEGRATION
+    ]
+
+
+async def test_repositories_list_ignores_country(
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test that a repository with a country in its hacs.json is listed regardless."""
+    repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
+    repository.repository_manifest = RepositoryManifest.from_dict(
+        {"name": "Basic integration", "country": ["NO"]}
+    )
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id({"type": "marketplace/repositories/list"})
+    response = await client.receive_json()
+
+    assert response["success"]
+    listed = next(
+        item
+        for item in response["result"]
+        if item["full_name"] == REPOSITORY_INTEGRATION
+    )
+    assert "country" not in listed
+
+
+async def test_removing_a_custom_repository_tells_the_panel(
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test the panel hears a custom repository is gone, like one added."""
+    await marketplace.async_register_repository(
+        "hacs-test-org/integration-basic-custom", RepositoryCategory.INTEGRATION
+    )
+    repository = marketplace.repositories.get_by_full_name(
+        "hacs-test-org/integration-basic-custom"
+    )
+    signals: list[dict[str, Any]] = []
+    async_dispatcher_connect(hass, MarketplaceSignal.REPOSITORY, signals.append)
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {"type": "marketplace/repositories/remove", "repository": repository.data.id}
+    )
+    assert (await client.receive_json())["success"]
+    await hass.async_block_till_done()
+
+    # The panel refetches on it, the dialog that removed it is not in the panel
+    assert signals
+
+
+async def test_repositories_removed(
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test listing the repositories that were removed from the Marketplace."""
+    removed = marketplace.repositories.removed_repository("removed/repository")
+    removed.update_data({"reason": "Gone", "removal_type": "remove"})
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id({"type": "marketplace/repositories/removed"})
+    response = await client.receive_json()
+
+    assert response["success"]
+    assert {"repository": "removed/repository", "reason": "Gone"}.items() <= next(
+        entry
+        for entry in response["result"]
+        if entry["repository"] == "removed/repository"
+    ).items()
+
+
+async def test_repositories_removed_skips_ignored(
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test that an ignored repository is not reported as removed."""
+    marketplace.repositories.removed_repository("removed/repository")
+    marketplace.common.ignored_repositories.add("removed/repository")
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id({"type": "marketplace/repositories/removed"})
+    response = await client.receive_json()
+
+    assert response["success"]
+    assert "removed/repository" not in [
+        entry["repository"] for entry in response["result"]
+    ]
+
+
+async def test_repositories_clear_new_for_categories(
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test clearing the new flag of a whole category."""
+    integration = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
+    plugin = marketplace.repositories.get_by_full_name("hacs-test-org/plugin-basic")
+    integration.data.new = True
+    plugin.data.new = True
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {"type": "marketplace/repositories/clear_new", "categories": ["integration"]}
+    )
+    assert (await client.receive_json())["success"]
+
+    assert integration.data.new is False
+    assert plugin.data.new is True
+
+
+async def test_repositories_clear_new_for_one_repository(
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test clearing the new flag of a single repository."""
+    repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
+    repository.data.new = True
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {
+            "type": "marketplace/repositories/clear_new",
+            "repository": REPOSITORY_INTEGRATION_ID,
+        }
+    )
+    assert (await client.receive_json())["success"]
+
+    assert repository.data.new is False
+
+
+@pytest.mark.parametrize(
+    ("repository", "categories"),
+    [
+        pytest.param(
+            "hacs-test-org/integration-basic", ["integration"], id="integration"
+        ),
+        pytest.param("hacs-test-org/plugin-basic", ["plugin"], id="plugin"),
+        pytest.param("hacs-test-org/plugin-custom-dist", ["plugin"], id="plugin_dist"),
+        pytest.param("hacs-test-org/theme-basic", ["theme"], id="theme"),
+        pytest.param("hacs-test-org/template-basic", ["template"], id="template"),
+        pytest.param("hacs-test-org/integration-invalid", [], id="nothing"),
+    ],
+)
+@pytest.mark.usefixtures("init_integration")
+async def test_repositories_detect(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    repository: str,
+    categories: list[str],
+) -> None:
+    """Test what a repository holds is told by the rules its install follows."""
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {
+            "type": "marketplace/repositories/detect",
+            "repository": f"https://github.com/{repository}",
+        }
+    )
+    response = await client.receive_json()
+
+    assert response["success"]
+    assert response["result"] == {"categories": categories}
+
+
+@pytest.mark.parametrize(
+    ("repository", "error"),
+    [
+        pytest.param(
+            "not a link",
+            translated_error(
+                "invalid_format",
+                "invalid_repository",
+                "Could not read a GitHub repository from not a link",
+                repository="not a link",
+            ),
+            id="not_a_link",
+        ),
+        pytest.param(
+            "https://github.com/home-assistant/core",
+            translated_error(
+                "core_repository",
+                "core_repository",
+                "The integrations of Home Assistant itself come with Home"
+                " Assistant, there is nothing to add",
+            ),
+            id="core",
+        ),
+        pytest.param(
+            "https://github.com/hacs-test-org/addon-basic",
+            translated_error(
+                "app_repository",
+                "app_repository",
+                "hacs-test-org/addon-basic holds apps, the Marketplace does not"
+                " install apps",
+                repository="hacs-test-org/addon-basic",
+            ),
+            id="apps",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("init_integration")
+async def test_repositories_detect_refused(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    repository: str,
+    error: dict[str, Any],
+) -> None:
+    """Test what can not be added is told before anything is guessed."""
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {"type": "marketplace/repositories/detect", "repository": repository}
+    )
+    response = await client.receive_json()
+
+    assert not response["success"]
+    assert response["error"] == error
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_repositories_detect_what_github_does_not_know(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    response_mocker: MarketplaceResponses,
+) -> None:
+    """Test a repository GitHub does not know is answered, not guessed at."""
+    url = "https://api.github.com/repos/owner/does-not-exist"
+    response_mocker.add(
+        url,
+        mocked_response(
+            url, status=HTTPStatus.NOT_FOUND, json_content={"message": "Not Found"}
+        ),
+    )
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {
+            "type": "marketplace/repositories/detect",
+            "repository": "https://github.com/owner/does-not-exist",
+        }
+    )
+    response = await client.receive_json()
+
+    assert not response["success"]
+    assert response["error"]["code"] == "add_failed"
+    assert response["error"]["translation_key"] == "github_failed"
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_repositories_add_existing(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test adding a repository the Marketplace already knows is answered."""
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {
+            "type": "marketplace/repositories/add",
+            "repository": REPOSITORY_INTEGRATION,
+            "category": "integration",
+        }
+    )
+    response = await client.receive_json()
+
+    assert not response["success"]
+    assert response["error"] == translated_error(
+        "repository_exists",
+        "repository_exists",
+        f"{REPOSITORY_INTEGRATION} is already in the Marketplace",
+        repository=REPOSITORY_INTEGRATION,
+    )
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_repositories_add_unknown_category(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test adding a repository to a category that is not active is refused."""
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {
+            "type": "marketplace/repositories/add",
+            "repository": "test/test",
+            "category": "netdaemon",
+        }
+    )
+    response = await client.receive_json()
+
+    assert not response["success"]
+    assert response["error"] == translated_error(
+        "invalid_format",
+        "invalid_category",
+        "Repositories cannot be added to the netdaemon category",
+        category="netdaemon",
+    )
+    assert get_marketplace(hass).repositories.get_by_full_name("test/test") is None
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_repositories_add_invalid_url(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test that a URL no repository can be read from is answered."""
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {
+            "type": "marketplace/repositories/add",
+            "repository": "https://example.com/",
+            "category": "integration",
+        }
+    )
+    response = await client.receive_json()
+
+    assert not response["success"]
+    assert response["error"] == translated_error(
+        "invalid_format",
+        "invalid_repository",
+        "Could not read a GitHub repository from https://example.com/",
+        repository="https://example.com/",
+    )
+
+
+async def test_repositories_remove(
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test unregistering a repository from the Marketplace."""
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {
+            "type": "marketplace/repositories/remove",
+            "repository": REPOSITORY_INTEGRATION_ID,
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] is None
+
+    assert marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID) is None
+
+
+async def test_repositories_remove_refuses_installed(
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test an installed repository is not forgotten while its files stay."""
+    repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
+    repository.data.installed = True
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {
+            "type": "marketplace/repositories/remove",
+            "repository": REPOSITORY_INTEGRATION_ID,
+        }
+    )
+    response = await client.receive_json()
+
+    assert not response["success"]
+    assert response["error"]["code"] == "repository_installed"
+    assert marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID) is repository
+
+
+async def test_repository_ignore(
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test ignoring a repository."""
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {
+            "type": "marketplace/repository/ignore",
+            "repository": REPOSITORY_INTEGRATION_ID,
+        }
+    )
+    assert (await client.receive_json())["success"]
+
+    assert REPOSITORY_INTEGRATION in marketplace.common.ignored_repositories
+
+
+async def test_repository_version(
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test pinning a repository to a version."""
+    repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
+
+    client = await hass_ws_client(hass)
+    with patch.object(repository, "update_repository"):
+        await client.send_json_auto_id(
+            {
+                "type": "marketplace/repository/version",
+                "repository": REPOSITORY_INTEGRATION_ID,
+                "version": "1.5.0",
+            }
+        )
+        response = await client.receive_json()
+        assert response["success"]
+        assert response["result"] is None
+
+    assert repository.data.selected_tag == "1.5.0"
+
+
+async def test_repository_version_default_branch(
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test that selecting the default branch stops pinning the repository."""
+    repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
+    await repository.update_repository(force=True)
+    assert repository.data.default_branch == "main"
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {
+            "type": "marketplace/repository/version",
+            "repository": REPOSITORY_INTEGRATION_ID,
+            "version": "main",
+        }
+    )
+    assert (await client.receive_json())["success"]
+
+    assert repository.data.selected_tag is None
+
+
+async def test_repository_beta(
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test opting a repository in to pre-releases."""
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {
+            "type": "marketplace/repository/beta",
+            "repository": REPOSITORY_INTEGRATION_ID,
+            "show_beta": True,
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] is None
+
+    assert marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID).data.show_beta
+
+
+async def test_repository_refresh(
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test refreshing a single repository."""
+    repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
+
+    client = await hass_ws_client(hass)
+    with patch.object(
+        repository, "update_repository", wraps=repository.update_repository
+    ) as update:
+        await client.send_json_auto_id(
+            {
+                "type": "marketplace/repository/refresh",
+                "repository": REPOSITORY_INTEGRATION_ID,
+            }
+        )
+        response = await client.receive_json()
+        assert response["success"]
+        assert response["result"] is None
+
+    assert update.call_args.kwargs == {"ignore_issues": True, "force": True}
+
+
+async def test_repository_install(
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test installing a repository."""
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {
+            "type": "marketplace/repository/install",
+            "repository": REPOSITORY_INTEGRATION_ID,
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] is None
+
+    assert marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID).data.installed
+
+
+@pytest.mark.parametrize(
+    ("message", "installed"),
+    [
+        pytest.param({}, False, id="not_confirmed"),
+        pytest.param({"confirm_replace_built_in": True}, True, id="confirmed"),
+    ],
+)
+async def test_install_replacing_a_built_in_needs_confirmation(
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
+    message: dict[str, Any],
+    installed: bool,
+) -> None:
+    """Test a first install over a built-in integration has to be confirmed."""
+    repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
+    client = await hass_ws_client(hass)
+
+    with patch.object(repository, "async_replaces_built_in", return_value=True):
+        await client.send_json_auto_id(
+            {
+                "type": "marketplace/repository/install",
+                "repository": REPOSITORY_INTEGRATION_ID,
+            }
+            | message
+        )
+        response = await client.receive_json()
+
+    assert response["success"] is installed
+    assert repository.data.installed is installed
+
+
+async def test_install_confirms_the_domain_of_the_version_it_writes(
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test a version taking a built-in domain needs the confirmation too."""
+    repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
+    assert not await repository.async_replaces_built_in()
+    use_manifest = IntegrationRepository._use_integration_manifest
+
+    def built_in_manifest(self: IntegrationRepository, manifest: dict) -> None:
+        use_manifest(self, manifest | {"domain": "light"})
+
+    client = await hass_ws_client(hass)
+    with patch.object(
+        IntegrationRepository, "_use_integration_manifest", built_in_manifest
+    ):
+        await client.send_json_auto_id(
+            {
+                "type": "marketplace/repository/install",
+                "repository": REPOSITORY_INTEGRATION_ID,
+            }
+        )
+        response = await client.receive_json()
+
+    assert response["error"]["translation_key"] == "replaces_built_in_not_confirmed"
+    assert not repository.data.installed
+    assert not Path(hass.config.path("custom_components", "light")).exists()
+
+
+async def test_update_replacing_a_built_in_needs_no_new_confirmation(
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test a repository already installed was confirmed when it was."""
+    repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
+    repository.data.installed = True
+    client = await hass_ws_client(hass)
+
+    with (
+        patch.object(repository, "async_replaces_built_in", return_value=True),
+        patch.object(repository, "async_install_repository") as install,
+    ):
+        await client.send_json_auto_id(
+            {
+                "type": "marketplace/repository/install",
+                "repository": REPOSITORY_INTEGRATION_ID,
+            }
+        )
+        assert (await client.receive_json())["success"]
+
+    install.assert_called_once()
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_repositories_add_invalid_repository(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test adding a repository that fails validation answers why."""
+    client = await hass_ws_client(hass)
+
+    async def invalid(self: IntegrationRepository) -> bool:
+        self.validate.errors.append(
+            MarketplaceError(
+                translation_key="structure_not_compliant",
+                translation_placeholders={
+                    "repository": "owner/invalid",
+                    "version": "main",
+                },
+            )
+        )
+        return False
+
+    with patch.object(IntegrationRepository, "validate_repository", invalid):
+        await client.send_json_auto_id(
+            {
+                "type": "marketplace/repositories/add",
+                "repository": "owner/invalid",
+                "category": "integration",
+            }
+        )
+        response = await client.receive_json()
+
+    assert not response["success"]
+    assert response["error"] == translated_error(
+        "add_failed",
+        "structure_not_compliant",
+        "owner/invalid has no content the Marketplace can install in version main",
+        repository="owner/invalid",
+        version="main",
+    )
+
+
+async def test_repository_install_failure(
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test an install that can not be completed."""
+    repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
+
+    client = await hass_ws_client(hass)
+    with patch.object(
+        repository,
+        "async_install_repository",
+        side_effect=MarketplaceError("Could not install"),
+    ):
+        await client.send_json_auto_id(
+            {
+                "type": "marketplace/repository/install",
+                "repository": REPOSITORY_INTEGRATION_ID,
+            }
+        )
+        response = await client.receive_json()
+
+    assert not response["success"]
+    assert response["error"] == translated_error(
+        "error",
+        "install_failed",
+        f"Installing {REPOSITORY_INTEGRATION} failed: Could not install",
+        repository=REPOSITORY_INTEGRATION,
+        error="Could not install",
+    )
+
+
+async def test_repository_uninstall(
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test uninstalling a repository."""
+    repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {
+            "type": "marketplace/repository/install",
+            "repository": REPOSITORY_INTEGRATION_ID,
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] is None
+
+    await client.send_json_auto_id(
+        {
+            "type": "marketplace/repository/uninstall",
+            "repository": REPOSITORY_INTEGRATION_ID,
+        }
+    )
+    assert (await client.receive_json())["success"]
+
+    assert repository.data.installed is False
+
+
+async def test_repository_uninstall_of_what_is_not_installed(
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test nothing is removed for a repository that is not installed.
+
+    Its folder can be the one another repository installed to.
+    """
+    repository = marketplace.repositories.get_by_id(REPOSITORY_PLUGIN_ID)
+    assert not repository.data.installed
+    client = await hass_ws_client(hass)
+
+    with patch.object(type(repository), "remove_local_directory") as remove:
+        await client.send_json_auto_id(
+            {
+                "type": "marketplace/repository/uninstall",
+                "repository": REPOSITORY_PLUGIN_ID,
+            }
+        )
+        response = await client.receive_json()
+
+    assert response["error"]["code"] == "repository_not_installed"
+    assert response["error"]["translation_key"] == "repository_not_installed"
+    remove.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "source",
+    [
+        pytest.param(SOURCE_USER, id="set_up"),
+        pytest.param(SOURCE_IGNORE, id="ignored"),
+    ],
+)
+async def test_repository_uninstall_refused_while_in_use(
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
+    source: str,
+) -> None:
+    """Test an integration that still has entries is not pulled from under them."""
+    repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {
+            "type": "marketplace/repository/install",
+            "repository": REPOSITORY_INTEGRATION_ID,
+        }
+    )
+    assert (await client.receive_json())["success"]
+    MockConfigEntry(domain=repository.data.domain, source=source).add_to_hass(hass)
+
+    await client.send_json_auto_id(
+        {
+            "type": "marketplace/repository/uninstall",
+            "repository": REPOSITORY_INTEGRATION_ID,
+        }
+    )
+    response = await client.receive_json()
+
+    assert response["error"]["code"] == "repository_in_use"
+    assert repository.data.installed is True
+
+
+async def test_repository_releases(
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test listing the releases of a repository."""
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {
+            "type": "marketplace/repository/releases",
+            "repository_id": REPOSITORY_INTEGRATION_ID,
+        }
+    )
+    response = await client.receive_json()
+
+    assert response["success"]
+    assert [entry["tag"] for entry in response["result"]] == [
+        "3.0.0",
+        "2.5.0",
+        "2.0.0",
+        "1.0.0",
+    ]
+
+
+async def test_repository_releases_failure(
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test releases that can not be fetched."""
+    repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
+
+    client = await hass_ws_client(hass)
+    with patch.object(
+        repository, "async_get_releases", side_effect=MarketplaceError("Rate limited")
+    ):
+        await client.send_json_auto_id(
+            {
+                "type": "marketplace/repository/releases",
+                "repository_id": REPOSITORY_INTEGRATION_ID,
+            }
+        )
+        response = await client.receive_json()
+
+    assert not response["success"]
+    assert response["error"] == translated_error(
+        "unknown",
+        "releases_failed",
+        f"Could not get the releases of {REPOSITORY_INTEGRATION}: Rate limited",
+        repository=REPOSITORY_INTEGRATION,
+        error="Rate limited",
+    )
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_critical_list_without_data(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test listing critical repositories before any were stored."""
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id({"type": "marketplace/critical/list"})
+    response = await client.receive_json()
+
+    assert response["success"]
+    assert response["result"] == []
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_critical_list(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test listing the stored critical repositories."""
+    await async_save_to_storage(hass, "critical", [CRITICAL_REPOSITORY])
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id({"type": "marketplace/critical/list"})
+    response = await client.receive_json()
+
+    assert response["success"]
+    assert response["result"] == [CRITICAL_REPOSITORY]
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_critical_acknowledge(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test acknowledging a critical repository."""
+    await async_save_to_storage(hass, "critical", [CRITICAL_REPOSITORY])
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {
+            "type": "marketplace/critical/acknowledge",
+            "repository": "critical/repository",
+        }
+    )
+    response = await client.receive_json()
+
+    assert response["success"]
+    assert response["result"] == [CRITICAL_REPOSITORY | {"acknowledged": True}]
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_critical_acknowledge_unknown_repository(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test acknowledging a repository that is not critical."""
+    await async_save_to_storage(hass, "critical", [CRITICAL_REPOSITORY])
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {"type": "marketplace/critical/acknowledge", "repository": "other/repository"}
+    )
+    response = await client.receive_json()
+
+    assert response["success"]
+    assert response["result"] == [CRITICAL_REPOSITORY]
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_critical_acknowledge_without_a_repository(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test that the command needs to know what to acknowledge."""
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id({"type": "marketplace/critical/acknowledge"})
+    response = await client.receive_json()
+
+    assert not response["success"]
+    assert response["error"]["code"] == "invalid_format"
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_registered_commands(hass: HomeAssistant) -> None:
+    """Test that every Marketplace command is registered on the connection."""
+    handlers = hass.data["websocket_api"]
+
+    assert sorted(
+        command for command in handlers if command.startswith(f"{DOMAIN}/")
+    ) == sorted({command["type"] for command in COMMANDS})
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_categories_are_reported(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test that the active categories are part of the Marketplace information."""
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id({"type": "marketplace/info"})
+    response = await client.receive_json()
+
+    assert set(response["result"]["categories"]) == {
+        RepositoryCategory.INTEGRATION,
+        RepositoryCategory.PLUGIN,
+        RepositoryCategory.TEMPLATE,
+        RepositoryCategory.THEME,
+    }
+
+
+@pytest.mark.parametrize(
+    "message",
+    [
+        pytest.param(command, id=command["type"])
+        for command in COMMANDS
+        if command["type"] not in COMMANDS_WITHOUT_MARKETPLACE
+    ],
+)
+async def test_commands_before_the_marketplace_is_loaded(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    message: dict[str, Any],
+) -> None:
+    """Test the commands answer while there is no loaded Marketplace."""
+    MockConfigEntry(
+        domain=DOMAIN, data={}, disabled_by=ConfigEntryDisabler.USER
+    ).add_to_hass(hass)
+    assert await async_setup_component(hass, DOMAIN, {})
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(message)
+    response = await client.receive_json()
+
+    assert not response["success"]
+    assert response["error"] == translated_error(
+        "not_loaded", "not_loaded", "The Marketplace is not loaded"
+    )
+
+
+@pytest.mark.parametrize("github_token", [None])
+@pytest.mark.usefixtures("init_integration")
+async def test_info_without_github(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test the information tells the panel no GitHub account is connected."""
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id({"type": "marketplace/info"})
+    response = await client.receive_json()
+
+    assert response["success"]
+    assert response["result"]["github_connected"] is False
+    assert response["result"]["disabled_reason"] is None
+
+
+@pytest.mark.parametrize(
+    "message",
+    [pytest.param(command, id=command["type"]) for command in GITHUB_COMMANDS],
+)
+@pytest.mark.parametrize("github_token", [None])
+@pytest.mark.usefixtures("init_integration")
+async def test_commands_need_github(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    message: dict[str, Any],
+) -> None:
+    """Test the commands that need a GitHub connection are refused."""
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(message)
+    response = await client.receive_json()
+
+    assert not response["success"]
+    assert response["error"] == translated_error(
+        "github_not_connected",
+        "github_not_connected",
+        "Connect a GitHub account to the Marketplace first",
+    )
+    assert not github_api_calls(aioclient_mock)
+
+
+@pytest.mark.parametrize("github_token", [None])
+async def test_connect_github(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    init_integration: MockConfigEntry,
+    github_device_client: AsyncMock,
+    device_activation_event: asyncio.Event,
+    warning_accepted: dict[str, Any],
+) -> None:
+    """Test connecting a GitHub account from the panel."""
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id({"type": "marketplace/github/connect"})
+    response = await client.receive_json()
+
+    assert response["success"]
+    flow_id = response["result"]["flow_id"]
+
+    flow = hass.config_entries.flow.async_get(flow_id)
+    assert flow["context"]["source"] == SOURCE_RECONFIGURE
+    assert flow["context"]["entry_id"] == init_integration.entry_id
+    assert flow["step_id"] == "reconfigure"
+
+    await hass.config_entries.flow.async_configure(flow_id, {})
+    device_activation_event.set()
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_configure(flow_id)
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert init_integration.data == {
+        CONF_TOKEN: TOKEN,
+        CONF_WARNING_ACCEPTED: warning_accepted,
+    }
+    assert init_integration.state is ConfigEntryState.LOADED
+
+    await client.send_json_auto_id({"type": "marketplace/info"})
+    response = await client.receive_json()
+
+    assert response["result"]["github_connected"] is True
+
+
+@pytest.mark.parametrize(
+    "message",
+    [
+        pytest.param(command, id=command["type"])
+        for command in ANONYMOUS_GITHUB_COMMANDS
+    ],
+)
+@pytest.mark.parametrize("github_token", [None])
+async def test_commands_without_github(
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
+    message: dict[str, Any],
+) -> None:
+    """Test installing and updating work without a GitHub connection."""
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(message)
+    response = await client.receive_json()
+
+    assert response["success"]
+    assert not marketplace.system.disabled
+
+
+@pytest.mark.parametrize(
+    "message",
+    [
+        pytest.param(command, id=command["type"])
+        for command in ANONYMOUS_GITHUB_COMMANDS
+    ],
+)
+@pytest.mark.parametrize(
+    "url",
+    [
+        pytest.param(
+            f"https://api.github.com/repos/{REPOSITORY_INTEGRATION}", id="repository"
+        ),
+        pytest.param(
+            f"https://api.github.com/repos/{REPOSITORY_INTEGRATION}/releases",
+            id="releases",
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    "status",
+    [
+        pytest.param(HTTPStatus.FORBIDDEN, id="403"),
+        pytest.param(HTTPStatus.TOO_MANY_REQUESTS, id="429"),
+    ],
+)
+@pytest.mark.parametrize("github_token", [None])
+async def test_commands_rate_limited_without_github(
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
+    response_mocker: MarketplaceResponses,
+    message: dict[str, Any],
+    url: str,
+    status: HTTPStatus,
+) -> None:
+    """Test running out of anonymous requests fails only that one action."""
+    repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
+    repository.data.releases = True
+    response_mocker.add(
+        url,
+        mocked_response(url, status=status, json_content=RATE_LIMITED),
+        keep=True,
+    )
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(message)
+    response = await client.receive_json()
+    await hass.async_block_till_done()
+
+    assert not response["success"]
+    assert response["error"]["code"] == "github_rate_limited"
+    assert not marketplace.system.disabled
+    assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    # Nothing the action set out to change sticks
+    assert repository.data.releases is True
+    assert repository.data.selected_tag is None
+    assert repository.data.show_beta is False
+    assert repository.data.installed is False
+
+
+@pytest.mark.parametrize(
+    "message",
+    [
+        pytest.param(command, id=command["type"])
+        for command in ANONYMOUS_GITHUB_COMMANDS
+        if command["type"] != "marketplace/repository/install"
+    ],
+)
+async def test_commands_roll_back_when_the_refresh_fails(
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
+    message: dict[str, Any],
+) -> None:
+    """Test a refresh that fails leaves the repository as it was."""
+    repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
+    client = await hass_ws_client(hass)
+
+    with patch.object(
+        repository,
+        "update_repository",
+        side_effect=MarketplaceError("Repository structure is not compliant"),
+    ):
+        await client.send_json_auto_id(message)
+        response = await client.receive_json()
+
+    assert response["error"]["translation_key"] == "refresh_failed"
+    assert repository.data.selected_tag is None
+    assert repository.data.show_beta is False
+
+
+@pytest.mark.parametrize("github_token", [None])
+async def test_repository_releases_rate_limited_without_github(
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
+    response_mocker: MarketplaceResponses,
+) -> None:
+    """Test running out of anonymous requests answers clearly and disables nothing."""
+    url = f"https://api.github.com/repos/{REPOSITORY_INTEGRATION}/releases"
+    response_mocker.add(
+        url,
+        mocked_response(url, status=HTTPStatus.FORBIDDEN, json_content=RATE_LIMITED),
+    )
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {
+            "type": "marketplace/repository/releases",
+            "repository_id": REPOSITORY_INTEGRATION_ID,
+        }
+    )
+    response = await client.receive_json()
+    await hass.async_block_till_done()
+
+    assert not response["success"]
+    assert response["error"]["code"] == "github_rate_limited"
+    assert not marketplace.system.disabled
+    assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+
+
+@pytest.mark.usefixtures("marketplace")
+async def test_repository_releases_rate_limited_with_github(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    response_mocker: MarketplaceResponses,
+) -> None:
+    """Test a connected account is not told to connect GitHub for a higher limit."""
+    url = f"https://api.github.com/repos/{REPOSITORY_INTEGRATION}/releases"
+    response_mocker.add(
+        url,
+        mocked_response(url, status=HTTPStatus.FORBIDDEN, json_content=RATE_LIMITED),
+    )
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {
+            "type": "marketplace/repository/releases",
+            "repository_id": REPOSITORY_INTEGRATION_ID,
+        }
+    )
+    response = await client.receive_json()
+
+    assert not response["success"]
+    # Try again later, not connect GitHub, that is connected already
+    assert response["error"]["translation_key"] == "rate_limited"
+
+
+@pytest.mark.parametrize("github_token", [None])
+async def test_repository_info_rate_limited_without_github(
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
+    response_mocker: MarketplaceResponses,
+) -> None:
+    """Test the repository page still answers when the anonymous limit ran out."""
+    repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
+    repository.data.releases = True
+
+    url = f"https://api.github.com/repos/{REPOSITORY_INTEGRATION}/releases"
+    response_mocker.add(
+        url,
+        mocked_response(url, status=HTTPStatus.FORBIDDEN, json_content=RATE_LIMITED),
+    )
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {
+            "type": "marketplace/repository/info",
+            "repository_id": REPOSITORY_INTEGRATION_ID,
+        }
+    )
+    response = await client.receive_json()
+
+    assert response["success"]
+    assert not marketplace.system.disabled
+    # Being rate limited is not the same as having no releases
+    assert repository.data.releases is True
+
+
+@pytest.mark.parametrize("github_token", [None])
+async def test_repository_info_shows_the_readme_when_rate_limited(
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
+    response_mocker: MarketplaceResponses,
+) -> None:
+    """Test the README still shows once the anonymous limit ran out."""
+    repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
+    repository.data.releases = True
+    # As after a restart: the tree that names the README was never listed
+    repository.treefiles = []
+    repository.additional_info = ""
+
+    url = f"https://api.github.com/repos/{REPOSITORY_INTEGRATION}/releases"
+    response_mocker.add(
+        url,
+        mocked_response(url, status=HTTPStatus.FORBIDDEN, json_content=RATE_LIMITED),
+    )
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {
+            "type": "marketplace/repository/info",
+            "repository_id": REPOSITORY_INTEGRATION_ID,
+        }
+    )
+    response = await client.receive_json()
+
+    assert response["success"]
+    # The README comes from raw.githubusercontent.com, the limit does not cover it
+    assert response["result"]["additional_info"]
+
+
+@pytest.mark.parametrize("github_token", [None])
+@pytest.mark.usefixtures("stored_repositories")
+async def test_repository_uninstall_without_github(
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hass_ws_client: WebSocketGenerator,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test uninstalling a repository leaves GitHub alone."""
+    repository = marketplace.repositories.get_by_id(REPOSITORY_INTEGRATION_ID)
+    assert repository.data.installed
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {
+            "type": "marketplace/repository/uninstall",
+            "repository": REPOSITORY_INTEGRATION_ID,
+        }
+    )
+    assert (await client.receive_json())["success"]
+
+    assert repository.data.installed is False
+    assert not github_api_calls(aioclient_mock)
+
+
+@pytest.mark.parametrize(
+    "message",
+    [pytest.param(command, id=command["type"]) for command in WARNING_COMMANDS],
+)
+@pytest.mark.parametrize("config_entry_source", [SOURCE_SYSTEM])
+@pytest.mark.parametrize("warning_accepted", [None])
+@pytest.mark.usefixtures("init_integration")
+async def test_commands_need_accepted_warning(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    message: dict[str, Any],
+) -> None:
+    """Test the commands that install are refused until the warning is accepted."""
+    client = await hass_ws_client(hass)
+    calls_before = len(github_api_calls(aioclient_mock))
+
+    await client.send_json_auto_id(message)
+    response = await client.receive_json()
+
+    assert not response["success"]
+    assert response["error"] == translated_error(
+        "warning_not_accepted",
+        "warning_not_accepted",
+        "Open the Marketplace and read the warning first, installing and updating"
+        " work once it is accepted",
+    )
+    assert len(github_api_calls(aioclient_mock)) == calls_before
+
+    await client.send_json_auto_id({"type": "marketplace/warning/accept"})
+    assert (await client.receive_json())["success"]
+
+    await client.send_json_auto_id(message)
+    response = await client.receive_json()
+
+    assert response["success"]
+
+
+@pytest.mark.parametrize(
+    "message",
+    [pytest.param(command, id=command["type"]) for command in COMMANDS_WITHOUT_WARNING],
+)
+@pytest.mark.parametrize("config_entry_source", [SOURCE_SYSTEM])
+@pytest.mark.parametrize("warning_accepted", [None])
+@pytest.mark.usefixtures("init_integration")
+async def test_commands_without_accepted_warning(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    message: dict[str, Any],
+) -> None:
+    """Test browsing and managing the Marketplace work before the warning is accepted."""
+    # Uninstalling takes a repository that is installed
+    get_marketplace(hass).repositories.get_by_id(
+        REPOSITORY_INTEGRATION_ID
+    ).data.installed = True
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(message)
+    response = await client.receive_json()
+
+    assert response["success"]
+
+
+@pytest.mark.parametrize("github_token", [None])
+@pytest.mark.parametrize("config_entry_source", [SOURCE_SYSTEM])
+@pytest.mark.parametrize("warning_accepted", [None])
+@pytest.mark.usefixtures("frozen_time")
+async def test_accept_warning(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_admin_user: MockUser,
+    init_integration: MockConfigEntry,
+    marketplace: MarketplaceManager,
+) -> None:
+    """Test accepting the warning stores who accepted it without a reload."""
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id({"type": "marketplace/info"})
+    result = (await client.receive_json())["result"]
+    assert result["warning_accepted"] is False
+
+    signals: list[dict[str, Any]] = []
+
+    @callback
+    def _record_signal(data: dict[str, Any]) -> None:
+        signals.append(data)
+
+    async_dispatcher_connect(hass, MarketplaceSignal.CONFIG, _record_signal)
+
+    await client.send_json_auto_id({"type": "marketplace/warning/accept"})
+    response = await client.receive_json()
+    await hass.async_block_till_done()
+
+    assert response["success"]
+    assert init_integration.data == {
+        CONF_WARNING_ACCEPTED: {
+            hass_admin_user.id: {"version": 1, "accepted_at": FROZEN_TIME}
+        }
+    }
+    assert signals == [{}]
+
+    # The same Marketplace carries on, updating the entry data does not reload it
+    assert init_integration.state is ConfigEntryState.LOADED
+    assert init_integration.runtime_data is marketplace
+
+    await client.send_json_auto_id({"type": "marketplace/info"})
+    result = (await client.receive_json())["result"]
+    assert result["warning_accepted"] is True
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_newer_warning_needs_accepting_again(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_admin_user: MockUser,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test an acceptance of an older warning no longer counts."""
+    client = await hass_ws_client(hass)
+
+    with patch("homeassistant.components.marketplace.base.WARNING_VERSION", 2):
+        await client.send_json_auto_id({"type": "marketplace/info"})
+        assert (await client.receive_json())["result"]["warning_accepted"] is False
+
+        await client.send_json_auto_id(WARNING_COMMANDS[0])
+        response = await client.receive_json()
+
+        assert response["error"]["code"] == "warning_not_accepted"
+
+        await client.send_json_auto_id({"type": "marketplace/warning/accept"})
+        assert (await client.receive_json())["success"]
+
+        await client.send_json_auto_id({"type": "marketplace/info"})
+        assert (await client.receive_json())["result"]["warning_accepted"] is True
+
+    assert (
+        init_integration.data[CONF_WARNING_ACCEPTED][hass_admin_user.id]["version"] == 2
+    )
+
+
+async def test_warning_accepted_once(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_admin_user: MockUser,
+    init_integration: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test an accepted warning is not shown again, but when is still recorded."""
+    client = await hass_ws_client(hass)
+    freezer.move_to(WARNING_ACCEPTANCE["accepted_at"])
+
+    await client.send_json_auto_id({"type": "marketplace/warning/accept"})
+    assert (await client.receive_json())["success"]
+
+    freezer.tick(timedelta(days=3650))
+    await client.send_json_auto_id({"type": "marketplace/info"})
+    result = (await client.receive_json())["result"]
+
+    assert result["warning_accepted"] is True
+    assert "warning_reminder_due" not in result
+    assert init_integration.data[CONF_WARNING_ACCEPTED][hass_admin_user.id] == {
+        "version": WARNING_VERSION,
+        "accepted_at": WARNING_ACCEPTANCE["accepted_at"],
+    }
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_warning_is_accepted_per_user(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    second_admin_token: str,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test every admin has to accept the warning on their own."""
+    admin_client = await hass_ws_client(hass)
+    second_admin_client = await hass_ws_client(hass, second_admin_token)
+    freezer.move_to(WARNING_ACCEPTANCE["accepted_at"])
+
+    await second_admin_client.send_json_auto_id({"type": "marketplace/info"})
+    assert (await second_admin_client.receive_json())["result"][
+        "warning_accepted"
+    ] is False
+
+    await second_admin_client.send_json_auto_id(WARNING_COMMANDS[0])
+    response = await second_admin_client.receive_json()
+    assert response["error"]["code"] == "warning_not_accepted"
+
+    await admin_client.send_json_auto_id(WARNING_COMMANDS[0])
+    assert (await admin_client.receive_json())["success"]
+
+    await second_admin_client.send_json_auto_id({"type": "marketplace/warning/accept"})
+    assert (await second_admin_client.receive_json())["success"]
+
+    await second_admin_client.send_json_auto_id({"type": "marketplace/info"})
+    result = (await second_admin_client.receive_json())["result"]
+    assert result["warning_accepted"] is True
+
+
+@pytest.mark.parametrize("config_entry_source", [SOURCE_SYSTEM])
+@pytest.mark.parametrize("warning_accepted", [None])
+async def test_accept_warning_requires_admin(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_read_only_access_token: str,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test a non admin user cannot accept the warning."""
+    client = await hass_ws_client(hass, hass_read_only_access_token)
+
+    await client.send_json_auto_id({"type": "marketplace/warning/accept"})
+    response = await client.receive_json()
+
+    assert response["error"]["code"] == "unauthorized"
+    assert CONF_WARNING_ACCEPTED not in init_integration.data
