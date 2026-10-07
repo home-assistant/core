@@ -136,7 +136,7 @@ async def test_bridge_device_v2(
     # async_setup_devices) and the network MAC connection (merged in by
     # _async_register_bridge_device)
     assert bridge_device.connections == {
-        (dr.CONNECTION_NETWORK_MAC, "00:17:88:01:aa:bb:fd:c7"),
+        (dr.CONNECTION_ZIGBEE, "00:17:88:01:aa:bb:fd:c7"),
         (dr.CONNECTION_NETWORK_MAC, mock_bridge_v2.api.config.mac_address),
     }
     # The bridge device is registered exactly once
@@ -209,9 +209,7 @@ async def test_devices_sharing_a_mac_v2(
         device_registry.async_get_or_create(
             config_entry_id=config_entry.entry_id,
             identifiers={(DOMAIN, hue_device_id)},
-            connections={(dr.CONNECTION_NETWORK_MAC, SHARED_MAC)}
-            if holds_mac
-            else set(),
+            connections={(dr.CONNECTION_ZIGBEE, SHARED_MAC)} if holds_mac else set(),
         )
 
     await async_setup_devices(mock_bridge_v2)
@@ -225,7 +223,7 @@ async def test_devices_sharing_a_mac_v2(
     assert mac_owner is not None
     assert other_device is not None
     assert mac_owner.id != other_device.id
-    assert mac_owner.connections == {(dr.CONNECTION_NETWORK_MAC, SHARED_MAC)}
+    assert mac_owner.connections == {(dr.CONNECTION_ZIGBEE, SHARED_MAC)}
     assert other_device.connections == set()
 
 
@@ -255,7 +253,7 @@ async def test_device_sharing_a_mac_added_v2(
     assert first_device is not None
     assert added_device is not None
     assert first_device.id != added_device.id
-    assert first_device.connections == {(dr.CONNECTION_NETWORK_MAC, SHARED_MAC)}
+    assert first_device.connections == {(dr.CONNECTION_ZIGBEE, SHARED_MAC)}
     assert added_device.connections == set()
 
 
