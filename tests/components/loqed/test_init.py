@@ -464,6 +464,35 @@ async def test_unload_entry(
     assert not hass.data.get(DOMAIN)
 
 
+async def test_unload_entry_removes_cloudhook_from_bridge(
+    hass: HomeAssistant, cloud_config_entry: MockConfigEntry, lock: loqed.Lock
+) -> None:
+    """Test unload removes the webhook registered with the stored cloudhook URL."""
+    cloud_config_entry.add_to_hass(hass)
+    lock_status = await async_load_json_object_fixture(hass, "status_ok.json", DOMAIN)
+
+    with (
+        patch("loqedAPI.loqed.LoqedAPI.async_get_lock", return_value=lock),
+        patch(
+            "loqedAPI.loqed.LoqedAPI.async_get_lock_details", return_value=lock_status
+        ),
+        patch(
+            "homeassistant.components.cloud.async_active_subscription",
+            return_value=True,
+        ),
+    ):
+        await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+        await hass.async_block_till_done()
+
+    assert cloud_config_entry.state is ConfigEntryState.LOADED
+
+    assert await hass.config_entries.async_unload(cloud_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    lock.deleteWebhook.assert_called_once_with(1)
+    assert cloud_config_entry.state is ConfigEntryState.NOT_LOADED
+
+
 async def test_unload_entry_fails(
     hass: HomeAssistant, integration: MockConfigEntry, lock: loqed.Lock
 ) -> None:
