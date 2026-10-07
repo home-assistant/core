@@ -168,7 +168,7 @@ async def test_climate_fahrenheit_unit(hass: HomeAssistant) -> None:
     climate_component = hass.data[CLIMATE_DOMAIN]
     entity = climate_component.get_entity("climate.midea_0")
     assert entity is not None
-    assert entity.temperature_unit == UnitOfTemperature.FAHRENHEIT
+    assert entity.native_temperature_unit == UnitOfTemperature.FAHRENHEIT
 
     # With the entity already in Fahrenheit under the US system, the device's
     # native values pass through unconverted; were it still Celsius they would
