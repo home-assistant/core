@@ -15,9 +15,9 @@ from homeassistant.components.automation import (
     DOMAIN,
     EVENT_AUTOMATION_RELOADED,
     EVENT_AUTOMATION_TRIGGERED,
-    SERVICE_TRIGGER,
     AutomationEntity,
 )
+from homeassistant.components.automation.const import SERVICE_TRIGGER
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,

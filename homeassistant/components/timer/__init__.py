@@ -1,6 +1,7 @@
 """Support for Timers."""
 
 from collections.abc import Callable
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
 from typing import Any, Self, override
@@ -15,28 +16,36 @@ from homeassistant.const import (  # noqa: F401
     CONF_NAME,
     SERVICE_RELOAD,
 )
-from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import collection, config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.restore_state import RestoreEntity
-import homeassistant.helpers.service
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType, VolDictType
 from homeassistant.util import dt as dt_util
 
-from .const import TimerEntityStateAttribute
+from .const import (  # noqa: F401
+    ATTR_DURATION,
+    DATA_TIMER,
+    DEFAULT_DURATION,
+    DOMAIN,
+    SERVICE_CANCEL,
+    SERVICE_CHANGE,
+    SERVICE_FINISH,
+    SERVICE_PAUSE,
+    SERVICE_START,
+    TimerEntityStateAttribute,
+)
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "timer"
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
-DEFAULT_DURATION = 0
 DEFAULT_RESTORE = False
 
-ATTR_DURATION = "duration"
 ATTR_REMAINING = "remaining"
 ATTR_FINISHES_AT = "finishes_at"
 ATTR_RESTORE = "restore"
@@ -57,11 +66,6 @@ EVENT_TIMER_STARTED = "timer.started"
 EVENT_TIMER_RESTARTED = "timer.restarted"
 EVENT_TIMER_PAUSED = "timer.paused"
 
-SERVICE_START = "start"
-SERVICE_PAUSE = "pause"
-SERVICE_CANCEL = "cancel"
-SERVICE_CHANGE = "change"
-SERVICE_FINISH = "finish"
 
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
@@ -108,7 +112,13 @@ CONFIG_SCHEMA = probatio.Schema(
     extra=probatio.ALLOW_EXTRA,
 )
 
-RELOAD_SERVICE_SCHEMA = probatio.Schema({})
+
+@dataclass(slots=True)
+class TimerData:
+    """Runtime data for the timer integration."""
+
+    component: EntityComponent[Timer]
+    yaml_collection: collection.YamlCollection
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -140,34 +150,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         storage_collection, DOMAIN, DOMAIN, STORAGE_FIELDS, STORAGE_FIELDS
     ).async_setup(hass)
 
-    async def reload_service_handler(service_call: ServiceCall) -> None:
-        """Reload yaml entities."""
-        conf = await component.async_prepare_reload(skip_reset=True)
-        await yaml_collection.async_load(
-            [{CONF_ID: id_, **cfg} for id_, cfg in conf.get(DOMAIN, {}).items()]
-        )
+    hass.data[DATA_TIMER] = TimerData(component, yaml_collection)
 
-    homeassistant.helpers.service.async_register_admin_service(
-        hass,
-        DOMAIN,
-        SERVICE_RELOAD,
-        reload_service_handler,
-        schema=RELOAD_SERVICE_SCHEMA,
-    )
-    component.async_register_entity_service(
-        SERVICE_START,
-        {probatio.Optional(ATTR_DURATION, default=DEFAULT_DURATION): cv.time_period},
-        "async_start",
-    )
-    component.async_register_entity_service(SERVICE_PAUSE, None, "async_pause")
-    component.async_register_entity_service(SERVICE_CANCEL, None, "async_cancel")
-    component.async_register_entity_service(SERVICE_FINISH, None, "async_finish")
-    component.async_register_entity_service(
-        SERVICE_CHANGE,
-        {probatio.Optional(ATTR_DURATION, default=DEFAULT_DURATION): cv.time_period},
-        "async_change",
-    )
-
+    async_setup_services(hass)
     return True
 
 
@@ -358,20 +343,24 @@ class Timer(collection.CollectionEntity, RestoreEntity):
     def async_change(self, duration: timedelta) -> None:
         """Change duration of a running timer."""
         if self._listener is None or self._end is None:
-            raise HomeAssistantError(
-                f"Timer {self.entity_id} is not running,"
-                " only active timers can be changed"
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="timer_not_running",
+                translation_placeholders={"entity_id": self.entity_id},
             )
         # Check against new remaining time before checking boundaries
         new_remaining = (self._end + duration) - dt_util.utcnow().replace(microsecond=0)
         if self._remaining and new_remaining > self._running_duration:
-            raise HomeAssistantError(
-                f"Not possible to change timer {self.entity_id} beyond duration"
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="change_beyond_duration",
+                translation_placeholders={"entity_id": self.entity_id},
             )
         if self._remaining and (self._remaining + duration) < timedelta():
-            raise HomeAssistantError(
-                f"Not possible to change timer"
-                f" {self.entity_id} to negative time remaining"
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="change_negative_remaining",
+                translation_placeholders={"entity_id": self.entity_id},
             )
 
         self._listener()

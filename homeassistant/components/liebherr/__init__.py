@@ -8,6 +8,7 @@ from pyliebherrhomeapi import LiebherrClient
 from pyliebherrhomeapi.exceptions import (
     LiebherrAuthenticationError,
     LiebherrConnectionError,
+    LiebherrTimeoutError,
 )
 
 from homeassistant.const import CONF_API_KEY, Platform
@@ -49,7 +50,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LiebherrConfigEntry) -> 
             translation_domain=DOMAIN,
             translation_key="invalid_api_key",
         ) from err
-    except LiebherrConnectionError as err:
+    except (LiebherrConnectionError, LiebherrTimeoutError) as err:
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="cannot_connect",
@@ -87,7 +88,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: LiebherrConfigEntry) -> 
         """Scan for new devices added to the account."""
         try:
             devices = await client.get_devices()
-        except LiebherrAuthenticationError, LiebherrConnectionError:
+        except (
+            LiebherrAuthenticationError,
+            LiebherrConnectionError,
+            LiebherrTimeoutError,
+        ):
             _LOGGER.debug("Failed to scan for new devices")
             return
         except Exception:

@@ -12,16 +12,11 @@ from motioneye_client.const import (
     KEY_ACTION_SNAPSHOT,
     KEY_MOTION_DETECTION,
     KEY_STREAMING_AUTH_MODE,
-    KEY_TEXT_OVERLAY_CAMERA_NAME,
-    KEY_TEXT_OVERLAY_CUSTOM_TEXT,
     KEY_TEXT_OVERLAY_CUSTOM_TEXT_LEFT,
     KEY_TEXT_OVERLAY_CUSTOM_TEXT_RIGHT,
-    KEY_TEXT_OVERLAY_DISABLED,
     KEY_TEXT_OVERLAY_LEFT,
     KEY_TEXT_OVERLAY_RIGHT,
-    KEY_TEXT_OVERLAY_TIMESTAMP,
 )
-import probatio
 
 from homeassistant.components.mjpeg import (
     CONF_MJPEG_URL,
@@ -29,7 +24,6 @@ from homeassistant.components.mjpeg import (
     MjpegCamera,
 )
 from homeassistant.const import (
-    CONF_ACTION,
     CONF_AUTHENTICATION,
     CONF_NAME,
     CONF_PASSWORD,
@@ -39,7 +33,6 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import get_camera_from_cameras, is_acceptable_camera, listen_for_new_cameras
@@ -48,42 +41,12 @@ from .const import (
     CONF_SURVEILLANCE_PASSWORD,
     CONF_SURVEILLANCE_USERNAME,
     MOTIONEYE_MANUFACTURER,
-    SERVICE_ACTION,
-    SERVICE_SET_TEXT_OVERLAY,
-    SERVICE_SNAPSHOT,
     TYPE_MOTIONEYE_MJPEG_CAMERA,
 )
 from .coordinator import MotionEyeConfigEntry, MotionEyeUpdateCoordinator
 from .entity import MotionEyeEntity
 
 PLATFORMS = [Platform.CAMERA]
-
-SCHEMA_TEXT_OVERLAY = probatio.In(
-    [
-        KEY_TEXT_OVERLAY_DISABLED,
-        KEY_TEXT_OVERLAY_TIMESTAMP,
-        KEY_TEXT_OVERLAY_CUSTOM_TEXT,
-        KEY_TEXT_OVERLAY_CAMERA_NAME,
-    ]
-)
-SCHEMA_SERVICE_SET_TEXT = probatio.Schema(
-    probatio.All(
-        cv.make_entity_service_schema(
-            {
-                probatio.Optional(KEY_TEXT_OVERLAY_LEFT): SCHEMA_TEXT_OVERLAY,
-                probatio.Optional(KEY_TEXT_OVERLAY_CUSTOM_TEXT_LEFT): cv.string,
-                probatio.Optional(KEY_TEXT_OVERLAY_RIGHT): SCHEMA_TEXT_OVERLAY,
-                probatio.Optional(KEY_TEXT_OVERLAY_CUSTOM_TEXT_RIGHT): cv.string,
-            },
-        ),
-        probatio.AtLeastOne(
-            KEY_TEXT_OVERLAY_LEFT,
-            KEY_TEXT_OVERLAY_CUSTOM_TEXT_LEFT,
-            KEY_TEXT_OVERLAY_RIGHT,
-            KEY_TEXT_OVERLAY_CUSTOM_TEXT_RIGHT,
-        ),
-    ),
-)
 
 
 async def async_setup_entry(
@@ -114,23 +77,6 @@ async def async_setup_entry(
         )
 
     listen_for_new_cameras(hass, entry, camera_add)
-
-    platform = entity_platform.async_get_current_platform()
-    platform.async_register_entity_service(
-        SERVICE_SET_TEXT_OVERLAY,
-        SCHEMA_SERVICE_SET_TEXT,
-        "async_set_text_overlay",
-    )
-    platform.async_register_entity_service(
-        SERVICE_ACTION,
-        {probatio.Required(CONF_ACTION): cv.string},
-        "async_request_action",
-    )
-    platform.async_register_entity_service(
-        SERVICE_SNAPSHOT,
-        None,
-        "async_request_snapshot",
-    )
 
 
 class MotionEyeMjpegCamera(MotionEyeEntity, MjpegCamera):

@@ -196,7 +196,7 @@ SENSORS: tuple[RehlkoSensorEntityDescription, ...] = (
     ),
     RehlkoSensorEntityDescription(
         key="lastMaintenanceTimestamp",
-        translation_key="last_maintainance",
+        translation_key="last_maintenance",
         device_class=SensorDeviceClass.TIMESTAMP,
         document_key=GENERATOR_DATA_DEVICE,
         value_fn=datetime.fromisoformat,
@@ -204,7 +204,7 @@ SENSORS: tuple[RehlkoSensorEntityDescription, ...] = (
     ),
     RehlkoSensorEntityDescription(
         key="nextMaintenanceTimestamp",
-        translation_key="next_maintainance",
+        translation_key="next_maintenance",
         device_class=SensorDeviceClass.TIMESTAMP,
         document_key=GENERATOR_DATA_DEVICE,
         value_fn=datetime.fromisoformat,
