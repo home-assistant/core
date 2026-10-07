@@ -380,9 +380,6 @@ async def test_local_invalid_wifi_cred(hass: HomeAssistant) -> None:
     assert result["reason"] == "invalid_auth"
 
 
-# local manual API:
-
-
 async def test_form_local_manual_success(hass: HomeAssistant) -> None:
     """Test successful manual local configuration."""
     result = await hass.config_entries.flow.async_init(
