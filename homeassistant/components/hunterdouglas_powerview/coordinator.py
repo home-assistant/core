@@ -11,10 +11,11 @@ from aiopvapi.resources.shade_data import PowerviewShadeData
 from aiopvapi.shades import Shades
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import HUB_EXCEPTIONS
+from .const import HUB_EXCEPTIONS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -80,8 +81,8 @@ class PowerviewShadeUpdateCoordinator(DataUpdateCoordinator[PowerviewShadeData])
     def _remove_stale_devices(self, removed_shade_ids):
         """Remove devices for shades that no longer exist."""
         device_registry = dr.async_get(self.hass)
-        devices = device_registry.devices.get_devices_for_config_entry_id(
-            self.entry.entry_id
+        devices = dr.async_entries_for_config_entry(
+            device_registry, self.config_entry.entry_id
         )
 
         for device in devices:
@@ -98,6 +99,6 @@ class PowerviewShadeUpdateCoordinator(DataUpdateCoordinator[PowerviewShadeData])
                     )
                     device_registry.async_update_device(
                         device.id,
-                        remove_config_entry_id=self.entry.entry_id
+                        remove_config_entry_id=self.config_entry.entry_id
                     )
                     break
