@@ -74,6 +74,7 @@ class TractiveSwitch(TractiveEntity, SwitchEntity):
     ) -> None:
         """Initialize switch entity."""
         super().__init__(coordinator, trackable)
+
         self._attr_unique_id = f"{trackable.pet_id}_{description.key}"
         self._tracker = coordinator.client.tracker(trackable.tracker_id)
         self._method = getattr(self, description.method)

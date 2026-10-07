@@ -23,8 +23,10 @@ class TractiveEntity(CoordinatorEntity[TractiveCoordinator]):
     ) -> None:
         """Initialize tracker entity."""
         super().__init__(coordinator)
+
         self._pet_id = trackable.pet_id
         self._tracker_id = trackable.tracker_id
+
         if hardware_entity:
             self._attr_device_info = DeviceInfo(
                 configuration_url="https://my.tractive.com/",

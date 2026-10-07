@@ -35,6 +35,7 @@ class TractiveDeviceTracker(TractiveEntity, TrackerEntity):
     def __init__(self, coordinator: TractiveCoordinator, trackable: Trackable) -> None:
         """Initialize tracker entity."""
         super().__init__(coordinator, trackable)
+
         self._attr_unique_id = trackable.pet_id
 
     @property
@@ -61,4 +62,5 @@ class TractiveDeviceTracker(TractiveEntity, TrackerEntity):
         """Return the source type of the device."""
         if self._tracker_status.sensor_used == "PHONE":
             return SourceType.BLUETOOTH
+
         return SourceType.GPS

@@ -53,6 +53,7 @@ class TractiveSensor(TractiveEntity, SensorEntity):
     ) -> None:
         """Initialize sensor entity."""
         super().__init__(coordinator, trackable, description.hardware_sensor)
+
         self._attr_unique_id = f"{trackable.pet_id}_{description.key}"
         self.entity_description = description
 
