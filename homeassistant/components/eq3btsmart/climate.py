@@ -64,7 +64,7 @@ class Eq3Climate(Eq3Entity, ClimateEntity):
         | ClimateEntityFeature.TURN_OFF
         | ClimateEntityFeature.TURN_ON
     )
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_min_temp = EQ3_OFF_TEMP
     _attr_max_temp = EQ3_MAX_TEMP
     _attr_precision = PRECISION_HALVES
@@ -84,8 +84,8 @@ class Eq3Climate(Eq3Entity, ClimateEntity):
 
         self._target_temperature = self._thermostat.status.target_temperature
         self._attr_hvac_mode = EQ_TO_HA_HVAC[self._thermostat.status.operation_mode]
-        self._attr_current_temperature = self._get_current_temperature()
-        self._attr_target_temperature = self._get_target_temperature()
+        self._attr_native_current_temperature = self._get_current_temperature()
+        self._attr_native_target_temperature = self._get_target_temperature()
         self._attr_preset_mode = self._get_current_preset_mode()
         self._attr_hvac_action = self._get_current_hvac_action()
         super()._async_on_status_updated(data)
