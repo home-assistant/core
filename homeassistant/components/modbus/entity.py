@@ -255,11 +255,8 @@ class ModbusStructEntity(ModbusBaseEntity, RestoreEntity):
             v_result = []
             for entry in val:
                 v_temp = self.__process_raw_value(entry, scale, offset)
-                if self._data_type != DataType.CUSTOM:
-                    v_result.append(str(v_temp))
-                else:
-                    v_result.append(str(v_temp) if v_temp is not None else "None")
-            return ",".join(map(str, v_result))
+                v_result.append(str(v_temp))
+            return ",".join(v_result)
 
         # Apply scale, precision, limits to floats and ints
         return self.__process_raw_value(val[0], scale, offset)
