@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock, patch
 
-from skylight_api import SkylightAuthError
+from skylight_api import SkylightAPIError, SkylightAuthError
 
 from homeassistant import config_entries
 from homeassistant.components.skylight.const import (
@@ -138,6 +138,44 @@ async def test_flow_code_exchange_auth_error(
         )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_auth"}
+
+
+async def test_flow_code_exchange_connect_error(
+    hass: HomeAssistant,
+    mock_get_frames: AsyncMock,
+) -> None:
+    """Test a connection failure during the code exchange."""
+    with patch(
+        "homeassistant.components.skylight.config_flow.exchange_authorization_code",
+        side_effect=SkylightAPIError("endpoint down"),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"code": CODE}
+        )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
+
+
+async def test_flow_get_frames_connect_error(
+    hass: HomeAssistant,
+    mock_exchange_token: AsyncMock,
+) -> None:
+    """Test a connection failure while enumerating frames."""
+    with patch(
+        "skylight_api.SkylightAPI.get_frames",
+        side_effect=SkylightAPIError("endpoint down"),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"code": CODE}
+        )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
 
 
 async def test_flow_no_frames(
