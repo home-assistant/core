@@ -67,6 +67,8 @@ safe-outputs:
   add-comment:
     max: 1
     target: "${{ needs.prepare.outputs.pr_number }}"
+    # Re-runs (reopen, manual dispatch) minimize the previous run's comment.
+    hide-older-comments: true
   needs:
     - prepare
 jobs:
@@ -357,15 +359,15 @@ drop findings, keep lower tiers first: Bronze, then Silver, Gold, Platinum.
 ## Step 7: No violations
 
 When every selected rule passes or no rule was selected, post one comment with
-`add_comment`. Keep it to the heading and one line that names the domains and
-the number of rules checked:
+`add_comment`. Keep it to the heading and one line that names the reviewed
+commit, the domains, and the number of rules checked:
 
 ```markdown
 ## Quality scale review
 
-✅ No issues found. Checked 6 `done`/`exempt` rules for `peblar`; none are violated by the changed lines.
+✅ No issues found at ${{ needs.prepare.outputs.head_sha }}. Checked 6 `done`/`exempt` rules for `peblar`; none are violated by the changed lines.
 ```
 
 When no rule was selected, use
-`✅ No issues found. No `done`/`exempt` rule for `peblar` concerns the changed lines.`
+`✅ No issues found at ${{ needs.prepare.outputs.head_sha }}. No `done`/`exempt` rule for `peblar` concerns the changed lines.`
 instead. Do not post this comment when you posted a finding.
