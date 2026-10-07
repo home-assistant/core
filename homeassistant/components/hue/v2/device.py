@@ -35,6 +35,9 @@ async def async_setup_devices(bridge: HueBridge):
     api: HueBridgeV2 = bridge.api  # to satisfy typing
     dev_reg = dr.async_get(hass)
     dev_controller = api.devices
+    # Multi-channel Zigbee devices show up as several Hue devices sharing one MAC,
+    # while a connection must be unique within the config entry.
+    mac_owners: dict[str, str] = {}
 
     @callback
     def add_device(hue_resource: Device | Room | Zone | ServiceGroup) -> dr.DeviceEntry:
@@ -80,13 +83,20 @@ async def async_setup_devices(bridge: HueBridge):
             )
         zigbee = dev_controller.get_zigbee_connectivity(hue_resource.id)
         if zigbee and zigbee.mac_address:
-            params[ATTR_CONNECTIONS] = {(dr.CONNECTION_NETWORK_MAC, zigbee.mac_address)}
+            mac_owner = mac_owners.setdefault(zigbee.mac_address, hue_resource.id)
+            if mac_owner == hue_resource.id:
+                params[ATTR_CONNECTIONS] = {
+                    (dr.CONNECTION_NETWORK_MAC, zigbee.mac_address)
+                }
 
         return dev_reg.async_get_or_create(config_entry_id=entry.entry_id, **params)
 
     @callback
     def remove_device(hue_device_id: str) -> None:
         """Remove device from registry."""
+        for mac, owner in list(mac_owners.items()):
+            if owner == hue_device_id:
+                del mac_owners[mac]
         if device := dev_reg.async_get_device_by_identifier(
             (DOMAIN, hue_device_id), entry.entry_id
         ):
