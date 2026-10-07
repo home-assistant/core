@@ -173,7 +173,7 @@ class AdaxConfigFlow(ConfigFlow, domain=DOMAIN):
                     status = await client.get_status()
                     if not status or status.get("current_temperature") is None:
                         errors["base"] = "cannot_connect"
-                except (aiohttp.ClientError, TimeoutError):
+                except aiohttp.ClientError, TimeoutError:
                     errors["base"] = "cannot_connect"
                 except Exception:
                     _LOGGER.exception("Unexpected error connecting to Adax heater")
@@ -192,7 +192,7 @@ class AdaxConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="local_manual",
-            data_schema=data_schema,
+            data_schema=self.add_suggested_values_to_schema(data_schema, user_input),
             errors=errors,
         )
 
