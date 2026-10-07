@@ -48,6 +48,7 @@ class WaterHeaterStateAttribute(
     TARGET_TEMP_LOW = "target_temp_low"
     OPERATION_MODE = "operation_mode"
     AWAY_MODE = "away_mode"
+    TEMPERATURE_UNIT = "temperature_unit"
 
 
 STATE_ECO = "eco"

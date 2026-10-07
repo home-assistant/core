@@ -18,6 +18,7 @@ from homeassistant.components.teslemetry.coordinator import VEHICLE_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    EVENT_STATE_CHANGED,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     EntityCategory,
@@ -38,7 +39,7 @@ from .const import (
     VEHICLE_DATA_ALT,
 )
 
-from tests.common import async_fire_time_changed
+from tests.common import async_capture_events, async_fire_time_changed
 
 # VIN used across the Teslemetry test fixtures.
 VEHICLE_VIN = "LRW3F7EK4NC700000"
@@ -64,11 +65,11 @@ TPMS_NO_WARNINGS = {
 }
 
 
-def _products_with_driver_assist(driver_assist: str) -> dict:
-    """Return a products response with the vehicle's driver-assist capability set."""
-    products = deepcopy(PRODUCTS)
-    products["response"][0]["vehicle_config"]["driver_assist"] = driver_assist
-    return products
+def _metadata_with_driver_assist(driver_assist: str | None) -> dict:
+    """Return a metadata response with the vehicle's driver-assist hardware set."""
+    metadata = deepcopy(METADATA)
+    metadata["vehicles"][VEHICLE_VIN]["config"]["driver_assist"] = driver_assist
+    return metadata
 
 
 def _live_status(**overrides: object) -> dict:
@@ -191,7 +192,7 @@ async def test_sensors_streaming(
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
     mock_vehicle_data: AsyncMock,
-    mock_products: AsyncMock,
+    mock_metadata: AsyncMock,
     mock_add_listener: AsyncMock,
 ) -> None:
     """Tests that the sensor entities with streaming are correct."""
@@ -199,7 +200,7 @@ async def test_sensors_streaming(
     freezer.move_to("2024-01-01 00:00:00+00:00")
 
     # miles_since_reset and self_driving_miles_since_reset are HW4-only fields.
-    mock_products.return_value = _products_with_driver_assist("TeslaAP4")
+    mock_metadata.return_value = _metadata_with_driver_assist("TeslaAP4")
 
     entry = await setup_platform(hass, [Platform.SENSOR])
 
@@ -313,14 +314,14 @@ async def test_sensors_streaming(
 async def test_new_streaming_sensors_disabled_by_default(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    mock_products: AsyncMock,
+    mock_metadata: AsyncMock,
     mock_add_listener: AsyncMock,
     entity_id: str,
 ) -> None:
     """Test the new firmware-2025.44 streaming sensors are disabled-by-default diagnostics."""
 
     # miles_since_reset and self_driving_miles_since_reset are HW4-only fields.
-    mock_products.return_value = _products_with_driver_assist("TeslaAP4")
+    mock_metadata.return_value = _metadata_with_driver_assist("TeslaAP4")
 
     await setup_platform(hass, [Platform.SENSOR])
 
@@ -343,12 +344,14 @@ async def test_new_streaming_sensors_disabled_by_default(
     [
         ("2025.44.25.5", "TeslaAP4", True),
         ("2025.44.25.5", "TeslaAP3", False),
+        ("2025.44.25.5", None, False),
         ("2025.44.25.4", "TeslaAP4", False),
         ("2025.44.25.4", "TeslaAP3", False),
     ],
     ids=[
         "hw4_at_threshold",
         "hw3_at_threshold",
+        "unknown_at_threshold",
         "hw4_below_threshold",
         "hw3_below_threshold",
     ],
@@ -361,16 +364,19 @@ async def test_hw4_mileage_sensors_gating(
     mock_add_listener: AsyncMock,
     entity_id: str,
     firmware: str,
-    driver_assist: str,
+    driver_assist: str | None,
     expected: bool,
 ) -> None:
     """Test HW4 mileage sensors need both AP4 hardware and qualifying firmware."""
 
-    metadata = deepcopy(METADATA)
+    metadata = _metadata_with_driver_assist(driver_assist)
     metadata["vehicles"][VEHICLE_VIN]["firmware"] = firmware
     mock_metadata.return_value = metadata
 
-    mock_products.return_value = _products_with_driver_assist(driver_assist)
+    # A streaming vehicle is never polled, so vehicle_config is only in metadata.
+    products = deepcopy(PRODUCTS)
+    del products["response"][0]["vehicle_config"]
+    mock_products.return_value = products
 
     await setup_platform(hass, [Platform.SENSOR])
 
@@ -439,6 +445,105 @@ async def test_sensors_streaming_unit_conversion(
     state = hass.states.get(entity_id)
     assert state is not None
     assert float(state.state) == pytest.approx(expected_state)
+
+
+@pytest.mark.parametrize(
+    ("updates", "expected_delay", "expected_energy"),
+    [
+        pytest.param(
+            [
+                {
+                    Signal.MINUTES_TO_ARRIVAL: 12.5,
+                    Signal.ROUTE_TRAFFIC_MINUTES_DELAY: 3,
+                    Signal.EXPECTED_ENERGY_PERCENT_AT_TRIP_ARRIVAL: 62,
+                },
+                # The car keeps reporting the last trip's arrival energy and
+                # traffic delay after arriving, but MinutesToArrival goes null.
+                {
+                    Signal.MINUTES_TO_ARRIVAL: None,
+                    Signal.ROUTE_TRAFFIC_MINUTES_DELAY: 0,
+                    Signal.EXPECTED_ENERGY_PERCENT_AT_TRIP_ARRIVAL: 62,
+                },
+            ],
+            ["3", STATE_UNKNOWN],
+            ["62", STATE_UNKNOWN],
+            id="route_ends",
+        ),
+        pytest.param(
+            [
+                {
+                    Signal.MINUTES_TO_ARRIVAL: 12.5,
+                    Signal.ROUTE_TRAFFIC_MINUTES_DELAY: 3,
+                },
+                {
+                    Signal.MINUTES_TO_ARRIVAL: None,
+                    Signal.ROUTE_TRAFFIC_MINUTES_DELAY: 0,
+                },
+                {
+                    Signal.MINUTES_TO_ARRIVAL: 30.0,
+                    Signal.ROUTE_TRAFFIC_MINUTES_DELAY: 5,
+                },
+            ],
+            ["3", STATE_UNKNOWN, "5"],
+            [],
+            id="route_restarts",
+        ),
+        pytest.param(
+            [
+                {
+                    Signal.MINUTES_TO_ARRIVAL: 12.5,
+                    Signal.ROUTE_TRAFFIC_MINUTES_DELAY: 3,
+                },
+                {Signal.MINUTES_TO_ARRIVAL: None},
+                {Signal.MINUTES_TO_ARRIVAL: 20.0},
+            ],
+            ["3", STATE_UNKNOWN, "3"],
+            [],
+            id="route_restarts_with_unchanged_value",
+        ),
+        pytest.param(
+            [
+                {Signal.ROUTE_TRAFFIC_MINUTES_DELAY: 3},
+                {Signal.MINUTES_TO_ARRIVAL: 12.5},
+            ],
+            ["3"],
+            [],
+            id="waits_for_minutes_to_arrival",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_sensors_streaming_active_route(
+    hass: HomeAssistant,
+    mock_add_listener: AsyncMock,
+    updates: list[dict[Signal, float | None]],
+    expected_delay: list[str],
+    expected_energy: list[str],
+) -> None:
+    """Test the streaming active route sensors only report during navigation."""
+    await setup_platform(hass, [Platform.SENSOR])
+    events = async_capture_events(hass, EVENT_STATE_CHANGED)
+
+    for data in updates:
+        mock_add_listener.send(
+            {
+                "vin": VEHICLE_DATA_ALT["response"]["vin"],
+                "data": data,
+                "createdAt": "2026-09-28T08:40:00.000Z",
+            }
+        )
+        await hass.async_block_till_done()
+
+    assert [
+        event.data["new_state"].state
+        for event in events
+        if event.data["entity_id"] == "sensor.test_traffic_delay"
+    ] == expected_delay
+    assert [
+        event.data["new_state"].state
+        for event in events
+        if event.data["entity_id"] == "sensor.test_state_of_charge_at_arrival"
+    ] == expected_energy
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

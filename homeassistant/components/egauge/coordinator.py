@@ -11,7 +11,7 @@ from egauge_async.exceptions import (
 )
 from egauge_async.json.client import EgaugeJsonClient
 from egauge_async.json.models import RegisterInfo
-from httpx import ConnectError
+from httpx2 import ConnectError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
