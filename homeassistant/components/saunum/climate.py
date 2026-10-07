@@ -74,7 +74,7 @@ class LeilSaunaClimate(LeilSaunaEntity, ClimateEntity):
         | ClimateEntityFeature.FAN_MODE
         | ClimateEntityFeature.PRESET_MODE
     )
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_precision = PRECISION_WHOLE
     _attr_target_temperature_step = 1.0
     _attr_min_temp = MIN_TEMPERATURE
@@ -116,13 +116,13 @@ class LeilSaunaClimate(LeilSaunaEntity, ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature in Celsius."""
         return self.coordinator.data.current_temperature
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the target temperature in Celsius."""
         return self.coordinator.data.target_temperature
 
