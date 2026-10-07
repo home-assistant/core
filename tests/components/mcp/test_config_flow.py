@@ -3964,3 +3964,82 @@ def test_normalized_scopes_rejects_malformed_scopes(scopes: Any) -> None:
     """Normalizing scopes does not split a string into characters."""
     with pytest.raises(ClientRegistrationError):
         normalized_scopes(scopes)
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_concurrent_url_submissions_abort_the_loser(
+    hass: HomeAssistant,
+    mock_mcp_client: Mock,
+) -> None:
+    """A URL created while validation is in progress is still a duplicate."""
+    first_validating = asyncio.Event()
+    release_first = asyncio.Event()
+
+    async def initialize() -> Mock:
+        """Let the second submission finish before the first one does."""
+        if not first_validating.is_set():
+            first_validating.set()
+            await release_first.wait()
+        response = Mock()
+        response.serverInfo.name = TEST_API_NAME
+        return response
+
+    mock_mcp_client.return_value.initialize.side_effect = initialize
+    first = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    second = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    first_task = asyncio.create_task(
+        hass.config_entries.flow.async_configure(
+            first["flow_id"],
+            {CONF_URL: MCP_SERVER_URL},
+        )
+    )
+    await first_validating.wait()
+    second_result = await hass.config_entries.flow.async_configure(
+        second["flow_id"],
+        {CONF_URL: MCP_SERVER_URL},
+    )
+    release_first.set()
+    first_result = await first_task
+
+    assert second_result["type"] is FlowResultType.CREATE_ENTRY
+    assert first_result["type"] is FlowResultType.ABORT
+    assert first_result["reason"] == "already_configured"
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+
+
+@pytest.mark.parametrize(
+    "authorization_servers",
+    [
+        pytest.param([1], id="not_a_string"),
+        pytest.param([""], id="empty"),
+        pytest.param(["https://auth.example", ""], id="mixed"),
+    ],
+)
+@pytest.mark.usefixtures("current_request_with_host", "mock_setup_entry")
+@respx.mock
+async def test_authorization_servers_must_be_urls(
+    hass: HomeAssistant,
+    mock_mcp_client: Mock,
+    authorization_servers: list[Any],
+) -> None:
+    """A non-string authorization server aborts instead of failing as unknown."""
+    resource_metadata_url = _resource_metadata_url()
+    respx.get(resource_metadata_url).mock(
+        return_value=httpx2.Response(
+            200,
+            json={
+                "resource": MCP_SERVER_URL,
+                "authorization_servers": authorization_servers,
+            },
+        )
+    )
+
+    reason = await _protected_resource_abort_reason(
+        hass, mock_mcp_client, resource_metadata_url
+    )
+
+    assert reason == "invalid_discovery_info"

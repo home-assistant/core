@@ -53,7 +53,6 @@ from .registration import (
     ClientRegistrationError,
     ClientSecretExpiresError,
     RegisteredClientIdentity,
-    _scope_list,
     async_register_dynamic_client,
     decode_registered_client_id,
     encode_registered_client_id,
@@ -61,6 +60,7 @@ from .registration import (
     registered_client_auth_domain,
     registered_client_matches_request,
     resolve_registration_endpoint,
+    scope_list,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -252,6 +252,8 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
+                # Another submission can create this URL during validation.
+                self._async_abort_entries_match({CONF_URL: user_input[CONF_URL]})
                 return self.async_create_entry(title=info["title"], data=user_input)
 
         return self.async_show_form(
@@ -312,6 +314,7 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception")
             return self.async_abort(reason="unknown")
 
+        self._async_abort_entries_match({CONF_URL: self.data[CONF_URL]})
         return self.async_create_entry(title=info["title"], data=self.data)
 
     async def async_step_auth_discovery(
@@ -355,6 +358,9 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             return self.async_abort(reason="timeout_connect")
         except CannotConnect:
             return self.async_abort(reason="cannot_connect")
+        except InvalidMetadata:
+            _LOGGER.debug("OAuth resource metadata authorization servers were invalid")
+            return self.async_abort(reason="invalid_discovery_info")
         except Exception:
             _LOGGER.exception("Unexpected exception")
             return self.async_abort(reason="unknown")
@@ -595,6 +601,8 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         # OAuth entries have no unique id. The application credential identifies
         # the client, not the MCP server, so two URLs that share a client must
         # not replace each other. A Supervisor discovery keeps its uuid.
+        # Another submission can create this URL during discovery or validation.
+        self._async_abort_entries_match({CONF_URL: config_entry_data[CONF_URL]})
         return self.async_create_entry(
             title=info["title"],
             data=config_entry_data,
@@ -715,6 +723,10 @@ def _resource_metadata_from_document(
         or resource != mcp_server_url
     ):
         return None
+    if any(
+        not isinstance(server, str) or not server for server in authorization_servers
+    ):
+        raise InvalidMetadata
     return ResourceMetadata(
         authorization_servers=authorization_servers,
         supported_scopes=data.get("scopes_supported"),
@@ -841,7 +853,11 @@ def _select_scopes(
     else:
         selected = oauth_config.scopes
     # A JSON string would be joined into one scope per character.
-    return _scope_list(selected)
+    return scope_list(selected)
+
+
+class InvalidMetadata(HomeAssistantError):
+    """Discovered OAuth metadata cannot be used."""
 
 
 class InvalidUrl(HomeAssistantError):

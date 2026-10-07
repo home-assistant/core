@@ -96,11 +96,10 @@ def select_token_endpoint_auth_method(
     )
 
 
-def _scope_list(scopes: Any) -> list[str] | None:
+def scope_list(scopes: Any) -> list[str] | None:
     """Return scopes when they are a list of strings.
 
-    Omitted scopes request nothing. A string must not be joined, because that
-    requests one scope per character. A mixed list cannot be joined either.
+    A string must not be joined: that requests one scope per character.
     """
     if scopes is None:
         return None
@@ -114,9 +113,9 @@ def normalized_scopes(scopes: list[str] | None) -> tuple[str, ...]:
 
     An omitted scope list and an empty list are the same request: no scope.
     """
-    if not (scope_list := _scope_list(scopes)):
+    if not (validated := scope_list(scopes)):
         return ()
-    return tuple(sorted(set(scope_list)))
+    return tuple(sorted(set(validated)))
 
 
 def registered_client_matches_request(
@@ -244,18 +243,13 @@ async def async_register_dynamic_client(
     token_endpoint_auth_methods: list[str] | None,
     scopes: list[str] | None,
 ) -> RegisteredClient:
-    """Register an OAuth client at the authorization server.
+    """Register an OAuth client at the advertised endpoint.
 
-    The MCP SDK registration request falls back to ``/register`` when metadata
-    omits an endpoint, and its response parser rejects a client id returned
-    without the rest of the metadata. This posts only to the advertised
-    endpoint and still accepts that partial response. The request metadata
-    itself is the SDK model.
-    Transport errors from the HTTP client propagate so the config flow can map
-    them the same way as metadata discovery.
+    The MCP SDK helper falls back to ``/register`` and rejects a response that
+    is only a client id. Transport errors propagate for the config flow.
     """
     method = select_token_endpoint_auth_method(token_endpoint_auth_methods)
-    scope_list = _scope_list(scopes)
+    validated_scopes = scope_list(scopes)
     try:
         metadata = OAuthClientMetadata(
             redirect_uris=[AnyUrl(redirect_uri)],
@@ -263,7 +257,7 @@ async def async_register_dynamic_client(
             grant_types=["authorization_code", "refresh_token"],
             response_types=["code"],
             client_name=DCR_CLIENT_NAME,
-            scope=" ".join(scope_list) if scope_list else None,
+            scope=" ".join(validated_scopes) if validated_scopes else None,
         )
     except ValidationError as err:
         raise ClientRegistrationError("Invalid client metadata") from err
@@ -297,7 +291,7 @@ async def async_register_dynamic_client(
         raise ClientRegistrationError("Registration response was not JSON") from err
 
     return _parse_registration_response(
-        body, redirect_uri, method, normalized_scopes(scope_list)
+        body, redirect_uri, method, normalized_scopes(validated_scopes)
     )
 
 
