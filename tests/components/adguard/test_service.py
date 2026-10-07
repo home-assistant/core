@@ -19,9 +19,12 @@ from homeassistant.components.adguard.const import (
     SERVICE_REFRESH,
     SERVICE_REMOVE_URL,
 )
+from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+
+from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("init_integration")
 
@@ -131,3 +134,27 @@ async def test_service_error(
         )
 
     assert str(excinfo.value) == message
+
+
+async def test_service_authentication_failed(
+    hass: HomeAssistant,
+    mock_adguard: AsyncMock,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test rejected credentials during an action ask for new ones."""
+    mock_adguard.filtering.blocklists.enable.side_effect = (
+        AdGuardHomeAuthenticationError("Nope")
+    )
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_ENABLE_URL,
+            {"url": "https://x"},
+            blocking=True,
+        )
+
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+    assert flows[0]["context"]["entry_id"] == init_integration.entry_id
