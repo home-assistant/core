@@ -1693,7 +1693,7 @@ mutesync==0.0.1
 mvg==1.6.0
 
 # homeassistant.components.my_pv
-my-pv==0.0.10
+my-pv==0.0.11
 
 # homeassistant.components.myuplink
 myuplink==0.7.0
@@ -2118,7 +2118,7 @@ pybbox==0.0.5-alpha
 pyblackbird==0.10
 
 # homeassistant.components.bluesound
-pyblu==2.0.8
+pyblu==2.2.0
 
 # homeassistant.components.neato
 pybotvac==0.0.29
