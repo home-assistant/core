@@ -57,7 +57,7 @@
             "sort_by": "Choose the order in which the voices are displayed.",
             "title": "Filter voices by name."
           },
-          "description": "Apply filters to narrow down the voice list, then click Submit to see the results.",
+          "description": "Apply filters to narrow down the voice list, then select **Submit** to see the results.",
           "title": "Voice selection filters"
         },
         "model": {

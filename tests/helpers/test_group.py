@@ -171,6 +171,10 @@ async def test_group_entity_id_changed_in_registry(
     expanded = group.expand_entity_ids(hass, ["light.new_id"])
     assert sorted(expanded) == ["light.bulb1", "light.bulb2"]
 
+    entity_registry.async_remove("light.new_id")
+    await hass.async_block_till_done()
+    assert get_group_entities(hass) == {}
+
 
 async def test_multiple_group_entities(hass: HomeAssistant) -> None:
     """Test multiple group entities can be registered and work independently."""

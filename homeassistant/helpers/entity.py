@@ -104,6 +104,43 @@ def entity_sources(hass: HomeAssistant) -> dict[str, EntityInfo]:
     return {}
 
 
+_ADD_REMOVE_METHODS = (
+    "async_prepare_to_add_to_hass",
+    "async_added_to_hass",
+    "async_will_remove_from_hass",
+)
+_ENTITY_ID_CHANGED_METHODS = (
+    "async_entity_id_changed",
+    "async_entity_id_change_finished",
+)
+
+
+@ft.cache
+def _entity_class_requires_readd(entity_class: type[Entity]) -> bool:
+    """Return if an entity_id change must remove and re-add entities of a class.
+
+    Add or remove methods in _ADD_REMOVE_METHODS defined by a class are covered
+    when that class, or a subclass of it in the MRO, defines
+    async_entity_id_changed or async_entity_id_change_finished. A sibling which
+    is merely earlier in the MRO does not cover them. Entity itself does not
+    count, and neither do the internal add and remove methods, which core handles
+    in async_internal_entity_id_changed.
+
+    This can be removed in Home Assistant Core 2027.11.
+    """
+    mro = [cls for cls in entity_class.__mro__ if cls is not Entity]
+    hook_owners = [
+        cls
+        for cls in mro
+        if any(method in cls.__dict__ for method in _ENTITY_ID_CHANGED_METHODS)
+    ]
+    return any(
+        any(method in cls.__dict__ for method in _ADD_REMOVE_METHODS)
+        and not any(issubclass(owner, cls) for owner in hook_owners)
+        for cls in mro
+    )
+
+
 def generate_entity_id(
     entity_id_format: str,
     name: str | None,
@@ -546,6 +583,7 @@ class Entity(
     _on_remove: list[CALLBACK_TYPE] | None = None
 
     _unsub_device_updates: CALLBACK_TYPE | None = None
+    _unsub_registry_updates: CALLBACK_TYPE | None = None
 
     # Context
     _context: Context | None = None
@@ -1560,7 +1598,9 @@ class Entity(
     async def async_internal_added_to_hass(self) -> None:
         """Run when entity about to be added to hass.
 
-        Not to be extended by integrations.
+        Not to be extended by integrations. Not called when the entity_id is
+        changed in place; core classes extending this must handle anything they
+        set up which depends on the entity_id in async_internal_entity_id_changed.
         """
         entity_info: EntityInfo = {
             "domain": self.platform.platform_name,
@@ -1580,14 +1620,7 @@ class Entity(
                 f"Entity '{self.entity_id}' is being added while it's disabled"
             )
 
-            self.async_on_remove(
-                async_track_entity_registry_updated_event(
-                    self.hass,
-                    self.entity_id,
-                    self._async_registry_updated,
-                    job_type=HassJobType.Callback,
-                )
-            )
+            self._async_subscribe_registry_updates()
             self._async_subscribe_device_updates()
 
         if self.group is not None:
@@ -1604,7 +1637,8 @@ class Entity(
     async def async_internal_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass.
 
-        Not to be extended by integrations.
+        Not to be extended by integrations. Not called when the entity_id is
+        changed in place, see async_internal_added_to_hass.
         """
         # The check for self.platform guards against integrations not using an
         # EntityComponent and can be removed in HA Core 2026.8
@@ -1618,10 +1652,69 @@ class Entity(
     def async_internal_entity_id_changed(self, old_entity_id: str) -> None:
         """Move bookkeeping from old_entity_id to the new self.entity_id.
 
-        Called after the entity was removed under old_entity_id, before it is
-        added again under the new entity_id.
+        Called on entity_id change, when self.entity_id is already the new
+        entity_id and before the new state is written.
+
+        When changed in place, it is called after core moved the entity's
+        registrations and before async_registry_entry_updated and
+        async_entity_id_changed.
+
+        When the entity is removed and re-added for not yet migrated custom
+        integrations, it is called after the entity was removed under old_entity_id,
+        before it is added again under the new entity_id.
 
         Not to be extended by integrations.
+        """
+
+    @callback
+    def _async_move_entity_id(self, old_entity_id: str) -> None:
+        """Move core registrations of an entity whose entity_id changed in place."""
+        sources = entity_sources(self.hass)
+        sources[self.entity_id] = sources.pop(old_entity_id)
+        self.platform.async_move_entity(old_entity_id, self.entity_id)
+        # The registry update tracker is keyed on the entity_id it was created for
+        self._async_subscribe_registry_updates()
+        if self.__group is not None:
+            self.__group.async_entity_id_changed(old_entity_id)
+
+    @callback
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Run when the entity_id has been changed in the entity registry.
+
+        This method is called when self.entity_id is already the new entity_id,
+        core bookkeeping (entity registry and device registry tracking, entity
+        sources, restore state) has been moved to it and async_registry_entry_updated
+        has run, but before the state is written under the new entity_id; the old
+        state has already been removed.
+
+        Implement this to update anything set up by the entity which depends on
+        its entity_id, in particular anything the state or attributes are derived
+        from, e.g. state change listeners or signals keyed on self.entity_id. Do
+        not write the state, core writes it after calling this method.
+
+        Call super() so base classes can do the same.
+
+        To be extended by integrations.
+
+        Note: During the deprecation period ending in 2027.11, custom integrations
+        may implement this method, even as a no-op, to opt in to changing the entity_id
+        in place.
+        """
+
+    @callback
+    def async_entity_id_change_finished(self, old_entity_id: str) -> None:
+        """Run when the state has been written under the new entity_id.
+
+        Only for work which reads the entity's own state under the new entity_id,
+        e.g. templates rendering `this`, or which may write state. Anything else
+        belongs in async_entity_id_changed. Call super() so base classes can do
+        the same.
+
+        Work which must await can be done in a task; registry events are not
+        serialized with it, so after an await re-check that the entity is still
+        added and that self.entity_id is unchanged.
+
+        To be extended by integrations.
         """
 
     @callback
@@ -1679,7 +1772,45 @@ class Entity(
             self.async_write_ha_state()
             return
 
-        old_entity_id = self.entity_id
+        old_entity_id = old.entity_id
+        if _entity_class_requires_readd(type(self)):
+            # Backwards compatibility for custom integrations not yet migrated to
+            # async_entity_id_changed, can be removed in Home Assistant Core 2027.11.
+            await self._async_readd_on_entity_id_change(old_entity_id, registry_entry)
+            return
+
+        self.hass.states.async_remove(old_entity_id, context=event.context)
+        self.entity_id = registry_entry.entity_id
+        self._async_move_entity_id(old_entity_id)
+        self.async_internal_entity_id_changed(old_entity_id)
+        self.async_registry_entry_updated()
+        # The old state is gone, a failing hook must not leave the entity without one
+        try:
+            self.async_entity_id_changed(old_entity_id)
+        except Exception:
+            _LOGGER.exception(
+                "Error handling entity_id change of %s from %s",
+                self.entity_id,
+                old_entity_id,
+            )
+        self.async_write_ha_state()
+        try:
+            self.async_entity_id_change_finished(old_entity_id)
+        except Exception:
+            _LOGGER.exception(
+                "Error finishing entity_id change of %s from %s",
+                self.entity_id,
+                old_entity_id,
+            )
+
+    async def _async_readd_on_entity_id_change(
+        self, old_entity_id: str, registry_entry: er.RegistryEntry
+    ) -> None:
+        """Remove the entity and add it again with its new entity_id.
+
+        Used for entities which have not opted in to async_entity_id_changed.
+        Can be removed in Home Assistant Core 2027.11.
+        """
         await self.async_remove(force_remove=True)
 
         self.entity_id = registry_entry.entity_id
@@ -1691,6 +1822,30 @@ class Entity(
         await self.platform.async_add_entities(
             [self], config_subentry_id=registry_entry.config_subentry_id
         )
+
+    @callback
+    def _async_unsubscribe_registry_updates(self) -> None:
+        """Unsubscribe from entity registry updates."""
+        if self._unsub_registry_updates is None:
+            return
+        self._unsub_registry_updates()
+        self._unsub_registry_updates = None
+
+    @callback
+    def _async_subscribe_registry_updates(self) -> None:
+        """Subscribe to entity registry updates for the current entity_id."""
+        self._async_unsubscribe_registry_updates()
+        self._unsub_registry_updates = async_track_entity_registry_updated_event(
+            self.hass,
+            self.entity_id,
+            self._async_registry_updated,
+            job_type=HassJobType.Callback,
+        )
+        if (
+            not self._on_remove
+            or self._async_unsubscribe_registry_updates not in self._on_remove
+        ):
+            self.async_on_remove(self._async_unsubscribe_registry_updates)
 
     @callback
     def _async_unsubscribe_device_updates(self) -> None:

@@ -36,7 +36,7 @@ async def test_full_user_flow(
     )
 
     assert result2.get("type") is FlowResultType.CREATE_ENTRY
-    assert result2.get("title") == "12345"
+    assert result2.get("title") == "Frenck's Solar Farm"
     assert result2.get("data") == {
         CONF_SYSTEM_ID: 12345,
         CONF_API_KEY: "tadaaa",
@@ -91,7 +91,7 @@ async def test_user_flow_errors(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "12345"
+    assert result["title"] == "Frenck's Solar Farm"
     assert result["data"] == {
         CONF_SYSTEM_ID: 12345,
         CONF_API_KEY: "tadaaa",
