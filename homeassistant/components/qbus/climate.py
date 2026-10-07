@@ -64,7 +64,7 @@ class QbusClimate(QbusEntity, ClimateEntity):
     _attr_supported_features = (
         ClimateEntityFeature.PRESET_MODE | ClimateEntityFeature.TARGET_TEMPERATURE
     )
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
 
     def __init__(self, mqtt_output: QbusMqttOutput) -> None:
         """Initialize climate entity."""
@@ -139,10 +139,10 @@ class QbusClimate(QbusEntity, ClimateEntity):
             self._attr_preset_mode = preset_mode
 
         if current_temperature := state.read_current_temperature():
-            self._attr_current_temperature = current_temperature
+            self._attr_native_current_temperature = current_temperature
 
         if target_temperature := state.read_set_temperature():
-            self._attr_target_temperature = target_temperature
+            self._attr_native_target_temperature = target_temperature
 
         self._set_hvac_action()
 
@@ -155,13 +155,16 @@ class QbusClimate(QbusEntity, ClimateEntity):
             await self._request_state_debouncer.async_call()
 
     def _set_hvac_action(self) -> None:
-        if self.target_temperature is None or self.current_temperature is None:
+        if (
+            self.native_target_temperature is None
+            or self.native_current_temperature is None
+        ):
             self._attr_hvac_action = HVACAction.IDLE
             return
 
         self._attr_hvac_action = (
             HVACAction.HEATING
-            if self.target_temperature > self.current_temperature
+            if self.native_target_temperature > self.native_current_temperature
             else HVACAction.IDLE
         )
 

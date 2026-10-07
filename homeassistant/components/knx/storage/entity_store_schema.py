@@ -1,9 +1,12 @@
 """KNX entity store schema."""
 
 from collections.abc import Hashable
+from dataclasses import dataclass
 from enum import StrEnum, unique
+from typing import Annotated, Any
 
 import probatio
+from probatio import Key
 from xknx.dpt import DPTBase, DPTBinary, DPTNumeric
 from xknx.exceptions import ConversionError
 
@@ -13,33 +16,23 @@ from homeassistant.components.number import (
     NumberMode,
 )
 from homeassistant.components.sensor import (
-    CONF_STATE_CLASS as CONF_SENSOR_STATE_CLASS,
     DEVICE_CLASS_UNITS as SENSOR_DEVICE_CLASS_UNITS,
     SensorDeviceClass,
-    SensorStateClass,
 )
 from homeassistant.components.text import TextMode
 from homeassistant.const import (
-    CONF_DEVICE_CLASS,
     CONF_ENTITY_CATEGORY,
     CONF_ENTITY_ID,
-    CONF_MODE,
-    CONF_NAME,
     CONF_PAYLOAD,
     CONF_PLATFORM,
-    CONF_UNIT_OF_MEASUREMENT,
+    EntityCategory,
     Platform,
 )
 from homeassistant.helpers import selector
-from homeassistant.helpers.entity import ENTITY_CATEGORIES_SCHEMA
 from homeassistant.helpers.typing import VolDictType
 
 from ..const import (
-    CONF_CONTEXT_TIMEOUT,
-    CONF_IGNORE_INTERNAL_STATE,
-    CONF_INVERT,
     CONF_PAYLOAD_LENGTH,
-    CONF_RESET_AFTER,
     CONF_RESPOND_TO_READ,
     CONF_SYNC_STATE,
     CONF_VALUE,
@@ -47,50 +40,39 @@ from ..const import (
     SUPPORTED_PLATFORMS_UI,
     ClimateConf,
     ColorTempModes,
-    CoverConf,
     FanConf,
     FanZeroMode,
-    NumberConf,
-    SceneConf,
     SelectConf,
 )
 from ..dpt import get_supported_dpts, raw_payload_length
-from ..validation import validate_number_attributes, validate_sensor_attributes
+from ..validation import (
+    entity_category_supported,
+    parse_entity_category,
+    validate_number_attributes,
+    validate_sensor_attributes,
+)
 from .const import (
-    CONF_ALWAYS_CALLBACK,
     CONF_COLOR,
     CONF_COLOR_TEMP_MAX,
     CONF_COLOR_TEMP_MIN,
     CONF_DATA,
-    CONF_DEVICE_INFO,
     CONF_DPT,
     CONF_ENTITY,
     CONF_GA_ACTIVE,
-    CONF_GA_AIR_PRESSURE,
-    CONF_GA_ANGLE,
     CONF_GA_BLUE_BRIGHTNESS,
     CONF_GA_BLUE_SWITCH,
     CONF_GA_BRIGHTNESS,
-    CONF_GA_BRIGHTNESS_EAST,
-    CONF_GA_BRIGHTNESS_NORTH,
-    CONF_GA_BRIGHTNESS_SOUTH,
-    CONF_GA_BRIGHTNESS_WEST,
     CONF_GA_COLOR,
     CONF_GA_COLOR_TEMP,
     CONF_GA_CONTROLLER_MODE,
     CONF_GA_CONTROLLER_STATUS,
-    CONF_GA_DATE,
-    CONF_GA_DATETIME,
-    CONF_GA_DAY_NIGHT,
     CONF_GA_FAN_SPEED,
     CONF_GA_FAN_SWING,
     CONF_GA_FAN_SWING_HORIZONTAL,
-    CONF_GA_FROST_ALARM,
     CONF_GA_GREEN_BRIGHTNESS,
     CONF_GA_GREEN_SWITCH,
     CONF_GA_HEAT_COOL,
     CONF_GA_HUE,
-    CONF_GA_HUMIDITY,
     CONF_GA_HUMIDITY_CURRENT,
     CONF_GA_ON_OFF,
     CONF_GA_OP_MODE_COMFORT,
@@ -99,97 +81,122 @@ from .const import (
     CONF_GA_OP_MODE_STANDBY,
     CONF_GA_OPERATION_MODE,
     CONF_GA_OSCILLATION,
-    CONF_GA_POSITION_SET,
-    CONF_GA_POSITION_STATE,
-    CONF_GA_RAIN_ALARM,
     CONF_GA_RED_BRIGHTNESS,
     CONF_GA_RED_SWITCH,
     CONF_GA_SATURATION,
-    CONF_GA_SCENE,
     CONF_GA_SEND,
-    CONF_GA_SENSOR,
     CONF_GA_SETPOINT_SHIFT,
     CONF_GA_SPEED,
     CONF_GA_STEP,
-    CONF_GA_STOP,
     CONF_GA_SWITCH,
-    CONF_GA_TEMPERATURE,
     CONF_GA_TEMPERATURE_CURRENT,
     CONF_GA_TEMPERATURE_TARGET,
-    CONF_GA_TEXT,
-    CONF_GA_TIME,
-    CONF_GA_UP_DOWN,
     CONF_GA_VALVE,
     CONF_GA_WHITE_BRIGHTNESS,
     CONF_GA_WHITE_SWITCH,
-    CONF_GA_WIND_ALARM,
-    CONF_GA_WIND_BEARING,
-    CONF_GA_WIND_SPEED,
     CONF_IGNORE_AUTO_MODE,
-    CONF_INVERT_DAY_NIGHT,
     CONF_SPEED,
     CONF_TARGET_TEMPERATURE,
 )
 from .knx_selector import (
     AllSerializeFirst,
     GASelector,
+    GroupAddressConfig,
     GroupSelect,
     GroupSelectOption,
     KnxPayloadSelector,
     KNXSectionFlat,
     KnxSelectOptionsSelector,
     SyncStateSelector,
+    ga,
 )
 
-BASE_ENTITY_SCHEMA = probatio.All(
-    {
-        probatio.Optional(CONF_NAME, default=None): probatio.Maybe(str),
-        probatio.Optional(CONF_DEVICE_INFO, default=None): probatio.Maybe(str),
-        probatio.Optional(CONF_ENTITY_CATEGORY, default=None): probatio.Any(
-            ENTITY_CATEGORIES_SCHEMA, probatio.SetTo(None)
-        ),
-    },
-    probatio.Any(
-        probatio.Schema(
-            {
-                probatio.Required(CONF_NAME): probatio.All(str, probatio.IsTrue()),
-            },
-            extra=probatio.ALLOW_EXTRA,
-        ),
-        probatio.Schema(
-            {
-                probatio.Required(CONF_DEVICE_INFO): str,
-            },
-            extra=probatio.ALLOW_EXTRA,
-        ),
-        msg="One of `Device` or `Name` is required",
-    ),
-)
+SyncState = Annotated[bool | str | int, SyncStateSelector()]
+SyncStateAllowFalse = Annotated[bool | str | int, SyncStateSelector(allow_false=True)]
 
 
-BINARY_SENSOR_KNX_SCHEMA = probatio.Schema(
-    {
-        probatio.Required(CONF_GA_SENSOR): GASelector(
-            write=False, state_required=True, valid_dpt="1"
+@dataclass(kw_only=True, slots=True)
+class BaseEntityConfig:
+    """Common UI configuration of a KNX entity."""
+
+    name: str | None = None
+    device_info: str | None = None
+    entity_category: Annotated[
+        EntityCategory | None, probatio.Coerce(parse_entity_category)
+    ] = None
+
+    @property
+    def xknx_name(self) -> str:
+        """Name of the xknx device, empty when HA names the entity after its device."""
+        return self.name or ""
+
+
+def _name_or_device_required(config: BaseEntityConfig) -> BaseEntityConfig:
+    """Require a name, unless the entity is named after its device."""
+    if not config.name and config.device_info is None:
+        raise probatio.AnyInvalid("One of `Device` or `Name` is required")
+    return config
+
+
+def base_entity_schema(platform: Platform) -> probatio.All:
+    """Return the base entity schema for a platform."""
+    return probatio.All(
+        probatio.DataclassSchema(
+            BaseEntityConfig,
+            {CONF_ENTITY_CATEGORY: entity_category_supported(platform)},
         ),
-        probatio.Optional(CONF_INVERT): selector.BooleanSelector(),
-        "section_advanced_options": KNXSectionFlat(collapsible=True),
-        probatio.Optional(CONF_IGNORE_INTERNAL_STATE): selector.BooleanSelector(),
-        probatio.Optional(CONF_CONTEXT_TIMEOUT): selector.NumberSelector(
-            selector.NumberSelectorConfig(
-                min=0, max=10, step=0.1, unit_of_measurement="s"
+        _name_or_device_required,
+    )
+
+
+@dataclass(kw_only=True, slots=True)
+class KnxEntityData[KnxT]:
+    """Validated UI entity data: the common `entity` and the platform `knx` part."""
+
+    entity: BaseEntityConfig
+    knx: KnxT
+
+
+def _to_entity_data(data: dict[str, Any]) -> KnxEntityData[Any]:
+    return KnxEntityData(entity=data[CONF_ENTITY], knx=data[DOMAIN])
+
+
+@dataclass(kw_only=True, slots=True)
+class BinarySensorKnxConfig:
+    """UI configuration of a KNX binary sensor."""
+
+    ga_sensor: Annotated[
+        GroupAddressConfig, ga(write=False, state_required=True, valid_dpt="1")
+    ]
+    invert: Annotated[bool, selector.BooleanSelector()] = False
+    section_advanced_options: Annotated[
+        None, Key(remove=True), KNXSectionFlat(collapsible=True)
+    ] = None
+    ignore_internal_state: Annotated[bool, selector.BooleanSelector()] = False
+    context_timeout: Annotated[
+        float | None,
+        probatio.Maybe(
+            selector.NumberSelector(
+                selector.NumberSelectorConfig(
+                    min=0, max=10, step=0.1, unit_of_measurement="s"
+                )
             )
         ),
-        probatio.Optional(CONF_RESET_AFTER): selector.NumberSelector(
-            selector.NumberSelectorConfig(
-                min=0, max=600, step=0.1, unit_of_measurement="s"
+    ] = None
+    reset_after: Annotated[
+        float | None,
+        probatio.Maybe(
+            selector.NumberSelector(
+                selector.NumberSelectorConfig(
+                    min=0, max=600, step=0.1, unit_of_measurement="s"
+                )
             )
         ),
-        probatio.Required(CONF_SYNC_STATE, default=True): SyncStateSelector(
-            allow_false=True
-        ),
-    },
-)
+    ] = None
+    sync_state: Annotated[SyncStateAllowFalse, Key(required=True)] = True
+
+
+BINARY_SENSOR_KNX_SCHEMA = probatio.DataclassSchema(BinarySensorKnxConfig)
 
 
 def _button_data_sub_validator(config: dict) -> dict:
@@ -240,90 +247,89 @@ BUTTON_KNX_SCHEMA = AllSerializeFirst(
     _button_data_sub_validator,
 )
 
-COVER_KNX_SCHEMA = AllSerializeFirst(
-    probatio.Schema(
-        {
-            probatio.Optional(CONF_GA_UP_DOWN): GASelector(state=False, valid_dpt="1"),
-            probatio.Optional(CoverConf.INVERT_UPDOWN): selector.BooleanSelector(),
-            probatio.Optional(CONF_GA_STOP): GASelector(state=False, valid_dpt="1"),
-            probatio.Optional(CONF_GA_STEP): GASelector(state=False, valid_dpt="1"),
-            "section_position_control": KNXSectionFlat(collapsible=True),
-            probatio.Optional(CONF_GA_POSITION_SET): GASelector(
-                state=False, valid_dpt="5.001"
-            ),
-            probatio.Optional(CONF_GA_POSITION_STATE): GASelector(
-                write=False, valid_dpt="5.001"
-            ),
-            probatio.Optional(CoverConf.INVERT_POSITION): selector.BooleanSelector(),
-            "section_tilt_control": KNXSectionFlat(collapsible=True),
-            probatio.Optional(CONF_GA_ANGLE): GASelector(valid_dpt="5.001"),
-            probatio.Optional(CoverConf.INVERT_ANGLE): selector.BooleanSelector(),
-            "section_travel_time": KNXSectionFlat(),
-            probatio.Required(
-                CoverConf.TRAVELLING_TIME_UP, default=25
-            ): selector.NumberSelector(
-                selector.NumberSelectorConfig(
-                    min=0, max=1000, step=0.1, unit_of_measurement="s"
-                )
-            ),
-            probatio.Required(
-                CoverConf.TRAVELLING_TIME_DOWN, default=25
-            ): selector.NumberSelector(
-                selector.NumberSelectorConfig(
-                    min=0, max=1000, step=0.1, unit_of_measurement="s"
-                )
-            ),
-            probatio.Optional(CONF_SYNC_STATE, default=True): SyncStateSelector(),
-        },
-        extra=probatio.REMOVE_EXTRA,
-    ),
-    probatio.Any(
-        probatio.Schema(
-            {
-                probatio.Required(CONF_GA_UP_DOWN): GASelector(
-                    state=False, write_required=True
-                )
-            },
-            extra=probatio.ALLOW_EXTRA,
-        ),
-        probatio.Schema(
-            {
-                probatio.Required(CONF_GA_POSITION_SET): GASelector(
-                    state=False, write_required=True
-                )
-            },
-            extra=probatio.ALLOW_EXTRA,
-        ),
-        msg=(
+_TRAVELLING_TIME_SELECTOR = selector.NumberSelector(
+    selector.NumberSelectorConfig(min=0, max=1000, step=0.1, unit_of_measurement="s")
+)
+
+
+@dataclass(kw_only=True, slots=True)
+class CoverKnxConfig:
+    """UI configuration of a KNX cover."""
+
+    ga_up_down: Annotated[GroupAddressConfig | None, ga(state=False, valid_dpt="1")] = (
+        None
+    )
+    invert_updown: Annotated[bool, selector.BooleanSelector()] = False
+    ga_stop: Annotated[GroupAddressConfig | None, ga(state=False, valid_dpt="1")] = None
+    ga_step: Annotated[GroupAddressConfig | None, ga(state=False, valid_dpt="1")] = None
+    section_position_control: Annotated[
+        None, Key(remove=True), KNXSectionFlat(collapsible=True)
+    ] = None
+    ga_position_set: Annotated[
+        GroupAddressConfig | None, ga(state=False, valid_dpt="5.001")
+    ] = None
+    ga_position_state: Annotated[
+        GroupAddressConfig | None, ga(write=False, valid_dpt="5.001")
+    ] = None
+    invert_position: Annotated[bool, selector.BooleanSelector()] = False
+    section_tilt_control: Annotated[
+        None, Key(remove=True), KNXSectionFlat(collapsible=True)
+    ] = None
+    ga_angle: Annotated[GroupAddressConfig | None, ga(valid_dpt="5.001")] = None
+    invert_angle: Annotated[bool, selector.BooleanSelector()] = False
+    section_travel_time: Annotated[None, Key(remove=True), KNXSectionFlat()] = None
+    travelling_time_up: Annotated[
+        float, Key(required=True), _TRAVELLING_TIME_SELECTOR
+    ] = 25
+    travelling_time_down: Annotated[
+        float, Key(required=True), _TRAVELLING_TIME_SELECTOR
+    ] = 25
+    sync_state: SyncState = True
+
+
+def _cover_control_sub_validator(config: CoverKnxConfig) -> CoverKnxConfig:
+    """Require a way to move the cover."""
+    if not any(
+        ga_config is not None and ga_config.write is not None
+        for ga_config in (config.ga_up_down, config.ga_position_set)
+    ):
+        raise probatio.Invalid(
             "At least one of 'Open/Close control' or"
             " 'Position - Set position' is required."
-        ),
-    ),
+        )
+    return config
+
+
+COVER_KNX_SCHEMA = AllSerializeFirst(
+    probatio.DataclassSchema(CoverKnxConfig, extra=probatio.REMOVE_EXTRA),
+    _cover_control_sub_validator,
 )
 
-DATE_KNX_SCHEMA = probatio.Schema(
-    {
-        probatio.Required(CONF_GA_DATE): GASelector(
-            write_required=True, valid_dpt="11.001"
-        ),
-        probatio.Optional(
-            CONF_RESPOND_TO_READ, default=False
-        ): selector.BooleanSelector(),
-        probatio.Optional(CONF_SYNC_STATE, default=True): SyncStateSelector(),
-    }
-)
 
-DATETIME_KNX_SCHEMA = probatio.Schema(
-    {
-        probatio.Required(CONF_GA_DATETIME): GASelector(
-            write_required=True, valid_dpt="19.001"
-        ),
-        probatio.Optional(
-            CONF_RESPOND_TO_READ, default=False
-        ): selector.BooleanSelector(),
-        probatio.Optional(CONF_SYNC_STATE, default=True): SyncStateSelector(),
-    }
-)
+@dataclass(kw_only=True, slots=True)
+class DateKnxConfig:
+    """UI configuration of a KNX date entity."""
+
+    ga_date: Annotated[GroupAddressConfig, ga(write_required=True, valid_dpt="11.001")]
+    respond_to_read: Annotated[bool, selector.BooleanSelector()] = False
+    sync_state: SyncState = True
+
+
+DATE_KNX_SCHEMA = probatio.DataclassSchema(DateKnxConfig)
+
+
+@dataclass(kw_only=True, slots=True)
+class DatetimeKnxConfig:
+    """UI configuration of a KNX datetime entity."""
+
+    ga_datetime: Annotated[
+        GroupAddressConfig, ga(write_required=True, valid_dpt="19.001")
+    ]
+    respond_to_read: Annotated[bool, selector.BooleanSelector()] = False
+    sync_state: SyncState = True
+
+
+DATETIME_KNX_SCHEMA = probatio.DataclassSchema(DatetimeKnxConfig)
 
 FAN_KNX_SCHEMA = AllSerializeFirst(
     probatio.Schema(
@@ -520,49 +526,54 @@ LIGHT_KNX_SCHEMA = AllSerializeFirst(
 )
 
 
-NOTIFY_KNX_SCHEMA = probatio.Schema(
-    {
-        probatio.Required(CONF_GA_SEND): GASelector(
-            state=False, passive=False, write_required=True, dpt=["string"]
+@dataclass(kw_only=True, slots=True)
+class NotifyKnxConfig:
+    """UI configuration of a KNX notify entity."""
+
+    ga_send: Annotated[
+        GroupAddressConfig,
+        ga(state=False, passive=False, write_required=True, dpt=["string"]),
+    ]
+
+
+NOTIFY_KNX_SCHEMA = probatio.DataclassSchema(NotifyKnxConfig)
+
+
+@dataclass(kw_only=True, slots=True)
+class NumberKnxConfig:
+    """UI configuration of a KNX number entity."""
+
+    ga_sensor: Annotated[GroupAddressConfig, ga(write_required=True, dpt=["numeric"])]
+    respond_to_read: Annotated[bool, selector.BooleanSelector()] = False
+    section_advanced_options: Annotated[
+        None, Key(remove=True), KNXSectionFlat(collapsible=True)
+    ] = None
+    mode: Annotated[
+        str,
+        Key(required=True),
+        selector.SelectSelector(
+            selector.SelectSelectorConfig(
+                options=list(NumberMode),
+                translation_key="component.knx.config_panel.entities.create.number.knx.mode",
+            ),
         ),
-    }
-)
-
-
-def _number_limit_sub_validator(config: dict) -> dict:
-    """Validate min, max, and step values for a number entity."""
-    dpt = config[CONF_GA_SENSOR][CONF_DPT]
-    transcoder = DPTNumeric.parse_transcoder(dpt)
-    assert transcoder is not None  # already checked by GASelector
-    return validate_number_attributes(transcoder, config)
-
-
-NUMBER_KNX_SCHEMA = AllSerializeFirst(
-    probatio.Schema(
-        {
-            probatio.Required(CONF_GA_SENSOR): GASelector(
-                write_required=True, dpt=["numeric"]
-            ),
-            probatio.Optional(
-                CONF_RESPOND_TO_READ, default=False
-            ): selector.BooleanSelector(),
-            "section_advanced_options": KNXSectionFlat(collapsible=True),
-            probatio.Required(
-                CONF_MODE, default=NumberMode.AUTO
-            ): selector.SelectSelector(
-                selector.SelectSelectorConfig(
-                    options=list(NumberMode),
-                    translation_key="component.knx.config_panel.entities.create.number.knx.mode",
-                ),
-            ),
-            probatio.Optional(NumberConf.MIN): selector.NumberSelector(),
-            probatio.Optional(NumberConf.MAX): selector.NumberSelector(),
-            probatio.Optional(NumberConf.STEP): selector.NumberSelector(
+    ] = NumberMode.AUTO
+    min: Annotated[float | None, probatio.Maybe(selector.NumberSelector())] = None
+    max: Annotated[float | None, probatio.Maybe(selector.NumberSelector())] = None
+    step: Annotated[
+        float | None,
+        probatio.Maybe(
+            selector.NumberSelector(
                 selector.NumberSelectorConfig(
                     min=0, step="any", mode=selector.NumberSelectorMode.BOX
                 )
-            ),
-            probatio.Optional(CONF_UNIT_OF_MEASUREMENT): selector.SelectSelector(
+            )
+        ),
+    ] = None
+    unit_of_measurement: Annotated[
+        str | None,
+        probatio.Maybe(
+            selector.SelectSelector(
                 selector.SelectSelectorConfig(
                     options=sorted(
                         {
@@ -575,34 +586,67 @@ NUMBER_KNX_SCHEMA = AllSerializeFirst(
                     mode=selector.SelectSelectorMode.DROPDOWN,
                     custom_value=True,
                 ),
-            ),
-            probatio.Optional(CONF_DEVICE_CLASS): selector.DeviceClassSelector(
+            )
+        ),
+    ] = None
+    device_class: Annotated[
+        str | None,
+        probatio.Maybe(
+            selector.DeviceClassSelector(
                 selector.DeviceClassSelectorConfig(domain=Platform.NUMBER)
-            ),
-            probatio.Optional(CONF_SYNC_STATE, default=True): SyncStateSelector(),
-        },
-    ),
+            )
+        ),
+    ] = None
+    sync_state: SyncState = True
+
+
+def _number_limit_sub_validator(config: NumberKnxConfig) -> NumberKnxConfig:
+    """Validate min, max, and step values for a number entity."""
+    assert config.ga_sensor.dpt is not None  # required by the selector
+    transcoder = DPTNumeric.parse_transcoder(config.ga_sensor.dpt)
+    assert transcoder is not None  # already checked by GASelector
+    validate_number_attributes(
+        transcoder,
+        min_config=config.min,
+        max_config=config.max,
+        step_config=config.step,
+        device_class=config.device_class,
+        unit_of_measurement=config.unit_of_measurement,
+    )
+    return config
+
+
+NUMBER_KNX_SCHEMA = AllSerializeFirst(
+    probatio.DataclassSchema(NumberKnxConfig),
     _number_limit_sub_validator,
 )
 
-SCENE_KNX_SCHEMA = probatio.Schema(
-    {
-        probatio.Required(CONF_GA_SCENE): GASelector(
+
+@dataclass(kw_only=True, slots=True)
+class SceneKnxConfig:
+    """UI configuration of a KNX scene."""
+
+    ga_scene: Annotated[
+        GroupAddressConfig,
+        ga(
             state=False,
             passive=False,
             write_required=True,
             valid_dpt=["17.001", "18.001"],
         ),
-        probatio.Required(SceneConf.SCENE_NUMBER): AllSerializeFirst(
-            selector.NumberSelector(
-                selector.NumberSelectorConfig(
-                    min=1, max=64, step=1, mode=selector.NumberSelectorMode.BOX
-                )
-            ),
-            probatio.Coerce(int),
+    ]
+    scene_number: Annotated[
+        int,
+        selector.NumberSelector(
+            selector.NumberSelectorConfig(
+                min=1, max=64, step=1, mode=selector.NumberSelectorMode.BOX
+            )
         ),
-    },
-)
+        probatio.Coerce(int),
+    ]
+
+
+SCENE_KNX_SCHEMA = probatio.DataclassSchema(SceneKnxConfig)
 
 
 def _select_options_sub_validator(config: dict) -> dict:
@@ -725,48 +769,52 @@ SELECT_KNX_SCHEMA = AllSerializeFirst(
     _select_options_sub_validator,
 )
 
-SWITCH_KNX_SCHEMA = probatio.Schema(
-    {
-        probatio.Required(CONF_GA_SWITCH): GASelector(
-            write_required=True, valid_dpt="1"
-        ),
-        probatio.Optional(CONF_INVERT, default=False): selector.BooleanSelector(),
-        probatio.Optional(
-            CONF_RESPOND_TO_READ, default=False
-        ): selector.BooleanSelector(),
-        probatio.Optional(CONF_SYNC_STATE, default=True): SyncStateSelector(),
-    },
-)
 
-TEXT_KNX_SCHEMA = probatio.Schema(
-    {
-        probatio.Required(CONF_GA_TEXT): GASelector(
-            write_required=True, dpt=["string"]
-        ),
-        probatio.Required(CONF_MODE, default=TextMode.TEXT): selector.SelectSelector(
+@dataclass(kw_only=True, slots=True)
+class SwitchKnxConfig:
+    """UI configuration of a KNX switch."""
+
+    ga_switch: Annotated[GroupAddressConfig, ga(write_required=True, valid_dpt="1")]
+    invert: Annotated[bool, selector.BooleanSelector()] = False
+    respond_to_read: Annotated[bool, selector.BooleanSelector()] = False
+    sync_state: SyncState = True
+
+
+SWITCH_KNX_SCHEMA = probatio.DataclassSchema(SwitchKnxConfig)
+
+
+@dataclass(kw_only=True, slots=True)
+class TextKnxConfig:
+    """UI configuration of a KNX text entity."""
+
+    ga_text: Annotated[GroupAddressConfig, ga(write_required=True, dpt=["string"])]
+    mode: Annotated[
+        str,
+        Key(required=True),
+        selector.SelectSelector(
             selector.SelectSelectorConfig(
                 options=list(TextMode),
                 translation_key="component.knx.config_panel.entities.create.text.knx.mode",
             ),
         ),
-        probatio.Optional(
-            CONF_RESPOND_TO_READ, default=False
-        ): selector.BooleanSelector(),
-        probatio.Optional(CONF_SYNC_STATE, default=True): SyncStateSelector(),
-    },
-)
+    ] = TextMode.TEXT
+    respond_to_read: Annotated[bool, selector.BooleanSelector()] = False
+    sync_state: SyncState = True
 
-TIME_KNX_SCHEMA = probatio.Schema(
-    {
-        probatio.Required(CONF_GA_TIME): GASelector(
-            write_required=True, valid_dpt="10.001"
-        ),
-        probatio.Optional(
-            CONF_RESPOND_TO_READ, default=False
-        ): selector.BooleanSelector(),
-        probatio.Optional(CONF_SYNC_STATE, default=True): SyncStateSelector(),
-    }
-)
+
+TEXT_KNX_SCHEMA = probatio.DataclassSchema(TextKnxConfig)
+
+
+@dataclass(kw_only=True, slots=True)
+class TimeKnxConfig:
+    """UI configuration of a KNX time entity."""
+
+    ga_time: Annotated[GroupAddressConfig, ga(write_required=True, valid_dpt="10.001")]
+    respond_to_read: Annotated[bool, selector.BooleanSelector()] = False
+    sync_state: SyncState = True
+
+
+TIME_KNX_SCHEMA = probatio.DataclassSchema(TimeKnxConfig)
 
 
 @unique
@@ -915,21 +963,21 @@ CLIMATE_KNX_SCHEMA = probatio.Schema(
 )
 
 
-def _sensor_attribute_sub_validator(config: dict) -> dict:
-    """Validate state_class, device_class and unit compatibility."""
-    dpt = config[CONF_GA_SENSOR][CONF_DPT]
-    dpt_metadata = get_supported_dpts()[dpt]
-    return validate_sensor_attributes(dpt_metadata, config)
+@dataclass(kw_only=True, slots=True)
+class SensorKnxConfig:
+    """UI configuration of a KNX sensor."""
 
-
-SENSOR_KNX_SCHEMA = AllSerializeFirst(
-    probatio.Schema(
-        {
-            probatio.Required(CONF_GA_SENSOR): GASelector(
-                write=False, state_required=True, dpt=["numeric", "string"]
-            ),
-            "section_advanced_options": KNXSectionFlat(collapsible=True),
-            probatio.Optional(CONF_UNIT_OF_MEASUREMENT): selector.SelectSelector(
+    ga_sensor: Annotated[
+        GroupAddressConfig,
+        ga(write=False, state_required=True, dpt=["numeric", "string"]),
+    ]
+    section_advanced_options: Annotated[
+        None, Key(remove=True), KNXSectionFlat(collapsible=True)
+    ] = None
+    unit_of_measurement: Annotated[
+        str | None,
+        probatio.Maybe(
+            selector.SelectSelector(
                 selector.SelectSelectorConfig(
                     options=sorted(
                         {
@@ -943,8 +991,13 @@ SENSOR_KNX_SCHEMA = AllSerializeFirst(
                     translation_key="component.knx.selector.sensor_unit_of_measurement",
                     custom_value=True,
                 ),
-            ),
-            probatio.Optional(CONF_DEVICE_CLASS): selector.SelectSelector(
+            )
+        ),
+    ] = None
+    device_class: Annotated[
+        str | None,
+        probatio.Maybe(
+            selector.SelectSelector(
                 selector.SelectSelectorConfig(
                     options=[
                         cls.value
@@ -954,65 +1007,91 @@ SENSOR_KNX_SCHEMA = AllSerializeFirst(
                     translation_key="component.knx.selector.sensor_device_class",
                     sort=True,
                 )
-            ),
-            probatio.Optional(CONF_SENSOR_STATE_CLASS): selector.SelectSelector(
-                selector.SelectSelectorConfig(
-                    options=list(SensorStateClass),
-                    translation_key="component.knx.selector.sensor_state_class",
-                    mode=selector.SelectSelectorMode.DROPDOWN,
-                )
-            ),
-            probatio.Optional(CONF_ALWAYS_CALLBACK): selector.BooleanSelector(),
-            probatio.Required(CONF_SYNC_STATE, default=True): SyncStateSelector(
-                allow_false=True
-            ),
-        },
-    ),
+            )
+        ),
+    ] = None
+    state_class: Annotated[
+        str | None, probatio.Maybe(selector.StateClassSelector())
+    ] = None
+    always_callback: Annotated[bool, selector.BooleanSelector()] = False
+    sync_state: Annotated[SyncStateAllowFalse, Key(required=True)] = True
+
+
+def _sensor_attribute_sub_validator(config: SensorKnxConfig) -> SensorKnxConfig:
+    """Validate state_class, device_class and unit compatibility."""
+    assert config.ga_sensor.dpt is not None  # required by the selector
+    validate_sensor_attributes(
+        get_supported_dpts()[config.ga_sensor.dpt],
+        state_class=config.state_class,
+        device_class=config.device_class,
+        unit_of_measurement=config.unit_of_measurement,
+    )
+    return config
+
+
+SENSOR_KNX_SCHEMA = AllSerializeFirst(
+    probatio.DataclassSchema(SensorKnxConfig),
     _sensor_attribute_sub_validator,
 )
 
-WEATHER_KNX_SCHEMA = probatio.Schema(
-    {
-        probatio.Required(CONF_GA_TEMPERATURE): GASelector(
-            write=False, state_required=True, valid_dpt="9.001"
-        ),
-        probatio.Optional(CONF_GA_HUMIDITY): GASelector(write=False, valid_dpt="9.007"),
-        probatio.Optional(CONF_GA_AIR_PRESSURE): GASelector(
-            write=False, valid_dpt=["9.006", "14.058"]
-        ),
-        probatio.Optional(CONF_GA_WIND_SPEED): GASelector(
-            write=False, valid_dpt="9.005"
-        ),
-        probatio.Optional(CONF_GA_WIND_BEARING): GASelector(
-            write=False, valid_dpt="5.003"
-        ),
-        "section_brightness": KNXSectionFlat(collapsible=True),
-        probatio.Optional(CONF_GA_BRIGHTNESS_EAST): GASelector(
-            write=False, valid_dpt="9.004"
-        ),
-        probatio.Optional(CONF_GA_BRIGHTNESS_SOUTH): GASelector(
-            write=False, valid_dpt="9.004"
-        ),
-        probatio.Optional(CONF_GA_BRIGHTNESS_WEST): GASelector(
-            write=False, valid_dpt="9.004"
-        ),
-        probatio.Optional(CONF_GA_BRIGHTNESS_NORTH): GASelector(
-            write=False, valid_dpt="9.004"
-        ),
-        "section_day_night": KNXSectionFlat(collapsible=True),
-        probatio.Optional(CONF_GA_DAY_NIGHT): GASelector(
-            write=False, valid_dpt="1.024"
-        ),
-        probatio.Optional(
-            CONF_INVERT_DAY_NIGHT, default=False
-        ): selector.BooleanSelector(),
-        "section_alarms": KNXSectionFlat(collapsible=True),
-        probatio.Optional(CONF_GA_RAIN_ALARM): GASelector(write=False, valid_dpt="1"),
-        probatio.Optional(CONF_GA_FROST_ALARM): GASelector(write=False, valid_dpt="1"),
-        probatio.Optional(CONF_GA_WIND_ALARM): GASelector(write=False, valid_dpt="1"),
-        probatio.Optional(CONF_SYNC_STATE, default=True): SyncStateSelector(),
-    }
-)
+
+@dataclass(kw_only=True, slots=True)
+class WeatherKnxConfig:
+    """UI configuration of a KNX weather entity."""
+
+    ga_temperature: Annotated[
+        GroupAddressConfig, ga(write=False, state_required=True, valid_dpt="9.001")
+    ]
+    ga_humidity: Annotated[
+        GroupAddressConfig | None, ga(write=False, valid_dpt="9.007")
+    ] = None
+    ga_air_pressure: Annotated[
+        GroupAddressConfig | None, ga(write=False, valid_dpt=["9.006", "14.058"])
+    ] = None
+    ga_wind_speed: Annotated[
+        GroupAddressConfig | None, ga(write=False, valid_dpt="9.005")
+    ] = None
+    ga_wind_bearing: Annotated[
+        GroupAddressConfig | None, ga(write=False, valid_dpt="5.003")
+    ] = None
+    section_brightness: Annotated[
+        None, Key(remove=True), KNXSectionFlat(collapsible=True)
+    ] = None
+    ga_brightness_east: Annotated[
+        GroupAddressConfig | None, ga(write=False, valid_dpt="9.004")
+    ] = None
+    ga_brightness_south: Annotated[
+        GroupAddressConfig | None, ga(write=False, valid_dpt="9.004")
+    ] = None
+    ga_brightness_west: Annotated[
+        GroupAddressConfig | None, ga(write=False, valid_dpt="9.004")
+    ] = None
+    ga_brightness_north: Annotated[
+        GroupAddressConfig | None, ga(write=False, valid_dpt="9.004")
+    ] = None
+    section_day_night: Annotated[
+        None, Key(remove=True), KNXSectionFlat(collapsible=True)
+    ] = None
+    ga_day_night: Annotated[
+        GroupAddressConfig | None, ga(write=False, valid_dpt="1.024")
+    ] = None
+    invert_day_night: Annotated[bool, selector.BooleanSelector()] = False
+    section_alarms: Annotated[
+        None, Key(remove=True), KNXSectionFlat(collapsible=True)
+    ] = None
+    ga_rain_alarm: Annotated[
+        GroupAddressConfig | None, ga(write=False, valid_dpt="1")
+    ] = None
+    ga_frost_alarm: Annotated[
+        GroupAddressConfig | None, ga(write=False, valid_dpt="1")
+    ] = None
+    ga_wind_alarm: Annotated[
+        GroupAddressConfig | None, ga(write=False, valid_dpt="1")
+    ] = None
+    sync_state: SyncState = True
+
+
+WEATHER_KNX_SCHEMA = probatio.DataclassSchema(WeatherKnxConfig)
 
 KNX_SCHEMA_FOR_PLATFORM = {
     Platform.BINARY_SENSOR: BINARY_SENSOR_KNX_SCHEMA,
@@ -1050,12 +1129,17 @@ ENTITY_STORE_DATA_SCHEMA = probatio.All(
         {
             platform: probatio.Schema(
                 {
-                    probatio.Required(CONF_DATA): probatio.Schema(
-                        {
-                            probatio.Required(CONF_ENTITY): BASE_ENTITY_SCHEMA,
-                            probatio.Required(DOMAIN): knx_schema,
-                        },
-                        extra=probatio.PREVENT_EXTRA,  # restrict in data key for yaml edit
+                    probatio.Required(CONF_DATA): probatio.All(
+                        probatio.Schema(
+                            {
+                                probatio.Required(CONF_ENTITY): base_entity_schema(
+                                    platform
+                                ),
+                                probatio.Required(DOMAIN): knx_schema,
+                            },
+                            extra=probatio.PREVENT_EXTRA,  # restrict in data key for yaml edit
+                        ),
+                        _to_entity_data,
                     ),
                 },
                 extra=probatio.ALLOW_EXTRA,  # eg. "type" from WS-endpoint when validating directly

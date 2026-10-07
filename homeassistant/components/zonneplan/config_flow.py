@@ -4,14 +4,15 @@ from collections.abc import Mapping
 import logging
 from typing import Any, override
 
+import probatio
 from pyzonneplan import (
     OtpChallenge,
     Zonneplan,
     ZonneplanConnectionError,
     ZonneplanInvalidOtpError,
+    ZonneplanRateLimitError,
     ZonneplanTimeoutError,
 )
-import voluptuous as vol
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
@@ -31,16 +32,16 @@ from .const import DOMAIN
 
 LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_EMAIL): TextSelector(
+        probatio.Required(CONF_EMAIL): TextSelector(
             TextSelectorConfig(type=TextSelectorType.EMAIL, autocomplete="username")
         ),
     }
 )
-STEP_OTP_DATA_SCHEMA = vol.Schema(
+STEP_OTP_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required("otp"): TextSelector(
+        probatio.Required("otp"): TextSelector(
             TextSelectorConfig(type=TextSelectorType.NUMBER)
         )
     }
@@ -67,6 +68,8 @@ class ZonneplanConfigFlow(ConfigFlow, domain=DOMAIN):
             return {"base": "cannot_connect"}
         except ZonneplanTimeoutError:
             return {"base": "timeout_connect"}
+        except ZonneplanRateLimitError:
+            return {"base": "rate_limited"}
         except Exception:
             LOGGER.exception("Unexpected exception")
             return {"base": "unknown"}
@@ -104,6 +107,8 @@ class ZonneplanConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except ZonneplanTimeoutError:
                 errors["base"] = "timeout_connect"
+            except ZonneplanRateLimitError:
+                errors["base"] = "rate_limited"
             except Exception:
                 LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"

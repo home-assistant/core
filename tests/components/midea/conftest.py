@@ -37,6 +37,7 @@ class DummyDevice:
         device_type: DeviceType,
         *,
         attributes: dict | None = None,
+        capabilities: dict | None = None,
     ) -> None:
         """Initialize fake device."""
         self.device_type = device_type
@@ -46,11 +47,13 @@ class DummyDevice:
         self.subtype = TEST_SUBTYPE
         self.available = False
         self.attributes = attributes or {}
-        self.capabilities: dict[str, Any] = {}
+        self.capabilities: dict[str, Any] = capabilities or {}
         self._callbacks: list[Callable] = []
         self.calls: list[tuple] = []
         self.temperature_step = 1
-        self.fan_modes = ["Low", "Medium", "High", "Auto"]
+        self.raw_hvac_modes = ["off", "auto", "cool", "dry", "heat", "fan_only"]
+        self.raw_fan_modes = ["low", "medium", "high", "auto"]
+        self.raw_fan_mode: str | None = "high"
         self.modes = [
             "Auto",
             "ECO",
@@ -88,17 +91,21 @@ class DummyDevice:
         self.notify_update({attr: value})
         self.calls.append(("set_attribute", attr, value))
 
-    def set_target_temperature(self, **kwargs: Any) -> None:
+    def set_raw_target_temperature(self, **kwargs: Any) -> None:
         """Record set target temperature call."""
-        self.calls.append(("set_target_temperature", kwargs))
+        self.calls.append(("set_raw_target_temperature", kwargs))
 
-    def set_swing(self, **kwargs: Any) -> None:
-        """Record set swing call."""
-        self.calls.append(("set_swing", kwargs))
+    def set_raw_swing_mode(self, swing_mode: str) -> None:
+        """Record set swing mode call."""
+        self.calls.append(("set_raw_swing_mode", swing_mode))
 
-    def set_mode(self, zone: int, mode: int) -> None:
-        """Record set mode call."""
-        self.calls.append(("set_mode", zone, mode))
+    def set_raw_fan_mode(self, fan_mode: str) -> None:
+        """Record set fan mode call."""
+        self.calls.append(("set_raw_fan_mode", fan_mode))
+
+    def set_raw_hvac_mode(self, hvac_mode: str, zone: int | None = None) -> None:
+        """Record set hvac mode call."""
+        self.calls.append(("set_raw_hvac_mode", hvac_mode, zone))
 
     def start_work(self) -> None:
         """Record start_work call."""

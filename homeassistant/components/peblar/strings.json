@@ -3,9 +3,7 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "different_device": "The information entered is from a different Peblar EV charger.",
-      "no_serial_number": "The discovered Peblar device did not provide a serial number.",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      "no_serial_number": "The discovered Peblar device did not provide a serial number."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -72,6 +70,18 @@
         "name": "Unlock socket"
       }
     },
+    "event": {
+      "session_authorization": {
+        "name": "Session authorization",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "session_authorized": "Session authorized"
+            }
+          }
+        }
+      }
+    },
     "number": {
       "charge_current_limit": {
         "name": "Charge limit"
@@ -101,6 +111,7 @@
       "smart_charging": {
         "name": "Smart charging",
         "state": {
+          "custom_solar": "Custom solar",
           "default": "Default",
           "fast_solar": "Fast solar",
           "pure_solar": "Pure solar",

@@ -1,16 +1,9 @@
 """The Aladdin Connect Genie integration."""
 
-import aiohttp
 from genie_partner_sdk.client import AladdinConnectClient
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import (
-    ConfigEntryAuthFailed,
-    ConfigEntryNotReady,
-    OAuth2TokenRequestError,
-    OAuth2TokenRequestReauthError,
-)
 from homeassistant.helpers import (
     aiohttp_client,
     config_entry_oauth2_flow,
@@ -36,12 +29,7 @@ async def async_setup_entry(
 
     session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
 
-    try:
-        await session.async_ensure_token_valid()
-    except OAuth2TokenRequestReauthError as err:
-        raise ConfigEntryAuthFailed(err) from err
-    except (OAuth2TokenRequestError, aiohttp.ClientError) as err:
-        raise ConfigEntryNotReady from err
+    await session.async_ensure_token_valid()
 
     client = AladdinConnectClient(
         api.AsyncConfigEntryAuth(aiohttp_client.async_get_clientsession(hass), session)

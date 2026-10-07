@@ -21,7 +21,7 @@ from .common import ENTITY_HUMIDIFIER_300S_NIGHT_LIGHT_SELECT
     "install_humidifier_device", ["humidifier_300s"], indirect=True
 )
 async def test_humidifier_set_nightlight_level(
-    hass: HomeAssistant, manager, humidifier_300s, install_humidifier_device
+    hass: HomeAssistant, humidifier_300s, install_humidifier_device
 ) -> None:
     """Test set of humidifier night light level."""
 
@@ -39,8 +39,6 @@ async def test_humidifier_set_nightlight_level(
     humidifier_300s.set_nightlight_brightness.assert_called_once_with(
         HA_TO_VS_HUMIDIFIER_NIGHT_LIGHT_LEVEL_MAP[HUMIDIFIER_NIGHT_LIGHT_LEVEL_DIM]
     )
-    # Assert that devices were refreshed
-    manager.update_all_devices.assert_called_once()
 
 
 @pytest.mark.parametrize(

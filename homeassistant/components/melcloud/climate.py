@@ -14,7 +14,6 @@ from pymelcloud.atw_device import (
     Zone,
 )
 from pymelcloud.device import PROPERTY_POWER
-import voluptuous as vol
 
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
@@ -27,7 +26,6 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
@@ -36,9 +34,6 @@ from .const import (
     ATTR_VANE_HORIZONTAL_POSITIONS,
     ATTR_VANE_VERTICAL,
     ATTR_VANE_VERTICAL_POSITIONS,
-    CONF_POSITION,
-    SERVICE_SET_VANE_HORIZONTAL,
-    SERVICE_SET_VANE_VERTICAL,
 )
 from .coordinator import MelCloudConfigEntry, MelCloudDeviceUpdateCoordinator
 from .entity import MelCloudEntity
@@ -101,18 +96,6 @@ async def async_setup_entry(
         ]
     )
     async_add_entities(entities)
-
-    platform = entity_platform.async_get_current_platform()
-    platform.async_register_entity_service(
-        SERVICE_SET_VANE_HORIZONTAL,
-        {vol.Required(CONF_POSITION): cv.string},
-        "async_set_vane_horizontal",
-    )
-    platform.async_register_entity_service(
-        SERVICE_SET_VANE_VERTICAL,
-        {vol.Required(CONF_POSITION): cv.string},
-        "async_set_vane_vertical",
-    )
 
 
 class MelCloudClimate(MelCloudEntity, ClimateEntity):

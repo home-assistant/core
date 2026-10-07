@@ -2,8 +2,8 @@
 
 from typing import Any, override
 
+import probatio
 from pyplaato.plaato import PlaatoDeviceType
-import voluptuous as vol
 
 from homeassistant.components import cloud, webhook
 from homeassistant.config_entries import (
@@ -12,16 +12,14 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     OptionsFlow,
 )
-from homeassistant.const import CONF_SCAN_INTERVAL, CONF_TOKEN, CONF_WEBHOOK_ID
+from homeassistant.const import CONF_TOKEN, CONF_WEBHOOK_ID
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, callback
-from homeassistant.helpers import config_validation as cv
 
 from .const import (
     CONF_CLOUDHOOK,
     CONF_DEVICE_NAME,
     CONF_DEVICE_TYPE,
     CONF_USE_WEBHOOK,
-    DEFAULT_SCAN_INTERVAL,
     DOCS_URL,
     DOMAIN,
     PLACEHOLDER_DEVICE_NAME,
@@ -58,18 +56,18 @@ class PlaatoConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
                     # Name field is no longer allowed in config flow schemas
                     # pylint: disable-next=home-assistant-config-flow-name-field
-                    vol.Required(
+                    probatio.Required(
                         CONF_DEVICE_NAME,
                         default=self._init_info.get(CONF_DEVICE_NAME, None),
                     ): str,
-                    vol.Required(
+                    probatio.Required(
                         CONF_DEVICE_TYPE,
                         default=self._init_info.get(CONF_DEVICE_TYPE, None),
-                    ): vol.In(list(PlaatoDeviceType)),
+                    ): probatio.In(list(PlaatoDeviceType)),
                 }
             ),
         )
@@ -148,11 +146,13 @@ class PlaatoConfigFlow(ConfigFlow, domain=DOMAIN):
     async def _show_api_method_form(
         self, device_type: PlaatoDeviceType, errors: dict[str, str] | None = None
     ) -> ConfigFlowResult:
-        data_schema = vol.Schema({vol.Optional(CONF_TOKEN, default=""): str})
+        data_schema = probatio.Schema(
+            {probatio.Optional(probatio.Secret(CONF_TOKEN), default=""): str}
+        )
 
         if device_type == PlaatoDeviceType.Airlock:
             data_schema = data_schema.extend(
-                {vol.Optional(CONF_USE_WEBHOOK, default=False): bool}
+                {probatio.Optional(CONF_USE_WEBHOOK, default=False): bool}
             )
 
         return self.async_show_form(
@@ -202,30 +202,7 @@ class PlaatoOptionsFlowHandler(OptionsFlow):
         if use_webhook:
             return await self.async_step_webhook()
 
-        return await self.async_step_user()
-
-    async def async_step_user(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Manage the options."""
-        if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
-
-        return self.async_show_form(
-            step_id="user",
-            data_schema=vol.Schema(
-                {
-                    # Polling interval is user-configurable, which is no longer allowed
-                    # pylint: disable-next=home-assistant-config-flow-polling-field
-                    vol.Optional(
-                        CONF_SCAN_INTERVAL,
-                        default=self.config_entry.options.get(
-                            CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
-                        ),
-                    ): cv.positive_int
-                }
-            ),
-        )
+        return self.async_abort(reason="no_options")
 
     async def async_step_webhook(
         self, user_input: dict[str, Any] | None = None

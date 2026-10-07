@@ -16,7 +16,8 @@
         "warning": "The Smile P1 is not connected to a smart meter."
       }
     },
-    "vendor": "Plugwise"
+    "vendor": "Plugwise",
+    "wifi_mac_address": "012345670002"
   },
   "b82b6b3322484f2ea4e25e0bd5f3d61f": {
     "available": true,

@@ -7,7 +7,7 @@ from operator import attrgetter
 from typing import Any
 from unittest.mock import MagicMock, patch
 
-from lyngdorf import LyngdorfModel
+from lyngdorf import LyngdorfInvalidValueError, LyngdorfModel, LyngdorfUnsupportedError
 from lyngdorf.states import Control, PlaybackState, Repeat
 from lyngdorf.streaming import NowPlaying
 import pytest
@@ -52,6 +52,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import notify_position_jump, notify_receiver_update
@@ -272,6 +273,58 @@ async def test_select_source(
     attrgetter(attr)(mock_receiver).assert_awaited_once_with("HDMI")
 
 
+@pytest.mark.parametrize(
+    ("entity_id", "service", "payload", "method"),
+    [
+        pytest.param(
+            MAIN_ZONE,
+            SERVICE_SELECT_SOURCE,
+            {ATTR_INPUT_SOURCE: "Bogus"},
+            "set_source",
+            id="main_source",
+        ),
+        pytest.param(
+            ZONE_B,
+            SERVICE_SELECT_SOURCE,
+            {ATTR_INPUT_SOURCE: "Bogus"},
+            "zone_b.set_source",
+            id="zone_b_source",
+        ),
+        pytest.param(
+            MAIN_ZONE,
+            SERVICE_SELECT_SOUND_MODE,
+            {ATTR_SOUND_MODE: "Bogus"},
+            "set_sound_mode",
+            id="sound_mode",
+        ),
+    ],
+)
+async def test_select_invalid_option(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_receiver: MagicMock,
+    entity_id: str,
+    service: str,
+    payload: dict[str, Any],
+    method: str,
+) -> None:
+    """Test a source or sound mode the device does not offer is reported."""
+    attrgetter(method)(mock_receiver).side_effect = LyngdorfInvalidValueError(
+        "Bogus is not valid"
+    )
+
+    with pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            service,
+            {ATTR_ENTITY_ID: entity_id} | payload,
+            blocking=True,
+        )
+
+    assert err.value.translation_key == "invalid_option"
+    assert err.value.translation_placeholders["option"] == "Bogus"
+
+
 async def test_select_sound_mode(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
@@ -480,36 +533,66 @@ async def test_set_play_mode(
     attrgetter(method)(playing_receiver).assert_awaited_once_with(expected)
 
 
+@pytest.mark.parametrize(
+    ("service", "payload", "method"),
+    [
+        pytest.param(SERVICE_MEDIA_PAUSE, {}, "player.pause", id="pause"),
+        pytest.param(SERVICE_MEDIA_NEXT_TRACK, {}, "player.next_track", id="next"),
+        pytest.param(
+            SERVICE_MEDIA_PREVIOUS_TRACK, {}, "player.previous_track", id="previous"
+        ),
+        pytest.param(
+            SERVICE_MEDIA_SEEK, {ATTR_MEDIA_SEEK_POSITION: 42}, "player.seek", id="seek"
+        ),
+        pytest.param(
+            SERVICE_SHUFFLE_SET,
+            {ATTR_MEDIA_SHUFFLE: True},
+            "player.set_shuffle",
+            id="shuffle",
+        ),
+        pytest.param(
+            SERVICE_REPEAT_SET,
+            {ATTR_MEDIA_REPEAT: RepeatMode.ALL},
+            "player.set_repeat",
+            id="repeat",
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    ("result", "exception", "translation_key"),
+    [
+        pytest.param(False, HomeAssistantError, "command_failed", id="not_sent"),
+        pytest.param(
+            LyngdorfUnsupportedError("not offered"),
+            ServiceValidationError,
+            "unsupported_command",
+            id="unsupported",
+        ),
+    ],
+)
 @pytest.mark.usefixtures("init_integration")
-async def test_volume_before_the_device_reports_one(
+async def test_transport_failure(
     hass: HomeAssistant,
-    mock_receiver: MagicMock,
+    playing_receiver: MagicMock,
+    service: str,
+    payload: dict[str, Any],
+    method: str,
+    result: bool | Exception,
+    exception: type[HomeAssistantError],
+    translation_key: str,
 ) -> None:
-    """Test the volume control being absent until the device reports a level."""
-    mock_receiver.power_on = True
-    mock_receiver.volume = None
-    # Changed alongside so the assertions below fail if building the state
-    # raised rather than merely omitting the volume.
-    mock_receiver.muted = True
-    notify_receiver_update(mock_receiver)
-    await hass.async_block_till_done()
+    """Test a transport command the device does not take raises."""
+    attrgetter(method)(playing_receiver).side_effect = [result]
 
-    state = hass.states.get(MAIN_ZONE)
-    assert state.attributes[ATTR_MEDIA_VOLUME_MUTED] is True
-    assert state.attributes.get(ATTR_MEDIA_VOLUME_LEVEL) is None
+    with pytest.raises(exception) as err:
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            service,
+            {ATTR_ENTITY_ID: MAIN_ZONE} | payload,
+            blocking=True,
+        )
 
-    await hass.services.async_call(
-        MEDIA_PLAYER_DOMAIN,
-        SERVICE_VOLUME_UP,
-        {ATTR_ENTITY_ID: MAIN_ZONE},
-        blocking=True,
-    )
-    await hass.services.async_call(
-        MEDIA_PLAYER_DOMAIN,
-        SERVICE_VOLUME_SET,
-        {ATTR_ENTITY_ID: MAIN_ZONE, ATTR_MEDIA_VOLUME_LEVEL: 0.5},
-        blocking=True,
-    )
+    assert err.value.translation_key == translation_key
 
 
 @pytest.mark.usefixtures("init_integration")

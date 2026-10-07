@@ -41,7 +41,7 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import _WH_TO_CAL, _WH_TO_J
 from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.components.recorder.common import async_wait_recording_done
 from tests.typing import WebSocketGenerator
 
@@ -1123,6 +1123,90 @@ async def test_cost_sensor_handle_gas_kwh(
 
     state = hass.states.get("sensor.gas_consumption_cost")
     assert state.state == "50.0"
+
+
+@pytest.mark.parametrize(
+    ("usage_unit", "price_unit"),
+    [
+        pytest.param(
+            UnitOfVolume.CUBIC_METERS,
+            UnitOfEnergy.KILO_WATT_HOUR,
+            id="volume_usage_energy_price",
+        ),
+        pytest.param(
+            UnitOfEnergy.KILO_WATT_HOUR,
+            UnitOfVolume.CUBIC_METERS,
+            id="energy_usage_volume_price",
+        ),
+    ],
+)
+async def test_cost_sensor_gas_price_unit_mismatch(
+    setup_integration: Callable[[HomeAssistant], Coroutine[Any, Any, None]],
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    caplog: pytest.LogCaptureFixture,
+    usage_unit: str,
+    price_unit: str,
+) -> None:
+    """Test a gas price unit that cannot be converted to the usage unit."""
+    energy_attributes = {
+        ATTR_UNIT_OF_MEASUREMENT: usage_unit,
+        ATTR_STATE_CLASS: SensorStateClass.TOTAL_INCREASING,
+    }
+    energy_data = data.EnergyManager.default_preferences()
+    energy_data["energy_sources"].append(
+        {
+            "type": "gas",
+            "stat_energy_from": "sensor.gas_consumption",
+            "stat_cost": None,
+            "entity_energy_price": "sensor.gas_price",
+            "number_energy_price": None,
+        }
+    )
+
+    hass_storage[data.STORAGE_KEY] = {
+        "version": 1,
+        "data": energy_data,
+    }
+
+    hass.states.async_set(
+        "sensor.gas_price", "0.5", {ATTR_UNIT_OF_MEASUREMENT: f"EUR/{price_unit}"}
+    )
+    hass.states.async_set("sensor.gas_consumption", 100, energy_attributes)
+
+    await setup_integration(hass)
+
+    state = hass.states.get("sensor.gas_consumption_cost")
+    assert state.state == "0.0"
+
+    hass.states.async_set("sensor.gas_consumption", 200, energy_attributes)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.gas_consumption_cost")
+    assert state.state == "0.0"
+    assert (
+        f"Not updating cost of sensor.gas_consumption: unit {usage_unit} does not "
+        f"match price unit per {price_unit} of sensor.gas_price" in caplog.text
+    )
+    assert "Error while dispatching event" not in caplog.text
+
+    # Warned once only
+    caplog.clear()
+    hass.states.async_set("sensor.gas_consumption", 300, energy_attributes)
+    await hass.async_block_till_done()
+
+    assert "Not updating cost" not in caplog.text
+    assert "Error while dispatching event" not in caplog.text
+
+    # Usage since the last update is priced once the units match
+    hass.states.async_set(
+        "sensor.gas_price", "0.5", {ATTR_UNIT_OF_MEASUREMENT: f"EUR/{usage_unit}"}
+    )
+    hass.states.async_set("sensor.gas_consumption", 310, energy_attributes)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.gas_consumption_cost")
+    assert state.state == "105.0"
 
 
 @pytest.mark.parametrize(
@@ -2443,6 +2527,96 @@ async def test_power_sensor_combined_invalid_value(
     assert state.state == "unknown"
 
 
+@pytest.mark.usefixtures("recorder_mock")
+@pytest.mark.parametrize(
+    ("invalid_source", "value"),
+    [
+        pytest.param("sensor.battery_discharge", "150.0", id="discharge"),
+        pytest.param("sensor.battery_charge", "50.0", id="charge"),
+    ],
+)
+async def test_power_sensor_combined_invalid_unit(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    invalid_source: str,
+    value: str,
+) -> None:
+    """Test combined power sensor with a source in a non-power unit."""
+    assert await async_setup_component(hass, DOMAIN, {"energy": {}})
+    manager = await async_get_manager(hass)
+    manager.data = manager.default_preferences()
+
+    hass.states.async_set(
+        "sensor.battery_discharge",
+        "150.0",
+        {ATTR_UNIT_OF_MEASUREMENT: UnitOfPower.WATT},
+    )
+    hass.states.async_set(
+        "sensor.battery_charge",
+        "50.0",
+        {ATTR_UNIT_OF_MEASUREMENT: UnitOfPower.WATT},
+    )
+    hass.states.async_set(
+        invalid_source,
+        value,
+        {ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR},
+    )
+    await hass.async_block_till_done()
+
+    await manager.async_update(
+        {
+            "energy_sources": [
+                {
+                    "type": "battery",
+                    "stat_energy_from": "sensor.battery_energy_from",
+                    "stat_energy_to": "sensor.battery_energy_to",
+                    "power_config": {
+                        "stat_rate_from": "sensor.battery_discharge",
+                        "stat_rate_to": "sensor.battery_charge",
+                    },
+                }
+            ],
+        }
+    )
+    await hass.async_block_till_done()
+
+    # The sensor is still added when a source has a non-power unit at setup
+    state = hass.states.get(
+        "sensor.energy_battery_battery_discharge_battery_charge_net_power"
+    )
+    assert state
+    assert state.state == "unknown"
+    assert (
+        "Unable to combine sensor.battery_discharge and sensor.battery_charge: "
+        "kWh is not a recognized power unit" in caplog.text
+    )
+
+    hass.states.async_set(
+        invalid_source, value, {ATTR_UNIT_OF_MEASUREMENT: UnitOfPower.WATT}
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(
+        "sensor.energy_battery_battery_discharge_battery_charge_net_power"
+    )
+    assert state
+    assert state.state == "100.0"
+
+    hass.states.async_set(
+        invalid_source,
+        value,
+        {ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR},
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(
+        "sensor.energy_battery_battery_discharge_battery_charge_net_power"
+    )
+    assert state
+    assert state.state == "unknown"
+    assert caplog.text.count("kWh is not a recognized power unit") == 1
+
+
 async def test_power_sensor_naming_fallback(
     recorder_mock: Recorder, hass: HomeAssistant
 ) -> None:
@@ -2758,53 +2932,192 @@ async def test_missing_price_entity(
     assert state.state == "150.0"
 
 
-async def test_energy_cost_sensor_add_to_platform_abort(
-    recorder_mock: Recorder, hass: HomeAssistant
-) -> None:
-    """Test EnergyCostSensor.add_to_platform_abort sets the future."""
-    adapter = SourceAdapter(
-        source_type="grid",
-        flow_type="flow_from",
-        stat_energy_key="stat_energy_from",
-        total_money_key="stat_cost",
-        name_suffix="Cost",
-        entity_id_suffix="cost",
+def _make_cost_sensor() -> EnergyCostSensor:
+    """Build an EnergyCostSensor for the abort test."""
+    return EnergyCostSensor(
+        SourceAdapter(
+            source_type="grid",
+            flow_type="flow_from",
+            stat_energy_key="stat_energy_from",
+            total_money_key="stat_cost",
+            name_suffix="Cost",
+            entity_id_suffix="cost",
+        ),
+        {
+            "stat_energy_from": "sensor.energy",
+            "stat_cost": None,
+            "entity_energy_price": "sensor.price",
+            "number_energy_price": None,
+        },
     )
-    config = {
-        "stat_energy_from": "sensor.energy",
-        "stat_cost": None,
-        "entity_energy_price": "sensor.price",
-        "number_energy_price": None,
-    }
-
-    sensor = EnergyCostSensor(adapter, config)
-
-    # Future should not be done yet
-    assert not sensor.add_finished.done()
-
-    # Call abort
-    sensor.add_to_platform_abort()
-
-    # Future should now be done
-    assert sensor.add_finished.done()
 
 
-async def test_energy_power_sensor_add_to_platform_abort(
-    recorder_mock: Recorder, hass: HomeAssistant
-) -> None:
-    """Test EnergyPowerSensor.add_to_platform_abort sets the future."""
-    sensor = EnergyPowerSensor(
+def _make_power_sensor() -> EnergyPowerSensor:
+    """Build an EnergyPowerSensor for the abort test."""
+    return EnergyPowerSensor(
         source_type="battery",
         config={"stat_rate_inverted": "sensor.battery_power"},
         unique_id="test_unique_id",
         entity_id="sensor.test_power",
     )
 
-    # Future should not be done yet
+
+@pytest.mark.usefixtures("recorder_mock", "hass")
+@pytest.mark.parametrize(
+    "make_sensor",
+    [
+        pytest.param(_make_cost_sensor, id="cost"),
+        pytest.param(_make_power_sensor, id="power"),
+    ],
+)
+async def test_add_finished_resolved_on_abort(
+    make_sensor: Callable[[], EnergyCostSensor | EnergyPowerSensor],
+) -> None:
+    """Test an aborted add resolves add_finished so SensorManager does not hang."""
+    sensor = make_sensor()
+
     assert not sensor.add_finished.done()
 
-    # Call abort
     sensor.add_to_platform_abort()
 
-    # Future should now be done
     assert sensor.add_finished.done()
+
+
+@pytest.mark.parametrize(
+    ("energy_source", "power_entity_id"),
+    [
+        pytest.param(
+            {
+                "type": "battery",
+                "stat_energy_from": "sensor.battery_energy_from",
+                "stat_energy_to": "sensor.battery_energy_to",
+                "power_config": {"stat_rate_inverted": "sensor.battery_power"},
+            },
+            "sensor.battery_power_inverted",
+            id="battery_inverted",
+        ),
+        pytest.param(
+            {
+                "type": "grid",
+                "stat_energy_from": "sensor.grid_energy_import",
+                "stat_energy_to": "sensor.grid_energy_export",
+                "power_config": {
+                    "stat_rate_from": "sensor.grid_import",
+                    "stat_rate_to": "sensor.grid_export",
+                },
+                "cost_adjustment_day": 0,
+            },
+            "sensor.energy_grid_grid_import_grid_export_net_power",
+            id="grid_combined",
+        ),
+    ],
+)
+async def test_power_sensor_rename_updates_stat_rate(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+    energy_source: data.SourceType,
+    power_entity_id: str,
+) -> None:
+    """Test renaming a power sensor updates stat_rate in the preferences."""
+    assert await async_setup_component(hass, DOMAIN, {"energy": {}})
+    manager = await async_get_manager(hass)
+    manager.data = manager.default_preferences()
+
+    await manager.async_update({"energy_sources": [energy_source]})
+    await hass.async_block_till_done()
+    assert manager.data["energy_sources"][0]["stat_rate"] == power_entity_id
+
+    entity_registry.async_update_entity(
+        power_entity_id, new_entity_id="sensor.renamed_power"
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.renamed_power") is not None
+    assert manager.data["energy_sources"][0]["stat_rate"] == "sensor.renamed_power"
+
+    freezer.tick(timedelta(seconds=60))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert (
+        hass_storage[data.STORAGE_KEY]["data"]["energy_sources"][0]["stat_rate"]
+        == "sensor.renamed_power"
+    )
+
+
+async def test_power_sensor_rename_other_entity_keeps_prefs(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test renaming an entity which is not a power sensor leaves prefs alone."""
+    assert await async_setup_component(hass, DOMAIN, {"energy": {}})
+    manager = await async_get_manager(hass)
+    manager.data = manager.default_preferences()
+    entity_registry.async_get_or_create(
+        "sensor", "test", "battery_power", suggested_object_id="battery_power"
+    )
+
+    await manager.async_update(
+        {
+            "energy_sources": [
+                {
+                    "type": "battery",
+                    "stat_energy_from": "sensor.battery_energy_from",
+                    "stat_energy_to": "sensor.battery_energy_to",
+                    "power_config": {"stat_rate_inverted": "sensor.battery_power"},
+                }
+            ],
+        }
+    )
+    await hass.async_block_till_done()
+    prefs = manager.data
+
+    entity_registry.async_update_entity(
+        "sensor.battery_power", new_entity_id="sensor.battery_power_renamed"
+    )
+    await hass.async_block_till_done()
+
+    assert manager.data is prefs
+    assert prefs["energy_sources"][0]["stat_rate"] == "sensor.battery_power_inverted"
+
+
+async def test_power_sensor_suggested_entity_id_taken(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test stat_rate follows the power sensor when its entity_id is taken."""
+    assert await async_setup_component(hass, DOMAIN, {"energy": {}})
+    manager = await async_get_manager(hass)
+    manager.data = manager.default_preferences()
+    entity_registry.async_get_or_create(
+        "sensor", "test", "taken", suggested_object_id="battery_power_inverted"
+    )
+
+    await manager.async_update(
+        {
+            "energy_sources": [
+                {
+                    "type": "battery",
+                    "stat_energy_from": "sensor.battery_energy_from",
+                    "stat_energy_to": "sensor.battery_energy_to",
+                    "power_config": {"stat_rate_inverted": "sensor.battery_power"},
+                }
+            ],
+        }
+    )
+    await hass.async_block_till_done()
+
+    assert (
+        entity_registry.async_get_entity_id(
+            "sensor", DOMAIN, "energy_power_battery_inverted_sensor_battery_power"
+        )
+        == "sensor.battery_power_inverted_2"
+    )
+    assert (
+        manager.data["energy_sources"][0]["stat_rate"]
+        == "sensor.battery_power_inverted_2"
+    )

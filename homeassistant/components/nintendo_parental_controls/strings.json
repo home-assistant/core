@@ -2,8 +2,7 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
-      "no_devices_found": "There are no devices paired with this Nintendo account, go to [Nintendo Support]({more_info_url}) for further assistance.",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "no_devices_found": "There are no devices paired with this Nintendo account, go to [Nintendo Support]({more_info_url}) for further assistance."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -18,7 +17,7 @@
         "data_description": {
           "api_token": "The link copied from the Nintendo website"
         },
-        "description": "To obtain your access token, click [Nintendo Login]({link}) to sign in to your Nintendo account. Then, for the account you want to link, right-click on the red **Select this person** button and choose **Copy Link Address**."
+        "description": "To obtain your access token, select [Nintendo Login]({link}) to sign in to your Nintendo account. Then, for the account you want to link, right-click on the red **Select this person** button and choose **Copy Link Address**."
       },
       "user": {
         "data": {
@@ -27,7 +26,7 @@
         "data_description": {
           "api_token": "The link copied from the Nintendo website"
         },
-        "description": "To obtain your access token, click [Nintendo Login]({link}) to sign in to your Nintendo account. Then, for the account you want to link, right-click on the red **Select this person** button and choose **Copy Link Address**."
+        "description": "To obtain your access token, select [Nintendo Login]({link}) to sign in to your Nintendo account. Then, for the account you want to link, right-click on the red **Select this person** button and choose **Copy Link Address**."
       }
     }
   },

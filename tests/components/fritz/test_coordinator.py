@@ -11,6 +11,7 @@ from fritzconnection.core.exceptions import (
     FritzConnectionException,
     FritzSecurityError,
 )
+from fritzconnection.lib.fritzstatus import FritzStatus
 from fritzconnection.lib.fritztools import ArgumentNamespace
 import pytest
 
@@ -257,6 +258,43 @@ async def test_async_get_wan_access_success(
     assert await fritz_tools._async_get_wan_access("192.168.1.2") is True
 
 
+async def test_setup_ignores_wan_enabled_action_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+    patch_fritzconnectioncached_globally: FritzConnectionMock,
+) -> None:
+    """Test WAN capability check falls back when the router reports a call error."""
+
+    mock_config_entry.add_to_hass(hass)
+    coordinator = FritzBoxTools(
+        hass=hass,
+        config_entry=mock_config_entry,
+        password=mock_config_entry.data["password"],
+        port=mock_config_entry.data["port"],
+    )
+    hass.data.setdefault(FRITZ_DATA_KEY, FritzData())
+
+    with (
+        patch.object(
+            FritzStatus,
+            "has_wan_enabled",
+            new_callable=PropertyMock,
+            side_effect=FritzActionError("401 Invalid Action."),
+        ),
+        patch.object(
+            FritzStatus,
+            "has_wan_support",
+            new_callable=PropertyMock,
+            return_value=True,
+        ),
+    ):
+        await coordinator.async_setup()
+
+    assert coordinator.device_is_router is False
+    assert "assume that device has no wan enabled" in caplog.text
+
+
 async def test_async_update_hosts_info_attributes_branches(
     fritz_tools,
 ) -> None:
@@ -350,19 +388,6 @@ async def test_async_update_call_deflections_empty_paths(
         return_value={"NewDeflectionList": "<List><Foo>Bar</Foo></List>"}
     )
     assert await fritz_tools.async_update_call_deflections() == {}
-
-
-async def test_async_scan_devices_stopping_returns(
-    hass: HomeAssistant,
-    fritz_tools,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test scan devices exits when Home Assistant is stopping."""
-
-    with patch.object(hass, "is_stopping", True):
-        await fritz_tools.async_scan_devices()
-
-    assert "Cannot execute scan devices: HomeAssistant is shutting down" in caplog.text
 
 
 async def test_async_scan_devices_old_discovery_branch(

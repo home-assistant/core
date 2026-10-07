@@ -26,6 +26,7 @@ from homeassistant.components.cast.const import (
 )
 from homeassistant.components.cast.media_player import ChromecastInfo
 from homeassistant.components.media_player import (
+    DOMAIN as MP_DOMAIN,
     BrowseMedia,
     MediaClass,
     MediaPlayerEntityFeature,
@@ -34,6 +35,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     CAST_APP_ID_HOMEASSISTANT_LOVELACE,
     EVENT_HOMEASSISTANT_STOP,
+    STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.core_config import async_process_ha_core_config
@@ -2112,6 +2114,42 @@ async def test_disconnect_on_stop(hass: HomeAssistant) -> None:
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
     assert chromecast.disconnect.call_count == 1
+    assert hass.states.get("media_player.speaker").state == STATE_UNAVAILABLE
+
+
+async def test_disable_entity_does_not_write_state(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test disabling the entity doesn't write its state while it is removed."""
+    info = get_fake_chromecast_info()
+    chromecast, _ = await async_setup_media_player_cast(hass, info)
+
+    entity_registry.async_update_entity(
+        "media_player.speaker", disabled_by=er.RegistryEntryDisabler.USER
+    )
+    await hass.async_block_till_done()
+
+    assert chromecast.disconnect.call_count == 1
+    assert hass.states.get("media_player.speaker") is None
+    assert "incorrectly being triggered" not in caplog.text
+
+
+async def test_stop_listener_removed_with_entity(hass: HomeAssistant) -> None:
+    """Test the stop listener is removed when the entity is removed."""
+    info = get_fake_chromecast_info()
+    await async_setup_media_player_cast(hass, info)
+    stop_listeners = hass.bus.async_listeners()[EVENT_HOMEASSISTANT_STOP]
+
+    entity = hass.data[MP_DOMAIN].get_entity("media_player.speaker")
+    await entity.async_remove()
+    await hass.async_block_till_done()
+
+    assert (
+        hass.bus.async_listeners().get(EVENT_HOMEASSISTANT_STOP, 0)
+        == stop_listeners - 1
+    )
 
 
 async def test_entry_setup_no_config(hass: HomeAssistant) -> None:

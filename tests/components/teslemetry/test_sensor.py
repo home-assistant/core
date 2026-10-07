@@ -7,41 +7,69 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 from teslemetry_stream import Signal
+from teslemetry_stream.const import EnergyHistoryTotals
 
-from homeassistant.components.teslemetry.const import DOMAIN
+from homeassistant.components.homeassistant import (
+    DOMAIN as HOMEASSISTANT_DOMAIN,
+    SERVICE_UPDATE_ENTITY,
+)
+from homeassistant.components.teslemetry.const import DOMAIN, ENERGY_HISTORY_FIELDS
 from homeassistant.components.teslemetry.coordinator import VEHICLE_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    EVENT_STATE_CHANGED,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     EntityCategory,
     Platform,
-    UnitOfPressure,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.util.unit_conversion import PressureConverter
+from homeassistant.setup import async_setup_component
 
 from . import assert_entities, assert_entities_alt, setup_platform
 from .const import (
-    ENERGY_HISTORY_EMPTY,
+    ENERGY_TOTALS,
+    ENERGY_TOTALS_NULL,
     LIVE_STATUS,
     METADATA,
     PRODUCTS,
+    SITE_INFO,
     VEHICLE_DATA_ALT,
 )
 
-from tests.common import async_fire_time_changed
+from tests.common import async_capture_events, async_fire_time_changed
 
 # VIN used across the Teslemetry test fixtures.
 VEHICLE_VIN = "LRW3F7EK4NC700000"
 
+ENERGY_HISTORY_ENTITY = "sensor.energy_site_battery_discharged"
+# Midnight in Australia/Brisbane, the timezone site_info.json declares. Home
+# Assistant runs on US/Pacific in tests, so a last_reset derived from its clock
+# or from the event's created_at cannot produce this.
+SITE_MIDNIGHT = "2024-09-18T00:00:00+10:00"
 
-def _products_with_driver_assist(driver_assist: str) -> dict:
-    """Return a products response with the vehicle's driver-assist capability set."""
-    products = deepcopy(PRODUCTS)
-    products["response"][0]["vehicle_config"]["driver_assist"] = driver_assist
-    return products
+# Per-tire TPMS warning objects including the Tesla Semi.
+TPMS_NO_WARNINGS = {
+    "frontLeft": False,
+    "frontRight": False,
+    "rearLeft": False,
+    "rearRight": False,
+    "semiMiddleAxleLeft2": False,
+    "semiMiddleAxleRight2": False,
+    "semiRearAxleLeft": False,
+    "semiRearAxleLeft2": False,
+    "semiRearAxleRight": False,
+    "semiRearAxleRight2": False,
+}
+
+
+def _metadata_with_driver_assist(driver_assist: str | None) -> dict:
+    """Return a metadata response with the vehicle's driver-assist hardware set."""
+    metadata = deepcopy(METADATA)
+    metadata["vehicles"][VEHICLE_VIN]["config"]["driver_assist"] = driver_assist
+    return metadata
 
 
 def _live_status(**overrides: object) -> dict:
@@ -97,6 +125,34 @@ async def test_energy_only_account_streams_live_status(
     )
 
 
+@pytest.mark.parametrize(
+    ("has_battery", "expected"),
+    [
+        pytest.param(True, "0", id="battery"),
+        pytest.param(False, None, id="no_battery"),
+    ],
+)
+async def test_energy_percentage_charged_requires_battery(
+    hass: HomeAssistant,
+    mock_live_status: AsyncMock,
+    mock_site_info: AsyncMock,
+    has_battery: bool,
+    expected: str | None,
+) -> None:
+    """The battery level sensor is created for battery sites even when Tesla omits it at 0 %."""
+    live_status = deepcopy(LIVE_STATUS)
+    del live_status["response"]["percentage_charged"]
+    mock_live_status.side_effect = lambda: deepcopy(live_status)
+    site_info = deepcopy(SITE_INFO)
+    site_info["response"]["components"]["battery"] = has_battery
+    mock_site_info.side_effect = lambda: deepcopy(site_info)
+
+    await setup_platform(hass, [Platform.SENSOR])
+
+    state = hass.states.get("sensor.energy_site_percentage_charged")
+    assert (state and state.state) == expected
+
+
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensors(
     hass: HomeAssistant,
@@ -105,6 +161,7 @@ async def test_sensors(
     freezer: FrozenDateTimeFactory,
     mock_vehicle_data: AsyncMock,
     mock_legacy: AsyncMock,
+    mock_energy_totals_stream: MagicMock,
 ) -> None:
     """Tests that the sensor entities with the legacy polling are correct."""
 
@@ -113,6 +170,9 @@ async def test_sensors(
     await hass.async_block_till_done()
 
     entry = await setup_platform(hass, [Platform.SENSOR])
+
+    mock_energy_totals_stream.send()
+    await hass.async_block_till_done()
 
     assert_entities(hass, entry.entry_id, entity_registry, snapshot)
 
@@ -132,7 +192,7 @@ async def test_sensors_streaming(
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
     mock_vehicle_data: AsyncMock,
-    mock_products: AsyncMock,
+    mock_metadata: AsyncMock,
     mock_add_listener: AsyncMock,
 ) -> None:
     """Tests that the sensor entities with streaming are correct."""
@@ -140,7 +200,7 @@ async def test_sensors_streaming(
     freezer.move_to("2024-01-01 00:00:00+00:00")
 
     # miles_since_reset and self_driving_miles_since_reset are HW4-only fields.
-    mock_products.return_value = _products_with_driver_assist("TeslaAP4")
+    mock_metadata.return_value = _metadata_with_driver_assist("TeslaAP4")
 
     entry = await setup_platform(hass, [Platform.SENSOR])
 
@@ -176,10 +236,15 @@ async def test_sensors_streaming(
     )
     await hass.async_block_till_done()
 
-    # Balance-only credit events should not clear quota usage.
+    # A credit event without quota data should not clear quota usage.
     mock_add_listener.send(
         {
-            "credits": {"balance": 1980},
+            "credits": {
+                "type": "wake_up",
+                "cost": 0,
+                "name": "wake_up",
+                "balance": 1980,
+            },
             "createdAt": "2024-10-04T10:45:18.537Z",
         }
     )
@@ -249,14 +314,14 @@ async def test_sensors_streaming(
 async def test_new_streaming_sensors_disabled_by_default(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    mock_products: AsyncMock,
+    mock_metadata: AsyncMock,
     mock_add_listener: AsyncMock,
     entity_id: str,
 ) -> None:
     """Test the new firmware-2025.44 streaming sensors are disabled-by-default diagnostics."""
 
     # miles_since_reset and self_driving_miles_since_reset are HW4-only fields.
-    mock_products.return_value = _products_with_driver_assist("TeslaAP4")
+    mock_metadata.return_value = _metadata_with_driver_assist("TeslaAP4")
 
     await setup_platform(hass, [Platform.SENSOR])
 
@@ -279,12 +344,14 @@ async def test_new_streaming_sensors_disabled_by_default(
     [
         ("2025.44.25.5", "TeslaAP4", True),
         ("2025.44.25.5", "TeslaAP3", False),
+        ("2025.44.25.5", None, False),
         ("2025.44.25.4", "TeslaAP4", False),
         ("2025.44.25.4", "TeslaAP3", False),
     ],
     ids=[
         "hw4_at_threshold",
         "hw3_at_threshold",
+        "unknown_at_threshold",
         "hw4_below_threshold",
         "hw3_below_threshold",
     ],
@@ -297,16 +364,19 @@ async def test_hw4_mileage_sensors_gating(
     mock_add_listener: AsyncMock,
     entity_id: str,
     firmware: str,
-    driver_assist: str,
+    driver_assist: str | None,
     expected: bool,
 ) -> None:
     """Test HW4 mileage sensors need both AP4 hardware and qualifying firmware."""
 
-    metadata = deepcopy(METADATA)
+    metadata = _metadata_with_driver_assist(driver_assist)
     metadata["vehicles"][VEHICLE_VIN]["firmware"] = firmware
     mock_metadata.return_value = metadata
 
-    mock_products.return_value = _products_with_driver_assist(driver_assist)
+    # A streaming vehicle is never polled, so vehicle_config is only in metadata.
+    products = deepcopy(PRODUCTS)
+    del products["response"][0]["vehicle_config"]
+    mock_products.return_value = products
 
     await setup_platform(hass, [Platform.SENSOR])
 
@@ -321,29 +391,25 @@ async def test_hw4_mileage_sensors_gating(
             Signal.TPMS_PRESSURE_FL,
             "sensor.test_tire_pressure_front_left",
             2.7,
-            # 2.7 atm independently hand-converted to bar (2.7 * 1.01325 = 2.735775)
-            PressureConverter.convert(2.735775, UnitOfPressure.BAR, UnitOfPressure.PSI),
+            39.679063381059,
         ),
         (
             Signal.TPMS_PRESSURE_FR,
             "sensor.test_tire_pressure_front_right",
             2.7,
-            # 2.7 atm independently hand-converted to bar (2.7 * 1.01325 = 2.735775)
-            PressureConverter.convert(2.735775, UnitOfPressure.BAR, UnitOfPressure.PSI),
+            39.679063381059,
         ),
         (
             Signal.TPMS_PRESSURE_RL,
             "sensor.test_tire_pressure_rear_left",
             2.7,
-            # 2.7 atm independently hand-converted to bar (2.7 * 1.01325 = 2.735775)
-            PressureConverter.convert(2.735775, UnitOfPressure.BAR, UnitOfPressure.PSI),
+            39.679063381059,
         ),
         (
             Signal.TPMS_PRESSURE_RR,
             "sensor.test_tire_pressure_rear_right",
             2.7,
-            # 2.7 atm independently hand-converted to bar (2.7 * 1.01325 = 2.735775)
-            PressureConverter.convert(2.735775, UnitOfPressure.BAR, UnitOfPressure.PSI),
+            39.679063381059,
         ),
         (
             Signal.ISOLATION_RESISTANCE,
@@ -379,6 +445,219 @@ async def test_sensors_streaming_unit_conversion(
     state = hass.states.get(entity_id)
     assert state is not None
     assert float(state.state) == pytest.approx(expected_state)
+
+
+@pytest.mark.parametrize(
+    ("updates", "expected_delay", "expected_energy"),
+    [
+        pytest.param(
+            [
+                {
+                    Signal.MINUTES_TO_ARRIVAL: 12.5,
+                    Signal.ROUTE_TRAFFIC_MINUTES_DELAY: 3,
+                    Signal.EXPECTED_ENERGY_PERCENT_AT_TRIP_ARRIVAL: 62,
+                },
+                # The car keeps reporting the last trip's arrival energy and
+                # traffic delay after arriving, but MinutesToArrival goes null.
+                {
+                    Signal.MINUTES_TO_ARRIVAL: None,
+                    Signal.ROUTE_TRAFFIC_MINUTES_DELAY: 0,
+                    Signal.EXPECTED_ENERGY_PERCENT_AT_TRIP_ARRIVAL: 62,
+                },
+            ],
+            ["3", STATE_UNKNOWN],
+            ["62", STATE_UNKNOWN],
+            id="route_ends",
+        ),
+        pytest.param(
+            [
+                {
+                    Signal.MINUTES_TO_ARRIVAL: 12.5,
+                    Signal.ROUTE_TRAFFIC_MINUTES_DELAY: 3,
+                },
+                {
+                    Signal.MINUTES_TO_ARRIVAL: None,
+                    Signal.ROUTE_TRAFFIC_MINUTES_DELAY: 0,
+                },
+                {
+                    Signal.MINUTES_TO_ARRIVAL: 30.0,
+                    Signal.ROUTE_TRAFFIC_MINUTES_DELAY: 5,
+                },
+            ],
+            ["3", STATE_UNKNOWN, "5"],
+            [],
+            id="route_restarts",
+        ),
+        pytest.param(
+            [
+                {
+                    Signal.MINUTES_TO_ARRIVAL: 12.5,
+                    Signal.ROUTE_TRAFFIC_MINUTES_DELAY: 3,
+                },
+                {Signal.MINUTES_TO_ARRIVAL: None},
+                {Signal.MINUTES_TO_ARRIVAL: 20.0},
+            ],
+            ["3", STATE_UNKNOWN, "3"],
+            [],
+            id="route_restarts_with_unchanged_value",
+        ),
+        pytest.param(
+            [
+                {Signal.ROUTE_TRAFFIC_MINUTES_DELAY: 3},
+                {Signal.MINUTES_TO_ARRIVAL: 12.5},
+            ],
+            ["3"],
+            [],
+            id="waits_for_minutes_to_arrival",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_sensors_streaming_active_route(
+    hass: HomeAssistant,
+    mock_add_listener: AsyncMock,
+    updates: list[dict[Signal, float | None]],
+    expected_delay: list[str],
+    expected_energy: list[str],
+) -> None:
+    """Test the streaming active route sensors only report during navigation."""
+    await setup_platform(hass, [Platform.SENSOR])
+    events = async_capture_events(hass, EVENT_STATE_CHANGED)
+
+    for data in updates:
+        mock_add_listener.send(
+            {
+                "vin": VEHICLE_DATA_ALT["response"]["vin"],
+                "data": data,
+                "createdAt": "2026-09-28T08:40:00.000Z",
+            }
+        )
+        await hass.async_block_till_done()
+
+    assert [
+        event.data["new_state"].state
+        for event in events
+        if event.data["entity_id"] == "sensor.test_traffic_delay"
+    ] == expected_delay
+    assert [
+        event.data["new_state"].state
+        for event in events
+        if event.data["entity_id"] == "sensor.test_state_of_charge_at_arrival"
+    ] == expected_energy
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_sensors_streaming_tpms_none_clears_state(
+    hass: HomeAssistant,
+    mock_vehicle_data: AsyncMock,
+    mock_add_listener: AsyncMock,
+) -> None:
+    """A None streamed TPMS pressure must clear the entity, not pass through the converter."""
+    entity_id = "sensor.test_tire_pressure_front_left"
+    await setup_platform(hass, [Platform.SENSOR])
+    vin = VEHICLE_DATA_ALT["response"]["vin"]
+
+    mock_add_listener.send(
+        {
+            "vin": vin,
+            "data": {Signal.TPMS_PRESSURE_FL: 2.7},
+            "createdAt": "2024-10-04T10:45:17.537Z",
+        }
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state != STATE_UNKNOWN
+
+    mock_add_listener.send(
+        {
+            "vin": vin,
+            "data": {Signal.TPMS_PRESSURE_FL: None},
+            "createdAt": "2024-10-04T10:45:18.537Z",
+        }
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == STATE_UNKNOWN
+
+
+@pytest.mark.parametrize(
+    ("signal", "entity_id"),
+    [
+        pytest.param(
+            Signal.TPMS_HARD_WARNINGS,
+            "sensor.test_tire_pressure_hard_warnings",
+            id="hard",
+        ),
+        pytest.param(
+            Signal.TPMS_SOFT_WARNINGS,
+            "sensor.test_tire_pressure_soft_warnings",
+            id="soft",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_sensors_streaming_tpms_warnings(
+    hass: HomeAssistant,
+    mock_add_listener: AsyncMock,
+    signal: Signal,
+    entity_id: str,
+) -> None:
+    """Test TPMS warning sensors report how many tires are in warning."""
+    await setup_platform(hass, [Platform.SENSOR])
+    vin = VEHICLE_DATA_ALT["response"]["vin"]
+
+    for warnings, expected_state in (
+        ({**TPMS_NO_WARNINGS, "frontRight": True, "rearLeft": True}, "2"),
+        (TPMS_NO_WARNINGS, "0"),
+        (None, STATE_UNKNOWN),
+    ):
+        mock_add_listener.send(
+            {
+                "vin": vin,
+                "data": {signal: warnings},
+                "createdAt": "2024-10-04T10:45:17.537Z",
+            }
+        )
+        await hass.async_block_till_done()
+        assert hass.states.get(entity_id).state == expected_state
+
+
+@pytest.mark.parametrize(
+    "raw_value",
+    [
+        pytest.param("FollowDistanceUnknown", id="unknown"),
+        pytest.param(None, id="none"),
+    ],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_cruise_follow_distance_unknown(
+    hass: HomeAssistant,
+    mock_vehicle_data: AsyncMock,
+    mock_add_listener: AsyncMock,
+    raw_value: str | None,
+) -> None:
+    """An unknown streamed follow distance must clear the numeric sensor."""
+    entity_id = "sensor.test_cruise_follow_distance"
+    await setup_platform(hass, [Platform.SENSOR])
+    vin = VEHICLE_DATA_ALT["response"]["vin"]
+
+    mock_add_listener.send(
+        {
+            "vin": vin,
+            "data": {Signal.CRUISE_FOLLOW_DISTANCE: "FollowDistance3"},
+            "createdAt": "2024-10-04T10:45:17.537Z",
+        }
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == "3"
+
+    mock_add_listener.send(
+        {
+            "vin": vin,
+            "data": {Signal.CRUISE_FOLLOW_DISTANCE: raw_value},
+            "createdAt": "2024-10-04T10:45:18.537Z",
+        }
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == STATE_UNKNOWN
 
 
 @pytest.mark.parametrize(
@@ -460,26 +739,260 @@ async def test_streaming_enum_none_clears_state(
     assert hass.states.get(entity_id).state == STATE_UNKNOWN
 
 
-async def test_energy_history_no_time_series(
+def test_energy_history_fields_match_stream_totals() -> None:
+    """The sensor key list mirrors the totals the stream event carries."""
+    assert list(EnergyHistoryTotals.__dataclass_fields__) == ENERGY_HISTORY_FIELDS
+
+
+async def test_energy_history_stream_updates(
     hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
-    mock_energy_history: AsyncMock,
+    mock_energy_totals_stream: MagicMock,
 ) -> None:
-    """Test energy history coordinator when time_series is not a list."""
-    # Mock energy history to return data without time_series as a list
+    """A streamed energy_totals event drives the history sensors and their last_reset."""
+    await setup_platform(hass, [Platform.SENSOR])
 
-    entry = await setup_platform(hass, [Platform.SENSOR])
-    assert entry.state is ConfigEntryState.LOADED
-
-    entity_id = "sensor.energy_site_battery_discharged"
-    state = hass.states.get(entity_id)
+    # Nothing has streamed yet, so the sensors are available but hold no value.
+    assert (state := hass.states.get(ENERGY_HISTORY_ENTITY))
     assert state.state == STATE_UNKNOWN
+    assert "last_reset" not in state.attributes
 
-    mock_energy_history.return_value = ENERGY_HISTORY_EMPTY
-
-    freezer.tick(VEHICLE_INTERVAL)
-    async_fire_time_changed(hass)
+    mock_energy_totals_stream.send()
     await hass.async_block_till_done()
 
-    state = hass.states.get(entity_id)
-    assert state.state == STATE_UNAVAILABLE
+    assert (state := hass.states.get(ENERGY_HISTORY_ENTITY))
+    assert state.state == "0.036"
+    assert state.attributes["state_class"] == "total"
+    assert state.attributes["last_reset"] == SITE_MIDNIGHT
+    assert hass.states.get("sensor.energy_site_solar_generated").state == "0.724"
+
+
+async def test_energy_history_late_event_keeps_previous_day(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_energy_totals_stream: MagicMock,
+) -> None:
+    """A late event finalising the previous day keeps that day's last_reset.
+
+    The server finalises a day after the site's local midnight. Deriving
+    last_reset from the current day instead would start a second cycle and bank
+    the whole of the previous day again.
+    """
+    # 00:05 on the 19th in Brisbane, so "today" at the site is no longer the 18th.
+    freezer.move_to("2024-09-18T14:05:00+00:00")
+    await setup_platform(hass, [Platform.SENSOR])
+
+    mock_energy_totals_stream.send(date="2024-09-18")
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(ENERGY_HISTORY_ENTITY))
+    assert state.attributes["last_reset"] == SITE_MIDNIGHT
+
+
+async def test_energy_history_cache_snapshot_populates_sensors(
+    hass: HomeAssistant,
+    mock_energy_totals_stream: MagicMock,
+) -> None:
+    """The connect-time snapshot is applied exactly like a live update."""
+    await setup_platform(hass, [Platform.SENSOR])
+
+    mock_energy_totals_stream.send(is_cache=True)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(ENERGY_HISTORY_ENTITY))
+    assert state.state == "0.036"
+    assert state.attributes["last_reset"] == SITE_MIDNIGHT
+
+
+@pytest.mark.parametrize(
+    ("totals", "expected"),
+    [
+        pytest.param(ENERGY_TOTALS, "0.0", id="absent_field_sent_as_zero"),
+        pytest.param(ENERGY_TOTALS_NULL, STATE_UNKNOWN, id="empty_day_sent_as_null"),
+    ],
+)
+async def test_energy_history_zero_and_null_totals(
+    hass: HomeAssistant,
+    mock_energy_totals_stream: MagicMock,
+    totals: dict[str, float | None],
+    expected: str,
+) -> None:
+    """A zero total reads as zero and a null total reads as unknown, never unavailable."""
+    await setup_platform(hass, [Platform.SENSOR])
+
+    mock_energy_totals_stream.send(totals)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get("sensor.energy_site_grid_imported"))
+    assert state.state == expected
+    assert state.attributes["last_reset"] == SITE_MIDNIGHT
+
+
+@pytest.mark.parametrize(
+    "installation_time_zone",
+    [pytest.param("", id="not_provided"), pytest.param("Mars/Olympus", id="unknown")],
+)
+async def test_energy_history_time_zone_fallback(
+    hass: HomeAssistant,
+    mock_site_info: AsyncMock,
+    mock_energy_totals_stream: MagicMock,
+    installation_time_zone: str,
+) -> None:
+    """Without a usable site timezone, last_reset falls back to Home Assistant's."""
+    site_info = deepcopy(SITE_INFO)
+    site_info["response"]["installation_time_zone"] = installation_time_zone
+    mock_site_info.side_effect = lambda: deepcopy(site_info)
+
+    await setup_platform(hass, [Platform.SENSOR])
+
+    mock_energy_totals_stream.send()
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(ENERGY_HISTORY_ENTITY))
+    # Home Assistant runs on US/Pacific in tests, which was in PDT on this date.
+    assert state.attributes["last_reset"] == "2024-09-18T00:00:00-07:00"
+
+
+@pytest.mark.parametrize(
+    ("connected", "expected_state"),
+    [
+        pytest.param(True, "0.036", id="connected"),
+        pytest.param(False, STATE_UNAVAILABLE, id="disconnected"),
+    ],
+)
+async def test_energy_history_update_entity_service(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    mock_add_connection_listener: MagicMock,
+    mock_energy_totals_stream: MagicMock,
+    connected: bool,
+    expected_state: str,
+) -> None:
+    """The generic update service leaves the history sensors as the stream set them.
+
+    The stream is their only source, so the service must neither fail on a
+    healthy stream nor revive stale totals while it is down.
+    """
+    await setup_platform(hass, [Platform.SENSOR])
+    await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
+
+    mock_energy_totals_stream.send()
+    await hass.async_block_till_done()
+    mock_add_connection_listener.send(connected)
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: ENERGY_HISTORY_ENTITY},
+        blocking=True,
+    )
+
+    assert "NotImplementedError" not in caplog.text
+    assert (state := hass.states.get(ENERGY_HISTORY_ENTITY))
+    assert state.state == expected_state
+
+
+async def test_energy_history_unavailable_while_stream_disconnected(
+    hass: HomeAssistant,
+    mock_add_connection_listener: MagicMock,
+    mock_energy_totals_stream: MagicMock,
+) -> None:
+    """A dropped stream makes the history sensors unavailable until a snapshot returns."""
+    await setup_platform(hass, [Platform.SENSOR])
+
+    mock_energy_totals_stream.send()
+    await hass.async_block_till_done()
+    assert hass.states.get(ENERGY_HISTORY_ENTITY).state == "0.036"
+
+    mock_add_connection_listener.send(False)
+    await hass.async_block_till_done()
+    assert hass.states.get(ENERGY_HISTORY_ENTITY).state == STATE_UNAVAILABLE
+
+    mock_energy_totals_stream.send(is_cache=True)
+    await hass.async_block_till_done()
+    assert hass.states.get(ENERGY_HISTORY_ENTITY).state == "0.036"
+
+
+@pytest.mark.parametrize(
+    ("components", "absent"),
+    [
+        pytest.param(
+            {"battery": False},
+            {
+                "grid_energy_exported_from_battery",
+                "battery_energy_exported",
+                "battery_energy_imported_from_grid",
+                "battery_energy_imported_from_solar",
+                "battery_energy_imported_from_generator",
+                "consumer_energy_imported_from_battery",
+                "total_battery_charge",
+                "total_battery_discharge",
+            },
+            id="solar_only",
+        ),
+        pytest.param(
+            {"solar": False},
+            {
+                "solar_energy_exported",
+                "grid_energy_exported_from_solar",
+                "battery_energy_imported_from_solar",
+                "consumer_energy_imported_from_solar",
+                "total_solar_generation",
+            },
+            id="battery_only",
+        ),
+    ],
+)
+async def test_energy_history_sensors_match_site_components(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_site_info: AsyncMock,
+    components: dict[str, bool],
+    absent: set[str],
+) -> None:
+    """History sensors are only created for the components a site has."""
+    site_info = deepcopy(SITE_INFO)
+    site_info["response"]["components"].update(components)
+    mock_site_info.side_effect = lambda: deepcopy(site_info)
+
+    await setup_platform(hass, [Platform.SENSOR])
+
+    created = {
+        key
+        for key in ENERGY_HISTORY_FIELDS
+        if entity_registry.async_get_entity_id(Platform.SENSOR, DOMAIN, f"123456-{key}")
+    }
+    assert created == set(ENERGY_HISTORY_FIELDS) - absent
+
+
+@pytest.mark.parametrize(
+    ("scopes", "expected"),
+    [
+        pytest.param(METADATA["scopes"], True, id="location_scope"),
+        pytest.param(
+            [scope for scope in METADATA["scopes"] if scope != "vehicle_location"],
+            False,
+            id="no_location_scope",
+        ),
+    ],
+)
+async def test_location_sensors_require_location_scope(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_metadata: AsyncMock,
+    scopes: list[str],
+    expected: bool,
+) -> None:
+    """Test location sensors are only created with the vehicle location scope."""
+
+    mock_metadata.return_value = {**METADATA, "scopes": scopes}
+
+    await setup_platform(hass, [Platform.SENSOR])
+
+    for key in ("gps_heading", "drive_state_active_route_destination"):
+        assert (
+            entity_registry.async_get_entity_id(
+                Platform.SENSOR, DOMAIN, f"{VEHICLE_VIN}-{key}"
+            )
+            is not None
+        ) is expected
