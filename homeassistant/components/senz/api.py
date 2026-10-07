@@ -2,7 +2,7 @@
 
 from typing import cast, override
 
-from httpx import AsyncClient
+from httpx2 import AsyncClient
 from pysenz import AbstractSENZAuth
 
 from homeassistant.helpers import config_entry_oauth2_flow

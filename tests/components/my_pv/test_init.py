@@ -2,7 +2,11 @@
 
 from unittest.mock import AsyncMock
 
-from my_pv.exceptions import MyPVAuthenticationError, MyPVConnectionError
+from my_pv.exceptions import (
+    MyPVAuthenticationError,
+    MyPVConnectionError,
+    MyPVDeviceNotSupportedError,
+)
 import pytest
 
 from homeassistant.config_entries import ConfigEntryState
@@ -39,6 +43,23 @@ async def test_setup_entry_cannot_connect(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_setup_entry_unsupported_device(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_my_pv_client: AsyncMock,
+) -> None:
+    """Test setup of a config entry when device is not supported."""
+    mock_config_entry.add_to_hass(hass)
+
+    mock_my_pv_client.connect.side_effect = MyPVDeviceNotSupportedError()
+
+    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.error_reason_translation_key == "unsupported_device"
 
 
 async def test_setup_entry_auth_error(

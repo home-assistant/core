@@ -808,6 +808,7 @@
     'id': 1,
     'result': list([
       dict({
+        'default': None,
         'name': 'ga_up_down',
         'optional': True,
         'options': dict({
@@ -827,6 +828,7 @@
         'type': 'knx_group_address',
       }),
       dict({
+        'default': False,
         'name': 'invert_updown',
         'optional': True,
         'required': False,
@@ -837,6 +839,7 @@
         'type': 'ha_selector',
       }),
       dict({
+        'default': None,
         'name': 'ga_stop',
         'optional': True,
         'options': dict({
@@ -856,6 +859,7 @@
         'type': 'knx_group_address',
       }),
       dict({
+        'default': None,
         'name': 'ga_step',
         'optional': True,
         'options': dict({
@@ -881,6 +885,7 @@
         'type': 'knx_section_flat',
       }),
       dict({
+        'default': None,
         'name': 'ga_position_set',
         'optional': True,
         'options': dict({
@@ -900,6 +905,7 @@
         'type': 'knx_group_address',
       }),
       dict({
+        'default': None,
         'name': 'ga_position_state',
         'optional': True,
         'options': dict({
@@ -919,6 +925,7 @@
         'type': 'knx_group_address',
       }),
       dict({
+        'default': False,
         'name': 'invert_position',
         'optional': True,
         'required': False,
@@ -935,6 +942,7 @@
         'type': 'knx_section_flat',
       }),
       dict({
+        'default': None,
         'name': 'ga_angle',
         'optional': True,
         'options': dict({
@@ -956,6 +964,7 @@
         'type': 'knx_group_address',
       }),
       dict({
+        'default': False,
         'name': 'invert_angle',
         'optional': True,
         'required': False,
@@ -2667,6 +2676,7 @@
         'type': 'knx_group_address',
       }),
       dict({
+        'default': None,
         'name': 'ga_humidity',
         'optional': True,
         'options': dict({
@@ -2686,6 +2696,7 @@
         'type': 'knx_group_address',
       }),
       dict({
+        'default': None,
         'name': 'ga_air_pressure',
         'optional': True,
         'options': dict({
@@ -2709,6 +2720,7 @@
         'type': 'knx_group_address',
       }),
       dict({
+        'default': None,
         'name': 'ga_wind_speed',
         'optional': True,
         'options': dict({
@@ -2728,6 +2740,7 @@
         'type': 'knx_group_address',
       }),
       dict({
+        'default': None,
         'name': 'ga_wind_bearing',
         'optional': True,
         'options': dict({
@@ -2753,6 +2766,7 @@
         'type': 'knx_section_flat',
       }),
       dict({
+        'default': None,
         'name': 'ga_brightness_east',
         'optional': True,
         'options': dict({
@@ -2772,6 +2786,7 @@
         'type': 'knx_group_address',
       }),
       dict({
+        'default': None,
         'name': 'ga_brightness_south',
         'optional': True,
         'options': dict({
@@ -2791,6 +2806,7 @@
         'type': 'knx_group_address',
       }),
       dict({
+        'default': None,
         'name': 'ga_brightness_west',
         'optional': True,
         'options': dict({
@@ -2810,6 +2826,7 @@
         'type': 'knx_group_address',
       }),
       dict({
+        'default': None,
         'name': 'ga_brightness_north',
         'optional': True,
         'options': dict({
@@ -2835,6 +2852,7 @@
         'type': 'knx_section_flat',
       }),
       dict({
+        'default': None,
         'name': 'ga_day_night',
         'optional': True,
         'options': dict({
@@ -2871,6 +2889,7 @@
         'type': 'knx_section_flat',
       }),
       dict({
+        'default': None,
         'name': 'ga_rain_alarm',
         'optional': True,
         'options': dict({
@@ -2890,6 +2909,7 @@
         'type': 'knx_group_address',
       }),
       dict({
+        'default': None,
         'name': 'ga_frost_alarm',
         'optional': True,
         'options': dict({
@@ -2909,6 +2929,7 @@
         'type': 'knx_group_address',
       }),
       dict({
+        'default': None,
         'name': 'ga_wind_alarm',
         'optional': True,
         'options': dict({

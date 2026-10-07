@@ -773,7 +773,10 @@ async def test_non_optimistic_template_with_optimistic_state(
 
 @pytest.mark.parametrize(
     ("count", "position_template", "config"),
-    [(1, "{{ 100 }}", SET_COVER_TILT_POSITION)],
+    [
+        (1, "{{ 100 }}", SET_COVER_TILT_POSITION),
+        (1, "{{ 100 }}", {"tilt_optimistic": False, **SET_COVER_TILT_POSITION}),
+    ],
 )
 @pytest.mark.parametrize(
     "style",
@@ -809,6 +812,114 @@ async def test_set_tilt_position_optimistic(
         await hass.async_block_till_done()
         state = hass.states.get(TEST_COVER.entity_id)
         assert state.attributes.get("current_tilt_position") == pos
+
+
+@pytest.mark.parametrize(
+    ("count", "position_template", "config"),
+    [
+        (
+            1,
+            "{{ 100 }}",
+            {
+                "tilt": "{{ states('sensor.test_state') | float }}",
+                "tilt_optimistic": True,
+                **SET_COVER_TILT_POSITION,
+            },
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.usefixtures("setup_position_cover")
+async def test_set_tilt_position_optimistic_with_tilt_optimistic_true(
+    hass: HomeAssistant, calls: list[ServiceCall]
+) -> None:
+    """Test the optimistic tilt_position mode with tilt_optimistic true."""
+    state = hass.states.get(TEST_COVER.entity_id)
+    assert state.attributes.get("current_tilt_position") is None
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_SET_COVER_TILT_POSITION,
+        {ATTR_ENTITY_ID: TEST_COVER.entity_id, ATTR_TILT_POSITION: 42},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get(TEST_COVER.entity_id)
+    assert state.attributes.get("current_tilt_position") == 42.0
+
+    for service, pos in (
+        (SERVICE_CLOSE_COVER_TILT, 0.0),
+        (SERVICE_OPEN_COVER_TILT, 100.0),
+        (SERVICE_TOGGLE_COVER_TILT, 0.0),
+        (SERVICE_TOGGLE_COVER_TILT, 100.0),
+    ):
+        await hass.services.async_call(
+            COVER_DOMAIN, service, {ATTR_ENTITY_ID: TEST_COVER.entity_id}, blocking=True
+        )
+        await hass.async_block_till_done()
+        state = hass.states.get(TEST_COVER.entity_id)
+        assert state.attributes.get("current_tilt_position") == pos
+
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, 45)
+    state = hass.states.get(TEST_COVER.entity_id)
+    assert state.attributes.get("current_tilt_position") == 45.0
+
+
+@pytest.mark.parametrize(
+    ("count", "position_template", "config"),
+    [
+        (
+            1,
+            "{{ 100 }}",
+            {
+                "tilt": "{{ states('sensor.test_state') | float }}",
+                "tilt_optimistic": False,
+                **SET_COVER_TILT_POSITION,
+            },
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.usefixtures("setup_position_cover")
+async def test_set_tilt_position_optimistic_with_tilt_optimistic_false(
+    hass: HomeAssistant, calls: list[ServiceCall]
+) -> None:
+    """Test the optimistic tilt_position mode with tilt_optimistic false."""
+    state = hass.states.get(TEST_COVER.entity_id)
+    assert state.attributes.get("current_tilt_position") is None
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_SET_COVER_TILT_POSITION,
+        {ATTR_ENTITY_ID: TEST_COVER.entity_id, ATTR_TILT_POSITION: 42},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get(TEST_COVER.entity_id)
+    assert state.attributes.get("current_tilt_position") is None
+
+    for service in (
+        SERVICE_CLOSE_COVER_TILT,
+        SERVICE_OPEN_COVER_TILT,
+        SERVICE_TOGGLE_COVER_TILT,
+        SERVICE_TOGGLE_COVER_TILT,
+    ):
+        await hass.services.async_call(
+            COVER_DOMAIN, service, {ATTR_ENTITY_ID: TEST_COVER.entity_id}, blocking=True
+        )
+        await hass.async_block_till_done()
+        state = hass.states.get(TEST_COVER.entity_id)
+        assert state.attributes.get("current_tilt_position") is None
+
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, 45)
+    state = hass.states.get(TEST_COVER.entity_id)
+    assert state.attributes.get("current_tilt_position") == 45.0
 
 
 @pytest.mark.parametrize(
