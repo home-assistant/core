@@ -197,7 +197,9 @@ class EntityComponent[_EntityT: entity.Entity = entity.Entity]:
         """Unload a config entry."""
         key = config_entry.entry_id
 
-        if (platform := self._platforms.pop(key, None)) is None:
+        if (platform := self._platforms.pop(key, None)) is not None:
+            await platform.async_reset()
+        else:
             self.logger.warning(
                 (
                     "Ignored unload request for config entry %s (%s) in %s.%s; "
@@ -209,9 +211,7 @@ class EntityComponent[_EntityT: entity.Entity = entity.Entity]:
                 config_entry.domain,
                 self.domain,
             )
-            return True
 
-        await platform.async_reset()
         return True
 
     async def async_extract_from_service(
