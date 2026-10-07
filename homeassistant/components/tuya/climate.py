@@ -7,6 +7,7 @@ from tuya_device_handlers.definition.climate import (
     ClimateDefinition,
     get_default_definition,
 )
+from tuya_device_handlers.device_wrapper.common import DPCodeIntegerWrapper
 from tuya_device_handlers.helpers.homeassistant import (
     TuyaClimateHVACMode,
     TuyaClimateSwingMode,
@@ -31,10 +32,10 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.unit_conversion import TemperatureConverter
 
-from .const import TUYA_DISCOVERY_NEW, DeviceCategory
+from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .coordinator import TuyaConfigEntry
 from .entity import TuyaEntity, TuyaEntityDescription
-from .util import get_temperature_unit
+from .util import get_device_temp_unit_convert, get_temperature_unit
 
 _TUYA_TO_HA_HVACMODE_MAPPINGS = {
     TuyaClimateHVACMode.OFF: HVACMode.OFF,
@@ -60,6 +61,94 @@ _HA_TO_TUYA_TEMPERATURE = {
     UnitOfTemperature.CELSIUS: TuyaUnitOfTemperature.CELSIUS,
     UnitOfTemperature.FAHRENHEIT: TuyaUnitOfTemperature.FAHRENHEIT,
 }
+
+# Shared setpoint/current DPs. Their schema unit is often left at Celsius
+# while c_f / temp_unit_convert selects the unit of the stored numbers.
+_PLAIN_TEMPERATURE_DPCODES = frozenset(
+    {
+        DPCode.TEMP_CURRENT,
+        DPCode.TEMP_SET,
+        DPCode.UPPER_TEMP,
+    }
+)
+_FAHRENHEIT_TEMPERATURE_DPCODES = frozenset(
+    {
+        DPCode.TEMP_CURRENT_F,
+        DPCode.TEMP_SET_F,
+        DPCode.UPPER_TEMP_F,
+    }
+)
+
+
+def _device_has_temperature_dp(
+    device: CustomerDevice, codes: frozenset[DPCode]
+) -> bool:
+    """Return whether the device exposes any of the temperature datapoints."""
+    return any(code in device.function or code in device.status_range for code in codes)
+
+
+def _apply_reported_temperature_unit(
+    device: CustomerDevice, definition: ClimateDefinition
+) -> None:
+    """Prefer the live c_f / temp_unit_convert selection over the schema unit.
+
+    Dedicated Fahrenheit datapoints are used when the device is in Fahrenheit.
+    Otherwise the plain datapoints already contain numbers in the selected unit,
+    even when their schema still says Celsius.
+    """
+    reported = get_device_temp_unit_convert(device)
+    if reported is None:
+        return
+
+    if reported == UnitOfTemperature.FAHRENHEIT:
+        if (
+            set_f := DPCodeIntegerWrapper.find_dpcode(
+                device, DPCode.TEMP_SET_F, prefer_function=True
+            )
+        ) is not None:
+            definition.set_temperature_wrapper = set_f
+        if (
+            current_f := DPCodeIntegerWrapper.find_dpcode(
+                device, (DPCode.TEMP_CURRENT_F, DPCode.UPPER_TEMP_F)
+            )
+        ) is not None:
+            definition.current_temperature_wrapper = current_f
+        definition.temperature_unit = TuyaUnitOfTemperature.FAHRENHEIT
+        return
+
+    if (
+        set_c := DPCodeIntegerWrapper.find_dpcode(
+            device, DPCode.TEMP_SET, prefer_function=True
+        )
+    ) is not None:
+        definition.set_temperature_wrapper = set_c
+    if (
+        current_c := DPCodeIntegerWrapper.find_dpcode(
+            device, (DPCode.TEMP_CURRENT, DPCode.UPPER_TEMP)
+        )
+    ) is not None:
+        definition.current_temperature_wrapper = current_c
+    definition.temperature_unit = TuyaUnitOfTemperature.CELSIUS
+
+
+def _temperature_value_unit(
+    device: CustomerDevice,
+    dpcode: str,
+    parsed_unit: UnitOfTemperature | None,
+    reported: UnitOfTemperature | None,
+) -> UnitOfTemperature | None:
+    """Return the unit the datapoint value is already expressed in."""
+    if reported is None or dpcode not in _PLAIN_TEMPERATURE_DPCODES:
+        return parsed_unit
+    # A dedicated Fahrenheit DP holds the Fahrenheit numbers. The plain DP
+    # next to it is still Celsius and must be converted.
+    if reported == UnitOfTemperature.FAHRENHEIT and _device_has_temperature_dp(
+        device, _FAHRENHEIT_TEMPERATURE_DPCODES
+    ):
+        return parsed_unit
+    if parsed_unit != reported:
+        return reported
+    return parsed_unit
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -124,6 +213,7 @@ async def async_setup_entry(
                     ),
                 )
             ):
+                _apply_reported_temperature_unit(device, definition)
                 entities.append(
                     TuyaClimateEntity(device, manager, description, definition)
                 )
@@ -165,14 +255,23 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         self._switch_wrapper = definition.switch_wrapper
         self._target_humidity_wrapper = definition.target_humidity_wrapper
         self._attr_temperature_unit = definition.temperature_unit
+        reported = get_device_temp_unit_convert(device)
 
-        if self._current_temperature:
-            self._current_temp_unit = get_temperature_unit(
-                device, self._current_temperature.native_unit
+        if current_temperature := cast(
+            DPCodeIntegerWrapper | None, self._current_temperature
+        ):
+            self._current_temp_unit = _temperature_value_unit(
+                device,
+                current_temperature.dpcode,
+                get_temperature_unit(device, current_temperature.native_unit),
+                reported,
             )
-        if self._set_temperature:
-            self._set_temp_unit = get_temperature_unit(
-                device, self._set_temperature.native_unit
+        if set_temperature := cast(DPCodeIntegerWrapper | None, self._set_temperature):
+            self._set_temp_unit = _temperature_value_unit(
+                device,
+                set_temperature.dpcode,
+                get_temperature_unit(device, set_temperature.native_unit),
+                reported,
             )
 
         # Get integer type data for the dpcode to set temperature, use

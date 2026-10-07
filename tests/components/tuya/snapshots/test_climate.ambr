@@ -1604,9 +1604,9 @@
 # ---
 # name: test_us_customary_system[climate.floor_thermostat_kitchen]
   ReadOnlyDict({
-    <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: -4,
-    <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 66,
-    <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 12,
+    <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 68,
+    <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 95,
+    <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 41,
     <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1.0,
     <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: None,
   })
@@ -1710,11 +1710,11 @@
 # ---
 # name: test_us_customary_system[climate.towel_rack]
   ReadOnlyDict({
-    <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 0,
-    <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 180,
-    <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 100,
-    <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 10.0,
-    <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 100,
+    <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 32,
+    <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 176,
+    <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 104,
+    <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 5.0,
+    <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 122,
   })
 # ---
 # name: test_us_customary_system[climate.wifi_smart_gas_boiler_thermostat]
