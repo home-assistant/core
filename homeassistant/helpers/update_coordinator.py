@@ -714,6 +714,7 @@ class _RestoreStoreManager:
             hass, RESTORE_STORAGE_VERSION, RESTORE_STORAGE_KEY
         )
         self._data: dict[str, dict[str, Any]] = {}
+        self._cleared_entry_ids: set[str] = set()
 
     async def async_load(self, *, load_empty: bool = False) -> None:
         """Load the store."""
@@ -732,6 +733,9 @@ class _RestoreStoreManager:
         self, entry_id: str, storage_key: str, data: Any, delay: float
     ) -> None:
         """Schedule saving the data of a coordinator."""
+        # A coordinator can outlive its removed entry if unloading failed
+        if entry_id in self._cleared_entry_ids:
+            return
         self._data.setdefault(entry_id, {})[storage_key] = data
         self._store.async_delay_save(self._data_to_save, delay)
 
@@ -748,6 +752,7 @@ class _RestoreStoreManager:
     @callback
     def async_clear_config_entry(self, entry_id: str) -> None:
         """Remove all data stored for a config entry."""
+        self._cleared_entry_ids.add(entry_id)
         if self._data.pop(entry_id, None) is None:
             return
         self._store.async_delay_save(self._data_to_save)

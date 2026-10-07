@@ -1923,6 +1923,32 @@ async def test_save_does_not_outlive_entry_removal(
     assert entry.entry_id not in store_data.get("data", {})
 
 
+async def test_no_save_after_entry_removal(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """Test a coordinator that outlives its removed entry cannot store data again."""
+    entry = MockConfigEntry()
+    entry.add_to_hass(hass)
+    crd: update_coordinator.RestoreDataUpdateCoordinator[Any] = (
+        update_coordinator.RestoreDataUpdateCoordinator(
+            hass,
+            _LOGGER,
+            config_entry=entry,
+            name="test",
+            storage_key=RESTORE_KEY,
+        )
+    )
+    await hass.config_entries.async_remove(entry.entry_id)
+    await hass.async_block_till_done()
+
+    # The coordinator was never shut down, as happens when unloading fails
+    crd.async_set_updated_data({"value": "pushed"})
+    await flush_restore_store(hass)
+
+    store_data = hass_storage.get(update_coordinator.RESTORE_STORAGE_KEY, {})
+    assert entry.entry_id not in store_data.get("data", {})
+
+
 async def test_no_persist_initial_none(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
