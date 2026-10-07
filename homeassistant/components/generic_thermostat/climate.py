@@ -289,7 +289,7 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         self._max_temp = max_temp
         self._attr_preset_mode = PRESET_NONE
         self._target_temp = target_temp
-        self._attr_temperature_unit = unit
+        self._attr_native_temperature_unit = unit
         self._attr_unique_id = unique_id
         self._attr_supported_features = (
             ClimateEntityFeature.TARGET_TEMPERATURE
@@ -423,7 +423,7 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the sensor temperature."""
         return self._cur_temp
 
@@ -450,7 +450,7 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         return self._target_temp
 

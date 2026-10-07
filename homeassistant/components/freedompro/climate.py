@@ -62,15 +62,15 @@ class Device(CoordinatorEntity[FreedomproDataUpdateCoordinator], ClimateEntity):
 
     _attr_has_entity_name = True
     _attr_hvac_modes = SUPPORTED_HVAC_MODES
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_name = None
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.TURN_OFF
         | ClimateEntityFeature.TURN_ON
     )
-    _attr_current_temperature = 0
-    _attr_target_temperature = 0
+    _attr_native_current_temperature = 0
+    _attr_native_target_temperature = 0
     _attr_hvac_mode = HVACMode.OFF
 
     def __init__(
@@ -110,9 +110,9 @@ class Device(CoordinatorEntity[FreedomproDataUpdateCoordinator], ClimateEntity):
         if device is not None and "state" in device:
             state = device["state"]
             if "currentTemperature" in state:
-                self._attr_current_temperature = state["currentTemperature"]
+                self._attr_native_current_temperature = state["currentTemperature"]
             if "targetTemperature" in state:
-                self._attr_target_temperature = state["targetTemperature"]
+                self._attr_native_target_temperature = state["targetTemperature"]
             if "heatingCoolingState" in state:
                 self._attr_hvac_mode = HVAC_MAP[state["heatingCoolingState"]]
         super()._handle_coordinator_update()

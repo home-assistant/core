@@ -146,7 +146,7 @@ class GreeClimateEntity(GreeEntity, ClimateEntity):
     _attr_swing_horizontal_modes = [*HORIZONTAL_SWING_MODES]
     _attr_name = None
     _attr_translation_key = "climate"
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_min_temp = TEMP_MIN
     _attr_max_temp = TEMP_MAX
 
@@ -157,13 +157,13 @@ class GreeClimateEntity(GreeEntity, ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> float:
+    def native_current_temperature(self) -> float:
         """Return the reported current temperature for the device."""
         return self.coordinator.device.current_temperature
 
     @property
     @override
-    def target_temperature(self) -> float:
+    def native_target_temperature(self) -> float:
         """Return the target temperature for the device."""
         return self.coordinator.device.target_temperature
 
@@ -355,18 +355,18 @@ class GreeClimateEntity(GreeEntity, ClimateEntity):
         units = self.coordinator.device.temperature_units
         if (
             units == TemperatureUnits.C
-            and self._attr_temperature_unit != UnitOfTemperature.CELSIUS
+            and self._attr_native_temperature_unit != UnitOfTemperature.CELSIUS
         ):
             _LOGGER.debug("Setting temperature unit to Celsius")
-            self._attr_temperature_unit = UnitOfTemperature.CELSIUS
+            self._attr_native_temperature_unit = UnitOfTemperature.CELSIUS
             self._attr_min_temp = TEMP_MIN
             self._attr_max_temp = TEMP_MAX
         elif (
             units == TemperatureUnits.F
-            and self._attr_temperature_unit != UnitOfTemperature.FAHRENHEIT
+            and self._attr_native_temperature_unit != UnitOfTemperature.FAHRENHEIT
         ):
             _LOGGER.debug("Setting temperature unit to Fahrenheit")
-            self._attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
+            self._attr_native_temperature_unit = UnitOfTemperature.FAHRENHEIT
             self._attr_min_temp = TEMP_MIN_F
             self._attr_max_temp = TEMP_MAX_F
 
