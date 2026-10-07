@@ -609,6 +609,7 @@ async def test_form_local_manual_already_configured(hass: HomeAssistant) -> None
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
+
 async def test_form_local_manual_mac_value_error(hass: HomeAssistant) -> None:
     """Test ValueError handling during MAC formatting/parsing."""
     result = await hass.config_entries.flow.async_init(
