@@ -219,6 +219,57 @@ async def test_state_change_updates_sensor(hass: HomeAssistant) -> None:
     assert hass.states.get("sensor.bedroom_level").state == LEVEL_INADEQUATE
 
 
+@pytest.mark.parametrize(
+    "source_state",
+    [
+        pytest.param(STATE_UNAVAILABLE, id="unavailable"),
+        pytest.param(STATE_UNKNOWN, id="unknown"),
+        pytest.param("not numeric", id="nonnumeric"),
+        pytest.param("nan", id="nonfinite"),
+        pytest.param("-1", id="negative"),
+    ],
+)
+async def test_sensor_availability_tracks_configured_sources(
+    hass: HomeAssistant, source_state: str
+) -> None:
+    """Both entities become unavailable and recover with their sources."""
+    hass.states.async_set(
+        "sensor.temperature",
+        "20",
+        {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
+    )
+    hass.states.async_set("sensor.co2", "500", {ATTR_UNIT_OF_MEASUREMENT: "ppm"})
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_SOURCES: {
+                CONF_TEMPERATURE: "sensor.temperature",
+                CONF_CO2: "sensor.co2",
+            },
+            CONF_STANDARD: STANDARD_UK,
+        },
+        title="Room",
+    )
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.room_index").state == "65"
+    assert hass.states.get("sensor.room_level").state == LEVEL_EXCELLENT
+
+    hass.states.async_set("sensor.co2", source_state, {ATTR_UNIT_OF_MEASUREMENT: "ppm"})
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.room_index").state == STATE_UNAVAILABLE
+    assert hass.states.get("sensor.room_level").state == STATE_UNAVAILABLE
+
+    hass.states.async_set("sensor.co2", "500", {ATTR_UNIT_OF_MEASUREMENT: "ppm"})
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.room_index").state == "65"
+    assert hass.states.get("sensor.room_level").state == LEVEL_EXCELLENT
+
+
 async def test_controller_initial_state(hass: HomeAssistant) -> None:
     """Test the controller starts with no calculated value."""
     controller = IndoorAirQualityController(

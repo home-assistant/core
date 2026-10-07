@@ -83,6 +83,12 @@ class IndoorAirQualitySensor(SensorEntity):
 
     @property
     @override
+    def available(self) -> bool:
+        """Return whether all configured sources can be scored."""
+        return self._controller.iaq_index is not None
+
+    @property
+    @override
     def native_value(self) -> int | str | None:
         """Return the sensor's current value."""
         if self._sensor_type == SENSOR_INDEX:
