@@ -2,7 +2,6 @@
 
 from datetime import timedelta
 from enum import StrEnum
-import socket
 
 from openrgb.utils import (
     ControllerParsingError,
@@ -58,10 +57,8 @@ DEVICE_TYPE_ICONS: dict[DeviceType, str] = {
 }
 
 CONNECTION_ERRORS = (
-    ConnectionRefusedError,
+    OSError,  # Refused, timed out, DNS failure or unreachable host
     OpenRGBDisconnected,
     ControllerParsingError,
-    TimeoutError,
-    socket.gaierror,  # DNS errors
     SDKVersionError,  # The OpenRGB SDK server version is incompatible with the client
 )
