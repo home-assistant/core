@@ -17,7 +17,6 @@ from huawei_lte_api.exceptions import (
     ResponseErrorLoginRequiredException,
     ResponseErrorNotSupportedException,
 )
-import probatio
 from requests.exceptions import Timeout
 
 from homeassistant.config_entries import ConfigEntry
@@ -36,7 +35,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import (
     config_validation as cv,
@@ -47,11 +46,9 @@ from homeassistant.helpers import (
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
-    ADMIN_SERVICES,
     ALL_KEYS,
     CONF_MANUFACTURER,
     CONF_UNAUTHENTICATED_MODE,
@@ -77,10 +74,9 @@ from .const import (
     KEY_WLAN_HOST_LIST,
     KEY_WLAN_WIFI_FEATURE_SWITCH,
     KEY_WLAN_WIFI_GUEST_NETWORK_SWITCH,
-    SERVICE_RESUME_INTEGRATION,
-    SERVICE_SUSPEND_INTEGRATION,
     UPDATE_SIGNAL,
 )
+from .services import async_setup_services
 from .utils import get_device_macs, non_verifying_requests_session
 
 _LOGGER = logging.getLogger(__name__)
@@ -89,7 +85,6 @@ SCAN_INTERVAL = timedelta(seconds=30)
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
-SERVICE_SCHEMA = probatio.Schema({probatio.Optional(CONF_URL): cv.url})
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -454,53 +449,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     hass.data[HUAWEI_LTE_CONFIG] = config
 
-    def service_handler(service: ServiceCall) -> None:
-        """Apply a service.
-
-        We key this using the router URL instead of its unique id / serial number,
-        because the latter is not available anywhere in the UI.
-        """
-        routers = [
-            entry.runtime_data
-            for entry in hass.config_entries.async_loaded_entries(DOMAIN)
-        ]
-        if url := service.data.get(CONF_URL):
-            router = next((router for router in routers if router.url == url), None)
-        elif not routers:
-            _LOGGER.error("%s: no routers configured", service.service)
-            return
-        elif len(routers) == 1:
-            router = routers[0]
-        else:
-            _LOGGER.error(
-                "%s: more than one router configured, must specify one of URLs %s",
-                service.service,
-                sorted(router.url for router in routers),
-            )
-            return
-        if not router:
-            _LOGGER.error("%s: router %s unavailable", service.service, url)
-            return
-
-        if service.service == SERVICE_RESUME_INTEGRATION:
-            # Login will be handled automatically on demand
-            router.suspended = False
-            _LOGGER.debug("%s: %s", service.service, "done")
-        elif service.service == SERVICE_SUSPEND_INTEGRATION:
-            router.logout()
-            router.suspended = True
-            _LOGGER.debug("%s: %s", service.service, "done")
-        else:
-            _LOGGER.error("%s: unsupported service", service.service)
-
-    for service in ADMIN_SERVICES:
-        async_register_admin_service(
-            hass,
-            DOMAIN,
-            service,
-            service_handler,
-            schema=SERVICE_SCHEMA,
-        )
+    async_setup_services(hass)
 
     return True
 
