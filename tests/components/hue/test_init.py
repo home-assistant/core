@@ -200,8 +200,9 @@ async def test_zigbee_connection(
     await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
     await setup_platform(hass, mock_bridge_v2, Platform.LIGHT)
 
-    device = device_registry.async_get_device(
-        identifiers={(hue.DOMAIN, WALL_SWITCH_ID)}
+    device = device_registry.async_get_device_by_identifier(
+        identifier=(hue.DOMAIN, WALL_SWITCH_ID),
+        config_entry_id=mock_bridge_v2.config_entry.entry_id,
     )
     assert device is not None
     assert device.connections == {(dr.CONNECTION_ZIGBEE, WALL_SWITCH_ZIGBEE_MAC)}

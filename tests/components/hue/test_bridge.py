@@ -134,7 +134,7 @@ async def test_bridge_device_v2(
     # async_setup_devices) and the network MAC connection (merged in by
     # _async_register_bridge_device)
     assert bridge_device.connections == {
-        (dr.CONNECTION_NETWORK_MAC, "00:17:88:01:aa:bb:fd:c7"),
+        (dr.CONNECTION_ZIGBEE, "00:17:88:01:aa:bb:fd:c7"),
         (dr.CONNECTION_NETWORK_MAC, mock_bridge_v2.api.config.mac_address),
     }
     # The bridge device is registered exactly once

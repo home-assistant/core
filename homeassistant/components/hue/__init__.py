@@ -52,7 +52,9 @@ async def _migrate_v2_zigbee_connections(
             zigbee = api.devices.get_zigbee_connectivity(hue_dev.id)
             if not zigbee or not zigbee.mac_address:
                 continue
-            device = dev_reg.async_get_device(identifiers={(DOMAIN, hue_dev.id)})
+            device = dev_reg.async_get_device_by_identifier(
+                identifier=(DOMAIN, hue_dev.id), config_entry_id=entry.entry_id
+            )
             if device is None:
                 continue
             old_connection = (dr.CONNECTION_NETWORK_MAC, zigbee.mac_address)
