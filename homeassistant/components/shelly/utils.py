@@ -12,6 +12,7 @@ from aioshelly.const import (
     BLU_TRV_MODEL_NAME,
     DEFAULT_COAP_PORT,
     DEFAULT_HTTP_PORT,
+    DEVICES,
     MODEL_1L,
     MODEL_DIMMER,
     MODEL_DIMMER_2,
@@ -319,6 +320,19 @@ def get_model_name(info: dict[str, Any]) -> str:
         return cast(str, MODEL_NAMES.get(info[CONF_MODEL], info[CONF_MODEL]))
 
     return cast(str, MODEL_NAMES.get(info["type"], info["type"]))
+
+
+def is_device_supported(info: dict[str, Any]) -> bool:
+    """Return True if the device model is supported."""
+    if get_info_gen(info) in RPC_GENERATIONS:
+        # Devices with firmware not fully provisioned
+        model = info.get(CONF_MODEL, "")
+    else:
+        model = info["type"]
+    if (device := DEVICES.get(model)) is None:
+        return True
+
+    return device.supported
 
 
 def get_shelly_model_name(
