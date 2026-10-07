@@ -11,7 +11,6 @@ from yt_dlp.utils import DownloadError, ExtractorError
 
 from homeassistant.components.media_player import (
     ATTR_MEDIA_CONTENT_ID,
-    ATTR_MEDIA_CONTENT_TYPE,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
     MEDIA_PLAYER_PLAY_MEDIA_SCHEMA,
     SERVICE_PLAY_MEDIA,
@@ -37,9 +36,6 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-CONF_CUSTOMIZE_ENTITIES = "customize"
-CONF_DEFAULT_STREAM_QUERY = "default_query"
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
@@ -92,11 +88,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     def play_media(call: ServiceCall) -> None:
         """Get stream URL and send it to the play_media service."""
-        MediaExtractor(hass, config.get(DOMAIN, {}), call.data).extract_and_send()
-
-    default_format_query = config.get(DOMAIN, {}).get(
-        CONF_DEFAULT_STREAM_QUERY, DEFAULT_STREAM_QUERY
-    )
+        MediaExtractor(hass, call.data).extract_and_send()
 
     hass.services.async_register(
         DOMAIN,
@@ -106,7 +98,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             {
                 probatio.Required(ATTR_URL): cv.string,
                 probatio.Optional(
-                    ATTR_FORMAT_QUERY, default=default_format_query
+                    ATTR_FORMAT_QUERY, default=DEFAULT_STREAM_QUERY
                 ): cv.string,
             }
         ),
@@ -137,12 +129,10 @@ class MediaExtractor:
     def __init__(
         self,
         hass: HomeAssistant,
-        component_config: dict[str, Any],
         call_data: dict[str, Any],
     ) -> None:
         """Initialize media extractor."""
         self.hass = hass
-        self.config = component_config
         self.call_data = call_data
 
     def get_media_url(self) -> str:
@@ -223,7 +213,7 @@ class MediaExtractor:
         self, stream_selector: Callable[[str], str], entity_id: str | None
     ) -> None:
         """Call Media player play_media service."""
-        stream_query = self.get_stream_query_for_entity(entity_id)
+        stream_query = DEFAULT_STREAM_QUERY
 
         try:
             stream_url = stream_selector(stream_query)
@@ -240,23 +230,6 @@ class MediaExtractor:
         self.hass.create_task(
             self.hass.services.async_call(MEDIA_PLAYER_DOMAIN, SERVICE_PLAY_MEDIA, data)
         )
-
-    def get_stream_query_for_entity(self, entity_id: str | None) -> str:
-        """Get stream format query for entity."""
-        default_stream_query: str = self.config.get(
-            CONF_DEFAULT_STREAM_QUERY, DEFAULT_STREAM_QUERY
-        )
-
-        if entity_id:
-            media_content_type = self.call_data.get(ATTR_MEDIA_CONTENT_TYPE)
-
-            return str(
-                self.config.get(CONF_CUSTOMIZE_ENTITIES, {})
-                .get(entity_id, {})
-                .get(media_content_type, default_stream_query)
-            )
-
-        return default_stream_query
 
 
 def get_best_stream(formats: list[dict[str, Any]]) -> str:
