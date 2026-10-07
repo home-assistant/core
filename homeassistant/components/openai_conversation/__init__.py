@@ -1,7 +1,6 @@
 """The OpenAI Conversation integration."""
 
 from types import MappingProxyType
-from typing import Any, cast
 
 import openai
 
@@ -49,8 +48,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenAIConfigEntry) -> bo
     """Set up OpenAI Conversation from a config entry."""
     client = openai.AsyncOpenAI(
         api_key=entry.data[CONF_API_KEY],
-        # Legacy HTTPX clients are supported at runtime only.
-        http_client=cast(Any, get_async_client(hass)),
+        http_client=get_async_client(hass),
     )
 
     # Cache current platform data which gets added to each request
