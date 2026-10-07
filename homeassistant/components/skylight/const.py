@@ -4,12 +4,10 @@ from datetime import timedelta
 
 DOMAIN = "skylight"
 
-CONF_ACCESS_TOKEN = "access_token"
 CONF_DEVICE_FINGERPRINT = "device_fingerprint"
 CONF_FRAME_ID = "frame_id"
 CONF_FRAME_NAME = "frame_name"
 CONF_REFRESH_TOKEN = "refresh_token"
-CONF_TOKEN = "token"
 
 # Rolling event window fetched on every poll (Skylight works in whole days).
 EVENTS_PAST_DAYS = 14

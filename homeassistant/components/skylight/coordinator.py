@@ -40,7 +40,7 @@ def _parse_wire_datetime(value: str) -> date | datetime:
         return date.fromisoformat(value)
     if (parsed := dt_util.parse_datetime(value)) is not None:
         return parsed
-    raise ValueError(f"Unparseable Skylight datetime: {value}")
+    raise ValueError(f"Unparsable Skylight datetime: {value}")
 
 
 def _event_from_raw(raw: dict[str, Any]) -> CalendarEvent | None:
@@ -54,7 +54,7 @@ def _event_from_raw(raw: dict[str, Any]) -> CalendarEvent | None:
         start = _parse_wire_datetime(starts)
         end = _parse_wire_datetime(ends)
     except ValueError:
-        _LOGGER.debug("Skipping event %s with unparseable dates", raw.get("id"))
+        _LOGGER.debug("Skipping event %s with unparsable dates", raw.get("id"))
         return None
 
     if not isinstance(start, datetime):

@@ -729,6 +729,7 @@ FLOWS = {
         "simplisafe",
         "sky_remote",
         "skybell",
+        "skylight",
         "slack",
         "sleep_as_android",
         "sleepiq",

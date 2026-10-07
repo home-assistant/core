@@ -7,6 +7,7 @@ the user signs in in their browser, and pastes back the code (or the whole
 callback URL) from the address bar.
 """
 
+from collections.abc import Mapping
 import logging
 import secrets
 from typing import Any, override
@@ -23,7 +24,7 @@ from skylight_api import (
 )
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_TOKEN
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_CODE, CONF_TOKEN
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
     SelectOptionDict,
@@ -35,7 +36,6 @@ from homeassistant.helpers.selector import (
 )
 
 from .const import (
-    CONF_ACCESS_TOKEN,
     CONF_DEVICE_FINGERPRINT,
     CONF_FRAME_ID,
     CONF_FRAME_NAME,
@@ -45,7 +45,6 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_CODE = "code"
 
 STEP_USER_DATA_SCHEMA = probatio.Schema(
     {probatio.Required(CONF_CODE): TextSelector(TextSelectorConfig())}
@@ -181,7 +180,9 @@ class SkylightConfigFlow(ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def async_step_reauth(self, entry_data: dict[str, Any]) -> ConfigFlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Perform reauth when the refresh token is revoked."""
         return await self.async_step_user()
 

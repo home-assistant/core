@@ -8,7 +8,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from .coordinator import SkylightConfigEntry, SkylightDataUpdateCoordinator
+from .coordinator import SkylightConfigEntry
 from .entity import SkylightEntity
 
 PARALLEL_UPDATES = 0
@@ -27,14 +27,6 @@ class SkylightCalendarEntity(SkylightEntity, CalendarEntity):
     """Representation of a Skylight frame calendar."""
 
     _attr_translation_key = "calendar"
-
-    def __init__(
-        self,
-        coordinator: SkylightDataUpdateCoordinator,
-        entry: SkylightConfigEntry,
-    ) -> None:
-        """Initialize the calendar entity."""
-        super().__init__(coordinator, entry)
 
     @property
     @override

@@ -2,17 +2,11 @@
 
 from skylight_api import SkylightAPI, TokenUpdateCallback
 
-from homeassistant.const import Platform
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import (
-    CONF_ACCESS_TOKEN,
-    CONF_DEVICE_FINGERPRINT,
-    CONF_REFRESH_TOKEN,
-    CONF_TOKEN,
-    DOMAIN as DOMAIN,
-)
+from .const import CONF_DEVICE_FINGERPRINT, CONF_REFRESH_TOKEN, DOMAIN as DOMAIN
 from .coordinator import SkylightConfigEntry, SkylightDataUpdateCoordinator
 
 PLATFORMS: list[Platform] = [Platform.CALENDAR]

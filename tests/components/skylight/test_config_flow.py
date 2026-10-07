@@ -6,7 +6,6 @@ from skylight_api import SkylightAuthError
 
 from homeassistant import config_entries
 from homeassistant.components.skylight.const import (
-    CONF_ACCESS_TOKEN,
     CONF_DEVICE_FINGERPRINT,
     CONF_FRAME_ID,
     CONF_FRAME_NAME,
@@ -14,7 +13,7 @@ from homeassistant.components.skylight.const import (
     DOMAIN,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_TOKEN
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 

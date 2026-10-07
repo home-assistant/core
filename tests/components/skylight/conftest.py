@@ -8,14 +8,13 @@ import pytest
 
 from homeassistant.components.calendar import CalendarEvent
 from homeassistant.components.skylight.const import (
-    CONF_ACCESS_TOKEN,
     CONF_DEVICE_FINGERPRINT,
     CONF_FRAME_ID,
     CONF_FRAME_NAME,
     CONF_REFRESH_TOKEN,
-    CONF_TOKEN,
     DOMAIN,
 )
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
 from homeassistant.components.skylight.coordinator import SkylightData
 
 from tests.common import MockConfigEntry
