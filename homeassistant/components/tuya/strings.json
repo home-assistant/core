@@ -1298,6 +1298,9 @@
     "action_dpcode_not_found": {
       "message": "Unable to process action as the device does not provide a corresponding function code (expected one of {expected} in {available})."
     },
+    "command_rejected": {
+      "message": "The Tuya cloud rejected the command."
+    },
     "device_not_found": {
       "message": "Feeder with ID {device_id} could not be found."
     },
@@ -1312,6 +1315,9 @@
     },
     "invalid_meal_plan_data": {
       "message": "Unable to parse meal plan data."
+    },
+    "send_command_failed": {
+      "message": "Failed to send the command to the Tuya cloud."
     }
   },
   "selector": {
