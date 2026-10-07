@@ -482,7 +482,6 @@ async def test_authentication_flow(
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TEST_API_NAME
-    assert result["result"]
     assert result["result"].unique_id is None
     data = result["data"]
     token = data.pop(CONF_TOKEN)
