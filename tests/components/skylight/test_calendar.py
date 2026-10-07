@@ -2,12 +2,12 @@
 
 from datetime import UTC, datetime, timedelta
 import itertools
-import json
+from typing import Any
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from skylight_api import SkylightAPIError, SkylightAuthError
+from skylight_api import SkylightAPI, SkylightAPIError, SkylightAuthError
 
 from homeassistant.components.calendar import (
     DOMAIN as CALENDAR_DOMAIN,
@@ -368,9 +368,20 @@ async def test_token_rotation_persists_new_tokens(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test the client's refresh cascade persists rotated tokens to the entry."""
-    with patch(
-        "skylight_api.SkylightAPI.get_calendar_events",
-        return_value={"data": []},
+    captured: dict[str, Any] = {}
+
+    real_init = SkylightAPI.__init__
+
+    def _capture_init(self: SkylightAPI, *args: Any, **kwargs: Any) -> None:
+        real_init(self, *args, **kwargs)
+        captured.update(kwargs)
+
+    with (
+        patch(
+            "skylight_api.SkylightAPI.get_calendar_events",
+            return_value={"data": []},
+        ),
+        patch.object(SkylightAPI, "__init__", _capture_init),
     ):
         mock_config_entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -378,31 +389,13 @@ async def test_token_rotation_persists_new_tokens(
 
     entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
     assert entry is not None
-    api = entry.runtime_data.api
 
-    class FakeResp:
-        status = 200
-
-        async def text(self) -> str:
-            return json.dumps(
-                {
-                    "access_token": "rotated-access",
-                    "refresh_token": "rotated-refresh",
-                }
-            )
-
-        async def __aenter__(self):
-            return self
-
-        async def __aexit__(self, *exc_info):
-            return None
-
-    class FakeSession:
-        def post(self, *_args, **_kwargs):
-            return FakeResp()
-
-    with patch.object(api, "_session", FakeSession()):
-        await api._refresh_access_token()
+    # Invoke the token_update_cb the integration registered at setup, exactly
+    # as the client's refresh cascade would, instead of reaching into the
+    # client's private session/refresh internals.
+    callback = captured["token_update_cb"]
+    assert callback is not None
+    await callback("rotated-access", "rotated-refresh", "mock-fingerprint")
     await hass.async_block_till_done()
 
     token = mock_config_entry.data["token"]
