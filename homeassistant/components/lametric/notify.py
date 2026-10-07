@@ -19,7 +19,7 @@ from homeassistant.components.notify import (
     BaseNotificationService,
     NotifyEntity,
 )
-from homeassistant.const import CONF_ICON
+from homeassistant.const import CONF_ICON, CONF_REPEAT
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -106,7 +106,11 @@ class LaMetricNotificationService(BaseNotificationService):
                     translation_key="unknown_sound",
                     translation_placeholders={"sound": str(data[CONF_SOUND])},
                 )
-            sound = Sound(sound=snd, category=None)
+            sound = Sound(
+                sound=snd,
+                category=None,
+                repeat=int(data.get(CONF_REPEAT, 1)),
+            )
 
         # Leave the sound out for a device that cannot play it, rather than have
         # it refuse the whole notification.

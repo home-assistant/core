@@ -227,6 +227,10 @@
           "description": "The priority of the notification. When the device is running in screensaver or kiosk mode, only critical priority notifications will be accepted.",
           "name": "Priority"
         },
+        "repeat": {
+          "description": "The number of times to play the sound. When set to 0, the sound will be played until the notification is dismissed.",
+          "name": "Repeat"
+        },
         "sound": {
           "description": "The notification sound to play.",
           "name": "Sound"
@@ -260,6 +264,10 @@
         "priority": {
           "description": "[%key:component::lametric::services::chart::fields::priority::description%]",
           "name": "[%key:component::lametric::services::chart::fields::priority::name%]"
+        },
+        "repeat": {
+          "description": "[%key:component::lametric::services::chart::fields::repeat::description%]",
+          "name": "[%key:component::lametric::services::chart::fields::repeat::name%]"
         },
         "sound": {
           "description": "[%key:component::lametric::services::chart::fields::sound::description%]",
