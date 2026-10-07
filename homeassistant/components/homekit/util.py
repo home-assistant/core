@@ -782,9 +782,10 @@ def get_min_max(value1: float, value2: float) -> tuple[float, float]:
 
 
 @callback
-def _async_update_entries_from_yaml(
+def async_update_entries_from_yaml(
     hass: HomeAssistant, config: ConfigType, start_import_flow: bool
 ) -> None:
+    """Update the config entries from YAML, optionally importing new ones."""
     current_entries = hass.config_entries.async_entries(DOMAIN)
     entries_by_name, entries_by_port = _async_get_imported_entries_indices(
         current_entries
@@ -809,7 +810,7 @@ def _async_update_entries_from_yaml(
             )
 
 
-def _async_all_homekit_instances(hass: HomeAssistant) -> list[HomeKit]:
+def async_all_homekit_instances(hass: HomeAssistant) -> list[HomeKit]:
     """All active HomeKit instances."""
     hk_data: HomeKitEntryData | None
     return [

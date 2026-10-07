@@ -146,12 +146,12 @@ from .iidmanager import AccessoryIIDStorage
 from .models import HomeKitConfigEntry, HomeKitEntryData
 from .type_triggers import DeviceTriggerAccessory
 from .util import (
-    _async_all_homekit_instances,
-    _async_update_entries_from_yaml,
     accessory_friendly_name,
+    async_all_homekit_instances,
     async_dismiss_setup_message,
     async_port_is_available,
     async_show_setup_message,
+    async_update_entries_from_yaml,
     get_persist_fullpath_for_entry_id,
     remove_state_files_for_entry_id,
     state_needs_accessory_mode,
@@ -252,7 +252,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if DOMAIN not in config:
         return True
 
-    _async_update_entries_from_yaml(hass, config, start_import_flow=True)
+    async_update_entries_from_yaml(hass, config, start_import_flow=True)
     return True
 
 
@@ -382,7 +382,7 @@ def _async_register_events_and_services(hass: HomeAssistant) -> None:
 
     async def async_handle_homekit_reset_accessory(service: ServiceCall) -> None:
         """Handle reset accessory HomeKit service call."""
-        for homekit in _async_all_homekit_instances(hass):
+        for homekit in async_all_homekit_instances(hass):
             if homekit.status != STATUS_RUNNING:
                 _LOGGER.warning(
                     "HomeKit is not running. Either it is waiting to be "
@@ -419,7 +419,7 @@ def _async_register_events_and_services(hass: HomeAssistant) -> None:
             ]
             matching_instances = [
                 homekit
-                for homekit in _async_all_homekit_instances(hass)
+                for homekit in async_all_homekit_instances(hass)
                 if homekit.driver and dr.format_mac(homekit.driver.state.mac) in macs
             ]
             if not matching_instances:
@@ -441,7 +441,7 @@ def _async_register_events_and_services(hass: HomeAssistant) -> None:
         config = await async_integration_yaml_config(hass, DOMAIN)
         if not config or DOMAIN not in config:
             return
-        _async_update_entries_from_yaml(hass, config, start_import_flow=False)
+        async_update_entries_from_yaml(hass, config, start_import_flow=False)
         await asyncio.gather(
             *(
                 create_eager_task(hass.config_entries.async_reload(entry.entry_id))
