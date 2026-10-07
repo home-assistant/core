@@ -83,8 +83,8 @@ async def test_update_firmware(
     assert state is not None
     assert state.state == STATE_OFF
 
-    device_info = device_registry.async_get_device(
-        {(DOMAIN, mock_device.serial_number)}
+    device_info = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_device.serial_number), entry.entry_id
     )
     assert device_info is not None
     assert device_info.sw_version == mock_device.firmware_version

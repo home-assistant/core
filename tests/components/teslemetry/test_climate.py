@@ -1,9 +1,11 @@
 """Test the Teslemetry climate platform."""
 
+from copy import deepcopy
 from unittest.mock import AsyncMock, patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
+from tesla_fleet_api.const import CabinOverheatProtectionTemp
 from tesla_fleet_api.exceptions import InvalidCommand
 from teslemetry_stream import Signal
 
@@ -17,20 +19,31 @@ from homeassistant.components.climate import (
     SERVICE_SET_TEMPERATURE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_SUPPORTED_FEATURES,
+    STATE_UNKNOWN,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from . import assert_entities, reload_platform, setup_platform
 from .const import (
     COMMAND_ERRORS,
     COMMAND_IGNORED_REASON,
+    COMMAND_OK,
+    METADATA,
     METADATA_NOSCOPE,
     VEHICLE_DATA_ALT,
 )
+
+VIN = "LRW3F7EK4NC700000"
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -173,18 +186,47 @@ async def test_climate(
     assert state.attributes[ATTR_TEMPERATURE] == 40
     assert state.state == HVACMode.COOL
 
-    # pytest raises ServiceValidationError
-    with pytest.raises(
-        ServiceValidationError,
-        match="Cabin overheat protection does not support that temperature",
-    ):
-        # Invalid Temp
+    # Set Temp between levels snaps to the nearest level
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: [entity_id], ATTR_TEMPERATURE: 34},
+        blocking=True,
+    )
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_TEMPERATURE] == 35
+
+
+@pytest.mark.parametrize(
+    ("temperature", "cop_temp"),
+    [
+        pytest.param(86, CabinOverheatProtectionTemp.LOW, id="low"),
+        pytest.param(91, CabinOverheatProtectionTemp.MEDIUM, id="medium"),
+        pytest.param(104, CabinOverheatProtectionTemp.HIGH, id="high"),
+    ],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_legacy")
+async def test_cop_set_temperature_fahrenheit(
+    hass: HomeAssistant,
+    temperature: int,
+    cop_temp: CabinOverheatProtectionTemp,
+) -> None:
+    """Tests a Fahrenheit temperature is snapped to the nearest COP level."""
+    hass.config.units = US_CUSTOMARY_SYSTEM
+    await setup_platform(hass, [Platform.CLIMATE])
+    entity_id = "climate.test_cabin_overheat_protection"
+
+    with patch(
+        "tesla_fleet_api.teslemetry.Vehicle.set_cop_temp",
+        return_value=COMMAND_OK,
+    ) as mock_set_cop_temp:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_TEMPERATURE,
-            {ATTR_ENTITY_ID: [entity_id], ATTR_TEMPERATURE: 34},
+            {ATTR_ENTITY_ID: [entity_id], ATTR_TEMPERATURE: temperature},
             blocking=True,
         )
+    mock_set_cop_temp.assert_called_once_with(cop_temp)
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -200,6 +242,61 @@ async def test_climate_alt(
     mock_vehicle_data.return_value = VEHICLE_DATA_ALT
     entry = await setup_platform(hass, [Platform.CLIMATE])
     assert_entities(hass, entry.entry_id, entity_registry, snapshot)
+
+
+async def test_climate_state_unknown(
+    hass: HomeAssistant,
+    mock_metadata: AsyncMock,
+    mock_vehicle_data: AsyncMock,
+) -> None:
+    """Test that a missing climate_state_is_climate_on reports unknown, not off."""
+
+    metadata = deepcopy(METADATA)
+    metadata["vehicles"]["LRW3F7EK4NC700000"]["polling"] = True
+    mock_metadata.return_value = metadata
+
+    data = deepcopy(VEHICLE_DATA_ALT)
+    data["response"]["climate_state"]["is_climate_on"] = None
+    mock_vehicle_data.return_value = data
+
+    await setup_platform(hass, [Platform.CLIMATE])
+
+    assert hass.states.get("climate.test_climate").state == STATE_UNKNOWN
+
+
+@pytest.mark.parametrize(
+    ("keeper_mode", "preset_mode"),
+    [
+        pytest.param("on", "keep", id="on"),
+        pytest.param("dog", "dog", id="dog"),
+        pytest.param("camp", "camp", id="camp"),
+        pytest.param("keep", None, id="unmapped"),
+        pytest.param(None, None, id="unknown"),
+    ],
+)
+async def test_climate_polling_keeper_mode(
+    hass: HomeAssistant,
+    mock_metadata: AsyncMock,
+    mock_vehicle_data: AsyncMock,
+    keeper_mode: str | None,
+    preset_mode: str | None,
+) -> None:
+    """Test that a polling vehicle maps Tesla's climate keeper mode to a preset."""
+
+    metadata = deepcopy(METADATA)
+    metadata["vehicles"]["LRW3F7EK4NC700000"]["polling"] = True
+    mock_metadata.return_value = metadata
+
+    data = deepcopy(VEHICLE_DATA_ALT)
+    data["response"]["climate_state"]["climate_keeper_mode"] = keeper_mode
+    mock_vehicle_data.return_value = data
+
+    await setup_platform(hass, [Platform.CLIMATE])
+
+    assert (
+        hass.states.get("climate.test_climate").attributes[ATTR_PRESET_MODE]
+        == preset_mode
+    )
 
 
 async def test_invalid_error(hass: HomeAssistant, snapshot: SnapshotAssertion) -> None:
@@ -348,3 +445,145 @@ async def test_select_streaming(
         "climate.test_cabin_overheat_protection",
     ):
         assert hass.states.get(entity_id) == snapshot(name=entity_id)
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize(
+    ("config", "supported_features"),
+    [
+        pytest.param(
+            {"cop_user_set_temp_supported": True},
+            ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.TURN_ON
+            | ClimateEntityFeature.TURN_OFF,
+            id="supported",
+        ),
+        pytest.param(
+            {"cop_user_set_temp_supported": False},
+            ClimateEntityFeature.TURN_ON | ClimateEntityFeature.TURN_OFF,
+            id="unsupported",
+        ),
+        pytest.param(
+            {},
+            ClimateEntityFeature.TURN_ON | ClimateEntityFeature.TURN_OFF,
+            id="missing",
+        ),
+    ],
+)
+async def test_cabin_overheat_protection_streaming_features(
+    hass: HomeAssistant,
+    mock_metadata: AsyncMock,
+    config: dict[str, bool],
+    supported_features: ClimateEntityFeature,
+) -> None:
+    """Test streaming cabin overheat protection features come from metadata config."""
+
+    metadata = deepcopy(METADATA)
+    metadata["vehicles"]["LRW3F7EK4NC700000"]["config"] = config
+    mock_metadata.return_value = metadata
+
+    await setup_platform(hass, [Platform.CLIMATE])
+
+    state = hass.states.get("climate.test_cabin_overheat_protection")
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == supported_features
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_cabin_overheat_protection_streaming_set_temperature(
+    hass: HomeAssistant,
+    mock_metadata: AsyncMock,
+) -> None:
+    """Test setting the streaming cabin overheat protection temperature."""
+
+    metadata = deepcopy(METADATA)
+    metadata["vehicles"]["LRW3F7EK4NC700000"]["config"] = {
+        "cop_user_set_temp_supported": True
+    }
+    mock_metadata.return_value = metadata
+
+    await setup_platform(hass, [Platform.CLIMATE])
+    entity_id = "climate.test_cabin_overheat_protection"
+
+    with patch(
+        "tesla_fleet_api.teslemetry.Vehicle.set_cop_temp",
+        return_value=COMMAND_OK,
+    ) as mock_set_cop_temp:
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {ATTR_ENTITY_ID: [entity_id], ATTR_TEMPERATURE: 35},
+            blocking=True,
+        )
+    mock_set_cop_temp.assert_called_once_with(CabinOverheatProtectionTemp.MEDIUM)
+    assert hass.states.get(entity_id).attributes[ATTR_TEMPERATURE] == 35
+
+
+@pytest.mark.parametrize(
+    ("rhd", "target_temperature"),
+    [
+        pytest.param(True, 21, id="rhd"),
+        pytest.param(False, 22, id="lhd"),
+    ],
+)
+async def test_climate_streaming_drive_side(
+    hass: HomeAssistant,
+    mock_metadata: AsyncMock,
+    mock_add_listener: AsyncMock,
+    rhd: bool,
+    target_temperature: float,
+) -> None:
+    """Test the streaming target temperature follows the driver side from metadata."""
+
+    metadata = deepcopy(METADATA)
+    metadata["vehicles"][VIN]["config"] = {"rhd": rhd}
+    mock_metadata.return_value = metadata
+
+    await setup_platform(hass, [Platform.CLIMATE])
+
+    mock_add_listener.send(
+        {
+            "vin": VIN,
+            "data": {
+                Signal.HVAC_LEFT_TEMPERATURE_REQUEST: 22,
+                Signal.HVAC_RIGHT_TEMPERATURE_REQUEST: 21,
+            },
+            "createdAt": "2024-10-04T10:45:17.537Z",
+        }
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("climate.test_climate")
+    assert state.attributes[ATTR_TEMPERATURE] == target_temperature
+
+
+@pytest.mark.parametrize(
+    ("hvac_power", "expected"),
+    [
+        pytest.param("HvacPowerStateOn", HVACMode.HEAT_COOL, id="on"),
+        pytest.param(
+            "HvacPowerStatePrecondition", HVACMode.HEAT_COOL, id="precondition"
+        ),
+        pytest.param("HvacPowerStateOverheatProtect", HVACMode.OFF, id="overheat"),
+        pytest.param("HvacPowerStateOff", HVACMode.OFF, id="off"),
+    ],
+)
+async def test_climate_streaming_hvac_power(
+    hass: HomeAssistant,
+    mock_add_listener: AsyncMock,
+    hvac_power: str,
+    expected: HVACMode,
+) -> None:
+    """Tests the HvacPower to HVAC mode mapping for streaming vehicles."""
+
+    await setup_platform(hass, [Platform.CLIMATE])
+
+    mock_add_listener.send(
+        {
+            "vin": VEHICLE_DATA_ALT["response"]["vin"],
+            "data": {Signal.HVAC_POWER: hvac_power},
+            "createdAt": "2024-10-04T10:45:17.537Z",
+        }
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get("climate.test_climate").state == expected

@@ -3,12 +3,12 @@
 import asyncio
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from datetime import timedelta
+from datetime import datetime, timedelta
 from typing import Any, cast, override
 
 from aioshelly.ble import async_ensure_ble_enabled, async_stop_scanner
 from aioshelly.block_device import BlockDevice, BlockUpdateType
-from aioshelly.const import MODEL_VALVE
+from aioshelly.const import DEFAULT_HTTPS_PORT, MODEL_VALVE
 from aioshelly.exceptions import (
     DeviceConnectionError,
     InvalidAuthError,
@@ -37,6 +37,7 @@ from homeassistant.helpers import (
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, format_mac
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 
 from .bluetooth import async_connect_scanner
 from .const import (
@@ -59,6 +60,7 @@ from .const import (
     OTA_BEGIN,
     OTA_ERROR,
     OTA_PROGRESS,
+    OTA_REBOOT_TIMEOUT,
     OTA_SUCCESS,
     PUSH_UPDATE_ISSUE_ID,
     REST_SENSORS_UPDATE_INTERVAL,
@@ -150,7 +152,9 @@ class ShellyCoordinatorBase[_DeviceT: BlockDevice | RpcDevice](
     @cached_property
     def configuration_url(self) -> str:
         """Return the configuration URL for the device."""
-        return f"http://{get_host(self.config_entry.data[CONF_HOST])}:{get_http_port(self.config_entry.data)}"
+        port = get_http_port(self.config_entry.data)
+        scheme = "https" if port == DEFAULT_HTTPS_PORT else "http"
+        return f"{scheme}://{get_host(self.config_entry.data[CONF_HOST])}:{port}"
 
     @cached_property
     def model(self) -> str:
@@ -530,9 +534,9 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         self._connection_lock = asyncio.Lock()
         self._event_listeners: list[Callable[[dict[str, Any]], None]] = []
         self._ota_event_listeners: list[Callable[[dict[str, Any]], None]] = []
+        self._ota_reboot_deadline: datetime | None = None
         self._input_event_listeners: list[Callable[[dict[str, Any]], None]] = []
         self._connect_task: asyncio.Task | None = None
-        entry.async_on_unload(entry.add_update_listener(self._async_update_listener))
 
     @cached_property
     def bluetooth_source(self) -> str:
@@ -617,15 +621,6 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
 
         return _unsubscribe
 
-    async def _async_update_listener(
-        self, hass: HomeAssistant, entry: ShellyConfigEntry
-    ) -> None:
-        """Reconfigure on update."""
-        async with self._connection_lock:
-            if self.connected:
-                self._async_run_disconnected_events()
-                await self._async_run_connected_events()
-
     @callback
     def _async_device_event_handler(self, event_data: dict[str, Any]) -> None:
         """Handle device events."""
@@ -665,6 +660,12 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
                     },
                 )
             elif event_type in (OTA_BEGIN, OTA_ERROR, OTA_PROGRESS, OTA_SUCCESS):
+                # The device reboots to apply the update, expect it to go offline
+                self._ota_reboot_deadline = (
+                    None
+                    if event_type == OTA_ERROR
+                    else dt_util.utcnow() + timedelta(seconds=OTA_REBOOT_TIMEOUT)
+                )
                 for event_callback in self._ota_event_listeners:
                     event_callback(event)
 
@@ -690,6 +691,15 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
                 return
 
             if not await self._async_device_connect_task():
+                if (
+                    self._ota_reboot_deadline is not None
+                    and dt_util.utcnow() < self._ota_reboot_deadline
+                ):
+                    LOGGER.debug(
+                        "Device %s is rebooting after a firmware update, retrying later",
+                        self.name,
+                    )
+                    return
                 raise UpdateFailed(
                     translation_domain=DOMAIN,
                     translation_key="update_error_reconnect_error",
@@ -815,6 +825,7 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
             self._came_online_once = True
             self._async_handle_rpc_device_online()
         elif update_type is RpcUpdateType.INITIALIZED:
+            self._ota_reboot_deadline = None
             self.config_entry.async_create_background_task(
                 self.hass, self._async_connected(), "rpc device init", eager_start=True
             )
@@ -907,18 +918,17 @@ def get_block_coordinator_by_device_id(
     hass: HomeAssistant, device_id: str
 ) -> ShellyBlockCoordinator | None:
     """Get a Shelly block device coordinator for the given device id."""
-    dev_reg = dr.async_get(hass)
-    if device := dev_reg.async_get(device_id):
-        for config_entry in device.config_entries:
-            entry = hass.config_entries.async_get_entry(config_entry)
-            if (
-                entry
-                and entry.state is ConfigEntryState.LOADED
-                and hasattr(entry, "runtime_data")
-                and isinstance(entry.runtime_data, ShellyEntryData)
-                and (coordinator := entry.runtime_data.block)
-            ):
-                return coordinator
+    _device, entry = dr.async_get_device_and_config_entry_for_domain(
+        hass, device_id, domain=DOMAIN
+    )
+    if (
+        entry is not None
+        and entry.state is ConfigEntryState.LOADED
+        and hasattr(entry, "runtime_data")
+        and isinstance(entry.runtime_data, ShellyEntryData)
+        and (coordinator := entry.runtime_data.block)
+    ):
+        return coordinator
 
     return None
 
@@ -927,18 +937,17 @@ def get_rpc_coordinator_by_device_id(
     hass: HomeAssistant, device_id: str
 ) -> ShellyRpcCoordinator | None:
     """Get a Shelly RPC device coordinator for the given device id."""
-    dev_reg = dr.async_get(hass)
-    if device := dev_reg.async_get(device_id):
-        for config_entry in device.config_entries:
-            entry = hass.config_entries.async_get_entry(config_entry)
-            if (
-                entry
-                and entry.state is ConfigEntryState.LOADED
-                and hasattr(entry, "runtime_data")
-                and isinstance(entry.runtime_data, ShellyEntryData)
-                and (coordinator := entry.runtime_data.rpc)
-            ):
-                return coordinator
+    _device, entry = dr.async_get_device_and_config_entry_for_domain(
+        hass, device_id, domain=DOMAIN
+    )
+    if (
+        entry is not None
+        and entry.state is ConfigEntryState.LOADED
+        and hasattr(entry, "runtime_data")
+        and isinstance(entry.runtime_data, ShellyEntryData)
+        and (coordinator := entry.runtime_data.rpc)
+    ):
+        return coordinator
 
     return None
 

@@ -7,7 +7,7 @@ import logging
 from typing import Any
 from unittest.mock import Mock, patch
 
-from aiohttp import BasicAuth, web
+from aiohttp import encode_basic_auth, web
 from aiohttp.web_exceptions import HTTPUnauthorized
 import jwt
 import pytest
@@ -28,6 +28,7 @@ from homeassistant.components.http.auth import (
     async_sign_path,
     async_user_not_allowed_do_auth,
 )
+from homeassistant.components.http.const import DATA_SUPERVISOR_USER
 from homeassistant.components.http.forwarded import async_setup_forwarded
 from homeassistant.components.http.request_context import (
     current_request,
@@ -111,7 +112,7 @@ def trusted_networks_auth(
 
 async def test_auth_middleware_loaded_by_default(hass: HomeAssistant) -> None:
     """Test accessing to server from banned IP when feature is off."""
-    with patch("homeassistant.components.http.async_setup_auth") as mock_setup:
+    with patch("homeassistant.components.http.server.async_setup_auth") as mock_setup:
         await async_setup_component(hass, DOMAIN, {"http": {}})
 
     assert len(mock_setup.mock_calls) == 1
@@ -164,13 +165,21 @@ async def test_basic_auth_does_not_work(
     await async_setup_auth(hass, app)
     client = await aiohttp_client(app)
 
-    req = await client.get("/", auth=BasicAuth("homeassistant", API_PASSWORD))
+    req = await client.get(
+        "/", headers={"Authorization": encode_basic_auth("homeassistant", API_PASSWORD)}
+    )
     assert req.status == HTTPStatus.UNAUTHORIZED
 
-    req = await client.get("/", auth=BasicAuth("wrong_username", API_PASSWORD))
+    req = await client.get(
+        "/",
+        headers={"Authorization": encode_basic_auth("wrong_username", API_PASSWORD)},
+    )
     assert req.status == HTTPStatus.UNAUTHORIZED
 
-    req = await client.get("/", auth=BasicAuth("homeassistant", "wrong password"))
+    req = await client.get(
+        "/",
+        headers={"Authorization": encode_basic_auth("homeassistant", "wrong password")},
+    )
     assert req.status == HTTPStatus.UNAUTHORIZED
 
     req = await client.get("/", headers={"authorization": "NotBasic abcdefg"})
@@ -285,7 +294,9 @@ async def test_auth_legacy_support_api_password_cannot_access(
     resp = await client.get("/", params={"api_password": API_PASSWORD})
     assert resp.status == HTTPStatus.UNAUTHORIZED
 
-    req = await client.get("/", auth=BasicAuth("homeassistant", API_PASSWORD))
+    req = await client.get(
+        "/", headers={"Authorization": encode_basic_auth("homeassistant", API_PASSWORD)}
+    )
     assert req.status == HTTPStatus.UNAUTHORIZED
 
 
@@ -756,7 +767,7 @@ async def test_unix_socket_auth_with_supervisor_user(
     supervisor_user = await hass.auth.async_create_system_user(
         HASSIO_USER_NAME, group_ids=[GROUP_ID_ADMIN]
     )
-    await hass.auth.async_create_refresh_token(supervisor_user)
+    hass.data[DATA_SUPERVISOR_USER] = supervisor_user
 
     await async_setup_auth(hass, app)
     client = await aiohttp_client(app)
@@ -788,16 +799,17 @@ async def test_unix_socket_auth_without_supervisor_user(
     assert req.status == HTTPStatus.INTERNAL_SERVER_ERROR
 
 
-async def test_unix_socket_auth_caches_user_id(
+async def test_unix_socket_auth_removed_user(
     hass: HomeAssistant,
     app: web.Application,
     aiohttp_client: ClientSessionGenerator,
 ) -> None:
-    """Test that Unix socket auth caches the Supervisor user ID."""
+    """Test that Unix socket requests fail once the Supervisor user was removed."""
     supervisor_user = await hass.auth.async_create_system_user(
         HASSIO_USER_NAME, group_ids=[GROUP_ID_ADMIN]
     )
-    await hass.auth.async_create_refresh_token(supervisor_user)
+    hass.data[DATA_SUPERVISOR_USER] = supervisor_user
+    await hass.auth.async_remove_user(supervisor_user)
 
     await async_setup_auth(hass, app)
     client = await aiohttp_client(app)
@@ -806,20 +818,37 @@ async def test_unix_socket_auth_caches_user_id(
         "homeassistant.components.http.auth.is_supervisor_unix_socket_request",
         return_value=True,
     ):
-        # First request triggers user lookup
         req = await client.get("/")
-        assert req.status == HTTPStatus.OK
+    assert req.status == HTTPStatus.INTERNAL_SERVER_ERROR
 
-    # Second request should use cached user ID
-    with (
-        patch(
-            "homeassistant.components.http.auth.is_supervisor_unix_socket_request",
-            return_value=True,
-        ),
-        patch.object(
-            hass.auth, "async_get_users", wraps=hass.auth.async_get_users
-        ) as mock_get_users,
+
+async def test_unix_socket_auth_uses_provided_user(
+    hass: HomeAssistant,
+    app: web.Application,
+    aiohttp_client: ClientSessionGenerator,
+) -> None:
+    """Test that Unix socket auth uses the user provided by hassio, not a name match.
+
+    A stale duplicate system user named Supervisor can be left behind in the
+    auth store; requests must be authenticated as the user hassio actually uses.
+    """
+    stale_user = await hass.auth.async_create_system_user(
+        HASSIO_USER_NAME, group_ids=[GROUP_ID_ADMIN]
+    )
+    supervisor_user = await hass.auth.async_create_system_user(
+        HASSIO_USER_NAME, group_ids=[GROUP_ID_ADMIN]
+    )
+    hass.data[DATA_SUPERVISOR_USER] = supervisor_user
+
+    await async_setup_auth(hass, app)
+    client = await aiohttp_client(app)
+
+    with patch(
+        "homeassistant.components.http.auth.is_supervisor_unix_socket_request",
+        return_value=True,
     ):
         req = await client.get("/")
-        assert req.status == HTTPStatus.OK
-        mock_get_users.assert_not_called()
+    assert req.status == HTTPStatus.OK
+    data = await req.json()
+    assert data["user_id"] == supervisor_user.id
+    assert data["user_id"] != stale_user.id

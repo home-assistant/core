@@ -26,10 +26,10 @@ async def test_get_triggers(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ) -> None:
     """Test we get the expected triggers."""
-    await setup_samsungtv_entry(hass, ENTRYDATA_ENCRYPTED_WEBSOCKET)
+    entry = await setup_samsungtv_entry(hass, ENTRYDATA_ENCRYPTED_WEBSOCKET)
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, "be9554b9-c9fb-41f4-8920-22da015376a4")}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "be9554b9-c9fb-41f4-8920-22da015376a4"), entry.entry_id
     )
 
     turn_on_trigger = {
@@ -53,11 +53,11 @@ async def test_if_fires_on_turn_on_request(
     service_calls: list[ServiceCall],
 ) -> None:
     """Test for turn_on and turn_off triggers firing."""
-    await setup_samsungtv_entry(hass, ENTRYDATA_ENCRYPTED_WEBSOCKET)
+    entry = await setup_samsungtv_entry(hass, ENTRYDATA_ENCRYPTED_WEBSOCKET)
     entity_id = "media_player.mock_title"
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, "be9554b9-c9fb-41f4-8920-22da015376a4")}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "be9554b9-c9fb-41f4-8920-22da015376a4"), entry.entry_id
     )
 
     assert await async_setup_component(

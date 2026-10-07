@@ -28,20 +28,39 @@ pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 async def test_duplicate_error(hass: HomeAssistant, config: dict[str, Any]) -> None:
     """Test that errors are shown when duplicate entries are added."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=config
+        DOMAIN,
+        context={"source": SOURCE_USER},
     )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=config,
+    )
+
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
 async def test_connect_error(hass: HomeAssistant, config: dict[str, Any]) -> None:
     """Test that the config entry errors out if the device cannot connect."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
     with patch(
         "aioguardian.client.Client.connect",
         side_effect=GuardianError,
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=config
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=config
         )
         assert result["type"] is FlowResultType.FORM
         assert result["errors"] == {CONF_IP_ADDRESS: "cannot_connect"}
@@ -67,9 +86,11 @@ async def test_step_user(hass: HomeAssistant, config: dict[str, Any]) -> None:
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    assert result["errors"] == {}
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=config
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=config,
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "ABCDEF123456"

@@ -2,12 +2,7 @@
 
 from typing import Any
 
-from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
-    ATTR_UNIT_OF_MEASUREMENT,
-    PERCENTAGE,
-    UnitOfTemperature,
-)
+from homeassistant.const import PERCENTAGE, EntityStateAttribute, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.significant_change import (
     check_absolute_change,
@@ -39,7 +34,7 @@ def async_check_significant_change(
     **kwargs: Any,
 ) -> bool | None:
     """Test if state significantly changed."""
-    if (device_class := new_attrs.get(ATTR_DEVICE_CLASS)) is None:
+    if (device_class := new_attrs.get(EntityStateAttribute.DEVICE_CLASS)) is None:
         return None
 
     percentage_change: float | None = None
@@ -49,7 +44,10 @@ def async_check_significant_change(
         NumberDeviceClass.TEMPERATURE,
         NumberDeviceClass.TEMPERATURE_DELTA,
     ):
-        if new_attrs.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfTemperature.FAHRENHEIT:
+        if (
+            new_attrs.get(EntityStateAttribute.UNIT_OF_MEASUREMENT)
+            == UnitOfTemperature.FAHRENHEIT
+        ):
             absolute_change = 1.0
         else:
             absolute_change = 0.5
@@ -64,7 +62,7 @@ def async_check_significant_change(
 
     # special for power factor
     elif device_class == NumberDeviceClass.POWER_FACTOR:
-        if new_attrs.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE:
+        if new_attrs.get(EntityStateAttribute.UNIT_OF_MEASUREMENT) == PERCENTAGE:
             absolute_change = 1.0
         else:
             absolute_change = 0.1

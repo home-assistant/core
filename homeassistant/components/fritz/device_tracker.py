@@ -1,7 +1,6 @@
 """Support for FRITZ!Box devices."""
 
 import datetime
-import logging
 from typing import override
 
 from homeassistant.components.device_tracker import ScannerEntity
@@ -9,13 +8,11 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DEFAULT_DEVICE_NAME
+from .const import DEFAULT_DEVICE_NAME, LOGGER
 from .coordinator import FRITZ_DATA_KEY, AvmWrapper, FritzConfigEntry, FritzData
 from .entity import FritzDeviceBase
 from .helpers import device_filter_out_from_trackers
 from .models import FritzDevice
-
-_LOGGER = logging.getLogger(__name__)
 
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
@@ -27,7 +24,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up device tracker for FRITZ!Box component."""
-    _LOGGER.debug("Starting FRITZ!Box device tracker")
+    LOGGER.debug("Starting FRITZ!Box device tracker")
     avm_wrapper = entry.runtime_data
     data_fritz = hass.data[FRITZ_DATA_KEY]
 

@@ -3,23 +3,25 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
+from mitsubishi_comfort import DeviceInfo
 from mitsubishi_comfort.exceptions import AuthenticationError, DeviceConnectionError
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.mitsubishi_comfort.const import CONF_ADDRESSES, DOMAIN
+from homeassistant.components.mitsubishi_comfort.const import (
+    CONF_ADDRESSES,
+    CONF_CREDENTIALS,
+    DOMAIN,
+)
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
-from .conftest import MOCK_MAC, MOCK_SERIAL
+from .conftest import MOCK_MAC, MOCK_PASSWORD, MOCK_SERIAL, MOCK_USERNAME
 
 from tests.common import MockConfigEntry
-
-MOCK_USERNAME = "test@test.com"
-MOCK_PASSWORD = "testpass"
 
 
 @pytest.fixture(autouse=True)
@@ -58,11 +60,213 @@ async def test_user_step_success(
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == f"Mitsubishi Comfort ({MOCK_USERNAME})"
+    # Per-device credentials from discovery are persisted so setup can skip the
+    # rate-limited Socket.IO fetch.
     assert result["data"] == {
         CONF_USERNAME: MOCK_USERNAME,
         CONF_PASSWORD: MOCK_PASSWORD,
+        CONF_CREDENTIALS: {
+            MOCK_SERIAL: {
+                "password": "dGVzdHBhc3M=",
+                "crypto_serial": "0102030405060708090a",
+                "mac": MOCK_MAC,
+            }
+        },
     }
     mock_setup_entry.assert_called_once()
+
+
+async def test_user_step_persists_partial_records(
+    hass: HomeAssistant,
+    mock_cloud_account: AsyncMock,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test partially discovered devices keep their recovered fields.
+
+    discover_devices() consumes the password, cryptoSerial, and MAC
+    independently, so whatever discovery recovered is seeded for replay,
+    matching async_setup_entry's caching.
+    """
+    mock_cloud_account.discover_devices.return_value = {
+        MOCK_SERIAL: DeviceInfo(
+            serial=MOCK_SERIAL,
+            label="Living Room",
+            address="",
+            mac=MOCK_MAC,
+            unit_type="ductless",
+            password="dGVzdHBhc3M=",
+            crypto_serial="0102030405060708090a",
+        ),
+        "SERIAL002": DeviceInfo(
+            serial="SERIAL002",
+            label="Bedroom",
+            address="",
+            mac="11:22:33:44:55:66",
+            unit_type="ductless",
+            password="",
+            crypto_serial="",
+        ),
+    }
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_USERNAME: MOCK_USERNAME, CONF_PASSWORD: MOCK_PASSWORD},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_CREDENTIALS] == {
+        MOCK_SERIAL: {
+            "password": "dGVzdHBhc3M=",
+            "crypto_serial": "0102030405060708090a",
+            "mac": MOCK_MAC,
+        },
+        "SERIAL002": {
+            "password": "",
+            "crypto_serial": "",
+            "mac": "11:22:33:44:55:66",
+        },
+    }
+
+
+def _partial_device_info() -> DeviceInfo:
+    """Build a device with local secrets but no MAC: recoverable, not usable."""
+    return DeviceInfo(
+        serial=MOCK_SERIAL,
+        label="Living Room",
+        address="",
+        mac="",
+        unit_type="ductless",
+        password="dGVzdHBhc3M=",
+        crypto_serial="0102030405060708090a",
+    )
+
+
+async def test_user_step_retry_replays_partial_credentials(
+    hass: HomeAssistant,
+    mock_cloud_account: AsyncMock,
+) -> None:
+    """Test a retry replays the fields recovered by a failed earlier attempt.
+
+    The Socket.IO password fetch is rate limited: one attempt can recover the
+    passwords yet miss the MACs, and its retry the reverse. Replaying the
+    recovered fields means no single attempt has to return everything.
+    """
+    mock_cloud_account.discover_devices.return_value = {
+        MOCK_SERIAL: _partial_device_info()
+    }
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_USERNAME: MOCK_USERNAME, CONF_PASSWORD: MOCK_PASSWORD},
+    )
+    assert result["errors"] == {"base": "no_usable_devices"}
+    assert (
+        mock_cloud_account.discover_devices.call_args.kwargs["cached_credentials"] == {}
+    )
+
+    mock_cloud_account.discover_devices.return_value = {
+        MOCK_SERIAL: DeviceInfo(
+            serial=MOCK_SERIAL,
+            label="Living Room",
+            address="",
+            mac=MOCK_MAC,
+            unit_type="ductless",
+            password="dGVzdHBhc3M=",
+            crypto_serial="0102030405060708090a",
+        )
+    }
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_USERNAME: MOCK_USERNAME, CONF_PASSWORD: MOCK_PASSWORD},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert mock_cloud_account.discover_devices.call_args.kwargs[
+        "cached_credentials"
+    ] == {
+        MOCK_SERIAL: {
+            "password": "dGVzdHBhc3M=",
+            "crypto_serial": "0102030405060708090a",
+            "mac": "",
+        }
+    }
+
+
+async def test_user_step_empty_account_response_keeps_cached_credentials(
+    hass: HomeAssistant,
+    mock_cloud_account: AsyncMock,
+) -> None:
+    """Test a transient empty device list does not wipe recovered fields.
+
+    The cached password may be unrecoverable, so only a discovery that
+    returned devices may replace the cache.
+    """
+    mock_cloud_account.discover_devices.return_value = {
+        MOCK_SERIAL: _partial_device_info()
+    }
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_USERNAME: MOCK_USERNAME, CONF_PASSWORD: MOCK_PASSWORD},
+    )
+    assert result["errors"] == {"base": "no_usable_devices"}
+
+    mock_cloud_account.discover_devices.return_value = {}
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_USERNAME: MOCK_USERNAME, CONF_PASSWORD: MOCK_PASSWORD},
+    )
+    assert result["errors"] == {"base": "no_devices"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_USERNAME: MOCK_USERNAME, CONF_PASSWORD: MOCK_PASSWORD},
+    )
+    assert mock_cloud_account.discover_devices.call_args.kwargs[
+        "cached_credentials"
+    ] == {
+        MOCK_SERIAL: {
+            "password": "dGVzdHBhc3M=",
+            "crypto_serial": "0102030405060708090a",
+            "mac": "",
+        }
+    }
+
+
+async def test_user_step_username_change_drops_cached_credentials(
+    hass: HomeAssistant,
+    mock_cloud_account: AsyncMock,
+) -> None:
+    """Test fields recovered for one account are not replayed for another."""
+    mock_cloud_account.discover_devices.return_value = {
+        MOCK_SERIAL: _partial_device_info()
+    }
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_USERNAME: MOCK_USERNAME, CONF_PASSWORD: MOCK_PASSWORD},
+    )
+    assert result["errors"] == {"base": "no_usable_devices"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_USERNAME: "other@example.com", CONF_PASSWORD: MOCK_PASSWORD},
+    )
+    assert result["errors"] == {"base": "no_usable_devices"}
+    assert (
+        mock_cloud_account.discover_devices.call_args.kwargs["cached_credentials"] == {}
+    )
 
 
 @pytest.mark.parametrize(
@@ -72,8 +276,45 @@ async def test_user_step_success(
         (DeviceConnectionError("nope"), None, "cannot_connect"),
         (RuntimeError("Unexpected"), None, "unknown"),
         (None, {}, "no_devices"),
+        (
+            None,
+            {
+                "SERIAL002": DeviceInfo(
+                    serial="SERIAL002",
+                    label="Bedroom",
+                    address="",
+                    mac="11:22:33:44:55:66",
+                    unit_type="ductless",
+                    password="",
+                    crypto_serial="",
+                )
+            },
+            "no_usable_devices",
+        ),
+        (
+            None,
+            {
+                "SERIAL002": DeviceInfo(
+                    serial="SERIAL002",
+                    label="Bedroom",
+                    address="",
+                    mac="",
+                    unit_type="ductless",
+                    password="dGVzdHBhc3M=",
+                    crypto_serial="0102030405060708090a",
+                )
+            },
+            "no_usable_devices",
+        ),
     ],
-    ids=["invalid_auth", "cannot_connect", "unknown_error", "no_devices"],
+    ids=[
+        "invalid_auth",
+        "cannot_connect",
+        "unknown_error",
+        "no_devices",
+        "no_usable_devices",
+        "no_usable_devices_mac_less",
+    ],
 )
 async def test_user_step_errors(
     hass: HomeAssistant,
@@ -207,6 +448,35 @@ async def test_dhcp_unregistered_device_ignored(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert mock_config_entry.data[CONF_ADDRESSES] == original
+    mock_reload.assert_not_called()
+
+
+async def test_dhcp_device_without_current_entry_aborts(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test DHCP aborts when the registered device has no current owning entry.
+
+    The device exists in the registry but belongs only to an ignored entry, so
+    there is nothing to update.
+    """
+    ignored_entry = MockConfigEntry(
+        domain=DOMAIN, source=config_entries.SOURCE_IGNORE, unique_id="ignored"
+    )
+    ignored_entry.add_to_hass(hass)
+    _register_device(device_registry, ignored_entry)
+
+    with patch(
+        "homeassistant.config_entries.ConfigEntries.async_schedule_reload"
+    ) as mock_reload:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DHCP},
+            data=_dhcp_info("192.168.1.253"),
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
     mock_reload.assert_not_called()
 
 

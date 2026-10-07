@@ -1,9 +1,7 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
     },
     "error": {
       "bot_logout_failed": "Failed to log out Telegram bot. Please try again later.",
@@ -188,6 +186,9 @@
     "allowlist_external_dirs_error": {
       "message": "File path has not been configured in allowlist_external_dirs."
     },
+    "cannot_connect": {
+      "message": "Could not connect to Telegram."
+    },
     "entry_not_loaded": {
       "message": "{telegram_bot} is not loaded"
     },
@@ -196,6 +197,9 @@
     },
     "failed_to_load_url": {
       "message": "Failed to load URL: {error}"
+    },
+    "invalid_api_key": {
+      "message": "The Telegram bot API token is invalid."
     },
     "invalid_chat_ids": {
       "message": "Invalid chat IDs: {chat_ids}. Please configure the chat IDs for {bot_name}."
@@ -230,7 +234,7 @@
       "fix_flow": {
         "step": {
           "confirm": {
-            "description": "Update all affected automations and scripts to remove the `timeout` parameter and then click SUBMIT to fix this issue.\n\nThe deprecated parameter was last seen in the `{action}` action originating from `{action_origin}`.",
+            "description": "Update all affected automations and scripts to remove the `timeout` parameter and then select **Submit** to fix this issue.\n\nThe deprecated parameter was last seen in the `{action}` action originating from `{action_origin}`.",
             "title": "The `timeout` parameter for {integration_title} is being removed"
           }
         }
@@ -241,7 +245,7 @@
       "fix_flow": {
         "step": {
           "confirm": {
-            "description": "The `target` parameter is being deprecated. You should update any automations and scripts that use that parameter in Telegram bot actions. Use `entity_id` to specify Telegram bot notify entities or `chat_id` to replace `target`.\n\nTo fix this issue,\n1. Go to `{action_origin}`.\n1. Update the `{action}` action using either of the following methods:\n    - Delete the `target` parameter and add the new `entity_id` parameter to specify [Telegram bot notify entities]({telegram_bot_entities_url}).\n    - Replace the `target` parameter with `chat_id`.\n1. Click SUBMIT to fix this issue.\n\n**Example old action:**\n{example_old}\n\n**Example new action (using notify entities):**\n{example_new_entity_id}\n\n**Example new action (replacing `target` with `chat_id`):**\n{example_new_chat_id}",
+            "description": "The `target` parameter is being deprecated. You should update any automations and scripts that use that parameter in Telegram bot actions. Use `entity_id` to specify Telegram bot notify entities or `chat_id` to replace `target`.\n\nTo fix this issue,\n1. Go to `{action_origin}`.\n1. Update the `{action}` action using either of the following methods:\n    - Delete the `target` parameter and add the new `entity_id` parameter to specify [Telegram bot notify entities]({telegram_bot_entities_url}).\n    - Replace the `target` parameter with `chat_id`.\n1. Select **Submit** to fix this issue.\n\n**Example old action:**\n{example_old}\n\n**Example new action (using notify entities):**\n{example_new_entity_id}\n\n**Example new action (replacing `target` with `chat_id`):**\n{example_new_chat_id}",
             "title": "The `target` parameter for {integration_title} is being removed"
           }
         }

@@ -3,7 +3,7 @@
 import logging
 from typing import Any, override
 
-import httpx
+import httpx2
 from iaqualink.exception import (
     AqualinkServiceException,
     AqualinkServiceThrottledException,
@@ -23,6 +23,8 @@ _LOGGER = logging.getLogger(__name__)
 
 class AqualinkDataUpdateCoordinator(DataUpdateCoordinator[None]):
     """Data coordinator for Aqualink systems."""
+
+    config_entry: ConfigEntry
 
     def __init__(
         self, hass: HomeAssistant, config_entry: ConfigEntry, system: Any
@@ -53,7 +55,7 @@ class AqualinkDataUpdateCoordinator(DataUpdateCoordinator[None]):
                 self.system.serial,
             )
             return
-        except (AqualinkServiceException, TimeoutError, httpx.HTTPError) as err:
+        except (AqualinkServiceException, TimeoutError, httpx2.HTTPError) as err:
             raise UpdateFailed(
                 "Unable to update iAquaLink system "
                 f"{self.system.serial}: {error_detail(err)}"

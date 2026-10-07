@@ -1,5 +1,8 @@
 """The pushover component."""
 
+from dataclasses import dataclass
+from typing import TYPE_CHECKING
+
 from pushover_complete import BadAPIRequestError, PushoverAPI
 from requests.exceptions import RequestException
 from urllib3.exceptions import HTTPError
@@ -12,20 +15,38 @@ from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_USER_KEY, DATA_HASS_CONFIG, DOMAIN
+from .services import async_setup_services
+
+if TYPE_CHECKING:
+    from .notify import PushoverNotificationService
 
 PLATFORMS = [Platform.NOTIFY]
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
+@dataclass
+class PushoverRuntimeData:
+    """Runtime data for a pushover config entry."""
+
+    api: PushoverAPI
+    notify_service: PushoverNotificationService | None = None
+
+
+type PushoverConfigEntry = ConfigEntry[PushoverRuntimeData]
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the pushover component."""
 
     hass.data[DATA_HASS_CONFIG] = config
+
+    async_setup_services(hass)
+
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: PushoverConfigEntry) -> bool:
     """Set up pushover from a config entry."""
 
     # remove unique_id for beta users
@@ -43,7 +64,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             raise ConfigEntryAuthFailed(err) from err
         raise ConfigEntryNotReady(err) from err
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = pushover_api
+    entry.runtime_data = PushoverRuntimeData(api=pushover_api)
 
     hass.async_create_task(
         discovery.async_load_platform(

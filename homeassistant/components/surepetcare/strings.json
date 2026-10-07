@@ -1,8 +1,7 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -23,6 +22,14 @@
           "username": "[%key:common::config_flow::data::username%]"
         }
       }
+    }
+  },
+  "exceptions": {
+    "invalid_flap_id": {
+      "message": "Unknown Sure Petcare flap ID: {flap_id}"
+    },
+    "invalid_pet_name": {
+      "message": "Unknown Sure Petcare pet: {pet_name}"
     }
   },
   "services": {
