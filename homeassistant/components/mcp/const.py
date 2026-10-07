@@ -1,21 +1,11 @@
 """Constants for the Model Context Protocol integration."""
 
-from typing import Final, Literal
-
 DOMAIN = "mcp"
 
-# Shown on the authorization server and in Application Credentials.
-DCR_CLIENT_NAME = "Home Assistant"
-
-TOKEN_ENDPOINT_AUTH_NONE: Final = "none"
-TOKEN_ENDPOINT_AUTH_POST: Final = "client_secret_post"
-TOKEN_ENDPOINT_AUTH_BASIC: Final = "client_secret_basic"
-
-type TokenEndpointAuthMethod = Literal[
-    "none",
-    "client_secret_post",
-    "client_secret_basic",
-]
+# The apex host redirects to www. The metadata document must be fetched
+# directly, so the client id is the www URL.
+CIMD_CLIENT_ID = "https://www.home-assistant.io/mcp/oauth-client.json"
+CIMD_AUTH_IMPLEMENTATION = "mcp_client_metadata"
 
 CONF_AUTHORIZATION_URL = "authorization_url"
 CONF_TOKEN_URL = "token_url"

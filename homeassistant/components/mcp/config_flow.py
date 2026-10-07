@@ -10,11 +10,7 @@ import httpx2
 import probatio
 from yarl import URL
 
-from homeassistant.components.application_credentials import (
-    AuthorizationServer,
-    ClientCredential,
-    async_import_client_credential,
-)
+from homeassistant.components.application_credentials import AuthorizationServer
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN, CONF_URL
 from homeassistant.core import HomeAssistant
@@ -23,29 +19,17 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.config_entry_oauth2_flow import (
     AbstractOAuth2FlowHandler,
     async_get_implementations,
-    async_get_redirect_uri,
 )
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 
 from . import async_get_config_entry_implementation
-from .application_credentials import authorization_server_context
+from .application_credentials import (
+    McpClientMetadataImplementation,
+    authorization_server_context,
+)
 from .auth import AuthenticateHeader
-from .const import (
-    CONF_AUTHORIZATION_URL,
-    CONF_SCOPE,
-    CONF_SLUG,
-    CONF_TOKEN_URL,
-    DCR_CLIENT_NAME,
-    DOMAIN,
-)
+from .const import CONF_AUTHORIZATION_URL, CONF_SCOPE, CONF_SLUG, CONF_TOKEN_URL, DOMAIN
 from .coordinator import TokenManager, mcp_client
-from .registration import (
-    ClientRegistrationError,
-    async_register_dynamic_client,
-    encode_registered_client_id,
-    registered_client_auth_domain,
-    resolve_registration_endpoint,
-)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -84,8 +68,7 @@ class OAuthConfig:
 
     authorization_server: AuthorizationServer
     scopes: list[str] | None = None
-    registration_endpoint: str | None = None
-    token_endpoint_auth_methods: list[str] | None = None
+    client_id_metadata_document_supported: bool = False
 
 
 async def async_discover_authorization_server(
@@ -120,30 +103,16 @@ async def async_discover_authorization_server(
     # We have no way to know the minimum set of scopes needed, so request
     # all of them and let the user limit during the authorization step.
     scopes = data.get("scopes_supported")
-    endpoint = data.get("registration_endpoint")
-    registration_endpoint = (
-        resolve_registration_endpoint(auth_server_url, endpoint)
-        if isinstance(endpoint, str) and endpoint
-        else None
+    client_id_metadata_document_supported = (
+        data.get("client_id_metadata_document_supported") is True
     )
-    if "token_endpoint_auth_methods_supported" not in data:
-        token_endpoint_auth_methods = None
-    else:
-        methods = data["token_endpoint_auth_methods_supported"]
-        token_endpoint_auth_methods = (
-            methods
-            if isinstance(methods, list)
-            and all(isinstance(method, str) for method in methods)
-            else []
-        )
     return OAuthConfig(
         authorization_server=AuthorizationServer(
             authorize_url=authorize_url,
             token_url=token_url,
         ),
         scopes=scopes,
-        registration_endpoint=registration_endpoint,
-        token_endpoint_auth_methods=token_endpoint_auth_methods,
+        client_id_metadata_document_supported=client_id_metadata_document_supported,
     )
 
 
@@ -341,66 +310,18 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
                     ),
                 }
             )
-            if oauth_config.registration_endpoint:
-                return await self._async_register_dynamic_client(
-                    oauth_config.registration_endpoint,
-                    oauth_config.token_endpoint_auth_methods,
-                )
-            return await self.async_step_credentials_choice()
-
-    async def _async_register_dynamic_client(
-        self,
-        registration_endpoint: str,
-        token_endpoint_auth_methods: list[str] | None,
-    ) -> ConfigFlowResult:
-        """Register a client at the endpoint advertised by the server."""
-        try:
-            redirect_uri = async_get_redirect_uri(self.hass)
-        except RuntimeError:
-            return self.async_abort(
-                reason="no_url_available",
-                description_placeholders={
-                    "docs_url": (
-                        "https://www.home-assistant.io/more-info/no-url-available"
+            if oauth_config.client_id_metadata_document_supported:
+                with authorization_server_context(self.authorization_server()):
+                    implementations = await async_get_implementations(self.hass, DOMAIN)
+                if not implementations:
+                    self.flow_impl = McpClientMetadataImplementation(
+                        self.hass,
+                        oauth_config.authorization_server.authorize_url,
+                        oauth_config.authorization_server.token_url,
+                        self.data[CONF_URL],
                     )
-                },
-                translation_domain=DOMAIN,
-            )
-        try:
-            client_id, client_secret, method = await async_register_dynamic_client(
-                self.hass,
-                registration_endpoint,
-                redirect_uri,
-                token_endpoint_auth_methods=token_endpoint_auth_methods,
-                scopes=self.data[CONF_SCOPE],
-            )
-        except ClientRegistrationError:
-            _LOGGER.debug("OAuth client registration failed", exc_info=True)
-            return self.async_abort(reason="oauth_registration_failed")
-        except httpx2.TimeoutException:
-            return self.async_abort(reason="timeout_connect")
-        except httpx2.HTTPError:
-            return self.async_abort(reason="cannot_connect")
-
-        encoded = encode_registered_client_id(
-            self.data[CONF_AUTHORIZATION_URL],
-            self.data[CONF_TOKEN_URL],
-            client_id,
-            method,
-        )
-        auth_domain = registered_client_auth_domain(encoded)
-        await async_import_client_credential(
-            self.hass,
-            DOMAIN,
-            ClientCredential(encoded, client_secret, DCR_CLIENT_NAME),
-            auth_domain,
-        )
-        with authorization_server_context(self.authorization_server()):
-            implementations = await async_get_implementations(self.hass, DOMAIN)
-        if auth_domain not in implementations:
-            return self.async_abort(reason="oauth_registration_failed")
-        self.flow_impl = implementations[auth_domain]
-        return await self.async_step_auth()
+                    return await self.async_step_auth()
+            return await self.async_step_credentials_choice()
 
     def authorization_server(self) -> AuthorizationServer:
         """Return the authorization server provided by the MCP server."""
