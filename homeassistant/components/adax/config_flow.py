@@ -151,7 +151,7 @@ class AdaxConfigFlow(ConfigFlow, domain=DOMAIN):
                 formatted_mac = format_mac(user_input[CONF_MAC])
                 mac_parts = formatted_mac.split(":")
                 if len(mac_parts) != 6 or any(len(part) != 2 for part in mac_parts):
-                    raise ValueError
+                    errors[CONF_MAC] = "invalid_mac"
                 clean_mac = "".join(mac_parts)
                 unique_id = str(int(clean_mac, 16))
             except ValueError:
