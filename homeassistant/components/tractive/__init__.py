@@ -61,7 +61,7 @@ class Trackables:
     trackable: dict[str, Any]
     tracker_details: dict[str, Any]
     hw_info: dict[str, Any]
-    pos_report: dict[str, Any]
+    pos_report: dict[str, Any] | None
     health_overview: dict[str, Any]
 
 
