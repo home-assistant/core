@@ -4,7 +4,7 @@ from typing import Any, override
 
 from egauge_async.exceptions import EgaugeAuthenticationError, EgaugePermissionError
 from egauge_async.json.client import EgaugeJsonClient
-from httpx import ConnectError
+from httpx2 import ConnectError
 import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -23,7 +23,7 @@ STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_HOST): str,
         probatio.Required(CONF_USERNAME): str,
-        probatio.Required(CONF_PASSWORD): str,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
         probatio.Required(CONF_SSL, default=True): bool,
         probatio.Required(CONF_VERIFY_SSL, default=False): bool,
     }

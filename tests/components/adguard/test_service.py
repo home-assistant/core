@@ -46,27 +46,27 @@ async def test_service_registration(
         (
             SERVICE_ADD_URL,
             {"name": "Example", "url": "https://example.com/1.txt"},
-            lambda mock: mock.filtering.add_url.assert_called_once(),
+            lambda mock: mock.filtering.blocklists.add.assert_called_once(),
         ),
         (
             SERVICE_DISABLE_URL,
             {"url": "https://example.com/1.txt"},
-            lambda mock: mock.filtering.disable_url.assert_called_once(),
+            lambda mock: mock.filtering.blocklists.disable.assert_called_once(),
         ),
         (
             SERVICE_ENABLE_URL,
             {"url": "https://example.com/1.txt"},
-            lambda mock: mock.filtering.enable_url.assert_called_once(),
+            lambda mock: mock.filtering.blocklists.enable.assert_called_once(),
         ),
         (
             SERVICE_REFRESH,
             {"force": False},
-            lambda mock: mock.filtering.refresh.assert_called_once(),
+            lambda mock: mock.filtering.blocklists.refresh.assert_called_once(),
         ),
         (
             SERVICE_REMOVE_URL,
             {"url": "https://example.com/1.txt"},
-            lambda mock: mock.filtering.remove_url.assert_called_once(),
+            lambda mock: mock.filtering.blocklists.remove.assert_called_once(),
         ),
     ],
 )

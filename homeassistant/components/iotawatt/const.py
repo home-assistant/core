@@ -2,9 +2,9 @@
 
 import json
 
-import httpx
+import httpx2
 
 DOMAIN = "iotawatt"
 VOLT_AMPERE_REACTIVE_HOURS = "VARh"
 
-CONNECTION_ERRORS = (KeyError, json.JSONDecodeError, httpx.HTTPError)
+CONNECTION_ERRORS = (KeyError, json.JSONDecodeError, httpx2.HTTPError)

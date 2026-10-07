@@ -136,6 +136,10 @@ HOMEKIT = {
         "always_discover": True,
         "domain": "lifx",
     },
+    "LIFX Mirror": {
+        "always_discover": True,
+        "domain": "lifx",
+    },
     "LIFX Neon": {
         "always_discover": True,
         "domain": "lifx",
@@ -145,6 +149,10 @@ HOMEKIT = {
         "domain": "lifx",
     },
     "LIFX PAR38": {
+        "always_discover": True,
+        "domain": "lifx",
+    },
+    "LIFX Path": {
         "always_discover": True,
         "domain": "lifx",
     },
@@ -161,6 +169,10 @@ HOMEKIT = {
         "domain": "lifx",
     },
     "LIFX Round": {
+        "always_discover": True,
+        "domain": "lifx",
+    },
+    "LIFX Spot": {
         "always_discover": True,
         "domain": "lifx",
     },
@@ -740,6 +752,11 @@ ZEROCONF = {
         {
             "domain": "overkiz",
             "name": "gateway*",
+        },
+    ],
+    "_lifx._udp.local.": [
+        {
+            "domain": "lifx",
         },
     ],
     "_linkplay._tcp.local.": [

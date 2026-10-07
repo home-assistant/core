@@ -14,24 +14,29 @@ from homeassistant.helpers.llm import (
     LLM_API_ASSIST,
     LLMContext,
     Tool,
+    ToolAnnotations,
     ToolInput,
     ToolResult,
 )
 from homeassistant.util import dt as dt_util
 
-from . import SERVICE_GET_EVENTS
-from .const import DOMAIN
+from .const import DOMAIN, SERVICE_GET_EVENTS
 
 
 class CalendarGetEventsTool(Tool):
     """LLM Tool allowing querying a calendar."""
 
     name = "calendar__get_events"
+    title = "Get calendar events"
     description = (
         "Get events from a calendar. "
         "When asked if something happens, search the whole week. "
         "Results are RFC 5545 which means 'end' is exclusive."
     )
+    annotations = ToolAnnotations(
+        read_only=True, destructive=False, idempotent=True, open_world=False
+    )
+    integration = DOMAIN
 
     def __init__(self, calendars: list[str]) -> None:
         """Init the get events tool."""

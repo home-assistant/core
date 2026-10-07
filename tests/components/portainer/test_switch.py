@@ -15,6 +15,7 @@ from homeassistant.components.switch import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
+from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -140,3 +141,28 @@ async def test_turn_off_on_exceptions(
             {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
+
+
+async def test_switch_invalid_auth_starts_reauth(
+    hass: HomeAssistant,
+    mock_portainer_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test an invalid API key on a switch action starts a reauth flow."""
+    await setup_integration(hass, mock_config_entry)
+    mock_portainer_client.stop_container.side_effect = PortainerAuthenticationError(
+        "auth"
+    )
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: "switch.practical_morse_container"},
+            blocking=True,
+        )
+    await hass.async_block_till_done()
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH

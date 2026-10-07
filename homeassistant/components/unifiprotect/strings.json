@@ -295,6 +295,9 @@
       "person_detected": {
         "name": "Person detected"
       },
+      "relay_input": {
+        "name": "Input {input_name}"
+      },
       "siren_detected": {
         "name": "Siren detected"
       },
@@ -588,9 +591,6 @@
       "alarm_sound_detected": {
         "name": "Alarm sound detected"
       },
-      "bluetooth_signal_strength": {
-        "name": "Bluetooth signal strength"
-      },
       "chime_type": {
         "name": "[%key:component::unifiprotect::entity::select::chime_type::name%]"
       },
@@ -687,6 +687,9 @@
       "resolution_hd_video": {
         "name": "Resolution: HD video"
       },
+      "signal_quality": {
+        "name": "Signal quality"
+      },
       "storage_used": {
         "name": "Storage used"
       },
@@ -773,9 +776,6 @@
       "detections_vehicle": {
         "name": "[%key:component::unifiprotect::entity::binary_sensor::detections_vehicle::name%]"
       },
-      "hdr_mode": {
-        "name": "[%key:component::unifiprotect::entity::binary_sensor::hdr_mode::name%]"
-      },
       "high_fps": {
         "name": "[%key:component::unifiprotect::entity::binary_sensor::high_fps::name%]"
       },
@@ -837,6 +837,9 @@
     },
     "cannot_connect": {
       "message": "Could not connect to the UniFi Protect console"
+    },
+    "chime_ringtone_not_set": {
+      "message": "No ringtone is selected for {camera_name} on this chime, so its ring volumes cannot be changed. Select one in the UniFi Protect app."
     },
     "command_error": {
       "message": "Error communicating with UniFi Protect while sending command: {error}"
@@ -920,9 +923,9 @@
       },
       "title": "Ubiquiti Cloud Users are not Supported"
     },
-    "deprecate_hdr_switch": {
-      "description": "UniFi Protect v3 added a new state for HDR (auto). As a result, the HDR Mode switch has been replaced with an HDR Mode select, and it is deprecated.\n\nBelow are the detected automations or scripts that use one or more of the deprecated entities:\n{items}\nThe above list may be incomplete and it does not include any template usages inside of dashboards. Please update any templates, automations or scripts accordingly.",
-      "title": "HDR Mode switch deprecated"
+    "hdr_switch_removed": {
+      "description": "The HDR mode switch `{entity_id}` has been removed. It could not represent the auto HDR mode and was replaced by the HDR mode select.\n\nUpdate the following automations and scripts:\n{items}",
+      "title": "HDR mode switch removed"
     },
     "insecure_camera_removed": {
       "description": "The camera entity `{entity_id}` used plain RTSP, which is no longer available now that streams come from the UniFi Protect public API (RTSPS only). It has been removed; use `{replacement}` instead.\n\nUpdate the following automations and scripts:\n{items}",
