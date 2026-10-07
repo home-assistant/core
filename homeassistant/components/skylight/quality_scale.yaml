@@ -1,0 +1,108 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: This integration does not provide any actions.
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow: done
+  config-flow-test-coverage: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: This integration does not provide any actions.
+  docs-conditions:
+    status: exempt
+    comment: This integration does not have any conditions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: This integration does not have any triggers.
+  entity-event-setup:
+    status: exempt
+    comment: Entities do not subscribe to external events.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: This integration does not provide any actions.
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: This integration has no options flow.
+  docs-installation-parameters: done
+  entity-unavailable:
+    status: done
+    comment: Offloaded to coordinator.
+  integration-owner: done
+  log-when-unavailable:
+    status: done
+    comment: Offloaded to coordinator.
+  parallel-updates: done
+  reauthentication-flow: done
+  test-coverage: done
+
+  # Gold
+  devices: done
+  diagnostics:
+    status: exempt
+    comment: Diagnostics are not planned for the initial release.
+  discovery:
+    status: exempt
+    comment: This is a cloud service that cannot be discovered.
+  discovery-update-info:
+    status: exempt
+    comment: This is a cloud service that cannot be discovered.
+  docs-data-update: done
+  docs-examples:
+    status: exempt
+    comment: The standard calendar card and service examples apply.
+  docs-known-limitations: done
+  docs-supported-devices:
+    status: exempt
+    comment: Works with every Skylight Calendar frame on the account.
+  docs-supported-functions:
+    status: exempt
+    comment: The standard calendar entity functions apply.
+  docs-troubleshooting:
+    status: exempt
+    comment: The generic authentication troubleshooting applies.
+  docs-use-cases:
+    status: exempt
+    comment: Covered by the calendar integration documentation.
+  dynamic-devices:
+    status: exempt
+    comment: Each config entry represents exactly one frame with one entity.
+  entity-category: done
+  entity-device-class:
+    status: exempt
+    comment: Calendar entities have no device class.
+  entity-disabled-by-default:
+    status: exempt
+    comment: The single entity is always enabled.
+  entity-translations: done
+  exception-translations: done
+  icon-translations: done
+  reconfiguration-flow:
+    status: exempt
+    comment: Not planned for the initial release.
+  repair-issues:
+    status: exempt
+    comment: No repair issues are raised.
+  stale-devices:
+    status: exempt
+    comment: Each config entry has exactly one device that is removed with the entry.
+  strict-typing: done
+
+  # Platinum
+  async-dependency: done
+  inject-websession: done

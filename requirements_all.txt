@@ -3105,6 +3105,9 @@ sisyphus-control==3.1.4
 # homeassistant.components.sky_remote
 skyboxremote==0.0.6
 
+# homeassistant.components.skylight
+skylight-api==0.1.0
+
 # homeassistant.components.slack
 slack_sdk==3.33.4
 

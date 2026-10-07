@@ -1,0 +1,42 @@
+{
+  "config": {
+    "abort": {
+      "all_frames_configured": "All Skylight frames on this account are already set up.",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "no_frames": "No Skylight frames were found on this account."
+    },
+    "error": {
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_code": "The pasted value does not contain a valid authorization code. Copy the whole URL you landed on after signing in, or just the code part."
+    },
+    "step": {
+      "pick_frame": {
+        "data": {
+          "frame_id": "Frame"
+        },
+        "data_description": {
+          "frame_id": "Which Skylight frame to set up."
+        },
+        "title": "Pick a frame"
+      },
+      "user": {
+        "data": {
+          "code": "Authorization code"
+        },
+        "data_description": {
+          "code": "Paste the URL you landed on after signing in, or just its `code=` value."
+        },
+        "description": "1. Open the [Skylight sign-in page]({authorize_url}) and sign in.\n2. After signing in, your browser lands on a Skylight page whose address ends in `?code=...`.\n3. Copy that whole address (or just the code part) and paste it below.",
+        "title": "Sign in to Skylight"
+      }
+    }
+  },
+  "entity": {
+    "calendar": {
+      "calendar": {
+        "name": "Calendar"
+      }
+    }
+  }
+}
