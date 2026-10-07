@@ -1,26 +1,38 @@
-"""Coordinators for the Mawaqit integration."""
+"""Coordinator for the MAWAQIT integration."""
 
-from datetime import timedelta
+from dataclasses import dataclass
+from datetime import timedelta, tzinfo
 import logging
 from typing import override
 
-from mawaqit import AsyncMawaqitClient
-from mawaqit.exceptions import BadCredentialsException, MawaqitException
+from mawaqit import AsyncMawaqitClient, MawaqitError
+from mawaqit.types import PrayerTimes
 
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_UUID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
-from .types import MawaqitConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
+type MawaqitConfigEntry = ConfigEntry[MawaqitCoordinator]
 
-class PrayerTimeCoordinator(DataUpdateCoordinator[dict]):
-    """Coordinator to fetch prayer times from the Mawaqit API.
 
-    The API is called twice a day to fetch the full prayer calendar.
-    """
+@dataclass
+class MawaqitData:
+    """Prayer times of the mosque, with its time zone."""
+
+    prayer_times: PrayerTimes
+    timezone: tzinfo
+
+
+class MawaqitCoordinator(DataUpdateCoordinator[MawaqitData]):
+    """Fetch the prayer times of the year of the mosque."""
+
+    config_entry: MawaqitConfigEntry
 
     def __init__(
         self,
@@ -28,48 +40,35 @@ class PrayerTimeCoordinator(DataUpdateCoordinator[dict]):
         config_entry: MawaqitConfigEntry,
         client: AsyncMawaqitClient,
     ) -> None:
-        """Initialize the prayer time coordinator."""
-        self.client = client
-
+        """Initialize the coordinator."""
         super().__init__(
             hass,
             _LOGGER,
             config_entry=config_entry,
-            name="Prayer Times",
-            update_method=self._async_update_data,
+            name=DOMAIN,
             update_interval=timedelta(hours=12),
         )
+        self.client = client
 
     @override
-    async def _async_update_data(self) -> dict:
-        """Fetch prayer times from API and notify sensors."""
-        prayer_times: dict | None
+    async def _async_update_data(self) -> MawaqitData:
+        """Fetch the prayer times."""
         try:
-            prayer_times = await self.client.fetch_prayer_times()
-        except BadCredentialsException as err:
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="mawaqit_error",
-                translation_placeholders={"error": str(err)},
-            ) from err
-        except MawaqitException as err:
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="mawaqit_error",
-                translation_placeholders={"error": str(err)},
-            ) from err
-        except (ConnectionError, TimeoutError) as err:
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="network_error",
-                translation_placeholders={"error": str(err)},
-            ) from err
-
-        if not prayer_times:
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="no_prayer_times_data",
+            prayer_times = await self.client.mosques.prayer_times(
+                self.config_entry.data[CONF_UUID]
             )
+        except MawaqitError as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed",
+                translation_placeholders={"error": str(err)},
+            ) from err
 
-        # return fresh data when fetched
-        return prayer_times
+        timezone = await dt_util.async_get_time_zone(prayer_times.timezone)
+        if timezone is None:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="invalid_timezone",
+                translation_placeholders={"timezone": prayer_times.timezone},
+            )
+        return MawaqitData(prayer_times, timezone)

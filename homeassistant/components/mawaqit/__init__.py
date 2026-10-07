@@ -1,41 +1,29 @@
-"""The mawaqit_prayer_times component."""
+"""The MAWAQIT integration."""
 
 from mawaqit import AsyncMawaqitClient
 
-from homeassistant.const import CONF_API_KEY, CONF_UUID, Platform
+from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.httpx_client import get_async_client
 
-from .coordinator import PrayerTimeCoordinator
-from .types import MawaqitConfigEntry, MawaqitData
+from .coordinator import MawaqitConfigEntry, MawaqitCoordinator
 
 PLATFORMS = [Platform.SENSOR]
 
 
-async def async_setup_entry(
-    hass: HomeAssistant, config_entry: MawaqitConfigEntry
-) -> bool:
-    """Set up the Mawaqit Prayer Component."""
+async def async_setup_entry(hass: HomeAssistant, entry: MawaqitConfigEntry) -> bool:
+    """Set up MAWAQIT from a config entry."""
     client = AsyncMawaqitClient(
-        mosque=config_entry.data[CONF_UUID],
-        token=config_entry.data[CONF_API_KEY],
-        session=async_get_clientsession(hass),
+        token=entry.data[CONF_API_KEY], http_client=get_async_client(hass)
     )
+    coordinator = MawaqitCoordinator(hass, entry, client)
+    await coordinator.async_config_entry_first_refresh()
+    entry.runtime_data = coordinator
 
-    prayer_time_coordinator = PrayerTimeCoordinator(hass, config_entry, client)
-    await prayer_time_coordinator.async_config_entry_first_refresh()
-
-    config_entry.runtime_data = MawaqitData(
-        prayer_time_coordinator=prayer_time_coordinator,
-    )
-
-    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
-
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
-async def async_unload_entry(
-    hass: HomeAssistant, config_entry: MawaqitConfigEntry
-) -> bool:
-    """Unload Mawaqit Prayer entry from config_entry."""
-    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
+async def async_unload_entry(hass: HomeAssistant, entry: MawaqitConfigEntry) -> bool:
+    """Unload a config entry."""
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

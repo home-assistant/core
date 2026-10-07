@@ -1,27 +1,12 @@
-"""Module provides sensor entities for the Mawaqit integration in Home Assistant.
-
-It includes the following sensor entities:
-- Mosque information sensor
-- Prayer time sensors
-- Iqama prayer time sensors
-- Next prayer sensors
-
-The sensors are set up using the `async_setup_entry` function, which initializes the necessary coordinators and adds the entities to the platform.
-
-Classes:
-    MyMosqueSensor: Represents a mosque sensor.
-    MawaqitPrayerTimeSensor: Represents a prayer time sensor.
-    NextPrayerSensor: Represents the next prayer time and name sensor.
-
-Functions:
-        async_setup_entry: Sets up the Mawaqit sensor platform.
-"""
+"""Sensors for the MAWAQIT integration."""
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime
-import logging
+from datetime import date, datetime, time, timedelta
 from typing import override
+
+from mawaqit.prayer_times import Prayer, PrayerDay, next_prayer, prayer_day
+from mawaqit.types import PrayerTimes
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -33,334 +18,268 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
-from . import MawaqitConfigEntry, utils
-from .const import PRAYER_NAMES
-from .coordinator import PrayerTimeCoordinator
+from .coordinator import MawaqitConfigEntry, MawaqitCoordinator, MawaqitData
 
-_LOGGER = logging.getLogger(__name__)
+PARALLEL_UPDATES = 0
 
-PARALLEL_UPDATES = 1
+FRIDAY = 4
 
-MOSQUE_SENSOR_DESCRIPTION = SensorEntityDescription(
-    key="mosque_info",
-    translation_key="mosque_info",
-)
+
+def _at(prayer: Prayer | None) -> datetime | None:
+    return prayer.at if prayer else None
+
+
+def _iqama(prayer: Prayer | None) -> datetime | None:
+    return prayer.iqama if prayer else None
+
+
+def _jumua(index: int) -> Callable[[PrayerDay], datetime | None]:
+    return lambda day: day.jumua[index].at if len(day.jumua) > index else None
+
+
+def _has_iqama(prayer_times: PrayerTimes) -> bool:
+    return prayer_times.iqama_enabled and bool(prayer_times.iqama_calendar)
+
+
+def _has_jumua(index: int) -> Callable[[PrayerTimes], bool]:
+    def has_jumua(prayer_times: PrayerTimes) -> bool:
+        first = prayer_times.jumua_as_duhr or prayer_times.jumua
+        times = (first, prayer_times.jumua_2, prayer_times.jumua_3)
+        return sum(map(bool, times)) > index
+
+    return has_jumua
 
 
 @dataclass(frozen=True, kw_only=True)
-class MawaqitPrayerTimeSensorEntityDescription(SensorEntityDescription):
-    """Describes Mawaqit prayer time sensor entity."""
+class MawaqitDaySensorEntityDescription(SensorEntityDescription):
+    """Describes a time of the prayer day shown by the sensors."""
 
-    get_value: Callable[[dict], datetime | None]
+    device_class: SensorDeviceClass = SensorDeviceClass.TIMESTAMP
+    value_fn: Callable[[PrayerDay], datetime | None]
+    exists_fn: Callable[[PrayerTimes], bool] = lambda _: True
+    # Read the next Friday from the shown day, rather than the shown day.
+    friday: bool = False
 
 
-PRAYER_TIME_SENSOR_DESCRIPTIONS = [
-    MawaqitPrayerTimeSensorEntityDescription(
-        key="Fajr",
-        translation_key="prayer_fajr",
-        device_class=SensorDeviceClass.TIMESTAMP,
-        get_value=lambda data: utils.get_regular_prayer_time(data, "Fajr"),
+@dataclass(frozen=True, kw_only=True)
+class MawaqitNextPrayerSensorEntityDescription(SensorEntityDescription):
+    """Describes a sensor of the next prayer."""
+
+    value_fn: Callable[[Prayer], str | datetime]
+
+
+DAY_SENSORS: tuple[MawaqitDaySensorEntityDescription, ...] = (
+    MawaqitDaySensorEntityDescription(
+        key="fajr", translation_key="prayer_fajr", value_fn=lambda day: _at(day.fajr)
     ),
-    MawaqitPrayerTimeSensorEntityDescription(
+    MawaqitDaySensorEntityDescription(
         key="shuruq",
         translation_key="prayer_shuruq",
-        device_class=SensorDeviceClass.TIMESTAMP,
-        get_value=utils.get_shuruq_time,
+        value_fn=lambda day: _at(day.shuruq),
     ),
-    MawaqitPrayerTimeSensorEntityDescription(
-        key="Dhuhr",
+    MawaqitDaySensorEntityDescription(
+        key="dhuhr",
         translation_key="prayer_dhuhr",
-        device_class=SensorDeviceClass.TIMESTAMP,
-        get_value=lambda data: utils.get_regular_prayer_time(data, "Dhuhr"),
+        value_fn=lambda day: _at(day.dhuhr),
     ),
-    MawaqitPrayerTimeSensorEntityDescription(
-        key="Asr",
-        translation_key="prayer_asr",
-        device_class=SensorDeviceClass.TIMESTAMP,
-        get_value=lambda data: utils.get_regular_prayer_time(data, "Asr"),
+    MawaqitDaySensorEntityDescription(
+        key="asr", translation_key="prayer_asr", value_fn=lambda day: _at(day.asr)
     ),
-    MawaqitPrayerTimeSensorEntityDescription(
-        key="Maghrib",
+    MawaqitDaySensorEntityDescription(
+        key="maghrib",
         translation_key="prayer_maghrib",
-        device_class=SensorDeviceClass.TIMESTAMP,
-        get_value=lambda data: utils.get_regular_prayer_time(data, "Maghrib"),
+        value_fn=lambda day: _at(day.maghrib),
     ),
-    MawaqitPrayerTimeSensorEntityDescription(
-        key="Isha",
-        translation_key="prayer_isha",
-        device_class=SensorDeviceClass.TIMESTAMP,
-        get_value=lambda data: utils.get_regular_prayer_time(data, "Isha"),
+    MawaqitDaySensorEntityDescription(
+        key="isha", translation_key="prayer_isha", value_fn=lambda day: _at(day.isha)
     ),
-]
-
-JUMUA_PRAYER_TIME_SENSOR_DESCRIPTIONS = [
-    MawaqitPrayerTimeSensorEntityDescription(
-        key="Jumua",
-        translation_key="prayer_jumua",
-        device_class=SensorDeviceClass.TIMESTAMP,
-        get_value=lambda data: utils.get_jumua_time(data, "jumua"),
+    *(
+        MawaqitDaySensorEntityDescription(
+            key=key,
+            translation_key=f"prayer_{key}",
+            value_fn=_jumua(index),
+            exists_fn=_has_jumua(index),
+            friday=True,
+        )
+        for index, key in enumerate(("jumua", "jumua_2", "jumua_3"))
     ),
-    MawaqitPrayerTimeSensorEntityDescription(
-        key="Jumua 2",
-        translation_key="prayer_jumua_2",
-        device_class=SensorDeviceClass.TIMESTAMP,
-        get_value=lambda data: utils.get_jumua_time(data, "jumua2"),
-    ),
-    MawaqitPrayerTimeSensorEntityDescription(
-        key="Jumua 3",
-        translation_key="prayer_jumua_3",
-        device_class=SensorDeviceClass.TIMESTAMP,
-        get_value=lambda data: utils.get_jumua_time(data, "jumua3"),
-    ),
-]
-
-IQAMA_PRAYER_TIME_SENSOR_DESCRIPTIONS = [
-    MawaqitPrayerTimeSensorEntityDescription(
-        key="Fajr_Iqama",
+    MawaqitDaySensorEntityDescription(
+        key="fajr_iqama",
         translation_key="iqama_fajr",
-        device_class=SensorDeviceClass.TIMESTAMP,
-        get_value=lambda data: utils.get_iqama_time(data, "Fajr"),
+        value_fn=lambda day: _iqama(day.fajr),
+        exists_fn=_has_iqama,
     ),
-    MawaqitPrayerTimeSensorEntityDescription(
-        key="Dhuhr_Iqama",
+    MawaqitDaySensorEntityDescription(
+        key="dhuhr_iqama",
         translation_key="iqama_dhuhr",
-        device_class=SensorDeviceClass.TIMESTAMP,
-        get_value=lambda data: utils.get_iqama_time(data, "Dhuhr"),
+        value_fn=lambda day: _iqama(day.dhuhr),
+        exists_fn=_has_iqama,
     ),
-    MawaqitPrayerTimeSensorEntityDescription(
-        key="Asr_Iqama",
+    MawaqitDaySensorEntityDescription(
+        key="asr_iqama",
         translation_key="iqama_asr",
-        device_class=SensorDeviceClass.TIMESTAMP,
-        get_value=lambda data: utils.get_iqama_time(data, "Asr"),
+        value_fn=lambda day: _iqama(day.asr),
+        exists_fn=_has_iqama,
     ),
-    MawaqitPrayerTimeSensorEntityDescription(
-        key="Maghrib_Iqama",
+    MawaqitDaySensorEntityDescription(
+        key="maghrib_iqama",
         translation_key="iqama_maghrib",
-        device_class=SensorDeviceClass.TIMESTAMP,
-        get_value=lambda data: utils.get_iqama_time(data, "Maghrib"),
+        value_fn=lambda day: _iqama(day.maghrib),
+        exists_fn=_has_iqama,
     ),
-    MawaqitPrayerTimeSensorEntityDescription(
-        key="Isha_Iqama",
+    MawaqitDaySensorEntityDescription(
+        key="isha_iqama",
         translation_key="iqama_isha",
-        device_class=SensorDeviceClass.TIMESTAMP,
-        get_value=lambda data: utils.get_iqama_time(data, "Isha"),
+        value_fn=lambda day: _iqama(day.isha),
+        exists_fn=_has_iqama,
     ),
-]
+)
 
-NEXT_SALAT_SENSOR_DESCRIPTION = [
-    SensorEntityDescription(
+NEXT_PRAYER_SENSORS: tuple[MawaqitNextPrayerSensorEntityDescription, ...] = (
+    MawaqitNextPrayerSensorEntityDescription(
         key="next_salat_name",
         translation_key="next_salat_name",
+        device_class=SensorDeviceClass.ENUM,
+        options=["fajr", "dhuhr", "jumua", "asr", "maghrib", "isha"],
+        value_fn=lambda prayer: prayer.name,
     ),
-    SensorEntityDescription(
+    MawaqitNextPrayerSensorEntityDescription(
         key="next_salat_time",
         translation_key="next_salat_time",
         device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=lambda prayer: prayer.at,
     ),
-]
+)
 
 
 async def async_setup_entry(
-    _hass: HomeAssistant,
-    config_entry: MawaqitConfigEntry,
+    hass: HomeAssistant,
+    entry: MawaqitConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the Mawaqit sensor platform."""
-    prayer_time_coordinator = config_entry.runtime_data.prayer_time_coordinator
-
-    prayer_data = prayer_time_coordinator.data
-    mosque_uuid = config_entry.data[CONF_UUID]
-
-    entities: list[SensorEntity] = []
-
-    # Prayer Time Sensors
-    entities.extend(
+    """Set up the MAWAQIT sensors."""
+    coordinator = entry.runtime_data
+    prayer_times = coordinator.data.prayer_times
+    async_add_entities(
         [
-            MawaqitPrayerTimeSensor(prayer_time_coordinator, desc, mosque_uuid)
-            for desc in PRAYER_TIME_SENSOR_DESCRIPTIONS
+            *(
+                MawaqitDaySensor(coordinator, description)
+                for description in DAY_SENSORS
+                if description.exists_fn(prayer_times)
+            ),
+            *(
+                MawaqitNextPrayerSensor(coordinator, description)
+                for description in NEXT_PRAYER_SENSORS
+            ),
         ]
     )
 
-    # Register Jumua Prayer Time Sensors
-    entities.extend(
-        [
-            MawaqitPrayerTimeSensor(prayer_time_coordinator, desc, mosque_uuid)
-            for desc in JUMUA_PRAYER_TIME_SENSOR_DESCRIPTIONS
-            if prayer_data and desc.get_value(prayer_data) is not None
-        ]
-    )
 
-    # Register Iqama Prayer Time Sensors
-    if (
-        prayer_data
-        and prayer_data.get("iqamaEnabled")
-        and prayer_data.get("iqamaCalendar")
-    ):
-        entities.extend(
-            [
-                MawaqitPrayerTimeSensor(prayer_time_coordinator, desc, mosque_uuid)
-                for desc in IQAMA_PRAYER_TIME_SENSOR_DESCRIPTIONS
-            ]
-        )
+def _day_end(data: MawaqitData, day: date) -> datetime:
+    """Return when the sensors move from a day to the next one.
 
-    # Register Next Prayer Sensors
-    entities.extend(
-        [
-            NextPrayerSensor(prayer_time_coordinator, desc, mosque_uuid)
-            for desc in NEXT_SALAT_SENSOR_DESCRIPTION
-        ]
-    )
-
-    # Register the Sensors
-    async_add_entities(new_entities=entities)
-
-    _LOGGER.info("Mawaqit sensors successfully initialized")
-
-
-class MawaqitPrayerTimeSensor(SensorEntity, CoordinatorEntity[PrayerTimeCoordinator]):
-    """Representation of a prayer time sensor."""
-
-    _attr_has_entity_name = True
-
-    entity_description: MawaqitPrayerTimeSensorEntityDescription
-
-    def __init__(
-        self,
-        coordinator: PrayerTimeCoordinator,
-        sensor_description: MawaqitPrayerTimeSensorEntityDescription,
-        mosque_uuid: str,
-    ) -> None:
-        """Initialize the prayer time sensor."""
-        super().__init__(coordinator)
-        self.entity_description = sensor_description
-        self._attr_unique_id = f"{mosque_uuid}_{self.entity_description.key.lower()}"
-
-    @property
-    @override
-    def native_value(self) -> datetime | None:
-        """Return the prayer time using the get_value function."""
-        prayer_data = self.coordinator.data
-
-        if not prayer_data:
-            return None
-
-        try:
-            return self.entity_description.get_value(prayer_data)
-        except (KeyError, ValueError, TypeError) as e:
-            _LOGGER.error(
-                "Error retrieving prayer time for %s: %s",
-                self.entity_description.key,
-                e,
-            )
-            return None
-
-    @property
-    @override
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return super().available and self.coordinator.data is not None
-
-
-class NextPrayerSensor(SensorEntity, CoordinatorEntity[PrayerTimeCoordinator]):
-    """Sensor for the next prayer time and name.
-
-    Computes the next prayer from the coordinator's prayer calendar and
-    schedules via async_track_point_in_utc_time to re-evaluate exactly
-    when each prayer starts.
+    Halfway between its Isha and the next Fajr, so that an Isha after midnight is
+    shown until it has passed. At midnight without these times.
     """
+    today = prayer_day(data.prayer_times, day, timezone=data.timezone)
+    tomorrow = prayer_day(
+        data.prayer_times, day + timedelta(days=1), timezone=data.timezone
+    )
+    if today and today.isha and tomorrow and tomorrow.fajr:
+        # In UTC: datetimes of the same time zone subtract in wall-clock time.
+        isha = dt_util.as_utc(today.isha.at)
+        return isha + (dt_util.as_utc(tomorrow.fajr.at) - isha) / 2
+    return datetime.combine(day + timedelta(days=1), time(), data.timezone)
+
+
+class MawaqitSensor[DescriptionT: SensorEntityDescription](
+    CoordinatorEntity[MawaqitCoordinator], SensorEntity
+):
+    """A sensor whose value also changes at a given time, without new data."""
 
     _attr_has_entity_name = True
+    entity_description: DescriptionT
+    _unsub_refresh: CALLBACK_TYPE | None = None
 
     def __init__(
-        self,
-        coordinator: PrayerTimeCoordinator,
-        description: SensorEntityDescription,
-        mosque_uuid: str,
+        self, coordinator: MawaqitCoordinator, description: DescriptionT
     ) -> None:
-        """Initialize the sensor with a specific description."""
+        """Initialize the sensor."""
         super().__init__(coordinator)
         self.entity_description = description
         self._attr_unique_id = (
-            f"{mosque_uuid}_next_prayer_{self.entity_description.key.lower()}"
+            f"{coordinator.config_entry.data[CONF_UUID]}_{description.key}"
         )
-        self._next_prayer_index: int | None = None
-        self._next_prayer_time: datetime | None = None
-        self._unsub_timer: CALLBACK_TYPE | None = None
 
     @override
     async def async_added_to_hass(self) -> None:
-        """When entity is added to hass, schedule the first update."""
+        """Compute the value and schedule its next change."""
         await super().async_added_to_hass()
-        self._schedule_next_update()
-
-    @override
-    async def async_will_remove_from_hass(self) -> None:
-        """Cancel the timer when entity is removed."""
-        self._cancel_timer()
-        await super().async_will_remove_from_hass()
+        self.async_on_remove(self._cancel_refresh)
+        self._update_value()
 
     @callback
     @override
     def _handle_coordinator_update(self) -> None:
-        """Re-evaluate when coordinator data changes (new prayer times fetched)."""
-        self._cancel_timer()
-        self._schedule_next_update()
-
-    def _cancel_timer(self) -> None:
-        """Cancel any pending timer."""
-        if self._unsub_timer:
-            self._unsub_timer()
-            self._unsub_timer = None
-
-    def _schedule_next_update(self) -> None:
-        """Find the next prayer and schedule an update at its exact time."""
-        self._evaluate_next_prayer()
-        self.async_write_ha_state()
-
-        if self._next_prayer_time is not None:
-            self._unsub_timer = async_track_point_in_utc_time(
-                self.hass, self._prayer_reached, self._next_prayer_time
-            )
+        self._update_value()
+        super()._handle_coordinator_update()
 
     @callback
-    def _prayer_reached(self, _now: datetime) -> None:
-        """Called when a prayer time is reached — update and schedule next."""
-        self._schedule_next_update()
+    def _refresh(self, _now: datetime) -> None:
+        self._unsub_refresh = None
+        self._update_value()
+        self.async_write_ha_state()
 
-    def _evaluate_next_prayer(self) -> None:
-        """Compute which prayer is next based on current wall-clock time."""
-        if not self.coordinator.data:
-            self._next_prayer_index = None
-            self._next_prayer_time = None
-            return
+    @callback
+    def _cancel_refresh(self) -> None:
+        if self._unsub_refresh:
+            self._unsub_refresh()
+            self._unsub_refresh = None
 
-        prayer_calendar = self.coordinator.data.get("calendar")
-        timezone = self.coordinator.data.get("timezone")
-        if not prayer_calendar or not timezone:
-            self._next_prayer_index = None
-            self._next_prayer_time = None
-            return
-
-        self._next_prayer_index, self._next_prayer_time = utils.find_next_prayer(
-            dt_util.now(), prayer_calendar, timezone
+    @callback
+    def _update_value(self) -> None:
+        self._cancel_refresh()
+        self._attr_native_value, refresh_at = self._compute(
+            self.coordinator.data, dt_util.utcnow()
         )
+        if refresh_at:
+            self._unsub_refresh = async_track_point_in_utc_time(
+                self.hass, self._refresh, refresh_at
+            )
 
-    @property
-    @override
-    def native_value(self) -> str | datetime | None:
-        """Return the appropriate value based on the sensor type."""
-        if self._next_prayer_index is None or self._next_prayer_time is None:
-            return None
-        if self.entity_description.key == "next_salat_name":
-            return PRAYER_NAMES[self._next_prayer_index]
-        if self.entity_description.key == "next_salat_time":
-            return self._next_prayer_time
-        return None
+    def _compute(
+        self, data: MawaqitData, now: datetime
+    ) -> tuple[str | datetime | None, datetime | None]:
+        """Return the value at `now`, and when it changes."""
+        raise NotImplementedError
 
-    @property
+
+class MawaqitDaySensor(MawaqitSensor[MawaqitDaySensorEntityDescription]):
+    """A time of the prayer day: today's, or yesterday's until the night is half over."""
+
     @override
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return super().available and self.coordinator.data is not None
+    def _compute(
+        self, data: MawaqitData, now: datetime
+    ) -> tuple[datetime | None, datetime]:
+        day = now.astimezone(data.timezone).date() - timedelta(days=1)
+        while (day_end := _day_end(data, day)) <= now:
+            day += timedelta(days=1)
+        if self.entity_description.friday:
+            day += timedelta(days=(FRIDAY - day.weekday()) % 7)
+        prayers = prayer_day(data.prayer_times, day, timezone=data.timezone)
+        return (self.entity_description.value_fn(prayers) if prayers else None), day_end
+
+
+class MawaqitNextPrayerSensor(MawaqitSensor[MawaqitNextPrayerSensorEntityDescription]):
+    """The next prayer: Jumua instead of Dhuhr on Fridays."""
+
+    @override
+    def _compute(
+        self, data: MawaqitData, now: datetime
+    ) -> tuple[str | datetime | None, datetime | None]:
+        prayer = next_prayer(data.prayer_times, now, timezone=data.timezone)
+        if prayer is None:
+            return None, None
+        return self.entity_description.value_fn(prayer), prayer.at

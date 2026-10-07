@@ -1,141 +1,104 @@
-"""Config flow for the Mawaqit integration."""
+"""Config flow for the MAWAQIT integration."""
 
-import logging
 from typing import Any, override
 
-from aiohttp.client_exceptions import ClientConnectorError
-from mawaqit import AsyncMawaqitClient
-from mawaqit.exceptions import BadCredentialsException, MawaqitException, NoMosqueAround
+from mawaqit import AsyncMawaqitClient, AuthenticationError, MawaqitError
+from mawaqit.types import Mosque
 import probatio
 
-from homeassistant import config_entries
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, CONF_UUID
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.const import CONF_API_KEY, CONF_EMAIL, CONF_PASSWORD, CONF_UUID
 from homeassistant.helpers import selector
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.httpx_client import get_async_client
 
-from . import mawaqit_wrapper, utils
-from .const import CANNOT_CONNECT_TO_SERVER, DOMAIN, MAWAQIT_URL, WRONG_CREDENTIAL
-from .types import MawaqitMosqueData
+from .const import DOMAIN, MAWAQIT_URL
 
-_LOGGER = logging.getLogger(__name__)
+USER_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(CONF_EMAIL): selector.TextSelector(
+            selector.TextSelectorConfig(type=selector.TextSelectorType.EMAIL)
+        ),
+        probatio.Required(CONF_PASSWORD): selector.TextSelector(
+            selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
+        ),
+    }
+)
 
 
-class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+def _display_name(mosque: Mosque) -> str:
+    """Return the name of a mosque with its distance."""
+    if mosque.proximity is None:
+        return mosque.label
+    return f"{mosque.label} ({mosque.proximity / 1000:.2f} km)"
+
+
+class MawaqitConfigFlow(ConfigFlow, domain=DOMAIN):
     """Config flow for MAWAQIT."""
 
     VERSION = 1
 
-    client: AsyncMawaqitClient
+    _client: AsyncMawaqitClient
+    _token: str
 
     def __init__(self) -> None:
-        """Initialize."""
-        self.mosques: dict[str, MawaqitMosqueData] = {}
+        """Initialize the flow."""
+        self._mosques: dict[str, Mosque] = {}
 
     @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> config_entries.ConfigFlowResult:
-        """Handle a flow initialized by the user."""
-
-        errors = {}
-        schema = probatio.Schema(
-            {
-                probatio.Required(CONF_USERNAME): selector.TextSelector(
-                    selector.TextSelectorConfig(type=selector.TextSelectorType.TEXT)
-                ),
-                probatio.Required(CONF_PASSWORD): selector.TextSelector(
-                    selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
-                ),
-            }
-        )
-
+    ) -> ConfigFlowResult:
+        """Log in to MAWAQIT."""
+        errors: dict[str, str] = {}
         if user_input is not None:
-            client = AsyncMawaqitClient(
-                latitude=self.hass.config.latitude,
-                longitude=self.hass.config.longitude,
-                username=user_input[CONF_USERNAME],
-                password=user_input[CONF_PASSWORD],
-                session=async_get_clientsession(self.hass),
-            )
-
+            self._client = AsyncMawaqitClient(http_client=get_async_client(self.hass))
             try:
-                token = await client.get_api_token()
-            except BadCredentialsException:
-                errors["base"] = WRONG_CREDENTIAL
-            except (
-                ClientConnectorError,
-                ConnectionError,
-                TimeoutError,
-                MawaqitException,
-            ):
-                errors["base"] = CANNOT_CONNECT_TO_SERVER
+                account = await self._client.auth.login(
+                    email=user_input[CONF_EMAIL], password=user_input[CONF_PASSWORD]
+                )
+            except AuthenticationError:
+                errors["base"] = "invalid_auth"
+            except MawaqitError:
+                errors["base"] = "cannot_connect"
             else:
-                if token:
-                    self.client = client
-                    return await self.async_step_mosques_coordinates()
-                errors["base"] = CANNOT_CONNECT_TO_SERVER
+                self._token = account.api_access_token
+                return await self.async_step_mosques_coordinates()
 
         return self.async_show_form(
             step_id="user",
-            data_schema=self.add_suggested_values_to_schema(schema, user_input),
+            data_schema=self.add_suggested_values_to_schema(USER_SCHEMA, user_input),
             errors=errors,
             description_placeholders={"mawaqit_url": MAWAQIT_URL},
         )
 
     async def async_step_mosques_coordinates(
         self, user_input: dict[str, Any] | None = None
-    ) -> config_entries.ConfigFlowResult:
-        """Handle mosques step."""
-
-        errors: dict[str, str] = {}
-
-        lat = self.hass.config.latitude
-        longi = self.hass.config.longitude
-
+    ) -> ConfigFlowResult:
+        """Select a mosque near the Home Assistant location."""
         if user_input is not None:
-            mosque_uuid = user_input[CONF_UUID]
-            title, data_entry = utils.save_mosque(
-                self.mosques[mosque_uuid].display_name,
-                mosque_uuid,
-                self.client.token,
-                lat,
-                longi,
+            mosque = self._mosques[user_input[CONF_UUID]]
+            return self.async_create_entry(
+                title=mosque.label,
+                data={CONF_API_KEY: self._token, CONF_UUID: mosque.uuid},
             )
-            return self.async_create_entry(title=title, data=data_entry)
 
-        if not self.mosques:
-            try:
-                neighborhood_mosques = await mawaqit_wrapper.all_mosques_neighborhood(
-                    self.client
-                )
-                if neighborhood_mosques:
-                    self.mosques = {
-                        mosque.uuid: mosque for mosque in neighborhood_mosques
-                    }
-            except NoMosqueAround:
-                return self.async_abort(reason="no_mosque")
-            except (
-                BadCredentialsException,
-                ClientConnectorError,
-                ConnectionError,
-                TimeoutError,
-            ):
-                return self.async_abort(reason="cannot_connect")
-
-        if len(self.mosques) == 0:
+        try:
+            mosques = await self._client.mosques.search(
+                lat=self.hass.config.latitude, lon=self.hass.config.longitude
+            )
+        except MawaqitError:
+            return self.async_abort(reason="cannot_connect")
+        if not mosques:
             return self.async_abort(reason="no_mosque")
+        self._mosques = {mosque.uuid: mosque for mosque in mosques}
 
         return self.async_show_form(
             step_id="mosques_coordinates",
             data_schema=probatio.Schema(
                 {
                     probatio.Required(CONF_UUID): probatio.In(
-                        {
-                            mosque.uuid: mosque.display_name
-                            for mosque in self.mosques.values()
-                        }
+                        {uuid: _display_name(m) for uuid, m in self._mosques.items()}
                     ),
                 }
             ),
-            errors=errors,
         )

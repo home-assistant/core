@@ -17,7 +17,7 @@
         "default": "mdi:weather-sunset-down"
       },
       "next_salat_name": {
-        "default": "mdi:calendar-star"
+        "default": "mdi:mosque"
       },
       "next_salat_time": {
         "default": "mdi:clock"

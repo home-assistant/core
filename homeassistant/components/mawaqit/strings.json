@@ -1,35 +1,33 @@
 {
   "config": {
     "abort": {
-      "cannot_connect": "Failed to connect to the MAWAQIT server. Please check your internet connection and try again.",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "no_mosque": "No MAWAQIT mosques were found near your Home Assistant location. Please make sure your location is set to somewhere near a mosque. Searching by keyword is not yet supported but is planned for a future release."
     },
     "error": {
-      "cannot_connect_to_server": "Cannot connect to the server, please retry later.",
-      "wrong_credential": "Wrong login or password, please retry."
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
     },
     "step": {
       "mosques_coordinates": {
         "data": {
-          "mosques": "Multiple mosques are available around you, select one:",
           "uuid": "Mosque"
         },
         "data_description": {
-          "mosques": "Mosques near your Home Assistant location.",
-          "uuid": "Select the mosque closest to your location."
+          "uuid": "The mosque whose prayer times to show, among the mosques near your Home Assistant location."
         },
-        "title": "Your favourite mosque"
+        "title": "Your mosque"
       },
       "user": {
         "data": {
-          "password": "[%key:common::config_flow::data::password%]",
-          "username": "[%key:common::config_flow::data::email%]"
+          "email": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
         },
         "data_description": {
-          "password": "Your MAWAQIT account password.",
-          "username": "Your MAWAQIT account email address."
+          "email": "The email address of your MAWAQIT account.",
+          "password": "The password of your MAWAQIT account."
         },
-        "description": "Register on [mawaqit.net]({mawaqit_url}) and connect below",
+        "description": "Register on [mawaqit.net]({mawaqit_url}) and log in below.",
         "title": "Log in to MAWAQIT"
       }
     }
@@ -37,49 +35,57 @@
   "entity": {
     "sensor": {
       "iqama_asr": {
-        "name": "Asr Iqama"
+        "name": "Asr iqama"
       },
       "iqama_dhuhr": {
-        "name": "Dhuhr Iqama"
+        "name": "Dhuhr iqama"
       },
       "iqama_fajr": {
-        "name": "Fajr Iqama"
+        "name": "Fajr iqama"
       },
       "iqama_isha": {
-        "name": "Isha Iqama"
+        "name": "Isha iqama"
       },
       "iqama_maghrib": {
-        "name": "Maghrib Iqama"
+        "name": "Maghrib iqama"
       },
       "next_salat_name": {
-        "name": "Next Salat Name"
+        "name": "Next salat",
+        "state": {
+          "asr": "Asr",
+          "dhuhr": "Dhuhr",
+          "fajr": "Fajr",
+          "isha": "Isha",
+          "jumua": "Jumua",
+          "maghrib": "Maghrib"
+        }
       },
       "next_salat_time": {
-        "name": "Next Salat Time"
+        "name": "Next salat time"
       },
       "prayer_asr": {
-        "name": "Asr Prayer"
+        "name": "Asr prayer"
       },
       "prayer_dhuhr": {
-        "name": "Dhuhr Prayer"
+        "name": "Dhuhr prayer"
       },
       "prayer_fajr": {
-        "name": "Fajr Prayer"
+        "name": "Fajr prayer"
       },
       "prayer_isha": {
-        "name": "Isha Prayer"
+        "name": "Isha prayer"
       },
       "prayer_jumua": {
-        "name": "Jumua Prayer"
+        "name": "Jumua prayer"
       },
       "prayer_jumua_2": {
-        "name": "Second Jumua Prayer"
+        "name": "Second Jumua prayer"
       },
       "prayer_jumua_3": {
-        "name": "Third Jumua Prayer"
+        "name": "Third Jumua prayer"
       },
       "prayer_maghrib": {
-        "name": "Maghrib Prayer"
+        "name": "Maghrib prayer"
       },
       "prayer_shuruq": {
         "name": "Shuruq"
@@ -87,20 +93,11 @@
     }
   },
   "exceptions": {
-    "auth_failed": {
-      "message": "Authentication with MAWAQIT failed. Please re-authenticate your account."
+    "invalid_timezone": {
+      "message": "MAWAQIT returned an unknown time zone: {timezone}"
     },
-    "mawaqit_error": {
+    "update_failed": {
       "message": "Error communicating with MAWAQIT: {error}"
-    },
-    "network_error": {
-      "message": "Network error while connecting to MAWAQIT: {error}"
-    },
-    "no_mosque_data": {
-      "message": "No mosque data was returned by MAWAQIT."
-    },
-    "no_prayer_times_data": {
-      "message": "No prayer times were returned by MAWAQIT."
     }
   },
   "title": "MAWAQIT Prayer Times"
