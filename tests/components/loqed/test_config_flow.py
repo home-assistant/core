@@ -1,6 +1,7 @@
 """Test the Loqed config flow."""
 
 from collections.abc import Callable
+from http import HTTPStatus
 from ipaddress import ip_address
 from typing import Any
 from unittest.mock import Mock, patch
@@ -361,7 +362,7 @@ async def test_no_locks(
     assert result["errors"] == {"base": "no_locks"}
 
 
-async def test_invalid_auth_when_lock_not_found(
+async def test_lock_not_found_when_lock_absent_from_account(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test we handle a situation where the lock is absent from the cloud API response."""
@@ -381,7 +382,7 @@ async def test_invalid_auth_when_lock_not_found(
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "invalid_auth"}
+    assert result["errors"] == {"base": "lock_not_found"}
 
 
 @pytest.mark.parametrize(
@@ -449,3 +450,76 @@ async def test_cannot_connect_when_lock_not_reachable(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
+
+
+def _response_error(status: HTTPStatus) -> aiohttp.ClientResponseError:
+    """Create a client response error with the given status."""
+    return aiohttp.ClientResponseError(Mock(), (), status=status)
+
+
+@pytest.mark.parametrize(
+    ("status", "error"),
+    [
+        pytest.param(HTTPStatus.UNAUTHORIZED, "invalid_auth", id="unauthorized"),
+        pytest.param(HTTPStatus.FORBIDDEN, "invalid_auth", id="forbidden"),
+        pytest.param(
+            HTTPStatus.INTERNAL_SERVER_ERROR, "cannot_connect", id="server_error"
+        ),
+    ],
+)
+async def test_cloud_http_error_is_mapped(
+    hass: HomeAssistant, status: HTTPStatus, error: str
+) -> None:
+    """Test HTTP errors from the cloud API are mapped to the matching error."""
+    result = await _async_init_user_flow(hass)
+
+    with patch(
+        "loqedAPI.cloud_loqed.LoqedCloudAPI.async_get_locks",
+        side_effect=_response_error(status),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_API_TOKEN: TEST_API_TOKEN},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": error}
+
+
+@pytest.mark.parametrize(
+    ("status", "error"),
+    [
+        pytest.param(HTTPStatus.UNAUTHORIZED, "invalid_auth", id="unauthorized"),
+        pytest.param(HTTPStatus.FORBIDDEN, "invalid_auth", id="forbidden"),
+        pytest.param(
+            HTTPStatus.INTERNAL_SERVER_ERROR, "cannot_connect", id="server_error"
+        ),
+    ],
+)
+async def test_bridge_http_error_is_mapped(
+    hass: HomeAssistant, status: HTTPStatus, error: str
+) -> None:
+    """Test HTTP errors from the bridge are mapped to the matching error."""
+    result = await _async_init_user_flow(hass)
+
+    all_locks_response = await async_load_json_object_fixture(
+        hass, "get_all_locks.json", DOMAIN
+    )
+
+    with (
+        patch(
+            "loqedAPI.cloud_loqed.LoqedCloudAPI.async_get_locks",
+            return_value=all_locks_response,
+        ),
+        patch(
+            "loqedAPI.loqed.LoqedAPI.async_get_lock",
+            side_effect=_response_error(status),
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_API_TOKEN: TEST_API_TOKEN},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": error}

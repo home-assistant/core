@@ -1,5 +1,6 @@
 """Config flow for loqed integration."""
 
+from http import HTTPStatus
 import logging
 import re
 from typing import Any, override
@@ -19,6 +20,14 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def _is_auth_error(err: TimeoutError | aiohttp.ClientError) -> bool:
+    """Return whether the client error is an authentication rejection."""
+    return isinstance(err, aiohttp.ClientResponseError) and err.status in (
+        HTTPStatus.UNAUTHORIZED,
+        HTTPStatus.FORBIDDEN,
+    )
 
 
 class LoqedConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -56,7 +65,7 @@ class LoqedConfigFlow(ConfigFlow, domain=DOMAIN):
                 lock_data = await cloud_client.async_get_locks()
             except (TimeoutError, aiohttp.ClientError) as err:
                 _LOGGER.error("HTTP Connection error to loqed API")
-                raise CannotConnect from err
+                raise (InvalidAuth if _is_auth_error(err) else CannotConnect) from err
 
         try:
             match_key, match_value = (
@@ -87,10 +96,10 @@ class LoqedConfigFlow(ConfigFlow, domain=DOMAIN):
                 "id": selected_lock["id"],
             }
         except StopIteration as err:
-            raise InvalidAuth from err
+            raise LockNotFound from err
         except (TimeoutError, aiohttp.ClientError) as err:
             _LOGGER.error("HTTP Connection error to loqed lock")
-            raise CannotConnect from err
+            raise (InvalidAuth if _is_auth_error(err) else CannotConnect) from err
 
     @override
     async def async_step_zeroconf(
@@ -147,8 +156,10 @@ class LoqedConfigFlow(ConfigFlow, domain=DOMAIN):
 
             try:
                 lock_data = await cloud_client.async_get_locks()
-            except TimeoutError, aiohttp.ClientError:
-                errors["base"] = "cannot_connect"
+            except (TimeoutError, aiohttp.ClientError) as err:
+                errors["base"] = (
+                    "invalid_auth" if _is_auth_error(err) else "cannot_connect"
+                )
             else:
                 self._locks = lock_data["data"]
                 self._api_token = user_input[CONF_API_TOKEN]
@@ -175,6 +186,8 @@ class LoqedConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "cannot_connect"
         except InvalidAuth:
             errors["base"] = "invalid_auth"
+        except LockNotFound:
+            errors["base"] = "lock_not_found"
         else:
             await self.async_set_unique_id(
                 re.sub(
@@ -229,3 +242,7 @@ class CannotConnect(HomeAssistantError):
 
 class InvalidAuth(HomeAssistantError):
     """Error to indicate there is invalid auth."""
+
+
+class LockNotFound(HomeAssistantError):
+    """Error to indicate the lock is not part of the account."""
