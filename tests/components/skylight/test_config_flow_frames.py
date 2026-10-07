@@ -9,12 +9,14 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import FRAME, FRAME_ID
 
+from tests.common import MockConfigEntry
+
 CODE = "mock-auth-code"
 
 
 async def test_pick_frame_excludes_configured(
     hass: HomeAssistant,
-    mock_config_entry,
+    mock_config_entry: MockConfigEntry,
     mock_exchange_token: AsyncMock,
     mock_setup_entry: AsyncMock,
 ) -> None:

@@ -1,6 +1,6 @@
 """Calendar platform for the Skylight integration."""
 
-from datetime import date, datetime, timedelta
+from datetime import date, datetime
 from typing import override
 
 from homeassistant.components.calendar import CalendarEntity, CalendarEvent
@@ -56,6 +56,6 @@ class SkylightCalendarEntity(SkylightEntity, CalendarEntity):
         return [
             event
             for event in self.coordinator.data.events
-            if _as_datetime(event.start) < end_date + timedelta(days=1)
+            if _as_datetime(event.start) < end_date
             and _as_datetime(event.end) > start_date
         ]
