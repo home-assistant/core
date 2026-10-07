@@ -30,10 +30,10 @@
       'summary': 'Shkia',
     }),
     dict({
-      'description': 'Nightfall: 17:26',
-      'end': '2024-01-15T15:26:00+00:00',
-      'start': '2024-01-15T15:26:00+00:00',
-      'summary': 'End of fast',
+      'description': 'Nightfall, 18 minutes: 17:12',
+      'end': '2024-01-15T15:12:18+00:00',
+      'start': '2024-01-15T15:12:18+00:00',
+      'summary': 'Tset Hakochavim (18 minutes)',
     }),
   ])
 # ---
@@ -58,10 +58,10 @@
       'summary': 'Shkia',
     }),
     dict({
-      'description': 'Nightfall: 17:26',
-      'end': '2024-01-15T22:26:00+00:00',
-      'start': '2024-01-15T22:26:00+00:00',
-      'summary': 'End of fast',
+      'description': 'Nightfall, 18 minutes: 17:07',
+      'end': '2024-01-15T22:07:06+00:00',
+      'start': '2024-01-15T22:07:06+00:00',
+      'summary': 'Tset Hakochavim (18 minutes)',
     }),
   ])
 # ---
