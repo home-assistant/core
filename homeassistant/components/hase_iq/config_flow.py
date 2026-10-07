@@ -28,7 +28,7 @@ class HaseIQConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             # The stove exposes no serial number or MAC address to use as unique id.
-            self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
+            self._async_abort_entries_match(user_input)
             try:
                 async with Client(user_input[CONF_HOST]) as stove:
                     await stove.get_phase()
