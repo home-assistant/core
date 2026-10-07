@@ -1,6 +1,9 @@
 """Tests for the EnergyID directives coordinator."""
 
+from collections.abc import Awaitable, Callable
 import datetime as dt
+from functools import partial
+from typing import Any, NoReturn
 from unittest.mock import AsyncMock, MagicMock
 
 from aiohttp import ClientError, ClientResponseError
@@ -334,14 +337,38 @@ async def test_unclaimed_device_starts_reauth(
     assert [flow["context"]["source"] for flow in flows] == ["reauth"]
 
 
+async def _lose_claim_and_return_nothing(
+    client: MagicMock, *_args: object
+) -> list[DirectiveResource]:
+    client.is_claimed = False
+    return []
+
+
+async def _lose_claim_and_deny(client: MagicMock, *_args: object) -> NoReturn:
+    client.is_claimed = False
+    raise PermissionError("The device is not authenticated")
+
+
 @pytest.mark.parametrize(
-    "lost_during", ["get_directives", "get_directives_denied", "get_directive_data"]
+    ("method", "lose_claim"),
+    [
+        pytest.param(
+            "get_directives", _lose_claim_and_return_nothing, id="get_directives"
+        ),
+        pytest.param(
+            "get_directives", _lose_claim_and_deny, id="get_directives_denied"
+        ),
+        pytest.param(
+            "get_directive_data", _lose_claim_and_deny, id="get_directive_data"
+        ),
+    ],
 )
 async def test_claim_lost_while_polling_starts_reauth(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_webhook_client: MagicMock,
-    lost_during: str,
+    method: str,
+    lose_claim: Callable[..., Awaitable[Any]],
 ) -> None:
     """Test a claim lost during the client's own re-authentication starts reauth."""
     resource, schedule = _directive_fixture()
@@ -350,24 +377,9 @@ async def test_claim_lost_while_polling_starts_reauth(
     mock_webhook_client.get_directive_data = AsyncMock(return_value=schedule)
     coordinator = await _setup_with_directives(hass, mock_config_entry)
 
-    async def lose_claim_on_list() -> list[DirectiveResource]:
-        mock_webhook_client.is_claimed = False
-        return []
-
-    async def lose_claim_on_denied_list() -> list[DirectiveResource]:
-        mock_webhook_client.is_claimed = False
-        raise PermissionError("The device is not authenticated")
-
-    async def lose_claim_on_schedule(_directive_id: str) -> DirectiveData:
-        mock_webhook_client.is_claimed = False
-        raise PermissionError("The device is not authenticated")
-
-    if lost_during == "get_directives":
-        mock_webhook_client.get_directives.side_effect = lose_claim_on_list
-    elif lost_during == "get_directives_denied":
-        mock_webhook_client.get_directives.side_effect = lose_claim_on_denied_list
-    else:
-        mock_webhook_client.get_directive_data.side_effect = lose_claim_on_schedule
+    getattr(mock_webhook_client, method).side_effect = partial(
+        lose_claim, mock_webhook_client
+    )
     await coordinator.async_refresh()
     await hass.async_block_till_done()
 
