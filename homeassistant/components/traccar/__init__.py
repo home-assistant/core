@@ -87,14 +87,19 @@ async def handle_webhook(
 ) -> web.Response:
     """Handle incoming webhook with Traccar Client request."""
     if not (requestdata := dict(request.query)):
-        try:
-            requestdata = _parse_json_body(await request.json())
-        except JSONDecodeError as error:
-            LOGGER.error("Error parsing JSON body: %s", error)
-            return web.Response(
-                text="Invalid JSON",
-                status=HTTPStatus.UNPROCESSABLE_ENTITY,
-            )
+        # Traccar Client 10 posts its data as a form
+        if request.content_type == "application/x-www-form-urlencoded":
+            form = await request.post()
+            requestdata = {key: str(value) for key, value in form.items()}
+        else:
+            try:
+                requestdata = _parse_json_body(await request.json())
+            except JSONDecodeError as error:
+                LOGGER.error("Error parsing JSON body: %s", error)
+                return web.Response(
+                    text="Invalid JSON",
+                    status=HTTPStatus.UNPROCESSABLE_ENTITY,
+                )
     try:
         data = WEBHOOK_SCHEMA(requestdata)
     except probatio.MultipleInvalid as error:
