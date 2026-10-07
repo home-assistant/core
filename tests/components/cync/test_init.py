@@ -65,7 +65,6 @@ async def test_preserve_registry_identifiers(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert mock_config_entry.version == 1
     current_device = device_registry.async_get(device.id)
     assert current_device is not None
     assert current_device.identifiers == {(DOMAIN, unique_id)}

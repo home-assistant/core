@@ -42,8 +42,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: CyncConfigEntry) -> bool
     except CyncError as ex:
         raise ConfigEntryNotReady("Unable to connect to Cync") from ex
 
-    entry.async_on_unload(cync.shut_down)
-
     devices_coordinator = CyncCoordinator(hass, entry, cync)
 
     cync.set_update_callback(devices_coordinator.on_data_update)
@@ -58,4 +56,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: CyncConfigEntry) -> bool
 
 async def async_unload_entry(hass: HomeAssistant, entry: CyncConfigEntry) -> bool:
     """Unload a config entry."""
+    cync = entry.runtime_data.cync
+    await cync.shut_down()
     return await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
