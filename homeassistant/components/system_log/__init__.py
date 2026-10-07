@@ -17,23 +17,21 @@ from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
+from .const import (
+    CONF_FIRE_EVENT,
+    CONF_LEVEL,
+    CONF_LOGGER,
+    CONF_MAX_ENTRIES,
+    CONF_MESSAGE,
+    DEFAULT_FIRE_EVENT,
+    DEFAULT_MAX_ENTRIES,
+    DOMAIN,
+    EVENT_SYSTEM_LOG,
+    SERVICE_CLEAR,
+    SERVICE_WRITE,
+)
+
 type KeyType = tuple[str, tuple[str, int], tuple[str, int, str] | None]
-
-CONF_MAX_ENTRIES = "max_entries"
-CONF_FIRE_EVENT = "fire_event"
-CONF_MESSAGE = "message"
-CONF_LEVEL = "level"
-CONF_LOGGER = "logger"
-
-DATA_SYSTEM_LOG = "system_log"
-DEFAULT_MAX_ENTRIES = 50
-DEFAULT_FIRE_EVENT = False
-DOMAIN = "system_log"
-
-EVENT_SYSTEM_LOG = "system_log_event"
-
-SERVICE_CLEAR = "clear"
-SERVICE_WRITE = "write"
 
 CONFIG_SCHEMA = probatio.Schema(
     {
