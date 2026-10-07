@@ -9,7 +9,8 @@
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "invalid_code": "The pasted value does not contain a valid authorization code. Copy the whole URL you landed on after signing in, or just the code part."
+      "invalid_code": "The pasted value does not contain a valid authorization code. Copy the whole URL you landed on after signing in, or just the code part.",
+      "wrong_account": "This sign-in is for a different Skylight account than the one this entry was set up with. Sign in with the original account."
     },
     "step": {
       "pick_frame": {

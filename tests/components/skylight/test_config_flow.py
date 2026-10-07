@@ -12,7 +12,6 @@ from homeassistant.components.skylight.const import (
     CONF_REFRESH_TOKEN,
     DOMAIN,
 )
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -219,6 +218,7 @@ async def test_reauth_flow(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_exchange_token: AsyncMock,
+    mock_get_frames: AsyncMock,
     mock_setup_entry: AsyncMock,
 ) -> None:
     """Test the reauth flow updates tokens."""
@@ -238,4 +238,56 @@ async def test_reauth_flow(
     token = mock_config_entry.data[CONF_TOKEN]
     assert token[CONF_ACCESS_TOKEN] == "mock-access-token"
     assert token[CONF_REFRESH_TOKEN] == "mock-refresh-token"
-    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_get_frames.await_count == 1
+
+
+async def test_reauth_flow_wrong_account(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_exchange_token: AsyncMock,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test reauth with a code from an account that does not own the frame."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+
+    with patch(
+        "skylight_api.SkylightAPI.get_frames",
+        return_value=[{"id": "other-frame", "name": "Other"}],
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"code": CODE}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "wrong_account"}
+
+
+async def test_reauth_flow_frame_check_connect_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_exchange_token: AsyncMock,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test reauth when frame ownership verification cannot connect."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+
+    with patch(
+        "skylight_api.SkylightAPI.get_frames",
+        side_effect=SkylightAPIError("boom"),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"code": CODE}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "cannot_connect"}

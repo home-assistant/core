@@ -187,8 +187,41 @@ class SkylightConfigFlow(ConfigFlow, domain=DOMAIN):
         return await self.async_step_user()
 
     async def _async_finish_reauth(self) -> ConfigFlowResult:
-        """Update the tokens on the reauth entry and reload it."""
+        """Update the tokens on the reauth entry and reload it.
+
+        Verify the newly signed-in account actually owns the frame the entry
+        was set up with, so a valid code from an unrelated account cannot
+        silently bind the entry to a frame it cannot update.
+        """
         reauth_entry = self._get_reauth_entry()
+        frame_id = reauth_entry.data[CONF_FRAME_ID]
+        api = SkylightAPI(
+            async_get_clientsession(self.hass),
+            access_token=self._token[CONF_ACCESS_TOKEN],
+            refresh_token=self._token[CONF_REFRESH_TOKEN],
+            device_fingerprint=self._device_fingerprint,
+        )
+        try:
+            frames = await api.get_frames()
+        except SkylightAPIError:
+            _LOGGER.exception("Failed to verify frame ownership during reauth")
+            return self.async_show_form(
+                step_id="user",
+                data_schema=STEP_USER_DATA_SCHEMA,
+                description_placeholders={
+                    "authorize_url": authorize_url(self._challenge)
+                },
+                errors={"base": "cannot_connect"},
+            )
+        if frame_id not in {frame["id"] for frame in frames}:
+            return self.async_show_form(
+                step_id="user",
+                data_schema=STEP_USER_DATA_SCHEMA,
+                description_placeholders={
+                    "authorize_url": authorize_url(self._challenge)
+                },
+                errors={"base": "wrong_account"},
+            )
         return self.async_update_reload_and_abort(
             reauth_entry,
             data_updates={
