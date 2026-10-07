@@ -289,7 +289,7 @@ async def test_update_device(
                 entity_registry, mock_config_entry.entry_id
             )
         )
-        == 58
+        == 57
     )
     assert (
         len(
@@ -321,7 +321,7 @@ async def test_update_device(
                     entity_registry, mock_config_entry.entry_id
                 )
             )
-            == 65
+            == 64
         )
         assert (
             len(
@@ -352,7 +352,7 @@ async def test_update_device(
                     entity_registry, mock_config_entry.entry_id
                 )
             )
-            == 58
+            == 57
         )
         assert (
             len(
