@@ -1,10 +1,11 @@
 """The test for ZHA device automation actions."""
 
 from collections.abc import Callable, Coroutine
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from pytest_unordered import unordered
+from zhaquirks.inovelli.types import AllLEDEffectType, SingleLEDEffectType
 from zigpy.device import Device
 from zigpy.profiles import zha
 from zigpy.zcl.clusters import general, security
@@ -12,7 +13,7 @@ import zigpy.zcl.foundation as zcl_f
 
 from homeassistant.components import automation
 from homeassistant.components.device_automation import DeviceAutomationType
-from homeassistant.components.zha import DOMAIN
+from homeassistant.components.zha import DOMAIN, device_action
 from homeassistant.components.zha.helpers import get_zha_gateway
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -221,6 +222,60 @@ async def test_action(
         assert calls[0].domain == DOMAIN
         assert calls[0].service == "warning_device_warn"
         assert calls[0].data["ieee"] == ieee_address
+
+
+@pytest.mark.parametrize(
+    ("action_type", "extra_config", "cluster_method", "expected_effect"),
+    [
+        pytest.param(
+            "issue_all_led_effect",
+            {},
+            "led_effect",
+            AllLEDEffectType.Clear,
+            id="all_leds",
+        ),
+        pytest.param(
+            "issue_individual_led_effect",
+            {"led_number": 1},
+            "individual_led_effect",
+            SingleLEDEffectType.Clear,
+            id="individual_led",
+        ),
+    ],
+)
+async def test_inovelli_led_effect_from_unvalidated_config(
+    hass: HomeAssistant,
+    action_type: str,
+    extra_config: dict[str, int],
+    cluster_method: str,
+    expected_effect: AllLEDEffectType | SingleLEDEffectType,
+) -> None:
+    """Test the LED effect is sent as an effect type, even if ZHA didn't validate it.
+
+    ZHA only validates the action when it is loaded, so the action can receive
+    the effect type as it was configured.
+    """
+    cluster = AsyncMock()
+    config = {
+        "device_id": "device_id",
+        "domain": DOMAIN,
+        "type": action_type,
+        "effect_type": "Clear",
+        "color": 200,
+        "level": 100,
+        "duration": 255,
+        **extra_config,
+    }
+
+    with patch(
+        "homeassistant.components.zha.device_action._find_inovelli_cluster",
+        return_value=cluster,
+    ):
+        await device_action.async_call_action_from_config(hass, config, {}, None)
+
+    assert getattr(cluster, cluster_method).call_args.kwargs["led_effect"] is (
+        expected_effect
+    )
 
 
 async def test_client_unique_id_suffix_stripped(
