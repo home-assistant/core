@@ -2,7 +2,6 @@
 
 from unittest.mock import AsyncMock, patch
 
-import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.device_tracker import SourceType
