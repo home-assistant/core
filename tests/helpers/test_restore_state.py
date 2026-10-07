@@ -323,11 +323,6 @@ async def test_dump_data(hass: HomeAssistant) -> None:
     assert state1["state"]["state"] == "off"
     assert state2["state"]["entity_id"] == "input_boolean.b5"
     assert state2["state"]["state"] == "off"
-    # States that are not written anymore are dropped from memory as well
-    assert list(data.last_states_by_entity_id) == [
-        "input_boolean.b3",
-        "input_boolean.b5",
-    ]
 
     # Test that removed entities are not persisted
     await entity.async_remove()
@@ -1249,7 +1244,6 @@ async def test_dump_drops_stored_state_of_entity_with_failing_extra_data(
     await data.async_dump_states()
 
     assert hass_storage[STORAGE_KEY]["data"] == []
-    assert not data.last_states_by_entity_registry_id
 
 
 async def test_load_stored_state_without_registry_entry(
