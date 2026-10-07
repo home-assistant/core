@@ -96,14 +96,27 @@ def select_token_endpoint_auth_method(
     )
 
 
+def _scope_list(scopes: Any) -> list[str] | None:
+    """Return scopes when they are a list of strings.
+
+    Omitted scopes request nothing. A string must not be joined, because that
+    requests one scope per character. A mixed list cannot be joined either.
+    """
+    if scopes is None:
+        return None
+    if isinstance(scopes, list) and all(isinstance(scope, str) for scope in scopes):
+        return scopes
+    raise ClientRegistrationError("OAuth scopes were not a list of strings")
+
+
 def normalized_scopes(scopes: list[str] | None) -> tuple[str, ...]:
     """Return scopes as a sorted unique tuple.
 
     An omitted scope list and an empty list are the same request: no scope.
     """
-    if not scopes:
+    if not (scope_list := _scope_list(scopes)):
         return ()
-    return tuple(sorted(set(scopes)))
+    return tuple(sorted(set(scope_list)))
 
 
 def registered_client_matches_request(
@@ -233,10 +246,16 @@ async def async_register_dynamic_client(
 ) -> RegisteredClient:
     """Register an OAuth client at the authorization server.
 
+    The MCP SDK registration request falls back to ``/register`` when metadata
+    omits an endpoint, and its response parser rejects a client id returned
+    without the rest of the metadata. This posts only to the advertised
+    endpoint and still accepts that partial response. The request metadata
+    itself is the SDK model.
     Transport errors from the HTTP client propagate so the config flow can map
     them the same way as metadata discovery.
     """
     method = select_token_endpoint_auth_method(token_endpoint_auth_methods)
+    scope_list = _scope_list(scopes)
     try:
         metadata = OAuthClientMetadata(
             redirect_uris=[AnyUrl(redirect_uri)],
@@ -244,7 +263,7 @@ async def async_register_dynamic_client(
             grant_types=["authorization_code", "refresh_token"],
             response_types=["code"],
             client_name=DCR_CLIENT_NAME,
-            scope=" ".join(scopes) if scopes else None,
+            scope=" ".join(scope_list) if scope_list else None,
         )
     except ValidationError as err:
         raise ClientRegistrationError("Invalid client metadata") from err
@@ -278,7 +297,7 @@ async def async_register_dynamic_client(
         raise ClientRegistrationError("Registration response was not JSON") from err
 
     return _parse_registration_response(
-        body, redirect_uri, method, normalized_scopes(scopes)
+        body, redirect_uri, method, normalized_scopes(scope_list)
     )
 
 
@@ -298,6 +317,7 @@ def _parse_registration_response(
     if redirect_uris is _OMITTED:
         payload["redirect_uris"] = [redirect_uri]
     _require_granted_scopes(_field_or_omitted(payload, "scope"), requested_scopes)
+    _require_authorization_code_grants(payload)
 
     client_id = payload.get("client_id")
     if not isinstance(client_id, str) or not client_id:
@@ -307,6 +327,12 @@ def _parse_registration_response(
         payload.get("token_endpoint_auth_method"), requested_method
     )
     client_secret = _client_secret_from_response(payload.get("client_secret"), method)
+    # Application credential storage strips surrounding whitespace. These
+    # values are opaque, so a stripped copy would not match the issued one.
+    if client_id != client_id.strip() or client_secret != client_secret.strip():
+        raise ClientRegistrationError(
+            "Registration response client id or secret has surrounding whitespace"
+        )
     # Application credentials are not rotated. A finite secret lifetime would
     # leave refresh and reauth on a credential that can no longer be replaced.
     # Public clients never send the secret, so an echoed expiry is ignored.
@@ -401,6 +427,34 @@ def _require_registered_redirect_uri(value: Any, redirect_uri: str) -> None:
     if redirect_uri not in value:
         raise ClientRegistrationError(
             "Registration response did not include the redirect URI"
+        )
+
+
+def _require_authorization_code_grants(payload: Mapping[str, Any]) -> None:
+    """Reject a response that drops the grants this client will use.
+
+    Omitted grant_types and response_types stay compatible with servers that
+    return only a client id. An explicit list must include authorization_code,
+    refresh_token, and the code response type.
+    """
+    grant_types = _field_or_omitted(payload, "grant_types")
+    if grant_types is not _OMITTED and (
+        not isinstance(grant_types, list)
+        or any(not isinstance(grant, str) for grant in grant_types)
+        or "authorization_code" not in grant_types
+        or "refresh_token" not in grant_types
+    ):
+        raise ClientRegistrationError(
+            "Registration response did not include the required grant types"
+        )
+    response_types = _field_or_omitted(payload, "response_types")
+    if response_types is not _OMITTED and (
+        not isinstance(response_types, list)
+        or any(not isinstance(response_type, str) for response_type in response_types)
+        or "code" not in response_types
+    ):
+        raise ClientRegistrationError(
+            "Registration response did not include the code response type"
         )
 
 

@@ -53,6 +53,7 @@ from .registration import (
     ClientRegistrationError,
     ClientSecretExpiresError,
     RegisteredClientIdentity,
+    _scope_list,
     async_register_dynamic_client,
     decode_registered_client_id,
     encode_registered_client_id,
@@ -198,8 +199,6 @@ async def validate_input(
         _LOGGER.info("Timeout connecting to MCP server: %s", error)
         raise TimeoutConnectError from error
     except (httpx.HTTPStatusError, httpx2.HTTPStatusError) as error:
-        # The MCP SDK raises httpx.HTTPStatusError. Home Assistant's HTTP
-        # client raises httpx2.HTTPStatusError. The classes are not related.
         _LOGGER.info("Cannot connect to MCP server: %s", error)
         if error.response.status_code == 401:
             auth_header = AuthenticateHeader.from_header(url, error.response)
@@ -361,6 +360,13 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             return self.async_abort(reason="unknown")
         else:
             _LOGGER.info("OAuth configuration: %s", oauth_config)
+            try:
+                selected_scopes = _select_scopes(
+                    self.auth_header, oauth_config, resource_metadata
+                )
+            except ClientRegistrationError:
+                _LOGGER.debug("Discovered OAuth scopes were not a list of strings")
+                return self.async_abort(reason="invalid_discovery_info")
             self.oauth_config = oauth_config
             self.data.update(
                 {
@@ -368,9 +374,7 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
                         oauth_config.authorization_server.authorize_url
                     ),
                     CONF_TOKEN_URL: oauth_config.authorization_server.token_url,
-                    CONF_SCOPE: _select_scopes(
-                        self.auth_header, oauth_config, resource_metadata
-                    ),
+                    CONF_SCOPE: selected_scopes,
                 }
             )
             # Servers that advertise RFC 7591 registration issue a client
@@ -829,11 +833,15 @@ def _select_scopes(
     then the protected resource metadata, then finally the default scopes from
     the OAuth discovery.
     """
+    selected: list[str] | None
     if auth_header and auth_header.scopes:
-        return auth_header.scopes
-    if resource_metadata and resource_metadata.supported_scopes:
-        return resource_metadata.supported_scopes
-    return oauth_config.scopes
+        selected = auth_header.scopes
+    elif resource_metadata and resource_metadata.supported_scopes:
+        selected = resource_metadata.supported_scopes
+    else:
+        selected = oauth_config.scopes
+    # A JSON string would be joined into one scope per character.
+    return _scope_list(selected)
 
 
 class InvalidUrl(HomeAssistantError):

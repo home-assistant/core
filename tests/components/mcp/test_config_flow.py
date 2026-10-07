@@ -3679,3 +3679,288 @@ async def test_basic_auth_token_connection_error(
 
     with pytest.raises(OAuth2TokenRequestConnectionError):
         await implementation._token_request({"grant_type": "refresh_token"})
+
+
+def _issued_client(**extra: Any) -> dict[str, Any]:
+    """Return a registration response body."""
+    return {
+        "client_id": REGISTERED_CLIENT_ID,
+        "client_secret": REGISTERED_CLIENT_SECRET,
+        "token_endpoint_auth_method": "client_secret_post",
+        **extra,
+    }
+
+
+def _registration_discovery(
+    scopes_supported: Any,
+    *,
+    registration_endpoint: str = "/register",
+) -> httpx2.Response:
+    """Return authorization server metadata, including a non-list scope value."""
+    return httpx2.Response(
+        200,
+        json={
+            "authorization_endpoint": OAUTH_AUTHORIZE_URL,
+            "token_endpoint": OAUTH_TOKEN_URL,
+            "registration_endpoint": registration_endpoint,
+            "token_endpoint_auth_methods_supported": ["client_secret_post"],
+            "scopes_supported": scopes_supported,
+        },
+    )
+
+
+async def _configure_registration(
+    hass: HomeAssistant,
+    mock_mcp_client: Mock,
+    *,
+    body: dict[str, Any],
+    discovery: httpx2.Response,
+) -> dict[str, Any]:
+    """Run user setup through discovery and registration."""
+    respx.post(f"{MCP_SERVER_BASE_URL}/register").mock(
+        return_value=httpx2.Response(201, json=body)
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    mock_mcp_client.side_effect = httpx2.HTTPStatusError(
+        "Authentication required", request=None, response=httpx2.Response(401)
+    )
+    respx.get(OAUTH_DISCOVERY_ENDPOINT).mock(return_value=discovery)
+    return await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_URL: MCP_SERVER_URL},
+    )
+
+
+@pytest.mark.parametrize(
+    ("client_id", "client_secret"),
+    [
+        pytest.param(
+            f" {REGISTERED_CLIENT_ID}",
+            REGISTERED_CLIENT_SECRET,
+            id="client_id",
+        ),
+        pytest.param(
+            REGISTERED_CLIENT_ID,
+            f" {REGISTERED_CLIENT_SECRET} ",
+            id="client_secret",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("current_request_with_host", "mock_setup_entry")
+@respx.mock
+async def test_whitespace_credentials_are_not_stored(
+    hass: HomeAssistant,
+    mock_mcp_client: Mock,
+    client_id: str,
+    client_secret: str,
+) -> None:
+    """Storage would strip an opaque id or secret, so registration aborts."""
+    result = await _configure_registration(
+        hass,
+        mock_mcp_client,
+        body=_issued_client(client_id=client_id, client_secret=client_secret),
+        discovery=_registration_discovery(SCOPES),
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "oauth_registration_failed"
+    stored = hass.data[APPLICATION_CREDENTIALS_DOMAIN].async_client_credentials(DOMAIN)
+    assert stored == {}
+
+
+@pytest.mark.parametrize(
+    "extra",
+    [
+        pytest.param({"grant_types": ["client_credentials"]}, id="grant_types_dropped"),
+        pytest.param({"grant_types": None}, id="grant_types_null"),
+        pytest.param({"grant_types": "authorization_code"}, id="grant_types_string"),
+        pytest.param({"response_types": ["token"]}, id="response_types_dropped"),
+        pytest.param({"response_types": None}, id="response_types_null"),
+    ],
+)
+@pytest.mark.usefixtures("current_request_with_host", "mock_setup_entry")
+@respx.mock
+async def test_registration_response_must_keep_authorization_code(
+    hass: HomeAssistant,
+    mock_mcp_client: Mock,
+    extra: dict[str, Any],
+) -> None:
+    """An explicit grant or response type list must include the code flow."""
+    result = await _configure_registration(
+        hass,
+        mock_mcp_client,
+        body=_issued_client(**extra),
+        discovery=_registration_discovery(SCOPES),
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "oauth_registration_failed"
+    stored = hass.data[APPLICATION_CREDENTIALS_DOMAIN].async_client_credentials(DOMAIN)
+    assert stored == {}
+
+
+@pytest.mark.parametrize(
+    "extra",
+    [
+        pytest.param({}, id="omitted"),
+        pytest.param(
+            {
+                "grant_types": ["authorization_code", "refresh_token"],
+                "response_types": ["code"],
+            },
+            id="required_present",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("current_request_with_host", "mock_setup_entry")
+@respx.mock
+async def test_registration_response_may_omit_grant_types(
+    hass: HomeAssistant,
+    mock_mcp_client: Mock,
+    extra: dict[str, Any],
+) -> None:
+    """Omitted grant metadata stays compatible with a client-id-only response."""
+    result = await _configure_registration(
+        hass,
+        mock_mcp_client,
+        body=_issued_client(**extra),
+        discovery=_registration_discovery(SCOPES),
+    )
+
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+
+
+@pytest.mark.parametrize(
+    "scopes_supported",
+    [
+        pytest.param("read", id="string"),
+        pytest.param(["read", 1], id="mixed"),
+    ],
+)
+@pytest.mark.usefixtures("current_request_with_host", "mock_setup_entry")
+@respx.mock
+async def test_malformed_scopes_supported_aborts(
+    hass: HomeAssistant,
+    mock_mcp_client: Mock,
+    scopes_supported: Any,
+) -> None:
+    """Authorization server scopes that are not a string list abort discovery."""
+    registration = respx.post(f"{MCP_SERVER_BASE_URL}/register").mock(
+        return_value=httpx2.Response(201, json=_issued_client())
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    mock_mcp_client.side_effect = httpx2.HTTPStatusError(
+        "Authentication required", request=None, response=httpx2.Response(401)
+    )
+    respx.get(OAUTH_DISCOVERY_ENDPOINT).mock(
+        return_value=_registration_discovery(scopes_supported=scopes_supported)
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_URL: MCP_SERVER_URL},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "invalid_discovery_info"
+    assert not registration.called
+
+
+@pytest.mark.parametrize(
+    "scopes_supported",
+    [
+        pytest.param("read", id="string"),
+        pytest.param(["read", 1], id="mixed"),
+    ],
+)
+@pytest.mark.usefixtures("current_request_with_host", "mock_setup_entry")
+@respx.mock
+async def test_malformed_resource_scopes_abort(
+    hass: HomeAssistant,
+    mock_mcp_client: Mock,
+    scopes_supported: Any,
+) -> None:
+    """Protected resource scopes that are not a string list abort discovery."""
+    resource_metadata_url = _resource_metadata_url()
+    respx.get(resource_metadata_url).mock(
+        return_value=httpx2.Response(
+            200,
+            json={
+                "resource": MCP_SERVER_URL,
+                "authorization_servers": [AUTHORIZATION_SERVER],
+                "scopes_supported": scopes_supported,
+            },
+        )
+    )
+    respx.get(f"{AUTHORIZATION_SERVER}/.well-known/oauth-authorization-server").mock(
+        return_value=_registration_discovery(SCOPES)
+    )
+    registration = respx.post(f"{AUTHORIZATION_SERVER}/register").mock(
+        return_value=httpx2.Response(201, json=_issued_client())
+    )
+
+    reason = await _protected_resource_abort_reason(
+        hass, mock_mcp_client, resource_metadata_url
+    )
+
+    assert reason == "invalid_discovery_info"
+    assert not registration.called
+
+
+@pytest.mark.usefixtures("current_request_with_host", "mock_setup_entry")
+@respx.mock
+async def test_null_scopes_supported_is_omitted(
+    hass: HomeAssistant,
+    mock_mcp_client: Mock,
+) -> None:
+    """Null scopes_supported requests no scopes instead of one per character."""
+    result = await _configure_registration(
+        hass,
+        mock_mcp_client,
+        body=_issued_client(),
+        discovery=_registration_discovery(scopes_supported=None),
+    )
+
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+    registered_payload = json.loads(respx.calls.last.request.content)
+    assert "scope" not in registered_payload
+    assert "scope" not in URL(result["url"]).query
+
+
+@pytest.mark.parametrize(
+    "scopes",
+    [
+        pytest.param("read", id="string"),
+        pytest.param(["read", 1], id="mixed"),
+    ],
+)
+async def test_registration_rejects_malformed_scopes(
+    hass: HomeAssistant,
+    scopes: Any,
+) -> None:
+    """Registration does not turn a scope string into per-character scopes."""
+    with pytest.raises(ClientRegistrationError):
+        await async_register_dynamic_client(
+            hass,
+            f"{MCP_SERVER_BASE_URL}/register",
+            OAUTH_CALLBACK_URL,
+            token_endpoint_auth_methods=["client_secret_post"],
+            scopes=scopes,
+        )
+
+
+@pytest.mark.parametrize(
+    "scopes",
+    [
+        pytest.param("read", id="string"),
+        pytest.param(["read", 1], id="mixed"),
+    ],
+)
+def test_normalized_scopes_rejects_malformed_scopes(scopes: Any) -> None:
+    """Normalizing scopes does not split a string into characters."""
+    with pytest.raises(ClientRegistrationError):
+        normalized_scopes(scopes)

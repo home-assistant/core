@@ -21,11 +21,7 @@ class AuthenticateHeader:
 
     @classmethod
     def from_header(cls, url: str, error_response: Any) -> AuthenticateHeader | None:
-        """Create AuthenticateHeader from a WWW-Authenticate header.
-
-        httpx and httpx2 responses both expose headers, but their header
-        types are not mutually assignable.
-        """
+        """Create AuthenticateHeader from a WWW-Authenticate header."""
         header = error_response.headers.get(WWW_AUTHENTICATE_HEADER)
         if not isinstance(header, str) or not (
             match := re.search(RESOURCE_METADATA_REGEXP, header)
