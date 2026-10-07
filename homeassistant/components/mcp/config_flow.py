@@ -6,26 +6,17 @@ from dataclasses import dataclass
 import logging
 from typing import Any, cast, override
 
-import httpx  # noqa: TID251
 import httpx2
 import probatio
 from yarl import URL
 
 from homeassistant.components.application_credentials import (
-    DOMAIN as APPLICATION_CREDENTIALS_DOMAIN,
     AuthorizationServer,
     ClientCredential,
     async_import_client_credential,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
-from homeassistant.const import (
-    CONF_ACCESS_TOKEN,
-    CONF_CLIENT_ID,
-    CONF_DOMAIN,
-    CONF_ID,
-    CONF_TOKEN,
-    CONF_URL,
-)
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, UnknownImplementationError
 from homeassistant.helpers import config_validation as cv
@@ -35,7 +26,6 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
     async_get_redirect_uri,
 )
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
-from homeassistant.util.hass_dict import HassKey
 
 from . import async_get_config_entry_implementation
 from .application_credentials import authorization_server_context
@@ -51,39 +41,13 @@ from .const import (
 from .coordinator import TokenManager, mcp_client
 from .registration import (
     ClientRegistrationError,
-    ClientSecretExpiresError,
-    RegisteredClientIdentity,
     async_register_dynamic_client,
-    decode_registered_client_id,
     encode_registered_client_id,
-    normalized_scopes,
     registered_client_auth_domain,
-    registered_client_matches_request,
     resolve_registration_endpoint,
-    scope_list,
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-_REGISTRATION_LOCKS: HassKey[dict[tuple[str, str], asyncio.Lock]] = HassKey(
-    f"{DOMAIN}_oauth_registration_locks"
-)
-
-
-def _async_registration_lock(
-    hass: HomeAssistant, authorize_url: str, token_url: str
-) -> asyncio.Lock:
-    """Return the lock for one authorization server.
-
-    Creating the lock does not await, so two flows cannot observe a missing
-    lock at the same time.
-    """
-    locks = hass.data.setdefault(_REGISTRATION_LOCKS, {})
-    key = (authorize_url, token_url)
-    if (lock := locks.get(key)) is None:
-        lock = locks[key] = asyncio.Lock()
-    return lock
-
 
 STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
@@ -156,12 +120,21 @@ async def async_discover_authorization_server(
     # We have no way to know the minimum set of scopes needed, so request
     # all of them and let the user limit during the authorization step.
     scopes = data.get("scopes_supported")
-    registration_endpoint = data.get("registration_endpoint")
-    if not isinstance(registration_endpoint, str) or not registration_endpoint:
-        registration_endpoint = None
+    endpoint = data.get("registration_endpoint")
+    registration_endpoint = (
+        resolve_registration_endpoint(auth_server_url, endpoint)
+        if isinstance(endpoint, str) and endpoint
+        else None
+    )
+    if "token_endpoint_auth_methods_supported" not in data:
+        token_endpoint_auth_methods = None
     else:
-        registration_endpoint = resolve_registration_endpoint(
-            auth_server_url, registration_endpoint
+        methods = data["token_endpoint_auth_methods_supported"]
+        token_endpoint_auth_methods = (
+            methods
+            if isinstance(methods, list)
+            and all(isinstance(method, str) for method in methods)
+            else []
         )
     return OAuthConfig(
         authorization_server=AuthorizationServer(
@@ -170,9 +143,7 @@ async def async_discover_authorization_server(
         ),
         scopes=scopes,
         registration_endpoint=registration_endpoint,
-        token_endpoint_auth_methods=_string_list(
-            data, "token_endpoint_auth_methods_supported"
-        ),
+        token_endpoint_auth_methods=token_endpoint_auth_methods,
     )
 
 
@@ -195,16 +166,16 @@ async def validate_input(
                     f"MCP Server {url} does not support 'Tools' capability"
                 )
             return {"title": response.serverInfo.name}
-    except (httpx.TimeoutException, httpx2.TimeoutException) as error:
+    except httpx2.TimeoutException as error:
         _LOGGER.info("Timeout connecting to MCP server: %s", error)
         raise TimeoutConnectError from error
-    except (httpx.HTTPStatusError, httpx2.HTTPStatusError) as error:
+    except httpx2.HTTPStatusError as error:
         _LOGGER.info("Cannot connect to MCP server: %s", error)
         if error.response.status_code == 401:
             auth_header = AuthenticateHeader.from_header(url, error.response)
             raise InvalidAuth(auth_header) from error
         raise CannotConnect from error
-    except (httpx.HTTPError, httpx2.HTTPError) as error:
+    except httpx2.HTTPError as error:
         _LOGGER.info("Cannot connect to MCP server: %s", error)
         raise CannotConnect from error
 
@@ -231,9 +202,6 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            # Match an existing URL before OAuth. The unauthenticated success
-            # path is not the only way a duplicate can be created.
-            self._async_abort_entries_match({CONF_URL: user_input[CONF_URL]})
             try:
                 info = await validate_input(self.hass, user_input)
             except InvalidUrl:
@@ -252,7 +220,6 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                # Another submission can create this URL during validation.
                 self._async_abort_entries_match({CONF_URL: user_input[CONF_URL]})
                 return self.async_create_entry(title=info["title"], data=user_input)
 
@@ -314,7 +281,6 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception")
             return self.async_abort(reason="unknown")
 
-        self._async_abort_entries_match({CONF_URL: self.data[CONF_URL]})
         return self.async_create_entry(title=info["title"], data=self.data)
 
     async def async_step_auth_discovery(
@@ -358,21 +324,11 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             return self.async_abort(reason="timeout_connect")
         except CannotConnect:
             return self.async_abort(reason="cannot_connect")
-        except InvalidMetadata:
-            _LOGGER.debug("OAuth resource metadata authorization servers were invalid")
-            return self.async_abort(reason="invalid_discovery_info")
         except Exception:
             _LOGGER.exception("Unexpected exception")
             return self.async_abort(reason="unknown")
         else:
             _LOGGER.info("OAuth configuration: %s", oauth_config)
-            try:
-                selected_scopes = _select_scopes(
-                    self.auth_header, oauth_config, resource_metadata
-                )
-            except ClientRegistrationError:
-                _LOGGER.debug("Discovered OAuth scopes were not a list of strings")
-                return self.async_abort(reason="invalid_discovery_info")
             self.oauth_config = oauth_config
             self.data.update(
                 {
@@ -380,17 +336,71 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
                         oauth_config.authorization_server.authorize_url
                     ),
                     CONF_TOKEN_URL: oauth_config.authorization_server.token_url,
-                    CONF_SCOPE: selected_scopes,
+                    CONF_SCOPE: _select_scopes(
+                        self.auth_header, oauth_config, resource_metadata
+                    ),
                 }
             )
-            # Servers that advertise RFC 7591 registration issue a client
-            # themselves, so the user does not create application credentials.
-            if registration_endpoint := oauth_config.registration_endpoint:
+            if oauth_config.registration_endpoint:
                 return await self._async_register_dynamic_client(
-                    registration_endpoint,
+                    oauth_config.registration_endpoint,
                     oauth_config.token_endpoint_auth_methods,
                 )
             return await self.async_step_credentials_choice()
+
+    async def _async_register_dynamic_client(
+        self,
+        registration_endpoint: str,
+        token_endpoint_auth_methods: list[str] | None,
+    ) -> ConfigFlowResult:
+        """Register a client at the endpoint advertised by the server."""
+        try:
+            redirect_uri = async_get_redirect_uri(self.hass)
+        except RuntimeError:
+            return self.async_abort(
+                reason="no_url_available",
+                description_placeholders={
+                    "docs_url": (
+                        "https://www.home-assistant.io/more-info/no-url-available"
+                    )
+                },
+                translation_domain=DOMAIN,
+            )
+        try:
+            client_id, client_secret, method = await async_register_dynamic_client(
+                self.hass,
+                registration_endpoint,
+                redirect_uri,
+                token_endpoint_auth_methods=token_endpoint_auth_methods,
+                scopes=self.data[CONF_SCOPE],
+            )
+        except ClientRegistrationError:
+            _LOGGER.debug("OAuth client registration failed", exc_info=True)
+            return self.async_abort(reason="oauth_registration_failed")
+        except httpx2.TimeoutException:
+            return self.async_abort(reason="timeout_connect")
+        except httpx2.HTTPError:
+            return self.async_abort(reason="cannot_connect")
+
+        encoded = encode_registered_client_id(
+            self.data[CONF_AUTHORIZATION_URL],
+            self.data[CONF_TOKEN_URL],
+            client_id,
+            method,
+        )
+        auth_domain = registered_client_auth_domain(encoded)
+        await async_import_client_credential(
+            self.hass,
+            DOMAIN,
+            ClientCredential(encoded, client_secret, DCR_CLIENT_NAME),
+            auth_domain,
+        )
+        with authorization_server_context(self.authorization_server()):
+            implementations = await async_get_implementations(self.hass, DOMAIN)
+        if auth_domain not in implementations:
+            return self.async_abort(reason="oauth_registration_failed")
+        self.flow_impl = implementations[auth_domain]
+        return await self.async_step_auth()
 
     def authorization_server(self) -> AuthorizationServer:
         """Return the authorization server provided by the MCP server."""
@@ -412,127 +422,6 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             data[CONF_SCOPE] = " ".join(scopes)
         data.update(super().extra_authorize_data)
         return data
-
-    def _async_existing_registered_auth_domain(
-        self, redirect_uri: str, scopes: tuple[str, ...]
-    ) -> str | None:
-        """Return a stored client registered for this callback and scopes."""
-        storage = self.hass.data[APPLICATION_CREDENTIALS_DOMAIN]
-        authorize_url = self.data[CONF_AUTHORIZATION_URL]
-        token_url = self.data[CONF_TOKEN_URL]
-        for item in storage.async_items():
-            if item[CONF_DOMAIN] != DOMAIN:
-                continue
-            identity = decode_registered_client_id(item[CONF_CLIENT_ID])
-            if identity is not None and registered_client_matches_request(
-                identity,
-                authorize_url=authorize_url,
-                token_url=token_url,
-                redirect_uri=redirect_uri,
-                scopes=scopes,
-            ):
-                return cast(str, item[CONF_ID])
-        return None
-
-    async def _async_register_dynamic_client(
-        self,
-        registration_endpoint: str,
-        token_endpoint_auth_methods: list[str] | None,
-    ) -> ConfigFlowResult:
-        """Register an OAuth client and continue the authorize flow."""
-        try:
-            redirect_uri = async_get_redirect_uri(self.hass)
-        except RuntimeError as err:
-            _LOGGER.debug("OAuth redirect URI is not available: %s", err)
-            return self.async_abort(
-                reason="no_url_available",
-                description_placeholders={
-                    "docs_url": (
-                        "https://www.home-assistant.io/more-info/no-url-available"
-                    )
-                },
-                # OAuth helper would otherwise retarget this shared reason.
-                translation_domain=DOMAIN,
-            )
-        scopes = normalized_scopes(self.data[CONF_SCOPE])
-        # One registration at a time per authorization server. A second flow
-        # waits, then reuses the client the first flow stored.
-        lock = _async_registration_lock(
-            self.hass,
-            self.data[CONF_AUTHORIZATION_URL],
-            self.data[CONF_TOKEN_URL],
-        )
-        async with lock:
-            auth_domain = self._async_existing_registered_auth_domain(
-                redirect_uri, scopes
-            )
-            if auth_domain is None:
-                try:
-                    registered = await async_register_dynamic_client(
-                        self.hass,
-                        registration_endpoint,
-                        redirect_uri,
-                        token_endpoint_auth_methods=token_endpoint_auth_methods,
-                        scopes=self.data[CONF_SCOPE],
-                    )
-                except ClientSecretExpiresError:
-                    _LOGGER.debug(
-                        "Authorization server issued an expiring client secret"
-                    )
-                    return self.async_abort(reason="oauth_secret_expires")
-                except ClientRegistrationError:
-                    _LOGGER.debug("Dynamic client registration failed", exc_info=True)
-                    return self.async_abort(reason="oauth_registration_failed")
-                except httpx.TimeoutException, httpx2.TimeoutException:
-                    _LOGGER.debug("Timeout during dynamic client registration")
-                    return self.async_abort(reason="timeout_connect")
-                except httpx.HTTPError, httpx2.HTTPError:
-                    _LOGGER.debug("Cannot connect during dynamic client registration")
-                    return self.async_abort(reason="cannot_connect")
-
-                encoded_client_id = encode_registered_client_id(
-                    RegisteredClientIdentity(
-                        authorize_url=self.data[CONF_AUTHORIZATION_URL],
-                        token_url=self.data[CONF_TOKEN_URL],
-                        client_id=registered.client_id,
-                        method=registered.token_endpoint_auth_method,
-                        redirect_uri=redirect_uri,
-                        scopes=scopes,
-                    )
-                )
-                auth_domain = registered_client_auth_domain(encoded_client_id)
-                try:
-                    await async_import_client_credential(
-                        self.hass,
-                        DOMAIN,
-                        ClientCredential(
-                            encoded_client_id,
-                            registered.client_secret,
-                            DCR_CLIENT_NAME,
-                        ),
-                        auth_domain,
-                    )
-                except ValueError:
-                    _LOGGER.debug(
-                        "Could not store dynamically registered client", exc_info=True
-                    )
-                    return self.async_abort(reason="oauth_registration_failed")
-            else:
-                _LOGGER.debug(
-                    "Reusing dynamically registered client for %s",
-                    self.data[CONF_AUTHORIZATION_URL],
-                )
-
-        with authorization_server_context(self.authorization_server()):
-            implementations = await async_get_implementations(self.hass, self.DOMAIN)
-        implementation = implementations.get(auth_domain)
-        if implementation is None:
-            _LOGGER.debug(
-                "Dynamically registered client %s is not available", auth_domain
-            )
-            return self.async_abort(reason="oauth_registration_failed")
-        self.flow_impl = implementation
-        return await self.async_step_auth()
 
     async def async_step_credentials_choice(
         self, user_input: dict[str, Any] | None = None
@@ -598,11 +487,6 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             return self.async_update_reload_and_abort(
                 self._get_reauth_entry(), data=config_entry_data
             )
-        # OAuth entries have no unique id. The application credential identifies
-        # the client, not the MCP server, so two URLs that share a client must
-        # not replace each other. A Supervisor discovery keeps its uuid.
-        # Another submission can create this URL during discovery or validation.
-        self._async_abort_entries_match({CONF_URL: config_entry_data[CONF_URL]})
         return self.async_create_entry(
             title=info["title"],
             data=config_entry_data,
@@ -684,55 +568,6 @@ async def _async_fetch_any(
     raise return_err or CannotConnect("No responses received from any URL")
 
 
-def _protected_resource_urls(auth_url: str, mcp_server_url: str) -> list[str]:
-    """Return resource-metadata URLs, header URL first.
-
-    The WWW-Authenticate resource_metadata URL names the document for this
-    MCP server. Path-inserted and root well-known URLs are fallbacks only.
-    """
-    parsed_url = URL(mcp_server_url)
-    fallbacks = [
-        str(
-            parsed_url.with_path(
-                f"{OAUTH_PROTECTED_RESOURCE_ENDPOINT}{parsed_url.path}"
-            )
-        ),
-        str(parsed_url.with_path(OAUTH_PROTECTED_RESOURCE_ENDPOINT)),
-    ]
-    urls: list[str] = []
-    if auth_url:
-        urls.append(auth_url)
-    for url in fallbacks:
-        if url not in urls:
-            urls.append(url)
-    return urls
-
-
-def _resource_metadata_from_document(
-    data: Any, mcp_server_url: str
-) -> ResourceMetadata | None:
-    """Return metadata when the document's resource is this MCP server."""
-    if not isinstance(data, Mapping):
-        return None
-    authorization_servers = data.get("authorization_servers")
-    resource = data.get("resource")
-    if (
-        not authorization_servers
-        or not isinstance(authorization_servers, list)
-        or not resource
-        or resource != mcp_server_url
-    ):
-        return None
-    if any(
-        not isinstance(server, str) or not server for server in authorization_servers
-    ):
-        raise InvalidMetadata
-    return ResourceMetadata(
-        authorization_servers=authorization_servers,
-        supported_scopes=data.get("scopes_supported"),
-    )
-
-
 async def async_discover_protected_resource(
     hass: HomeAssistant,
     auth_url: str,
@@ -745,47 +580,38 @@ async def async_discover_protected_resource(
     from the WWW-Authenticate header to fetch the resource metadata
     implementing RFC9728.
 
-    The header URL is fetched on its own before any well-known fallback.
-    For https://example.com/public/mcp the fallbacks are:
+    For the url https://example.com/public/mcp we attempt these urls:
     - https://example.com/.well-known/oauth-protected-resource/public/mcp
     - https://example.com/.well-known/oauth-protected-resource
-
-    A document whose resource is not exactly the MCP server URL is ignored
-    so a root document for a different path cannot win the discovery race.
     """
-    last_error: Exception | None = None
-    saw_invalid = False
-    for url in _protected_resource_urls(auth_url, mcp_server_url):
-        try:
-            response = await _async_fetch_any(hass, [url])
-        except NotFoundError:
-            continue
-        except TimeoutConnectError as err:
-            last_error = err
-            continue
-        except CannotConnect as err:
-            last_error = err
-            continue
-        try:
-            data = response.json()
-        except ValueError:
-            saw_invalid = True
-            _LOGGER.debug("OAuth resource metadata from %s was not JSON", url)
-            continue
-        if (metadata := _resource_metadata_from_document(data, mcp_server_url)) is None:
-            saw_invalid = True
-            _LOGGER.debug(
-                "Ignoring OAuth resource metadata from %s for %s",
-                url,
-                mcp_server_url,
+    parsed_url = URL(mcp_server_url)
+    urls_to_try = {
+        auth_url,
+        str(
+            parsed_url.with_path(
+                f"{OAUTH_PROTECTED_RESOURCE_ENDPOINT}{parsed_url.path}"
             )
-            continue
-        return metadata
+        ),
+        str(parsed_url.with_path(OAUTH_PROTECTED_RESOURCE_ENDPOINT)),
+    }
 
-    if last_error is not None and not saw_invalid:
-        raise last_error
-    _LOGGER.error("Invalid OAuth resource metadata for %s", mcp_server_url)
-    raise CannotConnect("OAuth resource metadata is invalid")
+    response = await _async_fetch_any(hass, list(urls_to_try))
+
+    # Parse the OAuth Authorization Protected Resource Metadata (rfc9728). We
+    # expect to find at least one authorization server in the response and
+    # a valid resource field that matches the MCP server URL.
+    data = response.json()
+    if (
+        not (authorization_servers := data.get("authorization_servers"))
+        or not (resource := data.get("resource"))
+        or (resource != mcp_server_url)
+    ):
+        _LOGGER.error("Invalid OAuth resource metadata: %s", data)
+        raise CannotConnect("OAuth resource metadata is invalid")
+    return ResourceMetadata(
+        authorization_servers=authorization_servers,
+        supported_scopes=data.get("scopes_supported"),
+    )
 
 
 def _authorization_server_discovery_paths(auth_server_url: URL) -> list[str]:
@@ -819,21 +645,6 @@ def _authorization_server_discovery_paths(auth_server_url: URL) -> list[str]:
     ]
 
 
-def _string_list(data: Mapping[str, Any], key: str) -> list[str] | None:
-    """Return a string list, or None when the key is omitted.
-
-    RFC 8414 treats a missing token_endpoint_auth_methods_supported as
-    client_secret_basic. An explicit null, a non-list, or a mixed list is
-    not that default, so it becomes an empty list and registration fails.
-    """
-    if key not in data:
-        return None
-    value = data[key]
-    if isinstance(value, list) and all(isinstance(item, str) for item in value):
-        return value
-    return []
-
-
 def _select_scopes(
     auth_header: AuthenticateHeader | None,
     oauth_config: OAuthConfig,
@@ -845,19 +656,11 @@ def _select_scopes(
     then the protected resource metadata, then finally the default scopes from
     the OAuth discovery.
     """
-    selected: list[str] | None
     if auth_header and auth_header.scopes:
-        selected = auth_header.scopes
-    elif resource_metadata and resource_metadata.supported_scopes:
-        selected = resource_metadata.supported_scopes
-    else:
-        selected = oauth_config.scopes
-    # A JSON string would be joined into one scope per character.
-    return scope_list(selected)
-
-
-class InvalidMetadata(HomeAssistantError):
-    """Discovered OAuth metadata cannot be used."""
+        return auth_header.scopes
+    if resource_metadata and resource_metadata.supported_scopes:
+        return resource_metadata.supported_scopes
+    return oauth_config.scopes
 
 
 class InvalidUrl(HomeAssistantError):

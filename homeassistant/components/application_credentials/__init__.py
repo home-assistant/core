@@ -177,6 +177,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
+class AuthImplementationNotApplicable(Exception):
+    """A stored credential does not apply to the active authorization server."""
+
+
 async def async_import_client_credential(
     hass: HomeAssistant,
     domain: str,
@@ -194,10 +198,6 @@ async def async_import_client_credential(
     }
     item[CONF_NAME] = credential.name or DEFAULT_IMPORT_NAME
     await hass.data[DATA_COMPONENT].async_import_item(item)
-
-
-class AuthImplementationNotApplicable(Exception):
-    """A stored credential does not apply to the active authorization server."""
 
 
 class AuthImplementation(config_entry_oauth2_flow.LocalOAuth2Implementation):
@@ -239,8 +239,6 @@ async def _async_provide_implementation(
 
     credentials = hass.data[DATA_COMPONENT].async_client_credentials(domain)
     if hasattr(platform, "async_get_auth_implementation"):
-        # Skip a credential the platform says does not apply to this context,
-        # such as a client issued by a different authorization server.
         implementations: list[
             config_entry_oauth2_flow.AbstractOAuth2Implementation
         ] = []

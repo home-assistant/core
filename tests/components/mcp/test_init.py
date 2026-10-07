@@ -4,7 +4,6 @@ import re
 import ssl
 from unittest.mock import AsyncMock, Mock, patch
 
-import httpx
 import httpx2
 from mcp import McpError
 from mcp.types import (
@@ -19,11 +18,6 @@ import probatio
 import pytest
 
 from homeassistant.components.mcp.const import CONF_SLUG, DOMAIN
-from homeassistant.components.mcp.coordinator import (
-    _iter_wrapped_errors,
-    _representative_mcp_error,
-    mcp_client,
-)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_URL
 from homeassistant.core import Context, HomeAssistant
@@ -866,70 +860,3 @@ async def test_llm_api_id(hass: HomeAssistant, mock_mcp_client: Mock) -> None:
     apis = llm.async_get_apis(hass)
     api = next(iter([api for api in apis if api.name == TEST_API_NAME]))
     assert api.id == "mcp-a0d7b954_mcp"
-
-
-def test_wrapped_errors_skip_a_cause_cycle() -> None:
-    """A cause that points at itself is walked once."""
-    error = ValueError("loop")
-    error.__cause__ = error
-
-    assert list(_iter_wrapped_errors(error)) == [error]
-
-
-def test_wrapped_errors_include_an_exception_group_cause() -> None:
-    """An exception group's own cause is visited with its nested errors."""
-    inner = ValueError("inner")
-    cause = RuntimeError("cause")
-    group = ExceptionGroup("group", [inner])
-    group.__cause__ = cause
-
-    assert list(_iter_wrapped_errors(group)) == [cause, inner]
-
-
-def test_representative_error_keeps_a_non_http_exception() -> None:
-    """An error that is not an HTTP or MCP failure is returned as itself."""
-    error = ValueError("plain")
-
-    assert _representative_mcp_error(error) is error
-
-
-def _sdk_http_status(status_code: int) -> httpx.HTTPStatusError:
-    """Build an MCP SDK httpx status error."""
-    request = httpx.Request("GET", "http://1.1.1.1/mcp")
-    response = httpx.Response(status_code, request=request)
-    return httpx.HTTPStatusError("status", request=request, response=response)
-
-
-@pytest.mark.parametrize(
-    ("sse_error", "expected_type"),
-    [
-        pytest.param(
-            httpx.TimeoutException("slow"),
-            httpx2.TimeoutException,
-            id="timeout",
-        ),
-        pytest.param(httpx.ConnectError("down"), httpx2.ConnectError, id="connect"),
-        pytest.param(_sdk_http_status(401), httpx2.HTTPStatusError, id="status"),
-    ],
-)
-async def test_sse_fallback_propagates_http_errors(
-    hass: HomeAssistant,
-    mock_http_streamable_client: AsyncMock,
-    mock_sse_client: AsyncMock,
-    sse_error: Exception,
-    expected_type: type[Exception],
-) -> None:
-    """An HTTP error from the SSE fallback is raised as that error."""
-    http_405 = httpx2.HTTPStatusError(
-        "Method not allowed", request=None, response=httpx2.Response(405)
-    )
-    mock_http_streamable_client.side_effect = ExceptionGroup(
-        "Method not allowed", [http_405]
-    )
-    mock_sse_client.side_effect = sse_error
-
-    with pytest.raises(expected_type) as err:
-        async with mcp_client(hass, "http://1.1.1.1/mcp"):
-            pass
-
-    assert type(err.value) is expected_type
