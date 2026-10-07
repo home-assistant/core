@@ -15,7 +15,7 @@ from elke27_lib.errors import (
     Elke27TimeoutError,
     InvalidCredentials,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_CLIENT_ID, CONF_HOST, CONF_PORT
@@ -28,11 +28,11 @@ from .identity import build_client_identity, derive_client_id, normalize_identif
 CONF_ACCESS_CODE = "access_code"
 CONF_PASSPHRASE = "passphrase"
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_ACCESS_CODE): selector({"text": {"type": "password"}}),
-        vol.Required(CONF_PASSPHRASE): selector({"text": {"type": "password"}}),
+        probatio.Required(CONF_HOST): cv.string,
+        probatio.Required(CONF_ACCESS_CODE): selector({"text": {"type": "password"}}),
+        probatio.Required(CONF_PASSPHRASE): selector({"text": {"type": "password"}}),
     }
 )
 
