@@ -11,10 +11,18 @@ from homeassistant.components.adax.const import (
     CONNECTION_TYPE,
     DOMAIN,
     LOCAL,
+    LOCAL_MANUAL,
     WIFI_PSWD,
     WIFI_SSID,
 )
-from homeassistant.const import CONF_PASSWORD
+from homeassistant.const import (
+    CONF_IP_ADDRESS,
+    CONF_MAC,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_TOKEN,
+    CONF_UNIQUE_ID,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -371,3 +379,147 @@ async def test_local_invalid_wifi_cred(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "invalid_auth"
+
+
+# local manual API:
+
+
+async def test_form_local_manual_success(hass: HomeAssistant) -> None:
+    """Test successful manual local configuration."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONNECTION_TYPE: LOCAL_MANUAL},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "local_manual"
+
+    expected_unique_id = str(int("AABBCCDDEEFF", 16))
+
+    with (
+        patch(
+            "homeassistant.components.adax.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+        patch(
+            "homeassistant.components.adax.config_flow.adax_local.AdaxLocal.get_status",
+            return_value={"target_temperature": 20.0, "current_temperature": 21.0},
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_NAME: "Living Room Heater",
+                CONF_IP_ADDRESS: "192.168.1.150",
+                CONF_MAC: "AA:BB:CC:DD:EE:FF",
+                CONF_TOKEN: "abcdef123456",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Living Room Heater"
+    assert result["data"] == {
+        CONF_IP_ADDRESS: "192.168.1.150",
+        CONF_TOKEN: "abcdef123456",
+        CONF_UNIQUE_ID: expected_unique_id,
+        CONNECTION_TYPE: LOCAL,
+    }
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_form_local_manual_invalid_mac(hass: HomeAssistant) -> None:
+    """Test validation failure on invalid MAC address inputs."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONNECTION_TYPE: LOCAL_MANUAL},
+    )
+    assert result["step_id"] == "local_manual"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_NAME: "Living Room Heater",
+            CONF_IP_ADDRESS: "192.168.1.150",
+            CONF_MAC: "not-a-mac",
+            CONF_TOKEN: "abcdef123456",
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {CONF_MAC: "invalid_mac"}
+
+
+async def test_form_local_manual_cannot_connect(hass: HomeAssistant) -> None:
+    """Test error handling when heater cannot be contacted."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONNECTION_TYPE: LOCAL_MANUAL},
+    )
+
+    with patch(
+        "homeassistant.components.adax.config_flow.adax_local.AdaxLocal.get_status",
+        return_value={"target_temperature": None, "current_temperature": None},
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_NAME: "Living Room Heater",
+                CONF_IP_ADDRESS: "192.168.1.150",
+                CONF_MAC: "AA:BB:CC:DD:EE:FF",
+                CONF_TOKEN: "wrong_token",
+            },
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
+
+
+async def test_form_local_manual_already_configured(hass: HomeAssistant) -> None:
+    """Test aborting if device is already configured."""
+    mac = "AA:BB:CC:DD:EE:FF"
+    unique_id = str(int("AABBCCDDEEFF", 16))
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=unique_id,
+        data={
+            CONF_IP_ADDRESS: "192.168.1.100",
+            CONF_TOKEN: "existing_token",
+            CONF_UNIQUE_ID: unique_id,
+            CONNECTION_TYPE: LOCAL,
+        },
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONNECTION_TYPE: LOCAL_MANUAL},
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_NAME: "Living Room Heater",
+            CONF_IP_ADDRESS: "192.168.1.150",
+            CONF_MAC: mac,
+            CONF_TOKEN: "abcdef123456",
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"

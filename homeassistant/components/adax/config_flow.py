@@ -5,16 +5,21 @@ from typing import Any, override
 
 import adax
 import adax_local
+from adax_local import Adax as AdaxLocal
+import aiohttp
 import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_IP_ADDRESS,
+    CONF_MAC,
+    CONF_NAME,
     CONF_PASSWORD,
     CONF_TOKEN,
     CONF_UNIQUE_ID,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.selector import (
     TextSelector,
     TextSelectorConfig,
@@ -27,6 +32,7 @@ from .const import (
     CONNECTION_TYPE,
     DOMAIN,
     LOCAL,
+    LOCAL_MANUAL,
     WIFI_PSWD,
     WIFI_SSID,
 )
@@ -50,6 +56,7 @@ class AdaxConfigFlow(ConfigFlow, domain=DOMAIN):
                     (
                         CLOUD,
                         LOCAL,
+                        LOCAL_MANUAL,
                     )
                 )
             }
@@ -63,6 +70,8 @@ class AdaxConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input[CONNECTION_TYPE] == LOCAL:
             return await self.async_step_local()
+        if user_input[CONNECTION_TYPE] == LOCAL_MANUAL:
+            return await self.async_step_local_manual()
         return await self.async_step_cloud()
 
     async def async_step_local(
@@ -118,6 +127,74 @@ class AdaxConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_UNIQUE_ID: unique_id,
                 CONNECTION_TYPE: LOCAL,
             },
+        )
+
+    async def async_step_local_manual(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the local manual step."""
+        errors: dict[str, str] = {}
+
+        data_schema = probatio.Schema(
+            {
+                probatio.Required(CONF_NAME): str,
+                probatio.Required(CONF_IP_ADDRESS): str,
+                probatio.Required(CONF_MAC): str,
+                probatio.Required(CONF_TOKEN): TextSelector(
+                    TextSelectorConfig(
+                        type=TextSelectorType.PASSWORD,
+                    ),
+                ),
+            }
+        )
+
+        if user_input is not None:
+            try:
+                formatted_mac = format_mac(user_input[CONF_MAC])
+                clean_mac = formatted_mac.replace(":", "")
+                unique_id = str(int(clean_mac, 16))
+            except ValueError:
+                errors[CONF_MAC] = "invalid_mac"
+            else:
+                await self.async_set_unique_id(unique_id)
+                self._abort_if_unique_id_configured()
+
+                ip_address = user_input[CONF_IP_ADDRESS].strip()
+                token = user_input[CONF_TOKEN].strip()
+
+                client = AdaxLocal(
+                    ip_address,
+                    token,
+                    websession=async_get_clientsession(self.hass, verify_ssl=False),
+                )
+
+                try:
+                    status = await client.get_status()
+                    if not status or status.get("current_temperature") is None:
+                        errors["base"] = "cannot_connect"
+                except (aiohttp.ClientError, TimeoutError):
+                    errors["base"] = "cannot_connect"
+                except Exception:
+                    _LOGGER.exception("Unexpected error connecting to Adax heater")
+                    errors["base"] = "cannot_connect"
+                else:
+                    if not errors:
+                        return self.async_create_entry(
+                            title=user_input[CONF_NAME],
+                            data={
+                                CONF_IP_ADDRESS: ip_address,
+                                CONF_TOKEN: token,
+                                CONF_UNIQUE_ID: unique_id,
+                                CONNECTION_TYPE: LOCAL,
+                            },
+                        )
+
+        return self.async_show_form(
+            step_id="local_manual",
+            data_schema=self.add_suggested_values_to_schema(
+                data_schema, user_input
+            ),
+            errors=errors,
         )
 
     async def async_step_cloud(

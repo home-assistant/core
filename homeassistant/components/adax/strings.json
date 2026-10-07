@@ -4,10 +4,12 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "heater_not_available": "Heater not available. Try to reset the heater by pressing + and OK for some seconds.",
       "heater_not_found": "Heater not found. Try to move the heater closer to Home Assistant computer.",
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_mac": "The provided MAC address is invalid."
     },
     "step": {
       "cloud": {
@@ -23,11 +25,25 @@
         },
         "description": "Reset the heater by pressing + and OK until display shows 'Reset'. Then press and hold OK button on the heater until the blue LED starts blinking before pressing Submit. Configuring heater might take some minutes."
       },
+      "local_manual": {
+        "data": {
+          "name": "Name",
+          "ip_address": "IP Address",
+          "mac": "MAC Address",
+          "token": "Auth Token"
+        },
+        "data_description": {
+          "ip_address": "The local IP of the heater. Use a static IP or DHCP reservation in your router so it does not change.",
+          "mac": "Found on the heater's label or in your router's client list.",
+          "token": "The authentication token generated and configured during the initial Wi-Fi setup of the heater."
+        },
+        "description": "Enter the IP address, MAC address, and authentication token of the provisioned heater."
+      },
       "user": {
         "data": {
           "connection_type": "Select connection type"
         },
-        "description": "Select connection type. Local requires heaters with Bluetooth"
+        "description": "Select connection type. Local requires heaters with Bluetooth. Local Manual configures an already provisioned heater via Wi-Fi."
       }
     }
   }

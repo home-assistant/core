@@ -8,6 +8,7 @@ CLOUD = "Cloud"
 CONNECTION_TYPE = "connection_type"
 DOMAIN: Final = "adax"
 LOCAL = "Local"
+LOCAL_MANUAL = "Local Manual"
 WIFI_SSID = "wifi_ssid"
 WIFI_PSWD = "wifi_pswd"
 
