@@ -1102,6 +1102,7 @@ async def test_full_press_button(
         (LaMetricConnectionError, "cannot_connect"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry", "mock_lametric")
 async def test_press_button_request_errors(
     hass: HomeAssistant,
     mock_lametric_local_auth: MagicMock,
@@ -1125,7 +1126,21 @@ async def test_press_button_request_errors(
     assert result["step_id"] == "press_button"
     assert result["errors"] == {"base": error}
 
+    # Once the problem is gone, the same flow still finishes the setup.
+    mock_lametric_local_auth.request_challenge.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_HOST: "127.0.0.1"}
+    )
+    await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert config_flow.LaMetricDevice.call_args.kwargs["api_key"] == (
+        "mock-local-api-key"
+    )
+
+
+@pytest.mark.usefixtures("mock_setup_entry", "mock_lametric")
 async def test_press_button_not_in_time(
     hass: HomeAssistant,
     mock_lametric_local_auth: MagicMock,
@@ -1158,6 +1173,21 @@ async def test_press_button_not_in_time(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "press_button"
 
+    # Once the problem is gone, the same flow still finishes the setup.
+    mock_lametric_local_auth.challenge.return_value = AuthChallenge(
+        challenge_id="mock-challenge", duration=60, state="resolved"
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_HOST: "127.0.0.1"}
+    )
+    await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert config_flow.LaMetricDevice.call_args.kwargs["api_key"] == (
+        "mock-local-api-key"
+    )
+
 
 @pytest.mark.parametrize(
     ("side_effect", "error"),
@@ -1166,6 +1196,7 @@ async def test_press_button_not_in_time(
         (LaMetricError, "unknown"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry", "mock_lametric")
 async def test_press_button_api_key_errors(
     hass: HomeAssistant,
     mock_lametric_local_auth: MagicMock,
@@ -1191,6 +1222,19 @@ async def test_press_button_api_key_errors(
     assert result["step_id"] == "press_button"
     assert result["errors"] == {"base": error}
 
+    # Once the problem is gone, the same flow still finishes the setup.
+    mock_lametric_local_auth.api_key.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_HOST: "127.0.0.1"}
+    )
+    await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert config_flow.LaMetricDevice.call_args.kwargs["api_key"] == (
+        "mock-local-api-key"
+    )
+
 
 @pytest.mark.parametrize(
     ("side_effect", "error"),
@@ -1199,6 +1243,7 @@ async def test_press_button_api_key_errors(
         (RuntimeError, "unknown"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_press_button_setup_errors(
     hass: HomeAssistant,
     mock_lametric: MagicMock,
@@ -1224,6 +1269,19 @@ async def test_press_button_setup_errors(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "press_button"
     assert result["errors"] == {"base": error}
+
+    # Once the problem is gone, the same flow still finishes the setup.
+    mock_lametric.device.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_HOST: "127.0.0.1"}
+    )
+    await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert config_flow.LaMetricDevice.call_args.kwargs["api_key"] == (
+        "mock-local-api-key"
+    )
 
 
 @pytest.mark.usefixtures("mock_setup_entry", "mock_lametric")
