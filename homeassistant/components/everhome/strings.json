@@ -11,6 +11,14 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "step": {
+      "fast_polling": {
+        "description": "Fast updates make Home Assistant poll your EcoTracker every second instead of every 5 seconds.\n\n**This is not recommended by Home Assistant.** It puts a high load on your Home Assistant instance, could make Home Assistant unresponsive in combination with other integrations, and also makes the Home Assistant database grow considerably faster. Only enable this if you really need real-time values to implement zero feed-in with other devices.\n\nDo you want to enable fast updates?",
+        "menu_options": {
+          "fast_polling_cancel": "Cancel",
+          "fast_polling_enable": "Yes, update every second"
+        },
+        "title": "Enable fast updates?"
+      },
       "reconfigure": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
@@ -23,9 +31,11 @@
       },
       "user": {
         "data": {
+          "fast_polling": "Fast updates (every second)",
           "host": "[%key:common::config_flow::data::host%]"
         },
         "data_description": {
+          "fast_polling": "Polls the EcoTracker every second instead of every 5 seconds. Not recommended, as it greatly increases the load on the Home Assistant database.",
           "host": "The hostname or IP address of the EcoTracker device."
         },
         "description": "Set up the EcoTracker integration to monitor your electricity usage.",
@@ -33,9 +43,11 @@
       },
       "zeroconf_confirm": {
         "data": {
+          "fast_polling": "[%key:component::everhome::config::step::user::data::fast_polling%]",
           "host": "[%key:common::config_flow::data::host%]"
         },
         "data_description": {
+          "fast_polling": "[%key:component::everhome::config::step::user::data_description::fast_polling%]",
           "host": "The hostname or IP address of the EcoTracker device."
         },
         "description": "Do you want to add the everHome {name} at `{host}` to Home Assistant?",
@@ -68,6 +80,26 @@
   "exceptions": {
     "update_failed": {
       "message": "An error occurred while fetching data from the EcoTracker device."
+    }
+  },
+  "options": {
+    "step": {
+      "fast_polling": {
+        "description": "[%key:component::everhome::config::step::fast_polling::description%]",
+        "menu_options": {
+          "fast_polling_cancel": "[%key:component::everhome::config::step::fast_polling::menu_options::fast_polling_cancel%]",
+          "fast_polling_enable": "[%key:component::everhome::config::step::fast_polling::menu_options::fast_polling_enable%]"
+        },
+        "title": "[%key:component::everhome::config::step::fast_polling::title%]"
+      },
+      "init": {
+        "data": {
+          "fast_polling": "[%key:component::everhome::config::step::user::data::fast_polling%]"
+        },
+        "data_description": {
+          "fast_polling": "[%key:component::everhome::config::step::user::data_description::fast_polling%]"
+        }
+      }
     }
   }
 }

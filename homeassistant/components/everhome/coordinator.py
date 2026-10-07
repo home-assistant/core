@@ -12,7 +12,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DEFAULT_UPDATE_INTERVAL, DOMAIN
+from .const import (
+    CONF_FAST_POLLING,
+    DEFAULT_UPDATE_INTERVAL,
+    DOMAIN,
+    FAST_UPDATE_INTERVAL,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,7 +42,12 @@ class EcoTrackerDataUpdateCoordinator(DataUpdateCoordinator[EcoTrackerData]):
             _LOGGER,
             config_entry=config_entry,
             name=DOMAIN,
-            update_interval=timedelta(seconds=DEFAULT_UPDATE_INTERVAL),
+            # Entries created before the option existed have no options.
+            update_interval=timedelta(
+                seconds=FAST_UPDATE_INTERVAL
+                if config_entry.options.get(CONF_FAST_POLLING, False)
+                else DEFAULT_UPDATE_INTERVAL
+            ),
         )
         self.client = EcoTracker(host, port=80, session=async_get_clientsession(hass))
         self.host = host
