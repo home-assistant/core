@@ -135,6 +135,10 @@
           "description": "The image to upload to the display.",
           "name": "Image"
         },
+        "refine_dithering": {
+          "description": "Refines the dithered image for how it is perceived at a normal viewing distance, which typically reproduces colors and tones more faithfully. Takes noticeably longer than plain dithering.",
+          "name": "Refine dithering"
+        },
         "refresh_mode": {
           "description": "The display refresh mode. Full refresh clears ghosting but is slower. Fast refresh is not supported on all displays.",
           "name": "Refresh mode"

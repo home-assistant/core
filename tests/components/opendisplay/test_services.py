@@ -92,6 +92,38 @@ async def test_upload_image_local_file(
     mock_upload_device.upload_image.assert_called_once()
 
 
+@pytest.mark.parametrize(
+    ("service_data", "expected_dbs"),
+    [({}, False), ({"refine_dithering": True}, True)],
+    ids=["default_off", "enabled"],
+)
+async def test_upload_image_refine_dithering(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_upload_device: MagicMock,
+    mock_resolve_media: MagicMock,
+    service_data: dict[str, bool],
+    expected_dbs: bool,
+) -> None:
+    """Test refine_dithering is passed to the library as dbs, defaulting to off."""
+    await hass.services.async_call(
+        DOMAIN,
+        "upload_image",
+        {
+            "device_id": _device_id(hass, mock_config_entry),
+            "image": {
+                "media_content_id": "media-source://local/test.png",
+                "media_content_type": "image/png",
+            },
+            **service_data,
+        },
+        blocking=True,
+    )
+
+    mock_upload_device.upload_image.assert_called_once()
+    assert mock_upload_device.upload_image.call_args.kwargs["dbs"] is expected_dbs
+
+
 async def test_upload_image_remote_url(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

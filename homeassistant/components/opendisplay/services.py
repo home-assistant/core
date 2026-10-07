@@ -48,6 +48,7 @@ ATTR_DITHER_MODE = "dither_mode"
 ATTR_REFRESH_MODE = "refresh_mode"
 ATTR_FIT_MODE = "fit_mode"
 ATTR_TONE_COMPRESSION = "tone_compression"
+ATTR_REFINE_DITHERING = "refine_dithering"
 
 
 def _str_to_int_enum(enum_class: type[IntEnum]) -> Callable[[str], Any]:
@@ -81,6 +82,7 @@ SCHEMA_UPLOAD_IMAGE = probatio.Schema(
         probatio.Optional(ATTR_TONE_COMPRESSION): probatio.All(
             probatio.Coerce(float), probatio.Range(min=0.0, max=100.0)
         ),
+        probatio.Optional(ATTR_REFINE_DITHERING, default=False): cv.boolean,
     }
 )
 
@@ -169,6 +171,7 @@ async def _async_upload_image(call: ServiceCall) -> None:
     tone_compression: float | str = (
         tone_compression_pct / 100.0 if tone_compression_pct is not None else "auto"
     )
+    refine_dithering: bool = call.data[ATTR_REFINE_DITHERING]
 
     ble_device = async_ble_device_from_address(call.hass, address, connectable=True)
     if ble_device is None:
@@ -221,6 +224,7 @@ async def _async_upload_image(call: ServiceCall) -> None:
                 tone=tone_compression,
                 fit=fit_mode,
                 rotate=rotation,
+                dbs=refine_dithering,
             )
     except asyncio.CancelledError:
         return
