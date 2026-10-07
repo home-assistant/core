@@ -482,12 +482,17 @@ async def async_discover_protected_resource(
     from the WWW-Authenticate header to fetch the resource metadata
     implementing RFC9728.
 
-    For the url https://example.com/public/mcp we attempt these urls:
+    The WWW-Authenticate resource_metadata URL is tried first. For
+    https://example.com/public/mcp the fallbacks are:
     - https://example.com/.well-known/oauth-protected-resource/public/mcp
     - https://example.com/.well-known/oauth-protected-resource
+
+    A document whose resource is not this MCP server is skipped, so a root
+    document for another path cannot win ahead of the header URL.
     """
     parsed_url = URL(mcp_server_url)
-    urls_to_try = {
+    urls_to_try: list[str] = []
+    for url in (
         auth_url,
         str(
             parsed_url.with_path(
@@ -495,25 +500,42 @@ async def async_discover_protected_resource(
             )
         ),
         str(parsed_url.with_path(OAUTH_PROTECTED_RESOURCE_ENDPOINT)),
-    }
-
-    response = await _async_fetch_any(hass, list(urls_to_try))
-
-    # Parse the OAuth Authorization Protected Resource Metadata (rfc9728). We
-    # expect to find at least one authorization server in the response and
-    # a valid resource field that matches the MCP server URL.
-    data = response.json()
-    if (
-        not (authorization_servers := data.get("authorization_servers"))
-        or not (resource := data.get("resource"))
-        or (resource != mcp_server_url)
     ):
-        _LOGGER.error("Invalid OAuth resource metadata: %s", data)
-        raise CannotConnect("OAuth resource metadata is invalid")
-    return ResourceMetadata(
-        authorization_servers=authorization_servers,
-        supported_scopes=data.get("scopes_supported"),
-    )
+        if url not in urls_to_try:
+            urls_to_try.append(url)
+
+    last_error: Exception | None = None
+    saw_invalid = False
+    for url in urls_to_try:
+        try:
+            response = await _async_fetch_any(hass, [url])
+        except NotFoundError:
+            continue
+        except (TimeoutConnectError, CannotConnect) as err:
+            last_error = err
+            continue
+        try:
+            data = response.json()
+        except ValueError:
+            saw_invalid = True
+            continue
+        if (
+            isinstance(data, dict)
+            and (authorization_servers := data.get("authorization_servers"))
+            and isinstance(authorization_servers, list)
+            and data.get("resource") == mcp_server_url
+        ):
+            return ResourceMetadata(
+                authorization_servers=authorization_servers,
+                supported_scopes=data.get("scopes_supported"),
+            )
+        saw_invalid = True
+        _LOGGER.debug("Ignoring OAuth resource metadata from %s", url)
+
+    if last_error is not None and not saw_invalid:
+        raise last_error
+    _LOGGER.error("Invalid OAuth resource metadata for %s", mcp_server_url)
+    raise CannotConnect("OAuth resource metadata is invalid")
 
 
 def _authorization_server_discovery_paths(auth_server_url: URL) -> list[str]:
