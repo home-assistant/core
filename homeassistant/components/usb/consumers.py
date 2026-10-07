@@ -8,8 +8,13 @@ from typing import Any
 from homeassistant.components.hassio import HassioNotReadyError, get_addons_info
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.generated.usb import USB_DEPENDENTS
 from homeassistant.helpers.hassio import is_hassio
-from homeassistant.loader import async_get_integrations
+from homeassistant.loader import (
+    Integration,
+    async_get_custom_components,
+    async_get_integrations,
+)
 
 from .const import DOMAIN
 from .models import SerialDevice, SerialPortConsumer, USBDevice
@@ -29,7 +34,14 @@ SERIAL_PORT_KEY_PATHS: tuple[tuple[str, ...], ...] = (
 )
 
 # Integrations configured with a serial port but not depending on `usb`
-NON_USB_SERIAL_DOMAINS = ("alarmdecoder", "bryant_evolution", "elkm1", "mysensors")
+NON_USB_SERIAL_DOMAINS = (
+    "alarmdecoder",
+    "bryant_evolution",
+    "elkm1",
+    "litejet",
+    "mysensors",
+    "opentherm_gw",
+)
 
 # States in which the entry claims its configured port, even if the port is not
 # open right now: a retrying setup typically failed to open the port, while an
@@ -61,6 +73,28 @@ BAUD_SUFFIX_RE = re.compile(r":\d+$")
 
 # Supervisor app state, mirrors `aiohasupervisor.models.AddonState.STARTED`
 APP_STATE_STARTED = "started"
+
+
+def _is_serial_integration(integration: Integration) -> bool:
+    """Return if an integration can be configured with a serial port."""
+    return (
+        integration.domain in NON_USB_SERIAL_DOMAINS
+        or DOMAIN in integration.dependencies
+        or DOMAIN in integration.after_dependencies
+    )
+
+
+async def async_get_serial_integrations(hass: HomeAssistant) -> set[str]:
+    """Return the domains of integrations configurable with a serial port."""
+    domains = {*USB_DEPENDENTS, *NON_USB_SERIAL_DOMAINS}
+
+    for integration in (await async_get_custom_components(hass)).values():
+        if _is_serial_integration(integration):
+            domains.add(integration.domain)
+        else:
+            domains.discard(integration.domain)
+
+    return domains
 
 
 def _resolve_key_path(data: Mapping[str, Any], key_path: tuple[str, ...]) -> Any:
@@ -127,11 +161,7 @@ async def _async_get_config_entry_consumers(
         if isinstance(integration, Exception):
             continue
 
-        if (
-            entry.domain not in NON_USB_SERIAL_DOMAINS
-            and DOMAIN not in integration.dependencies
-            and DOMAIN not in integration.after_dependencies
-        ):
+        if not _is_serial_integration(integration):
             continue
 
         for key_path in SERIAL_PORT_KEY_PATHS:

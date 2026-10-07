@@ -4,6 +4,7 @@ import asyncio
 from datetime import timedelta
 import logging
 import os
+from typing import Any
 from unittest.mock import MagicMock, Mock, call, patch, sentinel
 
 import pytest
@@ -1801,17 +1802,21 @@ async def test_list_serial_ports(
     ]
 
 
+@pytest.mark.parametrize(
+    "command", ["usb/list_serial_ports", "usb/list_serial_integrations"]
+)
 async def test_list_serial_ports_require_admin(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     hass_admin_user: MockUser,
     setup_usb: MagicMock,
+    command: str,
 ) -> None:
-    """Test that listing serial ports requires admin."""
+    """Test that listing serial ports and integrations requires admin."""
     hass_admin_user.groups = []
 
     ws_client = await hass_ws_client(hass)
-    await ws_client.send_json({"id": 1, "type": "usb/list_serial_ports"})
+    await ws_client.send_json({"id": 1, "type": command})
     response = await ws_client.receive_json()
 
     assert not response["success"]
@@ -1833,6 +1838,68 @@ async def test_list_serial_ports_os_error(
     assert not response["success"]
     assert response["error"]["code"] == "unknown_error"
     assert "Permission denied" in response["error"]["message"]
+
+
+async def _async_list_serial_integrations(
+    hass_ws_client: WebSocketGenerator, hass: HomeAssistant
+) -> list[str]:
+    """Return the result of the `usb/list_serial_integrations` command."""
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json({"id": 1, "type": "usb/list_serial_integrations"})
+    response = await ws_client.receive_json()
+
+    assert response["success"]
+    return response["result"]
+
+
+@pytest.mark.usefixtures("setup_usb")
+async def test_list_serial_integrations(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test listing the integrations configurable with a serial port."""
+    result = await _async_list_serial_integrations(hass_ws_client, hass)
+
+    assert result == sorted(result)
+    assert {"alarmdecoder", "elkm1", "esphome", "zha"} <= set(result)
+    assert "hue" not in result
+
+
+@pytest.mark.usefixtures("setup_usb")
+@pytest.mark.parametrize(
+    ("domain", "manifest", "listed"),
+    [
+        pytest.param("custom_serial", {"dependencies": ["usb"]}, True, id="dependency"),
+        pytest.param(
+            "custom_serial",
+            {"after_dependencies": ["usb"]},
+            True,
+            id="after_dependency",
+        ),
+        pytest.param("custom_serial", {}, False, id="no_dependency"),
+        pytest.param("zha", {}, False, id="core_override_without_usb"),
+    ],
+)
+async def test_list_serial_integrations_custom(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    domain: str,
+    manifest: dict[str, Any],
+    listed: bool,
+) -> None:
+    """Test listing custom integrations configurable with a serial port."""
+    integration = mock_integration(
+        hass, MockModule(domain, partial_manifest=manifest), built_in=False
+    )
+
+    with patch(
+        "homeassistant.components.usb.consumers.async_get_custom_components",
+        return_value={domain: integration},
+    ):
+        result = await _async_list_serial_integrations(hass_ws_client, hass)
+
+    assert (domain in result) is listed
+    assert "elkm1" in result
 
 
 async def test_serial_proxy_stub_sync(hass: HomeAssistant) -> None:

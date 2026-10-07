@@ -31,7 +31,11 @@ from homeassistant.loader import USBMatcher, async_get_usb
 from homeassistant.util.hass_dict import HassKey
 
 from .const import DOMAIN
-from .consumers import UNSCANNABLE_PORT_SCHEMES, async_get_serial_port_consumers
+from .consumers import (
+    UNSCANNABLE_PORT_SCHEMES,
+    async_get_serial_integrations,
+    async_get_serial_port_consumers,
+)
 from .models import SerialDevice, SerialPortConsumer, USBDevice
 from .serial_proxy_stub import register_serialx_transport
 from .utils import (
@@ -187,6 +191,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.data[_USB_DATA] = usb_discovery
     websocket_api.async_register_command(hass, websocket_usb_scan)
     websocket_api.async_register_command(hass, websocket_usb_list_serial_ports)
+    websocket_api.async_register_command(hass, websocket_usb_list_serial_integrations)
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, register_serialx_transport())
 
@@ -649,3 +654,17 @@ async def websocket_usb_list_serial_ports(
         entry["discovery_flows"] = _async_get_discovery_flows(hass, device)
 
     connection.send_result(msg["id"], result)
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {probatio.Required("type"): "usb/list_serial_integrations"}
+)
+@websocket_api.async_response
+async def websocket_usb_list_serial_integrations(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """List the domains of integrations configurable with a serial port."""
+    connection.send_result(msg["id"], sorted(await async_get_serial_integrations(hass)))
