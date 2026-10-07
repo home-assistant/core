@@ -37,10 +37,7 @@ async def test_all_entities(
         patch(
             "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
         ),
-        patch(
-            f"{MODULE}._setup_vicare_api",
-            return_value=MockPyViCare(fixtures).as_vicare_data(),
-        ),
+        patch(f"{MODULE}.PyViCare", return_value=MockPyViCare(fixtures)),
         patch(f"{MODULE}.PLATFORMS", [Platform.CLIMATE]),
     ):
         await setup_integration(hass, mock_config_entry)
@@ -90,10 +87,7 @@ async def test_hvac_action_compressor_phase(
         patch(
             "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
         ),
-        patch(
-            f"{MODULE}._setup_vicare_api",
-            return_value=MockPyViCare(fixtures).as_vicare_data(),
-        ),
+        patch(f"{MODULE}.PyViCare", return_value=MockPyViCare(fixtures)),
         patch(f"{MODULE}.PLATFORMS", [Platform.CLIMATE]),
         patch(
             "homeassistant.components.vicare.climate.get_compressors",
@@ -146,10 +140,7 @@ async def test_hvac_action_multi_compressor_cooling_takes_precedence(
         patch(
             "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
         ),
-        patch(
-            f"{MODULE}._setup_vicare_api",
-            return_value=MockPyViCare(fixtures).as_vicare_data(),
-        ),
+        patch(f"{MODULE}.PyViCare", return_value=MockPyViCare(fixtures)),
         patch(f"{MODULE}.PLATFORMS", [Platform.CLIMATE]),
         patch(
             "homeassistant.components.vicare.climate.get_compressors",
@@ -188,10 +179,7 @@ async def test_hvac_mode_cooling(
         patch(
             "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
         ),
-        patch(
-            f"{MODULE}._setup_vicare_api",
-            return_value=MockPyViCare(fixtures).as_vicare_data(),
-        ),
+        patch(f"{MODULE}.PyViCare", return_value=MockPyViCare(fixtures)),
         patch(f"{MODULE}.PLATFORMS", [Platform.CLIMATE]),
     ):
         await setup_integration(hass, mock_config_entry)
