@@ -139,7 +139,9 @@ SCHEMA_SET_HOME_COOLING_MODE = probatio.Schema(
 
 SCHEMA_PULL_LATCH = probatio.Schema(
     {
-        probatio.Required(ATTR_DEVICE_ID): probatio.All(cv.ensure_list, [cv.string]),
+        probatio.Required(ATTR_DEVICE_ID): probatio.All(
+            probatio.EnsureList(), [cv.string]
+        ),
         probatio.Optional(ATTR_PIN): cv.string,
     }
 )
