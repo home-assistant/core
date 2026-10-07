@@ -22,6 +22,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 
 TEST_API_TOKEN = "eyadiuyfasiuasf"
 TEST_WEBHOOK_ID = "Webhook_ID"
+TEST_UNIQUE_ID = "aabbccddeeff"
 
 zeroconf_data = ZeroconfServiceInfo(
     ip_address=ip_address("192.168.12.34"),
@@ -98,6 +99,7 @@ async def test_create_entry_zeroconf(
     found_lock = all_locks_response["data"][0]
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == TEST_UNIQUE_ID
     assert result["title"] == "MyLock"
     assert result["data"] == {
         "id": "Foo",
@@ -136,6 +138,7 @@ async def test_create_entry_user(
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == TEST_UNIQUE_ID
     assert result["title"] == "MyLock"
     assert result["data"] == {
         "id": "Foo",
@@ -228,7 +231,7 @@ async def test_zeroconf_already_configured_updates_bridge_ip(
     """Test zeroconf aborts when the bridge is configured and updates its IP."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id="***REDACTED***",
+        unique_id=TEST_UNIQUE_ID,
         data={"bridge_ip": "10.0.0.1"},
     )
     entry.add_to_hass(hass)
@@ -246,7 +249,7 @@ async def test_user_flow_already_configured(
     patch_lock_creation_flow: Callable[[dict[str, Any], loqed.Lock, str], Any],
 ) -> None:
     """Test the user flow aborts when the lock is already configured."""
-    MockConfigEntry(domain=DOMAIN, unique_id="aabbccddeeff").add_to_hass(hass)
+    MockConfigEntry(domain=DOMAIN, unique_id=TEST_UNIQUE_ID).add_to_hass(hass)
 
     result = await _async_init_user_flow(hass)
 
@@ -261,6 +264,32 @@ async def test_user_flow_already_configured(
             {CONF_API_TOKEN: TEST_API_TOKEN},
         )
         await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_zeroconf_aborts_for_entry_created_by_user_flow(
+    hass: HomeAssistant,
+    patch_lock_creation_flow: Callable[[dict[str, Any], loqed.Lock, str], Any],
+) -> None:
+    """Test zeroconf recognises a lock that was set up manually."""
+    result = await _async_init_user_flow(hass)
+    all_locks_response = await async_load_json_object_fixture(
+        hass, "get_all_locks.json", DOMAIN
+    )
+
+    with patch_lock_creation_flow(
+        all_locks_response, Mock(spec=loqed.Lock, id="Foo"), TEST_WEBHOOK_ID
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_API_TOKEN: TEST_API_TOKEN}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+    result = await _async_init_zeroconf_flow(hass)
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
