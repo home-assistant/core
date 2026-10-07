@@ -35,3 +35,29 @@ async def test_diagnostics(
     )
     assert gateway["characteristics"]["ipAddress"] == REDACTED
     config_entry.runtime_data.api.client.get_gateway_devices.assert_not_awaited()
+
+
+async def test_diagnostics_redacts_gateway_ssids(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Redact gateway Wi-Fi names from cached cloud data."""
+    await _async_setup_fixture(hass, config_entry, "climate_floorheatingairflow")
+    config_entry.runtime_data.api.client.get_gateway_devices = AsyncMock()
+
+    diagnostics = await get_diagnostics_for_config_entry(
+        hass, hass_client, config_entry
+    )
+
+    gateways = [
+        point
+        for device in diagnostics["devices"]
+        for point in device["management_points"]
+        if point["management_point_type"] == "gateway"
+    ]
+    assert gateways
+    for gateway in gateways:
+        characteristics = gateway["characteristics"]
+        assert characteristics["ssid"] == REDACTED
+        assert characteristics["wifiConnectionSSID"] == REDACTED

@@ -377,6 +377,24 @@ class TestOnectaDataUpdateCoordinator:
         assert isinstance(exc_info.value.__cause__, OnectaConnectionError)
         assert exc_info.value.translation_key == "connection_failed"
 
+    async def test_cooldown_fetch_failure_restores_regular_interval(self, coordinator):
+        """Do not retain the cooldown polling interval after a failed fetch."""
+        coordinator.api.last_patch_call = None
+        coordinator.update_interval = timedelta(seconds=30)
+        expected_interval = coordinator._determine_update_interval()
+        coordinator.api.get_cloud_device_details = AsyncMock(
+            side_effect=OnectaConnectionError(
+                EXPECTED_CONNECTION_ERROR,
+                method="GET",
+                path="/v1/gateway-devices",
+            )
+        )
+
+        with pytest.raises(UpdateFailed):
+            await coordinator._async_update_data_from_cloud()
+
+        assert coordinator.update_interval == expected_interval
+
     async def test_missing_cloud_device_is_marked_unavailable(self, coordinator):
         """Mark cached gateways unavailable when the cloud no longer returns them."""
         missing_device = MagicMock()

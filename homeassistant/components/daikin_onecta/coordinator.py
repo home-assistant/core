@@ -85,6 +85,9 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
                 "API UPDATE skipped (just updated from UI)",
             )
         else:
+            # Restore the normal polling interval before fetching. If the
+            # request fails, retries must not remain at the cooldown cadence.
+            self.update_interval = self._determine_update_interval()
             try:
                 cloud_devices = await self.api.get_cloud_device_details(
                     cooldown=_POST_WRITE_COOLDOWN

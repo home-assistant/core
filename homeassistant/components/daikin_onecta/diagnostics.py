@@ -20,8 +20,10 @@ TO_REDACT = {
     "refresh_token",
     "serialNumber",
     "serial_number",
+    "ssid",
     "token",
     "unique_id",
+    "wifiConnectionSSID",
 }
 
 
