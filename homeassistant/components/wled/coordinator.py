@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Any, override
 from wled import (
     WLED,
     Device as WLEDDevice,
+    LightCapability,
     Releases,
     WLEDConnectionClosedError,
     WLEDError,
@@ -81,8 +82,12 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
         )
         self.wled = WLED(entry.data[CONF_HOST], session=async_get_clientsession(hass))
         self.unsub: CALLBACK_TYPE | None = None
-        # The LED setup the lights set up their color modes from, if known.
+
+        # What the entities were set up from. The library updates the device
+        # object in place, so this keeps copies to compare new data against.
+        self._repo: str | None = None
         self._led_setup: tuple[Any, ...] | None = None
+        self._light_capabilities: dict[int, LightCapability | None] = {}
 
         if TYPE_CHECKING:
             assert entry.unique_id
@@ -96,24 +101,53 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
             update_interval=SCAN_INTERVAL,
         )
 
-    def _led_setup_changed(self, device: WLEDDevice) -> bool:
-        """Return whether the LED setup the color modes came from changed.
+    def _remember_setup(self, device: WLEDDevice) -> None:
+        """Remember what the entities are set up from."""
+        self._repo = device.info.repo
 
-        A setup that isn't known right now, like when fetching it failed,
-        doesn't count: that would reload the integration twice for nothing.
-        """
+        # An LED setup that isn't known right now, like when fetching it
+        # failed, keeps the last known one; it would reload twice for nothing.
+        if (led_setup := _led_setup(device)) is not None:
+            self._led_setup = led_setup
+
+        # Segments that disappear keep their entity, so keep theirs as well.
+        self._light_capabilities.update(
+            (segment_id, segment.light_capabilities)
+            for segment_id, segment in device.state.segments.items()
+        )
+
+    def _setup_changed(self, device: WLEDDevice) -> bool:
+        """Return whether the device changed in a way the entities can't follow."""
+        # Firmware from another repository changes which updates can be offered,
+        # like after flashing a fork.
+        if device.info.repo != self._repo:
+            return True
+
         # A segment can do other colors, like after changing the LED type.
-        old_segments = self.data.state.segments
         if any(
-            segment_id in old_segments
-            and old_segments[segment_id].light_capabilities
-            != segment.light_capabilities
+            segment_id in self._light_capabilities
+            and self._light_capabilities[segment_id] != segment.light_capabilities
             for segment_id, segment in device.state.segments.items()
         ):
             return True
 
         led_setup = _led_setup(device)
         return led_setup is not None and led_setup != self._led_setup
+
+    @callback
+    def _async_reload_on_setup_change(self, device: WLEDDevice) -> None:
+        """Set the integration up again when the device changed its setup."""
+        if self._setup_changed(device):
+            self.hass.config_entries.async_schedule_reload(self.config_entry.entry_id)
+
+        # Remembering it reloads only once, while more updates come in.
+        self._remember_setup(device)
+
+    @callback
+    def _async_handle_websocket_update(self, device: WLEDDevice) -> None:
+        """Handle an update the device pushed over the WebSocket."""
+        self._async_reload_on_setup_change(device)
+        self.async_set_updated_data(device)
 
     @property
     def has_main_light(self) -> bool:
@@ -148,7 +182,7 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
                     # Stop polling as long as we have a websocket. WS will push
                     # updates to us
                     self.update_interval = None
-                    await self.wled.listen(callback=self.async_set_updated_data)
+                    await self.wled.listen(callback=self._async_handle_websocket_update)
                 except WLEDConnectionClosedError as err:
                     self.last_update_success = False
                     self.logger.info(err)
@@ -214,15 +248,12 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
                 },
             )
 
-        # Firmware from another repository changes which updates can be offered,
-        # like after flashing a fork; a changed LED setup changes the color
-        # modes of the lights. Set the integration up again for either.
+        # The first data is what the entities are set up from.
         previous: WLEDDevice | None = self.data
         if previous is None:
-            # Nothing to compare with yet; remember what the lights start from.
-            self._led_setup = _led_setup(device)
-        elif device.info.repo != previous.info.repo or self._led_setup_changed(device):
-            self.hass.config_entries.async_schedule_reload(self.config_entry.entry_id)
+            self._remember_setup(device)
+        else:
+            self._async_reload_on_setup_change(device)
 
         # If the device supports a WebSocket, try activating it.
         if (

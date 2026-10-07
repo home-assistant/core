@@ -1,6 +1,7 @@
 """Tests for the WLED light platform."""
 
 from collections.abc import Generator
+from copy import deepcopy
 from typing import Any
 from unittest.mock import MagicMock, patch
 
@@ -748,9 +749,11 @@ async def _async_refresh_with(
     data = await async_load_json_object_fixture(hass, "cct.json", DOMAIN)
     data["info"]["leds"]["seglc"] = [light_capabilities]
     data["state"]["seg"][0]["col"] = [[255, 0, 0, 255], [0, 0, 0, 0], [0, 0, 0, 0]]
-    if led_config is not None:
-        data["cfg"] = {"hw": {"led": led_config}}
-    mock_wled.update.return_value = WLEDDevice.from_dict(data)
+    # The library has no LED setup when fetching it failed.
+    data["cfg"] = {"hw": {"led": led_config}} if led_config is not None else None
+
+    # The library updates the device object in place, like the real one does.
+    mock_wled.update.return_value.update_from_dict(data)
     await mock_config_entry.runtime_data.async_refresh()
     await hass.async_block_till_done()
 
@@ -829,3 +832,29 @@ async def test_color_modes_once_led_setup_is_known(
 
     assert (state := hass.states.get("light.wled_cct_light"))
     assert ColorMode.RGBWW in state.attributes[ATTR_SUPPORTED_COLOR_MODES]
+
+
+async def test_color_modes_follow_segment_coming_back(
+    hass: HomeAssistant,
+    mock_wled: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a segment that comes back with other capabilities sets up again."""
+    data = await async_load_json_object_fixture(hass, "rgb.json", DOMAIN)
+    device = mock_wled.update.return_value
+
+    # The second segment is removed, its entity stays.
+    removed = deepcopy(data)
+    removed["state"]["seg"] = removed["state"]["seg"][:1]
+    removed["info"]["leds"]["seglc"] = [1]
+    device.update_from_dict(removed)
+    await mock_config_entry.runtime_data.async_refresh()
+    await hass.async_block_till_done()
+
+    # It comes back on an RGBW output.
+    data["info"]["leds"]["seglc"] = [1, 3]
+    device.update_from_dict(data)
+    with patch.object(hass.config_entries, "async_schedule_reload") as reload:
+        await mock_config_entry.runtime_data.async_refresh()
+
+    reload.assert_called_once_with(mock_config_entry.entry_id)
