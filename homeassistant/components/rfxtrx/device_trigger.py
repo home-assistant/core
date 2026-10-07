@@ -1,7 +1,7 @@
 """Provides device automations for RFXCOM RFXtrx."""
 
-import RFXtrx as rfxtrxmod
 import probatio
+import RFXtrx as rfxtrxmod
 
 from homeassistant.components.device_automation import (
     DEVICE_TRIGGER_BASE_SCHEMA,
