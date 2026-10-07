@@ -6,13 +6,11 @@ from typing import Any, cast, override
 import aiohttp
 from pyatmo import ApiError as NetatmoApiError, modules as NaModules
 from pyatmo.event import Event as NaEvent
-import voluptuous as vol
 
 from homeassistant.components.camera import Camera, CameraEntityFeature
 from homeassistant.const import ATTR_PERSONS
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -20,7 +18,6 @@ from .const import (
     ATTR_CAMERA_LIGHT_MODE,
     ATTR_EVENT_TYPE,
     ATTR_PERSON,
-    CAMERA_LIGHT_MODES,
     CAMERA_TRIGGERS,
     CONF_URL_SECURITY,
     DOMAIN,
@@ -32,9 +29,6 @@ from .const import (
     MANUFACTURER,
     NETATMO_ALIM_STATUS_ONLINE,
     NETATMO_CREATE_CAMERA,
-    SERVICE_SET_CAMERA_LIGHT,
-    SERVICE_SET_PERSON_AWAY,
-    SERVICE_SET_PERSONS_HOME,
     WEBHOOK_PUSH_TYPE,
 )
 from .coordinator import EVENT, HOME, SIGNAL_NAME, NetatmoConfigEntry, NetatmoDevice
@@ -62,24 +56,6 @@ async def async_setup_entry(
 
     entry.async_on_unload(
         async_dispatcher_connect(hass, NETATMO_CREATE_CAMERA, _create_entity)
-    )
-
-    platform = entity_platform.async_get_current_platform()
-
-    platform.async_register_entity_service(
-        SERVICE_SET_PERSONS_HOME,
-        {vol.Required(ATTR_PERSONS): vol.All(cv.ensure_list, [cv.string])},
-        "_service_set_persons_home",
-    )
-    platform.async_register_entity_service(
-        SERVICE_SET_PERSON_AWAY,
-        {vol.Optional(ATTR_PERSON): cv.string},
-        "_service_set_person_away",
-    )
-    platform.async_register_entity_service(
-        SERVICE_SET_CAMERA_LIGHT,
-        {vol.Required(ATTR_CAMERA_LIGHT_MODE): vol.In(CAMERA_LIGHT_MODES)},
-        "_service_set_camera_light",
     )
 
 

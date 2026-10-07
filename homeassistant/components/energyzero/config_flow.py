@@ -2,7 +2,7 @@
 
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     ConfigEntry,
@@ -64,9 +64,9 @@ class EnergyZeroOptionsFlow(OptionsFlowWithReload):
         return self.async_show_form(
             step_id="init",
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(
+                probatio.Schema(
                     {
-                        vol.Required(
+                        probatio.Required(
                             CONF_ELECTRICITY_PRICE_INTERVAL,
                             default=DEFAULT_ELECTRICITY_PRICE_INTERVAL,
                         ): SelectSelector(

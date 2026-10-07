@@ -9,9 +9,9 @@ from typing import Any
 from unittest.mock import ANY, AsyncMock, Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
+import probatio
 import pytest
 from syrupy.assertion import SnapshotAssertion
-import voluptuous as vol
 
 from homeassistant import loader
 from homeassistant.components.device_automation import toggle_entity
@@ -47,9 +47,14 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
     label_registry as lr,
+    system_state,
+    trace,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.event import (
+    async_track_state_change_event,
+    async_track_time_interval,
+)
 from homeassistant.loader import Integration, async_get_integration
 from homeassistant.setup import async_set_domains_to_be_loaded, async_setup_component
 from homeassistant.util.json import json_loads
@@ -95,7 +100,7 @@ def fake_integration(hass: HomeAssistant):
         f"{DOMAIN}.device_action",
         Mock(
             ACTION_SCHEMA=toggle_entity.ACTION_SCHEMA.extend(
-                {vol.Required("domain"): DOMAIN}
+                {probatio.Required("domain"): DOMAIN}
             ),
             spec=["ACTION_SCHEMA"],
         ),
@@ -722,9 +727,9 @@ async def test_call_service_schema_validation_error(
     """Test call service command with invalid service data."""
 
     calls = []
-    service_schema = vol.Schema(
+    service_schema = probatio.Schema(
         {
-            vol.Required("message"): str,
+            probatio.Required("message"): str,
         }
     )
 
@@ -3015,7 +3020,9 @@ async def test_test_condition_template_error(
             {"condition": "sun"},
             {
                 "code": "invalid_format",
-                "message": ("must contain at least one of before, after. at 'options'"),
+                "message": (
+                    "at least one of ['before', 'after'] is required at 'options'"
+                ),
             },
         ),
         # Failing enabled template, raised by async_condition_from_config
@@ -3093,10 +3100,10 @@ async def test_test_condition_check_error_not_logged(
     assert "Error handling message" not in caplog.text
 
 
+@pytest.mark.usefixtures("freezer")
 async def test_subscribe_condition(
     hass: HomeAssistant,
     websocket_client: MockHAClientWebSocket,
-    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test subscribing to a condition."""
     hass.states.async_set("hello.world", "paulus")
@@ -3121,14 +3128,15 @@ async def test_subscribe_condition(
     msg = await websocket_client.receive_json()
     assert msg == {"id": subscription_id, "type": "event", "event": {"result": True}}
 
+    caller_trace = trace.trace_get()
     hass.states.async_set("hello.world", "frenck")
-    freezer.tick(1.1)
+    # The evaluation must not replace the trace of whoever changed the state
+    assert trace.trace_get(clear=False) is caller_trace
 
     msg = await websocket_client.receive_json()
     assert msg == {"id": subscription_id, "type": "event", "event": {"result": False}}
 
     hass.states.async_remove("hello.world")
-    freezer.tick(1.1)
 
     msg = await websocket_client.receive_json()
     assert msg == {
@@ -3138,6 +3146,150 @@ async def test_subscribe_condition(
             "error": "In 'state':\n  In 'state' condition: unknown entity hello.world",
         },
     }
+
+
+async def test_subscribe_condition_untracked_entity(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test changes to entities used only in a template are polled."""
+    hass.states.async_set("hello.world", "paulus")
+    hass.states.async_set("hello.other", "on")
+
+    await websocket_client.send_json_auto_id(
+        {
+            "type": "subscribe_condition",
+            "condition": {
+                "condition": "and",
+                "conditions": [
+                    {
+                        "condition": "state",
+                        "entity_id": "hello.world",
+                        "state": "paulus",
+                    },
+                    {
+                        "condition": "template",
+                        "value_template": "{{ is_state('hello.other', 'on') }}",
+                    },
+                ],
+            },
+        }
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+
+    subscription_id = msg["id"]
+
+    msg = await websocket_client.receive_json()
+    assert msg == {"id": subscription_id, "type": "event", "event": {"result": True}}
+
+    hass.states.async_set("hello.other", "off")
+
+    # A pong as the next message shows the change did not send an event
+    await websocket_client.send_json_auto_id({"type": "ping"})
+    msg = await websocket_client.receive_json()
+    assert msg["type"] == "pong"
+
+    freezer.tick(1.1)
+
+    msg = await websocket_client.receive_json()
+    assert msg == {"id": subscription_id, "type": "event", "event": {"result": False}}
+
+
+@pytest.mark.parametrize(
+    ("condition", "needs_polling"),
+    [
+        pytest.param(
+            {"condition": "state", "entity_id": "hello.world", "state": "paulus"},
+            False,
+            id="state",
+        ),
+        pytest.param(
+            {
+                "condition": "template",
+                "value_template": "{{ is_state('hello.world', 'paulus') }}",
+            },
+            True,
+            id="template",
+        ),
+    ],
+)
+async def test_subscribe_condition_polling(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    condition: dict[str, Any],
+    needs_polling: bool,
+) -> None:
+    """Test a condition is only polled when it can change without a state change."""
+    hass.states.async_set("hello.world", "paulus")
+
+    with patch(
+        "homeassistant.components.websocket_api.commands.async_track_time_interval",
+        wraps=async_track_time_interval,
+    ) as mock_track_time_interval:
+        await websocket_client.send_json_auto_id(
+            {"type": "subscribe_condition", "condition": condition}
+        )
+        msg = await websocket_client.receive_json()
+
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+    assert mock_track_time_interval.called is needs_polling
+
+
+async def test_unsubscribe_condition(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+    area_registry: ar.AreaRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test unsubscribing from a condition removes its listeners."""
+    area = area_registry.async_create("Kitchen")
+    light = entity_registry.async_get_or_create("light", "test", "kitchen")
+    entity_registry.async_update_entity(light.entity_id, area_id=area.id)
+    hass.states.async_set(light.entity_id, "on")
+    hass.states.async_set("hello.world", "paulus")
+    init_count = sum(hass.bus.async_listeners().values())
+
+    await websocket_client.send_json_auto_id(
+        {
+            "type": "subscribe_condition",
+            "condition": {
+                "condition": "or",
+                "conditions": [
+                    {
+                        "condition": "state",
+                        "entity_id": "hello.world",
+                        "state": "paulus",
+                    },
+                    {"condition": "light.is_on", "target": {"area_id": area.id}},
+                ],
+            },
+        }
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+
+    subscription_id = msg["id"]
+    assert sum(hass.bus.async_listeners().values()) > init_count
+
+    msg = await websocket_client.receive_json()
+    assert msg == {"id": subscription_id, "type": "event", "event": {"result": True}}
+
+    await websocket_client.send_json_auto_id(
+        {"type": "unsubscribe_events", "subscription": subscription_id}
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+
+    assert sum(hass.bus.async_listeners().values()) == init_count
 
 
 async def test_subscribe_condition_non_admin(
@@ -3298,7 +3450,9 @@ async def test_subscribe_condition_error(
             {"condition": "sun"},
             {
                 "code": "invalid_format",
-                "message": ("must contain at least one of before, after. at 'options'"),
+                "message": (
+                    "at least one of ['before', 'after'] is required at 'options'"
+                ),
             },
         ),
         # Failing enabled template, raised by async_condition_from_config
@@ -3571,6 +3725,80 @@ async def test_subscribe_unsubscribe_bootstrap_integrations(
     assert msg["event"] == message
 
 
+async def test_subscribe_system_state(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+) -> None:
+    """Test subscribing to the system state."""
+    system_state.async_set_home_assistant_restart_required(hass, "hacs")
+
+    await websocket_client.send_json_auto_id({"type": "subscribe_system_state"})
+
+    msg = await websocket_client.receive_json()
+    subscription = msg["id"]
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == subscription
+    assert msg["type"] == "event"
+    assert msg["event"] == {
+        "home_assistant_restart_dismissed": False,
+        "home_assistant_restart_required": True,
+        "home_assistant_restart_sources": ["hacs"],
+    }
+
+    system_state.async_set_home_assistant_restart_required(hass, "demo")
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == subscription
+    assert msg["event"] == {
+        "home_assistant_restart_dismissed": False,
+        "home_assistant_restart_required": True,
+        "home_assistant_restart_sources": ["demo", "hacs"],
+    }
+
+
+async def test_dismiss_system_state(
+    hass: HomeAssistant,
+    websocket_client: MockHAClientWebSocket,
+) -> None:
+    """Test dismissing the pending restart reaches every subscriber."""
+    system_state.async_set_home_assistant_restart_required(hass, "hacs")
+
+    await websocket_client.send_json_auto_id({"type": "subscribe_system_state"})
+    subscription = (await websocket_client.receive_json())["id"]
+    msg = await websocket_client.receive_json()
+    assert msg["event"]["home_assistant_restart_dismissed"] is False
+
+    await websocket_client.send_json_auto_id({"type": "dismiss_system_state"})
+
+    msg = await websocket_client.receive_json()
+    assert msg["id"] == subscription
+    assert msg["event"] == {
+        "home_assistant_restart_dismissed": True,
+        "home_assistant_restart_required": True,
+        "home_assistant_restart_sources": ["hacs"],
+    }
+
+    msg = await websocket_client.receive_json()
+    assert msg["type"] == const.TYPE_RESULT
+    assert msg["success"]
+
+
+@pytest.mark.parametrize("command", ["subscribe_system_state", "dismiss_system_state"])
+async def test_system_state_requires_admin(
+    websocket_client: MockHAClientWebSocket, hass_admin_user: MockUser, command: str
+) -> None:
+    """Test the system state commands are for admins only."""
+    hass_admin_user.groups = []
+    await websocket_client.send_json_auto_id({"type": command})
+
+    msg = await websocket_client.receive_json()
+    assert not msg["success"]
+    assert msg["error"]["code"] == const.ERR_UNAUTHORIZED
+
+
 async def test_integration_setup_info(
     hass: HomeAssistant,
     websocket_client: MockHAClientWebSocket,
@@ -3629,13 +3857,13 @@ async def test_validate_config_works(
 @pytest.mark.parametrize(
     ("key", "config", "error"),
     [
-        # Raises vol.Invalid
+        # Raises probatio.Invalid
         (
             "triggers",
             {"platform": "non_existing", "event_type": "hello"},
             "Invalid trigger 'non_existing' specified",
         ),
-        # Raises vol.Invalid
+        # Raises probatio.Invalid
         (
             "conditions",
             {
@@ -3658,7 +3886,7 @@ async def test_validate_config_works(
             },
             "Unknown device 'a51a57e5af051eb403d56eb9e6fd691c'",
         ),
-        # Raises vol.Invalid
+        # Raises probatio.Invalid
         (
             "actions",
             {"non_existing": "domain_test.test_service"},

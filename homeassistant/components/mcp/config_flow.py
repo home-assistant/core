@@ -6,8 +6,8 @@ from dataclasses import dataclass
 import logging
 from typing import Any, cast, override
 
-import httpx
-import voluptuous as vol
+import httpx2
+import probatio
 from yarl import URL
 
 from homeassistant.components.application_credentials import AuthorizationServer
@@ -30,9 +30,9 @@ from .coordinator import TokenManager, mcp_client
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_URL): str,
+        probatio.Required(CONF_URL): str,
     }
 )
 
@@ -115,7 +115,7 @@ async def validate_input(
     url = data[CONF_URL]
     try:
         cv.url(url)  # Cannot be added to schema directly
-    except vol.Invalid as error:
+    except probatio.Invalid as error:
         raise InvalidUrl from error
     try:
         async with mcp_client(hass, url, token_manager=token_manager) as (
@@ -127,16 +127,16 @@ async def validate_input(
                     f"MCP Server {url} does not support 'Tools' capability"
                 )
             return {"title": response.serverInfo.name}
-    except httpx.TimeoutException as error:
+    except httpx2.TimeoutException as error:
         _LOGGER.info("Timeout connecting to MCP server: %s", error)
         raise TimeoutConnectError from error
-    except httpx.HTTPStatusError as error:
+    except httpx2.HTTPStatusError as error:
         _LOGGER.info("Cannot connect to MCP server: %s", error)
         if error.response.status_code == 401:
             auth_header = AuthenticateHeader.from_header(url, error.response)
             raise InvalidAuth(auth_header) from error
         raise CannotConnect from error
-    except httpx.HTTPError as error:
+    except httpx2.HTTPError as error:
         _LOGGER.info("Cannot connect to MCP server: %s", error)
         raise CannotConnect from error
 
@@ -200,7 +200,7 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         try:
             # An unparsable URL, such as an unmatched IPv6 bracket, raises ValueError
             url = cv.url(url)
-        except vol.Invalid, ValueError:
+        except probatio.Invalid, ValueError:
             _LOGGER.debug(
                 "Ignoring discovery from app %s with invalid URL: %s",
                 discovery_info.slug,
@@ -389,11 +389,6 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             return self.async_update_reload_and_abort(
                 self._get_reauth_entry(), data=config_entry_data
             )
-        if self.unique_id is None:
-            # Unique id based on the application credentials OAuth Client ID. A
-            # discovered server keeps the Supervisor uuid instead, so that the
-            # entry is removed together with the app.
-            await self.async_set_unique_id(config_entry_data["auth_implementation"])
         return self.async_create_entry(
             title=info["title"],
             data=config_entry_data,
@@ -435,25 +430,25 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
 async def _async_fetch_any(
     hass: HomeAssistant,
     urls: Iterable[str],
-) -> httpx.Response:
+) -> httpx2.Response:
     """Fetch all URLs concurrently and return the first successful response."""
 
-    async def fetch(url: str) -> httpx.Response:
+    async def fetch(url: str) -> httpx2.Response:
         _LOGGER.debug("Fetching URL %s", url)
         try:
-            async with httpx.AsyncClient() as client:
+            async with httpx2.AsyncClient() as client:
                 response = await client.get(url)
                 response.raise_for_status()
                 return response
-        except httpx.TimeoutException as error:
+        except httpx2.TimeoutException as error:
             _LOGGER.debug("Timeout fetching URL %s: %s", url, error)
             raise TimeoutConnectError from error
-        except httpx.HTTPStatusError as error:
+        except httpx2.HTTPStatusError as error:
             _LOGGER.debug("Server error for URL %s: %s", url, error)
             if error.response.status_code == 404:
                 raise NotFoundError from error
             raise CannotConnect from error
-        except httpx.HTTPError as error:
+        except httpx2.HTTPError as error:
             _LOGGER.debug("Cannot fetch URL %s: %s", url, error)
             raise CannotConnect from error
 

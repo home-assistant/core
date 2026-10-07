@@ -57,14 +57,24 @@ INVERTER_REGISTER = 40069
 # The register the probe counts meters by.
 METER_MODEL_REGISTER = 40188
 
+# The identifier the multiple-MPPT probe reads, which sets the meter offset.
+MMPPT_REGISTER = 40121
+
 # An address inside the pooled storage and export control read.
 SITE_CONTROL_REGISTER = 57348
+
+# The first register of the power control block, which the probe asks for.
+POWER_CONTROL_REGISTER = 61440
 
 # Where the first meter's serial number lives.
 METER_SERIAL_REGISTER = 40171
 
 EXPORT_LIMITATION_ENTITY = "select.solaredge_se10000h_export_limitation"
 EXTERNAL_PRODUCTION_ENTITY = "switch.solaredge_se10000h_external_production"
+ACTIVE_POWER_LIMIT_ENTITY = "number.solaredge_se10000h_active_power_limit"
+BACKUP_RESERVE_ENTITY = "number.solaredge_se10000h_backup_reserve"
+SITE_EXPORT_LIMIT_ENTITY = "number.solaredge_se10000h_site_export_limit"
+ON_GRID_ENTITY = "binary_sensor.solaredge_se10000h_on_grid"
 
 
 async def _setup(hass: HomeAssistant, entry: MockConfigEntry) -> None:
@@ -636,10 +646,12 @@ async def _tick_attachment_check(
     probes = 0
     probe = SolarEdge.async_probe
 
-    async def counting_probe(unit: ModbusUnit) -> SolarEdge:
+    async def counting_probe(
+        unit: ModbusUnit, *, assume_absent: frozenset[str] = frozenset()
+    ) -> SolarEdge:
         nonlocal probes
         probes += 1
-        return await probe(unit)
+        return await probe(unit, assume_absent=assume_absent)
 
     with patch.object(SolarEdge, "async_probe", counting_probe):
         freezer.tick(ATTACHMENT_SCAN_INTERVAL)
@@ -756,6 +768,63 @@ async def test_replaced_meter_is_picked_up(
         )
         is not None
     )
+
+
+@pytest.mark.parametrize(
+    ("register", "entity_id"),
+    [
+        pytest.param(40113, ON_GRID_ENTITY, id="grid status"),
+        pytest.param(57348, BACKUP_RESERVE_ENTITY, id="storage control"),
+        pytest.param(57344, SITE_EXPORT_LIMIT_ENTITY, id="export control"),
+        pytest.param(61440, ACTIVE_POWER_LIMIT_ENTITY, id="power control"),
+    ],
+)
+async def test_block_that_answers_later_is_picked_up(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+    register: int,
+    entity_id: str,
+) -> None:
+    """A block that answers only after setup still gets its entities."""
+    mock_modbus_unit.fail_read(register, ModbusTimeoutError("timed out"))
+    await _setup(hass, mock_config_entry)
+
+    assert hass.states.get(entity_id) is None
+
+    mock_modbus_unit.fail_read(register, None)
+
+    await _tick_attachment_check(hass, freezer)
+
+    assert hass.states.get(entity_id) is not None
+
+
+@pytest.mark.parametrize(
+    ("register", "entity_id"),
+    [
+        pytest.param(40113, ON_GRID_ENTITY, id="grid status"),
+        pytest.param(57348, BACKUP_RESERVE_ENTITY, id="storage control"),
+        pytest.param(57344, SITE_EXPORT_LIMIT_ENTITY, id="export control"),
+        pytest.param(61440, ACTIVE_POWER_LIMIT_ENTITY, id="power control"),
+    ],
+)
+async def test_block_going_quiet_does_not_trigger_a_reload(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+    register: int,
+    entity_id: str,
+) -> None:
+    """A block going quiet is not the inverter saying it does not have one."""
+    await _setup(hass, mock_config_entry)
+
+    mock_modbus_unit.fail_read(register, ModbusTimeoutError("timed out"))
+
+    assert await _tick_attachment_check(hass, freezer) == 1
+
+    assert hass.states.get(entity_id) is not None
 
 
 async def test_silent_attachment_does_not_trigger_a_reload(
@@ -978,3 +1047,117 @@ async def test_setup_error_when_link_settings_are_in_use(
         await _setup(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+
+async def test_a_block_that_stays_silent_stops_being_asked(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """A block silent at setup is looked for once more, then left alone.
+
+    Asking costs a full timeout each time, and the link is shared, so that is
+    time every other inverter on it spends queued behind the question.
+    """
+    mock_modbus_unit.fail_read(POWER_CONTROL_REGISTER, ModbusTimeoutError("timed out"))
+    await _setup(hass, mock_config_entry)
+
+    asked: list[frozenset[str]] = []
+    probe = SolarEdge.async_probe
+
+    async def recording_probe(
+        unit: ModbusUnit, *, assume_absent: frozenset[str] = frozenset()
+    ) -> SolarEdge:
+        asked.append(assume_absent)
+        return await probe(unit, assume_absent=assume_absent)
+
+    with patch.object(SolarEdge, "async_probe", recording_probe):
+        for _ in range(2):
+            freezer.tick(ATTACHMENT_SCAN_INTERVAL)
+            async_fire_time_changed(hass)
+            await hass.async_block_till_done()
+
+    assert asked[0] == frozenset(), "the first check still looks for it"
+    assert "power_control" in asked[1], "a block still silent is not asked again"
+
+
+async def test_a_block_that_blips_once_keeps_being_asked(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """A block that answered at setup is not settled by one timeout later.
+
+    Settling it would hide the block going away for good, since a block taken
+    for absent is reported back as though it had been silent again.
+    """
+    await _setup(hass, mock_config_entry)
+
+    asked: list[frozenset[str]] = []
+    probe = SolarEdge.async_probe
+
+    async def recording_probe(
+        unit: ModbusUnit, *, assume_absent: frozenset[str] = frozenset()
+    ) -> SolarEdge:
+        asked.append(assume_absent)
+        return await probe(unit, assume_absent=assume_absent)
+
+    with patch.object(SolarEdge, "async_probe", recording_probe):
+        mock_modbus_unit.fail_read(
+            POWER_CONTROL_REGISTER, ModbusTimeoutError("timed out")
+        )
+        freezer.tick(ATTACHMENT_SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+        mock_modbus_unit.fail_read(POWER_CONTROL_REGISTER, None)
+        freezer.tick(ATTACHMENT_SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    assert "power_control" not in asked[1], "a blip settled a block that answered"
+
+
+@pytest.mark.parametrize(
+    ("register", "subsystem"),
+    [
+        pytest.param(BATTERY_RATED_ENERGY, "batteries", id="batteries"),
+        pytest.param(METER_MODEL_REGISTER, "meters", id="meters"),
+        pytest.param(MMPPT_REGISTER, "mmppt", id="mmppt"),
+    ],
+)
+async def test_a_block_discovery_depends_on_keeps_being_asked(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+    register: int,
+    subsystem: str,
+) -> None:
+    """A block that finding hardware depends on is asked however quiet it stays.
+
+    Meters and batteries each bring a device. The multiple-MPPT block decides
+    the offset the meters are looked for at, so taking it for absent would look
+    for them at the wrong addresses for good.
+    """
+    mock_modbus_unit.fail_read(register, ModbusTimeoutError("timed out"))
+    await _setup(hass, mock_config_entry)
+
+    asked: list[frozenset[str]] = []
+    probe = SolarEdge.async_probe
+
+    async def recording_probe(
+        unit: ModbusUnit, *, assume_absent: frozenset[str] = frozenset()
+    ) -> SolarEdge:
+        asked.append(assume_absent)
+        return await probe(unit, assume_absent=assume_absent)
+
+    with patch.object(SolarEdge, "async_probe", recording_probe):
+        for _ in range(2):
+            freezer.tick(ATTACHMENT_SCAN_INTERVAL)
+            async_fire_time_changed(hass)
+            await hass.async_block_till_done()
+
+    assert subsystem not in asked[1], "a block discovery depends on was settled"

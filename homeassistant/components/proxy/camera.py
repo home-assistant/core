@@ -7,7 +7,7 @@ import logging
 from typing import override
 
 from PIL import Image
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.camera import (
     PLATFORM_SCHEMA as CAMERA_PLATFORM_SCHEMA,
@@ -46,20 +46,22 @@ DEFAULT_QUALITY = 75
 
 PLATFORM_SCHEMA = CAMERA_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_ENTITY_ID): cv.entity_id,
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_CACHE_IMAGES, default=False): cv.boolean,
-        vol.Optional(CONF_FORCE_RESIZE, default=False): cv.boolean,
-        vol.Optional(CONF_MODE, default=MODE_RESIZE): vol.In([MODE_RESIZE, MODE_CROP]),
-        vol.Optional(CONF_IMAGE_QUALITY): int,
-        vol.Optional(CONF_IMAGE_REFRESH_RATE): float,
-        vol.Optional(CONF_MAX_IMAGE_WIDTH): int,
-        vol.Optional(CONF_MAX_IMAGE_HEIGHT): int,
-        vol.Optional(CONF_MAX_STREAM_WIDTH): int,
-        vol.Optional(CONF_MAX_STREAM_HEIGHT): int,
-        vol.Optional(CONF_IMAGE_LEFT): int,
-        vol.Optional(CONF_IMAGE_TOP): int,
-        vol.Optional(CONF_STREAM_QUALITY): int,
+        probatio.Required(CONF_ENTITY_ID): cv.entity_id,
+        probatio.Optional(CONF_NAME): cv.string,
+        probatio.Optional(CONF_CACHE_IMAGES, default=False): cv.boolean,
+        probatio.Optional(CONF_FORCE_RESIZE, default=False): cv.boolean,
+        probatio.Optional(CONF_MODE, default=MODE_RESIZE): probatio.In(
+            [MODE_RESIZE, MODE_CROP]
+        ),
+        probatio.Optional(CONF_IMAGE_QUALITY): int,
+        probatio.Optional(CONF_IMAGE_REFRESH_RATE): float,
+        probatio.Optional(CONF_MAX_IMAGE_WIDTH): int,
+        probatio.Optional(CONF_MAX_IMAGE_HEIGHT): int,
+        probatio.Optional(CONF_MAX_STREAM_WIDTH): int,
+        probatio.Optional(CONF_MAX_STREAM_HEIGHT): int,
+        probatio.Optional(CONF_IMAGE_LEFT): int,
+        probatio.Optional(CONF_IMAGE_TOP): int,
+        probatio.Optional(CONF_STREAM_QUALITY): int,
     }
 )
 
@@ -158,18 +160,25 @@ def _crop_image(image, opts):
     quality = opts.quality or DEFAULT_QUALITY
     (old_width, old_height) = img.size
     old_size = len(image)
-    if opts.top is None:
-        opts.top = 0
-    if opts.left is None:
-        opts.left = 0
-    if opts.max_width is None or opts.max_width > old_width - opts.left:
-        opts.max_width = old_width - opts.left
-    if opts.max_height is None or opts.max_height > old_height - opts.top:
-        opts.max_height = old_height - opts.top
+    top = opts.top or 0
+    left = opts.left or 0
+    width = old_width - left
+    if opts.max_width is not None:
+        width = min(opts.max_width, width)
+    height = old_height - top
+    if opts.max_height is not None:
+        height = min(opts.max_height, height)
+    if width <= 0 or height <= 0:
+        _LOGGER.debug(
+            "Image (%dx%d) is too small to crop at (%d, %d)",
+            old_width,
+            old_height,
+            left,
+            top,
+        )
+        return image
 
-    img = img.crop(
-        (opts.left, opts.top, opts.left + opts.max_width, opts.top + opts.max_height)
-    )
+    img = img.crop((left, top, left + width, top + height))
     imgbuf = io.BytesIO()
     img.save(imgbuf, "JPEG", optimize=True, quality=quality)
     newimage = imgbuf.getvalue()
@@ -179,8 +188,8 @@ def _crop_image(image, opts):
         old_width,
         old_height,
         old_size,
-        opts.max_width,
-        opts.max_height,
+        width,
+        height,
         len(newimage),
     )
     return newimage

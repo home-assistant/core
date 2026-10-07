@@ -1,12 +1,13 @@
 """Support for the definition of zones."""
 
 from collections.abc import Callable
+from dataclasses import dataclass
 import logging
 from operator import attrgetter
 import sys
 from typing import Any, Self, cast, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant import config_entries
 from homeassistant.const import (  # noqa: F401
@@ -30,7 +31,6 @@ from homeassistant.core import (
     Event,
     EventStateChangedData,
     HomeAssistant,
-    ServiceCall,
     State,
     callback,
 )
@@ -39,7 +39,6 @@ from homeassistant.helpers import (
     config_validation as cv,
     entity_component,
     event,
-    service,
     storage,
 )
 from homeassistant.helpers.typing import ConfigType, VolDictType
@@ -50,10 +49,12 @@ from .const import (  # noqa: F401
     ATTR_PASSIVE,
     ATTR_RADIUS,
     CONF_PASSIVE,
+    DATA_ZONE,
     DOMAIN,
     HOME_ZONE,
     ZoneEntityStateAttribute,
 )
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -66,22 +67,22 @@ ICON_HOME = "mdi:home"
 ICON_IMPORT = "mdi:import"
 
 CREATE_FIELDS: VolDictType = {
-    vol.Required(CONF_NAME): cv.string,
-    vol.Required(CONF_LATITUDE): cv.latitude,
-    vol.Required(CONF_LONGITUDE): cv.longitude,
-    vol.Optional(CONF_RADIUS, default=DEFAULT_RADIUS): vol.Coerce(float),
-    vol.Optional(CONF_PASSIVE, default=DEFAULT_PASSIVE): cv.boolean,
-    vol.Optional(CONF_ICON): cv.icon,
+    probatio.Required(CONF_NAME): cv.string,
+    probatio.Required(CONF_LATITUDE): cv.latitude,
+    probatio.Required(CONF_LONGITUDE): cv.longitude,
+    probatio.Optional(CONF_RADIUS, default=DEFAULT_RADIUS): probatio.Coerce(float),
+    probatio.Optional(CONF_PASSIVE, default=DEFAULT_PASSIVE): cv.boolean,
+    probatio.Optional(CONF_ICON): cv.icon,
 }
 
 
 UPDATE_FIELDS: VolDictType = {
-    vol.Optional(CONF_NAME): cv.string,
-    vol.Optional(CONF_LATITUDE): cv.latitude,
-    vol.Optional(CONF_LONGITUDE): cv.longitude,
-    vol.Optional(CONF_RADIUS): vol.Coerce(float),
-    vol.Optional(CONF_PASSIVE): cv.boolean,
-    vol.Optional(CONF_ICON): cv.icon,
+    probatio.Optional(CONF_NAME): cv.string,
+    probatio.Optional(CONF_LATITUDE): cv.latitude,
+    probatio.Optional(CONF_LONGITUDE): cv.longitude,
+    probatio.Optional(CONF_RADIUS): probatio.Coerce(float),
+    probatio.Optional(CONF_PASSIVE): cv.boolean,
+    probatio.Optional(CONF_ICON): cv.icon,
 }
 
 
@@ -90,20 +91,19 @@ def empty_value(value: Any) -> Any:
     if isinstance(value, dict) and len(value) == 0:
         return []
 
-    raise vol.Invalid("Not a default value")
+    raise probatio.Invalid("Not a default value")
 
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        vol.Optional(DOMAIN, default=[]): vol.Any(
-            vol.All(cv.ensure_list, [vol.Schema(CREATE_FIELDS)]),
+        probatio.Optional(DOMAIN, default=[]): probatio.Any(
+            probatio.All(probatio.EnsureList(), [probatio.Schema(CREATE_FIELDS)]),
             empty_value,
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
-RELOAD_SERVICE_SCHEMA = vol.Schema({})
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 
@@ -111,8 +111,16 @@ ENTITY_ID_SORTER = attrgetter("entity_id")
 
 ZONE_ENTITY_IDS = "zone_entity_ids"
 
-DATA_ZONE_STORAGE_COLLECTION: HassKey[ZoneStorageCollection] = HassKey(DOMAIN)
 DATA_ZONE_ENTITY_IDS: HassKey[list[str]] = HassKey(ZONE_ENTITY_IDS)
+
+
+@dataclass(slots=True)
+class ZoneData:
+    """Runtime data for the zone integration."""
+
+    component: entity_component.EntityComponent[Zone]
+    storage_collection: ZoneStorageCollection
+    yaml_collection: collection.IDLessCollection
 
 
 def async_in_zones(
@@ -306,8 +314,8 @@ def in_zone(zone: State, latitude: float, longitude: float, radius: float = 0) -
 class ZoneStorageCollection(collection.DictStorageCollection):
     """Zone collection stored in storage."""
 
-    CREATE_SCHEMA = vol.Schema(CREATE_FIELDS)
-    UPDATE_SCHEMA = vol.Schema(UPDATE_FIELDS)
+    CREATE_SCHEMA = probatio.Schema(CREATE_FIELDS)
+    UPDATE_SCHEMA = probatio.Schema(UPDATE_FIELDS)
 
     @override
     async def _process_create_data(self, data: dict) -> dict:
@@ -358,18 +366,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         storage_collection, DOMAIN, DOMAIN, CREATE_FIELDS, UPDATE_FIELDS
     ).async_setup(hass)
 
-    async def reload_service_handler(service_call: ServiceCall) -> None:
-        """Remove all zones and load new ones from config."""
-        conf = await component.async_prepare_reload(skip_reset=True)
-        await yaml_collection.async_load(conf[DOMAIN])
+    hass.data[DATA_ZONE] = ZoneData(component, storage_collection, yaml_collection)
 
-    service.async_register_admin_service(
-        hass,
-        DOMAIN,
-        SERVICE_RELOAD,
-        reload_service_handler,
-        schema=RELOAD_SERVICE_SCHEMA,
-    )
+    async_setup_services(hass)
 
     if component.get_entity("zone.home"):
         return True
@@ -383,8 +382,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         await home_zone.async_update_config(_home_conf(hass))
 
     hass.bus.async_listen(EVENT_CORE_CONFIG_UPDATE, core_config_updated)
-
-    hass.data[DATA_ZONE_STORAGE_COLLECTION] = storage_collection
 
     return True
 
@@ -410,7 +407,7 @@ async def async_setup_entry(
     data.setdefault(CONF_PASSIVE, DEFAULT_PASSIVE)
     data.setdefault(CONF_RADIUS, DEFAULT_RADIUS)
 
-    await hass.data[DATA_ZONE_STORAGE_COLLECTION].async_create_item(data)
+    await hass.data[DATA_ZONE].storage_collection.async_create_item(data)
 
     hass.async_create_task(
         hass.config_entries.async_remove(config_entry.entry_id), eager_start=True

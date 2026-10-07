@@ -1,29 +1,56 @@
 """Config Flow for Teslemetry integration."""
 
+import asyncio
 from collections.abc import Mapping
 import logging
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast, override
 
 from aiohttp import ClientError
-from aiopowerwall import PowerwallAuthenticationError, PowerwallClient, PowerwallError
+from aiopowerwall import PowerwallAuthenticationError, PowerwallError
+from bleak.exc import BleakError
+from bleak_retry_connector import BleakNotFoundError, BleakOutOfConnectionSlotsError
+from habluetooth.const import STRONG_OWNER_STALE_RSSI
+import probatio
 from tesla_fleet_api.const import (
     AuthorizedClientKeyType,
     AuthorizedClientState,
     AuthorizedClientType,
 )
 from tesla_fleet_api.exceptions import (
+    BluetoothTimeout,
+    BluetoothTransportError,
+    EnergyGatewayUnreachable,
     InvalidToken,
+    NotOnWhitelistFault,
+    PrivateKeyError,
     SubscriptionRequired,
     TeslaFleetError,
+    WhitelistOperationAttemptingToAddExistingKey,
+    WhitelistOperationCouldNotStartLocalEntityAuth,
+    WhitelistOperationLocalEntityAuthFailedCancelled,
+    WhitelistOperationLocalEntityAuthFailedTimedOutWaitingForTap,
+    WhitelistOperationLocalEntityAuthFailedTimedOutWaitingForUIAck,
+    WhitelistOperationLocalEntityAuthFailedUIDenied,
 )
+from tesla_fleet_api.tesla import EnergySiteRouter
+from tesla_fleet_api.tesla.vehicle.bluetooth import VehicleBluetooth
 from tesla_fleet_api.teslemetry import Teslemetry
 from tesla_fleet_api.teslemetry.energysite import AuthorizedClient, TeslemetryEnergySite
-import voluptuous as vol
 
 from homeassistant.components.application_credentials import (
     ClientCredential,
     async_import_client_credential,
+)
+from homeassistant.components.bluetooth import (
+    BluetoothScanningMode,
+    BluetoothServiceInfoBleak,
+    async_current_scanners,
+    async_discovered_service_info,
+    async_last_service_info,
+    async_register_advertisement_callback,
+    async_request_active_scan,
+    async_scanner_count,
 )
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
@@ -34,28 +61,39 @@ from homeassistant.config_entries import (
     ConfigSubentryFlow,
     SubentryFlowResult,
 )
-from homeassistant.const import CONF_HOST, CONF_PASSWORD
+from homeassistant.const import CONF_ADDRESS, CONF_HOST, CONF_PASSWORD
 from homeassistant.core import callback
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from . import TeslemetryConfigEntry
+from . import _BLE_KEY_ERRORS, TeslemetryConfigEntry
 from .const import (
+    BLE_ADVERTISEMENT_TIMEOUT,
     CLIENT_ID,
     CONF_SITE_ID,
+    CONF_VIN,
     DOMAIN,
     LOGGER,
     POWERWALL_KEY_FILE,
     SUBENTRY_TYPE_ENERGY_SITE,
+    SUBENTRY_TYPE_VEHICLE,
+    VEHICLE_KEY_FILE,
 )
+from .helpers import (
+    PowerwallKeyRejectedError,
+    async_get_ble_parent,
+    async_verify_local_gateway,
+    cloud_energy_site,
+)
+from .models import TeslemetryEnergyData
+
+
+class PowerwallSetupError(Exception):
+    """Signal a recoverable energy-site setup failure for the form to retry."""
 
 
 class PowerwallLookupError(Exception):
     """Signal that the authorized-client lookup failed for a non-retryable reason."""
-
-
-class PowerwallKeyRejectedError(Exception):
-    """Signal that the gateway refused a v1r-signed read with our RSA key."""
 
 
 class OAuth2FlowHandler(
@@ -85,7 +123,10 @@ class OAuth2FlowHandler(
         cls, config_entry: ConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return the subentry types supported by this integration."""
-        return {SUBENTRY_TYPE_ENERGY_SITE: EnergySiteSubentryFlowHandler}
+        return {
+            SUBENTRY_TYPE_VEHICLE: VehicleSubentryFlowHandler,
+            SUBENTRY_TYPE_ENERGY_SITE: EnergySiteSubentryFlowHandler,
+        }
 
     @override
     async def async_step_user(
@@ -187,18 +228,332 @@ class OAuth2FlowHandler(
         return await self.async_step_user()
 
 
+class VehicleSubentryFlowHandler(ConfigSubentryFlow):
+    """Add local Bluetooth control to one of the account's vehicles."""
+
+    def __init__(self) -> None:
+        """Initialize the vehicle subentry flow."""
+        self._vin: str | None = None
+        self._title: str | None = None
+        self._address: str | None = None
+        self._vehicle: VehicleBluetooth | None = None
+        self._pair_task: asyncio.Task[None] | None = None
+        self._pair_error: dict[str, str] = {}
+        self._key_added = False
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Select an account vehicle to add over Bluetooth, then pair it."""
+        if not async_scanner_count(self.hass, connectable=True):
+            return self.async_abort(reason="bluetooth_not_available")
+        entry = self._get_entry()
+        if entry.state is not ConfigEntryState.LOADED:
+            return self.async_abort(reason="entry_not_loaded")
+        already_added = {
+            subentry.data[CONF_VIN]
+            for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)
+            if CONF_VIN in subentry.data
+        }
+        vehicle_metadata = entry.runtime_data.metadata_coordinator.data["vehicles"]
+        choices = {
+            vehicle.vin: vehicle.device["name"] or vehicle.vin
+            for vehicle in entry.runtime_data.vehicles
+            if vehicle.vin not in already_added
+            # Vehicles without the command protocol (pre-2021 Model S/X) report
+            # False and cannot be controlled over Bluetooth; None or a VIN not
+            # yet in the metadata means unknown.
+            and vehicle_metadata.get(vehicle.vin, {}).get("proxy") is not False
+        }
+        if not choices:
+            if not entry.runtime_data.vehicles:
+                return self.async_abort(reason="no_vehicles")
+            if any(
+                vehicle.vin not in already_added
+                for vehicle in entry.runtime_data.vehicles
+            ):
+                return self.async_abort(reason="no_supported_vehicles")
+            return self.async_abort(reason="all_vehicles_added")
+
+        if user_input is not None:
+            self._vin = user_input[CONF_VIN]
+            self._title = choices[self._vin]
+            return await self.async_step_scan()
+
+        return self.async_show_form(
+            step_id="user",
+            data_schema=probatio.Schema(
+                {probatio.Required(CONF_VIN): probatio.In(choices)}
+            ),
+        )
+
+    async def async_step_scan(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Find the vehicle over Bluetooth and connect to it."""
+        if TYPE_CHECKING:
+            assert self._vin is not None
+        errors: dict[str, str] = {}
+        placeholders = {"vin": self._vin}
+
+        if user_input is not None:
+            try:
+                parent = await async_get_ble_parent(self.hass)
+            except _BLE_KEY_ERRORS as err:
+                LOGGER.debug("Bluetooth key load failed: %s", err)
+                errors["base"] = "key_load_failed"
+                placeholders["key_file"] = self.hass.config.path(VEHICLE_KEY_FILE)
+            else:
+                # The advertised BLE name is a hash of the VIN; match on its prefix.
+                expected = parent.get_name(self._vin)[:17]
+                if (info := self._async_find_vehicle(expected)) is None:
+                    # The name is only in scan responses, so an active scan may be needed to see it.
+                    await async_request_active_scan(self.hass)
+                    if (info := self._async_find_vehicle(expected)) is None:
+                        LOGGER.debug(
+                            "No connectable advertisement matched Bluetooth name %s",
+                            expected,
+                        )
+                    else:
+                        # Ending the active scan drops the vehicle from a local adapter until its next advertisement.
+                        heard: asyncio.Future[BluetoothServiceInfoBleak] = (
+                            self.hass.loop.create_future()
+                        )
+
+                        @callback
+                        def _async_heard(
+                            service_info: BluetoothServiceInfoBleak,
+                        ) -> None:
+                            # An Auto scanner still in the scan's active window has yet to restart discovery.
+                            if (
+                                service_info.connectable
+                                and not heard.done()
+                                and not any(
+                                    scanner.requested_mode is BluetoothScanningMode.AUTO
+                                    and scanner.current_mode
+                                    is BluetoothScanningMode.ACTIVE
+                                    for scanner in async_current_scanners(self.hass)
+                                )
+                            ):
+                                heard.set_result(service_info)
+
+                        cancel = async_register_advertisement_callback(
+                            self.hass, _async_heard, info.address
+                        )
+                        try:
+                            async with asyncio.timeout(BLE_ADVERTISEMENT_TIMEOUT):
+                                info = await heard
+                        except TimeoutError:
+                            LOGGER.debug(
+                                "Vehicle not heard again after the active scan"
+                            )
+                        finally:
+                            cancel()
+
+                if info is None:
+                    errors["base"] = "device_not_found"
+                else:
+                    self._address = info.address
+                    # Uses default keepalive so the link survives the on-screen key-approval wait.
+                    self._vehicle = parent.vehicles.createBluetooth(
+                        self._vin, device=info.device
+                    )
+                    try:
+                        await self._vehicle.connect()
+                    except (BleakError, TeslaFleetError, TimeoutError) as err:
+                        LOGGER.error("Failed to connect over Bluetooth: %s", err)
+                        await self._async_disconnect()
+                        cause = err.__cause__
+                        last_info = async_last_service_info(
+                            self.hass, info.address, connectable=True
+                        )
+                        if not isinstance(
+                            cause, BleakNotFoundError | BleakOutOfConnectionSlotsError
+                        ):
+                            errors["base"] = "cannot_connect"
+                        # bleak-retry-connector also raises BleakNotFoundError from a final connect timeout.
+                        elif last_info is None or (
+                            isinstance(cause, BleakNotFoundError)
+                            and not isinstance(cause.__cause__, TimeoutError)
+                        ):
+                            errors["base"] = "device_not_found"
+                        elif isinstance(cause, BleakOutOfConnectionSlotsError):
+                            errors["base"] = "no_connection_slot"
+                        # habluetooth treats this signal as a close device, so the timeout is not about range.
+                        elif last_info.rssi >= STRONG_OWNER_STALE_RSSI:
+                            errors["base"] = "vehicle_busy"
+                        else:
+                            errors["base"] = "weak_signal"
+                    else:
+                        return await self.async_step_pair()
+
+        return self.async_show_form(
+            step_id="scan",
+            errors=errors,
+            description_placeholders=placeholders,
+        )
+
+    @callback
+    def _async_find_vehicle(self, name_prefix: str) -> BluetoothServiceInfoBleak | None:
+        """Return the discovered vehicle whose advertised name matches, if any."""
+        return next(
+            (
+                info
+                for info in async_discovered_service_info(self.hass, connectable=True)
+                if info.name and info.name.startswith(name_prefix)
+            ),
+            None,
+        )
+
+    async def async_step_pair(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Check whether the virtual key is already whitelisted on the vehicle."""
+        if TYPE_CHECKING:
+            assert self._vehicle is not None
+        try:
+            await self._vehicle.handshakeVehicleSecurity()
+        except NotOnWhitelistFault:
+            return await self.async_step_instructions()
+        except (BleakError, TeslaFleetError, TimeoutError) as err:
+            LOGGER.error("Bluetooth security handshake failed: %s", err)
+            # The scan step owns the form; re-show it so a retry redoes scan and connect.
+            return self.async_show_form(
+                step_id="scan",
+                # The key is already on the vehicle; say so rather than prompt a re-pair.
+                errors={
+                    "base": "key_unverified" if self._key_added else "cannot_connect"
+                },
+                description_placeholders={"vin": self._vin or ""},
+            )
+        finally:
+            # Never hold the link while waiting on the user: a closed tab never removes the flow.
+            await self._async_disconnect()
+        if TYPE_CHECKING:
+            assert self._address is not None
+            assert self._vin is not None
+        self._vehicle = None
+        return self.async_create_entry(
+            title=self._title or self._vin,
+            data={CONF_VIN: self._vin, CONF_ADDRESS: self._address},
+            unique_id=self._vin,
+        )
+
+    async def async_step_instructions(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Ask the user to approve the virtual key on the vehicle touchscreen."""
+        if user_input is not None:
+            return await self.async_step_authorize()
+        errors = self._pair_error
+        self._pair_error = {}
+        return self.async_show_form(
+            step_id="instructions",
+            errors=errors,
+            description_placeholders={"vin": self._vin or ""},
+        )
+
+    async def async_step_authorize(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Add the virtual key to the vehicle while showing pairing progress."""
+        if self._pair_task is None:
+            # pair() can take minutes, so run it as a progress task rather than blocking the flow.
+            self._pair_task = self.hass.async_create_task(self._async_pair())
+
+        if not self._pair_task.done():
+            return self.async_show_progress(
+                step_id="authorize",
+                progress_action="pair",
+                progress_task=self._pair_task,
+                description_placeholders={"vin": self._vin or ""},
+            )
+
+        task = self._pair_task
+        self._pair_task = None
+        try:
+            task.result()
+        except (BluetoothTransportError, BleakError) as err:
+            LOGGER.debug("Bluetooth transport failed during pairing: %s", err)
+            self._pair_error = {"base": "cannot_connect"}
+            return self.async_show_progress_done(next_step_id="instructions")
+        except (BluetoothTimeout, TimeoutError) as err:
+            LOGGER.debug("Bluetooth pairing timed out: %s", err)
+            self._pair_error = {"base": "timeout"}
+            return self.async_show_progress_done(next_step_id="instructions")
+        except WhitelistOperationAttemptingToAddExistingKey as err:
+            LOGGER.debug("Virtual key is already on the whitelist: %s", err)
+        except WhitelistOperationLocalEntityAuthFailedTimedOutWaitingForTap as err:
+            LOGGER.debug(
+                "No key card was tapped before the vehicle stopped waiting: %s", err
+            )
+            self._pair_error = {"base": "tap_timeout"}
+            return self.async_show_progress_done(next_step_id="instructions")
+        except WhitelistOperationLocalEntityAuthFailedTimedOutWaitingForUIAck as err:
+            LOGGER.debug("Key was not confirmed on the vehicle touchscreen: %s", err)
+            self._pair_error = {"base": "confirm_timeout"}
+            return self.async_show_progress_done(next_step_id="instructions")
+        except (
+            WhitelistOperationLocalEntityAuthFailedUIDenied,
+            WhitelistOperationLocalEntityAuthFailedCancelled,
+        ) as err:
+            LOGGER.debug("Key was declined on the vehicle touchscreen: %s", err)
+            self._pair_error = {"base": "pair_denied"}
+            return self.async_show_progress_done(next_step_id="instructions")
+        except WhitelistOperationCouldNotStartLocalEntityAuth as err:
+            LOGGER.debug("Vehicle could not start the key card request: %s", err)
+            self._pair_error = {"base": "auth_not_started"}
+            return self.async_show_progress_done(next_step_id="instructions")
+        except TeslaFleetError as err:
+            LOGGER.error("Bluetooth pairing was rejected: %s", err)
+            self._pair_error = {"base": "pair_failed"}
+            return self.async_show_progress_done(next_step_id="instructions")
+        self._key_added = True
+        return self.async_show_progress_done(next_step_id="pair")
+
+    async def _async_pair(self) -> None:
+        """Add the key over a link that never outlives the attempt."""
+        if TYPE_CHECKING:
+            assert self._vehicle is not None
+        try:
+            # The library reconnects on demand, so each attempt starts from a new link.
+            await self._vehicle.pair()
+        finally:
+            await self._async_disconnect()
+
+    async def _async_disconnect(self) -> None:
+        """Disconnect the BLE link, if any."""
+        # Keep the reference: a step may still be awaiting this vehicle when the flow is removed.
+        if self._vehicle is not None:
+            try:
+                await self._vehicle.disconnect()
+            except (BleakError, TeslaFleetError, TimeoutError) as err:
+                LOGGER.debug("Error disconnecting Bluetooth: %s", err)
+
+    @callback
+    @override
+    def async_remove(self) -> None:
+        """Release resources if the flow is abandoned mid-pairing."""
+        # The pair task disconnects when it ends, so only disconnect here without one.
+        if self._pair_task is not None:
+            self._pair_task.cancel()
+        elif self._vehicle is not None:
+            self.hass.async_create_task(self._async_disconnect())
+
+
 class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
     """Pair a local Powerwall gateway for TEDAPI v1r command routing."""
 
     def __init__(self) -> None:
         """Initialize the energy site subentry flow."""
-        self._energy_site: TeslemetryEnergySite | None = None
+        self._energy_site: TeslemetryEnergySite | EnergySiteRouter | None = None
         self._key_pem: bytes | None = None
         self._public_key_der: bytes = b""
         self._public_key_b64: str = ""
         self._discovered_host: str = ""
         self._site_id: int | None = None
         self._site_name: str = ""
+        self._approval_expired: bool = False
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -229,22 +584,24 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
                 reason="all_sites_added" if local_control_sites else "no_powerwall"
             )
 
+        errors: dict[str, str] = {}
         if user_input is not None:
             energy_data = available[user_input[CONF_SITE_ID]]
             self._site_id = energy_data.id
             self._site_name = energy_data.device.get("name") or "Energy Site"
-            # Only unpaired sites are offered, so api is always the cloud EnergySite.
-            if abort := await self._prepare_energy_site(
-                cast(TeslemetryEnergySite, energy_data.api)
-            ):
-                return abort
-            return await self._async_begin_pairing()
+            try:
+                await self._prepare_energy_site(energy_data)
+                return await self._async_begin_pairing()
+            except EnergyGatewayUnreachable:
+                errors["base"] = "powerwall_unreachable"
+            except PowerwallSetupError:
+                errors["base"] = "cannot_connect"
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_SITE_ID): vol.In(
+                    probatio.Required(CONF_SITE_ID): probatio.In(
                         {
                             site_id: energy_data.device.get("name") or site_id
                             for site_id, energy_data in available.items()
@@ -252,15 +609,42 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
                     )
                 }
             ),
+            errors=errors,
         )
 
-    async def _prepare_energy_site(
-        self, energy_site: TeslemetryEnergySite
-    ) -> SubentryFlowResult | None:
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Re-pair an added site's local Powerwall to update its credentials."""
+        subentry = self._get_reconfigure_subentry()
+        entry = cast(TeslemetryConfigEntry, self._get_entry())
+        # runtime_data (the resolved energy sites) exists only while loaded.
+        if entry.state is not ConfigEntryState.LOADED:
+            return self.async_abort(reason="entry_not_loaded")
+        energy_data = next(
+            (
+                energysite
+                for energysite in entry.runtime_data.energysites
+                if energysite.subentry_id == subentry.subentry_id
+            ),
+            None,
+        )
+        if energy_data is None:
+            return self.async_abort(reason="cannot_connect")
+        try:
+            await self._prepare_energy_site(energy_data)
+            return await self._async_begin_pairing()
+        except EnergyGatewayUnreachable:
+            return self.async_abort(reason="powerwall_unreachable")
+        except PowerwallSetupError:
+            return self.async_abort(reason="cannot_connect")
+
+    async def _prepare_energy_site(self, energy_data: TeslemetryEnergyData) -> None:
         """Discover the gateway address and load the integration's RSA key.
 
-        Returns an abort result if the RSA key cannot be loaded, else None.
+        Raises PowerwallSetupError if the RSA key cannot be loaded.
         """
+        energy_site = cast(TeslemetryEnergySite | EnergySiteRouter, energy_data.api)
         self._energy_site = energy_site
 
         try:
@@ -277,27 +661,22 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
             session=async_get_clientsession(self.hass), access_token=""
         )
         try:
-            try:
-                await keyholder.get_rsa_private_key(path)
-            except TypeError as err:
-                # An encrypted PEM surfaces as TypeError from the cryptography loader.
-                raise ValueError("RSA private key file is encrypted") from err
+            await keyholder.get_rsa_private_key(path)
             self._key_pem = await self.hass.async_add_executor_job(
                 Path(path).read_bytes
             )
-        except (OSError, ValueError) as err:
+        except (OSError, ValueError, PrivateKeyError) as err:
             LOGGER.debug("RSA key load failed: %s", err)
-            return self.async_abort(reason="cannot_connect")
+            raise PowerwallSetupError from err
         self._public_key_der = keyholder.rsa_public_der_pkcs1
         self._public_key_b64 = keyholder.rsa_public_der_pkcs1_b64
-        return None
 
     async def _async_begin_pairing(self) -> SubentryFlowResult:
         """Resume or begin key pairing based on the key's state on the gateway."""
         try:
             client = await self._find_authorized_client()
-        except PowerwallLookupError:
-            return self.async_abort(reason="cannot_connect")
+        except PowerwallLookupError as err:
+            raise PowerwallSetupError from err
         if client is not None:
             # Key already registered; do not re-register a pending one (it would reset).
             if client.state == AuthorizedClientState.VERIFIED:
@@ -307,23 +686,27 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
             if client.state != AuthorizedClientState.PENDING_VERIFICATION_TIMEOUT:
                 # Unrecognized state is unusable; treat it as a lookup failure.
                 LOGGER.debug("Unrecognized authorized-client state: %s", client.state)
-                return self.async_abort(reason="cannot_connect")
+                raise PowerwallSetupError
             # Re-registering resets the expired window (no duplicate); fall through.
 
         if TYPE_CHECKING:
             assert self._energy_site is not None
+        # Registration must reach Tesla, so it never routes to the local gateway.
+        cloud_site = cloud_energy_site(self._energy_site)
         try:
             # Not revoked on removal: other consumers may share this key.
-            LOGGER.info("Powerwall key setup: id=%s", self._energy_site.energy_site_id)
-            await self._energy_site.add_authorized_client(
+            LOGGER.info("Powerwall key setup: id=%s", cloud_site.energy_site_id)
+            await cloud_site.add_authorized_client(
                 self._public_key_der,
                 description="Home Assistant",
                 key_type=AuthorizedClientKeyType.RSA,
                 authorized_client_type=AuthorizedClientType.CUSTOMER_MOBILE_APP,
             )
+        except EnergyGatewayUnreachable:
+            raise
         except (ClientError, TeslaFleetError) as err:
             LOGGER.error("Add authorized client failed: %s", err)
-            return self.async_abort(reason="cannot_connect")
+            raise PowerwallSetupError from err
 
         return await self.async_step_pair()
 
@@ -336,8 +719,27 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
         if user_input is None:
             return self.async_show_form(step_id="pair")
 
+        if self._approval_expired:
+            # The user saw the expired-window notice and submitted to try again.
+            try:
+                result = await self._async_begin_pairing()
+            except EnergyGatewayUnreachable:
+                return self.async_show_form(
+                    step_id="pair", errors={"base": "powerwall_unreachable"}
+                )
+            except PowerwallSetupError:
+                return self.async_show_form(
+                    step_id="pair", errors={"base": "cannot_connect"}
+                )
+            self._approval_expired = False
+            return result
+
         try:
             client = await self._find_authorized_client()
+        except EnergyGatewayUnreachable:
+            return self.async_show_form(
+                step_id="pair", errors={"base": "powerwall_unreachable"}
+            )
         except PowerwallLookupError:
             return self.async_show_form(
                 step_id="pair", errors={"base": "cannot_connect"}
@@ -351,6 +753,10 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
             return await self.async_step_credentials()
         if client.state == AuthorizedClientState.PENDING_VERIFICATION:
             return self.async_show_form(step_id="pair", errors={"base": "key_pending"})
+        if client.state == AuthorizedClientState.PENDING_VERIFICATION_TIMEOUT:
+            # Surface the expiry; the user's next submit reopens the window.
+            self._approval_expired = True
+            return self.async_show_form(step_id="pair", errors={"base": "key_expired"})
         # An unrecognized state reported as pending would trap the user forever.
         LOGGER.debug("Unrecognized authorized-client state: %s", client.state)
         return self.async_show_form(step_id="pair", errors={"base": "cannot_connect"})
@@ -361,6 +767,9 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
             assert self._energy_site is not None
         try:
             result = await self._energy_site.find_authorized_clients()
+        except EnergyGatewayUnreachable:
+            # Unwrapped so callers can report an unreachable gateway as retryable.
+            raise
         except (ClientError, TeslaFleetError) as err:
             # Raise so a failed lookup is not mistaken for an unregistered key.
             LOGGER.debug("find_authorized_clients failed: %s", err)
@@ -374,23 +783,19 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
             None,
         )
 
-    async def _verify_local_gateway(self, host: str, password: str) -> None:
-        """Prove the LAN connection and the RSA key against the gateway."""
-        if TYPE_CHECKING:
-            assert self._key_pem is not None
-            assert self._energy_site is not None
-        async with PowerwallClient(
-            host=host,
-            gateway_password=password,
-            rsa_private_key_pem=self._key_pem,
-            session=async_get_clientsession(self.hass),
-        ) as client:
-            await client.connect()
-            try:
-                # connect() passed the password, so a failure here is key rejection.
-                await client.get_status()
-            except PowerwallAuthenticationError as err:
-                raise PowerwallKeyRejectedError from err
+    def _default_gateway_host(self) -> str:
+        """Return the host to pre-fill on the credentials form, or "" for blank.
+
+        Discovery wins; on reconfigure a failed discovery falls back to the
+        subentry's known host rather than leaving the field blank, so a
+        password-only change is verified against the right gateway. A new
+        site whose discovery failed is left blank.
+        """
+        if self._discovered_host:
+            return self._discovered_host
+        if self.source == SOURCE_RECONFIGURE:
+            return cast(str, self._get_reconfigure_subentry().data[CONF_HOST])
+        return ""
 
     async def async_step_credentials(
         self, user_input: dict[str, Any] | None = None
@@ -400,11 +805,14 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
         if user_input is not None:
             if TYPE_CHECKING:
                 assert self._energy_site is not None
+                assert self._key_pem is not None
             host = user_input[CONF_HOST].strip()
             # The gateway accepts only the last 5 characters of the Wi-Fi password.
             password = user_input[CONF_PASSWORD].strip()[-5:]
             try:
-                await self._verify_local_gateway(host, password)
+                await async_verify_local_gateway(
+                    self.hass, host, password, self._key_pem
+                )
             except PowerwallKeyRejectedError as err:
                 LOGGER.debug("Powerwall rejected the signed read: %s", err.__cause__)
                 errors["base"] = "key_not_approved"
@@ -418,13 +826,13 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
 
         return self.async_show_form(
             step_id="credentials",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         CONF_HOST,
-                        default=self._discovered_host or vol.UNDEFINED,
+                        default=self._default_gateway_host() or probatio.UNDEFINED,
                     ): str,
-                    vol.Required(CONF_PASSWORD): str,
+                    probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
                 }
             ),
             errors=errors,
@@ -432,7 +840,21 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
 
     @callback
     def _async_save_credentials(self, host: str, password: str) -> SubentryFlowResult:
-        """Persist the verified gateway credentials to a new subentry."""
+        """Persist the verified gateway credentials to the subentry."""
+        if self.source == SOURCE_RECONFIGURE:
+            entry = self._get_entry()
+            subentry = self._get_reconfigure_subentry()
+            self._async_update(
+                entry,
+                subentry,
+                data_updates={CONF_HOST: host, CONF_PASSWORD: password},
+            )
+            # Always reload, even when credentials are unchanged: an earlier
+            # local-control initialization failure leaves only the cloud API active,
+            # and successful re-verification must install the local-first router.
+            self.hass.config_entries.async_schedule_reload(entry.entry_id)
+            return self.async_abort(reason="reconfigure_successful")
+
         return self.async_create_entry(
             title=self._site_name,
             data={

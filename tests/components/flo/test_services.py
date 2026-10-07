@@ -1,17 +1,17 @@
 """Test the services for the Flo by Moen integration."""
 
+from aioflo.location import SYSTEM_MODE_HOME
+from probatio.error import MultipleInvalid
 import pytest
-from voluptuous.error import MultipleInvalid
 
 from homeassistant.components.flo.const import DOMAIN
-from homeassistant.components.flo.switch import (
+from homeassistant.components.flo.services import (
     ATTR_REVERT_TO_MODE,
     ATTR_SLEEP_MINUTES,
     SERVICE_RUN_HEALTH_TEST,
     SERVICE_SET_AWAY_MODE,
     SERVICE_SET_HOME_MODE,
     SERVICE_SET_SLEEP_MODE,
-    SYSTEM_MODE_HOME,
 )
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant

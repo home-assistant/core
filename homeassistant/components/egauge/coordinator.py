@@ -11,7 +11,7 @@ from egauge_async.exceptions import (
 )
 from egauge_async.json.client import EgaugeJsonClient
 from egauge_async.json.models import RegisterInfo
-from httpx import ConnectError
+from httpx2 import ConnectError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -98,7 +98,7 @@ class EgaugeDataCoordinator(DataUpdateCoordinator[EgaugeData]):
             EgaugeException,
         ) as err:
             # will raise ConfigEntryAuthFailed once reauth is implemented
-            raise ConfigEntryError("Error fetching device info: {err}") from err
+            raise ConfigEntryError(f"Error fetching device info: {err}") from err
         except ConnectError as err:
             raise UpdateFailed(f"Error fetching device info: {err}") from err
 

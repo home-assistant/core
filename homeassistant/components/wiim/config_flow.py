@@ -2,7 +2,7 @@
 
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 from wiim.discovery import async_probe_wiim_device
 from wiim.models import WiimProbeResult
 
@@ -15,7 +15,7 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import DOMAIN, LOGGER, UPNP_PORT
 
-STEP_USER_DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str})
+STEP_USER_DATA_SCHEMA = probatio.Schema({probatio.Required(CONF_HOST): str})
 
 
 async def _async_probe_wiim_host(hass: HomeAssistant, host: str) -> WiimProbeResult:
