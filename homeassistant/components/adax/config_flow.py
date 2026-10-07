@@ -177,7 +177,7 @@ class AdaxConfigFlow(ConfigFlow, domain=DOMAIN):
                     errors["base"] = "cannot_connect"
                 except Exception:
                     _LOGGER.exception("Unexpected error connecting to Adax heater")
-                    errors["base"] = "cannot_connect"
+                    errors["base"] = "unknown"
                 else:
                     if not errors:
                         return self.async_create_entry(

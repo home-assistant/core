@@ -4,12 +4,12 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "heater_not_available": "Heater not available. Try to reset the heater by pressing + and OK for some seconds.",
       "heater_not_found": "Heater not found. Try to move the heater closer to Home Assistant computer.",
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_mac": "The provided MAC address is invalid."
+      "invalid_mac": "The provided MAC address is invalid.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
       "cloud": {
