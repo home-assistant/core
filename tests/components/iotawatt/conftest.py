@@ -1,6 +1,7 @@
 """Test fixtures for IoTaWatt."""
 
 from collections.abc import Generator
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -12,10 +13,19 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-def entry(hass: HomeAssistant) -> MockConfigEntry:
+def entry_options() -> dict[str, Any]:
+    """Options of the mock config entry, overridden by tests."""
+    return {}
+
+
+@pytest.fixture
+def entry(hass: HomeAssistant, entry_options: dict[str, Any]) -> MockConfigEntry:
     """Mock config entry added to HA."""
     entry = MockConfigEntry(
-        domain=DOMAIN, title="Test Device", data={"host": "1.2.3.4"}
+        domain=DOMAIN,
+        title="Test Device",
+        data={"host": "1.2.3.4"},
+        options=entry_options,
     )
     entry.add_to_hass(hass)
     return entry

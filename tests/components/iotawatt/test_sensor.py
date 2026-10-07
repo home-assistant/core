@@ -24,7 +24,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from . import INPUT_SENSOR, OUTPUT_SENSOR, VAR_OUTPUT_SENSOR
+from . import INPUT_SENSOR, LIFETIME_INPUT_SENSOR, OUTPUT_SENSOR, VAR_OUTPUT_SENSOR
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -144,3 +144,29 @@ async def test_sensor_type_output_reactive_power(
         == UnitOfReactivePower.VOLT_AMPERE_REACTIVE
     )
     assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.REACTIVE_POWER
+
+
+async def test_sensor_lifetime_energy(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_iotawatt: MagicMock,
+) -> None:
+    """Test lifetime energy sensors are meter readings."""
+    mock_iotawatt.getSensors.return_value["sensors"]["my_lifetime_key"] = (
+        LIFETIME_INPUT_SENSOR
+    )
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test_device_my_sensor_wh_lifetime")
+    assert state is not None
+    assert state.state == "100.0"
+    assert state.attributes[ATTR_STATE_CLASS] is SensorStateClass.TOTAL_INCREASING
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfEnergy.WATT_HOUR
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.ENERGY
+    assert state.attributes["metering_since"] == "2023-07-20T12:52:00"
+    assert "last_reset" not in state.attributes
+
+    reg_entry = entity_registry.async_get("sensor.test_device_my_sensor_wh_lifetime")
+    assert reg_entry is not None
+    assert reg_entry.unique_id == "mock-mac-input-1-WattHours-lifetime"

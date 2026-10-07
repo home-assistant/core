@@ -109,6 +109,13 @@ ENTITY_DESCRIPTION_KEY_MAP: dict[str, IotaWattSensorEntityDescription] = {
     ),
 }
 
+LIFETIME_ENERGY_DESCRIPTION = IotaWattSensorEntityDescription(
+    key="lifetime_energy",
+    native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+    state_class=SensorStateClass.TOTAL_INCREASING,
+    device_class=SensorDeviceClass.ENERGY,
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -124,9 +131,12 @@ async def async_setup_entry(
         """Create a sensor entity."""
         created.add(key)
         data = coordinator.data["sensors"][key]
-        description = ENTITY_DESCRIPTION_KEY_MAP.get(
-            data.getUnit(), IotaWattSensorEntityDescription(key="base_sensor")
-        )
+        if data.getLifetime():
+            description = LIFETIME_ENERGY_DESCRIPTION
+        else:
+            description = ENTITY_DESCRIPTION_KEY_MAP.get(
+                data.getUnit(), IotaWattSensorEntityDescription(key="base_sensor")
+            )
 
         return IotaWattSensor(
             coordinator=coordinator,
@@ -167,9 +177,12 @@ class IotaWattSensor(CoordinatorEntity[IotawattUpdater], SensorEntity):
         data = self._sensor_data
         # An entity without a unique ID cannot be attached to a device.
         if data.getType() == "Input":
-            self._attr_unique_id = (
+            unique_id = (
                 f"{data.hub_mac_address}-input-{data.getChannel()}-{data.getUnit()}"
             )
+            if data.getLifetime():
+                unique_id += "-lifetime"
+            self._attr_unique_id = unique_id
             self._attr_device_info = dr.DeviceInfo(
                 connections={(dr.CONNECTION_NETWORK_MAC, data.hub_mac_address)},
                 manufacturer="IoTaWatt",
@@ -199,8 +212,10 @@ class IotaWattSensor(CoordinatorEntity[IotawattUpdater], SensorEntity):
                 self.hass.async_create_task(self.async_remove())
             return
 
-        if (begin := self._sensor_data.getBegin()) and (
-            last_reset := dt_util.parse_datetime(begin)
+        if (
+            not self._sensor_data.getLifetime()
+            and (begin := self._sensor_data.getBegin())
+            and (last_reset := dt_util.parse_datetime(begin))
         ):
             self._attr_last_reset = last_reset
 
@@ -214,6 +229,8 @@ class IotaWattSensor(CoordinatorEntity[IotawattUpdater], SensorEntity):
         attrs = {"type": data.getType()}
         if attrs["type"] == "Input":
             attrs["channel"] = data.getChannel()
+        if data.getLifetime() and (begin := data.getBegin()):
+            attrs["metering_since"] = begin
 
         return attrs
 

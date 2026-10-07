@@ -6,13 +6,18 @@ from typing import Any, override
 from iotawattpy.iotawatt import Iotawatt
 import probatio
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlowWithReload,
+)
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import httpx_client
 
-from .const import CONNECTION_ERRORS, DOMAIN
+from .const import CONF_LEGACY_ENERGY, CONNECTION_ERRORS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -68,7 +73,11 @@ class IOTaWattConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_show_form(step_id="user", data_schema=schema)
 
         if not (errors := await validate_input(self.hass, user_input)):
-            return self.async_create_entry(title=user_input[CONF_HOST], data=user_input)
+            return self.async_create_entry(
+                title=user_input[CONF_HOST],
+                data=user_input,
+                options={CONF_LEGACY_ENERGY: False},
+            )
 
         if errors == {"base": "invalid_auth"}:
             self._data.update(user_input)
@@ -104,7 +113,39 @@ class IOTaWattConfigFlow(ConfigFlow, domain=DOMAIN):
                 step_id="auth", data_schema=data_schema, errors=errors
             )
 
-        return self.async_create_entry(title=data[CONF_HOST], data=data)
+        return self.async_create_entry(
+            title=data[CONF_HOST], data=data, options={CONF_LEGACY_ENERGY: False}
+        )
+
+    @staticmethod
+    @callback
+    @override
+    def async_get_options_flow(config_entry: ConfigEntry) -> IOTaWattOptionsFlow:
+        """Get the options flow for this handler."""
+        return IOTaWattOptionsFlow()
+
+
+class IOTaWattOptionsFlow(OptionsFlowWithReload):
+    """Handle an options flow for iotawatt."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage the options."""
+        if user_input is not None:
+            return self.async_create_entry(data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=probatio.Schema(
+                {
+                    probatio.Required(
+                        CONF_LEGACY_ENERGY,
+                        default=self.config_entry.options.get(CONF_LEGACY_ENERGY, True),
+                    ): bool,
+                }
+            ),
+        )
 
 
 class CannotConnect(HomeAssistantError):

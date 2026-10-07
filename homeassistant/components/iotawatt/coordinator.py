@@ -1,6 +1,6 @@
 """IoTaWatt DataUpdateCoordinator."""
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 import logging
 from typing import override
 
@@ -13,7 +13,7 @@ from homeassistant.helpers import httpx_client
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONNECTION_ERRORS
+from .const import CONF_LEGACY_ENERGY, CONNECTION_ERRORS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,16 +45,6 @@ class IotawattUpdater(DataUpdateCoordinator):
             ),
         )
 
-        self._last_run: datetime | None = None
-
-    def update_last_run(self, last_run: datetime) -> None:
-        """Notify coordinator of a sensor last update time."""
-        # We want to fetch the data from the iotawatt since HA was last shutdown.
-        # We retrieve from the sensor last updated.
-        # This method is called from each sensor upon their state being restored.
-        if self._last_run is None or last_run > self._last_run:
-            self._last_run = last_run
-
     @override
     async def _async_update_data(self):
         """Fetch sensors from IoTaWatt device."""
@@ -67,6 +57,10 @@ class IotawattUpdater(DataUpdateCoordinator):
                 self.config_entry.data.get(CONF_PASSWORD),
                 integratedInterval="d",
                 includeNonTotalSensors=False,
+                includeLifetimeSensors=True,
+                includeTotalSensors=self.config_entry.options.get(
+                    CONF_LEGACY_ENERGY, True
+                ),
             )
             try:
                 is_authenticated = await api.connect()
@@ -79,8 +73,7 @@ class IotawattUpdater(DataUpdateCoordinator):
             self.api = api
 
         try:
-            await self.api.update(lastUpdate=self._last_run)
+            await self.api.update()
         except CONNECTION_ERRORS as err:
             raise UpdateFailed("Connection failed") from err
-        self._last_run = None
         return self.api.getSensors()
