@@ -228,7 +228,8 @@
       "fix_flow": {
         "abort": {
           "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-          "no_new_account": "No other Kamereon account linked to your vehicles was found. If you already added your vehicles again under a new Renault entry, delete the entry for account {account_id}."
+          "no_new_account": "No other Kamereon account linked to your vehicles was found. If you already added your vehicles again under a new Renault entry, delete the entry for account {account_id}.",
+          "reauth_required": "Your Renault login is no longer valid. Re-authenticate the Renault integration, then open this repair again."
         },
         "step": {
           "account": {

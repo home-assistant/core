@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, Any
 
 import aiohttp
 import probatio
+from renault_api.exceptions import NotAuthenticatedException
 from renault_api.gigya.exceptions import GigyaException
 from renault_api.kamereon.exceptions import KamereonResponseException
 
@@ -66,6 +67,9 @@ class AccountNotFoundRepairFlow(RepairsFlow):
         try:
             await hub.async_login(self._entry)
             account_ids = await hub.get_account_ids_for_vins(vins)
+        except NotAuthenticatedException:
+            self._entry.async_start_reauth(self.hass)
+            return self.async_abort(reason="reauth_required")
         except aiohttp.ClientError, GigyaException, KamereonResponseException:
             return self.async_abort(reason="cannot_connect")
 

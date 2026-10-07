@@ -5,9 +5,15 @@ from unittest.mock import patch
 
 import aiohttp
 import pytest
+from renault_api.exceptions import NotAuthenticatedException
 
 from homeassistant.components.renault.const import DOMAIN, RenaultConfigurationKeys
-from homeassistant.config_entries import SOURCE_USER, ConfigEntry, ConfigEntryState
+from homeassistant.config_entries import (
+    SOURCE_REAUTH,
+    SOURCE_USER,
+    ConfigEntry,
+    ConfigEntryState,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import issue_registry as ir
@@ -119,19 +125,42 @@ async def test_account_not_found_repair_already_configured(
     assert result["reason"] == "no_new_account"
 
 
-async def test_account_not_found_repair_cannot_connect(
+@pytest.mark.parametrize(
+    ("side_effect", "reason", "reauth_flows"),
+    [
+        pytest.param(
+            aiohttp.ClientConnectionError, "cannot_connect", 0, id="cannot_connect"
+        ),
+        pytest.param(
+            NotAuthenticatedException("Authentication expired."),
+            "reauth_required",
+            1,
+            id="reauth_required",
+        ),
+    ],
+)
+async def test_account_not_found_repair_login_error(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     config_entry: ConfigEntry,
+    side_effect: Exception | type[Exception],
+    reason: str,
+    reauth_flows: int,
 ) -> None:
-    """Test the repair aborts when the Renault servers can't be reached."""
+    """Test the repair aborts when the Renault servers can't be used."""
     await _setup_with_account_not_found(hass, config_entry)
 
     client = await hass_client()
     with patch(
         "renault_api.renault_client.RenaultClient.get_api_accounts",
-        side_effect=aiohttp.ClientConnectionError,
+        side_effect=side_effect,
     ):
         result = await start_repair_fix_flow(client, DOMAIN, ISSUE_ID)
     assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == "cannot_connect"
+    assert result["reason"] == reason
+
+    await hass.async_block_till_done()
+    assert (
+        len(list(config_entry.async_get_active_flows(hass, {SOURCE_REAUTH})))
+        == reauth_flows
+    )
