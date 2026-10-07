@@ -69,7 +69,7 @@ async def async_setup_entry(
         if not coordinator.new_devices:
             return
 
-        entities = []
+        entities: list[SwitchEntity] = []
         for device_id in coordinator.new_devices:
             if not (switches := coordinator.data[device_id].get("switches")):
                 continue
