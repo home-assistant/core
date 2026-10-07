@@ -22,5 +22,30 @@
         }
       }
     }
+  },
+  "issues": {
+    "legacy_energy": {
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "description": "The IoTaWatt integration now provides lifetime energy sensors: meter readings counting since the beginning of the device datalog. These are more robust than the legacy period energy sensors, which reset at device-local midnight and will be removed in a future release.\n\nIf the legacy energy sensors are used in the Energy dashboard or in automations, replace them with the new lifetime energy sensors first.\n\nSubmitting removes the legacy period energy sensors from this IoTaWatt device. Already recorded long-term statistics remain available.",
+            "title": "Switch to the lifetime energy sensors"
+          }
+        }
+      },
+      "title": "Legacy period energy sensors are deprecated"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "legacy_energy": "Provide legacy period energy sensors"
+        },
+        "data_description": {
+          "legacy_energy": "Legacy period energy sensors reset at device-local midnight and are deprecated in favor of the lifetime energy sensors. Disabling them also reduces the load on the IoTaWatt device."
+        }
+      }
+    }
   }
 }
