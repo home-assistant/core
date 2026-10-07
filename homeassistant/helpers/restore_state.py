@@ -413,6 +413,13 @@ class RestoreStateData:
 
         del self.entities[entity_id]
 
+    @callback
+    def async_restore_entity_moved(
+        self, old_entity_id: str, new_entity_id: str
+    ) -> None:
+        """Track an entity whose entity_id was changed in place."""
+        self.entities[new_entity_id] = self.entities.pop(old_entity_id)
+
 
 @callback
 def _entity_registry_entry_created_filter(
@@ -456,6 +463,13 @@ class RestoreEntity(Entity):
             self.entity_id, state, extra_data, self.__added_entity_registry_id
         )
         await super().async_internal_will_remove_from_hass()
+
+    @callback
+    @override
+    def _async_move_entity_id(self, old_entity_id: str) -> None:
+        """Move core registrations of an entity whose entity_id changed in place."""
+        super()._async_move_entity_id(old_entity_id)
+        async_get(self.hass).async_restore_entity_moved(old_entity_id, self.entity_id)
 
     @callback
     def _async_get_restored_data(self) -> StoredState | None:

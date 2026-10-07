@@ -43,7 +43,6 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity,
     entity_registry as er,
-    restore_state,
 )
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -54,7 +53,6 @@ from homeassistant.helpers.event import (
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.util import dt as dt_util
 
 from tests.common import (
     MockConfigEntry,
@@ -3046,49 +3044,6 @@ async def test_change_entity_id_remove_and_add(
     assert ent.on_remove_calls == 2
     assert hass.states.get("test.test3").state == STATE_UNKNOWN
     _assert_entity_bookkeeping(hass, platform, ent, ["test.test3"])
-
-
-async def test_change_entity_id_remove_and_add_restore(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
-) -> None:
-    """Test restore data follows the entity to its new entity_id on re-add."""
-
-    class AddedRestoreEntity(RestoreEntity):
-        """Entity restoring its state when added, without opting in."""
-
-        _attr_unique_id = "5678"
-
-        def __init__(self) -> None:
-            """Initialize the entity."""
-            self.last_states: list[tuple[str, str | None]] = []
-
-        async def async_added_to_hass(self) -> None:
-            """Run when the entity has been added to hass."""
-            last_state = await self.async_get_last_state()
-            self.last_states.append(
-                (self.entity_id, last_state.state if last_state else None)
-            )
-
-    entity_registry.async_get_or_create(
-        "test", "test_platform", "5678", suggested_object_id="test"
-    )
-    data = restore_state.async_get(hass)
-    data.last_states = {
-        "test.test": restore_state.StoredState(
-            State("test.test", "stored"), None, dt_util.utcnow()
-        )
-    }
-    platform = MockEntityPlatform(hass, domain="test")
-    ent = AddedRestoreEntity()
-    await platform.async_add_entities([ent])
-
-    entity_registry.async_update_entity("test.test", new_entity_id="test.test2")
-    await hass.async_block_till_done()
-
-    # The state stored on removal is restored under the new entity_id
-    assert ent.last_states == [("test.test", "stored"), ("test.test2", STATE_UNKNOWN)]
-    assert list(data.last_states) == ["test.test2"]
-    assert data.entities == {"test.test2": ent}
 
 
 async def test_change_entity_id_on_remove_from_setup(
