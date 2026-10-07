@@ -8,6 +8,7 @@
       "missing_capabilities": "The MCP server does not support a required capability (Tools)",
       "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
       "oauth_registration_failed": "Could not register Home Assistant with the MCP server's authorization server",
+      "oauth_secret_expires": "The authorization server issued a client secret that expires, which is not supported",
       "reauth_account_mismatch": "The authenticated user does not match the MCP Server user that needed re-authentication.",
       "timeout_connect": "[%key:common::config_flow::error::timeout_connect%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"

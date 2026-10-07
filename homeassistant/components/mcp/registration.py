@@ -48,18 +48,26 @@ class ClientRegistrationError(HomeAssistantError):
     """Dynamic client registration was rejected or the response was unusable."""
 
 
+class ClientSecretExpiresError(ClientRegistrationError):
+    """The authorization server issued a client secret with a finite lifetime."""
+
+
 @dataclass(frozen=True, slots=True)
 class RegisteredClientIdentity:
     """OAuth client identity scoped to one authorization server.
 
     Client ids are only unique per authorization server, so the stored
-    credential id includes the server and the auth method.
+    credential id includes the server, the auth method, and the redirect URI
+    and scopes that registration bound to the client. Missing redirect or
+    scopes means a previously stored client whose metadata was not recorded.
     """
 
     authorize_url: str
     token_url: str
     client_id: str
     method: TokenEndpointAuthMethod
+    redirect_uri: str | None = None
+    scopes: tuple[str, ...] | None = None
 
 
 def select_token_endpoint_auth_method(
@@ -83,6 +91,39 @@ def select_token_endpoint_auth_method(
     )
 
 
+def normalized_scopes(scopes: list[str] | None) -> tuple[str, ...]:
+    """Return scopes as a sorted unique tuple.
+
+    An omitted scope list and an empty list are the same request: no scope.
+    """
+    if not scopes:
+        return ()
+    return tuple(sorted(set(scopes)))
+
+
+def registered_client_matches_request(
+    identity: RegisteredClientIdentity,
+    *,
+    authorize_url: str,
+    token_url: str,
+    redirect_uri: str,
+    scopes: tuple[str, ...],
+) -> bool:
+    """Return whether a stored client was registered for this request.
+
+    RFC 7591 binds redirect URIs and scope to the client. Another MCP resource
+    can share the authorization endpoints while using a different callback or
+    scope set, so those clients are not interchangeable.
+    """
+    return (
+        identity.authorize_url == authorize_url
+        and identity.token_url == token_url
+        and identity.redirect_uri == redirect_uri
+        and identity.scopes is not None
+        and set(identity.scopes) == set(scopes)
+    )
+
+
 def encode_registered_client_id(identity: RegisteredClientIdentity) -> str:
     """Return a lossless client id scoped to one authorization server.
 
@@ -91,13 +132,17 @@ def encode_registered_client_id(identity: RegisteredClientIdentity) -> str:
     issue the same client id, or two ids that slugify the same, cannot share
     a secret.
     """
-    payload = {
+    payload: dict[str, Any] = {
         "authorize_url": identity.authorize_url,
         "client_id": identity.client_id,
         "method": identity.method,
         "token_url": identity.token_url,
         "v": _REGISTERED_CLIENT_VERSION,
     }
+    if identity.redirect_uri is not None:
+        payload["redirect_uri"] = identity.redirect_uri
+    if identity.scopes is not None:
+        payload["scopes"] = list(identity.scopes)
     return json.dumps(payload, separators=(",", ":"), sort_keys=True).encode().hex()
 
 
@@ -126,11 +171,26 @@ def decode_registered_client_id(value: str) -> RegisteredClientIdentity | None:
         or method not in SUPPORTED_TOKEN_ENDPOINT_AUTH_METHODS
     ):
         return None
+    redirect_uri = payload.get("redirect_uri")
+    if redirect_uri is not None and (
+        not isinstance(redirect_uri, str) or not redirect_uri
+    ):
+        return None
+    if "scopes" not in payload or payload["scopes"] is None:
+        scopes = None
+    elif isinstance(payload["scopes"], list) and all(
+        isinstance(scope, str) for scope in payload["scopes"]
+    ):
+        scopes = tuple(payload["scopes"])
+    else:
+        return None
     return RegisteredClientIdentity(
         authorize_url=authorize_url,
         token_url=token_url,
         client_id=client_id,
         method=cast(TokenEndpointAuthMethod, method),
+        redirect_uri=redirect_uri,
+        scopes=scopes,
     )
 
 
@@ -203,21 +263,26 @@ async def async_register_dynamic_client(
     except ValueError as err:
         raise ClientRegistrationError("Registration response was not JSON") from err
 
-    return _parse_registration_response(body, redirect_uri, method)
+    return _parse_registration_response(
+        body, redirect_uri, method, normalized_scopes(scopes)
+    )
 
 
 def _parse_registration_response(
     body: Any,
     redirect_uri: str,
     requested_method: TokenEndpointAuthMethod,
+    requested_scopes: tuple[str, ...],
 ) -> RegisteredClient:
     """Parse an RFC 7591 registration response into issued credentials."""
     if not isinstance(body, Mapping):
         raise ClientRegistrationError("Registration response was not an object")
 
     payload = dict(body)
+    _require_registered_redirect_uri(payload.get("redirect_uris"), redirect_uri)
     if not payload.get("redirect_uris"):
         payload["redirect_uris"] = [redirect_uri]
+    _require_granted_scopes(payload.get("scope"), requested_scopes)
 
     client_id = payload.get("client_id")
     if not isinstance(client_id, str) or not client_id:
@@ -227,6 +292,9 @@ def _parse_registration_response(
         payload.get("token_endpoint_auth_method"), requested_method
     )
     client_secret = _client_secret_from_response(payload.get("client_secret"), method)
+    # Application credentials are not rotated. A finite secret lifetime would
+    # leave refresh and reauth on a credential that can no longer be replaced.
+    _reject_expiring_client_secret(payload.get("client_secret_expires_at"))
     try:
         info = OAuthClientInformationFull.model_validate(payload)
     except ValidationError as err:
@@ -277,4 +345,54 @@ def _issued_auth_method(
         return TOKEN_ENDPOINT_AUTH_BASIC
     raise ClientRegistrationError(
         "Registration response token_endpoint_auth_method is not supported"
+    )
+
+
+def _require_registered_redirect_uri(value: Any, redirect_uri: str) -> None:
+    """Reject a response that does not register the callback we will use.
+
+    An omitted list is accepted: some servers return only the client id. An
+    explicit list must include the callback from this registration request.
+    """
+    if value is None:
+        return
+    if not isinstance(value, list) or any(not isinstance(uri, str) for uri in value):
+        raise ClientRegistrationError("Registration response redirect_uris was invalid")
+    if redirect_uri not in value:
+        raise ClientRegistrationError(
+            "Registration response did not include the redirect URI"
+        )
+
+
+def _require_granted_scopes(value: Any, requested_scopes: tuple[str, ...]) -> None:
+    """Reject a response whose scope does not cover the request.
+
+    An omitted scope is accepted. An explicit scope must include every scope
+    this registration asked for.
+    """
+    if value is None:
+        return
+    if not isinstance(value, str):
+        raise ClientRegistrationError("Registration response scope was invalid")
+    granted = set(value.split())
+    if not set(requested_scopes).issubset(granted):
+        raise ClientRegistrationError(
+            "Registration response did not grant the requested scopes"
+        )
+
+
+def _reject_expiring_client_secret(value: Any) -> None:
+    """Reject a client secret that will expire.
+
+    RFC 7591 uses 0 when the secret does not expire. Any other timestamp is a
+    finite lifetime, which is refused until credential rotation exists.
+    """
+    if value is None:
+        return
+    if isinstance(value, bool) or not isinstance(value, int) or value < 0:
+        raise ClientRegistrationError("client_secret_expires_at was invalid")
+    if value == 0:
+        return
+    raise ClientSecretExpiresError(
+        "Authorization server issued a client secret that expires"
     )

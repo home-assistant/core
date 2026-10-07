@@ -35,6 +35,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
     async_get_redirect_uri,
 )
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
+from homeassistant.util.hass_dict import HassKey
 
 from . import async_get_config_entry_implementation
 from .application_credentials import authorization_server_context
@@ -50,15 +51,38 @@ from .const import (
 from .coordinator import TokenManager, mcp_client
 from .registration import (
     ClientRegistrationError,
+    ClientSecretExpiresError,
     RegisteredClientIdentity,
     async_register_dynamic_client,
     decode_registered_client_id,
     encode_registered_client_id,
+    normalized_scopes,
     registered_client_auth_domain,
+    registered_client_matches_request,
     resolve_registration_endpoint,
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+_REGISTRATION_LOCKS: HassKey[dict[tuple[str, str], asyncio.Lock]] = HassKey(
+    f"{DOMAIN}_oauth_registration_locks"
+)
+
+
+def _async_registration_lock(
+    hass: HomeAssistant, authorize_url: str, token_url: str
+) -> asyncio.Lock:
+    """Return the lock for one authorization server.
+
+    Creating the lock does not await, so two flows cannot observe a missing
+    lock at the same time.
+    """
+    locks = hass.data.setdefault(_REGISTRATION_LOCKS, {})
+    key = (authorize_url, token_url)
+    if (lock := locks.get(key)) is None:
+        lock = locks[key] = asyncio.Lock()
+    return lock
+
 
 STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
@@ -376,8 +400,10 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         data.update(super().extra_authorize_data)
         return data
 
-    def _async_existing_registered_auth_domain(self) -> str | None:
-        """Return a stored client for this authorization server, if one exists."""
+    def _async_existing_registered_auth_domain(
+        self, redirect_uri: str, scopes: tuple[str, ...]
+    ) -> str | None:
+        """Return a stored client registered for this callback and scopes."""
         storage = self.hass.data.get(APPLICATION_CREDENTIALS_DOMAIN)
         if storage is None:
             return None
@@ -387,11 +413,12 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             if item[CONF_DOMAIN] != DOMAIN:
                 continue
             identity = decode_registered_client_id(item[CONF_CLIENT_ID])
-            if identity is None:
-                continue
-            if (
-                identity.authorize_url == authorize_url
-                and identity.token_url == token_url
+            if identity is not None and registered_client_matches_request(
+                identity,
+                authorize_url=authorize_url,
+                token_url=token_url,
+                redirect_uri=redirect_uri,
+                scopes=scopes,
             ):
                 return item[CONF_ID]
         return None
@@ -400,71 +427,89 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         """Register an OAuth client and continue the authorize flow."""
         if self.oauth_config is None or not self.oauth_config.registration_endpoint:
             return self.async_abort(reason="oauth_registration_failed")
-        auth_domain = self._async_existing_registered_auth_domain()
-        if auth_domain is None:
-            try:
-                redirect_uri = async_get_redirect_uri(self.hass)
-            except RuntimeError as err:
-                _LOGGER.debug("OAuth redirect URI is not available: %s", err)
-                return self.async_abort(
-                    reason="no_url_available",
-                    description_placeholders={
-                        "docs_url": (
-                            "https://www.home-assistant.io/more-info/no-url-available"
-                        )
-                    },
-                    # OAuth helper would otherwise retarget this shared reason.
-                    translation_domain=DOMAIN,
-                )
-            try:
-                registered = await async_register_dynamic_client(
-                    self.oauth_config.registration_endpoint,
-                    redirect_uri,
-                    token_endpoint_auth_methods=(
-                        self.oauth_config.token_endpoint_auth_methods
-                    ),
-                    scopes=self.data[CONF_SCOPE],
-                )
-            except ClientRegistrationError:
-                _LOGGER.debug("Dynamic client registration failed", exc_info=True)
-                return self.async_abort(reason="oauth_registration_failed")
-            except httpx.TimeoutException, httpx2.TimeoutException:
-                _LOGGER.debug("Timeout during dynamic client registration")
-                return self.async_abort(reason="timeout_connect")
-            except httpx.HTTPError, httpx2.HTTPError:
-                _LOGGER.debug("Cannot connect during dynamic client registration")
-                return self.async_abort(reason="cannot_connect")
+        try:
+            redirect_uri = async_get_redirect_uri(self.hass)
+        except RuntimeError as err:
+            _LOGGER.debug("OAuth redirect URI is not available: %s", err)
+            return self.async_abort(
+                reason="no_url_available",
+                description_placeholders={
+                    "docs_url": (
+                        "https://www.home-assistant.io/more-info/no-url-available"
+                    )
+                },
+                # OAuth helper would otherwise retarget this shared reason.
+                translation_domain=DOMAIN,
+            )
+        scopes = normalized_scopes(self.data[CONF_SCOPE])
+        # One registration at a time per authorization server. A second flow
+        # waits, then reuses the client the first flow stored.
+        lock = _async_registration_lock(
+            self.hass,
+            self.data[CONF_AUTHORIZATION_URL],
+            self.data[CONF_TOKEN_URL],
+        )
+        async with lock:
+            auth_domain = self._async_existing_registered_auth_domain(
+                redirect_uri, scopes
+            )
+            if auth_domain is None:
+                try:
+                    registered = await async_register_dynamic_client(
+                        self.oauth_config.registration_endpoint,
+                        redirect_uri,
+                        token_endpoint_auth_methods=(
+                            self.oauth_config.token_endpoint_auth_methods
+                        ),
+                        scopes=self.data[CONF_SCOPE],
+                    )
+                except ClientSecretExpiresError:
+                    _LOGGER.debug(
+                        "Authorization server issued an expiring client secret"
+                    )
+                    return self.async_abort(reason="oauth_secret_expires")
+                except ClientRegistrationError:
+                    _LOGGER.debug("Dynamic client registration failed", exc_info=True)
+                    return self.async_abort(reason="oauth_registration_failed")
+                except httpx.TimeoutException, httpx2.TimeoutException:
+                    _LOGGER.debug("Timeout during dynamic client registration")
+                    return self.async_abort(reason="timeout_connect")
+                except httpx.HTTPError, httpx2.HTTPError:
+                    _LOGGER.debug("Cannot connect during dynamic client registration")
+                    return self.async_abort(reason="cannot_connect")
 
-            encoded_client_id = encode_registered_client_id(
-                RegisteredClientIdentity(
-                    authorize_url=self.data[CONF_AUTHORIZATION_URL],
-                    token_url=self.data[CONF_TOKEN_URL],
-                    client_id=registered.client_id,
-                    method=registered.token_endpoint_auth_method,
+                encoded_client_id = encode_registered_client_id(
+                    RegisteredClientIdentity(
+                        authorize_url=self.data[CONF_AUTHORIZATION_URL],
+                        token_url=self.data[CONF_TOKEN_URL],
+                        client_id=registered.client_id,
+                        method=registered.token_endpoint_auth_method,
+                        redirect_uri=redirect_uri,
+                        scopes=scopes,
+                    )
                 )
-            )
-            auth_domain = registered_client_auth_domain(encoded_client_id)
-            try:
-                await async_import_client_credential(
-                    self.hass,
-                    DOMAIN,
-                    ClientCredential(
-                        encoded_client_id,
-                        registered.client_secret,
-                        DCR_CLIENT_NAME,
-                    ),
-                    auth_domain,
-                )
-            except ValueError:
+                auth_domain = registered_client_auth_domain(encoded_client_id)
+                try:
+                    await async_import_client_credential(
+                        self.hass,
+                        DOMAIN,
+                        ClientCredential(
+                            encoded_client_id,
+                            registered.client_secret,
+                            DCR_CLIENT_NAME,
+                        ),
+                        auth_domain,
+                    )
+                except ValueError:
+                    _LOGGER.debug(
+                        "Could not store dynamically registered client", exc_info=True
+                    )
+                    return self.async_abort(reason="oauth_registration_failed")
+            else:
                 _LOGGER.debug(
-                    "Could not store dynamically registered client", exc_info=True
+                    "Reusing dynamically registered client for %s",
+                    self.data[CONF_AUTHORIZATION_URL],
                 )
-                return self.async_abort(reason="oauth_registration_failed")
-        else:
-            _LOGGER.debug(
-                "Reusing dynamically registered client for %s",
-                self.data[CONF_AUTHORIZATION_URL],
-            )
 
         with authorization_server_context(self.authorization_server()):
             implementations = await async_get_implementations(self.hass, self.DOMAIN)

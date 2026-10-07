@@ -1,5 +1,6 @@
 """Test the Model Context Protocol config flow."""
 
+import asyncio
 from collections.abc import Callable
 import json
 from typing import Any
@@ -26,6 +27,7 @@ from homeassistant.components.mcp.application_credentials import (
     authorization_server_context,
 )
 from homeassistant.components.mcp.auth import AuthenticateHeader
+from homeassistant.components.mcp.config_flow import _REGISTRATION_LOCKS
 from homeassistant.components.mcp.const import (
     CONF_AUTHORIZATION_URL,
     CONF_SCOPE,
@@ -35,6 +37,7 @@ from homeassistant.components.mcp.const import (
     DOMAIN,
 )
 from homeassistant.components.mcp.registration import (
+    RegisteredClient,
     RegisteredClientIdentity,
     decode_registered_client_id,
     encode_registered_client_id,
@@ -1434,12 +1437,13 @@ def _authorization_server_metadata(
     auth_methods: list[str] | None = None,
     authorize_url: str = OAUTH_AUTHORIZE_URL,
     token_url: str = OAUTH_TOKEN_URL,
+    scopes: list[str] | None = None,
 ) -> httpx2.Response:
     """Build an authorization server metadata response."""
     payload: dict[str, Any] = {
         "authorization_endpoint": authorize_url,
         "token_endpoint": token_url,
-        "scopes_supported": SCOPES,
+        "scopes_supported": SCOPES if scopes is None else scopes,
     }
     if registration_endpoint is not None:
         payload["registration_endpoint"] = registration_endpoint
@@ -2048,6 +2052,437 @@ async def test_dynamic_client_registration_reuses_existing_client(
 
 @pytest.mark.usefixtures("current_request_with_host", "mock_setup_entry")
 @respx.mock
+async def test_registration_records_callback_and_scopes(
+    hass: HomeAssistant,
+    mock_mcp_client: Mock,
+) -> None:
+    """A stored client remembers the callback and scopes it was registered for."""
+    respx.post(f"{MCP_SERVER_BASE_URL}/register").mock(
+        return_value=httpx2.Response(
+            201,
+            json={
+                "client_id": REGISTERED_CLIENT_ID,
+                "client_secret": REGISTERED_CLIENT_SECRET,
+                "token_endpoint_auth_method": "client_secret_post",
+                "redirect_uris": [OAUTH_CALLBACK_URL, "https://other.example/callback"],
+                "scope": "write read extra",
+                "client_secret_expires_at": 0,
+            },
+        )
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    mock_mcp_client.side_effect = httpx2.HTTPStatusError(
+        "Authentication required", request=None, response=httpx2.Response(401)
+    )
+    respx.get(OAUTH_DISCOVERY_ENDPOINT).mock(
+        return_value=_authorization_server_metadata(
+            registration_endpoint="/register",
+            auth_methods=["client_secret_post"],
+        )
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_URL: MCP_SERVER_URL},
+    )
+
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+    registered = [
+        item
+        for item in hass.data[APPLICATION_CREDENTIALS_DOMAIN].async_items()
+        if (identity := decode_registered_client_id(item[CONF_CLIENT_ID])) is not None
+    ]
+    assert len(registered) == 1
+    identity = decode_registered_client_id(registered[0][CONF_CLIENT_ID])
+    assert identity is not None
+    assert identity.redirect_uri == OAUTH_CALLBACK_URL
+    assert identity.scopes == ("read", "write")
+
+
+@pytest.mark.usefixtures("current_request_with_host", "mock_setup_entry")
+@respx.mock
+async def test_different_scopes_register_another_client(
+    hass: HomeAssistant,
+    mock_mcp_client: Mock,
+) -> None:
+    """Another MCP resource on the same authorization server keeps its own client."""
+    registration = respx.post(f"{AUTHORIZATION_SERVER}/register").mock(
+        side_effect=[
+            httpx2.Response(
+                201,
+                json={
+                    "client_id": "client-read",
+                    "client_secret": "secret-read",
+                    "token_endpoint_auth_method": "client_secret_post",
+                },
+            ),
+            httpx2.Response(
+                201,
+                json={
+                    "client_id": "client-write",
+                    "client_secret": "secret-write",
+                    "token_endpoint_auth_method": "client_secret_post",
+                },
+            ),
+        ]
+    )
+    respx.get(OAUTH_DISCOVERY_ENDPOINT).mock(
+        return_value=_authorization_server_metadata(
+            registration_endpoint=f"{AUTHORIZATION_SERVER}/register",
+            auth_methods=["client_secret_post"],
+            scopes=["read"],
+        )
+    )
+    respx.get(
+        f"{MCP_SERVER_BASE_URL}/.well-known/oauth-authorization-server/mcp/babybuddy"
+    ).mock(
+        return_value=_authorization_server_metadata(
+            registration_endpoint=f"{AUTHORIZATION_SERVER}/register",
+            auth_methods=["client_secret_post"],
+            scopes=["write"],
+        )
+    )
+
+    async def _start(mcp_url: str) -> config_entries.ConfigFlowResult:
+        started = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        mock_mcp_client.side_effect = httpx2.HTTPStatusError(
+            "Authentication required", request=None, response=httpx2.Response(401)
+        )
+        return await hass.config_entries.flow.async_configure(
+            started["flow_id"],
+            {CONF_URL: mcp_url},
+        )
+
+    first = await _start(MCP_SERVER_URL)
+    second = await _start(PATH_MCP_URL)
+
+    assert first["type"] is FlowResultType.EXTERNAL_STEP
+    assert second["type"] is FlowResultType.EXTERNAL_STEP
+    assert URL(first["url"]).query["client_id"] == "client-read"
+    assert URL(second["url"]).query["client_id"] == "client-write"
+    assert registration.call_count == 2
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+@respx.mock
+async def test_different_redirect_uri_registers_another_client(
+    hass: HomeAssistant,
+    mock_mcp_client: Mock,
+) -> None:
+    """A changed callback URI is not reused from an older registration."""
+    registration = respx.post(f"{AUTHORIZATION_SERVER}/register").mock(
+        side_effect=[
+            httpx2.Response(
+                201,
+                json={
+                    "client_id": "client-first",
+                    "client_secret": "secret-first",
+                    "token_endpoint_auth_method": "client_secret_post",
+                },
+            ),
+            httpx2.Response(
+                201,
+                json={
+                    "client_id": "client-second",
+                    "client_secret": "secret-second",
+                    "token_endpoint_auth_method": "client_secret_post",
+                },
+            ),
+        ]
+    )
+
+    def _metadata(_request: httpx2.Request) -> httpx2.Response:
+        return _authorization_server_metadata(
+            registration_endpoint=f"{AUTHORIZATION_SERVER}/register",
+            auth_methods=["client_secret_post"],
+        )
+
+    respx.get(OAUTH_DISCOVERY_ENDPOINT).mock(side_effect=_metadata)
+    respx.get(
+        f"{MCP_SERVER_BASE_URL}/.well-known/oauth-authorization-server/mcp/babybuddy"
+    ).mock(side_effect=_metadata)
+
+    async def _start(mcp_url: str) -> config_entries.ConfigFlowResult:
+        started = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        mock_mcp_client.side_effect = httpx2.HTTPStatusError(
+            "Authentication required", request=None, response=httpx2.Response(401)
+        )
+        return await hass.config_entries.flow.async_configure(
+            started["flow_id"],
+            {CONF_URL: mcp_url},
+        )
+
+    redirects = [
+        OAUTH_CALLBACK_URL,
+        OAUTH_CALLBACK_URL,
+        "https://other.example/auth/external/callback",
+        "https://other.example/auth/external/callback",
+    ]
+
+    def _redirect(_hass: HomeAssistant) -> str:
+        return redirects.pop(0)
+
+    with (
+        patch(
+            "homeassistant.components.mcp.config_flow.async_get_redirect_uri",
+            side_effect=_redirect,
+        ),
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.async_get_redirect_uri",
+            side_effect=_redirect,
+        ),
+    ):
+        first = await _start(MCP_SERVER_URL)
+        second = await _start(PATH_MCP_URL)
+
+    assert first["type"] is FlowResultType.EXTERNAL_STEP
+    assert second["type"] is FlowResultType.EXTERNAL_STEP
+    assert URL(first["url"]).query["client_id"] == "client-first"
+    assert URL(second["url"]).query["client_id"] == "client-second"
+    assert registration.call_count == 2
+
+
+@pytest.mark.usefixtures("current_request_with_host", "mock_setup_entry")
+@respx.mock
+async def test_client_without_recorded_metadata_is_not_reused(
+    hass: HomeAssistant,
+    mock_mcp_client: Mock,
+) -> None:
+    """A client stored before callback and scopes were recorded is not reused."""
+    assert await async_setup_component(hass, APPLICATION_CREDENTIALS_DOMAIN, {})
+    legacy = {
+        "authorize_url": OAUTH_AUTHORIZE_URL,
+        "client_id": "legacy-client",
+        "method": "client_secret_post",
+        "token_url": OAUTH_TOKEN_URL,
+        "v": 1,
+    }
+    encoded = json.dumps(legacy, separators=(",", ":"), sort_keys=True).encode().hex()
+    await async_import_client_credential(
+        hass,
+        DOMAIN,
+        ClientCredential(encoded, "legacy-secret", DCR_CLIENT_NAME),
+        registered_client_auth_domain(encoded),
+    )
+    registration = respx.post(f"{MCP_SERVER_BASE_URL}/register").mock(
+        return_value=httpx2.Response(
+            201,
+            json={
+                "client_id": REGISTERED_CLIENT_ID,
+                "client_secret": REGISTERED_CLIENT_SECRET,
+                "token_endpoint_auth_method": "client_secret_post",
+            },
+        )
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    mock_mcp_client.side_effect = httpx2.HTTPStatusError(
+        "Authentication required", request=None, response=httpx2.Response(401)
+    )
+    respx.get(OAUTH_DISCOVERY_ENDPOINT).mock(
+        return_value=_authorization_server_metadata(
+            registration_endpoint="/register",
+            auth_methods=["client_secret_post"],
+        )
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_URL: MCP_SERVER_URL},
+    )
+
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+    assert registration.call_count == 1
+    assert URL(result["url"]).query["client_id"] == REGISTERED_CLIENT_ID
+
+
+@pytest.mark.usefixtures("current_request_with_host", "mock_setup_entry")
+@respx.mock
+async def test_concurrent_flows_register_one_client(
+    hass: HomeAssistant,
+    mock_mcp_client: Mock,
+) -> None:
+    """Two flows for one authorization server share a single registration."""
+    release = asyncio.Event()
+    entered = asyncio.Event()
+    calls = 0
+
+    async def _register(*args: Any, **kwargs: Any) -> RegisteredClient:
+        nonlocal calls
+        calls += 1
+        entered.set()
+        await release.wait()
+        return RegisteredClient(
+            REGISTERED_CLIENT_ID,
+            REGISTERED_CLIENT_SECRET,
+            "client_secret_post",
+        )
+
+    def _metadata(_request: httpx2.Request) -> httpx2.Response:
+        return _authorization_server_metadata(
+            registration_endpoint=f"{AUTHORIZATION_SERVER}/register",
+            auth_methods=["client_secret_post"],
+        )
+
+    respx.get(OAUTH_DISCOVERY_ENDPOINT).mock(side_effect=_metadata)
+    respx.get(
+        f"{MCP_SERVER_BASE_URL}/.well-known/oauth-authorization-server/mcp/babybuddy"
+    ).mock(side_effect=_metadata)
+
+    async def _start(mcp_url: str) -> config_entries.ConfigFlowResult:
+        started = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        mock_mcp_client.side_effect = httpx2.HTTPStatusError(
+            "Authentication required", request=None, response=httpx2.Response(401)
+        )
+        return await hass.config_entries.flow.async_configure(
+            started["flow_id"],
+            {CONF_URL: mcp_url},
+        )
+
+    with patch(
+        "homeassistant.components.mcp.config_flow.async_register_dynamic_client",
+        side_effect=_register,
+    ):
+        first = asyncio.create_task(_start(MCP_SERVER_URL))
+        await entered.wait()
+        second = asyncio.create_task(_start(PATH_MCP_URL))
+        for _ in range(50):
+            await asyncio.sleep(0)
+        lock = next(iter(hass.data[_REGISTRATION_LOCKS].values()))
+        assert lock.locked()
+        assert lock._waiters
+        assert calls == 1
+        release.set()
+        first_result, second_result = await asyncio.gather(first, second)
+
+    assert calls == 1
+    assert first_result["type"] is FlowResultType.EXTERNAL_STEP
+    assert second_result["type"] is FlowResultType.EXTERNAL_STEP
+    assert URL(first_result["url"]).query["client_id"] == REGISTERED_CLIENT_ID
+    assert URL(second_result["url"]).query["client_id"] == REGISTERED_CLIENT_ID
+
+
+@pytest.mark.parametrize(
+    "extra",
+    [
+        pytest.param(
+            {"redirect_uris": ["https://other.example/callback"]},
+            id="callback_missing",
+        ),
+        pytest.param({"redirect_uris": []}, id="callback_list_empty"),
+        pytest.param(
+            {"redirect_uris": "https://example.com/callback"},
+            id="callback_not_a_list",
+        ),
+        pytest.param({"scope": "read"}, id="scope_too_narrow"),
+        pytest.param({"scope": 1}, id="scope_not_a_string"),
+    ],
+)
+@pytest.mark.usefixtures("current_request_with_host", "mock_setup_entry")
+@respx.mock
+async def test_registration_response_metadata_must_match_request(
+    hass: HomeAssistant,
+    mock_mcp_client: Mock,
+    extra: dict[str, Any],
+) -> None:
+    """Registration fails when the server does not accept the callback or scopes."""
+    body = {
+        "client_id": REGISTERED_CLIENT_ID,
+        "client_secret": REGISTERED_CLIENT_SECRET,
+        "token_endpoint_auth_method": "client_secret_post",
+        **extra,
+    }
+    respx.post(f"{MCP_SERVER_BASE_URL}/register").mock(
+        return_value=httpx2.Response(201, json=body)
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    mock_mcp_client.side_effect = httpx2.HTTPStatusError(
+        "Authentication required", request=None, response=httpx2.Response(401)
+    )
+    respx.get(OAUTH_DISCOVERY_ENDPOINT).mock(
+        return_value=_authorization_server_metadata(
+            registration_endpoint="/register",
+            auth_methods=["client_secret_post"],
+        )
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_URL: MCP_SERVER_URL},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "oauth_registration_failed"
+    stored = hass.data[APPLICATION_CREDENTIALS_DOMAIN].async_client_credentials(DOMAIN)
+    assert stored == {}
+
+
+@pytest.mark.parametrize(
+    ("expires_at", "expected_reason"),
+    [
+        pytest.param(1_700_000_000, "oauth_secret_expires", id="finite_expiry"),
+        pytest.param(-1, "oauth_registration_failed", id="negative_expiry"),
+        pytest.param(True, "oauth_registration_failed", id="boolean_expiry"),
+        pytest.param("3600", "oauth_registration_failed", id="string_expiry"),
+    ],
+)
+@pytest.mark.usefixtures("current_request_with_host", "mock_setup_entry")
+@respx.mock
+async def test_expiring_client_secret_is_not_stored(
+    hass: HomeAssistant,
+    mock_mcp_client: Mock,
+    expires_at: Any,
+    expected_reason: str,
+) -> None:
+    """A finite or invalid client secret lifetime aborts before the secret is stored."""
+    respx.post(f"{MCP_SERVER_BASE_URL}/register").mock(
+        return_value=httpx2.Response(
+            201,
+            json={
+                "client_id": REGISTERED_CLIENT_ID,
+                "client_secret": REGISTERED_CLIENT_SECRET,
+                "token_endpoint_auth_method": "client_secret_post",
+                "client_secret_expires_at": expires_at,
+            },
+        )
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    mock_mcp_client.side_effect = httpx2.HTTPStatusError(
+        "Authentication required", request=None, response=httpx2.Response(401)
+    )
+    respx.get(OAUTH_DISCOVERY_ENDPOINT).mock(
+        return_value=_authorization_server_metadata(
+            registration_endpoint="/register",
+            auth_methods=["client_secret_post"],
+        )
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_URL: MCP_SERVER_URL},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == expected_reason
+    stored = hass.data[APPLICATION_CREDENTIALS_DOMAIN].async_client_credentials(DOMAIN)
+    assert stored == {}
+
+
+@pytest.mark.usefixtures("current_request_with_host", "mock_setup_entry")
+@respx.mock
 async def test_in_use_registered_credential_cannot_be_deleted(
     hass: HomeAssistant,
     mock_mcp_client: Mock,
@@ -2564,12 +2999,15 @@ async def test_registered_client_is_hidden_from_other_authorization_server(
     assert isinstance(visible, McpRegisteredOAuth2Implementation)
     assert visible.client_id == "client-a"
     assert visible.client_secret == "secret-a"
-    with authorization_server_context(
-        AuthorizationServer(
-            "https://auth-b.example/authorize",
-            "https://auth-b.example/token",
-        )
-    ), pytest.raises(AuthImplementationNotApplicable):
+    with (
+        authorization_server_context(
+            AuthorizationServer(
+                "https://auth-b.example/authorize",
+                "https://auth-b.example/token",
+            )
+        ),
+        pytest.raises(AuthImplementationNotApplicable),
+    ):
         await async_get_auth_implementation(
             hass,
             domains[0],
