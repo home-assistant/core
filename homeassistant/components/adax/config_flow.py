@@ -128,7 +128,7 @@ class AdaxConfigFlow(ConfigFlow, domain=DOMAIN):
             },
         )
 
-async def async_step_local_manual(
+    async def async_step_local_manual(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the local manual step."""
