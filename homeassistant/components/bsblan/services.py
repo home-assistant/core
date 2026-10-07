@@ -57,7 +57,9 @@ _MAX_TIME_SLOTS_PER_DAY = 3
 
 _WEEKLY_SCHEDULE_FIELDS: Final[dict[probatio.Marker, Any]] = {
     probatio.Optional(slot_attr): probatio.All(
-        probatio.EnsureList(), [_SLOT_SCHEMA], probatio.Length(max=_MAX_TIME_SLOTS_PER_DAY)
+        probatio.EnsureList(),
+        [_SLOT_SCHEMA],
+        probatio.Length(max=_MAX_TIME_SLOTS_PER_DAY),
     )
     for _, slot_attr in _DAY_NAME_SLOT_ATTR_PAIRS
 }
@@ -71,13 +73,13 @@ _WEEKLY_SCHEDULE_SCHEMA: dict[probatio.Marker, Any] = {
 
 SERVICE_SET_HOT_WATER_SCHEDULE_SCHEMA = probatio.All(
     _WEEKLY_SCHEDULE_SCHEMA,
-    cv.has_at_least_one_key(*(slot_attr for _, slot_attr in _DAY_NAME_SLOT_ATTR_PAIRS)),
+    probatio.AtLeastOne(*(slot_attr for _, slot_attr in _DAY_NAME_SLOT_ATTR_PAIRS)),
 )
 
 
 SERVICE_SET_HEATING_SCHEDULE_SCHEMA = probatio.All(
     _WEEKLY_SCHEDULE_SCHEMA,
-    cv.has_at_least_one_key(*(slot_attr for _, slot_attr in _DAY_NAME_SLOT_ATTR_PAIRS)),
+    probatio.AtLeastOne(*(slot_attr for _, slot_attr in _DAY_NAME_SLOT_ATTR_PAIRS)),
 )
 
 
