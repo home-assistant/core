@@ -4,12 +4,13 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from datetime import timedelta
 import time
-from typing import TYPE_CHECKING, override
+from typing import TYPE_CHECKING, Any, cast, override
 
 from python_homeassistant_analytics import (
     CustomIntegration,
     HomeassistantAnalyticsClient,
     HomeassistantAnalyticsConnectionError,
+    HomeassistantAnalyticsError,
     HomeassistantAnalyticsNotModifiedError,
 )
 from python_homeassistant_analytics.models import Addon
@@ -27,6 +28,8 @@ from .const import (
 
 if TYPE_CHECKING:
     from . import AnalyticsInsightsConfigEntry
+
+RETRY_AFTER = timedelta(minutes=15)
 
 
 @dataclass(frozen=True)
@@ -67,11 +70,14 @@ class HomeassistantAnalyticsDataUpdateCoordinator(DataUpdateCoordinator[Analytic
         self._tracked_custom_integrations = self.config_entry.options[
             CONF_TRACKED_CUSTOM_INTEGRATIONS
         ]
+        # The client keeps one ETag per endpoint, so a 304 only means that
+        # endpoint is unchanged: keep each last response to fall back on.
+        self._responses: dict[str, Any] = {}
 
     async def _async_fetch[_T](
         self, endpoint: str, fetch: Callable[[], Awaitable[_T]]
     ) -> _T:
-        """Fetch one endpoint, logging timing, ETag state and any failure."""
+        """Fetch one endpoint, falling back to its last response on 304."""
         LOGGER.debug(
             "Fetching %s (stored ETags: %s)",
             endpoint,
@@ -80,13 +86,33 @@ class HomeassistantAnalyticsDataUpdateCoordinator(DataUpdateCoordinator[Analytic
         start = time.monotonic()
         try:
             result = await fetch()
-        except HomeassistantAnalyticsNotModifiedError:
+        except HomeassistantAnalyticsNotModifiedError as err:
             LOGGER.debug(
                 "%s not modified (304) after %.3fs",
                 endpoint,
                 time.monotonic() - start,
             )
-            raise
+            if endpoint in self._responses:
+                return cast("_T", self._responses[endpoint])
+            # ETag stored without a usable response: drop it to force a full fetch
+            self._client._etags.clear()  # noqa: SLF001
+            raise UpdateFailed(
+                f"Homeassistant Analytics returned 304 for {endpoint} without "
+                f"previous data, retrying in {RETRY_AFTER}",
+                retry_after=RETRY_AFTER.total_seconds(),
+            ) from err
+        except HomeassistantAnalyticsConnectionError as err:
+            raise UpdateFailed(
+                f"Could not reach Homeassistant Analytics while fetching {endpoint} "
+                f"({err}), retrying in {RETRY_AFTER}",
+                retry_after=RETRY_AFTER.total_seconds(),
+            ) from err
+        except HomeassistantAnalyticsError as err:
+            raise UpdateFailed(
+                f"Unexpected response from Homeassistant Analytics for {endpoint} "
+                f"({str(err.args)[:500]}), retrying in {RETRY_AFTER}",
+                retry_after=RETRY_AFTER.total_seconds(),
+            ) from err
         except Exception as err:
             LOGGER.warning(
                 "%s failed after %.3fs with %s: %s",
@@ -97,6 +123,7 @@ class HomeassistantAnalyticsDataUpdateCoordinator(DataUpdateCoordinator[Analytic
                 exc_info=True,
             )
             raise
+        self._responses[endpoint] = result
         LOGGER.debug(
             "%s fetched in %.3fs: %s",
             endpoint,
@@ -122,17 +149,8 @@ class HomeassistantAnalyticsDataUpdateCoordinator(DataUpdateCoordinator[Analytic
             custom_data = await self._async_fetch(
                 "custom_integrations.json", self._client.get_custom_integrations
             )
-        except HomeassistantAnalyticsConnectionError as err:
-            LOGGER.warning("Connection error, raising UpdateFailed: %s", err)
-            raise UpdateFailed(
-                "Error communicating with Homeassistant Analytics"
-            ) from err
-        except HomeassistantAnalyticsNotModifiedError:
-            LOGGER.debug(
-                "Not modified, keeping previous data (has data: %s)",
-                self.data is not None,
-            )
-            return self.data
+        except UpdateFailed:
+            raise
         except Exception as err:
             LOGGER.warning(
                 "Unhandled %s escaping the coordinator, entities will be "
