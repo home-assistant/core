@@ -43,13 +43,9 @@ from homeassistant.const import (
     CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_VALUE_TEMPLATE,
-    SERVICE_RELOAD,
 )
-from homeassistant.core import Event, HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity_platform import async_get_platforms
-from homeassistant.helpers.reload import async_integration_yaml_config
-from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.trigger_template_entity import (
     CONF_AVAILABILITY,
     ValueTemplate,
@@ -63,11 +59,7 @@ from .const import (
     DEFAULT_TIMEOUT,
     DOMAIN,
 )
-from .utils import (
-    async_load_platforms,
-    async_prune_shell_template_issues,
-    shell_template_issue_ids,
-)
+from .services import async_load_platforms, async_setup_services
 
 BINARY_SENSOR_DEFAULT_NAME = "Binary Command Sensor"
 DEFAULT_PAYLOAD_ON = "ON"
@@ -195,26 +187,7 @@ CONFIG_SCHEMA = probatio.Schema(
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Command Line from yaml config."""
 
-    async def _reload_config(call: Event | ServiceCall) -> None:
-        """Reload Command Line."""
-        reload_config = await async_integration_yaml_config(hass, DOMAIN)
-        reset_platforms = async_get_platforms(hass, DOMAIN)
-        for reset_platform in reset_platforms:
-            _LOGGER.debug("Reload resetting platform: %s", reset_platform.domain)
-            await reset_platform.async_reset()
-        # Prune template deprecation issues for entities that no longer exist,
-        # keeping issues for still-configured entities so an ignored issue is not
-        # reset by a delete-and-recreate. Each entity refreshes or clears its own
-        # issue on its next update after reload.
-        valid_issue_ids = shell_template_issue_ids(
-            reload_config.get(DOMAIN, []) if reload_config else []
-        )
-        async_prune_shell_template_issues(hass, valid_issue_ids)
-        if not reload_config:
-            return
-        await async_load_platforms(hass, reload_config.get(DOMAIN, []), reload_config)
-
-    async_register_admin_service(hass, DOMAIN, SERVICE_RELOAD, _reload_config)
+    async_setup_services(hass)
 
     await async_load_platforms(hass, config.get(DOMAIN, []), config)
 
