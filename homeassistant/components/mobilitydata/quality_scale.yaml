@@ -69,8 +69,8 @@ rules:
   dynamic-devices:
     status: exempt
     comment: >
-      Stops are added via config subentries, which reload the entry and set up
-      their devices; there is no library-side device discovery.
+      Devices are stop boards the user adds and removes as config subentries;
+      nothing is discovered.
   entity-category:
     status: exempt
     comment: The departure sensors are primary entities with no category.
@@ -84,9 +84,10 @@ rules:
   stale-devices:
     status: exempt
     comment: >
-      Devices exist only for configured stop subentries; removing a subentry
-      removes its device. Stops that vanish from the schedule raise a repair
-      issue instead of silent removal.
+      Devices are stop boards the user adds and removes as config subentries;
+      removing a subentry removes its device. A stop that disappears from the
+      schedule raises a repair issue telling the user to remove the board,
+      since its absence may be temporary.
 
   # Platinum
   async-dependency: done

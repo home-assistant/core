@@ -89,7 +89,9 @@ async def async_remove_entry(
 ) -> None:
     """Purge the cached GTFS index when the entry is removed."""
     client = MobilityFeedsClient(
-        entry.data[CONF_REFRESH_TOKEN], cache_dir=_cache_dir(hass)
+        entry.data[CONF_REFRESH_TOKEN],
+        session=async_get_clientsession(hass),
+        cache_dir=_cache_dir(hass),
     )
     try:
         await client.purge_cache(entry.data[CONF_FEED_ID])
