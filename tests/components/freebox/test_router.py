@@ -139,7 +139,7 @@ def test_is_invalid_token_error(error: AuthorizationError, expected: bool) -> No
     [
         (
             '{"success": false, "error_code": "invalid_request", '
-            '"msg": "Requête invalide (404)"}',
+            '"msg": "Requête invalide (404)"}',  # codespell:ignore
             True,
         ),
         (
@@ -180,7 +180,7 @@ async def test_update_home_devices_unavailable(
         side_effect=HttpRequestError(
             'Request failed (APIResponse: {"success": false, '
             '"error_code": "invalid_request", '
-            '"msg": "Requête invalide (404)"})'
+            '"msg": "Requête invalide (404)"})'  # codespell:ignore
         )
     )
 
