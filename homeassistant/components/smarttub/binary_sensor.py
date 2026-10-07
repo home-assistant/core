@@ -3,7 +3,6 @@
 import logging
 from typing import Any, override
 
-import probatio
 from smarttub import Spa, SpaError, SpaReminder
 
 from homeassistant.components.binary_sensor import (
@@ -11,12 +10,10 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.typing import VolDictType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import ATTR_ERRORS, ATTR_REMINDERS, ATTR_SENSORS
+from .const import ATTR_ERRORS, ATTR_REMINDER_DAYS, ATTR_REMINDERS, ATTR_SENSORS
 from .controller import SmartTubConfigEntry
 from .entity import (
     SmartTubEntity,
@@ -35,17 +32,6 @@ ATTR_CREATED_AT = "created_at"
 ATTR_UPDATED_AT = "updated_at"
 
 # how many days to snooze the reminder for
-ATTR_REMINDER_DAYS = "days"
-RESET_REMINDER_SCHEMA: VolDictType = {
-    probatio.Required(ATTR_REMINDER_DAYS): probatio.All(
-        probatio.Coerce(int), probatio.Range(min=30, max=365)
-    )
-}
-SNOOZE_REMINDER_SCHEMA: VolDictType = {
-    probatio.Required(ATTR_REMINDER_DAYS): probatio.All(
-        probatio.Coerce(int), probatio.Range(min=10, max=120)
-    )
-}
 
 PARALLEL_UPDATES = 0
 
@@ -77,19 +63,6 @@ async def async_setup_entry(
                 )
 
     async_add_entities(entities)
-
-    platform = entity_platform.async_get_current_platform()
-
-    platform.async_register_entity_service(
-        "snooze_reminder",
-        SNOOZE_REMINDER_SCHEMA,
-        "async_snooze",
-    )
-    platform.async_register_entity_service(
-        "reset_reminder",
-        RESET_REMINDER_SCHEMA,
-        "async_reset",
-    )
 
 
 class SmartTubOnline(SmartTubOnboardSensorBase, BinarySensorEntity):

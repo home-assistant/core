@@ -25,3 +25,7 @@ ATTR_PUMPS = "pumps"
 ATTR_REMINDERS = "reminders"
 ATTR_STATUS = "status"
 ATTR_SENSORS = "sensors"
+
+ATTR_DURATION = "duration"
+ATTR_START_HOUR = "start_hour"
+ATTR_REMINDER_DAYS = "days"
