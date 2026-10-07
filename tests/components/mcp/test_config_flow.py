@@ -1,5 +1,6 @@
 """Test the Model Context Protocol config flow."""
 
+import importlib
 import json
 from typing import Any
 from unittest.mock import AsyncMock, Mock
@@ -1353,11 +1354,16 @@ async def test_hassio_discovery_authentication_flow(
 
 
 def _unauthorized() -> httpx2.HTTPStatusError:
-    """Return the 401 the MCP client raises when a server requires OAuth."""
-    return httpx2.HTTPStatusError(
+    """Return the 401 the MCP client raises when a server requires OAuth.
+
+    The SDK imports httpx. Home Assistant aliases that name to httpx2, so
+    this builds the exception the same way the SDK does.
+    """
+    sdk_httpx = importlib.import_module("httpx")
+    return sdk_httpx.HTTPStatusError(
         "Authentication required",
         request=None,
-        response=httpx2.Response(401),
+        response=sdk_httpx.Response(401),
     )
 
 

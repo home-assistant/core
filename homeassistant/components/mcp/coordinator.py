@@ -74,6 +74,7 @@ def _representative_mcp_error(exc: BaseException) -> BaseException:
     for nested in _iter_wrapped_errors(exc):
         if fallback is None:
             fallback = nested
+        # Home Assistant aliases httpx to httpx2, so this is the SDK's class.
         if status_error is None and isinstance(nested, httpx2.HTTPStatusError):
             status_error = nested
         elif mcp_error is None and isinstance(nested, McpError):
