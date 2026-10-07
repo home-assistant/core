@@ -608,3 +608,29 @@ async def test_form_local_manual_already_configured(hass: HomeAssistant) -> None
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+async def test_form_local_manual_mac_value_error(hass: HomeAssistant) -> None:
+    """Test ValueError handling during MAC formatting/parsing."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONNECTION_TYPE: LOCAL_MANUAL},
+    )
+
+    with patch(
+        "homeassistant.components.adax.config_flow.format_mac",
+        side_effect=ValueError("Invalid MAC"),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_IP_ADDRESS: "192.168.1.150",
+                CONF_MAC: "invalid_mac",
+                CONF_TOKEN: "abcdef123456",
+            },
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {CONF_MAC: "invalid_mac"}
