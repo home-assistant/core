@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock, patch
 
+import pytest
 from skylight_api import SkylightAPIError, SkylightAuthError
 
 from homeassistant import config_entries
@@ -12,6 +13,7 @@ from homeassistant.components.skylight.const import (
     CONF_REFRESH_TOKEN,
     DOMAIN,
 )
+from homeassistant.components.skylight.coordinator import _parse_wire_datetime
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -21,6 +23,12 @@ from .conftest import FRAME, FRAME_ID, FRAME_NAME
 from tests.common import MockConfigEntry
 
 CODE = "mock-auth-code"
+
+
+def test_parse_wire_datetime_rejects_garbage() -> None:
+    """Test unparsable datetime strings raise ValueError."""
+    with pytest.raises(ValueError, match="Unparsable Skylight datetime"):
+        _parse_wire_datetime("not-a-timestamp")
 
 
 async def test_full_flow_single_frame(

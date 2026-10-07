@@ -2,11 +2,12 @@
 
 from datetime import UTC, datetime, timedelta
 import itertools
+import json
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from skylight_api import SkylightAPIError
+from skylight_api import SkylightAPIError, SkylightAuthError
 
 from homeassistant.components.calendar import (
     DOMAIN as CALENDAR_DOMAIN,
@@ -172,3 +173,127 @@ async def test_coordinator_setup_retry_then_recovery(
             await hass.async_block_till_done()
         await hass.async_block_till_done()
         assert mock_config_entry.state is ConfigEntryState.LOADED
+
+
+async def test_coordinator_skips_malformed_events(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test events with missing or unparsable dates are skipped, not fatal."""
+    raw_events = {
+        "data": [
+            {"id": "e-missing", "attributes": {"summary": "no dates"}},
+            {
+                "id": "e-bad",
+                "attributes": {
+                    "summary": "bad dates",
+                    "starts_at": "not-a-date",
+                    "ends_at": "2030-10-12",
+                },
+            },
+            {
+                "id": "e-good",
+                "attributes": {
+                    "summary": "Fine",
+                    "starts_at": "2030-10-10T09:00:00+00:00",
+                    "ends_at": "2030-10-10T10:00:00+00:00",
+                },
+            },
+            {
+                "id": "e-mixed",
+                "attributes": {
+                    "summary": "Date start, datetime end",
+                    "starts_at": "2030-10-10",
+                    "ends_at": "2030-10-10T10:00:00+00:00",
+                },
+            },
+            {"id": "no-attributes"},
+        ]
+    }
+    with patch(
+        "skylight_api.SkylightAPI.get_calendar_events",
+        return_value=raw_events,
+    ):
+        mock_config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    result = await hass.services.async_call(
+        CALENDAR_DOMAIN,
+        SERVICE_GET_EVENTS,
+        {
+            "entity_id": "calendar.home_frame_calendar",
+            "start_date_time": datetime(2030, 10, 9, tzinfo=UTC),
+            "end_date_time": datetime(2030, 10, 13, tzinfo=UTC),
+        },
+        blocking=True,
+        return_response=True,
+    )
+    events = result["calendar.home_frame_calendar"]["events"]
+    assert [event["summary"] for event in events] == [
+        "Fine",
+        "Date start, datetime end",
+    ]
+
+
+async def test_coordinator_auth_error_triggers_reauth(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a SkylightAuthError on poll starts the reauth flow."""
+    with patch(
+        "skylight_api.SkylightAPI.get_calendar_events",
+        side_effect=SkylightAuthError("expired"),
+    ):
+        mock_config_entry.add_to_hass(hass)
+        assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+        assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+
+async def test_token_rotation_persists_new_tokens(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the client's refresh cascade persists rotated tokens to the entry."""
+    with patch(
+        "skylight_api.SkylightAPI.get_calendar_events",
+        return_value={"data": []},
+    ):
+        mock_config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
+    assert entry is not None
+    api = entry.runtime_data.api
+
+    class FakeResp:
+        status = 200
+
+        async def text(self) -> str:
+            return json.dumps(
+                {
+                    "access_token": "rotated-access",
+                    "refresh_token": "rotated-refresh",
+                }
+            )
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *exc_info):
+            return None
+
+    class FakeSession:
+        def post(self, *_args, **_kwargs):
+            return FakeResp()
+
+    with patch.object(api, "_session", FakeSession()):
+        await api._refresh_access_token()
+    await hass.async_block_till_done()
+
+    token = mock_config_entry.data["token"]
+    assert token["access_token"] == "rotated-access"
+    assert token["refresh_token"] == "rotated-refresh"
+    assert token["device_fingerprint"] == "mock-fingerprint"
