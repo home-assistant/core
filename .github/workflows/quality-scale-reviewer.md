@@ -11,8 +11,8 @@ description: >
   to check from the rules index, the PR diff, and `quality_scale.yaml`, then
   applies the repository's `ha-quality-scale-verify` skill to each selected
   rule and posts each violation as an inline review comment on the offending
-  changed line. Pull requests above the size limit are not reviewed; a comment
-  states that.
+  changed line, or a short comment when no rule is violated. Pull requests
+  above the size limit are not reviewed; a comment states that.
 intent: >
   Pull requests that break a quality scale rule their integration claims to
   satisfy receive an inline review comment naming the rule on the offending
@@ -64,6 +64,9 @@ safe-outputs:
     max: 15
     target: "${{ needs.prepare.outputs.pr_number }}"
     commit-id: "${{ needs.prepare.outputs.head_sha }}"
+  add-comment:
+    max: 1
+    target: "${{ needs.prepare.outputs.pr_number }}"
   needs:
     - prepare
 jobs:
@@ -225,7 +228,7 @@ Check the changed lines of this pull request against the Integration Quality
 Scale rules that each touched integration declares as `done` or `exempt` in
 its `quality_scale.yaml`. Post an inline review comment on each changed line
 that violates a rule, naming the rule and explaining why it is violated. When
-no rule is violated, call `noop`.
+no rule is violated, post a short comment saying so (Step 7).
 
 If this PR sets a rule to `done` or `exempt` ("newly claimed rules"), verify
 that the integration satisfies the rule, or that the exemption is justified.
@@ -291,7 +294,7 @@ Also skip rules whose evidence lives outside this repository: every `docs-*`
 rule (documentation repository) and `dependency-transparency` (covered by the
 "Check requirements" workflow).
 
-If no rule is selected, call `noop` with the reason.
+If no rule is selected, go to Step 7.
 
 ## Step 5: Check each selected rule
 
@@ -353,7 +356,16 @@ drop findings, keep lower tiers first: Bronze, then Silver, Gold, Platinum.
 
 ## Step 7: No violations
 
-When every selected rule passes or no rule was selected, call `noop` with a
-one-line reason that names the domains and the number of rules checked, for
-example
-`Checked 6 done/exempt rules for peblar; none violated by the changed lines`.
+When every selected rule passes or no rule was selected, post one comment with
+`add_comment`. Keep it to the heading and one line that names the domains and
+the number of rules checked:
+
+```markdown
+## Quality scale review
+
+✅ No issues found. Checked 6 `done`/`exempt` rules for `peblar`; none are violated by the changed lines.
+```
+
+When no rule was selected, use
+`✅ No issues found. No `done`/`exempt` rule for `peblar` concerns the changed lines.`
+instead. Do not post this comment when you posted a finding.
