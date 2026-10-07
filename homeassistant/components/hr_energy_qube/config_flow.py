@@ -122,6 +122,9 @@ class QubeConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             host = user_input[CONF_HOST]
+
+            self._async_abort_entries_match({CONF_HOST: host})
+
             if error := await _async_validate_device(host):
                 errors["base"] = error
             else:

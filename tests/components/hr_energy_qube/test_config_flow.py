@@ -369,6 +369,30 @@ async def test_reconfigure_other_controller(
     assert entry.data == {CONF_HOST: "192.168.5.100", CONF_PORT: 502}
 
 
+async def test_reconfigure_host_of_other_entry(
+    hass: HomeAssistant,
+    mock_qube_client: MagicMock,
+) -> None:
+    """Test reconfiguring to the host of another entry is refused."""
+    other_entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: "192.168.5.208", CONF_PORT: 502}
+    )
+    other_entry.add_to_hass(hass)
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: "192.168.5.100", CONF_PORT: 502}
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: "192.168.5.208"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.data == {CONF_HOST: "192.168.5.100", CONF_PORT: 502}
+
+
 @pytest.mark.parametrize(
     ("connect_result", "version_result", "error"),
     [
