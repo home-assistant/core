@@ -32,7 +32,9 @@ async def setup_media_player(hass: HomeAssistant) -> None:
 async def setup_mock_yt_dlp(hass: HomeAssistant) -> MockYoutubeDL:
     """Mock YoutubeDL."""
     mock = MockYoutubeDL({})
-    with patch("homeassistant.components.media_extractor.YoutubeDL", return_value=mock):
+    with patch(
+        "homeassistant.components.media_extractor.services.YoutubeDL", return_value=mock
+    ):
         yield mock
 
 
