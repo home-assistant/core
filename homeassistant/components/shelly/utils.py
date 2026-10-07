@@ -5,6 +5,8 @@ from ipaddress import IPv4Address, IPv6Address, ip_address
 from typing import TYPE_CHECKING, Any, cast
 
 from aiohttp.web import Request, WebSocketResponse
+from aioshelly.ble import get_device_from_model_id
+from aioshelly.ble.manufacturer_data import parse_shelly_manufacturer_data
 from aioshelly.block_device import COAP, Block, BlockDevice
 from aioshelly.const import (
     BLOCK_GENERATIONS,
@@ -12,6 +14,7 @@ from aioshelly.const import (
     BLU_TRV_MODEL_NAME,
     DEFAULT_COAP_PORT,
     DEFAULT_HTTP_PORT,
+    DEVICES,
     MODEL_1L,
     MODEL_DIMMER,
     MODEL_DIMMER_2,
@@ -20,6 +23,7 @@ from aioshelly.const import (
     MODEL_NAMES,
     MODEL_PLUG,
     RPC_GENERATIONS,
+    ShellyDevice,
 )
 from aioshelly.rpc_device import RpcDevice, WsServer
 from yarl import URL
@@ -319,6 +323,30 @@ def get_model_name(info: dict[str, Any]) -> str:
         return cast(str, MODEL_NAMES.get(info[CONF_MODEL], info[CONF_MODEL]))
 
     return cast(str, MODEL_NAMES.get(info["type"], info["type"]))
+
+
+def is_device_supported(info: dict[str, Any]) -> bool:
+    """Return True if the device model is supported."""
+    if get_info_gen(info) in RPC_GENERATIONS:
+        # Devices with firmware not fully provisioned
+        model = info.get(CONF_MODEL, "")
+    else:
+        model = info["type"]
+    if (device := DEVICES.get(model)) is None:
+        return True
+
+    return device.supported
+
+
+def get_device_from_manufacturer_data(
+    manufacturer_data: dict[int, bytes],
+) -> ShellyDevice | None:
+    """Return the Shelly device matching the advertised BLE model ID."""
+    parsed = parse_shelly_manufacturer_data(manufacturer_data)
+    if not parsed or not isinstance(model_id := parsed.get("model_id"), int):
+        return None
+
+    return get_device_from_model_id(model_id)
 
 
 def get_shelly_model_name(

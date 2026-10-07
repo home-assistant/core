@@ -1995,7 +1995,7 @@ async def test_subentry_add_flow_only_unsupported_vehicles(
     )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "no_vehicles"
+    assert result["reason"] == "no_supported_vehicles"
 
 
 async def test_subentry_add_flow_no_bluetooth(hass: HomeAssistant) -> None:
