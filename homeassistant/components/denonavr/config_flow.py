@@ -181,10 +181,8 @@ class DenonAvrFlowHandler(ConfigFlow, domain=DOMAIN):
         self._set_confirm_only()
         return self.async_show_form(step_id="confirm")
 
-    async def async_step_connect(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Connect to the receiver."""
+    async def _async_connect_receiver(self) -> denonavr.DenonAVR | None:
+        """Connect to the receiver, return None if that fails."""
         assert self.host
         connect_denonavr = ConnectDenonAVR(
             self.host,
@@ -199,11 +197,17 @@ class DenonAvrFlowHandler(ConfigFlow, domain=DOMAIN):
         try:
             success = await connect_denonavr.async_connect_receiver()
         except AvrNetworkError, AvrTimoutError:
-            success = False
+            return None
         if not success:
+            return None
+        return connect_denonavr.receiver
+
+    async def async_step_connect(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Connect to the receiver."""
+        if (receiver := await self._async_connect_receiver()) is None:
             return self.async_abort(reason="cannot_connect")
-        receiver = connect_denonavr.receiver
-        assert receiver
 
         if not self.serial_number:
             self.serial_number = receiver.serial_number
@@ -270,6 +274,11 @@ class DenonAvrFlowHandler(ConfigFlow, domain=DOMAIN):
         unique_id = self.construct_unique_id(self.model_name, self.serial_number)
         await self.async_set_unique_id(unique_id)
         self._abort_if_unique_id_configured({CONF_HOST: self.host})
+
+        # HEOS-only devices (like the Denon Home speakers) are discovered as well,
+        # but don't serve the receiver API, so they could never be set up
+        if await self._async_connect_receiver() is None:
+            return self.async_abort(reason="cannot_connect")
 
         self.context.update(
             {

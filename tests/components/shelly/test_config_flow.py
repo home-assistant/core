@@ -11,6 +11,8 @@ from aioshelly.const import (
     DEFAULT_HTTP_PORT,
     DEFAULT_HTTPS_PORT,
     MODEL_1,
+    MODEL_4PRO,
+    MODEL_AZ_HT,
     MODEL_PLUS_2PM,
 )
 from aioshelly.exceptions import (
@@ -131,6 +133,12 @@ BLE_MANUFACTURER_DATA_WITH_MAC_UNKNOWN_MODEL = {
 }
 # Flags (0x01, 0x05, 0x00), Model (0x0b, 0x99, 0x99) -
 # unknown model ID, MAC (0x0a, 0x70, 0xd6, 0xc2, 0x97, 0xba, 0xcc)
+
+BLE_MANUFACTURER_DATA_UNSUPPORTED_MODEL = {
+    0x0BA9: bytes.fromhex("0105000b16180a70d6c297bacc")
+}
+# Flags (0x01, 0x05, 0x00), Model (0x0b, 0x16, 0x18) - Shelly AZ H&T (0x1816),
+# unsupported model, MAC (0x0a, 0x70, 0xd6, 0xc2, 0x97, 0xba, 0xcc)
 
 BLE_MANUFACTURER_DATA_FOR_CLEAR_TEST = {
     0x0BA9: bytes.fromhex("0105000b30100a00eeddccbbaa")
@@ -253,6 +261,26 @@ BLE_DISCOVERY_INFO_MAC_UNKNOWN_MODEL = BluetoothServiceInfoBleak(
     ),
     advertisement=generate_advertisement_data(
         manufacturer_data=BLE_MANUFACTURER_DATA_WITH_MAC_UNKNOWN_MODEL,
+    ),
+    time=0,
+    connectable=True,
+    tx_power=-127,
+)
+
+BLE_DISCOVERY_INFO_UNSUPPORTED_MODEL = BluetoothServiceInfoBleak(
+    name="CC:BA:97:C2:D6:72",  # BLE address as name (newer devices)
+    address="CC:BA:97:C2:D6:72",  # BLE address may differ from device MAC
+    rssi=-32,
+    manufacturer_data=BLE_MANUFACTURER_DATA_UNSUPPORTED_MODEL,
+    service_uuids=[],
+    service_data={},
+    source="local",
+    device=generate_ble_device(
+        address="CC:BA:97:C2:D6:72",
+        name="CC:BA:97:C2:D6:72",
+    ),
+    advertisement=generate_advertisement_data(
+        manufacturer_data=BLE_MANUFACTURER_DATA_UNSUPPORTED_MODEL,
     ),
     time=0,
     connectable=True,
@@ -1023,7 +1051,7 @@ async def test_form_errors_test_connection(
     with (
         patch(
             "homeassistant.components.shelly.config_flow.get_info",
-            return_value={"mac": "test-mac", "auth": False},
+            return_value={"mac": "test-mac", "type": MODEL_1, "auth": False},
         ),
         patch(
             "aioshelly.block_device.BlockDevice.create", new=AsyncMock(side_effect=exc)
@@ -1039,7 +1067,7 @@ async def test_form_errors_test_connection(
 
     with patch(
         "homeassistant.components.shelly.config_flow.get_info",
-        return_value={"mac": "test-mac", "auth": False},
+        return_value={"mac": "test-mac", "type": MODEL_1, "auth": False},
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -1737,7 +1765,7 @@ async def test_user_flow_zeroconf_device_requires_auth(
         "homeassistant.components.shelly.config_flow.get_info",
         return_value={
             "mac": "AABBCCDDEEFF",
-            "model": MODEL_1,
+            "type": MODEL_1,
             "auth": True,  # Requires auth
             "gen": 1,
         },
@@ -1757,7 +1785,7 @@ async def test_user_flow_zeroconf_device_requires_auth(
             "homeassistant.components.shelly.config_flow.get_info",
             return_value={
                 "mac": "AABBCCDDEEFF",
-                "model": MODEL_1,
+                "type": MODEL_1,
                 "auth": False,  # Auth passed with credentials
                 "gen": 1,
                 "port": 80,
@@ -2218,7 +2246,7 @@ async def test_form_auth_errors_test_connection_gen1(
 
     with patch(
         "homeassistant.components.shelly.config_flow.get_info",
-        return_value={"mac": "test-mac", "auth": True},
+        return_value={"mac": "test-mac", "type": MODEL_1, "auth": True},
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -5777,3 +5805,130 @@ async def test_bluetooth_provision_ble_reconnect_fails_during_ip_fetch(
         # Abort flow to reach terminal state
         hass.config_entries.flow.async_abort(result["flow_id"])
         await hass.async_block_till_done(wait_background_tasks=True)
+
+
+@pytest.mark.parametrize(
+    ("get_info", "model_name"),
+    [
+        (
+            {"mac": "test-mac", "model": MODEL_AZ_HT, "auth": False, "gen": 3},
+            "Shelly AZ H&T",
+        ),
+        (
+            {"mac": "test-mac", "type": MODEL_4PRO, "auth": False, "gen": 1},
+            "Shelly 4Pro",
+        ),
+    ],
+)
+async def test_form_unsupported_device(
+    hass: HomeAssistant, get_info: dict[str, Any], model_name: str
+) -> None:
+    """Test user flow aborts for a device model not supported by aioshelly."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.shelly.config_flow.get_info",
+        return_value=get_info,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: "1.1.1.1", CONF_PORT: DEFAULT_HTTP_PORT},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unsupported_device"
+    assert result["description_placeholders"] == {"model": model_name}
+
+
+async def test_zeroconf_unsupported_device(hass: HomeAssistant) -> None:
+    """Test zeroconf discovery aborts for a device model not supported by aioshelly."""
+    with patch(
+        "homeassistant.components.shelly.config_flow.get_info",
+        return_value={
+            "mac": "test-mac",
+            "model": MODEL_AZ_HT,
+            "auth": False,
+            "gen": 3,
+        },
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            data=DISCOVERY_INFO,
+            context={"source": config_entries.SOURCE_ZEROCONF},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unsupported_device"
+    assert result["description_placeholders"] == {"model": "Shelly AZ H&T"}
+
+
+@pytest.mark.usefixtures("mock_zeroconf")
+async def test_bluetooth_discovery_unsupported_device(hass: HomeAssistant) -> None:
+    """Test bluetooth discovery aborts before provisioning for unsupported model."""
+    await _async_inject_ble_discovery(hass, BLE_DISCOVERY_INFO_UNSUPPORTED_MODEL)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        data=BLE_DISCOVERY_INFO_UNSUPPORTED_MODEL,
+        context={"source": config_entries.SOURCE_BLUETOOTH},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unsupported_device"
+    assert result["description_placeholders"] == {"model": "Shelly AZ H&T"}
+
+
+@pytest.mark.usefixtures("mock_zeroconf")
+async def test_bluetooth_discovery_unsupported_device_already_configured(
+    hass: HomeAssistant,
+) -> None:
+    """Test already configured check runs before the unsupported model check."""
+    await _async_inject_ble_discovery(hass, BLE_DISCOVERY_INFO_UNSUPPORTED_MODEL)
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="CCBA97C2D670",  # MAC from manufacturer data
+        data={
+            CONF_HOST: "1.1.1.1",
+            CONF_MODEL: MODEL_AZ_HT,
+            CONF_SLEEP_PERIOD: 0,
+            CONF_GEN: 3,
+        },
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        data=BLE_DISCOVERY_INFO_UNSUPPORTED_MODEL,
+        context={"source": config_entries.SOURCE_BLUETOOTH},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_user_flow_select_ble_unsupported_device(
+    hass: HomeAssistant,
+    mock_discovery: AsyncMock,
+) -> None:
+    """Test selecting an unsupported BLE device aborts before provisioning."""
+    mock_discovery.return_value = []
+    await _async_inject_ble_discovery(hass, BLE_DISCOVERY_INFO_UNSUPPORTED_MODEL)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_DEVICE: "CCBA97C2D670"},  # MAC from manufacturer data
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unsupported_device"
+    assert result["description_placeholders"] == {"model": "Shelly AZ H&T"}

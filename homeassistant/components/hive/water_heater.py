@@ -3,8 +3,6 @@
 from datetime import timedelta
 from typing import Any, override
 
-import probatio
-
 from homeassistant.components.water_heater import (
     STATE_ECO,
     WaterHeaterEntity,
@@ -12,16 +10,9 @@ from homeassistant.components.water_heater import (
 )
 from homeassistant.const import STATE_OFF, STATE_ON, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import HiveConfigEntry, refresh_system
-from .const import (
-    ATTR_ONOFF,
-    ATTR_TIME_PERIOD,
-    SERVICE_BOOST_HOT_WATER,
-    WATER_HEATER_MODES,
-)
 from .entity import HiveEntity
 
 HOTWATER_NAME = "Hot Water"
@@ -55,21 +46,6 @@ async def async_setup_entry(
         async_add_entities(
             (HiveWaterHeater(hass, entry, hive, dev) for dev in devices), True
         )
-
-    platform = entity_platform.async_get_current_platform()
-
-    platform.async_register_entity_service(
-        SERVICE_BOOST_HOT_WATER,
-        {
-            probatio.Optional(ATTR_TIME_PERIOD, default="00:30:00"): probatio.All(
-                cv.time_period,
-                cv.positive_timedelta,
-                lambda td: td.total_seconds() // 60,
-            ),
-            probatio.Required(ATTR_ONOFF): probatio.In(WATER_HEATER_MODES),
-        },
-        "async_hot_water_boost",
-    )
 
 
 class HiveWaterHeater(HiveEntity, WaterHeaterEntity):

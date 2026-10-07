@@ -2,9 +2,24 @@
 
 from enum import StrEnum
 import logging
+from typing import TYPE_CHECKING
+
+from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.util.hass_dict import HassKey
+
+if TYPE_CHECKING:
+    from . import BaseAutomationEntity
 
 CONF_TRIGGER_VARIABLES = "trigger_variables"
 DOMAIN = "automation"
+
+DATA_COMPONENT: HassKey[EntityComponent[BaseAutomationEntity]] = HassKey(DOMAIN)
+
+ATTR_VARIABLES = "variables"
+CONF_SKIP_CONDITION = "skip_condition"
+CONF_STOP_ACTIONS = "stop_actions"
+DEFAULT_STOP_ACTIONS = True
+SERVICE_TRIGGER = "trigger"
 
 
 class AutomationEntityCapabilityAttribute(StrEnum):

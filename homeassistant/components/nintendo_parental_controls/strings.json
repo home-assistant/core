@@ -17,7 +17,7 @@
         "data_description": {
           "api_token": "The link copied from the Nintendo website"
         },
-        "description": "To obtain your access token, click [Nintendo Login]({link}) to sign in to your Nintendo account. Then, for the account you want to link, right-click on the red **Select this person** button and choose **Copy Link Address**."
+        "description": "To obtain your access token, select [Nintendo Login]({link}) to sign in to your Nintendo account. Then, for the account you want to link, right-click on the red **Select this person** button and choose **Copy Link Address**."
       },
       "user": {
         "data": {
@@ -26,7 +26,7 @@
         "data_description": {
           "api_token": "The link copied from the Nintendo website"
         },
-        "description": "To obtain your access token, click [Nintendo Login]({link}) to sign in to your Nintendo account. Then, for the account you want to link, right-click on the red **Select this person** button and choose **Copy Link Address**."
+        "description": "To obtain your access token, select [Nintendo Login]({link}) to sign in to your Nintendo account. Then, for the account you want to link, right-click on the red **Select this person** button and choose **Copy Link Address**."
       }
     }
   },
