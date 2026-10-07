@@ -62,51 +62,26 @@ def _iter_wrapped_errors(exc: BaseException) -> Iterator[BaseException]:
             stack.append(current.__cause__)
 
 
-def _as_httpx2_error(error: BaseException) -> BaseException:
-    """Return an httpx2 error equivalent to an MCP SDK httpx error.
-
-    The MCP SDK imports httpx. Home Assistant imports httpx2. Status errors
-    from those packages do not share a class, so callers that catch httpx2
-    would otherwise miss a 401.
-    """
-    if isinstance(error, httpx2.HTTPError):
-        return error
-    if isinstance(error, httpx.HTTPStatusError):
-        sdk_request = error.response.request
-        request = httpx2.Request(sdk_request.method, str(sdk_request.url))
-        response = httpx2.Response(
-            status_code=error.response.status_code,
-            headers=dict(error.response.headers),
-            request=request,
-        )
-        return httpx2.HTTPStatusError(str(error), request=request, response=response)
-    if isinstance(error, httpx.TimeoutException):
-        return httpx2.TimeoutException(str(error))
-    if isinstance(error, httpx.HTTPError):
-        return httpx2.HTTPError(str(error))
-    return error
-
-
 def _representative_mcp_error(exc: BaseException) -> BaseException:
     """Pick the transport error callers should handle.
 
     anyio wraps the SDK's httpx.HTTPStatusError in an ExceptionGroup. A 401
     has to stay an auth failure instead of being reported as an unknown error.
+    Home Assistant aliases httpx to httpx2, so those errors are already httpx2.
     """
     status_error: BaseException | None = None
     mcp_error: BaseException | None = None
     http_error: BaseException | None = None
     fallback: BaseException | None = None
     for nested in _iter_wrapped_errors(exc):
-        normalized = _as_httpx2_error(nested)
         if fallback is None:
-            fallback = normalized
-        if status_error is None and isinstance(normalized, httpx2.HTTPStatusError):
-            status_error = normalized
-        elif mcp_error is None and isinstance(normalized, McpError):
-            mcp_error = normalized
-        elif http_error is None and isinstance(normalized, httpx2.HTTPError):
-            http_error = normalized
+            fallback = nested
+        if status_error is None and isinstance(nested, httpx2.HTTPStatusError):
+            status_error = nested
+        elif mcp_error is None and isinstance(nested, McpError):
+            mcp_error = nested
+        elif http_error is None and isinstance(nested, httpx2.HTTPError):
+            http_error = nested
     if status_error is not None:
         return status_error
     if mcp_error is not None:
@@ -191,12 +166,11 @@ async def mcp_client(
                 _LOGGER.debug("Error creating SSE MCP client: %s", sse_err)
                 raise _representative_mcp_error(sse_err) from sse_err
             except httpx.HTTPError as sse_http_err:
-                raise _as_httpx2_error(sse_http_err) from sse_http_err
+                # The streamable failure is context here. Report the SSE error.
+                raise sse_http_err from None
         else:
             _LOGGER.debug("Error creating MCP client: %s", streamable_err)
             raise main_error from streamable_err
-    except httpx.HTTPError as http_err:
-        raise _as_httpx2_error(http_err) from http_err
 
 
 def _tool_annotations(remote: ToolAnnotations | None) -> llm.ToolAnnotations:

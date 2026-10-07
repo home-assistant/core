@@ -375,8 +375,11 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             )
             # Servers that advertise RFC 7591 registration issue a client
             # themselves, so the user does not create application credentials.
-            if oauth_config.registration_endpoint:
-                return await self._async_register_dynamic_client()
+            if registration_endpoint := oauth_config.registration_endpoint:
+                return await self._async_register_dynamic_client(
+                    registration_endpoint,
+                    oauth_config.token_endpoint_auth_methods,
+                )
             return await self.async_step_credentials_choice()
 
     def authorization_server(self) -> AuthorizationServer:
@@ -404,9 +407,7 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         self, redirect_uri: str, scopes: tuple[str, ...]
     ) -> str | None:
         """Return a stored client registered for this callback and scopes."""
-        storage = self.hass.data.get(APPLICATION_CREDENTIALS_DOMAIN)
-        if storage is None:
-            return None
+        storage = self.hass.data[APPLICATION_CREDENTIALS_DOMAIN]
         authorize_url = self.data[CONF_AUTHORIZATION_URL]
         token_url = self.data[CONF_TOKEN_URL]
         for item in storage.async_items():
@@ -423,10 +424,12 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
                 return cast(str, item[CONF_ID])
         return None
 
-    async def _async_register_dynamic_client(self) -> ConfigFlowResult:
+    async def _async_register_dynamic_client(
+        self,
+        registration_endpoint: str,
+        token_endpoint_auth_methods: list[str] | None,
+    ) -> ConfigFlowResult:
         """Register an OAuth client and continue the authorize flow."""
-        if self.oauth_config is None or not self.oauth_config.registration_endpoint:
-            return self.async_abort(reason="oauth_registration_failed")
         try:
             redirect_uri = async_get_redirect_uri(self.hass)
         except RuntimeError as err:
@@ -457,11 +460,9 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
                 try:
                     registered = await async_register_dynamic_client(
                         self.hass,
-                        self.oauth_config.registration_endpoint,
+                        registration_endpoint,
                         redirect_uri,
-                        token_endpoint_auth_methods=(
-                            self.oauth_config.token_endpoint_auth_methods
-                        ),
+                        token_endpoint_auth_methods=token_endpoint_auth_methods,
                         scopes=self.data[CONF_SCOPE],
                     )
                 except ClientSecretExpiresError:

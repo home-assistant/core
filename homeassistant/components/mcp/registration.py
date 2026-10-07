@@ -312,20 +312,16 @@ def _parse_registration_response(
     # Public clients never send the secret, so an echoed expiry is ignored.
     _reject_expiring_client_secret(payload.get("client_secret_expires_at"), method)
     try:
-        info = OAuthClientInformationFull.model_validate(payload)
-    except ValidationError as err:
         # Some servers return a client id without the rest of the metadata.
+        OAuthClientInformationFull.model_validate(payload)
+    except ValidationError as err:
         # Log locations and types only. The error string includes input values,
         # and a missing field's input is the whole response.
         _LOGGER.debug(
             "Registration response was only partially valid: %s",
             _validation_error_summary(err),
         )
-        return RegisteredClient(client_id, client_secret, method)
-
-    if not info.client_id:
-        raise ClientRegistrationError("Registration response did not include client_id")
-    return RegisteredClient(info.client_id, client_secret, method)
+    return RegisteredClient(client_id, client_secret, method)
 
 
 def _client_secret_from_response(value: Any, method: TokenEndpointAuthMethod) -> str:

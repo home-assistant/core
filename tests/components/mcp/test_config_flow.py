@@ -7,6 +7,7 @@ import logging
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
+from aiohttp import ClientError
 import httpx
 import httpx2
 import pytest
@@ -40,22 +41,30 @@ from homeassistant.components.mcp.const import (
     DOMAIN,
 )
 from homeassistant.components.mcp.registration import (
+    ClientRegistrationError,
     RegisteredClient,
     RegisteredClientIdentity,
+    async_register_dynamic_client,
     decode_registered_client_id,
     encode_registered_client_id,
+    normalized_scopes,
     registered_client_auth_domain,
 )
 from homeassistant.const import (
     CONF_CLIENT_ID,
     CONF_CLIENT_SECRET,
+    CONF_DOMAIN,
     CONF_ID,
     CONF_TOKEN,
     CONF_URL,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import (
+    HomeAssistantError,
+    OAuth2TokenRequestConnectionError,
+    OAuth2TokenRequestReauthError,
+)
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 from homeassistant.setup import async_setup_component
@@ -3154,6 +3163,7 @@ async def test_reauth_uses_registered_redirect_uri(
             ClientCredential(encoded, REGISTERED_CLIENT_SECRET),
         )
         assert isinstance(implementation, McpRegisteredOAuth2Implementation)
+        assert implementation.name == DCR_CLIENT_NAME
         assert implementation.redirect_uri == expected_redirect
 
 
@@ -3317,3 +3327,355 @@ async def test_two_mcp_urls_create_separate_oauth_entries(
         entries[0].data["auth_implementation"] == entries[1].data["auth_implementation"]
     )
     assert registration.call_count == 1
+
+
+def test_normalized_scopes_treats_empty_as_omitted() -> None:
+    """An omitted scope list and an empty list are the same request."""
+    assert normalized_scopes(None) == ()
+    assert normalized_scopes([]) == ()
+
+
+def _marked_client_id(payload: dict[str, Any]) -> str:
+    """Return a registration marker around an arbitrary JSON payload."""
+    return "mcp-dcr:" + json.dumps(payload, separators=(",", ":")).encode().hex()
+
+
+def _valid_identity_payload() -> dict[str, Any]:
+    """Return a decodable registered-client payload."""
+    return {
+        "authorize_url": OAUTH_AUTHORIZE_URL,
+        "client_id": "cid",
+        "method": "none",
+        "token_url": OAUTH_TOKEN_URL,
+        "v": 1,
+    }
+
+
+@pytest.mark.parametrize(
+    "client_id",
+    [
+        pytest.param("mcp-dcr:zz", id="bad_hex"),
+        pytest.param("mcp-dcr:" + b"{".hex(), id="bad_json"),
+        pytest.param(
+            "mcp-dcr:" + json.dumps([1]).encode().hex(),
+            id="not_object",
+        ),
+        pytest.param(_marked_client_id({"v": 2}), id="wrong_version"),
+        pytest.param(
+            _marked_client_id({**_valid_identity_payload(), "authorize_url": ""}),
+            id="empty_authorize_url",
+        ),
+        pytest.param(
+            _marked_client_id({**_valid_identity_payload(), "redirect_uri": ""}),
+            id="empty_redirect_uri",
+        ),
+        pytest.param(
+            _marked_client_id({**_valid_identity_payload(), "redirect_uri": 1}),
+            id="redirect_uri_not_string",
+        ),
+        pytest.param(
+            _marked_client_id({**_valid_identity_payload(), "scopes": "read"}),
+            id="scopes_not_a_list",
+        ),
+        pytest.param(
+            _marked_client_id({**_valid_identity_payload(), "scopes": ["read", 1]}),
+            id="scopes_mixed",
+        ),
+    ],
+)
+def test_decode_registered_client_id_rejects_malformed(client_id: str) -> None:
+    """A marked client id that is not a registered identity stays undecoded."""
+    assert decode_registered_client_id(client_id) is None
+
+
+async def test_invalid_redirect_uri_is_not_registered(hass: HomeAssistant) -> None:
+    """Client metadata that is not a URL fails before the registration request."""
+    with pytest.raises(ClientRegistrationError):
+        await async_register_dynamic_client(
+            hass,
+            f"{MCP_SERVER_BASE_URL}/register",
+            "not a url",
+            token_endpoint_auth_methods=["client_secret_post"],
+            scopes=["read"],
+        )
+
+
+def _resource_metadata_url() -> str:
+    """Return the header URL and mock the well-known fallbacks as missing."""
+    resource_metadata_url = "https://example.com/custom-discovery"
+    parsed_server = URL(MCP_SERVER_URL)
+    for fallback_url in (
+        str(
+            parsed_server.with_path(
+                f"/.well-known/oauth-protected-resource{parsed_server.path}"
+            )
+        ),
+        str(parsed_server.with_path("/.well-known/oauth-protected-resource")),
+    ):
+        respx.get(fallback_url).mock(return_value=httpx2.Response(status_code=404))
+    return resource_metadata_url
+
+
+async def _protected_resource_abort_reason(
+    hass: HomeAssistant,
+    mock_mcp_client: Mock,
+    resource_metadata_url: str,
+) -> str:
+    """Start user setup and return the abort reason after resource discovery."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    mock_mcp_client.side_effect = httpx2.HTTPStatusError(
+        "Authentication required",
+        request=None,
+        response=httpx2.Response(
+            401,
+            headers={
+                "WWW-Authenticate": (
+                    'Bearer error="invalid_token",'
+                    f' resource_metadata="{resource_metadata_url}"'
+                ),
+            },
+        ),
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_URL: MCP_SERVER_URL},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    return result["reason"]
+
+
+@pytest.mark.parametrize(
+    ("header_error", "expected_reason"),
+    [
+        pytest.param(
+            httpx2.TimeoutException("timeout"),
+            "timeout_connect",
+            id="timeout",
+        ),
+        pytest.param(
+            httpx2.HTTPStatusError(
+                "server",
+                request=httpx2.Request("GET", "https://example.com/custom-discovery"),
+                response=httpx2.Response(500),
+            ),
+            "cannot_connect",
+            id="server_error",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("current_request_with_host", "mock_setup_entry")
+@respx.mock
+async def test_protected_resource_fetch_error_is_preserved(
+    hass: HomeAssistant,
+    mock_mcp_client: Mock,
+    header_error: Exception,
+    expected_reason: str,
+) -> None:
+    """A failed resource document keeps its timeout or connection error."""
+    resource_metadata_url = _resource_metadata_url()
+    respx.get(resource_metadata_url).mock(side_effect=header_error)
+
+    reason = await _protected_resource_abort_reason(
+        hass, mock_mcp_client, resource_metadata_url
+    )
+
+    assert reason == expected_reason
+
+
+@pytest.mark.parametrize(
+    "header_response",
+    [
+        pytest.param(httpx2.Response(200, text="not-json"), id="not_json"),
+        pytest.param(httpx2.Response(200, json=["nope"]), id="not_object"),
+    ],
+)
+@pytest.mark.usefixtures("current_request_with_host", "mock_setup_entry")
+@respx.mock
+async def test_protected_resource_document_must_be_an_object(
+    hass: HomeAssistant,
+    mock_mcp_client: Mock,
+    header_response: httpx2.Response,
+) -> None:
+    """Resource metadata that is not a JSON object is ignored."""
+    resource_metadata_url = _resource_metadata_url()
+    respx.get(resource_metadata_url).mock(return_value=header_response)
+
+    reason = await _protected_resource_abort_reason(
+        hass, mock_mcp_client, resource_metadata_url
+    )
+
+    assert reason == "cannot_connect"
+
+
+@pytest.mark.usefixtures("current_request_with_host", "mock_setup_entry")
+@respx.mock
+async def test_registration_response_must_be_an_object(
+    hass: HomeAssistant,
+    mock_mcp_client: Mock,
+) -> None:
+    """A JSON registration response that is not an object is rejected."""
+    respx.post(f"{MCP_SERVER_BASE_URL}/register").mock(
+        return_value=httpx2.Response(201, json=["not-an-object"])
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    mock_mcp_client.side_effect = httpx2.HTTPStatusError(
+        "Authentication required", request=None, response=httpx2.Response(401)
+    )
+    respx.get(OAUTH_DISCOVERY_ENDPOINT).mock(
+        return_value=_authorization_server_metadata(
+            registration_endpoint="/register",
+            auth_methods=["client_secret_post"],
+        )
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_URL: MCP_SERVER_URL},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "oauth_registration_failed"
+
+
+@pytest.mark.usefixtures("current_request_with_host", "mock_setup_entry")
+@respx.mock
+async def test_public_client_rejects_non_string_secret(
+    hass: HomeAssistant,
+    mock_mcp_client: Mock,
+) -> None:
+    """A public client with a non-string secret is not stored."""
+    respx.post(f"{MCP_SERVER_BASE_URL}/register").mock(
+        return_value=httpx2.Response(
+            201,
+            json={
+                "client_id": REGISTERED_CLIENT_ID,
+                "client_secret": 1,
+                "token_endpoint_auth_method": "none",
+            },
+        )
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    mock_mcp_client.side_effect = httpx2.HTTPStatusError(
+        "Authentication required", request=None, response=httpx2.Response(401)
+    )
+    respx.get(OAUTH_DISCOVERY_ENDPOINT).mock(
+        return_value=_authorization_server_metadata(
+            registration_endpoint="/register",
+            auth_methods=["none"],
+        )
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_URL: MCP_SERVER_URL},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "oauth_registration_failed"
+    stored = hass.data[APPLICATION_CREDENTIALS_DOMAIN].async_client_credentials(DOMAIN)
+    assert stored == {}
+
+
+@pytest.mark.usefixtures("current_request_with_host", "mock_setup_entry")
+@respx.mock
+async def test_registered_client_lookup_skips_other_domains(
+    hass: HomeAssistant,
+    mock_mcp_client: Mock,
+) -> None:
+    """Credentials for another integration are not reused as MCP clients."""
+    assert await async_setup_component(hass, APPLICATION_CREDENTIALS_DOMAIN, {})
+    hass.data[APPLICATION_CREDENTIALS_DOMAIN].data["other-id"] = {
+        CONF_DOMAIN: "other",
+        CONF_CLIENT_ID: "other-client",
+        CONF_CLIENT_SECRET: "other-secret",
+        CONF_ID: "other-id",
+    }
+    registration = respx.post(f"{MCP_SERVER_BASE_URL}/register").mock(
+        return_value=httpx2.Response(
+            201,
+            json={
+                "client_id": REGISTERED_CLIENT_ID,
+                "client_secret": REGISTERED_CLIENT_SECRET,
+                "token_endpoint_auth_method": "client_secret_post",
+            },
+        )
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    mock_mcp_client.side_effect = httpx2.HTTPStatusError(
+        "Authentication required", request=None, response=httpx2.Response(401)
+    )
+    respx.get(OAUTH_DISCOVERY_ENDPOINT).mock(
+        return_value=_authorization_server_metadata(
+            registration_endpoint="/register",
+            auth_methods=["client_secret_post"],
+        )
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_URL: MCP_SERVER_URL},
+    )
+
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+    assert registration.call_count == 1
+
+
+def _basic_auth_implementation(
+    hass: HomeAssistant,
+) -> McpRegisteredOAuth2Implementation:
+    """Return a client_secret_basic implementation."""
+    return McpRegisteredOAuth2Implementation(
+        hass,
+        "auth-domain",
+        REGISTERED_CLIENT_ID,
+        OAUTH_AUTHORIZE_URL,
+        OAUTH_TOKEN_URL,
+        REGISTERED_CLIENT_SECRET,
+        "client_secret_basic",
+        registered_redirect_uri=OAUTH_CALLBACK_URL,
+    )
+
+
+@pytest.mark.parametrize(
+    "body",
+    [
+        pytest.param(
+            '{"error": "invalid_client", "error_description": "denied"}',
+            id="description",
+        ),
+        pytest.param('{"error": "invalid_client"}', id="code_only"),
+        pytest.param("not-json", id="not_json"),
+        pytest.param("", id="empty"),
+    ],
+)
+async def test_basic_auth_token_error_does_not_return_tokens(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    body: str,
+) -> None:
+    """A failed basic-auth token response is reported as reauth."""
+    aioclient_mock.post(OAUTH_TOKEN_URL, status=400, text=body)
+    implementation = _basic_auth_implementation(hass)
+
+    with pytest.raises(OAuth2TokenRequestReauthError):
+        await implementation._token_request({"grant_type": "refresh_token"})
+
+
+async def test_basic_auth_token_connection_error(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """A basic-auth token request that never connects is a connection error."""
+    aioclient_mock.post(OAUTH_TOKEN_URL, exc=ClientError("connection failed"))
+    implementation = _basic_auth_implementation(hass)
+
+    with pytest.raises(OAuth2TokenRequestConnectionError):
+        await implementation._token_request({"grant_type": "refresh_token"})
