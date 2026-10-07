@@ -22,7 +22,7 @@ async def _async_validate_device(host: str) -> str | None:
     try:
         if not await client.connect():
             return "cannot_connect"
-        if await client.async_get_software_version() is None:
+        if not await client.async_verify_device():
             return "not_qube_device"
     except OSError:
         return "cannot_connect"
