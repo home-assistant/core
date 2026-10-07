@@ -39,7 +39,7 @@ on:
 env:
   CACHE_VERSION: 4
   MYPY_CACHE_VERSION: 1
-  HA_SHORT_VERSION: "2026.10"
+  HA_SHORT_VERSION: "2026.11"
   ADDITIONAL_PYTHON_VERSIONS: "[]"
   # LTS versions: 10.3, 10.6, 10.11, 11.4, 11.8, 12.3
   # - 10.3 and 10.6 are the versions currently phased out until 2027.3
@@ -132,12 +132,7 @@ jobs:
           filters: .core_files.yaml
       - name: Create a list of integrations to filter for changes
         run: |
-          integrations=$(ls -Ad ./homeassistant/components/[!_]*  | xargs -n 1 basename)
-          touch .integration_paths.yaml
-          for integration in $integrations; do
-            echo "${integration}: [homeassistant/components/${integration}/**, tests/components/${integration}/**]" \
-              >> .integration_paths.yaml;
-          done
+          python3 -m script.gen_integration_paths
           echo "Result:"
           cat .integration_paths.yaml
       - name: Filter for integration changes
@@ -777,9 +772,10 @@ jobs:
         with:
           mode: simulation,memory
           # No token: auth uses the OIDC id-token minted by the job permissions.
+          # Keep respx disabled: it imports httpx before it can be aliased to httpx2.
           run: |
             . venv/bin/activate
-            pytest benchmarks --codspeed --no-cov -o addopts=""
+            pytest benchmarks --codspeed --no-cov -o addopts="-p no:respx"
 
   prepare-pytest-full:
     name: Split tests for full run
@@ -823,13 +819,15 @@ jobs:
           path: pytest_test_counts.json
           # Primary key is a sentinel; restore-keys pick the most recent
           # prefix match since the real (content-addressed) key isn't
-          # known until split_tests.py runs below.
+          # known until split_tests.py runs below. The keys leave out the
+          # requirements: split_tests.py recounts a file when it or a conftest
+          # or helper module on its path changes, and a count that shifts with
+          # a library update only makes the buckets slightly uneven.
           key: >-
             pytest-counts-${{ runner.os }}-${{ runner.arch }}-${{
-            steps.python.outputs.python-version }}-${{
-            needs.info.outputs.python_cache_key }}-restore-sentinel
+            steps.python.outputs.python-version }}-restore-sentinel
           restore-keys: |
-            pytest-counts-${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-${{ needs.info.outputs.python_cache_key }}-
+            pytest-counts-${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-
       - name: Run split_tests.py
         env:
           TEST_GROUP_COUNT: ${{ needs.info.outputs.test_group_count }}
@@ -857,7 +855,6 @@ jobs:
           key: >-
             pytest-counts-${{ runner.os }}-${{ runner.arch }}-${{
             steps.python.outputs.python-version }}-${{
-            needs.info.outputs.python_cache_key }}-${{
             steps.cache-pytest-counts-hash.outputs.hash }}
       - name: Upload pytest_buckets
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -948,7 +945,7 @@ jobs:
             --timeout=9 \
             --durations=0 \
             --durations-min=1 \
-            --numprocesses auto \
+            --numprocesses logical \
             --snapshot-details \
             --dist=loadfile \
             ${cov_params[@]} \
@@ -1364,7 +1361,7 @@ jobs:
           python3 -b -X dev -m pytest \
             -qq \
             --timeout=20 \
-            --numprocesses auto \
+            --numprocesses logical \
             --dist=loadfile \
             --snapshot-details \
             -o console_output_style=count \
@@ -1503,7 +1500,7 @@ jobs:
           python3 -b -X dev -m pytest \
             -qq \
             --timeout=9 \
-            --numprocesses auto \
+            --numprocesses logical \
             --snapshot-details \
             ${cov_params[@]} \
             -o console_output_style=count \

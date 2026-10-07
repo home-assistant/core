@@ -81,7 +81,7 @@ STEP_USER_DATA_SCHEMA: probatio.Schema = probatio.Schema(
                 translation_key="platforms",
             )
         ),
-        probatio.Required(CONF_API_KEY): TextSelector(
+        probatio.Required(probatio.Secret(CONF_API_KEY)): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.PASSWORD,
                 autocomplete="current-password",
@@ -137,7 +137,7 @@ STEP_RECONFIGURE_USER_DATA_SCHEMA: probatio.Schema = probatio.Schema(
 )
 STEP_REAUTH_DATA_SCHEMA: probatio.Schema = probatio.Schema(
     {
-        probatio.Required(CONF_API_KEY): TextSelector(
+        probatio.Required(probatio.Secret(CONF_API_KEY)): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.PASSWORD,
                 autocomplete="current-password",

@@ -522,6 +522,12 @@ def selector_serializer(schema: Any) -> Any:  # noqa: C901
     """Convert selectors into OpenAPI schema."""
     if schema is cv.string or schema is intent.non_empty_string:
         return {"type": "string"}
+    if (
+        schema is cv.entity_id
+        or schema is cv.entity_id_or_uuid
+        or schema is cv.strict_entity_id
+    ):
+        return {"type": "string"}
     if schema is cv.boolean:
         return {"type": "boolean"}
 
@@ -591,7 +597,9 @@ def selector_serializer(schema: Any) -> Any:  # noqa: C901
         return probatio.to_openapi(schema.DATA_SCHEMA)
 
     if isinstance(schema, selector.MediaSelector):
-        item_schema = probatio.to_openapi(schema.DATA_SCHEMA)
+        item_schema = probatio.to_openapi(
+            schema.DATA_SCHEMA, custom_serializer=selector_serializer
+        )
         # Media selector allows multiple when configured
         if schema.config.get("multiple"):
             return {
@@ -646,7 +654,9 @@ def selector_serializer(schema: Any) -> Any:  # noqa: C901
         return {"type": "string", "enum": options}
 
     if isinstance(schema, selector.TargetSelector):
-        return probatio.to_openapi(cv.TARGET_FIELDS)
+        return probatio.to_openapi(
+            cv.TARGET_FIELDS, custom_serializer=selector_serializer
+        )
 
     if isinstance(schema, selector.TemplateSelector):
         return {"type": "string", "format": "jinja2"}

@@ -160,7 +160,7 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
         probatio.Optional(CONF_NAME): cv.string,
         probatio.Optional(CONF_UNIQUE_ID): cv.string,
         probatio.Required(CONF_FILTERS): probatio.All(
-            cv.ensure_list,
+            probatio.EnsureList(),
             [
                 probatio.Any(
                     FILTER_OUTLIER_SCHEMA,

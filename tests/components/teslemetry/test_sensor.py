@@ -1,7 +1,6 @@
 """Test the Teslemetry sensor platform."""
 
 from copy import deepcopy
-from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
@@ -19,6 +18,7 @@ from homeassistant.components.teslemetry.coordinator import VEHICLE_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    EVENT_STATE_CHANGED,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     EntityCategory,
@@ -39,7 +39,7 @@ from .const import (
     VEHICLE_DATA_ALT,
 )
 
-from tests.common import async_fire_time_changed
+from tests.common import async_capture_events, async_fire_time_changed
 
 # VIN used across the Teslemetry test fixtures.
 VEHICLE_VIN = "LRW3F7EK4NC700000"
@@ -49,6 +49,20 @@ ENERGY_HISTORY_ENTITY = "sensor.energy_site_battery_discharged"
 # Assistant runs on US/Pacific in tests, so a last_reset derived from its clock
 # or from the event's created_at cannot produce this.
 SITE_MIDNIGHT = "2024-09-18T00:00:00+10:00"
+
+# Per-tire TPMS warning objects including the Tesla Semi.
+TPMS_NO_WARNINGS = {
+    "frontLeft": False,
+    "frontRight": False,
+    "rearLeft": False,
+    "rearRight": False,
+    "semiMiddleAxleLeft2": False,
+    "semiMiddleAxleRight2": False,
+    "semiRearAxleLeft": False,
+    "semiRearAxleLeft2": False,
+    "semiRearAxleRight": False,
+    "semiRearAxleRight2": False,
+}
 
 
 def _products_with_driver_assist(driver_assist: str) -> dict:
@@ -109,6 +123,34 @@ async def test_energy_only_account_streams_live_status(
     assert entity_registry.async_get_entity_id(
         Platform.SENSOR, "teslemetry", f"{entry.unique_id}_credit_quota"
     )
+
+
+@pytest.mark.parametrize(
+    ("has_battery", "expected"),
+    [
+        pytest.param(True, "0", id="battery"),
+        pytest.param(False, None, id="no_battery"),
+    ],
+)
+async def test_energy_percentage_charged_requires_battery(
+    hass: HomeAssistant,
+    mock_live_status: AsyncMock,
+    mock_site_info: AsyncMock,
+    has_battery: bool,
+    expected: str | None,
+) -> None:
+    """The battery level sensor is created for battery sites even when Tesla omits it at 0 %."""
+    live_status = deepcopy(LIVE_STATUS)
+    del live_status["response"]["percentage_charged"]
+    mock_live_status.side_effect = lambda: deepcopy(live_status)
+    site_info = deepcopy(SITE_INFO)
+    site_info["response"]["components"]["battery"] = has_battery
+    mock_site_info.side_effect = lambda: deepcopy(site_info)
+
+    await setup_platform(hass, [Platform.SENSOR])
+
+    state = hass.states.get("sensor.energy_site_percentage_charged")
+    assert (state and state.state) == expected
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -400,6 +442,105 @@ async def test_sensors_streaming_unit_conversion(
     assert float(state.state) == pytest.approx(expected_state)
 
 
+@pytest.mark.parametrize(
+    ("updates", "expected_delay", "expected_energy"),
+    [
+        pytest.param(
+            [
+                {
+                    Signal.MINUTES_TO_ARRIVAL: 12.5,
+                    Signal.ROUTE_TRAFFIC_MINUTES_DELAY: 3,
+                    Signal.EXPECTED_ENERGY_PERCENT_AT_TRIP_ARRIVAL: 62,
+                },
+                # The car keeps reporting the last trip's arrival energy and
+                # traffic delay after arriving, but MinutesToArrival goes null.
+                {
+                    Signal.MINUTES_TO_ARRIVAL: None,
+                    Signal.ROUTE_TRAFFIC_MINUTES_DELAY: 0,
+                    Signal.EXPECTED_ENERGY_PERCENT_AT_TRIP_ARRIVAL: 62,
+                },
+            ],
+            ["3", STATE_UNKNOWN],
+            ["62", STATE_UNKNOWN],
+            id="route_ends",
+        ),
+        pytest.param(
+            [
+                {
+                    Signal.MINUTES_TO_ARRIVAL: 12.5,
+                    Signal.ROUTE_TRAFFIC_MINUTES_DELAY: 3,
+                },
+                {
+                    Signal.MINUTES_TO_ARRIVAL: None,
+                    Signal.ROUTE_TRAFFIC_MINUTES_DELAY: 0,
+                },
+                {
+                    Signal.MINUTES_TO_ARRIVAL: 30.0,
+                    Signal.ROUTE_TRAFFIC_MINUTES_DELAY: 5,
+                },
+            ],
+            ["3", STATE_UNKNOWN, "5"],
+            [],
+            id="route_restarts",
+        ),
+        pytest.param(
+            [
+                {
+                    Signal.MINUTES_TO_ARRIVAL: 12.5,
+                    Signal.ROUTE_TRAFFIC_MINUTES_DELAY: 3,
+                },
+                {Signal.MINUTES_TO_ARRIVAL: None},
+                {Signal.MINUTES_TO_ARRIVAL: 20.0},
+            ],
+            ["3", STATE_UNKNOWN, "3"],
+            [],
+            id="route_restarts_with_unchanged_value",
+        ),
+        pytest.param(
+            [
+                {Signal.ROUTE_TRAFFIC_MINUTES_DELAY: 3},
+                {Signal.MINUTES_TO_ARRIVAL: 12.5},
+            ],
+            ["3"],
+            [],
+            id="waits_for_minutes_to_arrival",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_sensors_streaming_active_route(
+    hass: HomeAssistant,
+    mock_add_listener: AsyncMock,
+    updates: list[dict[Signal, float | None]],
+    expected_delay: list[str],
+    expected_energy: list[str],
+) -> None:
+    """Test the streaming active route sensors only report during navigation."""
+    await setup_platform(hass, [Platform.SENSOR])
+    events = async_capture_events(hass, EVENT_STATE_CHANGED)
+
+    for data in updates:
+        mock_add_listener.send(
+            {
+                "vin": VEHICLE_DATA_ALT["response"]["vin"],
+                "data": data,
+                "createdAt": "2026-09-28T08:40:00.000Z",
+            }
+        )
+        await hass.async_block_till_done()
+
+    assert [
+        event.data["new_state"].state
+        for event in events
+        if event.data["entity_id"] == "sensor.test_traffic_delay"
+    ] == expected_delay
+    assert [
+        event.data["new_state"].state
+        for event in events
+        if event.data["entity_id"] == "sensor.test_state_of_charge_at_arrival"
+    ] == expected_energy
+
+
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensors_streaming_tpms_none_clears_state(
     hass: HomeAssistant,
@@ -425,6 +566,88 @@ async def test_sensors_streaming_tpms_none_clears_state(
         {
             "vin": vin,
             "data": {Signal.TPMS_PRESSURE_FL: None},
+            "createdAt": "2024-10-04T10:45:18.537Z",
+        }
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == STATE_UNKNOWN
+
+
+@pytest.mark.parametrize(
+    ("signal", "entity_id"),
+    [
+        pytest.param(
+            Signal.TPMS_HARD_WARNINGS,
+            "sensor.test_tire_pressure_hard_warnings",
+            id="hard",
+        ),
+        pytest.param(
+            Signal.TPMS_SOFT_WARNINGS,
+            "sensor.test_tire_pressure_soft_warnings",
+            id="soft",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_sensors_streaming_tpms_warnings(
+    hass: HomeAssistant,
+    mock_add_listener: AsyncMock,
+    signal: Signal,
+    entity_id: str,
+) -> None:
+    """Test TPMS warning sensors report how many tires are in warning."""
+    await setup_platform(hass, [Platform.SENSOR])
+    vin = VEHICLE_DATA_ALT["response"]["vin"]
+
+    for warnings, expected_state in (
+        ({**TPMS_NO_WARNINGS, "frontRight": True, "rearLeft": True}, "2"),
+        (TPMS_NO_WARNINGS, "0"),
+        (None, STATE_UNKNOWN),
+    ):
+        mock_add_listener.send(
+            {
+                "vin": vin,
+                "data": {signal: warnings},
+                "createdAt": "2024-10-04T10:45:17.537Z",
+            }
+        )
+        await hass.async_block_till_done()
+        assert hass.states.get(entity_id).state == expected_state
+
+
+@pytest.mark.parametrize(
+    "raw_value",
+    [
+        pytest.param("FollowDistanceUnknown", id="unknown"),
+        pytest.param(None, id="none"),
+    ],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_cruise_follow_distance_unknown(
+    hass: HomeAssistant,
+    mock_vehicle_data: AsyncMock,
+    mock_add_listener: AsyncMock,
+    raw_value: str | None,
+) -> None:
+    """An unknown streamed follow distance must clear the numeric sensor."""
+    entity_id = "sensor.test_cruise_follow_distance"
+    await setup_platform(hass, [Platform.SENSOR])
+    vin = VEHICLE_DATA_ALT["response"]["vin"]
+
+    mock_add_listener.send(
+        {
+            "vin": vin,
+            "data": {Signal.CRUISE_FOLLOW_DISTANCE: "FollowDistance3"},
+            "createdAt": "2024-10-04T10:45:17.537Z",
+        }
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == "3"
+
+    mock_add_listener.send(
+        {
+            "vin": vin,
+            "data": {Signal.CRUISE_FOLLOW_DISTANCE: raw_value},
             "createdAt": "2024-10-04T10:45:18.537Z",
         }
     )
@@ -624,21 +847,32 @@ async def test_energy_history_time_zone_fallback(
     assert state.attributes["last_reset"] == "2024-09-18T00:00:00-07:00"
 
 
-async def test_energy_history_update_entity_service_is_a_noop(
+@pytest.mark.parametrize(
+    ("connected", "expected_state"),
+    [
+        pytest.param(True, "0.036", id="connected"),
+        pytest.param(False, STATE_UNAVAILABLE, id="disconnected"),
+    ],
+)
+async def test_energy_history_update_entity_service(
     hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
     caplog: pytest.LogCaptureFixture,
+    mock_add_connection_listener: MagicMock,
     mock_energy_totals_stream: MagicMock,
+    connected: bool,
+    expected_state: str,
 ) -> None:
-    """The generic update service keeps the streamed totals instead of failing.
+    """The generic update service leaves the history sensors as the stream set them.
 
-    The coordinator has nothing to fetch, so the service must not leave the
-    sensors unavailable on a stream that is perfectly healthy.
+    The stream is their only source, so the service must neither fail on a
+    healthy stream nor revive stale totals while it is down.
     """
     await setup_platform(hass, [Platform.SENSOR])
     await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
 
     mock_energy_totals_stream.send()
+    await hass.async_block_till_done()
+    mock_add_connection_listener.send(connected)
     await hass.async_block_till_done()
 
     await hass.services.async_call(
@@ -647,15 +881,10 @@ async def test_energy_history_update_entity_service_is_a_noop(
         {ATTR_ENTITY_ID: ENERGY_HISTORY_ENTITY},
         blocking=True,
     )
-    # The coordinator debounces refresh requests, so let the deferred one land.
-    freezer.tick(timedelta(seconds=30))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
 
     assert "NotImplementedError" not in caplog.text
     assert (state := hass.states.get(ENERGY_HISTORY_ENTITY))
-    assert state.state == "0.036"
-    assert state.attributes["last_reset"] == SITE_MIDNIGHT
+    assert state.state == expected_state
 
 
 async def test_energy_history_unavailable_while_stream_disconnected(
@@ -677,3 +906,88 @@ async def test_energy_history_unavailable_while_stream_disconnected(
     mock_energy_totals_stream.send(is_cache=True)
     await hass.async_block_till_done()
     assert hass.states.get(ENERGY_HISTORY_ENTITY).state == "0.036"
+
+
+@pytest.mark.parametrize(
+    ("components", "absent"),
+    [
+        pytest.param(
+            {"battery": False},
+            {
+                "grid_energy_exported_from_battery",
+                "battery_energy_exported",
+                "battery_energy_imported_from_grid",
+                "battery_energy_imported_from_solar",
+                "battery_energy_imported_from_generator",
+                "consumer_energy_imported_from_battery",
+                "total_battery_charge",
+                "total_battery_discharge",
+            },
+            id="solar_only",
+        ),
+        pytest.param(
+            {"solar": False},
+            {
+                "solar_energy_exported",
+                "grid_energy_exported_from_solar",
+                "battery_energy_imported_from_solar",
+                "consumer_energy_imported_from_solar",
+                "total_solar_generation",
+            },
+            id="battery_only",
+        ),
+    ],
+)
+async def test_energy_history_sensors_match_site_components(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_site_info: AsyncMock,
+    components: dict[str, bool],
+    absent: set[str],
+) -> None:
+    """History sensors are only created for the components a site has."""
+    site_info = deepcopy(SITE_INFO)
+    site_info["response"]["components"].update(components)
+    mock_site_info.side_effect = lambda: deepcopy(site_info)
+
+    await setup_platform(hass, [Platform.SENSOR])
+
+    created = {
+        key
+        for key in ENERGY_HISTORY_FIELDS
+        if entity_registry.async_get_entity_id(Platform.SENSOR, DOMAIN, f"123456-{key}")
+    }
+    assert created == set(ENERGY_HISTORY_FIELDS) - absent
+
+
+@pytest.mark.parametrize(
+    ("scopes", "expected"),
+    [
+        pytest.param(METADATA["scopes"], True, id="location_scope"),
+        pytest.param(
+            [scope for scope in METADATA["scopes"] if scope != "vehicle_location"],
+            False,
+            id="no_location_scope",
+        ),
+    ],
+)
+async def test_location_sensors_require_location_scope(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_metadata: AsyncMock,
+    scopes: list[str],
+    expected: bool,
+) -> None:
+    """Test location sensors are only created with the vehicle location scope."""
+
+    mock_metadata.return_value = {**METADATA, "scopes": scopes}
+
+    await setup_platform(hass, [Platform.SENSOR])
+
+    for key in ("gps_heading", "drive_state_active_route_destination"):
+        assert (
+            entity_registry.async_get_entity_id(
+                Platform.SENSOR, DOMAIN, f"{VEHICLE_VIN}-{key}"
+            )
+            is not None
+        ) is expected

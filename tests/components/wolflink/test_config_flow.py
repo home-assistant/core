@@ -2,7 +2,7 @@
 
 from unittest.mock import patch
 
-from httpx import RequestError
+from httpx2 import RequestError
 import pytest
 from wolf_comm.models import Device
 from wolf_comm.token_auth import InvalidAuth

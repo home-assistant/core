@@ -38,7 +38,7 @@ DATA_SCHEMA_USER = probatio.Schema(
             config=TextSelectorConfig(type=TextSelectorType.URL)
         ),
         probatio.Required(CONF_USERNAME, default=DEFAULT_USERNAME): str,
-        probatio.Required(CONF_PASSWORD): TextSelector(
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): TextSelector(
             config=TextSelectorConfig(type=TextSelectorType.PASSWORD)
         ),
         probatio.Required(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): bool,
@@ -48,7 +48,7 @@ DATA_SCHEMA_USER = probatio.Schema(
 DATA_SCHEMA_CONFIRM = probatio.Schema(
     {
         probatio.Required(CONF_USERNAME, default=DEFAULT_USERNAME): str,
-        probatio.Required(CONF_PASSWORD): TextSelector(
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): TextSelector(
             config=TextSelectorConfig(type=TextSelectorType.PASSWORD)
         ),
     }
@@ -109,6 +109,20 @@ class FritzboxConfigFlow(ConfigFlow, domain=DOMAIN):
         except OSError:
             return RESULT_NO_DEVICES_FOUND
         return RESULT_SUCCESS
+
+    async def async_has_smarthome_capabilities(self) -> bool | None:
+        """Test if the device has smarthome capabilities."""
+        return await self.hass.async_add_executor_job(self._has_smarthome_capabilities)
+
+    def _has_smarthome_capabilities(self) -> bool | None:
+        """Test if the device has smarthome capabilities."""
+        fritzbox = Fritzhome(
+            host=self._url,
+            user=None,
+            password=None,
+            ssl_verify=False,
+        )
+        return fritzbox.has_smarthome_capabilities()  # type: ignore[no-any-return]
 
     @override
     async def async_step_user(
@@ -177,6 +191,9 @@ class FritzboxConfigFlow(ConfigFlow, domain=DOMAIN):
                 if uuid and not entry.unique_id:
                     self.hass.config_entries.async_update_entry(entry, unique_id=uuid)
                 return self.async_abort(reason="already_configured")
+
+        if await self.async_has_smarthome_capabilities() is False:
+            return self.async_abort(reason="not_supported")
 
         self._name = str(discovery_info.upnp.get(ATTR_UPNP_FRIENDLY_NAME) or self._url)
 
@@ -252,7 +269,7 @@ class FritzboxConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=probatio.Schema(
                 {
                     probatio.Required(CONF_USERNAME, default=self._username): str,
-                    probatio.Required(CONF_PASSWORD): str,
+                    probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
                 }
             ),
             description_placeholders={"name": self._name},

@@ -1160,7 +1160,7 @@ async def websocket_browse_media(
         ): str,
         probatio.Required(ATTR_MEDIA_SEARCH_QUERY): str,
         probatio.Optional(ATTR_MEDIA_FILTER_CLASSES): probatio.All(
-            cv.ensure_list,
+            probatio.EnsureList(),
             [probatio.In([m.value for m in MediaClass])],
             lambda x: {MediaClass(item) for item in x},
         ),

@@ -629,6 +629,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
             translation_domain=DOMAIN,
             translation_key="not_ready_api_error",
         ) from e
+    except (ClientError, TimeoutError) as e:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="not_ready_connection_error",
+        ) from e
 
     metadata = metadata_coordinator.data
     scopes = metadata["scopes"]
@@ -802,7 +807,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
 
     # Run all first refreshes
     await asyncio.gather(
-        *(async_setup_stream(hass, entry, vehicle) for vehicle in vehicles),
+        *(
+            async_setup_stream(hass, entry, vehicle)
+            for vehicle in vehicles
+            if not vehicle.poll
+        ),
         *(
             vehicle.coordinator.async_config_entry_first_refresh()
             for vehicle in vehicles
@@ -862,7 +871,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
         if energysites:
             entry.async_on_unload(
                 stream.async_add_connection_listener(
-                    create_handle_energy_stream_connection(energysites)
+                    create_handle_energy_stream_connection(hass, energysites)
                 )
             )
 
@@ -898,6 +907,7 @@ def _setup_subentry_change_reload(
 
 
 def create_handle_energy_stream_connection(
+    hass: HomeAssistant,
     energysites: list[TeslemetryEnergyData],
 ) -> Callable[[bool], None]:
     """Create a stream connection listener for the energy coordinators."""
@@ -909,7 +919,8 @@ def create_handle_energy_stream_connection(
         Each subsequent streamed document restores its coordinator via
         async_set_updated_data, so no reload is required on reconnect.
         """
-        if connected:
+        # Stopping cancels the listen task, which reports a disconnect.
+        if connected or hass.is_stopping:
             return
         error = UpdateFailed(
             translation_domain=DOMAIN,
@@ -967,6 +978,11 @@ async def _async_setup_energy_site(
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="not_ready_api_error",
+        ) from e
+    except (ClientError, TimeoutError) as e:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="not_ready_connection_error",
         ) from e
 
     live_coordinator = (
@@ -1131,8 +1147,6 @@ async def async_setup_stream(
     hass: HomeAssistant, entry: TeslemetryConfigEntry, vehicle: TeslemetryVehicleData
 ) -> None:
     """Set up the stream for a vehicle."""
-    await vehicle.stream_vehicle.get_config()
-
     entry.async_on_unload(
         vehicle.stream_vehicle.listen_Version(
             create_vehicle_streaming_listener(hass, vehicle.vin, entry.entry_id)

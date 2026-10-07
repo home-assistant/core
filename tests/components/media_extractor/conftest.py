@@ -11,7 +11,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from . import MockYoutubeDL
-from .const import AUDIO_QUERY
 
 
 @pytest.fixture(autouse=True)
@@ -41,12 +40,6 @@ async def setup_mock_yt_dlp(hass: HomeAssistant) -> MockYoutubeDL:
 def empty_media_extractor_config() -> dict[str, Any]:
     """Return base media extractor config."""
     return {DOMAIN: {}}
-
-
-@pytest.fixture(name="audio_media_extractor_config")
-def audio_media_extractor_config() -> dict[str, Any]:
-    """Media extractor config for audio."""
-    return {DOMAIN: {"default_query": AUDIO_QUERY}}
 
 
 @pytest.fixture

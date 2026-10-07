@@ -17,7 +17,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_entry_flow, config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN
+from .const import DATA_API_KEYS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,7 +37,9 @@ SERVICE_TRIGGER = "trigger"
 SERVICE_TRIGGER_SCHEMA = probatio.Schema(
     {
         probatio.Required(ATTR_EVENT): cv.string,
-        probatio.Optional(ATTR_TARGET): probatio.All(cv.ensure_list, [cv.string]),
+        probatio.Optional(ATTR_TARGET): probatio.All(
+            probatio.EnsureList(), [cv.string]
+        ),
         probatio.Optional(ATTR_VALUE1): cv.string,
         probatio.Optional(ATTR_VALUE2): cv.string,
         probatio.Optional(ATTR_VALUE3): cv.string,
@@ -48,7 +50,7 @@ CONFIG_SCHEMA = probatio.Schema(
     {
         probatio.Optional(DOMAIN): probatio.Schema(
             {
-                probatio.Required(CONF_KEY): probatio.Any(
+                probatio.Required(probatio.Secret(CONF_KEY)): probatio.Any(
                     {cv.string: cv.string}, cv.string
                 )
             }
@@ -66,9 +68,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     api_keys = config[DOMAIN][CONF_KEY]
     if isinstance(api_keys, str):
         api_keys = {"default": api_keys}
+    hass.data[DATA_API_KEYS] = api_keys
 
     def trigger_service(call: ServiceCall) -> None:
         """Handle IFTTT trigger service calls."""
+        api_keys = call.hass.data[DATA_API_KEYS]
         event = call.data[ATTR_EVENT]
         targets = call.data.get(ATTR_TARGET, list(api_keys))
         value1 = call.data.get(ATTR_VALUE1)

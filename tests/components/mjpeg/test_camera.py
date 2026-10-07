@@ -1,7 +1,7 @@
 """Test the MJPEG IP Camera camera platform."""
 
 import aiohttp
-import httpx
+import httpx2
 import pytest
 import respx
 
@@ -88,9 +88,9 @@ def mock_digest_config_entry() -> MockConfigEntry:
     [
         pytest.param(TimeoutError, "timeout_getting_image", id="timeout"),
         pytest.param(
-            httpx.TimeoutException, "timeout_getting_image", id="httpx_timeout"
+            httpx2.TimeoutException, "timeout_getting_image", id="httpx_timeout"
         ),
-        pytest.param(httpx.HTTPError, "error_getting_image", id="http_error"),
+        pytest.param(httpx2.HTTPError, "error_getting_image", id="http_error"),
     ],
 )
 async def test_digest_camera_image_error(
