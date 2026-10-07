@@ -12,6 +12,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -61,10 +62,11 @@ SENSOR_TYPES: tuple[PapouchSensorEntityDescription, ...] = (
     ),
     PapouchSensorEntityDescription(
         key="wind_direction",
+        device_class=SensorDeviceClass.WIND_DIRECTION,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     PapouchSensorEntityDescription(
-        key="wind_direction_text",
+        key="wind_direction_text",  # e.g. N, E, ...
     ),
     PapouchSensorEntityDescription(
         key="wind_speed",
@@ -88,11 +90,13 @@ SENSOR_TYPES: tuple[PapouchSensorEntityDescription, ...] = (
         key="battery",
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     PapouchSensorEntityDescription(
         key="signal_strength",
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )
 
@@ -130,7 +134,7 @@ async def async_setup_entry(
             base_desc = SENSOR_MAP.get(data_type)
 
             if not base_desc:
-                _LOGGER.error("Unknown sensor type '%s'. Skipping entity", data_type)
+                _LOGGER.warning("Unknown sensor type '%s'. Skipping entity", data_type)
                 continue
 
             name_val = sensor_data.get("name")
@@ -146,6 +150,7 @@ async def async_setup_entry(
                 native_unit_of_measurement=sensor_data.get("unit"),
                 translation_key=translation_key,
                 translation_placeholders=placeholders,
+                entity_category=base_desc.entity_category,
             )
             entities.append(PapouchSensor(coordinator, device, description))
 
