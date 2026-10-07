@@ -3,7 +3,7 @@
 import logging
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant import config_entries
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
@@ -123,14 +123,14 @@ SOURCE_SELECTORS = {
 
 def _source_schema_fields(
     defaults: dict[str, Any] | None = None,
-) -> dict[vol.Optional, selector.EntitySelector]:
+) -> dict[probatio.Optional, selector.EntitySelector]:
     """Return flat source selector fields for config and options flows."""
     defaults = defaults or {}
 
     return {
-        vol.Optional(source, description={"suggested_value": defaults[source]})
+        probatio.Optional(source, description={"suggested_value": defaults[source]})
         if source in defaults
-        else vol.Optional(source): source_selector
+        else probatio.Optional(source): source_selector
         for source, source_selector in SOURCE_SELECTORS.items()
     }
 
@@ -337,26 +337,26 @@ class IndoorAirQualityConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data=data,
         )
 
-    def _user_schema(self) -> vol.Schema:
+    def _user_schema(self) -> probatio.Schema:
         """Return the first-step config schema."""
-        return vol.Schema(
+        return probatio.Schema(
             {
-                vol.Optional(CONF_DEVICE_ID): DEVICE_SELECTOR,
-                vol.Optional(
+                probatio.Optional(CONF_DEVICE_ID): DEVICE_SELECTOR,
+                probatio.Optional(
                     CONF_STANDARD, default=DEFAULT_STANDARD
                 ): STANDARD_SELECTOR,
-                vol.Optional(
+                probatio.Optional(
                     CONF_SHOW_SOURCE_OPTIONS,
                     default=False,
                 ): selector.BooleanSelector(),
             }
         )
 
-    def _sources_schema(self) -> vol.Schema:
+    def _sources_schema(self) -> probatio.Schema:
         """Return the manual source selection schema."""
-        return vol.Schema(
+        return probatio.Schema(
             {
-                vol.Optional(CONF_NAME, default=self._name): str,
+                probatio.Optional(CONF_NAME, default=self._name): str,
                 **_source_schema_fields(self._detected_sources),
             }
         )
@@ -445,7 +445,7 @@ class IndoorAirQualityConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 if unique_id != entry.unique_id:
                     await self.async_set_unique_id(unique_id)
                     self._abort_if_unique_id_configured()
-                return self.async_update_reload_and_abort(
+                return self.async_update_and_abort(
                     entry,
                     unique_id=unique_id,
                     data_updates={
@@ -456,9 +456,9 @@ class IndoorAirQualityConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reconfigure",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_STANDARD, default=current_standard
                     ): STANDARD_SELECTOR,
                     **_source_schema_fields(current_sources),

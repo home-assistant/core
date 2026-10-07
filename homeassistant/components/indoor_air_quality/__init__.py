@@ -7,7 +7,7 @@ sensor sources, using a configurable rating standard.
 import logging
 from typing import Any, Final, cast
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_ID, Platform
@@ -28,18 +28,20 @@ _LOGGER: Final = logging.getLogger(__name__)
 PLATFORMS: Final = [Platform.SENSOR]
 
 
-_SOURCES_SCHEMA: Final = vol.Schema({vol.In(SOURCE_SPECS): str})
+_SOURCES_SCHEMA: Final = probatio.Schema({probatio.In(SOURCE_SPECS): str})
 
-_ENTRY_DATA_SCHEMA: Final = vol.Schema(
+_ENTRY_DATA_SCHEMA: Final = probatio.Schema(
     {
-        vol.Required(CONF_SOURCES): vol.All(
+        probatio.Required(CONF_SOURCES): probatio.All(
             _SOURCES_SCHEMA,
-            vol.Length(min=1),
+            probatio.Length(min=1),
         ),
-        vol.Optional(CONF_STANDARD, default=DEFAULT_STANDARD): vol.In(STANDARDS),
-        vol.Optional(CONF_DEVICE_ID): vol.Any(str, None),
+        probatio.Optional(CONF_STANDARD, default=DEFAULT_STANDARD): probatio.In(
+            STANDARDS
+        ),
+        probatio.Optional(CONF_DEVICE_ID): probatio.Any(str, None),
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 
@@ -50,7 +52,7 @@ def _validate_entry_data(entry: IndoorAirQualityConfigEntry) -> dict[str, Any]:
     """Validate ``entry.data``; raise :class:`ConfigEntryError` on failure."""
     try:
         validated = _ENTRY_DATA_SCHEMA(dict(entry.data))
-    except vol.Invalid as err:
+    except probatio.Invalid as err:
         raise ConfigEntryError(
             f"Invalid Indoor Air Quality config entry data: {err}"
         ) from err
