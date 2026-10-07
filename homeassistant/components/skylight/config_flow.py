@@ -150,9 +150,7 @@ class SkylightConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="all_frames_configured")
         if user_input is not None:
             frame_id = user_input[CONF_FRAME_ID]
-            frame = next(
-                (f for f in available if f["id"] == frame_id), None
-            )
+            frame = next((f for f in available if f["id"] == frame_id), None)
             if frame is None:
                 # The frame was configured by a concurrent flow while the
                 # picker was open.
