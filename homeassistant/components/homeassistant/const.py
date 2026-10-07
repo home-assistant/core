@@ -4,12 +4,6 @@ from enum import StrEnum
 from typing import TYPE_CHECKING, Final
 
 from homeassistant import core as ha
-from homeassistant.const import (
-    SERVICE_SAVE_PERSISTENT_STATES,
-    SERVICE_TOGGLE,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-)
 from homeassistant.util.hass_dict import HassKey
 
 if TYPE_CHECKING:
@@ -30,12 +24,12 @@ class HomeAssistantService(StrEnum):
     RELOAD_CORE_CONFIG = "reload_core_config"
     RELOAD_CUSTOM_TEMPLATES = "reload_custom_templates"
     RESTART = "restart"
-    SAVE_PERSISTENT_STATES = SERVICE_SAVE_PERSISTENT_STATES
+    SAVE_PERSISTENT_STATES = "save_persistent_states"
     SET_LOCATION = "set_location"
     STOP = "stop"
-    TOGGLE = SERVICE_TOGGLE
-    TURN_OFF = SERVICE_TURN_OFF
-    TURN_ON = SERVICE_TURN_ON
+    TOGGLE = "toggle"
+    TURN_OFF = "turn_off"
+    TURN_ON = "turn_on"
     UPDATE_ENTITY = "update_entity"
 
 
