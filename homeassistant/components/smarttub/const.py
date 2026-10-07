@@ -26,6 +26,9 @@ ATTR_REMINDERS = "reminders"
 ATTR_STATUS = "status"
 ATTR_SENSORS = "sensors"
 
+# the desired duration, in hours, of the cycle
 ATTR_DURATION = "duration"
+# the hour of the day at which to start the cycle (0-23)
 ATTR_START_HOUR = "start_hour"
+# how many days to snooze the reminder for
 ATTR_REMINDER_DAYS = "days"

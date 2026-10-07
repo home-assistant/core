@@ -31,8 +31,6 @@ ATTR_ERROR_TYPE = "error_type"
 ATTR_CREATED_AT = "created_at"
 ATTR_UPDATED_AT = "updated_at"
 
-# how many days to snooze the reminder for
-
 PARALLEL_UPDATES = 0
 
 _LOGGER = logging.getLogger(__name__)

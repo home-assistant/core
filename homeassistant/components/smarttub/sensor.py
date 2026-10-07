@@ -15,10 +15,7 @@ from .const import ATTR_DURATION, ATTR_START_HOUR
 from .controller import SmartTubConfigEntry
 from .entity import SmartTubOnboardSensorBase
 
-# the desired duration, in hours, of the cycle
 ATTR_CYCLE_LAST_UPDATED = "cycle_last_updated"
-# the hour of the day at which to start the cycle (0-23)
-
 
 PARALLEL_UPDATES = 0
 
