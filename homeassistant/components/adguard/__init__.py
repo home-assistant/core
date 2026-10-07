@@ -3,53 +3,26 @@
 from dataclasses import dataclass
 
 from adguardhome import AdGuardHome, AdGuardHomeAuthenticationError, AdGuardHomeError
-import probatio
 from yarl import URL
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
-    CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_SSL,
-    CONF_URL,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
     Platform,
 )
-from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import (
-    ConfigEntryAuthFailed,
-    ConfigEntryNotReady,
-    ServiceValidationError,
-)
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
-from .const import (
-    CONF_FORCE,
-    DOMAIN,
-    SERVICE_ADD_URL,
-    SERVICE_DISABLE_URL,
-    SERVICE_ENABLE_URL,
-    SERVICE_REFRESH,
-    SERVICE_REMOVE_URL,
-)
-
-SERVICE_URL_SCHEMA = probatio.Schema(
-    {probatio.Required(CONF_URL): probatio.Any(cv.url, cv.path)}
-)
-SERVICE_ADD_URL_SCHEMA = probatio.Schema(
-    {
-        probatio.Required(CONF_NAME): cv.string,
-        probatio.Required(CONF_URL): probatio.Any(cv.url, cv.path),
-    }
-)
-SERVICE_REFRESH_SCHEMA = probatio.Schema(
-    {probatio.Optional(CONF_FORCE, default=False): cv.boolean}
-)
+from .const import DOMAIN
+from .services import async_setup_services
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 PLATFORMS = [Platform.SENSOR, Platform.SWITCH, Platform.UPDATE]
@@ -67,61 +40,7 @@ class AdGuardData:
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the component."""
 
-    def _get_adguard_instances(hass: HomeAssistant) -> list[AdGuardHome]:
-        """Get the AdGuardHome instances."""
-        entries: list[AdGuardConfigEntry] = hass.config_entries.async_loaded_entries(
-            DOMAIN
-        )
-        if not entries:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN, translation_key="config_entry_not_loaded"
-            )
-        return [entry.runtime_data.client for entry in entries]
-
-    async def add_url(call: ServiceCall) -> None:
-        """Service call to add a new filter subscription to AdGuard Home."""
-        for adguard in _get_adguard_instances(call.hass):
-            await adguard.filtering.blocklists.add(
-                call.data[CONF_URL], name=call.data[CONF_NAME]
-            )
-
-    async def remove_url(call: ServiceCall) -> None:
-        """Service call to remove a filter subscription from AdGuard Home."""
-        for adguard in _get_adguard_instances(call.hass):
-            await adguard.filtering.blocklists.remove(call.data[CONF_URL])
-
-    async def enable_url(call: ServiceCall) -> None:
-        """Service call to enable a filter subscription in AdGuard Home."""
-        for adguard in _get_adguard_instances(call.hass):
-            await adguard.filtering.blocklists.enable(call.data[CONF_URL])
-
-    async def disable_url(call: ServiceCall) -> None:
-        """Service call to disable a filter subscription in AdGuard Home."""
-        for adguard in _get_adguard_instances(call.hass):
-            await adguard.filtering.blocklists.disable(call.data[CONF_URL])
-
-    async def refresh(call: ServiceCall) -> None:
-        """Service call to refresh the filter subscriptions in AdGuard Home."""
-        for adguard in _get_adguard_instances(call.hass):
-            # AdGuard Home always forces a refresh, so the force option does
-            # nothing, but is kept so existing automations keep working.
-            await adguard.filtering.blocklists.refresh()
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_ADD_URL, add_url, schema=SERVICE_ADD_URL_SCHEMA
-    )
-    hass.services.async_register(
-        DOMAIN, SERVICE_REMOVE_URL, remove_url, schema=SERVICE_URL_SCHEMA
-    )
-    hass.services.async_register(
-        DOMAIN, SERVICE_ENABLE_URL, enable_url, schema=SERVICE_URL_SCHEMA
-    )
-    hass.services.async_register(
-        DOMAIN, SERVICE_DISABLE_URL, disable_url, schema=SERVICE_URL_SCHEMA
-    )
-    hass.services.async_register(
-        DOMAIN, SERVICE_REFRESH, refresh, schema=SERVICE_REFRESH_SCHEMA
-    )
+    async_setup_services(hass)
     return True
 
 

@@ -39,34 +39,44 @@ async def test_load_unload_config_entry(
 
 
 @pytest.mark.parametrize(
-    "side_effect", [PVOutputConnectionError, PVOutputNoDataError, PVOutputError]
+    ("method", "side_effect"),
+    [
+        ("status", PVOutputConnectionError),
+        ("status", PVOutputNoDataError),
+        ("status", PVOutputError),
+        ("system", PVOutputConnectionError),
+        ("system", PVOutputError),
+    ],
 )
 async def test_config_entry_not_ready(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_pvoutput: MagicMock,
+    method: str,
     side_effect: Exception,
 ) -> None:
     """Test the PVOutput configuration entry not ready."""
-    mock_pvoutput.status.side_effect = side_effect
+    getattr(mock_pvoutput, method).side_effect = side_effect
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert len(mock_pvoutput.status.mock_calls) == 1
+    assert len(getattr(mock_pvoutput, method).mock_calls) == 1
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
+@pytest.mark.parametrize("method", ["status", "system"])
 async def test_config_entry_authentication_failed(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_pvoutput: MagicMock,
+    method: str,
 ) -> None:
     """Test trigger reauthentication flow."""
     mock_config_entry.add_to_hass(hass)
 
-    mock_pvoutput.status.side_effect = PVOutputAuthenticationError
+    getattr(mock_pvoutput, method).side_effect = PVOutputAuthenticationError
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
