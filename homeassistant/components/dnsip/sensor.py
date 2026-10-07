@@ -27,6 +27,8 @@ from .const import (
     DOMAIN,
 )
 
+PARALLEL_UPDATES = 1
+
 DEFAULT_RETRIES = 2
 MAX_RESULTS = 10
 
