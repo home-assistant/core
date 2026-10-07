@@ -300,7 +300,8 @@ class EntityTriggerBase(Trigger):
         # started — a vacuous all-match (`included == 0`) would otherwise
         # let the action fire after `for:` even though no entity still
         # matches.
-        return 0 < included == matches
+        # pylint: disable-next=chained-comparison
+        return included > 0 and matches == included
 
     @override
     async def async_attach_runner(
