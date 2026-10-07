@@ -11,23 +11,19 @@ from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_REFRESH_TOKEN, CONTRACTS_RETRY_INTERVAL, DOMAIN, LOGGER
+from .const import CONF_REFRESH_TOKEN, CONTRACTS_RETRY_INTERVAL, LOGGER
 from .coordinator import (
     EngieBeEpexCoordinator,
     EngieBePricesCoordinator,
     EngieBeRelationsCoordinator,
     mask_identifier,
 )
-from .services import async_setup_services
 
 _PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
-
-CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 @dataclass
@@ -50,12 +46,6 @@ class EngieBeRuntimeData:
 
 
 type EngieBeConfigEntry = ConfigEntry[EngieBeRuntimeData]
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the ENGIE Belgium integration."""
-    async_setup_services(hass)
-    return True
 
 
 async def _async_is_dynamic(client: EngieBeClient, ban: str) -> bool | None:

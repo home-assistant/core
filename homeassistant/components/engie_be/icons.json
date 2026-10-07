@@ -181,10 +181,5 @@
         "default": "mdi:meter-gas"
       }
     }
-  },
-  "services": {
-    "get_epex_prices_for_date": {
-      "service": "mdi:cash"
-    }
   }
 }
