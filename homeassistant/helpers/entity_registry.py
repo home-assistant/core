@@ -507,7 +507,8 @@ def async_get_unprefixed_name(hass: HomeAssistant, entry: RegistryEntry) -> str:
     name = entry.name
     if name is not None:
         if (
-            entry.device_id is not None
+            entry.next_name_part is NextNamePart.DEVICE
+            and entry.device_id is not None
             and (device := dr.async_get(hass).async_get(entry.device_id)) is not None
         ):
             device_name = device.name_by_user or device.name
