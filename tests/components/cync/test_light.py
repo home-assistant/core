@@ -1,10 +1,12 @@
 """Tests for the Cync integration light platform."""
 
-from unittest.mock import AsyncMock
+from copy import deepcopy
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.const import STATE_ON, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -57,7 +59,7 @@ async def test_turn_on(
     entity_id_parameter = {"entity_id": "light.office_lamp_bulb_1"}
     action_parameters = entity_id_parameter | input_parameters
 
-    test_device = mock_config_entry.runtime_data.data.get(1111)
+    test_device = mock_config_entry.runtime_data.data["1000-2"]
     test_device.set_combo = AsyncMock(name="set_combo")
 
     # now call the HA turn_on service
@@ -71,3 +73,57 @@ async def test_turn_on(
     test_device.set_combo.assert_called_once_with(
         True, expected_brightness, expected_color_temp, expected_rgb
     )
+
+
+@pytest.mark.parametrize(
+    ("unique_id", "mesh_unique_id"),
+    [
+        pytest.param("1000-1101", "1000-1", id="room-light"),
+        pytest.param("1000-1111", "1000-2", id="group-light"),
+        pytest.param("1000-1112", "1000-3", id="initially-offline-light"),
+    ],
+)
+@pytest.mark.parametrize(
+    ("is_online", "expected_state"),
+    [
+        pytest.param(True, STATE_ON, id="online"),
+        pytest.param(False, STATE_UNAVAILABLE, id="offline"),
+    ],
+)
+async def test_mesh_state_callback(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    cync_client: MagicMock,
+    unique_id: str,
+    mesh_unique_id: str,
+    is_online: bool,
+    expected_state: str,
+) -> None:
+    """Test mesh callbacks update lights with legacy registry identifiers."""
+    await setup_integration(hass, mock_config_entry)
+    home = cync_client.get_homes.return_value[0]
+    updated_light = deepcopy(
+        next(
+            device
+            for device in home.get_flattened_device_list()
+            if device.unique_id == mesh_unique_id
+        )
+    )
+    updated_light.update_state(True, 50, 254, (100, 150, 200), is_online)
+    callback = cync_client.set_update_callback.call_args.args[0]
+
+    await callback({mesh_unique_id: updated_light})
+    await hass.async_block_till_done()
+
+    entity_id = entity_registry.async_get_entity_id(Platform.LIGHT, "cync", unique_id)
+    assert entity_id is not None
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == expected_state
+    assert mock_config_entry.runtime_data.data[mesh_unique_id] is updated_light
+    assert set(mock_config_entry.runtime_data.data) == {
+        "1000-1",
+        "1000-2",
+        mesh_unique_id,
+    }
