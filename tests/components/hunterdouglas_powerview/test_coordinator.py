@@ -1,4 +1,4 @@
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, patch, AsyncMock
 
 from aiopvapi.resources.shade_data import PowerviewShadeData
 
@@ -47,7 +47,7 @@ async def test_coordinator_automatic_cleanup_stale_shades(
     )
 
     # Mock the underlying api client library classes
-    mock_shades_api = MagicMock()
+    mock_shades_api = MagicMock(get_shades=AsyncMock())
     mock_hub_api = MagicMock()
     mock_hub_api.hub_address = "192.168.1.50"
 
