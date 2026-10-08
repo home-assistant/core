@@ -2030,10 +2030,6 @@
         'capabilities': dict({
           <WaterHeaterCapabilityAttribute.MAX_TEMP: 'max_temp'>: None,
           <WaterHeaterCapabilityAttribute.MIN_TEMP: 'min_temp'>: None,
-          <WaterHeaterCapabilityAttribute.OPERATION_LIST: 'operation_list'>: list([
-            'off',
-            'heat_pump',
-          ]),
         }),
         'config_entry_id': <ANY>,
         'config_subentry_id': <ANY>,
@@ -2059,7 +2055,7 @@
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
         'suggested_object_id': None,
-        'supported_features': <WaterHeaterEntityFeature: 10>,
+        'supported_features': 0,
         'translation_key': None,
         'unique_id': '7edb544e-2c53-405b-98bc-3d9392f4d1f9_2',
         'unit_of_measurement': None,
@@ -2070,12 +2066,7 @@
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Living Room',
           <WaterHeaterCapabilityAttribute.MAX_TEMP: 'max_temp'>: None,
           <WaterHeaterCapabilityAttribute.MIN_TEMP: 'min_temp'>: None,
-          <WaterHeaterCapabilityAttribute.OPERATION_LIST: 'operation_list'>: list([
-            'off',
-            'heat_pump',
-          ]),
-          <WaterHeaterStateAttribute.OPERATION_MODE: 'operation_mode'>: 'off',
-          <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <WaterHeaterEntityFeature: 10>,
+          <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <WaterHeaterEntityFeature: 0>,
           <WaterHeaterStateAttribute.TARGET_TEMP_HIGH: 'target_temp_high'>: None,
           <WaterHeaterStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: None,
           <WaterHeaterStateAttribute.TARGET_TEMPERATURE: 'temperature'>: None,

@@ -1289,10 +1289,6 @@
         'capabilities': dict({
           <WaterHeaterCapabilityAttribute.MAX_TEMP: 'max_temp'>: 60.0,
           <WaterHeaterCapabilityAttribute.MIN_TEMP: 'min_temp'>: 35.0,
-          <WaterHeaterCapabilityAttribute.OPERATION_LIST: 'operation_list'>: list([
-            'off',
-            'heat_pump',
-          ]),
         }),
         'config_entry_id': <ANY>,
         'config_subentry_id': <ANY>,
@@ -1318,7 +1314,7 @@
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
         'suggested_object_id': None,
-        'supported_features': <WaterHeaterEntityFeature: 10>,
+        'supported_features': 0,
         'translation_key': None,
         'unique_id': '13995b32-fc6e-43ed-918e-5d2b01095ccb_2',
         'unit_of_measurement': None,
@@ -1329,12 +1325,7 @@
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NDJ',
           <WaterHeaterCapabilityAttribute.MAX_TEMP: 'max_temp'>: 60.0,
           <WaterHeaterCapabilityAttribute.MIN_TEMP: 'min_temp'>: 35.0,
-          <WaterHeaterCapabilityAttribute.OPERATION_LIST: 'operation_list'>: list([
-            'off',
-            'heat_pump',
-          ]),
-          <WaterHeaterStateAttribute.OPERATION_MODE: 'operation_mode'>: 'heat_pump',
-          <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <WaterHeaterEntityFeature: 10>,
+          <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <WaterHeaterEntityFeature: 0>,
           <WaterHeaterStateAttribute.TARGET_TEMP_HIGH: 'target_temp_high'>: None,
           <WaterHeaterStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: None,
           'target_temp_step': 1.0,

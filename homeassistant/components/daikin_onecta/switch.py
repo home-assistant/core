@@ -149,7 +149,7 @@ class DaikinSwitch(DaikinManagementPointEntity, SwitchEntity):
             if characteristic is not None:
                 characteristic.value = "on"
             self.update_state()
-            self.async_write_ha_state()
+            self.coordinator.async_update_listeners()
         else:
             _LOGGER.debug(
                 "Device '%s' switch '%s' request to turn on ignored because is already on",
@@ -177,7 +177,7 @@ class DaikinSwitch(DaikinManagementPointEntity, SwitchEntity):
             if characteristic is not None:
                 characteristic.value = "off"
             self.update_state()
-            self.async_write_ha_state()
+            self.coordinator.async_update_listeners()
         else:
             _LOGGER.debug(
                 "Device '%s' switch '%s' request to turn off ignored because is already off",

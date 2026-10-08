@@ -123,7 +123,17 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
 
     def get_supported_features(self) -> WaterHeaterEntityFeature:
         """Return the list of supported features."""
-        sf = WaterHeaterEntityFeature.OPERATION_MODE | WaterHeaterEntityFeature.ON_OFF
+        sf = WaterHeaterEntityFeature(0)
+        point = self.hot_water_management_point
+        hot_water = point.domestic_hot_water if point is not None else None
+        if (
+            hot_water is not None
+            and hot_water.power is not None
+            and hot_water.power.settable
+        ):
+            sf |= WaterHeaterEntityFeature.ON_OFF
+        if self.get_operation_list():
+            sf |= WaterHeaterEntityFeature.OPERATION_MODE
         # Only when we have a fixed setpointMode we can control the target
         # temperature of the tank
         dht = self.domestic_hotwater_temperature
@@ -220,6 +230,7 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
                 lambda hot_water: hot_water.set_temperature(int_value),
                 "water_heater_set_temperature_failed",
             )
+            dht = self.domestic_hotwater_temperature
             if dht is not None:
                 dht.value = int_value
             self.update_state()
@@ -252,12 +263,22 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
 
     def get_operation_list(self) -> list[str]:
         """Return the list of available operation modes."""
-        states = [STATE_OFF, STATE_HEAT_PUMP]
+        states: list[str] = []
         point = self.hot_water_management_point
         hot_water = point.domestic_hot_water if point is not None else None
+        power = hot_water.power if hot_water is not None else None
+        if power is not None and power.settable:
+            states = [STATE_OFF, STATE_HEAT_PUMP]
         pwf = hot_water.powerful_mode if hot_water is not None else None
-        if pwf is not None and pwf.settable:
-            states += [STATE_PERFORMANCE]
+        if (
+            power is not None
+            and (power.settable or power.value == "on")
+            and pwf is not None
+            and pwf.settable
+        ):
+            if STATE_HEAT_PUMP not in states:
+                states.append(STATE_HEAT_PUMP)
+            states.append(STATE_PERFORMANCE)
         _LOGGER.debug(
             "Device '%s' hot water tank supports modes %s", self._device.name, states
         )
@@ -268,7 +289,7 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
         on_off_mode = ""
         powerful_mode = ""
         if operation_mode == STATE_OFF:
-            on_off_mode = "off"
+            on_off_mode = "off" if self.current_operation != STATE_OFF else ""
         elif operation_mode == STATE_PERFORMANCE:
             powerful_mode = "on"
             on_off_mode = "on" if self.current_operation == STATE_OFF else ""
@@ -281,6 +302,8 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
     async def async_set_operation_mode(self, operation_mode: str) -> None:
         """Set new tank state."""
         _LOGGER.debug("Set tank operation mode: %s", operation_mode)
+        if operation_mode not in self.get_operation_list():
+            self._raise_command_failed("water_heater_set_operation_mode_failed")
         # First determine the new settings for onOffMode/powerfulMode, we need these to set them to Daikin
         # and update our local cached version when succeeded
         on_off_mode, powerful_mode = self._requested_modes(operation_mode)
@@ -316,6 +339,8 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
         """Turn water heater on."""
         _LOGGER.debug("Device '%s' request to turn on", self._device.name)
         if self.current_operation == STATE_OFF:
+            if not self.supported_features & WaterHeaterEntityFeature.ON_OFF:
+                self._raise_command_failed("water_heater_turn_on_failed")
             await self._async_execute_hot_water_command(
                 lambda hot_water: hot_water.set_power(True),
                 "water_heater_turn_on_failed",
@@ -337,6 +362,8 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
         """Turn water heater off."""
         _LOGGER.debug("Device '%s' request to turn off", self._device.name)
         if self.current_operation != STATE_OFF:
+            if not self.supported_features & WaterHeaterEntityFeature.ON_OFF:
+                self._raise_command_failed("water_heater_turn_off_failed")
             await self._async_execute_hot_water_command(
                 lambda hot_water: hot_water.set_power(False),
                 "water_heater_turn_off_failed",

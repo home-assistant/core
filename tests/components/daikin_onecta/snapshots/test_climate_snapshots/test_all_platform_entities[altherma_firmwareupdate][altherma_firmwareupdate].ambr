@@ -2325,10 +2325,6 @@
         'capabilities': dict({
           <WaterHeaterCapabilityAttribute.MAX_TEMP: 'max_temp'>: 65.0,
           <WaterHeaterCapabilityAttribute.MIN_TEMP: 'min_temp'>: 20.0,
-          <WaterHeaterCapabilityAttribute.OPERATION_LIST: 'operation_list'>: list([
-            'off',
-            'heat_pump',
-          ]),
         }),
         'config_entry_id': <ANY>,
         'config_subentry_id': <ANY>,
@@ -2354,7 +2350,7 @@
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
         'suggested_object_id': None,
-        'supported_features': <WaterHeaterEntityFeature: 10>,
+        'supported_features': 0,
         'translation_key': None,
         'unique_id': '29e9a6af-0a8e-49ac-bc19-361c1347ba95_domesticHotWaterTank',
         'unit_of_measurement': None,
@@ -2365,12 +2361,7 @@
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Climate control getr422',
           <WaterHeaterCapabilityAttribute.MAX_TEMP: 'max_temp'>: 65.0,
           <WaterHeaterCapabilityAttribute.MIN_TEMP: 'min_temp'>: 20.0,
-          <WaterHeaterCapabilityAttribute.OPERATION_LIST: 'operation_list'>: list([
-            'off',
-            'heat_pump',
-          ]),
-          <WaterHeaterStateAttribute.OPERATION_MODE: 'operation_mode'>: 'off',
-          <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <WaterHeaterEntityFeature: 10>,
+          <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <WaterHeaterEntityFeature: 0>,
           <WaterHeaterStateAttribute.TARGET_TEMP_HIGH: 'target_temp_high'>: None,
           <WaterHeaterStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: None,
           'target_temp_step': 0.5,

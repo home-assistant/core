@@ -215,7 +215,8 @@ class DaikinAirPurifier(DaikinManagementPointEntity, FanEntity):
             lambda purifier: purifier.set_mode(preset_mode),
             "air_purifier_set_mode_failed",
         )
-        if purification.mode is not None:
+        purification = self._air_purification()
+        if purification is not None and purification.mode is not None:
             purification.mode.value = preset_mode
         self._update_state()
         self.coordinator.async_update_listeners()
@@ -234,20 +235,26 @@ class DaikinAirPurifier(DaikinManagementPointEntity, FanEntity):
         speed_range = self._fixed_speed_range()
         if speed_range is None:
             self._raise_command_failed("air_purifier_set_percentage_failed")
-        mode = purification.mode
-        assert mode is not None
+        purification = self._air_purification()
+        if purification is None or purification.mode is None:
+            self._raise_command_failed("air_purifier_set_percentage_failed")
+        mode = purification.mode.value
         speed = ceil(percentage_to_ranged_value(speed_range, percentage))
         await self._async_execute_air_purification_command(
-            lambda purifier: purifier.set_fixed_fan_speed(mode.value, speed),
+            lambda purifier: purifier.set_fixed_fan_speed(mode, speed),
             "air_purifier_set_percentage_failed",
         )
-        operation = purification.fan_operation()
-        assert (
+        purification = self._air_purification()
+        operation = (
+            purification.fan_operation(mode) if purification is not None else None
+        )
+        if (
             operation is not None
             and operation.fan_speed is not None
             and operation.fan_speed.modes is not None
-        )
-        operation.fan_speed.modes[FANMODE_FIXED].value = speed
+            and (fixed := operation.fan_speed.modes.get(FANMODE_FIXED)) is not None
+        ):
+            fixed.value = speed
         self._update_state()
         self.coordinator.async_update_listeners()
 

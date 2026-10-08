@@ -1,12 +1,16 @@
 """Tests for Daikin Onecta platforms other than climate."""
 
+from collections.abc import Awaitable, Callable
+from copy import deepcopy
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock
 
+from daikin_onecta.client import OnectaClient
 import pytest
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.components.daikin_onecta.binary_sensor import DaikinBinarySensor
+from homeassistant.components.daikin_onecta.device import DaikinOnectaDevice
 from homeassistant.components.daikin_onecta.fan import DaikinAirPurifier
 from homeassistant.components.daikin_onecta.select import DaikinScheduleSelect
 from homeassistant.components.daikin_onecta.sensor import (
@@ -42,12 +46,13 @@ from homeassistant.components.water_heater import (
     SERVICE_TURN_ON as WATER_HEATER_SERVICE_TURN_ON,
     STATE_HEAT_PUMP,
     STATE_PERFORMANCE,
+    WaterHeaterEntityFeature,
 )
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
-from .test_climate_snapshots import _async_setup_fixture
+from .test_climate_snapshots import _async_setup_fixture, _load_gateway_devices
 
 from tests.common import MockConfigEntry
 
@@ -185,6 +190,212 @@ async def test_switch_service_updates_cached_state(
         blocking=True,
     )
     assert hass.states.get(state.entity_id).state == "on"
+
+
+async def test_switch_updates_sibling_climate_preset(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """A shared preset change immediately reaches the sibling climate entity."""
+    await _async_setup_fixture(hass, config_entry, "altherma")
+    config_entry.runtime_data.api.async_execute_command = _execute_typed_command(
+        config_entry
+    )
+    entity_id = "climate.johnny_maaike_room_temperature"
+    assert hass.states.get(entity_id).attributes["preset_mode"] == "eco"
+
+    for service, expected in (
+        (SWITCH_SERVICE_TURN_OFF, "none"),
+        (SWITCH_SERVICE_TURN_ON, "eco"),
+    ):
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            service,
+            {ATTR_ENTITY_ID: "switch.johnny_maaike_econo_mode"},
+            blocking=True,
+        )
+        assert hass.states.get(entity_id).attributes["preset_mode"] == expected
+
+
+@pytest.mark.parametrize(
+    ("fixture", "domain", "service", "entity_id", "data", "attribute", "expected"),
+    [
+        (
+            "altherma_boost",
+            WATER_HEATER_DOMAIN,
+            WATER_HEATER_SERVICE_SET_TEMPERATURE,
+            "water_heater.altherma",
+            {ATTR_TEMPERATURE: 50},
+            "temperature",
+            50,
+        ),
+        (
+            "mc80z",
+            FAN_DOMAIN,
+            SERVICE_SET_PRESET_MODE,
+            "fan.air_purifier",
+            {"preset_mode": "autoFan"},
+            "preset_mode",
+            "autoFan",
+        ),
+        (
+            "mc80z",
+            FAN_DOMAIN,
+            SERVICE_SET_PERCENTAGE,
+            "fan.air_purifier",
+            {"percentage": 100},
+            "percentage",
+            100,
+        ),
+    ],
+)
+async def test_command_cache_survives_model_replacement(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    fixture: str,
+    domain: str,
+    service: str,
+    entity_id: str,
+    data: dict[str, str | int],
+    attribute: str,
+    expected: str | int,
+) -> None:
+    """Update the current model if polling replaces it while a command waits."""
+    await _async_setup_fixture(hass, config_entry, fixture)
+    coordinator = config_entry.runtime_data
+    execute = _execute_typed_command(config_entry)
+    coordinator.api.async_execute_command = execute
+    if service == SERVICE_SET_PERCENTAGE:
+        await hass.services.async_call(
+            FAN_DOMAIN,
+            SERVICE_SET_PRESET_MODE,
+            {ATTR_ENTITY_ID: entity_id, "preset_mode": "manualFan"},
+            blocking=True,
+        )
+
+    async def replace_model(command: Callable[[OnectaClient], Awaitable[None]]) -> bool:
+        for device in coordinator.data.values():
+            device.set_device_data(deepcopy(device.device))
+        return await execute(command)
+
+    coordinator.api.async_execute_command = AsyncMock(side_effect=replace_model)
+    await hass.services.async_call(
+        domain,
+        service,
+        {ATTR_ENTITY_ID: entity_id, **data},
+        blocking=True,
+    )
+
+    assert hass.states.get(entity_id).attributes[attribute] == expected
+
+
+async def test_air_purifier_speed_updates_captured_mode_after_model_replacement(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """A changed cloud mode does not redirect a pending speed command or its cache."""
+    await _async_setup_fixture(hass, config_entry, "mc80z")
+    coordinator = config_entry.runtime_data
+    execute = _execute_typed_command(config_entry)
+    coordinator.api.async_execute_command = execute
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {ATTR_ENTITY_ID: "fan.air_purifier", "preset_mode": "manualFan"},
+        blocking=True,
+    )
+    device = next(
+        device
+        for device in coordinator.data.values()
+        if device.device.management_points_by_type("climateControl")[0].air_purification
+        is not None
+    )
+    embedded_id = device.device.management_points_by_type("climateControl")[
+        0
+    ].embedded_id
+    coordinator.api.client.patch_characteristic.reset_mock()
+
+    async def replace_model(command: Callable[[OnectaClient], Awaitable[None]]) -> bool:
+        device.set_device_data(deepcopy(device.device))
+        device.management_point(embedded_id).air_purification.mode.value = "autoFan"
+        return await execute(command)
+
+    coordinator.api.async_execute_command = AsyncMock(side_effect=replace_model)
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        SERVICE_SET_PERCENTAGE,
+        {ATTR_ENTITY_ID: "fan.air_purifier", "percentage": 100},
+        blocking=True,
+    )
+
+    coordinator.api.client.patch_characteristic.assert_awaited_once_with(
+        device.id,
+        embedded_id,
+        "fanControl",
+        4,
+        path="/airPurificationModes/manualFan/fanSpeed/modes/fixed",
+    )
+    purification = device.management_point(embedded_id).air_purification
+    assert purification.mode.value == "autoFan"
+    assert purification.fan_operation("manualFan").fan_speed.modes["fixed"].value == 4
+
+
+@pytest.mark.parametrize("power_settable", [False, True])
+def test_water_heater_features_follow_power_capability(power_settable: bool) -> None:
+    """Only advertise power and operation controls for a writable characteristic."""
+    device = DaikinOnectaDevice(_load_gateway_devices("holidaymode")[0])
+    point = device.device.management_points_by_type("domesticHotWaterFlowThrough")[0]
+    point.on_off_mode.settable = power_settable
+    entity = DaikinWaterTank(
+        device, MagicMock(), point.management_point_type, point.embedded_id
+    )
+
+    expected = (
+        WaterHeaterEntityFeature.ON_OFF | WaterHeaterEntityFeature.OPERATION_MODE
+        if power_settable
+        else WaterHeaterEntityFeature(0)
+    )
+    assert entity.supported_features == expected
+    assert entity.operation_list == (["off", STATE_HEAT_PUMP] if power_settable else [])
+
+
+@pytest.mark.parametrize(
+    "method", ["async_turn_on", "async_turn_off", "async_set_operation_mode"]
+)
+async def test_water_heater_rejects_read_only_power(method: str) -> None:
+    """Read-only water-heater actions fail without spending a cloud request."""
+    device = DaikinOnectaDevice(_load_gateway_devices("holidaymode")[0])
+    point = device.device.management_points_by_type("domesticHotWaterFlowThrough")[0]
+    point.on_off_mode.value = "off" if method == "async_turn_on" else "on"
+    entity = DaikinWaterTank(
+        device, MagicMock(), point.management_point_type, point.embedded_id
+    )
+    entity._async_execute_hot_water_command = AsyncMock()
+
+    with pytest.raises(HomeAssistantError):
+        await getattr(entity, method)(
+            *(["off"] if method == "async_set_operation_mode" else [])
+        )
+
+    entity._async_execute_hot_water_command.assert_not_awaited()
+
+
+@pytest.mark.parametrize("power", ["on", "off"])
+def test_water_heater_read_only_power_keeps_writable_boost(power: str) -> None:
+    """Allow writable boost while powered on without advertising power control."""
+    device = DaikinOnectaDevice(_load_gateway_devices("altherma_boost")[0])
+    point = device.device.management_points_by_type("domesticHotWaterTank")[0]
+    point.on_off_mode.settable = False
+    point.on_off_mode.value = power
+    entity = DaikinWaterTank(
+        device, MagicMock(), point.management_point_type, point.embedded_id
+    )
+
+    assert not entity.supported_features & WaterHeaterEntityFeature.ON_OFF
+    assert bool(
+        entity.supported_features & WaterHeaterEntityFeature.OPERATION_MODE
+    ) == (power == "on")
+    assert entity.operation_list == (
+        [STATE_HEAT_PUMP, STATE_PERFORMANCE] if power == "on" else []
+    )
 
 
 async def test_schedule_select_updates_cached_selection(
