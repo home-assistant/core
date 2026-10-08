@@ -28,8 +28,8 @@ rules:
   test-before-setup: done
   unique-config-entry: done
   action-exceptions:
-    status: exempt
-    comment: This integration does not register custom actions.
+    status: todo
+    comment: The refresh button must report refresh failures to the caller.
   config-entry-unloading: done
   docs-configuration-parameters: done
   docs-installation-parameters: done
@@ -63,8 +63,8 @@ rules:
   entity-translations: done
   exception-translations: done
   icon-translations:
-    status: exempt
-    comment: The integration does not use custom entity icons.
+    status: todo
+    comment: Move custom entity icons from entity descriptions to icons.json.
   reconfiguration-flow:
     status: exempt
     comment: >-
