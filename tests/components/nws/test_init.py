@@ -297,6 +297,7 @@ async def test_no_update_without_significant_move(
         "away",
         {ATTR_LATITUDE: new_lat, ATTR_LONGITUDE: new_lon},
     )
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
     await config_entry.runtime_data.coordinator_observation.async_refresh()
     await hass.async_block_till_done()
 

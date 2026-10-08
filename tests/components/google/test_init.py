@@ -168,6 +168,10 @@ async def test_calendar_yaml_missing_required_fields(
     assert not await component_setup()
 
     assert config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert config_entry.reason == (
+        "Configuration error in google_calendars.yaml: required key not provided at"
+        " 'entities'"
+    )
 
 
 @pytest.mark.parametrize("calendars_config", [[{"missing-cal_id": "invalid-schema"}]])
@@ -182,6 +186,10 @@ async def test_invalid_calendar_yaml(
     assert not await component_setup()
 
     assert config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert config_entry.reason == (
+        "Configuration error in google_calendars.yaml: required key not provided at"
+        " 'cal_id'"
+    )
 
 
 async def test_calendar_yaml_error(

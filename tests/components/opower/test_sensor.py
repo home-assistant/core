@@ -148,6 +148,7 @@ async def test_dynamic_and_stale_devices(
     mock_opower_api.async_get_forecast.return_value = [original_forecasts[0]]
 
     coordinator = mock_config_entry.runtime_data
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
     await coordinator.async_refresh()
     await hass.async_block_till_done()
 
@@ -170,6 +171,7 @@ async def test_dynamic_and_stale_devices(
     mock_opower_api.async_get_accounts.return_value = original_accounts
     mock_opower_api.async_get_forecast.return_value = original_forecasts
 
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
     await coordinator.async_refresh()
     await hass.async_block_till_done()
 

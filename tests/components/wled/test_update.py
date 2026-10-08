@@ -345,6 +345,7 @@ async def test_update_follows_firmware_repository_change(
     data = await async_load_json_object_fixture(hass, "rgb.json", DOMAIN)
     data["info"]["repo"] = "MoonModules/WLED-MM"
     mock_wled.update.return_value.update_from_dict(data)
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
     await mock_config_entry.runtime_data.async_refresh()
     await hass.async_block_till_done()
 

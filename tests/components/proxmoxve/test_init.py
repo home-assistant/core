@@ -364,6 +364,7 @@ async def test_new_vm_creates_entity(
     )
 
     coordinator = mock_config_entry.runtime_data
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
     await coordinator.async_refresh()
     await hass.async_block_till_done()
 
@@ -397,6 +398,7 @@ async def test_new_container_creates_entity(
     )
 
     coordinator = mock_config_entry.runtime_data
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
     await coordinator.async_refresh()
     await hass.async_block_till_done()
 
@@ -538,6 +540,7 @@ async def test_stale_devices_removed(
     ]
 
     coordinator = mock_config_entry.runtime_data
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
     await coordinator.async_refresh()
     await hass.async_block_till_done()
 

@@ -127,6 +127,7 @@ async def test_current_measurement_once_reported(
 
     device.info.leds.max_power = 850
     device.info.leds.power = 470
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
     await mock_config_entry.runtime_data.async_refresh()
     await hass.async_block_till_done()
 
@@ -136,6 +137,7 @@ async def test_current_measurement_once_reported(
     assert state.state == "470"
 
     # Later updates don't add them again.
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
     await mock_config_entry.runtime_data.async_refresh()
     await hass.async_block_till_done()
     assert "does not generate unique IDs" not in caplog.text

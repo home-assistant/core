@@ -47,6 +47,7 @@ async def test_diagnostics(
     mock_scorpiontrack_client.async_get_share.return_value = share
     await setup_integration(hass, mock_config_entry)
     mock_scorpiontrack_client.async_get_share.side_effect = update_error
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
     await mock_config_entry.runtime_data.async_refresh()
     mock_scorpiontrack_client.async_get_share.reset_mock()
 

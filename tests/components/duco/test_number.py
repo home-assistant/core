@@ -104,6 +104,7 @@ async def test_successful_write_does_not_recover_failed_coordinator(
     await write_started.wait()
 
     mock_duco_client.async_get_nodes.side_effect = DucoError("Temporary update failure")
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
     await mock_config_entry.runtime_data.async_refresh()
 
     state = hass.states.get(_ZONE_1_ENTITY_ID)

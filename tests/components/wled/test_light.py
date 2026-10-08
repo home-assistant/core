@@ -556,6 +556,7 @@ async def test_color_mode_changes_with_the_device(
     data = await async_load_json_object_fixture(hass, "cct.json", DOMAIN)
     data["state"]["seg"][0]["col"] = [[255, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]
     mock_wled.update.return_value = WLEDDevice.from_dict(data)
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
     await mock_config_entry.runtime_data.async_refresh()
     await hass.async_block_till_done()
 
@@ -754,6 +755,7 @@ async def _async_refresh_with(
 
     # The library updates the device object in place, like the real one does.
     mock_wled.update.return_value.update_from_dict(data)
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
     await mock_config_entry.runtime_data.async_refresh()
     await hass.async_block_till_done()
 
@@ -848,6 +850,7 @@ async def test_color_modes_follow_segment_coming_back(
     removed["state"]["seg"] = removed["state"]["seg"][:1]
     removed["info"]["leds"]["seglc"] = [1]
     device.update_from_dict(removed)
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
     await mock_config_entry.runtime_data.async_refresh()
     await hass.async_block_till_done()
 
@@ -855,6 +858,7 @@ async def test_color_modes_follow_segment_coming_back(
     data["info"]["leds"]["seglc"] = [1, 3]
     device.update_from_dict(data)
     with patch.object(hass.config_entries, "async_schedule_reload") as reload:
+        # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
         await mock_config_entry.runtime_data.async_refresh()
 
     reload.assert_called_once_with(mock_config_entry.entry_id)
@@ -891,6 +895,7 @@ async def test_color_modes_follow_segment_moving_to_other_leds(
     data["state"]["seg"][0]["stop"] = 178
     device.update_from_dict(data)
     with patch.object(hass.config_entries, "async_schedule_reload") as reload:
+        # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
         await mock_config_entry.runtime_data.async_refresh()
 
     reload.assert_called_once_with(mock_config_entry.entry_id)

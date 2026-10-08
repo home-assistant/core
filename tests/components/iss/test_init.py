@@ -74,6 +74,7 @@ async def test_coordinator_single_failure_uses_cached_data(
     # Simulate API failure
     mock_pyiss.number_of_people_in_space.side_effect = HTTPError("API Error")
 
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
     await coordinator.async_refresh()
     await hass.async_block_till_done()
 
@@ -95,6 +96,7 @@ async def test_coordinator_multiple_failures_uses_cached_data(
     )
 
     for _ in range(MAX_CONSECUTIVE_FAILURES - 1):
+        # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
         await coordinator.async_refresh()
         await hass.async_block_till_done()
 
@@ -113,6 +115,7 @@ async def test_coordinator_max_failures_marks_unavailable(
     mock_pyiss.number_of_people_in_space.side_effect = HTTPError("API Error")
 
     for _ in range(MAX_CONSECUTIVE_FAILURES):
+        # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
         await coordinator.async_refresh()
         await hass.async_block_till_done()
 
@@ -130,12 +133,14 @@ async def test_coordinator_failure_counter_resets_on_success(
     # Simulate some failures
     mock_pyiss.number_of_people_in_space.side_effect = HTTPError("API Error")
     for _ in range(2):
+        # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
         await coordinator.async_refresh()
         await hass.async_block_till_done()
 
     # Now simulate success
     mock_pyiss.number_of_people_in_space.side_effect = None
     mock_pyiss.number_of_people_in_space.return_value = 8
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
     await coordinator.async_refresh()
     await hass.async_block_till_done()
 
@@ -147,6 +152,7 @@ async def test_coordinator_failure_counter_resets_on_success(
         "Connection failed"
     )
     for _ in range(MAX_CONSECUTIVE_FAILURES - 1):
+        # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
         await coordinator.async_refresh()
         await hass.async_block_till_done()
 
@@ -180,6 +186,7 @@ async def test_coordinator_handles_connection_error(
         "Network unreachable"
     )
 
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
     await coordinator.async_refresh()
     await hass.async_block_till_done()
 

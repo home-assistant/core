@@ -164,6 +164,7 @@ async def test_connection_error_availability(
     assert hass.states.get(AGENT_ID).state == STATE_UNAVAILABLE
 
     # A successful availability ping restores the entity.
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
     await mock_config_entry.runtime_data.async_request_refresh()
     await hass.async_block_till_done()
     assert hass.states.get(AGENT_ID).state != STATE_UNAVAILABLE

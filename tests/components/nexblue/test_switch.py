@@ -52,6 +52,7 @@ async def test_charger_removed_from_list_becomes_unavailable(
     """Test a charger missing from a refresh does not raise an exception."""
     mock_client.async_list_chargers.return_value = []
 
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
     await init_integration.runtime_data.async_refresh()
 
     assert hass.states.get("switch.nb123456_charging").state == STATE_UNAVAILABLE
@@ -385,6 +386,7 @@ async def test_charging_session_states(
         CHARGER_STATUS, charging_state=charging_state
     )
 
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
     await init_integration.runtime_data.async_refresh()
 
     assert hass.states.get("switch.nb123456_charging").state == expected_state
