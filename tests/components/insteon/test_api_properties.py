@@ -246,6 +246,30 @@ async def test_change_int_property(
         assert devices["33.33.33"].properties["led_dimming"].is_dirty
 
 
+async def test_change_advanced_property(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, kpl_properties_data
+) -> None:
+    """Test changing a property that is only listed under advanced."""
+    ws_client, devices = await _setup(
+        hass, hass_ws_client, "33.33.33", kpl_properties_data
+    )
+
+    with patch.object(insteon.api.properties, "devices", devices):
+        await ws_client.send_json(
+            {
+                ID: 4,
+                TYPE: "insteon/properties/change",
+                DEVICE_ADDRESS: "33.33.33",
+                PROPERTY_NAME: "on_mask_3",
+                PROPERTY_VALUE: 5,
+            }
+        )
+        msg = await ws_client.receive_json()
+        assert msg["success"]
+        assert devices["33.33.33"].properties["on_mask_3"].new_value == 5
+        assert devices["33.33.33"].properties["on_mask_3"].is_dirty
+
+
 async def test_change_ramp_rate_property(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator, kpl_properties_data
 ) -> None:

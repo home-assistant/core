@@ -145,7 +145,12 @@ def property_to_dict(prop):
 
 def update_property(device, prop_name, value):
     """Update the value of a device property."""
-    prop = device.configuration[prop_name]
+    for props in (device.configuration, device.operating_flags, device.properties):
+        if prop_name in props:
+            prop = props[prop_name]
+            break
+    else:
+        raise KeyError(prop_name)
     if prop.value_type == ToggleMode:
         toggle_mode = getattr(ToggleMode, value.upper())
         prop.new_value = toggle_mode
