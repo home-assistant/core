@@ -8,7 +8,6 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
-from homeassistant.components.bluesound import DOMAIN
 from homeassistant.components.bluesound.const import ATTR_MASTER
 from homeassistant.components.media_player import (
     ATTR_GROUP_MEMBERS,
@@ -240,116 +239,6 @@ async def test_unavailable_when_offline(
     post_state = hass.states.get("media_player.player_name1111")
 
     assert post_state.state == STATE_UNAVAILABLE
-
-
-async def test_join_cannot_join_to_self(
-    hass: HomeAssistant, setup_config_entry: None, player_mocks: PlayerMocks
-) -> None:
-    """Test that joining to self is not allowed."""
-    with pytest.raises(ServiceValidationError, match="Cannot join player to itself"):
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_JOIN,
-            {
-                ATTR_ENTITY_ID: "media_player.player_name1111",
-                ATTR_MASTER: "media_player.player_name1111",
-            },
-            blocking=True,
-        )
-
-
-async def test_join(
-    hass: HomeAssistant,
-    setup_config_entry: None,
-    setup_config_entry_secondary: None,
-    player_mocks: PlayerMocks,
-) -> None:
-    """Test the bluesound.join action."""
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_JOIN,
-        {
-            ATTR_ENTITY_ID: "media_player.player_name1111",
-            ATTR_MASTER: "media_player.player_name2222",
-        },
-        blocking=True,
-    )
-
-    player_mocks.player_data_secondary.player.add_follower.assert_called_once_with(
-        "1.1.1.1", 11000
-    )
-
-
-async def test_join_after_entity_id_change(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    setup_config_entry: None,
-    setup_config_entry_secondary: None,
-    player_mocks: PlayerMocks,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test the bluesound.join action follows an entity_id change of the leader."""
-    entity_registry.async_update_entity(
-        "media_player.player_name2222", new_entity_id="media_player.renamed_leader"
-    )
-    await hass.async_block_till_done()
-
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_JOIN,
-        {
-            ATTR_ENTITY_ID: "media_player.player_name1111",
-            ATTR_MASTER: "media_player.player_name2222",
-        },
-        blocking=True,
-    )
-    player_mocks.player_data_secondary.player.add_follower.assert_not_called()
-
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_JOIN,
-        {
-            ATTR_ENTITY_ID: "media_player.player_name1111",
-            ATTR_MASTER: "media_player.renamed_leader",
-        },
-        blocking=True,
-    )
-    player_mocks.player_data_secondary.player.add_follower.assert_called_once_with(
-        "1.1.1.1", 11000
-    )
-
-    for entry in hass.config_entries.async_entries(DOMAIN):
-        assert await hass.config_entries.async_unload(entry.entry_id)
-    assert "Unable to remove unknown dispatcher" not in caplog.text
-
-
-async def test_unjoin(
-    hass: HomeAssistant,
-    setup_config_entry: None,
-    setup_config_entry_secondary: None,
-    player_mocks: PlayerMocks,
-) -> None:
-    """Test the bluesound.unjoin action."""
-    updated_sync_status = dataclasses.replace(
-        player_mocks.player_data.sync_status_long_polling_mock.get(),
-        leader=PairedPlayer("2.2.2.2", 11000),
-    )
-    player_mocks.player_data.sync_status_long_polling_mock.set(updated_sync_status)
-
-    # give the long polling loop a chance to update the
-    # state; this could be any async call
-    await hass.async_block_till_done()
-
-    await hass.services.async_call(
-        DOMAIN,
-        "unjoin",
-        {ATTR_ENTITY_ID: "media_player.player_name1111"},
-        blocking=True,
-    )
-
-    player_mocks.player_data_secondary.player.remove_follower.assert_called_once_with(
-        "1.1.1.1", 11000
-    )
 
 
 async def test_attr_master(
@@ -597,6 +486,44 @@ async def test_join_players(
         blocking=True,
     )
 
+    player_mocks.player_data.player.add_followers.assert_called_once_with(
+        [PairedPlayer("2.2.2.2", 11000)]
+    )
+
+
+async def test_join_players_after_entity_id_change(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    setup_config_entry: None,
+    setup_config_entry_secondary: None,
+    player_mocks: PlayerMocks,
+) -> None:
+    """Test the media_player.join action follows an entity_id change of a member."""
+    entity_registry.async_update_entity(
+        "media_player.player_name2222", new_entity_id="media_player.renamed_member"
+    )
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_JOIN,
+        {
+            ATTR_ENTITY_ID: "media_player.player_name1111",
+            ATTR_GROUP_MEMBERS: "media_player.player_name2222",
+        },
+        blocking=True,
+    )
+    player_mocks.player_data.player.add_followers.assert_not_called()
+
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_JOIN,
+        {
+            ATTR_ENTITY_ID: "media_player.player_name1111",
+            ATTR_GROUP_MEMBERS: "media_player.renamed_member",
+        },
+        blocking=True,
+    )
     player_mocks.player_data.player.add_followers.assert_called_once_with(
         [PairedPlayer("2.2.2.2", 11000)]
     )
