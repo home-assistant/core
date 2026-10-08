@@ -92,7 +92,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: PeblarConfigEntry) -> bo
         meter_coordinator.async_config_entry_first_refresh(),
         user_configuration_coordinator.async_config_entry_first_refresh(),
         version_coordinator.async_config_entry_first_refresh(),
-        authorization_coordinator.async_config_entry_first_refresh(),
+        # Older firmware has no meter history, which must not block setup.
+        authorization_coordinator.async_refresh(),
     )
 
     # Store the runtime data

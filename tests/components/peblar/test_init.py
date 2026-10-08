@@ -8,6 +8,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.peblar.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
@@ -102,6 +103,28 @@ async def test_config_entry_authentication_failed(
     assert "context" in flow
     assert flow["context"].get("source") == SOURCE_REAUTH
     assert flow["context"].get("entry_id") == mock_config_entry.entry_id
+
+
+async def test_setup_without_meter_history(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_peblar: MagicMock,
+) -> None:
+    """Test older firmware without meter history still sets up.
+
+    The authorization event reads the meter history, which older firmware
+    answers with a 404. That must not keep the rest of the charger from
+    loading.
+    """
+    mock_peblar.meter_history.side_effect = PeblarError("Not Found")
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert (state := hass.states.get("event.peblar_ev_charger_session_authorization"))
+    assert state.state == STATE_UNAVAILABLE
 
 
 @pytest.mark.usefixtures("init_integration")
