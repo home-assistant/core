@@ -1,3 +1,5 @@
+"""Tests for the Hunter Douglas PowerView data update coordinator and device cleanup."""
+
 from unittest.mock import MagicMock, patch, AsyncMock
 
 from aiopvapi.resources.shade_data import PowerviewShadeData
