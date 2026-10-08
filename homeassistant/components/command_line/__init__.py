@@ -59,7 +59,8 @@ from .const import (
     DEFAULT_TIMEOUT,
     DOMAIN,
 )
-from .services import async_load_platforms, async_setup_services
+from .helpers import async_load_platforms
+from .services import async_setup_services
 
 BINARY_SENSOR_DEFAULT_NAME = "Binary Command Sensor"
 DEFAULT_PAYLOAD_ON = "ON"
