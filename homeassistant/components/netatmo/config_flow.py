@@ -5,12 +5,17 @@ import logging
 from typing import Any, override
 import uuid
 
+import aiohttp
 import probatio
 
 from homeassistant.config_entries import ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_SHOW_ON_MAP, CONF_UUID
 from homeassistant.core import callback
-from homeassistant.helpers import config_entry_oauth2_flow, config_validation as cv
+from homeassistant.helpers import (
+    aiohttp_client,
+    config_entry_oauth2_flow,
+    config_validation as cv,
+)
 
 from .api import get_api_scopes
 from .const import (
@@ -21,10 +26,14 @@ from .const import (
     CONF_LON_SW,
     CONF_NEW_AREA,
     CONF_PUBLIC_MODE,
+    CONF_SIREN_EMAIL,
+    CONF_SIREN_PASSWORD,
+    CONF_SIREN_TOKEN,
     CONF_WEATHER_AREAS,
     DOMAIN,
 )
 from .coordinator import NetatmoConfigEntry
+from .web_auth import NetatmoWebSessionAuth
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -101,7 +110,63 @@ class NetatmoOptionsFlowHandler(OptionsFlow):
 
     async def async_step_init(self, user_input: dict | None = None) -> ConfigFlowResult:
         """Manage the Netatmo options."""
-        return await self.async_step_public_weather_areas()
+        return await self.async_step_siren_auth()
+
+    async def async_step_siren_auth(
+        self, user_input: dict | None = None
+    ) -> ConfigFlowResult:
+        """Configure Netatmo web session credentials for siren control."""
+        errors: dict = {}
+
+        if user_input is not None:
+            email = user_input.get(CONF_SIREN_EMAIL, "").strip()
+            password = user_input.get(CONF_SIREN_PASSWORD, "").strip()
+
+            if email and password:
+                # Attempt login to get session token
+                try:
+                    # Use a dedicated session with cookie jar for the login
+                    async with aiohttp.ClientSession(
+                        cookie_jar=aiohttp.CookieJar()
+                    ) as login_session:
+                        web_auth = await NetatmoWebSessionAuth.async_login(
+                            login_session, email, password
+                        )
+                    self.options[CONF_SIREN_TOKEN] = web_auth.token
+                    self.options[CONF_SIREN_EMAIL] = email
+                    self.options[CONF_SIREN_PASSWORD] = password
+                    _LOGGER.debug("Netatmo siren web session login successful")
+                except aiohttp.ClientError:
+                    errors["base"] = "siren_login_failed"
+            elif not email and not password:
+                # Clear siren credentials
+                self.options.pop(CONF_SIREN_TOKEN, None)
+                self.options.pop(CONF_SIREN_EMAIL, None)
+
+            if not errors:
+                return await self.async_step_public_weather_areas()
+
+        current_email = self.options.get(CONF_SIREN_EMAIL, "")
+        has_token = bool(self.options.get(CONF_SIREN_TOKEN))
+
+        description_placeholders = {
+            "status": "Configured" if has_token else "Not configured",
+            "email": current_email if current_email else "-",
+        }
+
+        data_schema = probatio.Schema(
+            {
+                probatio.Optional(CONF_SIREN_EMAIL, default=current_email): str,
+                probatio.Optional(CONF_SIREN_PASSWORD, default=""): str,
+            }
+        )
+
+        return self.async_show_form(
+            step_id="siren_auth",
+            data_schema=data_schema,
+            errors=errors,
+            description_placeholders=description_placeholders,
+        )
 
     async def async_step_public_weather_areas(
         self, user_input: dict | None = None

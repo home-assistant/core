@@ -1,14 +1,18 @@
 """Test the Netatmo config flow."""
 
 from ipaddress import ip_address
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
+import aiohttp
 from pyatmo.const import ALL_SCOPES
 import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.netatmo.const import (
     CONF_NEW_AREA,
+    CONF_SIREN_EMAIL,
+    CONF_SIREN_PASSWORD,
+    CONF_SIREN_TOKEN,
     CONF_WEATHER_AREAS,
     DOMAIN,
     OAUTH2_AUTHORIZE,
@@ -154,6 +158,14 @@ async def test_option_flow(hass: HomeAssistant) -> None:
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
     assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "siren_auth"
+
+    # Skip siren auth step (leave credentials empty)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={}
+    )
+
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "public_weather_areas"
 
     result = await hass.config_entries.options.async_configure(
@@ -210,6 +222,14 @@ async def test_option_flow_wrong_coordinates(hass: HomeAssistant) -> None:
     config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "siren_auth"
+
+    # Skip siren auth step (leave credentials empty)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={}
+    )
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "public_weather_areas"
@@ -335,3 +355,71 @@ async def test_reauth(
     assert new_entry2.state is ConfigEntryState.LOADED
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert len(mock_setup.mock_calls) == 1
+
+
+async def test_option_flow_siren_auth_valid_credentials(
+    hass: HomeAssistant,
+) -> None:
+    """Test siren_auth option step with valid credentials stores token in options."""
+    config_entry = MockConfigEntry(domain=DOMAIN, unique_id=DOMAIN)
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "siren_auth"
+
+    with patch(
+        "homeassistant.components.netatmo.config_flow.NetatmoWebSessionAuth.async_login",
+    ) as mock_login:
+        mock_instance = MagicMock()
+        mock_instance.token = "mock-web-token"
+        mock_login.return_value = mock_instance
+
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_SIREN_EMAIL: "user@example.com",
+                CONF_SIREN_PASSWORD: "password123",
+            },
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "public_weather_areas"
+
+    # Complete the flow to persist options
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+    assert config_entry.options[CONF_SIREN_TOKEN] == "mock-web-token"
+    assert config_entry.options[CONF_SIREN_EMAIL] == "user@example.com"
+    assert config_entry.options[CONF_SIREN_PASSWORD] == "password123"
+
+
+async def test_option_flow_siren_auth_invalid_credentials(
+    hass: HomeAssistant,
+) -> None:
+    """Test siren_auth option step with invalid credentials shows error and re-displays form."""
+    config_entry = MockConfigEntry(domain=DOMAIN, unique_id=DOMAIN)
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "siren_auth"
+
+    with patch(
+        "homeassistant.components.netatmo.config_flow.NetatmoWebSessionAuth.async_login",
+        side_effect=aiohttp.ClientError("Login failed"),
+    ):
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_SIREN_EMAIL: "user@example.com",
+                CONF_SIREN_PASSWORD: "wrong-password",
+            },
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "siren_auth"
+    assert result["errors"]["base"] == "siren_login_failed"

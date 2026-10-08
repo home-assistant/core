@@ -164,6 +164,9 @@
     }
   },
   "options": {
+    "error": {
+      "siren_login_failed": "Failed to authenticate with Netatmo. Please check your email and password."
+    },
     "step": {
       "public_weather": {
         "data": {
@@ -198,6 +201,18 @@
         },
         "description": "Configure public weather sensors.",
         "title": "[%key:component::netatmo::options::step::public_weather::title%]"
+      },
+      "siren_auth": {
+        "data": {
+          "siren_email": "Email",
+          "siren_password": "Password"
+        },
+        "data_description": {
+          "siren_email": "Your Netatmo account email address, required for siren control.",
+          "siren_password": "Your Netatmo account password, required for siren control."
+        },
+        "description": "Enter your Netatmo credentials to enable siren control for the Smart Outdoor Camera (NOC). A confirmation email will be sent by Netatmo.",
+        "title": "Siren credentials"
       }
     }
   },

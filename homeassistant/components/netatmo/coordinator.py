@@ -36,6 +36,7 @@ from .const import (
     NETATMO_CREATE_BUTTON,
     NETATMO_CREATE_CAMERA,
     NETATMO_CREATE_CAMERA_LIGHT,
+    NETATMO_CREATE_CAMERA_SIREN,
     NETATMO_CREATE_CLIMATE,
     NETATMO_CREATE_CLIMATE_BATTERY_SENSOR,
     NETATMO_CREATE_CONNECTIVITY_BINARY_SENSOR,
@@ -61,6 +62,7 @@ from .device import (
     async_sync_home_disabled_state,
     netatmo_module_parents,
 )
+from .web_auth import NetatmoWebSessionAuth
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -187,6 +189,7 @@ class NetatmoDataHandler:
         self.parent_device_ids: dict[str, str] = {}
         self.module_parents: dict[str, str] = {}
         self.home_device_ids: list[str] = []
+        self.web_auth: NetatmoWebSessionAuth | None = None
 
     async def async_setup(self) -> None:
         """Set up the Netatmo data handler."""
@@ -443,11 +446,9 @@ class NetatmoDataHandler:
             NetatmoDeviceCategory.camera: [
                 NETATMO_CREATE_CAMERA,
                 NETATMO_CREATE_CAMERA_LIGHT,
+                NETATMO_CREATE_CAMERA_SIREN,
             ],
-            NetatmoDeviceCategory.dimmer: [
-                NETATMO_CREATE_LIGHT,
-                NETATMO_CREATE_LEGACY_SENSOR,
-            ],
+            NetatmoDeviceCategory.dimmer: [NETATMO_CREATE_LIGHT],
             NetatmoDeviceCategory.shutter: [
                 NETATMO_CREATE_COVER,
                 NETATMO_CREATE_BUTTON,

@@ -26,9 +26,16 @@ from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.typing import ConfigType
 
 from . import api
-from .const import DOMAIN, PLATFORMS
+from .const import (
+    CONF_SIREN_EMAIL,
+    CONF_SIREN_PASSWORD,
+    CONF_SIREN_TOKEN,
+    DOMAIN,
+    PLATFORMS,
+)
 from .coordinator import NetatmoConfigEntry, NetatmoDataHandler
 from .services import async_setup_services
+from .web_auth import NetatmoWebSessionAuth
 from .webhook import async_register_webhook, async_unregister_webhook
 
 _LOGGER = logging.getLogger(__name__)
@@ -69,6 +76,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: NetatmoConfigEntry) -> b
     )
 
     data_handler = NetatmoDataHandler(hass, entry, auth)
+
+    # Initialize web session auth for siren control if token is stored
+    siren_token = entry.options.get(CONF_SIREN_TOKEN)
+    if siren_token:
+        data_handler.web_auth = NetatmoWebSessionAuth(
+            aiohttp_client.async_get_clientsession(hass),
+            token=siren_token,
+            email=entry.options.get(CONF_SIREN_EMAIL),
+            password=entry.options.get(CONF_SIREN_PASSWORD),
+        )
+        _LOGGER.debug("Netatmo web session auth initialized for siren control")
+
     entry.runtime_data = data_handler
     await data_handler.async_setup()
 
@@ -104,6 +123,19 @@ async def async_config_entry_updated(
     hass: HomeAssistant, entry: NetatmoConfigEntry
 ) -> None:
     """Handle signals of config entry being updated."""
+    # Update web session auth if siren credentials changed
+    siren_token = entry.options.get(CONF_SIREN_TOKEN)
+    if siren_token:
+        entry.runtime_data.web_auth = NetatmoWebSessionAuth(
+            aiohttp_client.async_get_clientsession(hass),
+            token=siren_token,
+            email=entry.options.get(CONF_SIREN_EMAIL),
+            password=entry.options.get(CONF_SIREN_PASSWORD),
+        )
+        _LOGGER.debug("Netatmo web session auth updated from options")
+    else:
+        entry.runtime_data.web_auth = None
+
     async_dispatcher_send(hass, f"signal-{DOMAIN}-public-update-{entry.entry_id}")
 
 
