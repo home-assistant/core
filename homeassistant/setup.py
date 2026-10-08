@@ -70,6 +70,12 @@ _DATA_SETUP_TIME: HassKey[
     defaultdict[str, defaultdict[str | None, defaultdict[SetupPhases, float]]]
 ] = HassKey("setup_time")
 
+# _DATA_SETUP_WAITS is a dict, holding for each setup group the number
+# of waits in progress and when the current stretch of waiting started.
+_DATA_SETUP_WAITS: HassKey[dict[tuple[str, str | None], tuple[int, float]]] = HassKey(
+    "setup_waits"
+)
+
 _DATA_DEPS_REQS: HassKey[set[str]] = HassKey("deps_reqs_processed")
 
 _DATA_PERSISTENT_ERRORS: HassKey[dict[str, str | None]] = HassKey(
@@ -710,21 +716,37 @@ def async_pause_setup(hass: core.HomeAssistant, phase: SetupPhases) -> Generator
         yield
         return
 
-    started = time.monotonic()
+    waits = _setup_waits(hass)
+    count, started = waits.get(running, (0, time.monotonic()))
+    waits[running] = (count + 1, started)
     try:
         yield
     finally:
-        time_taken = time.monotonic() - started
-        integration, group = running
-        # Add negative time for the time we waited
-        _setup_times(hass)[integration][group][phase] = -time_taken
-        _LOGGER.debug(
-            "Adding wait for %s for %s (%s) of %.2f",
-            phase,
-            integration,
-            group,
-            time_taken,
-        )
+        count, started = waits.pop(running)
+        if count > 1:
+            # Waits that overlap block the setup once, so the time is
+            # subtracted when the last of them finishes
+            waits[running] = (count - 1, started)
+        else:
+            time_taken = time.monotonic() - started
+            integration, group = running
+            # Add negative time for the time we waited, keeping earlier waits
+            _setup_times(hass)[integration][group][phase] -= time_taken
+            _LOGGER.debug(
+                "Adding wait for %s for %s (%s) of %.2f",
+                phase,
+                integration,
+                group,
+                time_taken,
+            )
+
+
+@singleton.singleton(_DATA_SETUP_WAITS)
+def _setup_waits(
+    hass: core.HomeAssistant,
+) -> dict[tuple[str, str | None], tuple[int, float]]:
+    """Return the setup waits in progress dict."""
+    return {}
 
 
 @singleton.singleton(_DATA_SETUP_TIME)
