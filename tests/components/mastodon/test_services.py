@@ -605,8 +605,8 @@ async def test_service_post_local_media_source(
             ATTR_MEDIA: [
                 {
                     ATTR_MEDIA_SOURCE: {
-                        "media_content_id": "media-source://media_source/local/Epic Sax Guy 10 Hours.mp4",
-                        "media_content_type": "video/mp4",
+                        "media_content_id": "media-source://media_source/local/screenshot.jpg",
+                        "media_content_type": "image/jpeg",
                     },
                     ATTR_MEDIA_DESCRIPTION: "I play the sax",
                     ATTR_FOCUS_X: -0.5,
@@ -614,7 +614,7 @@ async def test_service_post_local_media_source(
                 },
                 {
                     ATTR_MEDIA_SOURCE: {
-                        "media_content_id": "media-source://media_source/local/screenshot.jpg",
+                        "media_content_id": "media-source://media_source/local/screenshot2.jpg",
                         "media_content_type": "image/jpeg",
                     },
                 },
@@ -625,22 +625,22 @@ async def test_service_post_local_media_source(
 
     assert mock_mastodon_client.media_post.call_count == 2
     mock_mastodon_client.media_post.assert_any_call(
-        media_file=Path(
-            "tests/testing_config/media/Epic Sax Guy 10 Hours.mp4"
-        ).resolve(),
-        mime_type="video/mp4",
+        media_file=Path("tests/testing_config/media/screenshot.jpg").resolve(),
+        mime_type="image/jpeg",
         description="I play the sax",
         focus=(-0.5, 0.5),
         thumbnail=None,
         thumbnail_mime_type=None,
+        synchronous=True,
     )
     mock_mastodon_client.media_post.assert_any_call(
-        media_file=Path("tests/testing_config/media/screenshot.jpg").resolve(),
+        media_file=Path("tests/testing_config/media/screenshot2.jpg").resolve(),
         mime_type="image/jpeg",
         description=None,
-        focus=(0, 0),
+        focus=None,
         thumbnail=None,
         thumbnail_mime_type=None,
+        synchronous=True,
     )
     mock_mastodon_client.status_post.assert_called_once_with(
         media_ids=[
@@ -700,6 +700,7 @@ async def test_service_post_camera_source(
         focus=(-0.5, 0.5),
         thumbnail=None,
         thumbnail_mime_type=None,
+        synchronous=True,
     )
     mock_mastodon_client.status_post.assert_called_once_with(
         media_ids=[MediaAttachment(id=1)],
@@ -756,6 +757,7 @@ async def test_service_post_image_source(
         focus=(-0.5, 0.5),
         thumbnail=None,
         thumbnail_mime_type=None,
+        synchronous=True,
     )
     mock_mastodon_client.status_post.assert_called_once_with(
         media_ids=[MediaAttachment(id=1)],
@@ -801,8 +803,6 @@ async def test_service_post_tts_source(
                             "media_content_type": "audio/mp3",
                         },
                         ATTR_MEDIA_DESCRIPTION: "I play the sax",
-                        ATTR_FOCUS_X: -0.5,
-                        ATTR_FOCUS_Y: 0.5,
                         ATTR_THUMBNAIL: {
                             "media_content_id": "media-source://image/image.test",
                             "media_content_type": "image/png",
@@ -820,9 +820,10 @@ async def test_service_post_tts_source(
         media_file=b"Tooooot",
         mime_type="audio/mpeg",
         description="I play the sax",
-        focus=(-0.5, 0.5),
+        focus=None,
         thumbnail=b"I play the sax\n",
         thumbnail_mime_type="image/jpeg",
+        synchronous=True,
     )
     mock_mastodon_client.status_post.assert_called_once_with(
         media_ids=[MediaAttachment(id=1)],
@@ -838,9 +839,9 @@ async def test_service_post_tts_source(
     )
 
 
+@pytest.mark.usefixtures("mock_mastodon_client")
 async def test_service_post_media_source_not_supported(
     hass: HomeAssistant,
-    mock_mastodon_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test the post service with media from unsupported source."""
@@ -887,8 +888,8 @@ async def test_service_post_media_source_not_supported(
                 ATTR_MEDIA: [
                     {
                         ATTR_MEDIA_SOURCE: {
-                            "media_content_id": "media-source://media_source/local/Epic Sax Guy 10 Hours.mp4",
-                            "media_content_type": "video/mp4",
+                            "media_content_id": "media-source://media_source/local/screenshot.jpg",
+                            "media_content_type": "image/jpeg",
                         },
                         ATTR_THUMBNAIL: {
                             "media_content_id": "media-source://image/image.test",
@@ -910,13 +911,13 @@ async def test_service_post_media_source_not_supported(
                     },
                     {
                         ATTR_MEDIA_SOURCE: {
-                            "media_content_id": "media-source://image/image.test",
-                            "media_content_type": "image/png",
+                            "media_content_id": "media-source://media_source/local/screenshot.jpg",
+                            "media_content_type": "image/jpeg",
                         },
                     },
                 ]
             },
-            "media_audio_not_allowed_with_other_media",
+            "media_not_allowed_with_other_media",
         ),
         (
             {
@@ -937,9 +938,9 @@ async def test_service_post_media_source_not_supported(
         ),
     ],
 )
+@pytest.mark.usefixtures("mock_mastodon_client")
 async def test_service_post_media_source_errors(
     hass: HomeAssistant,
-    mock_mastodon_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     payload: dict[str, str],
     translation_key: str,
@@ -993,9 +994,9 @@ async def test_service_post_media_source_upload_error(
     assert err.value.translation_key == "unable_to_upload_media"
 
 
+@pytest.mark.usefixtures("mock_mastodon_client")
 async def test_service_post_absolute_path_deprecated(
     hass: HomeAssistant,
-    mock_mastodon_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     issue_registry: ir.IssueRegistry,
 ) -> None:

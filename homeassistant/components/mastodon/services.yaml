@@ -318,7 +318,6 @@ post:
       required: false
       selector:
         text:
-
 update_profile:
   fields:
     config_entry_id: *config_entry_id

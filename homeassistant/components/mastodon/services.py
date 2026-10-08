@@ -12,6 +12,7 @@ from mastodon import Mastodon
 from mastodon.Mastodon import (
     Account,
     MastodonAPIError,
+    MastodonIllegalArgumentError,
     MastodonNotFoundError,
     MastodonUnauthorizedError,
     MediaAttachment,
@@ -360,33 +361,34 @@ async def _async_post(call: ServiceCall) -> ServiceResponse:
     spoiler_text: str | None = call.data.get(ATTR_CONTENT_WARNING)
     language: str | None = call.data.get(ATTR_LANGUAGE)
 
-    if isinstance(media_path := call.data.get(ATTR_MEDIA), str):
+    media_path: str | None = None
+    media: list[dict[str, Any]] | str = call.data.get(ATTR_MEDIA, [])
+    if isinstance(media, str):
         async_deprecated_media_path(call.hass)
-    else:
-        media_path = None
-
-    media: list[dict[str, Any]] = (
-        []
-        if isinstance(call.data.get(ATTR_MEDIA), str)
-        else call.data.get(ATTR_MEDIA, [])
-    )
+        media_path, media = media, []
 
     resolved: list[dict[str, Any]] = []
     for media_item in media:
         content, mime_type = await _resolve_media(
             call.hass, media_item[ATTR_MEDIA_SOURCE]
         )
-
-        if mime_type and mime_type.startswith("audio/") and len(media) > 1:
+        if mime_type is None:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
-                translation_key="media_audio_not_allowed_with_other_media",
+                translation_key="media_type_unknown",
             )
-        if (
-            mime_type
-            and not mime_type.startswith("audio/")
-            and media_item.get(ATTR_THUMBNAIL)
-        ):
+        audio_or_video = mime_type.startswith(("audio/", "video/"))
+        if audio_or_video and len(media) > 1:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="media_not_allowed_with_other_media",
+            )
+        if audio_or_video and len(media) > 1:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="media_video_not_allowed_with_other_media",
+            )
+        if not audio_or_video and media_item.get(ATTR_THUMBNAIL):
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="media_thumbnail_not_allowed",
@@ -408,8 +410,9 @@ async def _async_post(call: ServiceCall) -> ServiceResponse:
                 "mime_type": mime_type,
                 "description": media_item.get(ATTR_MEDIA_DESCRIPTION),
                 "focus": (
-                    media_item.get(ATTR_FOCUS_X, 0),
-                    media_item.get(ATTR_FOCUS_Y, 0),
+                    (media_item.get(ATTR_FOCUS_X, 0), media_item.get(ATTR_FOCUS_Y, 0))
+                    if ATTR_FOCUS_X in media_item or ATTR_FOCUS_Y in media_item
+                    else None
                 ),
                 "thumbnail": thumbnail_content,
                 "thumbnail_mime_type": thumbnail_mime_type,
@@ -417,7 +420,6 @@ async def _async_post(call: ServiceCall) -> ServiceResponse:
         )
 
     media_description: str | None = call.data.get(ATTR_MEDIA_DESCRIPTION)
-
     media_warning: str | None = call.data.get(ATTR_MEDIA_WARNING)
     in_reply_to: str | None = call.data.get(ATTR_IN_REPLY_TO)
     quoted_status: str | None = call.data.get(ATTR_QUOTED_STATUS)
@@ -488,8 +490,8 @@ def _post(
 
     for media in kwargs.get("media", []):
         try:
-            media_data.append(client.media_post(**media))
-        except MastodonAPIError as err:
+            media_data.append(client.media_post(**media, synchronous=True))
+        except (MastodonAPIError, MastodonIllegalArgumentError) as err:
             LOGGER.debug("Full exception:", exc_info=err)
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
