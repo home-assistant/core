@@ -54,7 +54,9 @@ def test_device_update_refreshes_cached_name() -> None:
 
 
 async def test_device_registry_refreshes_without_climate_entity(
-    hass: HomeAssistant, config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    config_entry: MockConfigEntry,
 ) -> None:
     """Refresh a gateway registry entry even when it has no climate entity."""
     gateway = DaikinOnectaDevice(
@@ -80,7 +82,7 @@ async def test_device_registry_refreshes_without_climate_entity(
     )
     gateway.async_update_device_registry(hass, config_entry)
 
-    entry = dr.async_get(hass).async_get_device_by_identifier(
+    entry = device_registry.async_get_device_by_identifier(
         (DOMAIN, "gateway"), config_entry.entry_id
     )
     assert entry is not None
