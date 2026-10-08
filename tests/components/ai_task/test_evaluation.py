@@ -13,14 +13,14 @@ from homeassistant.components import ai_task
 from homeassistant.components.ai_task.const import DATA_PREFERENCES
 from homeassistant.components.camera import Image
 from homeassistant.core import Context, HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.helpers import chat_session
 from homeassistant.util import dt as dt_util
 from homeassistant.util.json import JsonValueType
 
 from .conftest import TEST_ENTITY_ID, MockAITaskEntity
 
-from tests.common import async_fire_time_changed
+from tests.common import MockUser, async_fire_time_changed
 from tests.typing import WebSocketGenerator
 
 QUESTIONS: dict[str, ai_task.EvaluationQuestion] = {
@@ -300,4 +300,148 @@ async def test_invalid_questions(
             state="State",
             questions=questions,
         )
+    mock_evaluate.assert_not_called()
+
+
+@pytest.mark.usefixtures("init_components")
+@pytest.mark.parametrize(
+    "second_image",
+    [Image("image/jpeg", b"camera image"), HomeAssistantError("Task failed")],
+)
+async def test_failed_task_cleans_snapshots(
+    hass: HomeAssistant,
+    mock_evaluate: AsyncMock,
+    tmp_path: Path,
+    second_image: Image | HomeAssistantError,
+) -> None:
+    """Clean temporary camera files when resolution or evaluation fails."""
+    snapshot_path = tmp_path / "snapshot.jpg"
+    snapshot_path.write_bytes(b"camera image")
+    mock_evaluate.side_effect = HomeAssistantError("Task failed")
+    image = Image("image/jpeg", b"camera image")
+    with (
+        patch(
+            "homeassistant.components.camera.async_get_image",
+            side_effect=[image, second_image],
+        ),
+        patch(
+            "homeassistant.components.ai_task.task._save_camera_snapshot",
+            return_value=snapshot_path,
+        ),
+        pytest.raises(HomeAssistantError, match="Task failed"),
+    ):
+        await ai_task.async_evaluate(
+            hass,
+            task_name="Delivery",
+            entity_id=TEST_ENTITY_ID,
+            questions=QUESTIONS,
+            attachments=[
+                {"media_content_id": "media-source://camera/camera.front_door"},
+                {"media_content_id": "media-source://camera/camera.back_door"},
+            ],
+        )
+    assert chat_session.current_session.get() is None
+    async_fire_time_changed(
+        hass,
+        dt_util.utcnow() + chat_session.CONVERSATION_TIMEOUT + timedelta(seconds=1),
+    )
+    await hass.async_block_till_done()
+    assert not snapshot_path.exists()
+
+
+@pytest.mark.usefixtures("init_components")
+async def test_attachment_limit(
+    hass: HomeAssistant,
+    mock_ai_task_entity: MockAITaskEntity,
+    mock_evaluate: AsyncMock,
+) -> None:
+    """Reject excessive attachments before capturing any snapshots."""
+    mock_ai_task_entity._attr_max_attachments = 1
+    with (
+        patch("homeassistant.components.camera.async_get_image") as get_image,
+        pytest.raises(HomeAssistantError, match="supports at most 1 attachments"),
+    ):
+        await ai_task.async_evaluate(
+            hass,
+            task_name="Delivery",
+            entity_id=TEST_ENTITY_ID,
+            questions=QUESTIONS,
+            attachments=[
+                {"media_content_id": "media-source://camera/camera.front_door"},
+                {"media_content_id": "media-source://camera/camera.back_door"},
+            ],
+        )
+    get_image.assert_not_called()
+    mock_evaluate.assert_not_called()
+
+
+@pytest.mark.usefixtures("init_components")
+async def test_explicit_entity_permission(
+    hass: HomeAssistant,
+    hass_read_only_user: MockUser,
+    mock_evaluate: AsyncMock,
+) -> None:
+    """Reject an explicit entity before resolving attachments or invoking it."""
+    with (
+        patch("homeassistant.components.ai_task.task._resolve_attachments") as resolve,
+        pytest.raises(Unauthorized),
+    ):
+        await ai_task.async_evaluate(
+            hass,
+            task_name="Delivery",
+            entity_id=TEST_ENTITY_ID,
+            state="Delivered",
+            questions=QUESTIONS,
+            context=Context(user_id=hass_read_only_user.id),
+        )
+    resolve.assert_not_called()
+    mock_evaluate.assert_not_called()
+
+
+@pytest.mark.usefixtures("init_components")
+async def test_default_entity_permission(
+    hass: HomeAssistant, hass_read_only_user: MockUser
+) -> None:
+    """Allow the default decision entity without control permission."""
+    hass.data[DATA_PREFERENCES].async_set_preferences(evaluate_entity_id=TEST_ENTITY_ID)
+    result = await ai_task.async_evaluate(
+        hass,
+        task_name="Delivery",
+        state="Delivered",
+        questions=QUESTIONS,
+        context=Context(user_id=hass_read_only_user.id),
+    )
+    assert result.answers == ANSWERS
+
+
+@pytest.mark.usefixtures("init_components")
+@pytest.mark.parametrize("entity_id", [None, TEST_ENTITY_ID])
+@pytest.mark.parametrize("domain", ["camera", "image"])
+async def test_attachment_permission(
+    hass: HomeAssistant,
+    hass_admin_user: MockUser,
+    mock_evaluate: AsyncMock,
+    entity_id: str | None,
+    domain: str,
+) -> None:
+    """Always reject unreadable attachments, including with the default entity."""
+    hass.data[DATA_PREFERENCES].async_set_preferences(evaluate_entity_id=TEST_ENTITY_ID)
+    hass_admin_user.mock_policy(
+        {"entities": {"entity_ids": {TEST_ENTITY_ID: {"control": True}}}}
+    )
+    with (
+        patch("homeassistant.components.ai_task.task._resolve_attachments") as resolve,
+        pytest.raises(Unauthorized),
+    ):
+        await ai_task.async_evaluate(
+            hass,
+            task_name="Delivery",
+            entity_id=entity_id,
+            questions=QUESTIONS,
+            attachments=[
+                {"media_content_id": f"media-source://{domain}/{domain}.test"}
+            ],
+            context=Context(user_id=hass_admin_user.id),
+        )
+    resolve.assert_not_called()
     mock_evaluate.assert_not_called()

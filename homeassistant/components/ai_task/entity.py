@@ -30,6 +30,13 @@ class AITaskEntity(RestoreEntity):
     _attr_supported_features = AITaskEntityFeature(0)
     __last_activity: str | None = None
 
+    _attr_max_attachments: int | None = None
+
+    @property
+    def max_attachments(self) -> int | None:
+        """Return the maximum number of attachments, if limited."""
+        return self._attr_max_attachments
+
     @property
     @final
     @override
