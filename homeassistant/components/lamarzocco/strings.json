@@ -64,6 +64,9 @@
       "backflush_enabled": {
         "name": "Backflush active"
       },
+      "bluetooth_connected": {
+        "name": "Bluetooth connected"
+      },
       "brew_active": {
         "name": "Brewing active"
       },

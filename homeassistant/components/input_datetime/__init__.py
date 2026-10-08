@@ -1,10 +1,11 @@
 """Support to select a date and/or a time."""
 
+from dataclasses import dataclass
 import datetime as py_datetime
 import logging
 from typing import Any, Self, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import (  # noqa: F401
     ATTR_DATE,
@@ -15,23 +16,26 @@ from homeassistant.const import (  # noqa: F401
     CONF_NAME,
     SERVICE_RELOAD,
 )
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import collection, config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
-import homeassistant.helpers.service
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType, VolDictType
 from homeassistant.util import dt as dt_util
 
-from .const import (
+from .const import (  # noqa: F401
+    ATTR_DATETIME,
+    ATTR_TIMESTAMP,
+    DATA_INPUT_DATETIME,
+    DOMAIN,
     InputDatetimeEntityCapabilityAttribute,
     InputDatetimeEntityStateAttribute,
 )
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "input_datetime"
 
 CONF_HAS_DATE = "has_date"
 CONF_HAS_TIME = "has_time"
@@ -39,34 +43,21 @@ CONF_INITIAL = "initial"
 
 DEFAULT_TIME = py_datetime.time(0, 0, 0)
 
-ATTR_DATETIME = "datetime"
-ATTR_TIMESTAMP = "timestamp"
 
 FMT_DATE = "%Y-%m-%d"
 FMT_TIME = "%H:%M:%S"
 FMT_DATETIME = f"{FMT_DATE} {FMT_TIME}"
 
 
-def validate_set_datetime_attrs(config):
-    """Validate set_datetime service attributes."""
-    has_date_or_time_attr = any(key in config for key in (ATTR_DATE, ATTR_TIME))
-    if (
-        sum([has_date_or_time_attr, ATTR_DATETIME in config, ATTR_TIMESTAMP in config])
-        > 1
-    ):
-        raise vol.Invalid(f"Cannot use together: {', '.join(config.keys())}")
-    return config
-
-
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 
 STORAGE_FIELDS: VolDictType = {
-    vol.Required(CONF_NAME): vol.All(str, vol.Length(min=1)),
-    vol.Optional(CONF_HAS_DATE, default=False): cv.boolean,
-    vol.Optional(CONF_HAS_TIME, default=False): cv.boolean,
-    vol.Optional(CONF_ICON): cv.icon,
-    vol.Optional(CONF_INITIAL): cv.string,
+    probatio.Required(CONF_NAME): probatio.All(str, probatio.NonEmpty()),
+    probatio.Optional(CONF_HAS_DATE, default=False): cv.boolean,
+    probatio.Optional(CONF_HAS_TIME, default=False): cv.boolean,
+    probatio.Optional(CONF_ICON): cv.icon,
+    probatio.Optional(CONF_INITIAL): cv.string,
 }
 
 
@@ -75,7 +66,7 @@ def has_date_or_time(conf):
     if conf[CONF_HAS_DATE] or conf[CONF_HAS_TIME]:
         return conf
 
-    raise vol.Invalid("Entity needs at least a date or a time")
+    raise probatio.Invalid("Entity needs at least a date or a time")
 
 
 def valid_initial(conf: dict[str, Any]) -> dict[str, Any]:
@@ -83,7 +74,7 @@ def valid_initial(conf: dict[str, Any]) -> dict[str, Any]:
     if not (conf.get(CONF_INITIAL)):
         return conf
 
-    # Ensure we can parse the initial value, raise vol.Invalid on failure
+    # Ensure we can parse the initial value, raise probatio.Invalid on failure
     parse_initial_datetime(conf)
     return conf
 
@@ -95,37 +86,46 @@ def parse_initial_datetime(conf: dict[str, Any]) -> py_datetime.datetime:
     if conf[CONF_HAS_DATE] and conf[CONF_HAS_TIME]:
         if (datetime := dt_util.parse_datetime(initial)) is not None:
             return datetime
-        raise vol.Invalid(f"Initial value '{initial}' can't be parsed as a datetime")
+        raise probatio.Invalid(
+            f"Initial value '{initial}' can't be parsed as a datetime"
+        )
 
     if conf[CONF_HAS_DATE]:
         if (date := dt_util.parse_date(initial)) is not None:
             return py_datetime.datetime.combine(date, DEFAULT_TIME)
-        raise vol.Invalid(f"Initial value '{initial}' can't be parsed as a date")
+        raise probatio.Invalid(f"Initial value '{initial}' can't be parsed as a date")
 
     if (time := dt_util.parse_time(initial)) is not None:
         return py_datetime.datetime.combine(dt_util.now().date(), time)
-    raise vol.Invalid(f"Initial value '{initial}' can't be parsed as a time")
+    raise probatio.Invalid(f"Initial value '{initial}' can't be parsed as a time")
 
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
         DOMAIN: cv.schema_with_slug_keys(
-            vol.All(
+            probatio.All(
                 {
-                    vol.Optional(CONF_NAME): cv.string,
-                    vol.Optional(CONF_HAS_DATE, default=False): cv.boolean,
-                    vol.Optional(CONF_HAS_TIME, default=False): cv.boolean,
-                    vol.Optional(CONF_ICON): cv.icon,
-                    vol.Optional(CONF_INITIAL): cv.string,
+                    probatio.Optional(CONF_NAME): cv.string,
+                    probatio.Optional(CONF_HAS_DATE, default=False): cv.boolean,
+                    probatio.Optional(CONF_HAS_TIME, default=False): cv.boolean,
+                    probatio.Optional(CONF_ICON): cv.icon,
+                    probatio.Optional(CONF_INITIAL): cv.string,
                 },
                 has_date_or_time,
                 valid_initial,
             )
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
-RELOAD_SERVICE_SCHEMA = vol.Schema({})
+
+
+@dataclass(slots=True)
+class InputDatetimeData:
+    """Runtime data for the input_datetime integration."""
+
+    component: EntityComponent[InputDatetime]
+    yaml_collection: collection.YamlCollection
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -158,47 +158,18 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         storage_collection, DOMAIN, DOMAIN, STORAGE_FIELDS, STORAGE_FIELDS
     ).async_setup(hass)
 
-    async def reload_service_handler(service_call: ServiceCall) -> None:
-        """Reload yaml entities."""
-        conf = await component.async_prepare_reload(skip_reset=True)
-        await yaml_collection.async_load(
-            [{CONF_ID: id_, **cfg} for id_, cfg in conf.get(DOMAIN, {}).items()]
-        )
+    hass.data[DATA_INPUT_DATETIME] = InputDatetimeData(component, yaml_collection)
 
-    homeassistant.helpers.service.async_register_admin_service(
-        hass,
-        DOMAIN,
-        SERVICE_RELOAD,
-        reload_service_handler,
-        schema=RELOAD_SERVICE_SCHEMA,
-    )
-
-    component.async_register_entity_service(
-        "set_datetime",
-        vol.All(
-            cv.make_entity_service_schema(
-                {
-                    vol.Optional(ATTR_DATE): cv.date,
-                    vol.Optional(ATTR_TIME): cv.time,
-                    vol.Optional(ATTR_DATETIME): cv.datetime,
-                    vol.Optional(ATTR_TIMESTAMP): vol.Coerce(float),
-                },
-            ),
-            cv.has_at_least_one_key(
-                ATTR_DATE, ATTR_TIME, ATTR_DATETIME, ATTR_TIMESTAMP
-            ),
-            validate_set_datetime_attrs,
-        ),
-        "async_set_datetime",
-    )
-
+    async_setup_services(hass)
     return True
 
 
 class DateTimeStorageCollection(collection.DictStorageCollection):
     """Input storage based collection."""
 
-    CREATE_UPDATE_SCHEMA = vol.Schema(vol.All(STORAGE_FIELDS, has_date_or_time))
+    CREATE_UPDATE_SCHEMA = probatio.Schema(
+        probatio.All(STORAGE_FIELDS, has_date_or_time)
+    )
 
     @override
     async def _process_create_data(self, data: dict) -> dict:
@@ -425,7 +396,7 @@ class InputDatetime(collection.CollectionEntity, RestoreEntity):
             time = None
 
         if not date and not time:
-            raise vol.Invalid("Nothing to set")
+            raise probatio.Invalid("Nothing to set")
 
         if not date:
             date = self._current_datetime.date()

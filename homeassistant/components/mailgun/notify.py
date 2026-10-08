@@ -3,13 +3,13 @@
 import logging
 from typing import Any, override
 
+import probatio
 from pymailgunner import (
     Client,
     MailgunCredentialsError,
     MailgunDomainError,
     MailgunError,
 )
-import voluptuous as vol
 
 from homeassistant.components.notify import (
     ATTR_DATA,
@@ -34,7 +34,10 @@ ATTR_IMAGES = "images"
 DEFAULT_SANDBOX = False
 
 PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_RECIPIENT): vol.Email(), vol.Optional(CONF_SENDER): vol.Email()}
+    {
+        probatio.Required(CONF_RECIPIENT): probatio.Email(),
+        probatio.Optional(CONF_SENDER): probatio.Email(),
+    }
 )
 
 

@@ -3,7 +3,7 @@
 from typing import Any, override
 
 from gpiozero import LED
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.switch import (
     PLATFORM_SCHEMA as SWITCH_PLATFORM_SCHEMA,
@@ -19,13 +19,13 @@ from . import CONF_INVERT_LOGIC, DEFAULT_INVERT_LOGIC, setup_output, write_outpu
 
 CONF_PORTS = "ports"
 
-_SENSORS_SCHEMA = vol.Schema({cv.positive_int: cv.string})
+_SENSORS_SCHEMA = probatio.Schema({cv.positive_int: cv.string})
 
 PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_PORTS): _SENSORS_SCHEMA,
-        vol.Optional(CONF_INVERT_LOGIC, default=DEFAULT_INVERT_LOGIC): cv.boolean,
+        probatio.Required(CONF_HOST): cv.string,
+        probatio.Required(CONF_PORTS): _SENSORS_SCHEMA,
+        probatio.Optional(CONF_INVERT_LOGIC, default=DEFAULT_INVERT_LOGIC): cv.boolean,
     }
 )
 

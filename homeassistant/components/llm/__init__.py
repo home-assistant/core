@@ -16,6 +16,7 @@ from homeassistant.helpers.llm import (
     LLMContext,
     Tool,
     async_register_api,
+    report_untagged_tool,
     selector_serializer,
 )
 from homeassistant.helpers.typing import ConfigType
@@ -93,7 +94,7 @@ async def async_get_tools(
             continue
         if result is None:
             continue
-        _async_report_unprefixed_tools(hass, domain, result.tools)
+        _async_report_tool_issues(hass, domain, result.tools)
         tools.extend(result.tools)
         if result.prompt:
             prompts.append(result.prompt)
@@ -101,12 +102,18 @@ async def async_get_tools(
 
 
 @callback
-def _async_report_unprefixed_tools(
+def _async_report_tool_issues(
     hass: HomeAssistant, domain: str, tools: list[Tool]
 ) -> None:
-    """Report tools that are not prefixed with the domain offering them."""
+    """Report tools that do not follow the current requirements."""
     prefix = f"{domain}__"
-    unprefixed = [tool.name for tool in tools if not tool.name.startswith(prefix)]
+    unprefixed: list[str] = []
+    for tool in tools:
+        if not tool.name.startswith(prefix):
+            unprefixed.append(tool.name)
+        if tool.integration is None:
+            report_untagged_tool(tool, domain)
+
     if not unprefixed:
         return
 

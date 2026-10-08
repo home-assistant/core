@@ -194,7 +194,7 @@ async def test_speed_sensor_availability(
         pytest.param(HEADING_ENTITY_ID, id="heading"),
     ],
 )
-async def test_removed_vehicle_makes_sensor_unavailable(
+async def test_removed_vehicle_removes_sensor(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_config_entry: MockConfigEntry,
@@ -202,7 +202,7 @@ async def test_removed_vehicle_makes_sensor_unavailable(
     mock_scorpiontrack_client: AsyncMock,
     entity_id: str,
 ) -> None:
-    """Test a sensor becomes unavailable if its vehicle leaves the share."""
+    """Test a sensor is removed if its vehicle leaves the share."""
     await setup_integration(hass, mock_config_entry)
 
     mock_scorpiontrack_client.async_get_share.return_value = replace(
@@ -212,9 +212,7 @@ async def test_removed_vehicle_makes_sensor_unavailable(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get(entity_id)
-    assert state is not None
-    assert state.state == STATE_UNAVAILABLE
+    assert hass.states.get(entity_id) is None
 
 
 @pytest.mark.parametrize(

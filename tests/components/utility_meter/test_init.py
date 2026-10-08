@@ -598,7 +598,7 @@ async def test_async_handle_source_entity_changes_source_entity_removed(
     assert set(events) == expected_entities
 
     sensor_device = device_registry.async_get(sensor_device.id)
-    assert utility_meter_config_entry.entry_id not in sensor_device.config_entries
+    assert sensor_device.config_entry_id != utility_meter_config_entry.entry_id
 
     # Remove the source device, this removes the source sensor
     with patch(
@@ -669,7 +669,7 @@ async def test_async_handle_source_entity_changes_source_entity_removed_shared_d
     assert set(events) == expected_entities
 
     sensor_device = device_registry.async_get(sensor_device.id)
-    assert utility_meter_config_entry.entry_id not in sensor_device.config_entries
+    assert sensor_device.config_entry_id != utility_meter_config_entry.entry_id
 
     # Remove the source sensor
     with patch(
@@ -693,7 +693,7 @@ async def test_async_handle_source_entity_changes_source_entity_removed_shared_d
     # config entry
     sensor_device = device_registry.async_get(sensor_device.id)
     assert sensor_device is not None
-    assert utility_meter_config_entry.entry_id not in sensor_device.config_entries
+    assert sensor_device.config_entry_id != utility_meter_config_entry.entry_id
 
     # Check that the utility_meter config entry is not removed
     assert utility_meter_config_entry.entry_id in hass.config_entries.async_entry_ids()
@@ -743,7 +743,7 @@ async def test_async_handle_source_entity_changes_source_entity_removed_from_dev
     assert set(events) == expected_entities
 
     sensor_device = device_registry.async_get(sensor_device.id)
-    assert utility_meter_config_entry.entry_id not in sensor_device.config_entries
+    assert sensor_device.config_entry_id != utility_meter_config_entry.entry_id
 
     # Remove the source sensor from the device
     with patch(
@@ -766,7 +766,7 @@ async def test_async_handle_source_entity_changes_source_entity_removed_from_dev
 
     # Check that the utility_meter config entry is not in the device
     sensor_device = device_registry.async_get(sensor_device.id)
-    assert utility_meter_config_entry.entry_id not in sensor_device.config_entries
+    assert sensor_device.config_entry_id != utility_meter_config_entry.entry_id
 
     # Check that the utility_meter config entry is not removed
     assert utility_meter_config_entry.entry_id in hass.config_entries.async_entry_ids()
@@ -822,9 +822,9 @@ async def test_async_handle_source_entity_changes_source_entity_moved_other_devi
     assert set(events) == expected_entities
 
     sensor_device = device_registry.async_get(sensor_device.id)
-    assert utility_meter_config_entry.entry_id not in sensor_device.config_entries
+    assert sensor_device.config_entry_id != utility_meter_config_entry.entry_id
     sensor_device_2 = device_registry.async_get(sensor_device_2.id)
-    assert utility_meter_config_entry.entry_id not in sensor_device_2.config_entries
+    assert sensor_device_2.config_entry_id != utility_meter_config_entry.entry_id
 
     # Move the source sensor to another device
     with patch(
@@ -847,9 +847,9 @@ async def test_async_handle_source_entity_changes_source_entity_moved_other_devi
 
     # Check that the derivative config entry is not in any of the devices
     sensor_device = device_registry.async_get(sensor_device.id)
-    assert utility_meter_config_entry.entry_id not in sensor_device.config_entries
+    assert sensor_device.config_entry_id != utility_meter_config_entry.entry_id
     sensor_device_2 = device_registry.async_get(sensor_device_2.id)
-    assert utility_meter_config_entry.entry_id not in sensor_device_2.config_entries
+    assert sensor_device_2.config_entry_id != utility_meter_config_entry.entry_id
 
     # Check that the utility_meter config entry is not removed
     assert utility_meter_config_entry.entry_id in hass.config_entries.async_entry_ids()
@@ -899,7 +899,7 @@ async def test_async_handle_source_entity_new_entity_id(
     assert set(events) == expected_entities
 
     sensor_device = device_registry.async_get(sensor_device.id)
-    assert utility_meter_config_entry.entry_id not in sensor_device.config_entries
+    assert sensor_device.config_entry_id != utility_meter_config_entry.entry_id
 
     # Change the source entity's entity ID
     with patch(
@@ -917,7 +917,7 @@ async def test_async_handle_source_entity_new_entity_id(
 
     # Check that the helper config is not in the device
     sensor_device = device_registry.async_get(sensor_device.id)
-    assert utility_meter_config_entry.entry_id not in sensor_device.config_entries
+    assert sensor_device.config_entry_id != utility_meter_config_entry.entry_id
 
     # Check that the utility_meter config entry is not removed
     assert utility_meter_config_entry.entry_id in hass.config_entries.async_entry_ids()
@@ -979,7 +979,7 @@ async def test_migration_2_1(
     # Check that the helper config entry is not in the device and the helper
     # entities are linked to the source device
     sensor_device = device_registry.async_get(sensor_device.id)
-    assert utility_meter_config_entry.entry_id not in sensor_device.config_entries
+    assert sensor_device.config_entry_id != utility_meter_config_entry.entry_id
     entities = set()
     for (
         utility_meter_entity

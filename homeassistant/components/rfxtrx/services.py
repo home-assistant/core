@@ -3,7 +3,7 @@
 
 from typing import Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -17,12 +17,12 @@ def _bytearray_string(data: Any) -> bytearray:
     try:
         return bytearray.fromhex(val)
     except ValueError as err:
-        raise vol.Invalid(
+        raise probatio.Invalid(
             "Data must be a hex string with multiple of two characters"
         ) from err
 
 
-SERVICE_SEND_SCHEMA = vol.Schema({ATTR_EVENT: _bytearray_string})
+SERVICE_SEND_SCHEMA = probatio.Schema({ATTR_EVENT: _bytearray_string})
 
 
 @callback

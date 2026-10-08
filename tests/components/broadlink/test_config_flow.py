@@ -31,12 +31,13 @@ def broadlink_setup_fixture():
         yield
 
 
-async def test_flow_user_works(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize("device_name", ["Living Room", "Study"])
+async def test_flow_user_works(hass: HomeAssistant, device_name: str) -> None:
     """Test a config flow initiated by the user.
 
     Best case scenario with no errors or locks.
     """
-    device = get_device("Living Room")
+    device = get_device(device_name)
     mock_api = device.get_mock_api()
 
     result = await hass.config_entries.flow.async_init(
@@ -355,11 +356,16 @@ async def test_flow_reset_works(hass: HomeAssistant) -> None:
             {"host": device.host, "timeout": device.timeout},
         )
 
-    with patch(DEVICE_HELLO, return_value=device.get_mock_api()):
+    unlocked_api = device.get_mock_api()
+    with patch(DEVICE_HELLO, return_value=unlocked_api):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {"host": device.host, "timeout": device.timeout},
         )
+
+    # The first probe opened its endpoint in auth(); replacing it closes it.
+    assert mock_api.aclose.await_count == 1
+    assert unlocked_api.aclose.await_count == 0
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -369,6 +375,8 @@ async def test_flow_reset_works(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == device.name
     assert result["data"] == device.get_entry_data()
+    await hass.async_block_till_done()
+    assert unlocked_api.aclose.await_count == 1
 
 
 async def test_flow_unlock_works(hass: HomeAssistant) -> None:

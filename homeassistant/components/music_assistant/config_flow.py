@@ -13,7 +13,7 @@ from music_assistant_client.exceptions import (
 )
 from music_assistant_models.api import ServerInfoMessage
 from music_assistant_models.errors import AuthenticationFailed, InvalidToken
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
@@ -37,8 +37,10 @@ DEFAULT_TITLE = "Music Assistant"
 DEFAULT_URL = "http://mass.local:8095"
 
 
-STEP_USER_SCHEMA = vol.Schema({vol.Required(CONF_URL): str})
-STEP_AUTH_TOKEN_SCHEMA = vol.Schema({vol.Required(CONF_TOKEN): str})
+STEP_USER_SCHEMA = probatio.Schema({probatio.Required(CONF_URL): str})
+STEP_AUTH_TOKEN_SCHEMA = probatio.Schema(
+    {probatio.Required(probatio.Secret(CONF_TOKEN)): str}
+)
 
 
 def _parse_zeroconf_server_info(properties: dict[str, str]) -> ServerInfoMessage:
@@ -178,6 +180,10 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
                     ConfigEntryState.SETUP_IN_PROGRESS,
                 ):
                     self.hass.config_entries.async_schedule_reload(entry.entry_id)
+            elif entry.state is ConfigEntryState.SETUP_RETRY:
+                # The server answered, so it is back online: retry setup now
+                # instead of waiting for the next backoff interval
+                self.hass.config_entries.async_schedule_reload(entry.entry_id)
 
             # Abort since entry already exists
             return self.async_abort(reason="already_configured")
@@ -218,6 +224,12 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
             # Ignore servers running as Home Assistant app
             # (they should be discovered through hassio discovery instead)
             if server_info.homeassistant_addon:
+                # The app server announcing itself means it is online, so an
+                # existing entry waiting to retry setup is reloaded now
+                await self.async_set_unique_id(
+                    server_info.server_id, raise_on_progress=False
+                )
+                self._abort_if_unique_id_configured()
                 LOGGER.debug("Ignoring HA app server in zeroconf discovery")
                 return self.async_abort(reason="already_discovered_addon")
 
@@ -384,7 +396,9 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="auth_manual",
-            data_schema=vol.Schema({vol.Required(CONF_TOKEN): str}),
+            data_schema=probatio.Schema(
+                {probatio.Required(probatio.Secret(CONF_TOKEN)): str}
+            ),
             description_placeholders={"url": self.url},
             errors=errors,
         )

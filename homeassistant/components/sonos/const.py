@@ -213,3 +213,6 @@ SCAN_INTERVAL = datetime.timedelta(seconds=10)
 DISCOVERY_INTERVAL = datetime.timedelta(seconds=60)
 SUBSCRIPTION_TIMEOUT = 1200
 LONG_SERVICE_TIMEOUT = 30.0
+
+# Same as the Plex integration, which is only imported when used
+PLEX_URI_SCHEME = "plex://"

@@ -6,11 +6,8 @@ from datetime import timedelta
 import logging
 from typing import Any, override
 
-import voluptuous as vol
-
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -40,9 +37,6 @@ from .const import (
     KEY_ZONE_ID,
     KEY_ZONE_NUMBER,
     SCHEDULE_TYPE_FIXED,
-    SCHEDULE_TYPE_FLEX,
-    SERVICE_SET_ZONE_MOISTURE,
-    SERVICE_START_WATERING,
     SIGNAL_RACHIO_CONTROLLER_UPDATE,
     SIGNAL_RACHIO_RAIN_DELAY_UPDATE,
     SIGNAL_RACHIO_SCHEDULE_UPDATE,
@@ -71,7 +65,6 @@ from .webhooks import (
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_DURATION = "duration"
-ATTR_PERCENT = "percent"
 ATTR_SCHEDULE_SUMMARY = "Summary"
 ATTR_SCHEDULE_ENABLED = "Enabled"
 ATTR_SCHEDULE_DURATION = "Duration"
@@ -90,30 +83,8 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Rachio switches."""
-    has_flex_sched = False
     entities = await hass.async_add_executor_job(_create_entities, hass, config_entry)
-    for entity in entities:
-        if isinstance(entity, RachioSchedule) and entity.type == SCHEDULE_TYPE_FLEX:
-            has_flex_sched = True
-
     async_add_entities(entities)
-
-    platform = entity_platform.async_get_current_platform()
-    platform.async_register_entity_service(
-        SERVICE_START_WATERING,
-        {
-            vol.Optional(ATTR_DURATION): cv.positive_int,
-        },
-        "turn_on",
-    )
-
-    if has_flex_sched:
-        platform = entity_platform.async_get_current_platform()
-        platform.async_register_entity_service(
-            SERVICE_SET_ZONE_MOISTURE,
-            {vol.Required(ATTR_PERCENT): cv.positive_int},
-            "set_moisture_percent",
-        )
 
 
 def _create_entities(

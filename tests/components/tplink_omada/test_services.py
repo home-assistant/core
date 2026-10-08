@@ -2,10 +2,10 @@
 
 from unittest.mock import MagicMock
 
+import probatio
 import pytest
 from tplink_omada_client import OmadaClientSettings
 from tplink_omada_client.exceptions import OmadaClientException, RequestFailed
-import voluptuous as vol
 
 from homeassistant.components.tplink_omada.const import DOMAIN
 from homeassistant.components.tplink_omada.services import async_setup_services
@@ -402,7 +402,7 @@ async def test_service_set_client_name_empty_name_rejected(
     mac = "aa:bb:cc:dd:ee:ff"
     device_id = _add_client_device(hass, mock_config_entry, mac)
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             DOMAIN,
             "set_client_name",

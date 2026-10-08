@@ -92,6 +92,8 @@ def mock_lametric(device_fixture: str) -> Generator[MagicMock]:
         lametric.device.return_value = Device.from_json(
             load_fixture(f"{device_fixture}.json", DOMAIN)
         )
+        # The device answers a display write with its display state.
+        lametric.display.return_value = lametric.device.return_value.display
         yield lametric
 
 
