@@ -731,3 +731,10 @@ async def test_renamed_switch_handles_events(
     await hass.async_block_till_done()
 
     assert hass.states.get(f"{DOMAIN}.renamed").state == STATE_ON
+
+    # Removing the renamed switch unregisters it under its new entity_id
+    entity_registry.async_remove(f"{DOMAIN}.renamed")
+    await hass.async_block_till_done()
+
+    assert hass.data[DATA_ENTITY_LOOKUP][EVENT_KEY_COMMAND] == {}
+    assert hass.data[DATA_ENTITY_GROUP_LOOKUP][EVENT_KEY_COMMAND] == {}

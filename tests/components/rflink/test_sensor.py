@@ -803,3 +803,9 @@ async def test_renamed_sensor_handles_events(
     await hass.async_block_till_done()
 
     assert hass.states.get("sensor.renamed").state == "65"
+
+    # Removing the renamed sensor unregisters it under its new entity_id
+    entity_registry.async_remove("sensor.renamed")
+    await hass.async_block_till_done()
+
+    assert hass.data[DATA_ENTITY_LOOKUP][EVENT_KEY_SENSOR] == {}

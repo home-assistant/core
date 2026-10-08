@@ -150,13 +150,12 @@ class RflinkDevice(Entity):
         self, lookup: defaultdict[str, list[str]], event_id: str
     ) -> None:
         """Route events for event_id to this entity until it is removed."""
-        entity_id = self.entity_id
-        lookup[event_id].append(entity_id)
+        lookup[event_id].append(self.entity_id)
 
         @callback
         def _async_unregister() -> None:
             entity_ids = lookup[event_id]
-            entity_ids.remove(entity_id)
+            entity_ids.remove(self.entity_id)
             if not entity_ids:
                 del lookup[event_id]
 
