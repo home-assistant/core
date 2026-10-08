@@ -1297,17 +1297,20 @@ class ConfigEntry[_DataT = Any]:
             )
             return False
 
-        migration_result = await component.async_migrate_entry(hass, self)  # type: ignore[func-returns-value]
+        migration_result: bool | None = await component.async_migrate_entry(hass, self)  # type: ignore[func-returns-value]
         # Custom components can continue to return a boolean
         # See https://github.com/home-assistant/architecture/discussions/1463
         if migration_result is None:
-            result = True
-        else:
-            result = migration_result  # type: ignore[unreachable]
-        if result:
+            migration_result = True
+        elif not isinstance(migration_result, bool):
+            self.logger.error(  # type: ignore[unreachable]
+                "%s.async_migrate_entry did not return None or a boolean", self.domain
+            )
+            return False
+        if migration_result:
             hass.config_entries._async_schedule_save()  # noqa: SLF001
 
-        return result
+        return migration_result
 
     def add_update_listener(self, listener: UpdateListenerType) -> CALLBACK_TYPE:
         """Listen for when entry is updated.
