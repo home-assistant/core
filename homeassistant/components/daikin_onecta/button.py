@@ -67,3 +67,5 @@ class DaikinRefreshButton(DaikinEntity, ButtonEntity):
     async def async_press(self) -> None:
         """Request an immediate coordinator refresh."""
         await self.coordinator.async_refresh()
+        if not self.coordinator.last_update_success:
+            self._raise_command_failed("refresh_failed")

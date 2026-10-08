@@ -28,8 +28,8 @@ rules:
   test-before-setup: done
   unique-config-entry: done
   action-exceptions:
-    status: todo
-    comment: The refresh button must report refresh failures to the caller.
+    status: done
+    comment: The refresh button reports coordinator failures as a translated error.
   config-entry-unloading: done
   docs-configuration-parameters: done
   docs-installation-parameters: done

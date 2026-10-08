@@ -163,6 +163,32 @@ async def test_refresh_button_requests_coordinator_refresh(
     coordinator.async_refresh.assert_awaited_once()
 
 
+async def test_refresh_button_reports_failed_refresh(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """A failed cloud refresh is reported to the service caller."""
+    await _async_setup_fixture(hass, config_entry, "dry")
+    coordinator = config_entry.runtime_data
+
+    async def fail_refresh() -> None:
+        coordinator.last_update_success = False
+
+    coordinator.async_refresh = AsyncMock(side_effect=fail_refresh)
+
+    with pytest.raises(HomeAssistantError) as err:
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            SERVICE_PRESS,
+            {ATTR_ENTITY_ID: "button.lounge_refresh"},
+            blocking=True,
+        )
+
+    assert err.value.translation_domain == "daikin_onecta"
+    assert err.value.translation_key == "refresh_failed"
+    assert err.value.translation_placeholders == {"device": "Lounge"}
+    coordinator.async_refresh.assert_awaited_once()
+
+
 async def test_switch_service_updates_cached_state(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:

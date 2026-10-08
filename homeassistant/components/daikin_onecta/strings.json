@@ -377,6 +377,9 @@
     "rate_limit_exceeded": {
       "message": "Daikin API rate limit exceeded"
     },
+    "refresh_failed": {
+      "message": "Failed to refresh {device}"
+    },
     "schedule_select_failed": {
       "message": "Failed to select schedule for {device}"
     },
