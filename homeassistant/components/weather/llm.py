@@ -212,8 +212,14 @@ class GetForecastTool(Tool):
                 return_response=True,
             )
         except HomeAssistantError:
-            # Availability was already checked above, so this is a genuine
-            # provider/validation failure, not an unavailable entity.
+            # The entity-service resolver raises when the entity becomes
+            # unavailable between the check above and this call, so recheck
+            # its current state rather than assuming a provider failure.
+            current_state = hass.states.get(weather_state.entity_id)
+            if current_state is None or current_state.state == STATE_UNAVAILABLE:
+                return ToolResult(
+                    data={"error": "Weather entity is unavailable"}, error=True
+                )
             return ToolResult(
                 data={"error": "Failed to retrieve weather forecast"}, error=True
             )

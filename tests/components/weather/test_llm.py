@@ -265,6 +265,46 @@ async def test_get_forecast_tool_service_call_failure(hass: HomeAssistant) -> No
     assert response.data == {"error": "Failed to retrieve weather forecast"}
 
 
+async def test_get_forecast_tool_entity_becomes_unavailable_during_service_call(
+    hass: HomeAssistant,
+) -> None:
+    """Test a race where the entity goes unavailable after the initial check."""
+
+    class MockWeatherRace(MockWeatherTest):
+        """Mock weather entity that goes unavailable mid-service-call."""
+
+        async def async_forecast_daily(self) -> list[Forecast] | None:
+            # Simulate the entity becoming unavailable between the
+            # availability check in async_call and this forecast request,
+            # which makes the entity-service resolver raise instead of
+            # returning a response for the only targeted entity.
+            self._attr_available = False
+            self.async_write_ha_state()
+            raise HomeAssistantError(
+                "Service call requested response data but did not match any entities"
+            )
+
+    entity = await create_entity(
+        hass,
+        MockWeatherRace,
+        None,
+        supported_features=WeatherEntityFeature.FORECAST_DAILY,
+    )
+    assert isinstance(entity, MockWeatherRace)
+    async_expose_entity(hass, "conversation", entity.entity_id, True)
+    result = weather_llm.async_get_tools(hass, _llm_context(), "assist")
+    assert result is not None
+    tool = result.tools[0]
+
+    response = await tool.async_call(
+        hass,
+        llm_helper.ToolInput("weather__get_forecast", _tool_args("today")),
+        _llm_context(),
+    )
+    assert response.error
+    assert response.data == {"error": "Weather entity is unavailable"}
+
+
 async def test_get_forecast_tool_not_offered_without_forecast_support(
     hass: HomeAssistant,
 ) -> None:
