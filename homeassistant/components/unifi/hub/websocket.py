@@ -31,11 +31,12 @@ class UnifiWebsocket:
 
         self.ws_task: asyncio.Task | None = None
         self._cancel_websocket_check: CALLBACK_TYPE | None = None
+        self.running = False
 
     @callback
     def start(self) -> None:
         """Start websocket handler."""
-        self.connection.set_reconnect_callback(self.start_websocket)
+        self.running = True
         self._cancel_websocket_check = async_track_time_interval(
             self.hass, self._async_watch_websocket, CHECK_WEBSOCKET_INTERVAL
         )
@@ -44,11 +45,10 @@ class UnifiWebsocket:
     @callback
     def stop(self) -> None:
         """Stop websocket handler."""
+        self.running = False
         if self._cancel_websocket_check:
             self._cancel_websocket_check()
             self._cancel_websocket_check = None
-
-        self.connection.set_reconnect_callback(None)
 
         if self.ws_task is not None:
             self.ws_task.cancel()

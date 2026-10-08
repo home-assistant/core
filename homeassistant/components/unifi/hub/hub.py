@@ -45,10 +45,13 @@ class UnifiHub:
         self.hass = hass
         self.api = api
         self.config = UnifiConfig.from_config_entry(config_entry)
-        self.connection = UnifiConnectionManager(hass, api, self.signal_reachable)
+        self.connection = UnifiConnectionManager(
+            hass, api, self.signal_reachable, config_entry
+        )
         self.websocket = UnifiWebsocket(hass, api, self.connection)
         self.entity_loader = UnifiEntityLoader(self)
         self._entity_helper = UnifiEntityHelper(hass, api)
+        self.connection.set_recovery_callback(self._async_connection_recovered)
 
         self.site = config_entry.data[CONF_SITE_ID]
         self.is_admin = False
@@ -57,6 +60,13 @@ class UnifiHub:
     def available(self) -> bool:
         """Shared UniFi session state."""
         return self.connection.available
+
+    @callback
+    def _async_connection_recovered(self) -> None:
+        """Restart push updates and refresh polled data after app recovery."""
+        if self.websocket.running:
+            self.websocket.start_websocket()
+        self.entity_loader.refresh_coordinators()
 
     @property
     def signal_heartbeat_missed(self) -> str:

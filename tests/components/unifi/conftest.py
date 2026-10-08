@@ -406,6 +406,11 @@ class WebsocketStateManager(asyncio.Event):
             json={"data": "login successful", "meta": {"rc": "ok"}},
             headers={"content-type": CONTENT_TYPE_JSON},
         )
+        self.aioclient_mock.get(
+            f"https://{DEFAULT_HOST}:1234/api/s/{DEFAULT_SITE}/stat/sysinfo",
+            json={"meta": {"rc": "OK"}, "data": [{"version": "7.4.162"}]},
+            headers={"content-type": CONTENT_TYPE_JSON},
+        )
 
         if not fail:
             self.clear()

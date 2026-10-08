@@ -10,6 +10,7 @@ from datetime import datetime, timedelta
 from functools import partial
 from typing import TYPE_CHECKING, Any
 
+import aiounifi
 from aiounifi.interfaces.api_handlers import APIHandler, ItemEvent
 from aiounifi.models.api import ApiItem
 from aiounifi.models.client import Client
@@ -40,7 +41,7 @@ class UnifiEntityLoader:
         self._startup_only_api_updaters = (
             hub.api.clients_all.update,
             hub.api.sites.update,
-            hub.api.system_information.update,
+            self._async_update_system_information,
         )
         self.wireless_clients = hub.hass.data[UNIFI_WIRELESS_CLIENTS]
 
@@ -103,6 +104,13 @@ class UnifiEntityLoader:
         self._restore_inactive_clients()
         self.wireless_clients.update_clients(set(self.hub.api.clients.values()))
 
+    @callback
+    def refresh_coordinators(self) -> None:
+        """Refresh registered coordinators after a connection is restored."""
+        for coordinator in self._data_coordinators.values():
+            if coordinator.update_interval is not None:
+                self.hub.hass.async_create_task(coordinator.async_refresh())
+
     async def _refresh_data(
         self, updaters: Sequence[Callable[[], Coroutine[Any, Any, None]]]
     ) -> None:
@@ -113,6 +121,14 @@ class UnifiEntityLoader:
         for result in results:
             if result is not None:
                 LOGGER.warning("Exception on update %s", result)
+
+    async def _async_update_system_information(self) -> None:
+        """Refresh required Network application data and report readiness failures."""
+        try:
+            await self.hub.api.system_information.update()
+        except (TimeoutError, aiounifi.AiounifiException) as err:
+            self.hub.connection.report_failure(err)
+            raise
 
     @callback
     def _restore_inactive_clients(self) -> None:

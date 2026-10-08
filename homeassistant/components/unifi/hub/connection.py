@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import Callable
+from typing import TYPE_CHECKING
 
 import aiounifi
 
@@ -11,35 +12,46 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from ..const import LOGGER
 from .backoff import BackoffPolicy
 
+if TYPE_CHECKING:
+    from .. import UnifiConfigEntry
+
 
 class UnifiConnectionManager:
     """Own the API session state independently of its update transports."""
 
     def __init__(
-        self, hass: HomeAssistant, api: aiounifi.Controller, signal: str
+        self,
+        hass: HomeAssistant,
+        api: aiounifi.Controller,
+        signal: str,
+        config_entry: UnifiConfigEntry,
     ) -> None:
         """Initialize the manager."""
         self.hass = hass
         self.api = api
         self.signal = signal
+        self.config_entry = config_entry
         self.available = True
 
         self._backoff = BackoffPolicy()
         self._attempt = 0
         self._retry_handle: asyncio.TimerHandle | None = None
         self._reconnect_task: asyncio.Task[None] | None = None
-        self._reconnect_callback: Callable[[], None] | None = None
+        self._recovery_callback: Callable[[], None] | None = None
+        self._reauth_required = False
 
     @callback
-    def set_reconnect_callback(self, callback_fn: Callable[[], None] | None) -> None:
-        """Set the callback used to restart push transports after login."""
-        self._reconnect_callback = callback_fn
+    def set_recovery_callback(self, callback_fn: Callable[[], None] | None) -> None:
+        """Set the callback run after the Network application is ready."""
+        self._recovery_callback = callback_fn
 
     @callback
     def report_failure(
         self, err: Exception | None = None, *, log: bool = False
     ) -> None:
         """Mark the shared session unavailable and schedule one retry."""
+        if self._reauth_required:
+            return
         if self._retry_handle is not None or (
             self._reconnect_task is not None and not self._reconnect_task.done()
         ):
@@ -72,6 +84,10 @@ class UnifiConnectionManager:
             try:
                 async with asyncio.timeout(5):
                     await self.api.login()
+            except aiounifi.LoginRequired, aiounifi.Unauthorized:
+                self._reconnect_task = None
+                self._reauth_required = True
+                self.config_entry.async_start_reauth(self.hass)
             except (
                 TimeoutError,
                 aiounifi.BadGateway,
@@ -79,14 +95,26 @@ class UnifiConnectionManager:
                 aiounifi.AiounifiException,
             ) as err:
                 self._reconnect_task = None
-                LOGGER.debug("Schedule reconnect to UniFi Network '%s'", err)
+                LOGGER.debug("UniFi Network is not ready after login: %s", err)
                 self._schedule_retry()
             else:
+                try:
+                    async with asyncio.timeout(5):
+                        await self.api.system_information.update()
+                except (
+                    TimeoutError,
+                    aiounifi.AiounifiException,
+                ) as err:
+                    self._reconnect_task = None
+                    LOGGER.debug("UniFi Network is not ready after login: %s", err)
+                    self._schedule_retry()
+                    return
+
                 self._reconnect_task = None
                 self._attempt = 0
                 self._set_available(True)
-                if self._reconnect_callback is not None:
-                    self._reconnect_callback()
+                if self._recovery_callback is not None:
+                    self._recovery_callback()
 
         self._reconnect_task = self.hass.async_create_task(_reconnect())
 
@@ -111,7 +139,7 @@ class UnifiConnectionManager:
         if self._reconnect_task is not None:
             self._reconnect_task.cancel()
             self._reconnect_task = None
-        self._reconnect_callback = None
+        self._recovery_callback = None
 
     async def stop_and_wait(self) -> None:
         """Cancel and await an in-flight login attempt."""
