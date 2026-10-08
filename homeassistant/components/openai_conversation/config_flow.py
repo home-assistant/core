@@ -3,7 +3,7 @@
 from collections.abc import Mapping
 import json
 import logging
-from typing import Any, cast, override
+from typing import Any, override
 
 import openai
 import probatio
@@ -118,8 +118,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
     """
     client = openai.AsyncOpenAI(
         api_key=data[CONF_API_KEY],
-        # Legacy HTTPX clients are supported at runtime only.
-        http_client=cast(Any, get_async_client(hass)),
+        http_client=get_async_client(hass),
     )
     await client.models.list(timeout=10.0)
 
@@ -669,7 +668,7 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
         if zone_home is not None:
             client = openai.AsyncOpenAI(
                 api_key=self._get_entry().data[CONF_API_KEY],
-                http_client=cast(Any, get_async_client(self.hass)),
+                http_client=get_async_client(self.hass),
             )
             location_schema = probatio.Schema(
                 {

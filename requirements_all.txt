@@ -553,7 +553,7 @@ anova-wifi==1.0.1
 anthemav==1.4.2
 
 # homeassistant.components.anthropic
-anthropic==0.125.0
+anthropic==1.12.0
 
 # homeassistant.components.mcp_server
 anyio==4.14.2
@@ -888,7 +888,7 @@ dropmqttapi==1.0.3
 dsmr-parser==1.11.1
 
 # homeassistant.components.dwd_weather_warnings
-dwdwfsapi==1.0.7
+dwdwfsapi==1.1.0
 
 # homeassistant.components.dynalite
 dynalite-devices==0.1.47
@@ -3118,13 +3118,13 @@ smart-meter-texas==0.5.6
 snapcast==2.3.8
 
 # homeassistant.components.sonos
-soco==0.31.2
+soco==0.31.5
 
 # homeassistant.components.sofar
 sofar-modbus==0.17.0
 
 # homeassistant.components.solaredge
-solaredge-web==0.4.0
+solaredge-web==0.5.0
 
 # homeassistant.components.solaredge_modbus
 solaredged==0.5.0
