@@ -353,3 +353,118 @@ async def test_temperature_unit_conversion(
     mock_manager.send_commands.assert_called_once_with(
         mock_device.id, [{"code": "temp_set", "value": expected_set_value}]
     )
+
+
+@pytest.mark.parametrize("mock_device_code", ["kt_5wnlzekkstwcdsvm"])
+@pytest.mark.parametrize("unit_dp", ["c_f", "temp_unit_convert"])
+@pytest.mark.parametrize(
+    (
+        "units",
+        "expected_current",
+        "expected_target",
+        "service_temperature",
+        "expected_set",
+    ),
+    [
+        pytest.param(US_CUSTOMARY_SYSTEM, 70, 72, 74, 74, id="us"),
+        pytest.param(METRIC_SYSTEM, 21.1, 22.2, 22, 72, id="metric"),
+    ],
+)
+async def test_fahrenheit_thermostat_unit_switch(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+    unit_dp: str,
+    units: UnitSystem,
+    expected_current: float,
+    expected_target: float,
+    service_temperature: float,
+    expected_set: int,
+) -> None:
+    """Fahrenheit numbers must not be converted from Celsius a second time.
+
+    The schema unit stays Celsius, which is what Tuya publishes for many HVAC
+    thermostats. The live ``c_f`` / ``temp_unit_convert`` datapoint says the
+    stored current (70) and target (72) are already Fahrenheit.
+    """
+    hass.config.units = units
+    _override_temperature_unit(mock_device, temp_set="℃", temp_current="℃")
+    mock_device.status["temp_current"] = 70
+    mock_device.status["temp_set"] = 72
+    mock_device.status[unit_dp] = "f"
+
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+
+    state = hass.states.get("climate.air_conditioner")
+    assert state is not None
+    assert state.attributes[ATTR_CURRENT_TEMPERATURE] == expected_current
+    assert state.attributes[ATTR_TEMPERATURE] == expected_target
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {
+            ATTR_ENTITY_ID: "climate.air_conditioner",
+            ATTR_TEMPERATURE: service_temperature,
+        },
+        blocking=True,
+    )
+    mock_manager.send_commands.assert_called_once_with(
+        mock_device.id, [{"code": "temp_set", "value": expected_set}]
+    )
+
+
+@pytest.mark.parametrize("mock_device_code", ["kt_ibmmirhhq62mmf1g"])
+@pytest.mark.parametrize(
+    (
+        "units",
+        "expected_current",
+        "expected_target",
+        "service_temperature",
+        "expected_set",
+    ),
+    [
+        pytest.param(US_CUSTOMARY_SYSTEM, 79, 61, 70, 70, id="us"),
+        pytest.param(METRIC_SYSTEM, 26.0, 16.1, 20, 68, id="metric"),
+    ],
+)
+async def test_fahrenheit_setpoint_uses_dedicated_dp(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+    units: UnitSystem,
+    expected_current: float,
+    expected_target: float,
+    service_temperature: float,
+    expected_set: int,
+) -> None:
+    """Use temp_set_f when the device unit switch is Fahrenheit.
+
+    The Celsius temp_set value (750, scale 1 → 75°C) would display as 167°F.
+    temp_set_f is the live 61°F setpoint. Current temperature is only reported
+    in Celsius and is converted once.
+    """
+    hass.config.units = units
+    mock_device.status["temp_unit_convert"] = "f"
+
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+
+    state = hass.states.get("climate.master_bedroom_ac")
+    assert state is not None
+    assert state.attributes[ATTR_CURRENT_TEMPERATURE] == expected_current
+    assert state.attributes[ATTR_TEMPERATURE] == expected_target
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {
+            ATTR_ENTITY_ID: "climate.master_bedroom_ac",
+            ATTR_TEMPERATURE: service_temperature,
+        },
+        blocking=True,
+    )
+    mock_manager.send_commands.assert_called_once_with(
+        mock_device.id, [{"code": "temp_set_f", "value": expected_set}]
+    )

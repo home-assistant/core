@@ -9,10 +9,17 @@ from homeassistant.helpers.device_registry import DeviceInfo
 
 from .const import CELSIUS_ALIASES, DOMAIN, FAHRENHEIT_ALIASES, DPCode
 
-_TEMP_UNIT_CONVERT_MAPPING = {
-    "c": UnitOfTemperature.CELSIUS,
-    "f": UnitOfTemperature.FAHRENHEIT,
-}
+
+def _parse_reported_temperature_unit(raw: object) -> UnitOfTemperature | None:
+    """Map a Tuya unit token to a Home Assistant temperature unit."""
+    if not isinstance(raw, str):
+        return None
+    token = raw.strip().lower()
+    if token in CELSIUS_ALIASES:
+        return UnitOfTemperature.CELSIUS
+    if token in FAHRENHEIT_ALIASES:
+        return UnitOfTemperature.FAHRENHEIT
+    return None
 
 
 def get_temperature_unit(
@@ -22,18 +29,20 @@ def get_temperature_unit(
     if not dpcode_uom:
         return get_device_temp_unit_convert(device)
 
-    dpcode_uom = dpcode_uom.lower()
-    if dpcode_uom in CELSIUS_ALIASES:
-        return UnitOfTemperature.CELSIUS
-    if dpcode_uom in FAHRENHEIT_ALIASES:
-        return UnitOfTemperature.FAHRENHEIT
-    return None
+    return _parse_reported_temperature_unit(dpcode_uom)
 
 
 def get_device_temp_unit_convert(device: CustomerDevice) -> UnitOfTemperature | None:
-    """Return the temperature unit from TEMP_UNIT_CONVERT, or None if unrecognised."""
-    if temp_unit_convert := device.status.get(DPCode.TEMP_UNIT_CONVERT):
-        return _TEMP_UNIT_CONVERT_MAPPING.get(temp_unit_convert)
+    """Return the live temperature unit from c_f or temp_unit_convert.
+
+    ``c_f`` is checked first, matching the historical Tuya climate behavior.
+    Unrecognised values are ignored so a later datapoint can still match.
+    """
+    for dp_code in (DPCode.C_F, DPCode.TEMP_UNIT_CONVERT):
+        if (raw := device.status.get(dp_code)) is None:
+            continue
+        if (unit := _parse_reported_temperature_unit(raw)) is not None:
+            return unit
     return None
 
 
