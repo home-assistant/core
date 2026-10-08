@@ -165,29 +165,35 @@ async def test_sensor_state_change_pushes_data(
     # Vehicle SoC update
     hass.states.async_set("sensor.car_battery", "80")
     await hass.async_block_till_done()
-    mock_charger.soc.assert_called_with(battery_level=80)
+    mock_charger.soc.assert_called_with(
+        battery_level=80, battery_range=None, time_to_full=None
+    )
 
-    # Vehicle range update
+    # Vehicle range update (now includes previous or current SoC if set)
     hass.states.async_set("sensor.car_range", "220")
     await hass.async_block_till_done()
-    mock_charger.soc.assert_called_with(battery_range=220)
+    mock_charger.soc.assert_called_with(
+        battery_level=80, battery_range=220, time_to_full=None
+    )
 
-    # Vehicle ETA update
+    # Vehicle ETA update (now includes all three)
     hass.states.async_set("sensor.car_eta", "3600")
     await hass.async_block_till_done()
-    mock_charger.soc.assert_called_with(time_to_full=3600)
+    mock_charger.soc.assert_called_with(
+        battery_level=80, battery_range=220, time_to_full=3600
+    )
 
     # Home battery SoC update
     hass.states.async_set("sensor.home_battery_soc", "95")
     await hass.async_block_till_done()
-    mock_charger.home_battery.assert_called_with(soc=95)
+    mock_charger.home_battery.assert_called_with(soc=95, power=None)
 
-    # Home battery power update
+    # Home battery power update (now includes SoC as well)
     hass.states.async_set(
         "sensor.home_battery_power", "3200", {"unit_of_measurement": "W"}
     )
     await hass.async_block_till_done()
-    mock_charger.home_battery.assert_called_with(power=3200)
+    mock_charger.home_battery.assert_called_with(soc=95, power=3200)
 
     # Invalid / non-numeric states should not crash
     hass.states.async_set("sensor.grid_power", "unknown")

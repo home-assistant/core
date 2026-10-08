@@ -74,6 +74,16 @@ def _parse_power_state(state: State | None) -> int | None:
     return round(val)
 
 
+def _parse_int_state(state: State | None) -> int | None:
+    """Parse sensor state to integer."""
+    if not state or state.state in (None, "unavailable", "unknown", ""):
+        return None
+    try:
+        return round(float(state.state))
+    except ValueError, TypeError:
+        return None
+
+
 async def _handle_sensor_state_change(
     hass: HomeAssistant,
     entry: OpenEVSEConfigEntry,
@@ -96,13 +106,7 @@ async def _handle_sensor_state_change(
             await charger.self_production(grid=None, solar=solar, invert=False)
 
         elif changed_entity == options.get(CONF_VOLTAGE):
-            state = hass.states.get(changed_entity)
-            voltage: int | None = None
-            if state and state.state not in (None, "unavailable", "unknown", ""):
-                try:
-                    voltage = round(float(state.state))
-                except ValueError, TypeError:
-                    voltage = None
+            voltage = _parse_int_state(hass.states.get(changed_entity))
             await charger.grid_voltage(voltage=voltage)
 
         elif changed_entity == options.get(CONF_SHAPER):
@@ -110,49 +114,48 @@ async def _handle_sensor_state_change(
             if power is not None:
                 await charger.set_shaper_live_pwr(power=power)
 
-        elif changed_entity == options.get(CONF_VEHICLE_SOC):
-            state = hass.states.get(changed_entity)
-            soc: int | None = None
-            if state and state.state not in (None, "unavailable", "unknown", ""):
-                try:
-                    soc = round(float(state.state))
-                except ValueError, TypeError:
-                    soc = None
-            await charger.soc(battery_level=soc)
+        elif changed_entity in (
+            options.get(CONF_VEHICLE_SOC),
+            options.get(CONF_VEHICLE_RANGE),
+            options.get(CONF_VEHICLE_ETA),
+        ):
+            soc_sensor = options.get(CONF_VEHICLE_SOC)
+            range_sensor = options.get(CONF_VEHICLE_RANGE)
+            eta_sensor = options.get(CONF_VEHICLE_ETA)
 
-        elif changed_entity == options.get(CONF_VEHICLE_RANGE):
-            state = hass.states.get(changed_entity)
-            vrange: int | None = None
-            if state and state.state not in (None, "unavailable", "unknown", ""):
-                try:
-                    vrange = round(float(state.state))
-                except ValueError, TypeError:
-                    vrange = None
-            await charger.soc(battery_range=vrange)
+            soc = _parse_int_state(hass.states.get(soc_sensor)) if soc_sensor else None
+            vrange = (
+                _parse_int_state(hass.states.get(range_sensor))
+                if range_sensor
+                else None
+            )
+            eta = _parse_int_state(hass.states.get(eta_sensor)) if eta_sensor else None
 
-        elif changed_entity == options.get(CONF_VEHICLE_ETA):
-            state = hass.states.get(changed_entity)
-            eta: int | None = None
-            if state and state.state not in (None, "unavailable", "unknown", ""):
-                try:
-                    eta = round(float(state.state))
-                except ValueError, TypeError:
-                    eta = None
-            await charger.soc(time_to_full=eta)
+            await charger.soc(
+                battery_level=soc,
+                battery_range=vrange,
+                time_to_full=eta,
+            )
 
-        elif changed_entity == options.get(CONF_HOME_BATTERY_SOC):
-            state = hass.states.get(changed_entity)
-            hb_soc: int | None = None
-            if state and state.state not in (None, "unavailable", "unknown", ""):
-                try:
-                    hb_soc = round(float(state.state))
-                except ValueError, TypeError:
-                    hb_soc = None
-            await charger.home_battery(soc=hb_soc)
+        elif changed_entity in (
+            options.get(CONF_HOME_BATTERY_SOC),
+            options.get(CONF_HOME_BATTERY_POWER),
+        ):
+            hb_soc_sensor = options.get(CONF_HOME_BATTERY_SOC)
+            hb_power_sensor = options.get(CONF_HOME_BATTERY_POWER)
 
-        elif changed_entity == options.get(CONF_HOME_BATTERY_POWER):
-            hb_power = _parse_power_state(hass.states.get(changed_entity))
-            await charger.home_battery(power=hb_power)
+            hb_soc = (
+                _parse_int_state(hass.states.get(hb_soc_sensor))
+                if hb_soc_sensor
+                else None
+            )
+            hb_power = (
+                _parse_power_state(hass.states.get(hb_power_sensor))
+                if hb_power_sensor
+                else None
+            )
+
+            await charger.home_battery(soc=hb_soc, power=hb_power)
 
     except UnsupportedFeature:
         _LOGGER.debug(
