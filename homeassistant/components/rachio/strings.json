@@ -41,6 +41,14 @@
       }
     }
   },
+  "exceptions": {
+    "authentication_failed": {
+      "message": "Authentication with the Rachio API failed"
+    },
+    "no_devices_found": {
+      "message": "No Rachio devices found in the account"
+    }
+  },
   "options": {
     "step": {
       "init": {
