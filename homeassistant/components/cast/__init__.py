@@ -13,11 +13,15 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.integration_platform import LazyIntegrationPlatforms
+from homeassistant.helpers.typing import ConfigType
 
 from . import home_assistant_cast
 from .const import DOMAIN
+from .services import async_setup_services
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 PLATFORMS = [Platform.MEDIA_PLAYER]
 
@@ -50,6 +54,12 @@ def _process_cast_platform(
     ):
         raise HomeAssistantError(f"Invalid cast platform {platform}")
     return platform
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Cast component."""
+    async_setup_services(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: CastConfigEntry) -> bool:
