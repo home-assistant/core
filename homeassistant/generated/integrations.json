@@ -5250,6 +5250,13 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "open_home_foundation_events": {
+      "name": "Open Home Foundation Events",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling",
+      "single_config_entry": true
+    },
     "open_meteo": {
       "name": "Open-Meteo",
       "integration_type": "service",
