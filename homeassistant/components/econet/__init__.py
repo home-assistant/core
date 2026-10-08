@@ -17,11 +17,11 @@ from pyeconet.errors import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 
-from .const import PUSH_UPDATE
+from .const import DOMAIN, PUSH_UPDATE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,9 +50,11 @@ async def async_setup_entry(
 
     try:
         api = await EcoNetApiInterface.login(email, password=password)
-    except InvalidCredentialsError:
-        _LOGGER.error("Invalid credentials provided")
-        return False
+    except InvalidCredentialsError as err:
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="invalid_credentials",
+        ) from err
     except (ClientError, PyeconetError) as err:
         _LOGGER.error("Config entry failed: %s", err)
         raise ConfigEntryNotReady from err
