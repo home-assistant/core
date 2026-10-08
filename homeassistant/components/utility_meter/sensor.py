@@ -5,11 +5,9 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from decimal import Decimal, DecimalException, InvalidOperation
 import logging
-import math
 from typing import Any, Self, override
 
 from cronsim import CronSim
-import probatio
 
 from homeassistant.components.sensor import (
     ATTR_LAST_RESET,
@@ -40,7 +38,7 @@ from homeassistant.core import (
     State,
     callback,
 )
-from homeassistant.helpers import entity_platform, entity_registry as er
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device import async_entity_id_to_device
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import (
@@ -59,7 +57,6 @@ from homeassistant.util.enum import try_parse_enum
 
 from .const import (
     ATTR_NEXT_RESET,
-    ATTR_VALUE,
     BIMONTHLY,
     CONF_CRON_PATTERN,
     CONF_METER,
@@ -81,7 +78,6 @@ from .const import (
     MONTHLY,
     QUARTER_HOURLY,
     QUARTERLY,
-    SERVICE_CALIBRATE_METER,
     SIGNAL_RESET_METER,
     WEEKLY,
     YEARLY,
@@ -110,16 +106,6 @@ ATTR_TARIFF = "tariff"
 PRECISION = 3
 PAUSED = "paused"
 COLLECTING = "collecting"
-
-
-def validate_is_number(value):
-    """Validate value is a number."""
-    try:
-        if math.isfinite(float(value)):
-            return value
-    except ValueError, TypeError:
-        pass
-    raise probatio.Invalid("Value is not a number")
 
 
 async def async_setup_entry(
@@ -197,14 +183,6 @@ async def async_setup_entry(
 
     async_add_entities(meters)
 
-    platform = entity_platform.async_get_current_platform()
-
-    platform.async_register_entity_service(
-        SERVICE_CALIBRATE_METER,
-        {probatio.Required(ATTR_VALUE): validate_is_number},
-        "async_calibrate",
-    )
-
 
 async def async_setup_platform(
     hass: HomeAssistant,
@@ -278,14 +256,6 @@ async def async_setup_platform(
         meter_info[DATA_TARIFF_SENSORS].append(meter_sensor)
 
     async_add_entities(meters)
-
-    platform = entity_platform.async_get_current_platform()
-
-    platform.async_register_entity_service(
-        SERVICE_CALIBRATE_METER,
-        {probatio.Required(ATTR_VALUE): validate_is_number},
-        "async_calibrate",
-    )
 
 
 @dataclass

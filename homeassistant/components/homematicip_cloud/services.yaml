@@ -124,3 +124,17 @@ arm_anyway:
             - home
             - away
           translation_key: arm_anyway_mode
+
+pull_latch:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: homematicip_cloud
+          multiple: true
+    pin:
+      example: "1234"
+      selector:
+        text:
+          type: password

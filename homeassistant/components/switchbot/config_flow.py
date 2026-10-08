@@ -311,7 +311,7 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=probatio.Schema(
                 {
                     probatio.Required(CONF_KEY_ID): str,
-                    probatio.Required(CONF_ENCRYPTION_KEY): str,
+                    probatio.Required(probatio.Secret(CONF_ENCRYPTION_KEY)): str,
                 }
             ),
             description_placeholders={

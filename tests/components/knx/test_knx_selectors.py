@@ -18,6 +18,8 @@ from homeassistant.components.knx.storage.knx_selector import (
     SyncStateSelector,
     ga,
     knx_selector_in,
+    state_and_passive,
+    write_and_passive,
 )
 from homeassistant.components.knx.storage.serialize import knx_serializer
 from homeassistant.helpers import selector
@@ -120,12 +122,13 @@ def test_group_address_selector_none() -> None:
 
 
 def test_group_address_config_address_lists() -> None:
-    """Test GroupAddressConfig combines write / state with passive addresses."""
+    """Test combining write / state with passive addresses."""
     config = GroupAddressConfig(write="1/2/3", state="1/2/4", passive=["1/2/5"])
-    assert config.write_and_passive() == ["1/2/3", "1/2/5"]
-    assert config.state_and_passive() == ["1/2/4", "1/2/5"]
-    assert GroupAddressConfig(write="1/2/3").write_and_passive() == ["1/2/3"]
-    assert GroupAddressConfig().state_and_passive() == [None]
+    assert write_and_passive(config) == ["1/2/3", "1/2/5"]
+    assert state_and_passive(config) == ["1/2/4", "1/2/5"]
+    assert write_and_passive(GroupAddressConfig(write="1/2/3")) == ["1/2/3"]
+    assert state_and_passive(GroupAddressConfig()) == [None]
+    assert state_and_passive(None) is None
 
 
 def test_knx_selector_in() -> None:
