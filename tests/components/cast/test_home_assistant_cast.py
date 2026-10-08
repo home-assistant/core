@@ -1,10 +1,10 @@
 """Test Home Assistant Cast."""
 
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
-from homeassistant.components.cast import DOMAIN, home_assistant_cast
+from homeassistant.components.cast import DOMAIN, CastRuntimeData, home_assistant_cast
 from homeassistant.core import HomeAssistant
 from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.exceptions import HomeAssistantError
@@ -17,7 +17,10 @@ async def test_service_show_view(hass: HomeAssistant) -> None:
     """Test showing a view."""
     entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
-    await home_assistant_cast.async_setup_ha_cast(hass, entry)
+    entry.runtime_data = CastRuntimeData(
+        cast_platforms=MagicMock(),
+        refresh_token=await home_assistant_cast.async_setup_ha_cast(hass, entry),
+    )
     calls = async_mock_signal(hass, home_assistant_cast.SIGNAL_HASS_CAST_SHOW_VIEW)
 
     # No valid URL
@@ -61,7 +64,10 @@ async def test_service_show_view_dashboard(hass: HomeAssistant) -> None:
     )
     entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
-    await home_assistant_cast.async_setup_ha_cast(hass, entry)
+    entry.runtime_data = CastRuntimeData(
+        cast_platforms=MagicMock(),
+        refresh_token=await home_assistant_cast.async_setup_ha_cast(hass, entry),
+    )
     calls = async_mock_signal(hass, home_assistant_cast.SIGNAL_HASS_CAST_SHOW_VIEW)
 
     await hass.services.async_call(
@@ -93,7 +99,10 @@ async def test_use_cloud_url(hass: HomeAssistant) -> None:
 
     entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
-    await home_assistant_cast.async_setup_ha_cast(hass, entry)
+    entry.runtime_data = CastRuntimeData(
+        cast_platforms=MagicMock(),
+        refresh_token=await home_assistant_cast.async_setup_ha_cast(hass, entry),
+    )
     calls = async_mock_signal(hass, home_assistant_cast.SIGNAL_HASS_CAST_SHOW_VIEW)
 
     with patch(
