@@ -15,7 +15,12 @@ from homeassistant.components.homeassistant import (
     DOMAIN as HOMEASSISTANT_DOMAIN,
     SERVICE_UPDATE_ENTITY,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -137,7 +142,7 @@ async def test_missing_measurement(
     key: str,
     value: str,
 ) -> None:
-    """Test the entity is unavailable when the API omits its measurement."""
+    """Test the entity state is unknown when the API omits its measurement."""
     await init_integration(hass, mock_config_entry)
 
     measurements = mock_airly_client.create_measurements_session_point.return_value
@@ -157,7 +162,7 @@ async def test_missing_measurement(
 
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == STATE_UNAVAILABLE
+    assert state.state == STATE_UNKNOWN
     assert "Unexpected error updating listener" not in caplog.text
 
     measurements.current = mock_airly_measurements

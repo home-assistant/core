@@ -223,13 +223,3 @@ class AirlySensor(CoordinatorEntity[AirlyDataUpdateCoordinator], SensorEntity):
             self.coordinator.data
         )
         self.async_write_ha_state()
-
-    @property
-    @override
-    def available(self) -> bool:
-        """Return if entity is available."""
-        # The API may omit a measurement that was present at setup.
-        return (
-            super().available
-            and self.coordinator.data.get(self.entity_description.key) is not None
-        )
