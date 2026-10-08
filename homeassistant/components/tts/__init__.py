@@ -808,24 +808,16 @@ class SpeechManager:
         """Validate and process options."""
         # Languages
         language = language or engine_instance.default_language
-        if language is None or engine_instance.supported_languages is None:
+        if (
+            language is None
+            or engine_instance.supported_languages is None
+            or language not in engine_instance.supported_languages
+        ):
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="language_not_supported",
                 translation_placeholders={"language": str(language)},
             )
-        matched_languages = language_util.matches(
-            language,
-            engine_instance.supported_languages,
-            country=self.hass.config.country,
-        )
-        if not matched_languages:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="language_not_supported",
-                translation_placeholders={"language": str(language)},
-            )
-        language = matched_languages[0]
 
         options = options or {}
         supported_options = engine_instance.supported_options or []
