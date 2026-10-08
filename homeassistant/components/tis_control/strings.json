@@ -1,8 +1,15 @@
 {
   "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "no_devices": "No TIS dimmers answered. Check the gateway address and that Home Assistant is on the same network as the gateway.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
     "step": {
       "user": {
-        "description": "Enter the IP address of any TIS IP gateway on this network. Home Assistant asks every TIS module to identify itself; nothing is switched.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]"
@@ -10,16 +17,9 @@
         "data_description": {
           "host": "The IP address of a TIS IP gateway, for example 192.168.1.50. Modules behind other gateways on the same network are found too.",
           "port": "The TIS bus port. Leave at 6000 unless the installer changed it."
-        }
+        },
+        "description": "Enter the IP address of any TIS IP gateway on this network. Home Assistant asks every TIS module to identify itself; nothing is switched."
       }
-    },
-    "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "no_devices": "No TIS dimmers answered. Check the gateway address and that Home Assistant is on the same network as the gateway.",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
-    },
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   },
   "entity": {

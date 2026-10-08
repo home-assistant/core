@@ -43,6 +43,8 @@ class TISHub:
         self.gateway = gateway
         self.devices = devices
         self.channels: dict[tuple[int, int, int], int] = {}
+        # Last non-zero level per channel, whoever set it, so "turn on" restores it.
+        self.last_on: dict[tuple[int, int, int], int] = {}
         self.online: dict[Address, bool] = {}
         self._subscribers: dict[Address, list[Callable[[], None]]] = defaultdict(list)
         self._unsubs: list[CALLBACK_TYPE] = []
@@ -95,7 +97,7 @@ class TISHub:
             if was_online is False:
                 _LOGGER.info("TIS module %s.%s is answering again", *address)
             for channel, level in enumerate(levels, start=1):
-                self.channels[(*address, channel)] = level
+                self.set_level((*address, channel), level)
             self._notify(address)
 
     @callback
@@ -107,9 +109,16 @@ class TISHub:
         if not levels:
             return
         for item in levels:
-            self.channels[(*address, item.channel)] = item.level
+            self.set_level((*address, item.channel), item.level)
         self.online[address] = True
         self._notify(address)
+
+    @callback
+    def set_level(self, key: tuple[int, int, int], level: int) -> None:
+        """Store a channel level, remembering it when the channel is on."""
+        self.channels[key] = level
+        if level > 0:
+            self.last_on[key] = level
 
     @callback
     def _notify(self, address: Address) -> None:

@@ -45,7 +45,6 @@ class TISLight(TISEntity, LightEntity):
         """Initialize the light."""
         super().__init__(hub, spec)
         self._attr_translation_placeholders = {"channel": str(self.channel)}
-        self._last_on_level = 100
 
     @property
     @override
@@ -69,14 +68,12 @@ class TISLight(TISEntity, LightEntity):
         elif (current := self.level) and current > 0:
             level = current
         else:
-            level = self._last_on_level
+            level = self.hub.last_on.get((*self.address, self.channel), 100)
         self._set(level, kwargs.get(ATTR_TRANSITION))
 
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the channel off."""
-        if (current := self.level) and current > 0:
-            self._last_on_level = current
         self._set(0, kwargs.get(ATTR_TRANSITION))
 
     def _set(self, level: int, transition: float | None) -> None:
@@ -84,5 +81,5 @@ class TISLight(TISEntity, LightEntity):
             *self.address, self.channel, level, round(transition or 0)
         )
         # The module confirms on the bus within ~0.1 s; show the new state right away.
-        self.hub.channels[(*self.address, self.channel)] = level
+        self.hub.set_level((*self.address, self.channel), level)
         self.async_write_ha_state()

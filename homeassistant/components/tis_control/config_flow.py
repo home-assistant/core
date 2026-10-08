@@ -59,6 +59,14 @@ class TISConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    def _site_already_configured(self, channels: list[dict[str, Any]]) -> bool:
+        """Return True if an existing entry already has any of these modules."""
+        found = {(c["subnet"], c["device"]) for c in channels}
+        return any(
+            found & {(d["subnet"], d["device"]) for d in entry.data[CONF_DEVICES]}
+            for entry in self._async_current_entries(include_ignore=False)
+        )
+
     @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -84,6 +92,9 @@ class TISConfigFlow(ConfigFlow, domain=DOMAIN):
                 await gateway.close()
             if not errors and not channels:
                 errors["base"] = "no_devices"
+            if not errors and self._site_already_configured(channels):
+                # Every gateway of a site reaches the same modules: one entry covers them all.
+                return self.async_abort(reason="already_configured")
             if not errors:
                 return self.async_create_entry(
                     title=f"TIS gateway {host}",

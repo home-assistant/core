@@ -124,3 +124,35 @@ async def test_unavailable_and_back(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
     assert hass.states.get(CHANNEL_1).state == STATE_ON
+
+
+@pytest.mark.usefixtures("setup_entry")
+async def test_turn_on_restores_level_set_elsewhere(
+    hass: HomeAssistant, mock_gateway: MagicMock
+) -> None:
+    """Dimmed to 40 % from a wall panel, then off: turning on restores 40 %."""
+    mock_gateway.push((1, 5), OpCode.SINGLE_CHANNEL_REPLY, bytes.fromhex("02f828"))
+    mock_gateway.push((1, 5), OpCode.SINGLE_CHANNEL_REPLY, bytes.fromhex("02f800"))
+    await hass.async_block_till_done()
+    assert hass.states.get(CHANNEL_2).state == STATE_OFF
+    await hass.services.async_call(
+        LIGHT_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: CHANNEL_2}, blocking=True
+    )
+    mock_gateway.set_channel.assert_called_with(1, 5, 2, 40, 0)
+
+
+async def test_channel_unavailable_until_its_level_is_known(
+    hass: HomeAssistant, mock_gateway: MagicMock, mock_config_entry: MockConfigEntry
+) -> None:
+    """The first read times out; one channel announcing itself must not make others look off."""
+    levels = mock_gateway.levels.pop((1, 5))
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert hass.states.get(CHANNEL_1).state == STATE_UNAVAILABLE
+
+    mock_gateway.push((1, 5), OpCode.SINGLE_CHANNEL_REPLY, bytes.fromhex("01f864"))
+    await hass.async_block_till_done()
+    assert hass.states.get(CHANNEL_1).state == STATE_ON
+    assert hass.states.get(CHANNEL_2).state == STATE_UNAVAILABLE
+    mock_gateway.levels[(1, 5)] = levels

@@ -27,7 +27,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: TISConfigEntry) -> bool:
             translation_placeholders={"host": entry.data[CONF_HOST]},
         ) from err
     hub = TISHub(hass, entry, gateway, entry.data[CONF_DEVICES])
-    await hub.async_start()
+    try:
+        await hub.async_start()
+    except TISConnectionError as err:
+        await hub.async_stop()
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+            translation_placeholders={"host": entry.data[CONF_HOST]},
+        ) from err
     entry.runtime_data = hub
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True

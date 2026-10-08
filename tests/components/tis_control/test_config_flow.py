@@ -107,3 +107,17 @@ async def test_already_configured(
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_second_gateway_of_same_site(
+    hass: HomeAssistant, mock_gateway: MagicMock, mock_config_entry: MockConfigEntry
+) -> None:
+    """Another gateway of an already configured site finds the same modules: abort."""
+    mock_config_entry.add_to_hass(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+        data={CONF_HOST: "192.168.1.51", CONF_PORT: 6000},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"

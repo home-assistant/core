@@ -32,8 +32,8 @@ class TISEntity(Entity):
     @property
     @override
     def available(self) -> bool:
-        """Return if the module answered its last read."""
-        return self.hub.is_online(self.address)
+        """Return if the module answers and this channel's level is known."""
+        return self.hub.is_online(self.address) and self.level is not None
 
     @property
     def level(self) -> int | None:
