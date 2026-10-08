@@ -2,7 +2,7 @@
 
 from unittest.mock import patch
 
-from modbus_connection import ModbusError
+from modbus_connection import ModbusError, ModbusTimeoutError
 from modbus_connection.mock import MockModbusConnection
 import probatio
 import pytest
@@ -258,6 +258,32 @@ async def test_write_failure_is_a_home_assistant_error(
             },
             blocking=True,
         )
+
+
+@pytest.mark.usefixtures("mock_get_unit")
+async def test_action_while_asleep_is_a_write_failure(
+    hass: HomeAssistant,
+    mock_connection: MockModbusConnection,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test an action before the first answer fails like a write."""
+    mock_config_entry.add_to_hass(hass)
+    mock_connection.for_unit(1).fail_requests(ModbusTimeoutError("asleep"))
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_FEED_IN_LIMIT,
+            {
+                ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+                ATTR_MODE: "disabled",
+                ATTR_MAX_POWER: 0,
+            },
+            blocking=True,
+        )
+    assert exc_info.value.translation_key == "write_failed"
 
 
 @pytest.mark.parametrize(

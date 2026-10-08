@@ -42,8 +42,7 @@ SET_FEED_IN_LIMIT_SCHEMA = _ENTRY_SCHEMA.extend(
         probatio.Required(ATTR_MODE): probatio.In(
             [mode.name.lower() for mode in FeedinLimitationMode]
         ),
-        # Kept fractional so the multiple-of-100 check below sees the real
-        # value; cv.positive_int would truncate 3000.9 into a valid 3000.
+        # Fractional, so 3000.9 fails the multiple-of-100 check below.
         probatio.Required(ATTR_MAX_POWER): probatio.All(
             probatio.Coerce(float), probatio.Range(min=0, max=100000)
         ),
@@ -86,7 +85,14 @@ def _get_entry(
     entry: SofarConfigEntry = async_get_config_entry(
         hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY_ID]
     )
-    if component not in entry.runtime_data.served_components:
+    served = entry.runtime_data.served_components
+    if not served:
+        # Set up asleep: fail like a write, not as an unsupported action.
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="write_failed",
+        )
+    if component not in served:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="unsupported_action",
