@@ -5,12 +5,12 @@ from contextlib import suppress
 import logging
 
 import broadlink as blk
-import broadlink.exceptions as blke
 from broadlink.exceptions import (
     AuthenticationError,
     AuthorizationError,
     BroadlinkException,
     ConnectionClosedError,
+    EndpointClosedError,
     NetworkTimeoutError,
 )
 
@@ -201,9 +201,9 @@ class BroadlinkDevice[_ApiT: blk.Device = blk.Device]:
         """
         try:
             return await function(*args, **kwargs)
-        except (AuthorizationError, ConnectionClosedError) as err:
-            if isinstance(err, getattr(blke, "EndpointClosedError", ())):
-                raise
+        except EndpointClosedError:
+            raise
+        except AuthorizationError, ConnectionClosedError:
             if not await self.async_auth():
                 raise
             return await function(*args, **kwargs)
