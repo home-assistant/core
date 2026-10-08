@@ -44,7 +44,7 @@ DEFAULT_TIMEOUT = 10
 DEFAULT_SLOT = 1
 
 COMMAND_SCHEMA = probatio.Schema(
-    {probatio.Required(CONF_COMMAND): probatio.All(cv.ensure_list, [cv.string])}
+    {probatio.Required(CONF_COMMAND): probatio.All(probatio.EnsureList(), [cv.string])}
 )
 
 PLATFORM_SCHEMA = REMOTE_PLATFORM_SCHEMA.extend(
@@ -55,7 +55,7 @@ PLATFORM_SCHEMA = REMOTE_PLATFORM_SCHEMA.extend(
         probatio.Optional(CONF_SLOT, default=DEFAULT_SLOT): probatio.All(
             int, probatio.Range(min=1, max=1000000)
         ),
-        probatio.Required(CONF_TOKEN): probatio.All(
+        probatio.Required(probatio.Secret(CONF_TOKEN)): probatio.All(
             str, probatio.Length(min=32, max=32)
         ),
         probatio.Optional(CONF_COMMANDS, default={}): cv.schema_with_slug_keys(

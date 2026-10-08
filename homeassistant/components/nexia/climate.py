@@ -4,7 +4,6 @@ from typing import Any, override
 
 from nexia.const import (
     HOLD_PERMANENT,
-    HOLD_RESUME_SCHEDULE,
     OPERATION_MODE_AUTO,
     OPERATION_MODE_COOL,
     OPERATION_MODE_HEAT,
@@ -16,11 +15,8 @@ from nexia.const import (
 from nexia.thermostat import NexiaThermostat
 from nexia.util import find_humidity_setpoint
 from nexia.zone import NexiaThermostatZone
-import probatio
 
 from homeassistant.components.climate import (
-    ATTR_HUMIDITY,
-    ATTR_HVAC_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     ClimateEntity,
@@ -30,16 +26,9 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.typing import VolDictType
 
-from .const import (
-    ATTR_AIRCLEANER_MODE,
-    ATTR_DEHUMIDIFY_SETPOINT,
-    ATTR_HUMIDIFY_SETPOINT,
-    ATTR_RUN_MODE,
-)
+from .const import ATTR_DEHUMIDIFY_SETPOINT, ATTR_HUMIDIFY_SETPOINT
 from .coordinator import NexiaDataUpdateCoordinator
 from .entity import NexiaThermostatZoneEntity
 from .types import NexiaConfigEntry
@@ -47,40 +36,6 @@ from .util import percent_conv
 
 PARALLEL_UPDATES = 1  # keep data in sync with only one connection at a time
 
-SERVICE_SET_AIRCLEANER_MODE = "set_aircleaner_mode"
-SERVICE_SET_HUMIDIFY_SETPOINT = "set_humidify_setpoint"
-SERVICE_SET_DEHUMIDIFY_SETPOINT = "set_dehumidify_setpoint"
-SERVICE_SET_HVAC_RUN_MODE = "set_hvac_run_mode"
-
-SET_AIRCLEANER_SCHEMA: VolDictType = {
-    probatio.Required(ATTR_AIRCLEANER_MODE): cv.string,
-}
-
-SET_HUMIDIFY_SCHEMA: VolDictType = {
-    probatio.Required(ATTR_HUMIDITY): probatio.All(
-        probatio.Coerce(int), probatio.Range(min=10, max=45)
-    ),
-}
-
-SET_DEHUMIDIFY_SCHEMA: VolDictType = {
-    probatio.Required(ATTR_HUMIDITY): probatio.All(
-        probatio.Coerce(int), probatio.Range(min=35, max=65)
-    ),
-}
-
-SET_HVAC_RUN_MODE_SCHEMA = probatio.All(
-    cv.has_at_least_one_key(ATTR_RUN_MODE, ATTR_HVAC_MODE),
-    cv.make_entity_service_schema(
-        {
-            probatio.Optional(ATTR_RUN_MODE): probatio.In(
-                [HOLD_PERMANENT, HOLD_RESUME_SCHEDULE]
-            ),
-            probatio.Optional(ATTR_HVAC_MODE): probatio.In(
-                [HVACMode.HEAT, HVACMode.COOL, HVACMode.AUTO]
-            ),
-        }
-    ),
-)
 
 #
 # Nexia has two bits to determine hvac mode
@@ -128,29 +83,6 @@ async def async_setup_entry(
     """Set up climate for a Nexia device."""
     coordinator = config_entry.runtime_data
     nexia_home = coordinator.nexia_home
-
-    platform = entity_platform.async_get_current_platform()
-
-    platform.async_register_entity_service(
-        SERVICE_SET_HUMIDIFY_SETPOINT,
-        SET_HUMIDIFY_SCHEMA,
-        f"async_{SERVICE_SET_HUMIDIFY_SETPOINT}",
-    )
-    platform.async_register_entity_service(
-        SERVICE_SET_DEHUMIDIFY_SETPOINT,
-        SET_DEHUMIDIFY_SCHEMA,
-        f"async_{SERVICE_SET_DEHUMIDIFY_SETPOINT}",
-    )
-    platform.async_register_entity_service(
-        SERVICE_SET_AIRCLEANER_MODE,
-        SET_AIRCLEANER_SCHEMA,
-        f"async_{SERVICE_SET_AIRCLEANER_MODE}",
-    )
-    platform.async_register_entity_service(
-        SERVICE_SET_HVAC_RUN_MODE,
-        SET_HVAC_RUN_MODE_SCHEMA,
-        f"async_{SERVICE_SET_HVAC_RUN_MODE}",
-    )
 
     entities: list[NexiaZone] = []
     for thermostat_id in nexia_home.get_thermostat_ids():

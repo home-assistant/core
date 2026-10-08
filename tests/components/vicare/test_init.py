@@ -989,6 +989,43 @@ async def test_offline_gateway_does_not_stretch_the_cache(
     assert client.services["gwC"].fetch_all_features.call_count == 0
 
 
+async def test_setup_retries_until_a_device_is_online(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Setup retries while every device is offline and loads once one is back."""
+    fixtures: list[Fixture] = [
+        Fixture({"type:boiler"}, "vicare/Vitodens300W.json", online=False)
+    ]
+    client = MockPyViCare(fixtures)
+    client.loadViaGateway = Mock()
+    client.setCacheDuration = Mock()
+    client.initWithExternalOAuth = Mock()
+
+    with (
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+        ),
+        patch(f"{MODULE}.PyViCare", return_value=client),
+        patch(f"{MODULE}.PLATFORMS", [Platform.SENSOR]),
+    ):
+        mock_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+        assert mock_config_entry.reason == "No ViCare device is online"
+
+        client.devices[0].status = "Online"
+        freezer.tick(timedelta(seconds=10))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert hass.states.get(SENSOR_ID).state != STATE_UNAVAILABLE
+
+
 async def test_setup_loads_with_unpaid_package_gateway(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

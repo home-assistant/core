@@ -65,32 +65,6 @@ _RELAY_INPUT_STATE_MAP: dict[RelayInputState, bool] = {
 }
 
 
-def _async_motion_sensor_enabled_public(obj: PublicDeviceModel) -> bool:
-    # Mirrors Sensor.is_motion_sensor_enabled over the public API.
-    sensor = cast(PublicSensor, obj)
-    return sensor.mount_type is not MountType.LEAK and sensor.motion_settings.is_enabled
-
-
-def _async_contact_sensor_enabled_public(obj: PublicDeviceModel) -> bool:
-    # Mirrors Sensor.is_contact_sensor_enabled over the public API.
-    return cast(PublicSensor, obj).is_contact_sensor_enabled
-
-
-def _async_leak_sensor_enabled_public(obj: PublicDeviceModel) -> bool:
-    # Leak-mounted (UP Sense), or the capability map advertises water_leak with a
-    # leak channel enabled — the USL family detects leaks without a leak mount.
-    # Settings alone are not a valid gate: sensors without the capability report
-    # inert default leak settings.
-    sensor = cast(PublicSensor, obj)
-    return sensor.is_leak_sensor_enabled or (
-        sensor.supports(SensorFeatureCapability.WATER_LEAK)
-        and (
-            sensor.leak_settings.is_internal_enabled
-            or sensor.leak_settings.is_external_enabled
-        )
-    )
-
-
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class ProtectBinaryEntityDescription(
     ProtectEntityDescription, BinarySensorEntityDescription
@@ -324,7 +298,7 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
     ProtectBinaryEntityDescription(
         key="smart_obj_any",
         translation_key="object_detected",
-        ufp_required_field="feature_flags.has_smart_detect",
+        ufp_required_field="feature_flags.smart_detect_types",
         ufp_public_value="is_smart_currently_detected",
         ufp_event_driven=True,
         entity_registry_enabled_default=False,
@@ -479,7 +453,7 @@ MOUNTABLE_SENSE_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
         translation_key="contact",
         device_class=BinarySensorDeviceClass.DOOR,
         ufp_public_value="is_opened",
-        ufp_public_enabled_fn=_async_contact_sensor_enabled_public,
+        ufp_public_enabled_fn=operator.attrgetter("is_contact_sensor_enabled"),
         ufp_capability=SensorFeatureCapability.OPEN,
     ),
 )
@@ -489,7 +463,7 @@ SENSE_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
         key="leak",
         device_class=BinarySensorDeviceClass.MOISTURE,
         ufp_public_value="is_leak_detected",
-        ufp_public_enabled_fn=_async_leak_sensor_enabled_public,
+        ufp_public_enabled_fn=operator.attrgetter("is_leak_detection_enabled"),
         ufp_capability=SensorFeatureCapability.WATER_LEAK,
     ),
     ProtectBinaryEntityDescription(
@@ -502,7 +476,7 @@ SENSE_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
         key="motion",
         device_class=BinarySensorDeviceClass.MOTION,
         ufp_public_value="is_motion_detected",
-        ufp_public_enabled_fn=_async_motion_sensor_enabled_public,
+        ufp_public_enabled_fn=operator.attrgetter("is_motion_sensor_enabled"),
         ufp_capability=SensorFeatureCapability.MOTION,
     ),
     ProtectBinaryEntityDescription(
@@ -611,7 +585,7 @@ class ProtectDeviceBinarySensor(
 class MountableProtectDeviceBinarySensor(ProtectDeviceBinarySensor):
     """A UniFi Protect Device Binary Sensor that can change device class at runtime."""
 
-    device: Sensor
+    device: Sensor | PublicSensor
     _state_attrs = ("_attr_available", "_attr_is_on", "_attr_device_class")
 
     @callback
@@ -804,6 +778,25 @@ MODEL_DESCRIPTIONS_WITH_CLASS = (
 
 
 @callback
+def _async_model_entities(
+    data: ProtectData,
+    *,
+    ufp_device: ProtectAdoptableDeviceModel | None = None,
+    public_device: PublicDeviceModel | None = None,
+) -> list[BaseProtectEntity]:
+    entities: list[BaseProtectEntity] = []
+    for model_descriptions, klass in MODEL_DESCRIPTIONS_WITH_CLASS:
+        entities += async_all_device_entities(
+            data,
+            klass,
+            model_descriptions=model_descriptions,
+            ufp_device=ufp_device,
+            public_device=public_device,
+        )
+    return entities
+
+
+@callback
 def _async_event_entities(
     data: ProtectData,
     ufp_device: ProtectAdoptableDeviceModel | None = None,
@@ -896,9 +889,23 @@ async def async_setup_entry(
                 ProtectFobBinarySensor(data, device, description)
                 for description in FOB_BINARY_SENSORS
             )
+            return
+        async_add_entities(_async_model_entities(data, public_device=device))
+
+    @callback
+    def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
+        entities = _async_model_entities(data, ufp_device=device)
+        # AiPort inherits from Camera but should not create camera-specific entities
+        if device.is_adopted and device.model is ModelType.CAMERA:
+            entities += _async_event_entities(data, ufp_device=device)
+        async_add_entities(entities)
 
     entry.async_on_unload(
         async_dispatcher_connect(hass, data.public_add_signal, _add_new_public_device)
+    )
+    data.async_subscribe_adopt(_add_new_device)
+    async_remove_unsupported_sense_entities(
+        hass, Platform.BINARY_SENSOR, data, (*SENSE_SENSORS, *MOUNTABLE_SENSE_SENSORS)
     )
 
     # The public bootstrap is primed only with an API key and supported NVR
@@ -929,33 +936,9 @@ async def async_setup_entry(
         for relay in api.public_bootstrap.relays.values():
             _add_relay_inputs(relay)
 
-    # Everything below is driven by the private bootstrap, which public-only
-    # entries do not have.
-    if api.is_public_only:
-        return
-
-    async_remove_unsupported_sense_entities(
-        hass, Platform.BINARY_SENSOR, data, (*SENSE_SENSORS, *MOUNTABLE_SENSE_SENSORS)
-    )
-
-    @callback
-    def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
-        entities: list[BaseProtectEntity] = []
-        for model_descriptions, klass in MODEL_DESCRIPTIONS_WITH_CLASS:
-            entities += async_all_device_entities(
-                data, klass, model_descriptions=model_descriptions, ufp_device=device
-            )
-        # AiPort inherits from Camera but should not create camera-specific entities
-        if device.is_adopted and device.model is ModelType.CAMERA:
-            entities += _async_event_entities(data, ufp_device=device)
-        async_add_entities(entities)
-
-    data.async_subscribe_adopt(_add_new_device)
-    entities: list[BaseProtectEntity] = []
-    for model_descriptions, klass in MODEL_DESCRIPTIONS_WITH_CLASS:
-        entities += async_all_device_entities(
-            data, klass, model_descriptions=model_descriptions
-        )
-    entities += _async_event_entities(data)
-    entities += _async_nvr_entities(data)
+    entities = _async_model_entities(data)
+    if not api.is_public_only:
+        # Doorbell ring and NVR disks read the private bootstrap.
+        entities += _async_event_entities(data)
+        entities += _async_nvr_entities(data)
     async_add_entities(entities)

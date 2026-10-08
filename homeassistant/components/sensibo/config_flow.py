@@ -16,7 +16,7 @@ from .util import NoDevicesError, NoUsernameError, async_validate_api
 
 DATA_SCHEMA = probatio.Schema(
     {
-        probatio.Required(CONF_API_KEY): TextSelector(),
+        probatio.Required(probatio.Secret(CONF_API_KEY)): TextSelector(),
     }
 )
 

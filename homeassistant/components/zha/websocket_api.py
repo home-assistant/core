@@ -358,7 +358,7 @@ async def websocket_get_group(
         probatio.Required(GROUP_NAME): cv.string,
         probatio.Optional(GROUP_ID): cv.positive_int,
         probatio.Optional(ATTR_MEMBERS): probatio.All(
-            cv.ensure_list, [GROUP_MEMBER_SCHEMA]
+            probatio.EnsureList(), [GROUP_MEMBER_SCHEMA]
         ),
     }
 )
@@ -384,7 +384,9 @@ async def websocket_add_group(
 @websocket_api.websocket_command(
     {
         probatio.Required(TYPE): "zha/group/remove",
-        probatio.Required(GROUP_IDS): probatio.All(cv.ensure_list, [cv.positive_int]),
+        probatio.Required(GROUP_IDS): probatio.All(
+            probatio.EnsureList(), [cv.positive_int]
+        ),
     }
 )
 @websocket_api.async_response
@@ -413,7 +415,7 @@ async def websocket_remove_groups(
         probatio.Required(TYPE): "zha/group/members/add",
         probatio.Required(GROUP_ID): cv.positive_int,
         probatio.Required(ATTR_MEMBERS): probatio.All(
-            cv.ensure_list, [GROUP_MEMBER_SCHEMA]
+            probatio.EnsureList(), [GROUP_MEMBER_SCHEMA]
         ),
     }
 )
@@ -447,7 +449,7 @@ async def websocket_add_group_members(
         probatio.Required(TYPE): "zha/group/members/remove",
         probatio.Required(GROUP_ID): cv.positive_int,
         probatio.Required(ATTR_MEMBERS): probatio.All(
-            cv.ensure_list, [GROUP_MEMBER_SCHEMA]
+            probatio.EnsureList(), [GROUP_MEMBER_SCHEMA]
         ),
     }
 )
@@ -844,7 +846,7 @@ async def websocket_unbind_devices(
         probatio.Required(ATTR_SOURCE_IEEE): IEEE_SCHEMA,
         probatio.Required(GROUP_ID): cv.positive_int,
         probatio.Required(BINDINGS): probatio.All(
-            cv.ensure_list, [CLUSTER_BINDING_SCHEMA]
+            probatio.EnsureList(), [CLUSTER_BINDING_SCHEMA]
         ),
     }
 )
@@ -870,7 +872,7 @@ async def websocket_bind_group(
         probatio.Required(ATTR_SOURCE_IEEE): IEEE_SCHEMA,
         probatio.Required(GROUP_ID): cv.positive_int,
         probatio.Required(BINDINGS): probatio.All(
-            cv.ensure_list, [CLUSTER_BINDING_SCHEMA]
+            probatio.EnsureList(), [CLUSTER_BINDING_SCHEMA]
         ),
     }
 )

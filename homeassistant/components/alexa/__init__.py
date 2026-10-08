@@ -58,7 +58,7 @@ SMART_HOME_SCHEMA = probatio.Schema(
             probatio.Lower, probatio.In(VALID_ENDPOINTS)
         ),
         probatio.Optional(CONF_CLIENT_ID): cv.string,
-        probatio.Optional(CONF_CLIENT_SECRET): cv.string,
+        probatio.Optional(probatio.Secret(CONF_CLIENT_SECRET)): cv.string,
         probatio.Optional(CONF_LOCALE, default=DEFAULT_LOCALE): probatio.In(
             CONF_SUPPORTED_LOCALES
         ),
@@ -71,9 +71,9 @@ CONFIG_SCHEMA = probatio.Schema(
     {
         DOMAIN: {
             CONF_FLASH_BRIEFINGS: {
-                probatio.Required(CONF_PASSWORD): cv.string,
+                probatio.Required(probatio.Secret(CONF_PASSWORD)): cv.string,
                 cv.string: probatio.All(
-                    cv.ensure_list,
+                    probatio.EnsureList(),
                     [
                         {
                             probatio.Optional(CONF_UID): cv.string,

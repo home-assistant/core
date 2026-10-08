@@ -65,6 +65,7 @@ class ToonThermostatDevice(ToonDisplayDeviceEntity, ClimateEntity):
             PRESET_HOME,
             PRESET_SLEEP,
         ]
+        # Legacy format, kept as migrating existing unique IDs is not worth the risk
         self._attr_unique_id = (
             f"{DOMAIN}_{coordinator.data.agreement.agreement_id}_climate"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain,home-assistant-entity-unique-id-redundant-platform
         )

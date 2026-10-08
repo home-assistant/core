@@ -7,7 +7,7 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.hive.const import CONF_CODE, CONF_DEVICE_NAME, DOMAIN
-from homeassistant.const import CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -18,8 +18,6 @@ UPDATED_USERNAME = "updated_username@home-assistant.com"
 PASSWORD = "test-password"
 UPDATED_PASSWORD = "updated-password"
 INCORRECT_PASSWORD = "incorrect-password"
-SCAN_INTERVAL = 120
-UPDATED_SCAN_INTERVAL = 60
 DEVICE_NAME = "Test Home Assistant"
 MFA_CODE = "1234"
 MFA_RESEND_CODE = "0000"
@@ -582,43 +580,6 @@ async def test_reauth_2fa_flow_device_registration_check_fails(
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
 
-async def test_option_flow(hass: HomeAssistant) -> None:
-    """Test config flow options."""
-
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        title=USERNAME,
-        data={
-            CONF_USERNAME: USERNAME,
-            CONF_PASSWORD: PASSWORD,
-            "device_data": [
-                "mock-device-group-key",
-                "mock-device-key",
-                "mock-device-password",
-            ],
-        },
-    )
-    entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    result = await hass.config_entries.options.async_init(
-        entry.entry_id,
-        data=None,
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={CONF_SCAN_INTERVAL: UPDATED_SCAN_INTERVAL}
-    )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"][CONF_SCAN_INTERVAL] == UPDATED_SCAN_INTERVAL
-
-
 async def test_user_flow_2fa_send_new_code(hass: HomeAssistant) -> None:
     """Resend a 2FA code if it didn't arrive."""
     result = await hass.config_entries.flow.async_init(
@@ -733,7 +694,6 @@ async def test_abort_if_existing_entry(hass: HomeAssistant) -> None:
         domain=DOMAIN,
         unique_id=USERNAME,
         data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
-        options={CONF_SCAN_INTERVAL: SCAN_INTERVAL},
     )
     config_entry.add_to_hass(hass)
 

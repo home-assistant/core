@@ -56,7 +56,7 @@ HSV_SEQUENCE = probatio.ExactSequence((HUE, SAT, VAL))
 
 BASE_EFFECT_DICT: VolDictType = {
     probatio.Optional("brightness", default=100): probatio.All(
-        probatio.Coerce(int), probatio.Range(min=0, max=100)
+        probatio.Coerce(int), probatio.Percentage()
     ),
     probatio.Optional("duration", default=0): probatio.All(
         probatio.Coerce(int), probatio.Range(min=0, max=5000)
@@ -74,7 +74,7 @@ BASE_EFFECT_DICT: VolDictType = {
 SEQUENCE_EFFECT_DICT: VolDictType = {
     **BASE_EFFECT_DICT,
     probatio.Required("sequence"): probatio.All(
-        cv.ensure_list,
+        probatio.EnsureList(),
         probatio.Length(min=1, max=16),
         [probatio.All(probatio.Coerce(tuple), HSV_SEQUENCE)],
     ),
@@ -115,7 +115,7 @@ RANDOM_EFFECT_DICT: VolDictType = {
         probatio.Coerce(int), probatio.Range(min=1, max=600)
     ),
     probatio.Optional("backgrounds"): probatio.All(
-        cv.ensure_list,
+        probatio.EnsureList(),
         probatio.Length(min=1, max=16),
         [probatio.All(probatio.Coerce(tuple), HSV_SEQUENCE)],
     ),

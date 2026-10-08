@@ -54,14 +54,14 @@ from .entity import VenstarEntity
 PLATFORM_SCHEMA = CLIMATE_PLATFORM_SCHEMA.extend(
     {
         probatio.Required(CONF_HOST): cv.string,
-        probatio.Optional(CONF_PASSWORD): cv.string,
+        probatio.Optional(probatio.Secret(CONF_PASSWORD)): cv.string,
         probatio.Optional(CONF_HUMIDIFIER, default=True): cv.boolean,
         probatio.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
         probatio.Optional(CONF_TIMEOUT, default=5): probatio.All(
             probatio.Coerce(int), probatio.Range(min=1)
         ),
         probatio.Optional(CONF_USERNAME): cv.string,
-        probatio.Optional(CONF_PIN): cv.string,
+        probatio.Optional(probatio.Secret(CONF_PIN)): cv.string,
     }
 )
 

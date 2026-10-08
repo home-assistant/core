@@ -58,7 +58,7 @@ OPENALPR_REGIONS = [
 
 PLATFORM_SCHEMA = IMAGE_PROCESSING_PLATFORM_SCHEMA.extend(
     {
-        probatio.Required(CONF_API_KEY): cv.string,
+        probatio.Required(probatio.Secret(CONF_API_KEY)): cv.string,
         probatio.Required(CONF_REGION): probatio.All(
             probatio.Lower, probatio.In(OPENALPR_REGIONS)
         ),

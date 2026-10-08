@@ -1,6 +1,6 @@
 """Test the Remote Calendar config flow."""
 
-from httpx import HTTPError, InvalidURL, Response, TimeoutException
+from httpx2 import HTTPError, InvalidURL, Response, TimeoutException
 import pytest
 import respx
 
@@ -198,15 +198,15 @@ async def test_form_invalid_url(
     ("url", "log_message"),
     [
         (
-            "unsupported://protocol.com",  # Test for httpx.UnsupportedProtocol
+            "unsupported://protocol.com",  # Test for httpx2.UnsupportedProtocol
             "Request URL has an unsupported protocol 'unsupported://'",
         ),
         (
-            "invalid-url",  # Test for httpx.ProtocolError
+            "invalid-url",  # Test for httpx2.ProtocolError
             "Request URL is missing an 'http://' or 'https://' protocol",
         ),
         (
-            "https://example.com:abc/",  # Test for httpx.InvalidURL
+            "https://example.com:abc/",  # Test for httpx2.InvalidURL
             "Invalid port: 'abc'",
         ),
     ],
@@ -237,7 +237,7 @@ async def test_unsupported_inputs(
     assert get_schema_suggested_value(result2["data_schema"].schema, CONF_URL) == url
     assert log_message in caplog.text
     ## It's not possible to test a successful config flow because,
-    ## we need to mock httpx.get here and then the exception isn't
+    ## we need to mock httpx2.get here and then the exception isn't
     ## raised anymore.
 
 

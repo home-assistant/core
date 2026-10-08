@@ -12,7 +12,7 @@ from anthropic import (
 )
 from anthropic.pagination import AsyncPage
 from anthropic.types import ModelInfo
-from httpx import Request, Response
+from httpx2 import Request, Response
 import pytest
 
 from homeassistant.components.anthropic.const import (

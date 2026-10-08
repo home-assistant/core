@@ -75,7 +75,7 @@ HYGROSTAT_SCHEMA = probatio.Schema(
 )
 
 CONFIG_SCHEMA = probatio.Schema(
-    {DOMAIN: probatio.All(cv.ensure_list, [HYGROSTAT_SCHEMA])},
+    {DOMAIN: probatio.All(probatio.EnsureList(), [HYGROSTAT_SCHEMA])},
     extra=probatio.ALLOW_EXTRA,
 )
 

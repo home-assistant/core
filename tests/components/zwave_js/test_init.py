@@ -1009,13 +1009,31 @@ async def test_null_name(
 
 
 @pytest.mark.usefixtures("addon_installed", "addon_info")
+@pytest.mark.parametrize(
+    "existing_addon_options",
+    [
+        pytest.param({}, id="unconfigured"),
+        pytest.param(
+            {
+                "device": "/old",
+                "log_level": "debug",
+                "log_to_file": True,
+                "rf_region": "Europe",
+            },
+            id="user-configured",
+        ),
+    ],
+)
 async def test_start_addon(
     hass: HomeAssistant,
     install_addon: AsyncMock,
     set_addon_options: AsyncMock,
     start_addon: AsyncMock,
+    addon_options: dict[str, Any],
+    existing_addon_options: dict[str, Any],
 ) -> None:
-    """Test start the Z-Wave JS add-on during entry setup."""
+    """Test entry setup preserves user options when starting the Z-Wave JS add-on."""
+    addon_options.update(existing_addon_options)
     device = "/test"
     s0_legacy_key = "s0_legacy"
     s2_access_control_key = "s2_access_control"
@@ -1023,7 +1041,7 @@ async def test_start_addon(
     s2_unauthenticated_key = "s2_unauthenticated"
     lr_s2_access_control_key = "lr_s2_access_control"
     lr_s2_authenticated_key = "lr_s2_authenticated"
-    addon_options = {
+    expected_options = existing_addon_options | {
         "device": device,
         "s0_legacy_key": s0_legacy_key,
         "s2_access_control_key": s2_access_control_key,
@@ -1055,8 +1073,9 @@ async def test_start_addon(
     assert install_addon.call_count == 0
     assert set_addon_options.call_count == 1
     assert set_addon_options.call_args == call(
-        "core_zwave_js", AddonsOptions(config=addon_options)
+        "core_zwave_js", AddonsOptions(config=expected_options)
     )
+    assert addon_options == expected_options
     assert start_addon.call_count == 1
     assert start_addon.call_args == call("core_zwave_js")
 

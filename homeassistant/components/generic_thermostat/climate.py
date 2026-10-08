@@ -1,4 +1,7 @@
-"""Adds support for generic thermostat units."""
+"""Adds support for generic thermostat units.
+
+DEVELOPMENT OF THE GENERIC THERMOSTAT INTEGRATION IS FROZEN.
+"""
 
 import asyncio
 from collections.abc import Mapping

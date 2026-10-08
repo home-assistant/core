@@ -86,7 +86,7 @@ async def test_siren(
     # turn on from HA
     with (
         patch(
-            "zigpy.device.Device.request",
+            "zigpy.device.ZigbeeDevice.request",
             return_value=[0x00, zcl_f.Status.SUCCESS],
         ),
         patch(
@@ -120,7 +120,7 @@ async def test_siren(
     # turn off from HA
     with (
         patch(
-            "zigpy.device.Device.request",
+            "zigpy.device.ZigbeeDevice.request",
             return_value=[0x01, zcl_f.Status.SUCCESS],
         ),
         patch(
@@ -154,7 +154,7 @@ async def test_siren(
     # turn on from HA
     with (
         patch(
-            "zigpy.device.Device.request",
+            "zigpy.device.ZigbeeDevice.request",
             return_value=[0x00, zcl_f.Status.SUCCESS],
         ),
         patch(

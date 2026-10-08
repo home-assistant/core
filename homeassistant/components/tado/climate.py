@@ -4,7 +4,6 @@ from collections.abc import Mapping
 import logging
 from typing import Any, override
 
-import probatio
 import PyTado
 
 from homeassistant.components.climate import (
@@ -23,12 +22,9 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.typing import VolDictType
 
 from .const import (
-    CONST_EXCLUSIVE_OVERLAY_GROUP,
     CONST_FAN_AUTO,
     CONST_FAN_OFF,
     CONST_MODE_AUTO,
@@ -37,7 +33,6 @@ from .const import (
     CONST_MODE_OFF,
     CONST_MODE_SMART_SCHEDULE,
     CONST_OVERLAY_MANUAL,
-    CONST_OVERLAY_TADO_OPTIONS,
     DOMAIN,
     HA_TERMINATION_DURATION,
     HA_TERMINATION_TYPE,
@@ -74,27 +69,6 @@ from .helper import decide_duration, decide_overlay_mode, generate_supported_fan
 
 _LOGGER = logging.getLogger(__name__)
 
-SERVICE_CLIMATE_TIMER = "set_climate_timer"
-ATTR_TIME_PERIOD = "time_period"
-ATTR_REQUESTED_OVERLAY = "requested_overlay"
-
-CLIMATE_TIMER_SCHEMA: VolDictType = {
-    probatio.Required(ATTR_TEMPERATURE): probatio.Coerce(float),
-    probatio.Exclusive(ATTR_TIME_PERIOD, CONST_EXCLUSIVE_OVERLAY_GROUP): probatio.All(
-        cv.time_period, cv.positive_timedelta, lambda td: td.total_seconds()
-    ),
-    probatio.Exclusive(
-        ATTR_REQUESTED_OVERLAY, CONST_EXCLUSIVE_OVERLAY_GROUP
-    ): probatio.In(CONST_OVERLAY_TADO_OPTIONS),
-}
-
-SERVICE_TEMP_OFFSET = "set_climate_temperature_offset"
-ATTR_OFFSET = "offset"
-
-CLIMATE_TEMP_OFFSET_SCHEMA: VolDictType = {
-    probatio.Required(ATTR_OFFSET, default=0): probatio.Coerce(float),
-}
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -105,20 +79,6 @@ async def async_setup_entry(
 
     tado = entry.runtime_data
     entities = await _generate_entities(tado)
-
-    platform = entity_platform.async_get_current_platform()
-
-    platform.async_register_entity_service(
-        SERVICE_CLIMATE_TIMER,
-        CLIMATE_TIMER_SCHEMA,
-        "set_timer",
-    )
-
-    platform.async_register_entity_service(
-        SERVICE_TEMP_OFFSET,
-        CLIMATE_TEMP_OFFSET_SCHEMA,
-        "set_temp_offset",
-    )
 
     async_add_entities(entities, True)
 
