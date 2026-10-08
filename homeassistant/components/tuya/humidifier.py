@@ -21,12 +21,14 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .coordinator import TuyaConfigEntry
-from .entity import TuyaEntity
+from .entity import TuyaEntity, TuyaEntityDescription
 from .util import ActionDPCodeNotFoundError
 
 
 @dataclass(frozen=True)
-class TuyaHumidifierEntityDescription(HumidifierEntityDescription):
+class TuyaHumidifierEntityDescription(
+    TuyaEntityDescription, HumidifierEntityDescription
+):
     """Describe an Tuya (de)humidifier entity."""
 
     # DPCode, to use. If None, the key will be used as DPCode

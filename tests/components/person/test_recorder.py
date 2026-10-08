@@ -38,7 +38,7 @@ async def test_exclude_attributes(
     await async_wait_recording_done(hass)
 
     states = await hass.async_add_executor_job(
-        get_significant_states, hass, now, None, hass.states.async_entity_ids()
+        get_significant_states, hass, now, None, hass.states.async_entity_ids(DOMAIN)
     )
     assert len(states) >= 1
     for entity_states in states.values():

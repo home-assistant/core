@@ -14,7 +14,7 @@ from .api import (
     PterodactylAPI,
     PterodactylAuthorizationError,
     PterodactylConnectionError,
-    PterodactylData,
+    PterodactylGameServerData,
 )
 
 SCAN_INTERVAL = timedelta(seconds=60)
@@ -24,7 +24,9 @@ _LOGGER = logging.getLogger(__name__)
 type PterodactylConfigEntry = ConfigEntry[PterodactylCoordinator]
 
 
-class PterodactylCoordinator(DataUpdateCoordinator[dict[str, PterodactylData]]):
+class PterodactylCoordinator(
+    DataUpdateCoordinator[dict[str, PterodactylGameServerData]]
+):
     """Pterodactyl data update coordinator."""
 
     config_entry: PterodactylConfigEntry
@@ -62,7 +64,7 @@ class PterodactylCoordinator(DataUpdateCoordinator[dict[str, PterodactylData]]):
             raise ConfigEntryAuthFailed(error) from error
 
     @override
-    async def _async_update_data(self) -> dict[str, PterodactylData]:
+    async def _async_update_data(self) -> dict[str, PterodactylGameServerData]:
         """Get updated data from the Pterodactyl server."""
         try:
             return await self.api.async_get_data()

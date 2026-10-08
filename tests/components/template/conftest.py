@@ -5,8 +5,8 @@ from enum import Enum, StrEnum
 from itertools import chain
 from unittest.mock import AsyncMock, Mock
 
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.components import template
 from homeassistant.components.device_automation import toggle_entity
@@ -124,7 +124,7 @@ async def setup_mock_devices(
         f"{FAKE_DOMAIN}.device_action",
         Mock(
             ACTION_SCHEMA=toggle_entity.ACTION_SCHEMA.extend(
-                {vol.Required("domain"): FAKE_DOMAIN}
+                {probatio.Required("domain"): FAKE_DOMAIN}
             ),
             async_get_actions=_async_get_actions,
             async_call_action_from_config=AsyncMock(),

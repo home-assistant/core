@@ -11,7 +11,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.config_entry_oauth2_flow import (
-    ImplementationUnavailableError,
     OAuth2Session,
     async_get_config_entry_implementation,
 )
@@ -24,13 +23,7 @@ type DropboxConfigEntry = ConfigEntry[DropboxAPIClient]
 
 async def async_setup_entry(hass: HomeAssistant, entry: DropboxConfigEntry) -> bool:
     """Set up Dropbox from a config entry."""
-    try:
-        oauth2_implementation = await async_get_config_entry_implementation(hass, entry)
-    except ImplementationUnavailableError as err:
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN,
-            translation_key="oauth2_implementation_unavailable",
-        ) from err
+    oauth2_implementation = await async_get_config_entry_implementation(hass, entry)
 
     token = entry.data["token"]
     if not set(token.get("scope", "").split()).issuperset(OAUTH2_SCOPES):

@@ -7,13 +7,17 @@
         'is_on': False,
       }),
       'clean_cycle': dict({
+        'clean_timer_enabled': False,
         'is_enabled': False,
+        'start_hour': 0,
+        'start_minute': 0,
         'vanishing_act': False,
       }),
       'connection_status': dict({
         'spa_connected': True,
       }),
       'diagnostics': dict({
+        'circulation_pump_flow_status': '0',
         'heater_error': '0',
         'heater_power': '0',
         'heater_volts': 240.0,
@@ -22,8 +26,10 @@
         'jet3_volts': 0.0,
         'l1_n_volts': 120.0,
         'l2_n_volts': 120.0,
+        'limit_thermistor_status': '0',
         'power_frequency': '60',
         'pressure_switch_status': '0',
+        'regulation_thermistor_temp_status': '0',
         'small_loads_power': '0',
         'spa_failure_state': dict({
           '__type': "<enum 'SpaFailureState'>",
@@ -82,6 +88,8 @@
       }),
       'jets': list([
         dict({
+          'concurrent_mode': False,
+          'current': 0.0,
           'is_enabled': True,
           'jet_id': 1,
           'on_seconds': 0,
@@ -89,14 +97,24 @@
             '__type': "<enum 'JetSpeed'>",
             'repr': "<JetSpeed.OFF: 'off'>",
           }),
+          'speed_type': dict({
+            '__type': "<enum 'JetSpeedType'>",
+            'repr': "<JetSpeedType.UNKNOWN: 'unknown'>",
+          }),
         }),
         dict({
+          'concurrent_mode': False,
+          'current': 0.0,
           'is_enabled': True,
           'jet_id': 2,
           'on_seconds': 0,
           'speed': dict({
             '__type': "<enum 'JetSpeed'>",
             'repr': "<JetSpeed.OFF: 'off'>",
+          }),
+          'speed_type': dict({
+            '__type': "<enum 'JetSpeedType'>",
+            'repr': "<JetSpeedType.UNKNOWN: 'unknown'>",
           }),
         }),
       ]),
@@ -157,6 +175,8 @@
         'cartridge_installed': True,
         'level': 2,
         'one_twenty_day_timer': 117,
+        'power_a': False,
+        'power_b': False,
         'salt_value': 12,
         'system_enabled': True,
         'ten_day_timer': 0,
@@ -175,13 +195,17 @@
         'is_on': False,
       }),
       'clean_cycle': dict({
+        'clean_timer_enabled': False,
         'is_enabled': False,
+        'start_hour': 0,
+        'start_minute': 0,
         'vanishing_act': False,
       }),
       'connection_status': dict({
         'spa_connected': True,
       }),
       'diagnostics': dict({
+        'circulation_pump_flow_status': '0',
         'heater_error': '0',
         'heater_power': '0',
         'heater_volts': 240.0,
@@ -190,8 +214,10 @@
         'jet3_volts': 0.0,
         'l1_n_volts': 120.0,
         'l2_n_volts': 120.0,
+        'limit_thermistor_status': '0',
         'power_frequency': '60',
         'pressure_switch_status': '0',
+        'regulation_thermistor_temp_status': '0',
         'small_loads_power': '0',
         'spa_failure_state': dict({
           '__type': "<enum 'SpaFailureState'>",
@@ -250,6 +276,8 @@
       }),
       'jets': list([
         dict({
+          'concurrent_mode': False,
+          'current': 0.0,
           'is_enabled': True,
           'jet_id': 1,
           'on_seconds': 0,
@@ -257,14 +285,24 @@
             '__type': "<enum 'JetSpeed'>",
             'repr': "<JetSpeed.OFF: 'off'>",
           }),
+          'speed_type': dict({
+            '__type': "<enum 'JetSpeedType'>",
+            'repr': "<JetSpeedType.UNKNOWN: 'unknown'>",
+          }),
         }),
         dict({
+          'concurrent_mode': False,
+          'current': 0.0,
           'is_enabled': True,
           'jet_id': 2,
           'on_seconds': 0,
           'speed': dict({
             '__type': "<enum 'JetSpeed'>",
             'repr': "<JetSpeed.OFF: 'off'>",
+          }),
+          'speed_type': dict({
+            '__type': "<enum 'JetSpeedType'>",
+            'repr': "<JetSpeedType.UNKNOWN: 'unknown'>",
           }),
         }),
       ]),
@@ -325,6 +363,8 @@
         'cartridge_installed': True,
         'level': 2,
         'one_twenty_day_timer': 117,
+        'power_a': False,
+        'power_b': False,
         'salt_value': 12,
         'system_enabled': True,
         'ten_day_timer': 0,

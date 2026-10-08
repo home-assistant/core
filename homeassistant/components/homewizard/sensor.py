@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+import logging
 from typing import Final, override
 
 from homewizard_energy.const import Model
@@ -30,6 +31,7 @@ from homeassistant.const import (
     UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import (
     DeviceInfo,
     async_get_device_id_by_identifier,
@@ -43,6 +45,7 @@ from .coordinator import HomeWizardConfigEntry, HWEnergyDeviceUpdateCoordinator
 from .entity import HomeWizardEntity
 
 PARALLEL_UPDATES = 1
+_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -138,6 +141,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         entity_registry_enabled_default=False,
         has_fn=(
             lambda data: (
@@ -773,18 +777,71 @@ async def async_setup_entry(
     # Initialize external devices
     measurement = entry.runtime_data.data.measurement
     if measurement.external_devices is not None:
-        for unique_id, device in measurement.external_devices.items():
+        dev_reg = dr.async_get(hass)
+        parent_serial = entry.runtime_data.data.device.serial
+
+        # This cleanup must run at setup because the external device mapping
+        # needed for old->new identifier conversion is only available in runtime
+        # measurement data.
+        for new_unique_id, device in measurement.external_devices.items():
+            _async_migrate_external_device_identifier(
+                dev_reg,
+                entry,
+                str(device.unique_id),
+                new_unique_id,
+                parent_serial,
+            )
+
             if device.type is not None and (
                 description := EXTERNAL_SENSORS.get(device.type)
             ):
                 # Add external device
                 entities.append(
                     HomeWizardExternalSensorEntity(
-                        entry.runtime_data, description, unique_id
+                        entry.runtime_data, description, new_unique_id
                     )
                 )
 
     async_add_entities(entities)
+
+
+def _async_migrate_external_device_identifier(
+    dev_reg: dr.DeviceRegistry,
+    entry: HomeWizardConfigEntry,
+    old_unique_id: str,
+    new_unique_id: str,
+    parent_serial: str | None,
+) -> None:
+    """Migrate a HomeWizard external device identifier when needed."""
+    old_device = dev_reg.async_get_device_by_identifier(
+        (DOMAIN, old_unique_id), entry.entry_id
+    )
+    if old_device is None:
+        return
+
+    if old_unique_id == parent_serial:
+        return
+
+    new_device = dev_reg.async_get_device_by_identifier(
+        (DOMAIN, new_unique_id), entry.entry_id
+    )
+    if new_device is None:
+        dev_reg.async_update_device(
+            old_device.id,
+            new_identifiers={(DOMAIN, new_unique_id)},
+            serial_number=new_unique_id,
+        )
+        return
+
+    if old_device.id == new_device.id:
+        return
+
+    _LOGGER.debug(
+        "Removing migrated HomeWizard external device %s in favor of %s",
+        old_unique_id,
+        new_unique_id,
+    )
+    dev_reg.async_remove_device(old_device.id)
 
 
 class HomeWizardSensorEntity(HomeWizardEntity, SensorEntity):
@@ -831,6 +888,7 @@ class HomeWizardExternalSensorEntity(HomeWizardEntity, SensorEntity):
         self.entity_description = description
         self._device_id = device_unique_id
         self._suggested_device_class = description.suggested_device_class
+        # Legacy format, kept as migrating existing unique IDs is not worth the risk
         self._attr_unique_id = f"{DOMAIN}_{device_unique_id}"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device_unique_id)},

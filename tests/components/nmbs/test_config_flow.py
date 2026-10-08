@@ -105,13 +105,20 @@ async def test_abort_if_exists(
     """Test aborting the flow if the entry already exists."""
     mock_config_entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
             CONF_STATION_FROM: DUMMY_DATA["STAT_BRUSSELS_NORTH"],
             CONF_STATION_TO: DUMMY_DATA["STAT_BRUSSELS_SOUTH"],
         },
     )
+
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
@@ -122,14 +129,21 @@ async def test_dont_abort_if_exists_when_vias_differs(
     """Test aborting the flow if the entry already exists."""
     mock_config_entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
             CONF_STATION_FROM: DUMMY_DATA["STAT_BRUSSELS_NORTH"],
             CONF_STATION_TO: DUMMY_DATA["STAT_BRUSSELS_SOUTH"],
             CONF_EXCLUDE_VIAS: True,
         },
     )
+
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 

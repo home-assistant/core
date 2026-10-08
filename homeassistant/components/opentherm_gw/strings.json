@@ -160,6 +160,9 @@
     "button": {
       "cancel_room_setpoint_override": {
         "name": "Cancel room setpoint override"
+      },
+      "hot_water_push": {
+        "name": "Heat hot water once"
       }
     },
     "select": {

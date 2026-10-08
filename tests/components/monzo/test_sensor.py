@@ -285,27 +285,44 @@ async def test_all_entities(
         )
 
 
+@pytest.mark.parametrize(
+    ("api_error", "expected_log_messages"),
+    [
+        pytest.param(
+            InvalidMonzoAPIResponseError(),
+            ("The Monzo API returned an invalid response",),
+            id="invalid-response",
+        ),
+        pytest.param(
+            InvalidMonzoAPIResponseError({"acc_id": None}, "account_id"),
+            (
+                "The Monzo API returned an invalid response. Enable debug logging for details",
+                "account_id",
+                "acc_id",
+            ),
+            id="missing-key",
+        ),
+    ],
+)
 async def test_update_failed(
     hass: HomeAssistant,
-    snapshot: SnapshotAssertion,
     monzo: AsyncMock,
     polling_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
     caplog: pytest.LogCaptureFixture,
+    api_error: InvalidMonzoAPIResponseError,
+    expected_log_messages: tuple[str, ...],
 ) -> None:
-    """Test all entities."""
+    """Test an invalid API response makes entities unavailable."""
     await setup_integration(hass, polling_config_entry)
 
-    monzo.user_account.accounts.side_effect = InvalidMonzoAPIResponseError(
-        {"acc_id": None}, "account_id"
-    )
+    monzo.user_account.accounts.side_effect = api_error
     freezer.tick(timedelta(minutes=10))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert "Invalid Monzo API response." in caplog.text
-    assert "account_id" in caplog.text
-    assert "acc_id" in caplog.text
+    for message in expected_log_messages:
+        assert message in caplog.text
 
     entity_id = await async_get_entity_id(
         hass, TEST_ACCOUNTS[0]["id"], ACCOUNT_SENSORS[0]

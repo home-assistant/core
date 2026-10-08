@@ -2,10 +2,8 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
-      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "connection_error": "[%key:common::config_flow::error::cannot_connect%]",
-      "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]"
     },
     "create_entry": {
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
@@ -47,6 +45,14 @@
       "total_running_balance": {
         "name": "Total running balance"
       }
+    }
+  },
+  "exceptions": {
+    "auth_failed": {
+      "message": "Authentication with Electric Kiwi failed. Please re-authenticate."
+    },
+    "set_hop_failed": {
+      "message": "Failed to set the hour of free power."
     }
   }
 }

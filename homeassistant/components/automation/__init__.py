@@ -7,8 +7,8 @@ from dataclasses import dataclass
 import logging
 from typing import Any, cast, override
 
+import probatio
 from propcache.api import cached_property
-import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.components.blueprint import CONF_USE_BLUEPRINT
@@ -46,7 +46,6 @@ from homeassistant.core import (
 from homeassistant.exceptions import HomeAssistantError, ServiceNotFound, TemplateError
 from homeassistant.helpers import (
     condition as condition_helper,
-    config_validation as cv,
     trigger as trigger_helper,
 )
 from homeassistant.helpers.entity import ToggleEntity
@@ -80,37 +79,32 @@ from homeassistant.helpers.trace import (
 )
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.dt import parse_datetime
-from homeassistant.util.hass_dict import HassKey
 
 from .config import AutomationConfig, ValidationStatus
 from .const import (
     CONF_INITIAL_STATE,
+    CONF_STOP_ACTIONS,
     CONF_TRACE,
     CONF_TRIGGER_VARIABLES,
+    DATA_COMPONENT,
     DEFAULT_INITIAL_STATE,
+    DEFAULT_STOP_ACTIONS,
     DOMAIN,
     LOGGER,
     AutomationEntityCapabilityAttribute,
     AutomationEntityStateAttribute,
 )
 from .helpers import async_get_blueprints
+from .services import async_setup_services
 from .trace import trace_automation
 
-DATA_COMPONENT: HassKey[EntityComponent[BaseAutomationEntity]] = HassKey(DOMAIN)
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
-
-
-CONF_SKIP_CONDITION = "skip_condition"
-CONF_STOP_ACTIONS = "stop_actions"
-DEFAULT_STOP_ACTIONS = True
 
 EVENT_AUTOMATION_RELOADED = "automation_reloaded"
 EVENT_AUTOMATION_TRIGGERED = "automation_triggered"
 
 ATTR_LAST_TRIGGERED = "last_triggered"
 ATTR_SOURCE = "source"
-ATTR_VARIABLES = "variables"
-SERVICE_TRIGGER = "trigger"
 
 
 class IfAction(condition_helper.ConditionsChecker):
@@ -259,31 +253,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         async_get_blueprints(hass).async_populate(), eager_start=True
     )
 
-    async def trigger_service_handler(
-        entity: BaseAutomationEntity, service_call: ServiceCall
-    ) -> None:
-        """Handle forced automation trigger, e.g. from frontend."""
-        await entity.async_trigger(
-            {**service_call.data[ATTR_VARIABLES], "trigger": {"platform": None}},
-            skip_condition=service_call.data[CONF_SKIP_CONDITION],
-            context=service_call.context,
-        )
-
-    component.async_register_entity_service(
-        SERVICE_TRIGGER,
-        {
-            vol.Optional(ATTR_VARIABLES, default={}): dict,
-            vol.Optional(CONF_SKIP_CONDITION, default=True): bool,
-        },
-        trigger_service_handler,
-    )
-    component.async_register_entity_service(SERVICE_TOGGLE, None, "async_toggle")
-    component.async_register_entity_service(SERVICE_TURN_ON, None, "async_turn_on")
-    component.async_register_entity_service(
-        SERVICE_TURN_OFF,
-        {vol.Optional(CONF_STOP_ACTIONS, default=DEFAULT_STOP_ACTIONS): cv.boolean},
-        "async_turn_off",
-    )
+    async_setup_services(hass)
 
     async def reload_service_handler(service_call: ServiceCall) -> None:
         """Remove all automations and load new ones from config."""
@@ -307,7 +277,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         DOMAIN,
         SERVICE_RELOAD,
         reload_helper.execute_service,
-        schema=vol.Schema({vol.Optional(CONF_ID): str}),
+        schema=probatio.Schema({probatio.Optional(CONF_ID): str}),
     )
 
     websocket_api.async_register_command(hass, websocket_config)
@@ -735,7 +705,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
             if not skip_condition and self._condition is not None:
                 try:
                     conditions_pass = self._condition.async_check(variables=variables)
-                except (vol.Invalid, HomeAssistantError) as err:
+                except (probatio.Invalid, HomeAssistantError) as err:
                     self._logger.error(
                         "Error while checking conditions of automation %s: %s",
                         self.entity_id,
@@ -802,7 +772,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
                     },
                 )
                 automation_trace.set_error(err)
-            except (vol.Invalid, HomeAssistantError) as err:
+            except (probatio.Invalid, HomeAssistantError) as err:
                 self._logger.error(
                     "Error while executing automation %s: %s",
                     self.entity_id,

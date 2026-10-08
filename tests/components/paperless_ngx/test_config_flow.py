@@ -121,7 +121,14 @@ async def test_config_flow_error_handling(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
-        data=USER_INPUT_ONE,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=USER_INPUT_ONE,
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -223,9 +230,17 @@ async def test_config_already_exists(
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        data=USER_INPUT_ONE,
         context={"source": config_entries.SOURCE_USER},
     )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=USER_INPUT_ONE,
+    )
+
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 

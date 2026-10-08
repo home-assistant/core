@@ -6,9 +6,9 @@ import logging
 import ssl
 from typing import Any, cast
 
+import probatio
 from pylutron_caseta import BUTTON_STATUS_MULTITAP, BUTTON_STATUS_PRESSED
 from pylutron_caseta.smartbridge import Smartbridge
-import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import ATTR_DEVICE_ID, CONF_HOST, Platform
@@ -76,21 +76,21 @@ _LOGGER = logging.getLogger(__name__)
 
 DATA_BRIDGE_CONFIG = "lutron_caseta_bridges"
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.All(
-            cv.ensure_list,
+        DOMAIN: probatio.All(
+            probatio.EnsureList(),
             [
                 {
-                    vol.Required(CONF_HOST): cv.string,
-                    vol.Required(CONF_KEYFILE): cv.string,
-                    vol.Required(CONF_CERTFILE): cv.string,
-                    vol.Required(CONF_CA_CERTS): cv.string,
+                    probatio.Required(CONF_HOST): cv.string,
+                    probatio.Required(CONF_KEYFILE): cv.string,
+                    probatio.Required(CONF_CERTFILE): cv.string,
+                    probatio.Required(CONF_CA_CERTS): cv.string,
                 }
             ],
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 PLATFORMS = [
@@ -340,13 +340,13 @@ def _async_setup_keypads(
 @callback
 def _async_build_trigger_schemas(
     keypad_button_names_to_leap: dict[int, dict[str, int]],
-) -> dict[int, vol.Schema]:
+) -> dict[int, probatio.Schema]:
     """Build device trigger schemas."""
 
     return {
         keypad_id: LUTRON_BUTTON_TRIGGER_SCHEMA.extend(
             {
-                vol.Required(CONF_SUBTYPE): vol.In(
+                probatio.Required(CONF_SUBTYPE): probatio.In(
                     keypad_button_names_to_leap[keypad_id]
                 ),
             }
@@ -438,7 +438,10 @@ def async_get_lip_button(device_type: str, leap_button: int) -> int | None:
         leap_button_num_to_name := LEAP_TO_DEVICE_TYPE_SUBTYPE_MAP.get(device_type)
     ) is None:
         return None
-    return lip_buttons_name_to_num[leap_button_num_to_name[leap_button]]
+    # Some devices report button numbers their mapping doesn't list
+    if (button_name := leap_button_num_to_name.get(leap_button)) is None:
+        return None
+    return lip_buttons_name_to_num.get(button_name)
 
 
 @callback
@@ -473,7 +476,7 @@ def _async_subscribe_keypad_events(
         lip_button_number = async_get_lip_button(keypad_type, leap_button_number)
         button_type = LEAP_TO_DEVICE_TYPE_SUBTYPE_MAP.get(
             keypad_type, leap_to_keypad_button_names[keypad_device_id]
-        )[leap_button_number]
+        ).get(leap_button_number)
 
         hass.bus.async_fire(
             LUTRON_CASETA_BUTTON_EVENT,

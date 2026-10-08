@@ -5,7 +5,6 @@ from typing import Any, cast, override
 
 from pyatmo.modules import NATherm1
 from pyatmo.modules.device_types import DeviceType
-import voluptuous as vol
 
 from homeassistant.components.climate import (
     ATTR_PRESET_MODE,
@@ -25,7 +24,6 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
@@ -44,11 +42,6 @@ from .const import (
     EVENT_TYPE_SET_POINT,
     EVENT_TYPE_THERM_MODE,
     NETATMO_CREATE_CLIMATE,
-    SERVICE_CLEAR_TEMPERATURE_SETTING,
-    SERVICE_SET_PRESET_MODE_WITH_END_DATETIME,
-    SERVICE_SET_SCHEDULE,
-    SERVICE_SET_TEMPERATURE_WITH_END_DATETIME,
-    SERVICE_SET_TEMPERATURE_WITH_TIME_PERIOD,
 )
 from .coordinator import HOME, SIGNAL_NAME, NetatmoConfigEntry, NetatmoRoom
 from .entity import NetatmoRoomEntity
@@ -135,49 +128,6 @@ async def async_setup_entry(
 
     entry.async_on_unload(
         async_dispatcher_connect(hass, NETATMO_CREATE_CLIMATE, _create_entity)
-    )
-
-    platform = entity_platform.async_get_current_platform()
-    platform.async_register_entity_service(
-        SERVICE_SET_SCHEDULE,
-        {vol.Required(ATTR_SCHEDULE_NAME): cv.string},
-        "_async_service_set_schedule",
-    )
-    platform.async_register_entity_service(
-        SERVICE_SET_PRESET_MODE_WITH_END_DATETIME,
-        {
-            vol.Required(ATTR_PRESET_MODE): vol.In(THERM_MODES),
-            vol.Required(ATTR_END_DATETIME): cv.datetime,
-        },
-        "_async_service_set_preset_mode_with_end_datetime",
-    )
-    platform.async_register_entity_service(
-        SERVICE_SET_TEMPERATURE_WITH_END_DATETIME,
-        {
-            vol.Required(ATTR_TARGET_TEMPERATURE): vol.All(
-                vol.Coerce(float), vol.Range(min=7, max=30)
-            ),
-            vol.Required(ATTR_END_DATETIME): cv.datetime,
-        },
-        "_async_service_set_temperature_with_end_datetime",
-    )
-    platform.async_register_entity_service(
-        SERVICE_SET_TEMPERATURE_WITH_TIME_PERIOD,
-        {
-            vol.Required(ATTR_TARGET_TEMPERATURE): vol.All(
-                vol.Coerce(float), vol.Range(min=7, max=30)
-            ),
-            vol.Required(ATTR_TIME_PERIOD): vol.All(
-                cv.time_period,
-                cv.positive_timedelta,
-            ),
-        },
-        "_async_service_set_temperature_with_time_period",
-    )
-    platform.async_register_entity_service(
-        SERVICE_CLEAR_TEMPERATURE_SETTING,
-        None,
-        "_async_service_clear_temperature_setting",
     )
 
 

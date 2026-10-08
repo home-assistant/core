@@ -4,7 +4,12 @@ from collections.abc import Callable
 from typing import Any, override
 
 from aiohue.v2 import HueBridgeV2
-from aiohue.v2.controllers.config import BehaviorInstance, BehaviorInstanceController
+from aiohue.v2.controllers.config import (
+    BehaviorInstance,
+    BehaviorInstanceController,
+    MotionAreaConfiguration,
+    MotionAreaConfigurationController,
+)
 from aiohue.v2.controllers.events import EventType
 from aiohue.v2.controllers.sensors import (
     LightLevel,
@@ -25,9 +30,10 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .bridge import HueConfigEntry
+from .bridge import HueBridge, HueConfigEntry
 from .const import DOMAIN
 from .v2.entity import HueBaseEntity
+from .v2.helpers import get_motion_area_device_info
 
 
 async def async_setup_entry(
@@ -47,17 +53,20 @@ async def async_setup_entry(
     def register_items(
         controller: BehaviorInstanceController
         | LightLevelController
+        | MotionAreaConfigurationController
         | MotionController,
         switch_class: type[
             HueBehaviorInstanceEnabledEntity
             | HueLightSensorEnabledEntity
+            | HueMotionAreaConfigurationEnabledEntity
             | HueMotionSensorEnabledEntity
         ],
         resource_filter: Callable[[Any], bool] | None = None,
     ):
         @callback
         def async_add_entity(
-            event_type: EventType, resource: BehaviorInstance | LightLevel | Motion
+            event_type: EventType,
+            resource: BehaviorInstance | LightLevel | MotionAreaConfiguration | Motion,
         ) -> None:
             """Add entity from Hue resource."""
             if resource_filter is not None and not resource_filter(resource):
@@ -107,13 +116,21 @@ async def async_setup_entry(
         HueBehaviorInstanceEnabledEntity,
         is_user_automation,
     )
+    register_items(
+        api.config.motion_area_configuration, HueMotionAreaConfigurationEnabledEntity
+    )
 
 
 class HueResourceEnabledEntity(HueBaseEntity, SwitchEntity):
     """Represent a Switch entity from a Hue resource that toggles."""
 
-    controller: BehaviorInstanceController | LightLevelController | MotionController
-    resource: BehaviorInstance | LightLevel | Motion
+    controller: (
+        BehaviorInstanceController
+        | LightLevelController
+        | MotionAreaConfigurationController
+        | MotionController
+    )
+    resource: BehaviorInstance | LightLevel | MotionAreaConfiguration | Motion
 
     entity_description = SwitchEntityDescription(
         key="sensing_service_enabled",
@@ -188,6 +205,32 @@ class HueBehaviorInstanceEnabledEntity(HueResourceEnabledEntity):
             await super().async_turn_off(**kwargs)
             return
         await self.bridge.async_request_call(self.controller.stop, self.resource.id)
+
+
+class HueMotionAreaConfigurationEnabledEntity(HueResourceEnabledEntity):
+    """Representation of a Switch entity to enable/disable a Hue MotionAware zone."""
+
+    controller: MotionAreaConfigurationController
+    resource: MotionAreaConfiguration
+
+    entity_description = SwitchEntityDescription(
+        key="motion_area_configuration",
+        device_class=SwitchDeviceClass.SWITCH,
+        entity_category=EntityCategory.CONFIG,
+        has_entity_name=True,
+        translation_key="motion_aware",
+    )
+
+    def __init__(
+        self,
+        bridge: HueBridge,
+        controller: MotionAreaConfigurationController,
+        resource: MotionAreaConfiguration,
+    ) -> None:
+        """Initialize the switch."""
+        super().__init__(bridge, controller, resource)
+        # link the switch to the room or zone the MotionAware zone is associated with
+        self._attr_device_info = get_motion_area_device_info(bridge.api, resource)
 
 
 class HueMotionSensorEnabledEntity(HueResourceEnabledEntity):

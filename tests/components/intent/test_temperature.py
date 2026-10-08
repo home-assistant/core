@@ -115,7 +115,7 @@ async def create_mock_platform(
 class MockClimateEntity(ClimateEntity):
     """Mock Climate device to use in tests."""
 
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_hvac_mode = HVACMode.OFF
     _attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT]
     _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
@@ -129,7 +129,7 @@ class MockClimateEntity(ClimateEntity):
 class MockClimateEntityNoSetTemperature(ClimateEntity):
     """Mock Climate device to use in tests."""
 
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_hvac_mode = HVACMode.OFF
     _attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT]
 
@@ -183,7 +183,6 @@ async def test_get_temperature(
     # first floor => living room and office
     # 2nd floor => bedroom
     # 3rd floor => attic
-    floor_registry = fr.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     first_floor = floor_registry.async_create("First floor")
     living_room_area = area_registry.async_update(
         living_room_area.id, floor_id=first_floor.floor_id

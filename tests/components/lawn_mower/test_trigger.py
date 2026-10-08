@@ -5,14 +5,17 @@ from typing import Any
 import pytest
 
 from homeassistant.components.lawn_mower import LawnMowerActivity
+from homeassistant.components.lawn_mower.trigger import TRIGGERS
 from homeassistant.core import HomeAssistant
 
 from tests.components.common import (
+    TargetSupport,
     TriggerStateDescription,
     assert_trigger_behavior_all,
     assert_trigger_behavior_each,
     assert_trigger_behavior_first,
     assert_trigger_options_supported,
+    assert_triggers_target_support,
     other_states,
     parametrize_target_entities,
     parametrize_trigger_states,
@@ -26,6 +29,16 @@ async def target_lawn_mowers(hass: HomeAssistant) -> dict[str, list[str]]:
     return await target_entities(hass, "lawn_mower")
 
 
+_TRIGGER_TARGET_SUPPORT: dict[str, TargetSupport] = {
+    "returned_to_dock": TargetSupport.STANDARD,
+    "errored": TargetSupport.STANDARD,
+    "paused_mowing": TargetSupport.STANDARD,
+    "started_mowing": TargetSupport.STANDARD,
+    "started_returning": TargetSupport.STANDARD,
+    "became_idle": TargetSupport.STANDARD,
+}
+
+
 @pytest.mark.parametrize(
     ("trigger_key", "base_options", "supports_behavior", "supports_duration"),
     [
@@ -34,6 +47,7 @@ async def target_lawn_mowers(hass: HomeAssistant) -> dict[str, list[str]]:
         ("lawn_mower.paused_mowing", {}, True, True),
         ("lawn_mower.started_mowing", {}, True, True),
         ("lawn_mower.started_returning", {}, True, True),
+        ("lawn_mower.became_idle", {}, True, True),
     ],
 )
 async def test_lawn_mower_trigger_options_validation(
@@ -51,6 +65,11 @@ async def test_lawn_mower_trigger_options_validation(
         supports_behavior=supports_behavior,
         supports_duration=supports_duration,
     )
+
+
+def test_trigger_target_support() -> None:
+    """Certify the trigger registry matches its declared target support."""
+    assert_triggers_target_support(TRIGGERS, _TRIGGER_TARGET_SUPPORT)
 
 
 @pytest.mark.parametrize(
@@ -84,6 +103,11 @@ async def test_lawn_mower_trigger_options_validation(
             trigger="lawn_mower.started_returning",
             target_states=[LawnMowerActivity.RETURNING],
             other_states=other_states(LawnMowerActivity.RETURNING),
+        ),
+        *parametrize_trigger_states(
+            trigger="lawn_mower.became_idle",
+            target_states=[LawnMowerActivity.IDLE],
+            other_states=other_states(LawnMowerActivity.IDLE),
         ),
     ],
 )
@@ -142,6 +166,11 @@ async def test_lawn_mower_state_trigger_behavior_each(
             target_states=[LawnMowerActivity.RETURNING],
             other_states=other_states(LawnMowerActivity.RETURNING),
         ),
+        *parametrize_trigger_states(
+            trigger="lawn_mower.became_idle",
+            target_states=[LawnMowerActivity.IDLE],
+            other_states=other_states(LawnMowerActivity.IDLE),
+        ),
     ],
 )
 async def test_lawn_mower_state_trigger_behavior_first(
@@ -198,6 +227,11 @@ async def test_lawn_mower_state_trigger_behavior_first(
             trigger="lawn_mower.started_returning",
             target_states=[LawnMowerActivity.RETURNING],
             other_states=other_states(LawnMowerActivity.RETURNING),
+        ),
+        *parametrize_trigger_states(
+            trigger="lawn_mower.became_idle",
+            target_states=[LawnMowerActivity.IDLE],
+            other_states=other_states(LawnMowerActivity.IDLE),
         ),
     ],
 )

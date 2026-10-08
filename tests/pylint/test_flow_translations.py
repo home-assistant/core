@@ -53,9 +53,9 @@ class MyConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input=None):
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({
-                vol.Required("host"): str,
-                vol.Optional("port"): int,
+            data_schema=probatio.Schema({
+                probatio.Required("host"): str,
+                probatio.Optional("port"): int,
             }),
         )
 """,
@@ -87,9 +87,9 @@ class MyConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input=None):
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({
-                vol.Required("host"): str,
-                vol.Required("missing_field"): str,
+            data_schema=probatio.Schema({
+                probatio.Required("host"): str,
+                probatio.Required("missing_field"): str,
             }),
         )
 """,
@@ -127,8 +127,8 @@ class MyOptionsFlow(OptionsFlow):
     async def async_step_init(self, user_input=None):
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema({
-                vol.Required("interval"): int,
+            data_schema=probatio.Schema({
+                probatio.Required("interval"): int,
             }),
         )
 """,
@@ -160,9 +160,9 @@ class MyOptionsFlow(OptionsFlow):
     async def async_step_init(self, user_input=None):
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema({
-                vol.Required("interval"): int,
-                vol.Required("missing"): str,
+            data_schema=probatio.Schema({
+                probatio.Required("interval"): int,
+                probatio.Required("missing"): str,
             }),
         )
 """,
@@ -211,8 +211,8 @@ class MySubentryFlow(ConfigSubentryFlow):
     async def async_step_user(self, user_input=None):
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({
-                vol.Required("name"): str,
+            data_schema=probatio.Schema({
+                probatio.Required("name"): str,
             }),
         )
 """,
@@ -255,9 +255,9 @@ class MySubentryFlow(ConfigSubentryFlow):
     async def async_step_user(self, user_input=None):
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({
-                vol.Required("name"): str,
-                vol.Required("missing"): str,
+            data_schema=probatio.Schema({
+                probatio.Required("name"): str,
+                probatio.Required("missing"): str,
             }),
         )
 """,
@@ -306,8 +306,8 @@ class SharedFlow(ConfigSubentryFlow):
     async def async_step_user(self, user_input=None):
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({
-                vol.Required("name"): str,
+            data_schema=probatio.Schema({
+                probatio.Required("name"): str,
             }),
         )
 """,
@@ -357,11 +357,11 @@ class MySubentryFlow(ConfigSubentryFlow):
     async def async_step_user(self, user_input=None):
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({
-                vol.Required("advanced"): section(
-                    vol.Schema({
-                        vol.Required("timeout"): int,
-                        vol.Required("retries"): int,
+            data_schema=probatio.Schema({
+                probatio.Required("advanced"): section(
+                    probatio.Schema({
+                        probatio.Required("timeout"): int,
+                        probatio.Required("retries"): int,
                     }),
                 ),
             }),
@@ -397,13 +397,13 @@ def test_schema_extend_base_field_flagged(
 
     root_node = astroid.parse(
         """
-BASE_SCHEMA = vol.Schema({vol.Required("host"): str})
+BASE_SCHEMA = probatio.Schema({probatio.Required("host"): str})
 
 class MyConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input=None):
         return self.async_show_form(
             step_id="user",
-            data_schema=BASE_SCHEMA.extend({vol.Optional("port"): int}),
+            data_schema=BASE_SCHEMA.extend({probatio.Optional("port"): int}),
         )
 """,
         "homeassistant.components.test_int.config_flow",
@@ -433,13 +433,13 @@ def test_schema_extend_all_translated_ok(
 
     root_node = astroid.parse(
         """
-BASE_SCHEMA = vol.Schema({vol.Required("host"): str})
+BASE_SCHEMA = probatio.Schema({probatio.Required("host"): str})
 
 class MyConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input=None):
         return self.async_show_form(
             step_id="user",
-            data_schema=BASE_SCHEMA.extend({vol.Optional("port"): int}),
+            data_schema=BASE_SCHEMA.extend({probatio.Optional("port"): int}),
         )
 """,
         "homeassistant.components.test_int.config_flow",
@@ -466,14 +466,14 @@ def test_schema_extend_via_schema_attribute_flagged(
 
     root_node = astroid.parse(
         """
-BASE_SCHEMA = vol.Schema({vol.Required("missing"): str})
+BASE_SCHEMA = probatio.Schema({probatio.Required("missing"): str})
 
 class MyConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input=None):
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
-                {vol.Required("host"): str}
+            data_schema=probatio.Schema(
+                {probatio.Required("host"): str}
             ).extend(BASE_SCHEMA.schema),
         )
 """,
@@ -504,9 +504,9 @@ def test_add_suggested_values_to_schema_missing_field_flagged(
 
     root_node = astroid.parse(
         """
-OPTIONS_SCHEMA = vol.Schema({
-    vol.Required("interval"): int,
-    vol.Required("missing"): str,
+OPTIONS_SCHEMA = probatio.Schema({
+    probatio.Required("interval"): int,
+    probatio.Required("missing"): str,
 })
 
 class MyOptionsFlow(OptionsFlow):
@@ -545,9 +545,9 @@ def test_add_suggested_values_to_schema_keyword_flagged(
 
     root_node = astroid.parse(
         """
-USER_SCHEMA = vol.Schema({
-    vol.Required("host"): str,
-    vol.Required("missing"): str,
+USER_SCHEMA = probatio.Schema({
+    probatio.Required("host"): str,
+    probatio.Required("missing"): str,
 })
 
 class MyConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -586,7 +586,7 @@ def test_add_suggested_values_to_schema_translated_ok(
 
     root_node = astroid.parse(
         """
-OPTIONS_SCHEMA = vol.Schema({vol.Required("interval"): int})
+OPTIONS_SCHEMA = probatio.Schema({probatio.Required("interval"): int})
 
 class MyOptionsFlow(OptionsFlow):
     async def async_step_init(self, user_input=None):
@@ -627,7 +627,7 @@ def test_implicit_step_id_from_method(
 class MyConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input=None):
         return self.async_show_form(
-            data_schema=vol.Schema({vol.Required("host"): str}),
+            data_schema=probatio.Schema({probatio.Required("host"): str}),
         )
 """,
         "homeassistant.components.test_int.config_flow",
@@ -657,9 +657,9 @@ def test_implicit_step_id_missing_field_flagged(
 class MyConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input=None):
         return self.async_show_form(
-            data_schema=vol.Schema({
-                vol.Required("host"): str,
-                vol.Required("missing"): str,
+            data_schema=probatio.Schema({
+                probatio.Required("host"): str,
+                probatio.Required("missing"): str,
             }),
         )
 """,
@@ -698,7 +698,7 @@ class MyConfigFlow(ConfigFlow, domain=DOMAIN):
             step = "other"
         return self.async_show_form(
             step_id=step,
-            data_schema=vol.Schema({vol.Required("missing"): str}),
+            data_schema=probatio.Schema({probatio.Required("missing"): str}),
         )
 """,
         "homeassistant.components.test_int.config_flow",
@@ -742,12 +742,12 @@ class MyConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input=None):
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({
-                vol.Required("host"): str,
-                vol.Required("advanced"): section(
-                    vol.Schema({
-                        vol.Required("ssl"): bool,
-                        vol.Required("verify"): bool,
+            data_schema=probatio.Schema({
+                probatio.Required("host"): str,
+                probatio.Required("advanced"): section(
+                    probatio.Schema({
+                        probatio.Required("ssl"): bool,
+                        probatio.Required("verify"): bool,
                     }),
                     {"collapsed": True},
                 ),
@@ -795,12 +795,12 @@ class MyConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input=None):
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({
-                vol.Required("host"): str,
-                vol.Required("advanced"): section(
-                    vol.Schema({
-                        vol.Required("ssl"): bool,
-                        vol.Required("missing_field"): bool,
+            data_schema=probatio.Schema({
+                probatio.Required("host"): str,
+                probatio.Required("advanced"): section(
+                    probatio.Schema({
+                        probatio.Required("ssl"): bool,
+                        probatio.Required("missing_field"): bool,
                     }),
                     {"collapsed": True},
                 ),
@@ -850,10 +850,10 @@ class MyConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input=None):
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({
-                vol.Required("host"): str,
-                vol.Required("advanced"): data_entry_flow.section(
-                    vol.Schema({vol.Required("ssl"): bool}),
+            data_schema=probatio.Schema({
+                probatio.Required("host"): str,
+                probatio.Required("advanced"): data_entry_flow.section(
+                    probatio.Schema({probatio.Required("ssl"): bool}),
                     {"collapsed": True},
                 ),
             }),
@@ -875,7 +875,7 @@ def test_inclusive_exclusive_markers_resolved(
     flow_translations_checker: ConfigFlowTranslationsChecker,
     tmp_path: Path,
 ) -> None:
-    """Fields marked vol.Inclusive/vol.Exclusive are checked."""
+    """Fields marked probatio.Inclusive/probatio.Exclusive are checked."""
     integration_dir = _make_integration(
         tmp_path,
         {"config": {"step": {"user": {"data": {"password": "Password"}}}}},
@@ -887,9 +887,9 @@ class MyConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input=None):
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({
-                vol.Inclusive("password", "encrypted"): str,
-                vol.Exclusive("missing", "auth"): str,
+            data_schema=probatio.Schema({
+                probatio.Inclusive("password", "encrypted"): str,
+                probatio.Exclusive("missing", "auth"): str,
             }),
         )
 """,
@@ -912,7 +912,7 @@ def test_bare_marker_names_resolved(
     flow_translations_checker: ConfigFlowTranslationsChecker,
     tmp_path: Path,
 ) -> None:
-    """Markers imported directly from voluptuous are checked."""
+    """Markers imported directly from probatio are checked."""
     integration_dir = _make_integration(
         tmp_path,
         {"config": {"step": {"user": {"data": {"host": "Host"}}}}},
@@ -924,7 +924,7 @@ class MyConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input=None):
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({
+            data_schema=probatio.Schema({
                 Required("host"): str,
                 Optional("missing"): str,
             }),
@@ -957,9 +957,9 @@ def test_annotated_schema_variable_resolved(
 
     root_node = astroid.parse(
         """
-CONFIG_SCHEMA: Final = vol.Schema({
-    vol.Required("host"): str,
-    vol.Required("missing"): str,
+CONFIG_SCHEMA: Final = probatio.Schema({
+    probatio.Required("host"): str,
+    probatio.Required("missing"): str,
 })
 
 class MyConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -999,7 +999,7 @@ class MyConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input=None):
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({vol.Required(CONF_HOST): str}),
+            data_schema=probatio.Schema({probatio.Required(CONF_HOST): str}),
         )
 """,
         "homeassistant.components.test_int.config_flow",
@@ -1026,13 +1026,13 @@ def test_dict_unpacking_in_schema(
 
     root_node = astroid.parse(
         """
-BASE = {vol.Required("host"): str}
+BASE = {probatio.Required("host"): str}
 
 class MyConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input=None):
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({**BASE, vol.Optional("port"): int}),
+            data_schema=probatio.Schema({**BASE, probatio.Optional("port"): int}),
         )
 """,
         "homeassistant.components.test_int.config_flow",
@@ -1059,7 +1059,7 @@ def test_schema_variable_resolved(
 
     root_node = astroid.parse(
         """
-USER_SCHEMA = vol.Schema({vol.Required("host"): str})
+USER_SCHEMA = probatio.Schema({probatio.Required("host"): str})
 
 class MyConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input=None):
@@ -1093,7 +1093,7 @@ class MyConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input=None):
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({vol.Required("host"): str}),
+            data_schema=probatio.Schema({probatio.Required("host"): str}),
         )
 """,
         "homeassistant.components.test_int.config_flow",
@@ -1123,7 +1123,7 @@ class MyConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input=None):
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({vol.Required("host"): str}),
+            data_schema=probatio.Schema({probatio.Required("host"): str}),
         )
 """,
         "homeassistant.components.test_int.sensor",
@@ -1153,7 +1153,7 @@ class MyFlowMixin(SomeUnresolvableBase):
     async def async_step_user(self, user_input=None):
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({vol.Required("host"): str}),
+            data_schema=probatio.Schema({probatio.Required("host"): str}),
         )
 """,
         "homeassistant.components.test_int.config_flow",
@@ -1187,8 +1187,8 @@ class MyOptionsFlowHandler(BaseMixinFlowHandler, OptionsFlow):
     async def async_step_init(self, user_input=None):
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema({
-                vol.Required("interval"): int,
+            data_schema=probatio.Schema({
+                probatio.Required("interval"): int,
             }),
         )
 """,

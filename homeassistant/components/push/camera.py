@@ -7,7 +7,7 @@ import logging
 from typing import Any, cast, override
 
 from aiohttp import web
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import webhook
 from homeassistant.components.camera import (
@@ -38,13 +38,13 @@ PUSH_CAMERA_DATA = "push_camera"
 
 PLATFORM_SCHEMA = CAMERA_PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_BUFFER_SIZE, default=1): cv.positive_int,
-        vol.Optional(CONF_TIMEOUT, default=timedelta(seconds=5)): vol.All(
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(CONF_BUFFER_SIZE, default=1): cv.positive_int,
+        probatio.Optional(CONF_TIMEOUT, default=timedelta(seconds=5)): probatio.All(
             cv.time_period, cv.positive_timedelta
         ),
-        vol.Optional(CONF_IMAGE_FIELD, default="image"): cv.string,
-        vol.Required(CONF_WEBHOOK_ID): cv.string,
+        probatio.Optional(CONF_IMAGE_FIELD, default="image"): cv.string,
+        probatio.Required(CONF_WEBHOOK_ID): cv.string,
     }
 )
 

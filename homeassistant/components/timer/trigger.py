@@ -4,7 +4,7 @@ from collections.abc import Mapping
 from datetime import datetime, timedelta
 from typing import cast, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import ATTR_ENTITY_ID, CONF_OPTIONS
 from homeassistant.core import CALLBACK_TYPE, Context, HomeAssistant, State, callback
@@ -33,8 +33,8 @@ CONF_REMAINING = "remaining"
 
 TIME_REMAINING_TRIGGER_SCHEMA = ENTITY_STATE_TRIGGER_SCHEMA.extend(
     {
-        vol.Required(CONF_OPTIONS): {
-            vol.Required(CONF_REMAINING): cv.positive_time_period_dict,
+        probatio.Required(CONF_OPTIONS): {
+            probatio.Required(CONF_REMAINING): cv.positive_time_period_dict,
         },
     }
 )

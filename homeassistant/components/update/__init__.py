@@ -1,14 +1,13 @@
 """Component to allow for providing device or service updates."""
 
 from datetime import timedelta
-from enum import StrEnum
 from functools import lru_cache
 import logging
 from typing import Any, Final, final, override
 
 from awesomeversion import AwesomeVersion, AwesomeVersionCompareException
+import probatio
 from propcache.api import cached_property
-import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.config_entries import ConfigEntry
@@ -18,14 +17,13 @@ from homeassistant.const import (
     EntityCategory,
     EntityStateAttribute,
 )
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import ABCCachedProperties, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util.hass_dict import HassKey
 
 from .const import (  # noqa: F401
     ATTR_AUTO_UPDATE,
@@ -40,29 +38,23 @@ from .const import (  # noqa: F401
     ATTR_TITLE,
     ATTR_UPDATE_PERCENTAGE,
     ATTR_VERSION,
+    DATA_COMPONENT,
+    DEVICE_CLASSES_SCHEMA,
     DOMAIN,
     SERVICE_INSTALL,
     SERVICE_SKIP,
+    UpdateDeviceClass,
     UpdateEntityFeature,
     UpdateEntityStateAttribute,
 )
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_COMPONENT: HassKey[EntityComponent[UpdateEntity]] = HassKey(DOMAIN)
 ENTITY_ID_FORMAT: Final = DOMAIN + ".{}"
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
 SCAN_INTERVAL = timedelta(minutes=15)
-
-
-class UpdateDeviceClass(StrEnum):
-    """Device class for update."""
-
-    FIRMWARE = "firmware"
-
-
-DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.Coerce(UpdateDeviceClass))
 
 
 __all__ = [
@@ -93,29 +85,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
     await component.async_setup(config)
 
-    component.async_register_entity_service(
-        SERVICE_INSTALL,
-        {
-            vol.Optional(ATTR_VERSION): cv.string,
-            vol.Optional(ATTR_BACKUP, default=False): cv.boolean,
-        },
-        async_install,
-        [UpdateEntityFeature.INSTALL],
-        admin_only=True,
-    )
-
-    component.async_register_entity_service(
-        SERVICE_SKIP,
-        None,
-        async_skip,
-        admin_only=True,
-    )
-    component.async_register_entity_service(
-        "clear_skipped",
-        None,
-        async_clear_skipped,
-        admin_only=True,
-    )
+    async_setup_services(hass)
 
     websocket_api.async_register_command(hass, websocket_release_notes)
 
@@ -130,57 +100,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.data[DATA_COMPONENT].async_unload_entry(entry)
-
-
-async def async_install(entity: UpdateEntity, service_call: ServiceCall) -> None:
-    """Service call wrapper to validate the call."""
-    # If version is not specified, but no update is available.
-    if (version := service_call.data.get(ATTR_VERSION)) is None and (
-        entity.installed_version == entity.latest_version
-        or entity.latest_version is None
-    ):
-        raise HomeAssistantError(f"No update available for {entity.entity_id}")
-
-    # If version is specified, but not supported by the entity.
-    if (
-        version is not None
-        and UpdateEntityFeature.SPECIFIC_VERSION not in entity.supported_features
-    ):
-        raise HomeAssistantError(
-            f"Installing a specific version is not supported for {entity.entity_id}"
-        )
-
-    # If backup is requested, but not supported by the entity.
-    if (
-        backup := service_call.data[ATTR_BACKUP]
-    ) and UpdateEntityFeature.BACKUP not in entity.supported_features:
-        raise HomeAssistantError(f"Backup is not supported for {entity.entity_id}")
-
-    # Update is already in progress.
-    if entity.in_progress is not False:
-        raise HomeAssistantError(
-            f"Update installation already in progress for {entity.entity_id}"
-        )
-
-    await entity.async_install_with_progress(version, backup)
-
-
-async def async_skip(entity: UpdateEntity, service_call: ServiceCall) -> None:
-    """Service call wrapper to validate the call."""
-    if entity.auto_update:
-        raise HomeAssistantError(
-            f"Skipping update is not supported for {entity.entity_id}"
-        )
-    await entity.async_skip()
-
-
-async def async_clear_skipped(entity: UpdateEntity, service_call: ServiceCall) -> None:
-    """Service call wrapper to validate the call."""
-    if entity.auto_update:
-        raise HomeAssistantError(
-            f"Clearing skipped update is not supported for {entity.entity_id}"
-        )
-    await entity.async_clear_skipped()
 
 
 class UpdateEntityDescription(EntityDescription, frozen_or_thawed=True):
@@ -362,9 +281,17 @@ class UpdateEntity(
     async def async_skip(self) -> None:
         """Skip the current offered version to update."""
         if (latest_version := self.latest_version) is None:
-            raise HomeAssistantError(f"Cannot skip an unknown version for {self.name}")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="unknown_version_to_skip",
+                translation_placeholders={"entity_id": self.entity_id},
+            )
         if self.installed_version == latest_version:
-            raise HomeAssistantError(f"No update available to skip for {self.name}")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="no_update_available_to_skip",
+                translation_placeholders={"entity_id": self.entity_id},
+            )
         self.__skipped_version = latest_version
         self.async_write_ha_state()
 
@@ -527,8 +454,8 @@ class UpdateEntity(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "update/release_notes",
-        vol.Required("entity_id"): cv.entity_id,
+        probatio.Required("type"): "update/release_notes",
+        probatio.Required("entity_id"): cv.entity_id,
     }
 )
 @websocket_api.async_response

@@ -3,8 +3,8 @@
 import logging
 from unittest.mock import Mock
 
+from probatio.error import MultipleInvalid
 import pytest
-from voluptuous.error import MultipleInvalid
 
 from homeassistant.components.rflink import (
     CONF_KEEPALIVE_IDLE,
@@ -14,10 +14,10 @@ from homeassistant.components.rflink import (
     DOMAIN,
     EVENT_KEY_COMMAND,
     EVENT_KEY_SENSOR,
-    SERVICE_SEND_COMMAND,
     TMP_ENTITY,
     RflinkCommand,
 )
+from homeassistant.components.rflink.services import SERVICE_SEND_COMMAND
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_HOST,

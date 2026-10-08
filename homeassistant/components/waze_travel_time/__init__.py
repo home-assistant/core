@@ -49,6 +49,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     client = WazeRouteCalculator(
         region=config_entry.data[CONF_REGION].upper(), client=httpx_client
     )
+    config_entry.async_on_unload(client.close)
 
     coordinator = WazeTravelTimeCoordinator(hass, config_entry, client)
     config_entry.runtime_data = coordinator

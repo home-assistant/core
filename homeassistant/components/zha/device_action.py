@@ -2,7 +2,7 @@
 
 from typing import Any
 
-import voluptuous as vol
+import probatio
 from zhaquirks.inovelli.types import AllLEDEffectType, SingleLEDEffectType
 from zigpy.zcl.clusters.security import IasWd
 
@@ -14,7 +14,7 @@ from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
 from .const import DOMAIN
 from .helpers import async_get_zha_device_proxy, convert_zha_error_to_ha_error
-from .websocket_api import SERVICE_WARNING_DEVICE_SQUAWK, SERVICE_WARNING_DEVICE_WARN
+from .services import SERVICE_WARNING_DEVICE_SQUAWK, SERVICE_WARNING_DEVICE_WARN
 
 # mypy: disallow-any-generics
 
@@ -28,27 +28,39 @@ INOVELLI_INDIVIDUAL_LED_EFFECT = "issue_individual_led_effect"
 
 DEFAULT_ACTION_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_DOMAIN): DOMAIN,
-        vol.Required(CONF_TYPE): vol.In({ACTION_SQUAWK, ACTION_WARN}),
+        probatio.Required(CONF_DOMAIN): DOMAIN,
+        probatio.Required(CONF_TYPE): probatio.In({ACTION_SQUAWK, ACTION_WARN}),
     }
 )
 
 INOVELLI_ALL_LED_EFFECT_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_TYPE): INOVELLI_ALL_LED_EFFECT,
-        vol.Required(CONF_DOMAIN): DOMAIN,
-        vol.Required("effect_type"): AllLEDEffectType.__getitem__,
-        vol.Required("color"): vol.All(vol.Coerce(int), vol.Range(0, 255)),
-        vol.Required("level"): vol.All(vol.Coerce(int), vol.Range(0, 100)),
-        vol.Required("duration"): vol.All(vol.Coerce(int), vol.Range(1, 255)),
+        probatio.Required(CONF_TYPE): INOVELLI_ALL_LED_EFFECT,
+        probatio.Required(CONF_DOMAIN): DOMAIN,
+        probatio.Required("effect_type"): probatio.In(
+            AllLEDEffectType.__members__.keys()
+        ),
+        probatio.Required("color"): probatio.All(
+            probatio.Coerce(int), probatio.Range(0, 255)
+        ),
+        probatio.Required("level"): probatio.All(
+            probatio.Coerce(int), probatio.Range(0, 100)
+        ),
+        probatio.Required("duration"): probatio.All(
+            probatio.Coerce(int), probatio.Range(1, 255)
+        ),
     }
 )
 
 INOVELLI_INDIVIDUAL_LED_EFFECT_SCHEMA = INOVELLI_ALL_LED_EFFECT_SCHEMA.extend(
     {
-        vol.Required(CONF_TYPE): INOVELLI_INDIVIDUAL_LED_EFFECT,
-        vol.Required("effect_type"): SingleLEDEffectType.__getitem__,
-        vol.Required("led_number"): vol.All(vol.Coerce(int), vol.Range(0, 6)),
+        probatio.Required(CONF_TYPE): INOVELLI_INDIVIDUAL_LED_EFFECT,
+        probatio.Required("effect_type"): probatio.In(
+            SingleLEDEffectType.__members__.keys()
+        ),
+        probatio.Required("led_number"): probatio.All(
+            probatio.Coerce(int), probatio.Range(0, 6)
+        ),
     }
 )
 
@@ -57,7 +69,7 @@ ACTION_SCHEMA_MAP = {
     INOVELLI_INDIVIDUAL_LED_EFFECT: INOVELLI_INDIVIDUAL_LED_EFFECT_SCHEMA,
 }
 
-ACTION_SCHEMA = vol.Any(
+ACTION_SCHEMA = probatio.Any(
     INOVELLI_ALL_LED_EFFECT_SCHEMA,
     INOVELLI_INDIVIDUAL_LED_EFFECT_SCHEMA,
     DEFAULT_ACTION_SCHEMA,
@@ -76,21 +88,39 @@ DEVICE_ACTIONS_BY_CLUSTER_ID: dict[int, list[dict[str, str]]] = {
 }
 
 DEVICE_ACTION_SCHEMAS = {
-    INOVELLI_ALL_LED_EFFECT: vol.Schema(
+    INOVELLI_ALL_LED_EFFECT: probatio.Schema(
         {
-            vol.Required("effect_type"): vol.In(AllLEDEffectType.__members__.keys()),
-            vol.Required("color"): vol.All(vol.Coerce(int), vol.Range(0, 255)),
-            vol.Required("level"): vol.All(vol.Coerce(int), vol.Range(0, 100)),
-            vol.Required("duration"): vol.All(vol.Coerce(int), vol.Range(1, 255)),
+            probatio.Required("effect_type"): probatio.In(
+                AllLEDEffectType.__members__.keys()
+            ),
+            probatio.Required("color"): probatio.All(
+                probatio.Coerce(int), probatio.Range(0, 255)
+            ),
+            probatio.Required("level"): probatio.All(
+                probatio.Coerce(int), probatio.Range(0, 100)
+            ),
+            probatio.Required("duration"): probatio.All(
+                probatio.Coerce(int), probatio.Range(1, 255)
+            ),
         }
     ),
-    INOVELLI_INDIVIDUAL_LED_EFFECT: vol.Schema(
+    INOVELLI_INDIVIDUAL_LED_EFFECT: probatio.Schema(
         {
-            vol.Required("led_number"): vol.All(vol.Coerce(int), vol.Range(0, 6)),
-            vol.Required("effect_type"): vol.In(SingleLEDEffectType.__members__.keys()),
-            vol.Required("color"): vol.All(vol.Coerce(int), vol.Range(0, 255)),
-            vol.Required("level"): vol.All(vol.Coerce(int), vol.Range(0, 100)),
-            vol.Required("duration"): vol.All(vol.Coerce(int), vol.Range(1, 255)),
+            probatio.Required("led_number"): probatio.All(
+                probatio.Coerce(int), probatio.Range(0, 6)
+            ),
+            probatio.Required("effect_type"): probatio.In(
+                SingleLEDEffectType.__members__.keys()
+            ),
+            probatio.Required("color"): probatio.All(
+                probatio.Coerce(int), probatio.Range(0, 255)
+            ),
+            probatio.Required("level"): probatio.All(
+                probatio.Coerce(int), probatio.Range(0, 100)
+            ),
+            probatio.Required("duration"): probatio.All(
+                probatio.Coerce(int), probatio.Range(1, 255)
+            ),
         }
     ),
 }
@@ -146,7 +176,7 @@ async def async_get_actions(
 
 async def async_get_action_capabilities(
     hass: HomeAssistant, config: ConfigType
-) -> dict[str, vol.Schema]:
+) -> dict[str, probatio.Schema]:
     """List action capabilities."""
     if (fields := DEVICE_ACTION_SCHEMAS.get(config[CONF_TYPE])) is None:
         return {}
@@ -195,7 +225,9 @@ async def _execute_inovelli_all_led_effect(
 
     async with convert_zha_error_to_ha_error():
         await cluster.led_effect(
-            led_effect=config["effect_type"],
+            # The action isn't validated when ZHA wasn't loaded yet, so the
+            # effect type is converted here instead of in the schema
+            led_effect=AllLEDEffectType[config["effect_type"]],
             led_color=config["color"],
             led_level=config["level"],
             led_duration=config["duration"],
@@ -211,7 +243,7 @@ async def _execute_inovelli_individual_led_effect(
 
     async with convert_zha_error_to_ha_error():
         await cluster.individual_led_effect(
-            led_effect=config["effect_type"],
+            led_effect=SingleLEDEffectType[config["effect_type"]],
             led_color=config["color"],
             led_level=config["level"],
             led_duration=config["duration"],

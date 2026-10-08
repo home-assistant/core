@@ -1,9 +1,16 @@
 """Tests for the Peblar sensor platform."""
 
+from enum import StrEnum
+
+from peblar import ChargeLimiter, CPState
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.peblar.const import DOMAIN
+from homeassistant.components.peblar.const import (
+    DOMAIN,
+    PEBLAR_CHARGE_LIMITER_TO_HOME_ASSISTANT,
+    PEBLAR_CP_STATE_TO_HOME_ASSISTANT,
+)
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -34,3 +41,18 @@ async def test_entities(
     )
     for entity_entry in entity_entries:
         assert entity_entry.device_id == device_entry.id
+
+
+@pytest.mark.parametrize(
+    ("mapping", "states"),
+    [
+        (PEBLAR_CHARGE_LIMITER_TO_HOME_ASSISTANT, ChargeLimiter),
+        (PEBLAR_CP_STATE_TO_HOME_ASSISTANT, CPState),
+    ],
+    ids=["charge_limiter", "cp_state"],
+)
+def test_all_library_states_are_mapped(
+    mapping: dict[StrEnum, str | None], states: type[StrEnum]
+) -> None:
+    """Test every Peblar library state has a mapping."""
+    assert set(mapping) == set(states)

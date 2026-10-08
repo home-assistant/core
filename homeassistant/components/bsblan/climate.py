@@ -101,8 +101,10 @@ class BSBLANClimate(BSBLanCircuitEntity, ClimateEntity):
 
         # Backward compatible unique ID: circuit 1 keeps old format
         if circuit == 1:
+            # Legacy format, kept as migrating existing unique IDs is not worth the risk
             self._attr_unique_id = f"{mac}-climate"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
         else:
+            # Legacy format, kept as migrating existing unique IDs is not worth the risk
             self._attr_unique_id = f"{mac}-climate-{circuit}"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
 
         # Set temperature range from per-circuit static data. Standard BSB/LPB

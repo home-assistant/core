@@ -2,7 +2,7 @@
 
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.notify import (
     ATTR_DATA,
@@ -21,7 +21,7 @@ from .const import DOMAIN, SERVICE_SEND_MESSAGE
 CONF_DEFAULT_ROOM = "default_room"
 
 PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_DEFAULT_ROOM): cv.string}
+    {probatio.Required(CONF_DEFAULT_ROOM): cv.string}
 )
 
 
