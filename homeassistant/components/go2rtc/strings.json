@@ -1,7 +1,7 @@
 {
   "exceptions": {
     "cannot_connect": {
-      "message": "Could not connect to go2rtc instance on {url} ({error})"
+      "message": "Could not connect to go2rtc instance on {url}"
     }
   },
   "issues": {

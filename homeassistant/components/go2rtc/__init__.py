@@ -242,7 +242,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: Go2RtcConfigEntry) -> bo
         raise ConfigEntryError(
             translation_domain=DOMAIN,
             translation_key="cannot_connect",
-            translation_placeholders={"url": url, "error": str(err)},
+            translation_placeholders={"url": url},
         ) from err
     except Go2RtcVersionError as err:
         ir.async_create_issue(
@@ -262,7 +262,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: Go2RtcConfigEntry) -> bo
         raise ConfigEntryError(
             translation_domain=DOMAIN,
             translation_key="cannot_connect",
-            translation_placeholders={"url": url, "error": str(err)},
+            translation_placeholders={"url": url},
         ) from err
 
     ir.async_delete_issue(hass, DOMAIN, "unsupported_version")
