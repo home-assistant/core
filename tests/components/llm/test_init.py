@@ -205,10 +205,12 @@ async def test_get_tools_prefixed_tool_names_not_reported(
     assert "not prefixed with 'test__'" not in caplog.text
 
 
-async def test_management_api(hass: HomeAssistant, hass_admin_user: MockUser) -> None:
-    """Test that ManagementAPI is registered and retrieves management tools for admin."""
-    tool = _StubTool("test__mgmt_tool")
-    _mock_tools_platform(hass, "test", LLMTools(tools=[tool], prompt="mgmt prompt"))
+async def test_home_assistant_api(
+    hass: HomeAssistant, hass_admin_user: MockUser
+) -> None:
+    """Test that HomeAssistantAPI is registered and retrieves Home Assistant tools for admin."""
+    tool = _StubTool("test__ha_tool")
+    _mock_tools_platform(hass, "test", LLMTools(tools=[tool], prompt="ha prompt"))
 
     assert await async_setup_component(hass, "llm", {})
 
@@ -219,20 +221,22 @@ async def test_management_api(hass: HomeAssistant, hass_admin_user: MockUser) ->
         assistant="conversation",
         device_id=None,
     )
-    api_instance = await llm.async_get_api(hass, llm.LLM_API_MANAGEMENT, admin_context)
-    assert api_instance.api_prompt == "mgmt prompt"
+    api_instance = await llm.async_get_api(
+        hass, llm.LLM_API_HOME_ASSISTANT, admin_context
+    )
+    assert api_instance.api_prompt == "ha prompt"
     assert [t.name for t in api_instance.tools] == [
         "llm__GetDateTime",
-        "test__mgmt_tool",
+        "test__ha_tool",
     ]
 
 
-async def test_management_api_denied_for_non_admin(
+async def test_home_assistant_api_denied_for_non_admin(
     hass: HomeAssistant, hass_read_only_user: MockUser
 ) -> None:
-    """Test that ManagementAPI raises Unauthorized for non-admin user."""
-    tool = _StubTool("test__mgmt_tool")
-    _mock_tools_platform(hass, "test", LLMTools(tools=[tool], prompt="mgmt prompt"))
+    """Test that HomeAssistantAPI raises Unauthorized for non-admin user."""
+    tool = _StubTool("test__ha_tool")
+    _mock_tools_platform(hass, "test", LLMTools(tools=[tool], prompt="ha prompt"))
 
     assert await async_setup_component(hass, "llm", {})
 
@@ -244,17 +248,17 @@ async def test_management_api_denied_for_non_admin(
         device_id=None,
     )
     with pytest.raises(Unauthorized):
-        await llm.async_get_api(hass, llm.LLM_API_MANAGEMENT, non_admin_context)
+        await llm.async_get_api(hass, llm.LLM_API_HOME_ASSISTANT, non_admin_context)
 
 
-async def test_management_api_denied_without_user(
+async def test_home_assistant_api_denied_without_user(
     hass: HomeAssistant, llm_context: llm.LLMContext
 ) -> None:
-    """Test that ManagementAPI raises Unauthorized when no user is in context."""
-    tool = _StubTool("test__mgmt_tool")
-    _mock_tools_platform(hass, "test", LLMTools(tools=[tool], prompt="mgmt prompt"))
+    """Test that HomeAssistantAPI raises Unauthorized when no user is in context."""
+    tool = _StubTool("test__ha_tool")
+    _mock_tools_platform(hass, "test", LLMTools(tools=[tool], prompt="ha prompt"))
 
     assert await async_setup_component(hass, "llm", {})
 
     with pytest.raises(Unauthorized):
-        await llm.async_get_api(hass, llm.LLM_API_MANAGEMENT, llm_context)
+        await llm.async_get_api(hass, llm.LLM_API_HOME_ASSISTANT, llm_context)

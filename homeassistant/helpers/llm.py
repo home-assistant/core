@@ -41,7 +41,7 @@ APIS_CACHE: HassKey[dict[str, API]] = HassKey("llm_apis")
 
 
 LLM_API_ASSIST = "assist"
-LLM_API_MANAGEMENT = "management"
+LLM_API_HOME_ASSISTANT = "homeassistant"
 
 DATE_TIME_PROMPT = (
     'Current time is {{ now().strftime("%H:%M:%S") }}. '

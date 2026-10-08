@@ -32,14 +32,16 @@ def llm_context() -> llm.LLMContext:
 async def test_async_get_tools(
     hass: HomeAssistant, llm_context: llm.LLMContext
 ) -> None:
-    """Test async_get_tools returns tools only for management API."""
+    """Test async_get_tools returns tools only for Home Assistant API."""
     assert async_get_tools(hass, llm_context, llm.LLM_API_ASSIST) is None
 
-    management_tools = async_get_tools(hass, llm_context, llm.LLM_API_MANAGEMENT)
-    assert management_tools is not None
-    assert len(management_tools.tools) == 1
-    assert management_tools.tools[0].name == "system_log__get_entries"
-    assert management_tools.prompt is None
+    home_assistant_tools = async_get_tools(
+        hass, llm_context, llm.LLM_API_HOME_ASSISTANT
+    )
+    assert home_assistant_tools is not None
+    assert len(home_assistant_tools.tools) == 1
+    assert home_assistant_tools.tools[0].name == "system_log__get_entries"
+    assert home_assistant_tools.prompt is None
 
 
 async def test_system_log_not_loaded(

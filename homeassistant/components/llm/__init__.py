@@ -11,7 +11,7 @@ from homeassistant.helpers.integration_platform import LazyIntegrationPlatforms
 from homeassistant.helpers.llm import (
     API,
     LLM_API_ASSIST,
-    LLM_API_MANAGEMENT,
+    LLM_API_HOME_ASSISTANT,
     APIInstance,
     LLMContext,
     Tool,
@@ -63,7 +63,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         hass, DOMAIN, _process_llm_tools_platform
     )
     async_register_api(hass, AssistAPI(hass))
-    async_register_api(hass, ManagementAPI(hass))
+    async_register_api(hass, HomeAssistantAPI(hass))
     async_setup_ws_api(hass)
     return True
 
@@ -154,10 +154,10 @@ class AssistAPI(API):
         )
 
 
-class ManagementAPI(API):
-    """API exposing Management API to LLMs.
+class HomeAssistantAPI(API):
+    """API exposing Home Assistant API to LLMs.
 
-    The management API manages Home Assistant itself (e.g. registries, system logs,
+    The Home Assistant API manages Home Assistant itself (e.g. registries, system logs,
     automations, and config entries). It is not bounded by entity exposure and is
     restricted to admin users.
     """
@@ -166,8 +166,8 @@ class ManagementAPI(API):
         """Init the class."""
         super().__init__(
             hass=hass,
-            id=LLM_API_MANAGEMENT,
-            name="Management",
+            id=LLM_API_HOME_ASSISTANT,
+            name="Home Assistant",
             requires_admin=True,
         )
 

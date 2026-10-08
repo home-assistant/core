@@ -8,7 +8,12 @@ import voluptuous as vol
 from homeassistant.components.llm import LLMTools
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.llm import LLM_API_MANAGEMENT, LLMContext, Tool, ToolInput
+from homeassistant.helpers.llm import (
+    LLM_API_HOME_ASSISTANT,
+    LLMContext,
+    Tool,
+    ToolInput,
+)
 from homeassistant.util import dt as dt_util
 from homeassistant.util.json import JsonObjectType
 
@@ -139,8 +144,8 @@ class SystemLogGetEntriesTool(Tool):
 def async_get_tools(
     hass: HomeAssistant, llm_context: LLMContext, api_id: str
 ) -> LLMTools | None:
-    """Return the system log LLM tools for the management API."""
-    if api_id != LLM_API_MANAGEMENT:
+    """Return the system log LLM tools for the Home Assistant API."""
+    if api_id != LLM_API_HOME_ASSISTANT:
         return None
 
     return LLMTools(tools=[SystemLogGetEntriesTool()])

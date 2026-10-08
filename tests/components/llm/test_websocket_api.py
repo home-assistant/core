@@ -36,7 +36,11 @@ async def setup_llm(hass: HomeAssistant) -> None:
             [],
             [
                 {"id": "assist", "name": "Assist", "requires_admin": False},
-                {"id": "management", "name": "Management", "requires_admin": True},
+                {
+                    "id": "homeassistant",
+                    "name": "Home Assistant",
+                    "requires_admin": True,
+                },
             ],
             id="default_apis",
         ),
@@ -44,7 +48,11 @@ async def setup_llm(hass: HomeAssistant) -> None:
             [("test-api", "Test API")],
             [
                 {"id": "assist", "name": "Assist", "requires_admin": False},
-                {"id": "management", "name": "Management", "requires_admin": True},
+                {
+                    "id": "homeassistant",
+                    "name": "Home Assistant",
+                    "requires_admin": True,
+                },
                 {"id": "test-api", "name": "Test API", "requires_admin": False},
             ],
             id="registered_api",
