@@ -16,6 +16,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     Platform,
     UnitOfPower,
+    UnitOfTime,
 )
 from homeassistant.core import (
     Event,
@@ -28,7 +29,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.util import dt as dt_util
-from homeassistant.util.unit_conversion import PowerConverter
+from homeassistant.util.unit_conversion import DurationConverter, PowerConverter
 
 from .const import (
     CONF_GRID,
@@ -86,11 +87,20 @@ def _parse_int_state(state: State | None) -> int | None:
 
 
 def _parse_eta_state(state: State | None) -> int | None:
-    """Parse vehicle ETA sensor state in seconds, converting datetime if needed."""
+    """Parse vehicle ETA sensor state in seconds, converting datetime or duration units if needed."""
     if not state or state.state in (None, "unavailable", "unknown", ""):
         return None
     try:
-        return round(float(state.state))
+        val = float(state.state)
+        unit = state.attributes.get("unit_of_measurement")
+        if (
+            unit
+            and unit != UnitOfTime.SECONDS
+            and unit in DurationConverter.VALID_UNITS
+        ):
+            with contextlib.suppress(Exception):
+                val = DurationConverter.convert(val, unit, UnitOfTime.SECONDS)
+        return round(val)
     except ValueError, TypeError:
         pass
 

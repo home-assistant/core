@@ -21,6 +21,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     PERCENTAGE,
     UnitOfLength,
+    UnitOfTime,
 )
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -397,7 +398,29 @@ class OpenEVSEOptionsFlowHandler(OptionsFlowWithReload):
                 probatio.Optional(CONF_VEHICLE_ETA, default=""): probatio.Any(
                     None,
                     "",
-                    EntitySelector(EntitySelectorConfig(domain=SENSOR_DOMAIN)),
+                    EntitySelector(
+                        EntitySelectorConfig(
+                            filter=[
+                                EntityWithDeviceFilterSelectorConfig(
+                                    domain=SENSOR_DOMAIN,
+                                    device_class=[
+                                        SensorDeviceClass.TIMESTAMP,
+                                        SensorDeviceClass.DATE,
+                                        SensorDeviceClass.DURATION,
+                                    ],
+                                ),
+                                EntityWithDeviceFilterSelectorConfig(
+                                    domain=SENSOR_DOMAIN,
+                                    unit_of_measurement=[
+                                        UnitOfTime.SECONDS,
+                                        UnitOfTime.MINUTES,
+                                        UnitOfTime.HOURS,
+                                        UnitOfTime.DAYS,
+                                    ],
+                                ),
+                            ]
+                        )
+                    ),
                 ),
                 probatio.Optional(CONF_HOME_BATTERY_SOC, default=""): probatio.Any(
                     None,

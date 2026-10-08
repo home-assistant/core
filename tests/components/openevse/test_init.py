@@ -191,6 +191,11 @@ async def test_sensor_state_change_pushes_data(
     await hass.async_block_till_done()
     assert mock_charger.soc.call_args.kwargs["time_to_full"] in (1799, 1800, 1801)
 
+    # Vehicle ETA update with duration unit sensor (converts to seconds)
+    hass.states.async_set("sensor.car_eta", "30", {"unit_of_measurement": "min"})
+    await hass.async_block_till_done()
+    assert mock_charger.soc.call_args.kwargs["time_to_full"] == 1800
+
     # Home battery SoC update
     hass.states.async_set("sensor.home_battery_soc", "95")
     await hass.async_block_till_done()
