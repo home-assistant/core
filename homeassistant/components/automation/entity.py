@@ -9,6 +9,7 @@ import probatio
 from propcache.api import cached_property
 
 from homeassistant.components.blueprint import CONF_USE_BLUEPRINT
+from homeassistant.components.trace import ATTR_ITEM_ID, ATTR_RUN_ID
 from homeassistant.const import (
     ATTR_AREA_ID,
     ATTR_ENTITY_ID,
@@ -522,6 +523,10 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
             }
             if "trigger" in variables and "description" in variables["trigger"]:
                 event_data[ATTR_SOURCE] = variables["trigger"]["description"]
+            # Without an id there is no item id to look up the trace by
+            if self.unique_id:
+                event_data[ATTR_ITEM_ID] = self.unique_id
+                event_data[ATTR_RUN_ID] = automation_trace.run_id
 
             @callback
             def started_action() -> None:

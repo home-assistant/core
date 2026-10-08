@@ -18,11 +18,13 @@ from homeassistant.const import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_OFF,
+    STATE_ON,
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import (
     Context,
     CoreState,
+    Event,
     HomeAssistant,
     ServiceCall,
     State,
@@ -51,6 +53,7 @@ from homeassistant.util import dt as dt_util, yaml as yaml_util
 from tests.common import (
     MockConfigEntry,
     MockUser,
+    async_capture_events,
     async_fire_time_changed,
     async_mock_service,
     mock_restore_cache,
@@ -717,6 +720,142 @@ async def test_shared_context(hass: HomeAssistant) -> None:
     assert hass.states.get(ENTITY_ID).context is stop_context
 
 
+@pytest.mark.parametrize(
+    "callee_action",
+    [
+        pytest.param({"action": "script.callee"}, id="wait"),
+        pytest.param(
+            {"action": "script.turn_on", "target": {"entity_id": "script.callee"}},
+            id="no_wait",
+        ),
+    ],
+)
+async def test_script_started_event_trace_ids(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    callee_action: dict[str, Any],
+) -> None:
+    """Test the script started event identifies the trace of its run."""
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: {
+                "caller": {"sequence": [callee_action, callee_action]},
+                "callee": {"sequence": {"event": "callee_event"}, "mode": "parallel"},
+            }
+        },
+    )
+    started_events = async_capture_events(hass, EVENT_SCRIPT_STARTED)
+    context = Context()
+
+    await hass.services.async_call(DOMAIN, "caller", blocking=True, context=context)
+    await hass.async_block_till_done()
+
+    client = await hass_ws_client()
+    await client.send_json_auto_id({"type": "trace/list", "domain": DOMAIN})
+    response = await client.receive_json()
+    assert response["success"]
+    traces = response["result"]
+    assert [trace["item_id"] for trace in traces] == ["caller", "callee", "callee"]
+
+    # All runs share one context, only the run id tells them apart
+    assert [(event.context.id, event.data) for event in started_events] == [
+        (
+            context.id,
+            {
+                ATTR_NAME: "caller",
+                ATTR_ENTITY_ID: "script.caller",
+                "item_id": "caller",
+                "run_id": traces[0]["run_id"],
+            },
+        ),
+        (
+            context.id,
+            {
+                ATTR_NAME: "callee",
+                ATTR_ENTITY_ID: "script.callee",
+                "item_id": "callee",
+                "run_id": traces[1]["run_id"],
+            },
+        ),
+        (
+            context.id,
+            {
+                ATTR_NAME: "callee",
+                ATTR_ENTITY_ID: "script.callee",
+                "item_id": "callee",
+                "run_id": traces[2]["run_id"],
+            },
+        ),
+    ]
+
+
+@pytest.mark.parametrize(
+    ("script_mode", "script_executions"),
+    [
+        pytest.param({"mode": "single"}, ["finished", "failed_single"], id="single"),
+        pytest.param(
+            {"mode": "parallel", "max": 2},
+            ["finished", "finished", "failed_max_runs"],
+            id="max_runs",
+        ),
+        pytest.param({"mode": "queued"}, ["finished", "finished"], id="queued"),
+        pytest.param({"mode": "restart"}, ["cancelled", "finished"], id="restart"),
+    ],
+)
+async def test_script_started_event_script_modes(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    script_mode: dict[str, Any],
+    script_executions: list[str],
+) -> None:
+    """Test every run fires a started event with its run id, also rejected runs."""
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: {
+                "test": {
+                    "sequence": [
+                        {"wait_template": "{{ is_state('switch.test', 'off') }}"},
+                        {"event": "test_done"},
+                    ],
+                    **script_mode,
+                }
+            }
+        },
+    )
+    started: list[tuple[str, str]] = []
+
+    @callback
+    def record_started(event: Event) -> None:
+        # The script state shows whether the event fired before the run started
+        started.append((event.data["run_id"], hass.states.get(ENTITY_ID).state))
+
+    hass.bus.async_listen(EVENT_SCRIPT_STARTED, record_started)
+    hass.states.async_set("switch.test", STATE_ON)
+
+    for _ in script_executions:
+        await hass.services.async_call(DOMAIN, "test")
+    hass.states.async_set("switch.test", STATE_OFF)
+    await hass.async_block_till_done()
+
+    client = await hass_ws_client()
+    await client.send_json_auto_id(
+        {"type": "trace/list", "domain": DOMAIN, "item_id": "test"}
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    traces = response["result"]
+    assert [trace["script_execution"] for trace in traces] == script_executions
+    assert [run_id for run_id, _ in started] == [trace["run_id"] for trace in traces]
+    # Only the first run found the script idle; its event fired before it started
+    assert [state for _, state in started] == [STATE_OFF] + [STATE_ON] * (
+        len(traces) - 1
+    )
+
+
 async def test_logging_script_error(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -1066,7 +1205,12 @@ async def test_logbook_humanify_script_started_event(hass: HomeAssistant) -> Non
             ),
             MockRow(
                 EVENT_SCRIPT_STARTED,
-                {ATTR_ENTITY_ID: "script.bye", ATTR_NAME: "Bye Script"},
+                {
+                    ATTR_ENTITY_ID: "script.bye",
+                    ATTR_NAME: "Bye Script",
+                    "item_id": "bye",
+                    "run_id": "0123456789abcdef0123456789abcdef",
+                },
             ),
         ],
     )
@@ -1075,11 +1219,15 @@ async def test_logbook_humanify_script_started_event(hass: HomeAssistant) -> Non
     assert event1["domain"] == "script"
     assert event1["message"] == "started"
     assert event1["entity_id"] == "script.hello"
+    assert "item_id" not in event1
+    assert "run_id" not in event1
 
     assert event2["name"] == "Bye Script"
     assert event2["domain"] == "script"
     assert event2["message"] == "started"
     assert event2["entity_id"] == "script.bye"
+    assert event2["item_id"] == "bye"
+    assert event2["run_id"] == "0123456789abcdef0123456789abcdef"
 
 
 @pytest.mark.parametrize("concurrently", [False, True])

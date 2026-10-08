@@ -11,6 +11,7 @@ from propcache.api import cached_property
 
 from homeassistant.components import websocket_api
 from homeassistant.components.blueprint import CONF_USE_BLUEPRINT
+from homeassistant.components.trace import ATTR_ITEM_ID, ATTR_RUN_ID
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_MODE,
@@ -686,11 +687,6 @@ class ScriptEntity(BaseScriptEntity, RestoreEntity):
     ) -> ServiceResponse:
         """Start the run of a script."""
         self.async_set_context(context)
-        self.hass.bus.async_fire(
-            EVENT_SCRIPT_STARTED,
-            {ATTR_NAME: self.script.name, ATTR_ENTITY_ID: self.entity_id},
-            context=context,
-        )
         coro = self._async_run(variables, context)
         if wait:
             # If we are executing in parallel, we need to copy the script stack so
@@ -728,6 +724,16 @@ class ScriptEntity(BaseScriptEntity, RestoreEntity):
             context,
             self._trace_config,
         ) as script_trace:
+            self.hass.bus.async_fire(
+                EVENT_SCRIPT_STARTED,
+                {
+                    ATTR_NAME: self.script.name,
+                    ATTR_ENTITY_ID: self.entity_id,
+                    ATTR_ITEM_ID: self._attr_unique_id,
+                    ATTR_RUN_ID: script_trace.run_id,
+                },
+                context=context,
+            )
             # Prepare tracing the execution of the script's sequence
             script_trace.set_trace(trace_get())
             with trace_path("sequence"):
