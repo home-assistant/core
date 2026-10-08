@@ -45,6 +45,11 @@ class NoulAnswer:
     noul: float
     type: Literal["noul"] = field(default="noul", init=False)
 
+    def __post_init__(self) -> None:
+        """Validate the probability."""
+        if not _probability(self.noul):
+            raise HomeAssistantError("Invalid noul answer")
+
 
 @dataclass(slots=True)
 class ChoiceAnswer:
@@ -54,6 +59,18 @@ class ChoiceAnswer:
     probabilities: dict[str, float]
     type: Literal["choice"] = field(default="choice", init=False)
 
+    def __post_init__(self) -> None:
+        """Validate the distribution and selected alternative."""
+        if not (
+            isinstance(self.probabilities, dict)
+            and isinstance(self.choice, str)
+            and self.choice in self.probabilities
+            and all(_probability(value) for value in self.probabilities.values())
+            and math.isclose(sum(self.probabilities.values()), 1, abs_tol=1e-6)
+            and self.probabilities[self.choice] == max(self.probabilities.values())
+        ):
+            raise HomeAssistantError("Invalid choice answer")
+
 
 @dataclass(slots=True)
 class ScoreAnswer:
@@ -62,6 +79,22 @@ class ScoreAnswer:
     score: float
     probabilities: list[float]
     type: Literal["score"] = field(default="score", init=False)
+
+    def __post_init__(self) -> None:
+        """Validate the distribution and expected level index."""
+        if not (
+            isinstance(self.probabilities, list)
+            and all(_probability(value) for value in self.probabilities)
+            and math.isclose(sum(self.probabilities), 1, abs_tol=1e-6)
+            and type(self.score) in (int, float)
+            and math.isfinite(self.score)
+            and math.isclose(
+                self.score,
+                sum(index * value for index, value in enumerate(self.probabilities)),
+                abs_tol=1e-6,
+            )
+        ):
+            raise HomeAssistantError("Invalid score answer")
 
 
 type EvaluationAnswer = NoulAnswer | ChoiceAnswer | ScoreAnswer
@@ -121,6 +154,14 @@ class EvaluationTaskResult:
 
     answers: dict[str, EvaluationAnswer]
 
+    def __post_init__(self) -> None:
+        """Require typed answers keyed by question ID."""
+        if not isinstance(self.answers, dict) or not all(
+            isinstance(answer, NoulAnswer | ChoiceAnswer | ScoreAnswer)
+            for answer in self.answers.values()
+        ):
+            raise HomeAssistantError("Invalid evaluation answers")
+
     def as_dict(self) -> dict[str, Any]:
         """Return the action response."""
         return asdict(self)
@@ -134,45 +175,18 @@ def _probability(value: float) -> bool:
 def _valid_answer(question: EvaluationQuestion, answer: EvaluationAnswer) -> bool:
     """Validate an answer against its question."""
     if question["type"] == "noul" and isinstance(answer, NoulAnswer):
-        return _probability(answer.noul)
+        return True
     if question["type"] == "choice" and isinstance(answer, ChoiceAnswer):
-        probabilities = answer.probabilities
-        return (
-            probabilities.keys() == question["criteria"].keys()
-            and answer.choice in probabilities
-            and all(_probability(value) for value in probabilities.values())
-            and math.isclose(sum(probabilities.values()), 1, abs_tol=1e-6)
-            and probabilities[answer.choice] == max(probabilities.values())
-        )
+        return answer.probabilities.keys() == question["criteria"].keys()
     if question["type"] == "score" and isinstance(answer, ScoreAnswer):
-        levels = answer.probabilities
-        return (
-            isinstance(levels, list)
-            and len(levels) == len(question["criteria"])
-            and all(_probability(value) for value in levels)
-            and math.isclose(sum(levels), 1, abs_tol=1e-6)
-            and type(answer.score) in (int, float)
-            and math.isfinite(answer.score)
-            and math.isclose(
-                answer.score,
-                sum(index * value for index, value in enumerate(levels)),
-                abs_tol=1e-6,
-            )
-        )
+        return len(answer.probabilities) == len(question["criteria"])
     return False
 
 
 def validate_result(task: EvaluationTask, result: EvaluationTaskResult) -> None:
     """Reject incomplete or invalid provider results."""
-    if (
-        not isinstance(result.answers, dict)
-        or result.answers.keys() != task.questions.keys()
-    ):
+    if result.answers.keys() != task.questions.keys():
         raise HomeAssistantError("Evaluation did not return every requested answer")
     for question_id, question in task.questions.items():
-        try:
-            valid = _valid_answer(question, result.answers[question_id])
-        except KeyError, TypeError, AttributeError:
-            valid = False
-        if not valid:
+        if not _valid_answer(question, result.answers[question_id]):
             raise HomeAssistantError(f"Invalid evaluation answer for {question_id}")

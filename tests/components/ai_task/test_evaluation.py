@@ -1,7 +1,8 @@
 """Test decision tasks and their result contract."""
 
-from collections.abc import Generator
+from collections.abc import Callable, Generator
 from datetime import timedelta
+from functools import partial
 import math
 from pathlib import Path
 from unittest.mock import AsyncMock, patch
@@ -328,18 +329,98 @@ async def test_invalid_state(
     mock_evaluate.assert_not_called()
 
 
+@pytest.mark.parametrize(
+    "create_answer",
+    [
+        pytest.param(partial(ai_task.NoulAnswer, noul=math.nan), id="nan"),
+        pytest.param(partial(ai_task.NoulAnswer, noul=math.inf), id="infinity"),
+        pytest.param(partial(ai_task.NoulAnswer, noul=-0.1), id="negative"),
+        pytest.param(partial(ai_task.NoulAnswer, noul=1.1), id="above-one"),
+        pytest.param(partial(ai_task.NoulAnswer, noul=True), id="boolean"),
+        pytest.param(
+            partial(
+                ai_task.ChoiceAnswer,
+                choice="other",
+                probabilities={"door": 0.9, "other": 0.1},
+            ),
+            id="not-argmax",
+        ),
+        pytest.param(
+            partial(
+                ai_task.ChoiceAnswer,
+                choice="missing",
+                probabilities={"door": 0.9, "other": 0.1},
+            ),
+            id="unknown-choice",
+        ),
+        pytest.param(
+            partial(
+                ai_task.ChoiceAnswer,
+                choice="door",
+                probabilities={"door": 0.9, "other": 0.9},
+            ),
+            id="unnormalized-choice",
+        ),
+        pytest.param(
+            partial(
+                ai_task.ChoiceAnswer,
+                choice="door",
+                probabilities={"door": math.nan, "other": 0.1},
+            ),
+            id="nonfinite-choice",
+        ),
+        pytest.param(
+            partial(ai_task.ScoreAnswer, score=0.2, probabilities=[0.9, 0.05, 0.05]),
+            id="incorrect-expectation",
+        ),
+        pytest.param(
+            partial(
+                ai_task.ScoreAnswer, score=0, probabilities={"0": 1, "1": 0, "2": 0}
+            ),
+            id="mapping-not-list",
+        ),
+        pytest.param(
+            partial(ai_task.ScoreAnswer, score=0, probabilities=[0.9, 0.9]),
+            id="unnormalized-score",
+        ),
+        pytest.param(
+            partial(ai_task.ScoreAnswer, score=0, probabilities=[math.inf, 0]),
+            id="nonfinite-score-probability",
+        ),
+        pytest.param(
+            partial(ai_task.ScoreAnswer, score=math.nan, probabilities=[1, 0]),
+            id="nonfinite-score",
+        ),
+    ],
+)
+def test_invalid_answer_values(
+    create_answer: Callable[[], ai_task.EvaluationAnswer],
+) -> None:
+    """Reject invalid answer values when constructing the dataclass."""
+    with pytest.raises(HomeAssistantError, match="Invalid .* answer"):
+        create_answer()
+
+
+@pytest.mark.parametrize(
+    "answers",
+    [
+        pytest.param(None, id="none"),
+        pytest.param([], id="list"),
+        pytest.param(
+            {"delivered": {"type": "noul", "noul": 0.5}}, id="dictionary-not-dataclass"
+        ),
+    ],
+)
+def test_invalid_result(answers: dict[str, ai_task.EvaluationAnswer]) -> None:
+    """Require answer dataclasses when constructing the task result."""
+    with pytest.raises(HomeAssistantError, match="Invalid evaluation answers"):
+        ai_task.EvaluationTaskResult(answers=answers)
+
+
 @pytest.mark.usefixtures("init_components")
 @pytest.mark.parametrize(
     ("question_id", "answer"),
     [
-        pytest.param("delivered", ai_task.NoulAnswer(noul=math.nan), id="nan"),
-        pytest.param("delivered", ai_task.NoulAnswer(noul=math.inf), id="infinity"),
-        pytest.param("delivered", ai_task.NoulAnswer(noul=-0.1), id="negative"),
-        pytest.param("delivered", ai_task.NoulAnswer(noul=1.1), id="above-one"),
-        pytest.param("delivered", ai_task.NoulAnswer(noul=True), id="boolean"),
-        pytest.param(
-            "delivered", {"type": "noul", "noul": 0.5}, id="dictionary-not-dataclass"
-        ),
         pytest.param(
             "delivered",
             ai_task.ScoreAnswer(score=0, probabilities=[1, 0]),
@@ -347,37 +428,13 @@ async def test_invalid_state(
         ),
         pytest.param(
             "location",
-            ai_task.ChoiceAnswer(
-                choice="other", probabilities={"door": 0.9, "other": 0.1}
-            ),
-            id="not-argmax",
-        ),
-        pytest.param(
-            "location",
             ai_task.ChoiceAnswer(choice="door", probabilities={"door": 1}),
             id="missing-option",
-        ),
-        pytest.param(
-            "location",
-            ai_task.ChoiceAnswer(
-                choice="door", probabilities={"door": 0.9, "other": 0.9}
-            ),
-            id="unnormalized",
-        ),
-        pytest.param(
-            "attention",
-            ai_task.ScoreAnswer(score=0.2, probabilities=[0.9, 0.05, 0.05]),
-            id="incorrect-expectation",
         ),
         pytest.param(
             "attention",
             ai_task.ScoreAnswer(score=0, probabilities=[1, 0]),
             id="missing-level",
-        ),
-        pytest.param(
-            "attention",
-            ai_task.ScoreAnswer(score=0, probabilities={"0": 1, "1": 0, "2": 0}),
-            id="mapping-not-list",
         ),
     ],
 )
@@ -408,8 +465,6 @@ async def test_invalid_answer(
     "answers",
     [
         pytest.param({}, id="missing"),
-        pytest.param(None, id="none"),
-        pytest.param([], id="list"),
         pytest.param({**ANSWERS, "extra": ai_task.NoulAnswer(noul=0.5)}, id="extra"),
     ],
 )
