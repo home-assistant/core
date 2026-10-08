@@ -47,7 +47,7 @@
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Front',
       'id': '12:34:56:10:b9:0e',
       'is_local': False,
-      'light_state': None,
+      'light_state': 'auto',
       'local_url': None,
       'monitoring': True,
       <CameraEntityStateAttribute.MOTION_DETECTION: 'motion_detection'>: True,

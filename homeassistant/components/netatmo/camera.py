@@ -4,6 +4,7 @@ import logging
 from typing import Any, cast, override
 
 import aiohttp
+import probatio
 from pyatmo import ApiError as NetatmoApiError, modules as NaModules
 from pyatmo.event import Event as NaEvent
 
@@ -11,6 +12,7 @@ from homeassistant.components.camera import Camera, CameraEntityFeature
 from homeassistant.const import ATTR_PERSONS
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -18,6 +20,7 @@ from .const import (
     ATTR_CAMERA_LIGHT_MODE,
     ATTR_EVENT_TYPE,
     ATTR_PERSON,
+    CAMERA_LIGHT_MODES,
     CAMERA_TRIGGERS,
     CONF_URL_SECURITY,
     DOMAIN,
@@ -29,6 +32,9 @@ from .const import (
     MANUFACTURER,
     NETATMO_ALIM_STATUS_ONLINE,
     NETATMO_CREATE_CAMERA,
+    SERVICE_SET_CAMERA_LIGHT,
+    SERVICE_SET_PERSON_AWAY,
+    SERVICE_SET_PERSONS_HOME,
     WEBHOOK_PUSH_TYPE,
 )
 from .coordinator import EVENT, HOME, SIGNAL_NAME, NetatmoConfigEntry, NetatmoDevice
@@ -56,6 +62,28 @@ async def async_setup_entry(
 
     entry.async_on_unload(
         async_dispatcher_connect(hass, NETATMO_CREATE_CAMERA, _create_entity)
+    )
+
+    platform = entity_platform.async_get_current_platform()
+
+    platform.async_register_entity_service(
+        SERVICE_SET_PERSONS_HOME,
+        {
+            probatio.Required(ATTR_PERSONS): probatio.All(
+                probatio.EnsureList(), [cv.string]
+            )
+        },
+        "_service_set_persons_home",
+    )
+    platform.async_register_entity_service(
+        SERVICE_SET_PERSON_AWAY,
+        {probatio.Optional(ATTR_PERSON): cv.string},
+        "_service_set_person_away",
+    )
+    platform.async_register_entity_service(
+        SERVICE_SET_CAMERA_LIGHT,
+        {probatio.Required(ATTR_CAMERA_LIGHT_MODE): probatio.In(CAMERA_LIGHT_MODES)},
+        "_service_set_camera_light",
     )
 
 
@@ -256,8 +284,28 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
             self._attr_is_streaming = self.device.monitoring
             self._attr_motion_detection_enabled = self.device.monitoring
 
+        # Sync light_state from polled floodlight value (fallback to webhook value)
+        if hasattr(self.device, "floodlight") and self.device.floodlight is not None:
+            self._light_state = self.device.floodlight
+
         self.data_handler.events[self.device.entity_id] = self.process_events(
             self.device.events
+        )
+
+        self._attr_extra_state_attributes.update(
+            {
+                "id": self.device.entity_id,
+                "monitoring": self.device.monitoring,
+                "sd_status": self.device.sd_status,
+                "alim_status": self.device.alim_status,
+                "is_local": self.device.is_local,
+                "vpn_url": self.device.vpn_url,
+                "local_url": self.device.local_url,
+                "light_state": self._light_state,
+                "reachable": self.device.reachable,
+                "wifi_strength": getattr(self.device, "wifi_strength", None),
+                "firmware": getattr(self.device, "firmware_name", None),
+            }
         )
 
         self.async_write_ha_state()

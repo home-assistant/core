@@ -83,6 +83,7 @@
           "connection": "wifi",
           "homekit_status": "upgradable",
           "floodlight": "auto",
+          "siren_status": "no_sound",
           "timelapse_available": true,
           "id": "12:34:56:10:b9:0e",
           "vpn_url": "https://prodvpn-eu-6.netatmo.net/10.20.30.41/333333333333/444444444444,,",
@@ -369,3 +370,4 @@
     }
   }
 }
+
