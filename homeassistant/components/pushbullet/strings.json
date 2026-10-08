@@ -49,5 +49,10 @@
         "name": "Type"
       }
     }
+  },
+  "exceptions": {
+    "invalid_api_key": {
+      "message": "Invalid API key for Pushbullet"
+    }
   }
 }
