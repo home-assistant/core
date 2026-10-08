@@ -69,41 +69,25 @@ class PowerviewShadeUpdateCoordinator(DataUpdateCoordinator[PowerviewShadeData])
 
         # Clean up stale devices
         current_shade_ids = set(self.data.shades.keys())
-        device_registry = dr.async_get(self.hass)
-        registered_shade_ids = {
-            identifier[1]
-            for device in dr.async_entries_for_config_entry(
-                device_registry, self.config_entry.entry_id
-            )
-            if device.via_device_id is not None
-            for identifier in device.identifiers
-            if identifier[0] == DOMAIN
-        }
-        removed_shade_ids = registered_shade_ids - current_shade_ids
-        if removed_shade_ids:
-            self._remove_stale_devices(removed_shade_ids)
         
-        return self.data
-
-    @callback
-    def _remove_stale_devices(self, removed_shade_ids):
-        """Remove devices for shades that no longer exist."""
+        # Pull all currently tracked HA devices for this integration to check against
         device_registry = dr.async_get(self.hass)
         devices = dr.async_entries_for_config_entry(
             device_registry, self.config_entry.entry_id
         )
-
-        for device in devices:
-            # Skip the hub device itself
-            if device.via_device_id is None:
-                continue
-
-            # Check if this device is for a removed shade
-            for identifier in device.identifiers:
-                if identifier[0] == DOMAIN and identifier[1] in removed_shade_ids:
+        
+        # Audit registry devices to catch phantoms
+        for device in devices
+            # Only include shades, don't include the hub device
+            if device.via_device_id is not None
+            for identifier in device.identifiers
+                if identifier[0] == DOMAIN and identifier[1] not in current_shade_ids
+                    # Remove the stale shade and write the removal to the log
                     _LOGGER.info(
                         "Removing device for shade %s that no longer exists on hub",
                         identifier[1]
                     )
                     device_registry.async_remove_device(device.id)
-                    break
+
+        self._previous_shade_ids = current_shade_ids
+        return self.data
