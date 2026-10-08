@@ -24,6 +24,7 @@ async def test_sensors(
 @pytest.mark.usefixtures("init_integration")
 async def test_device(
     device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
     mock_config_entry: MockConfigEntry,
 ) -> None:
@@ -33,3 +34,11 @@ async def test_device(
     )
     assert device_entry is not None
     assert device_entry == snapshot
+
+    # The entity snapshots mask the device ID, so check the link explicitly
+    entity_entries = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
+    assert {entity_entry.device_id for entity_entry in entity_entries} == {
+        device_entry.id
+    }
