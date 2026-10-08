@@ -58,17 +58,32 @@ async def async_setup_entry(
     """Set up WLED switch based on a config entry."""
     coordinator = entry.runtime_data
 
-    switches: list[SwitchEntity] = [
-        WLEDNightlightSwitch(coordinator),
-        WLEDSyncSendSwitch(coordinator),
-        WLEDSyncReceiveSwitch(coordinator),
-    ]
+    async_add_entities(
+        [
+            WLEDNightlightSwitch(coordinator),
+            WLEDSyncSendSwitch(coordinator),
+            WLEDSyncReceiveSwitch(coordinator),
+        ]
+    )
 
-    # Only devices with the AudioReactive usermod installed report its state.
-    if coordinator.data.state.audio_reactive is not None:
-        switches.append(WLEDAudioReactiveSwitch(coordinator))
+    # Only devices with the AudioReactive usermod installed report its state,
+    # and it can show up later, like after flashing firmware that has it.
+    audio_reactive_added = False
 
-    async_add_entities(switches)
+    @callback
+    def async_add_audio_reactive_switch() -> None:
+        """Add the AudioReactive switch once the device reports the usermod."""
+        nonlocal audio_reactive_added
+        if audio_reactive_added or coordinator.data.state.audio_reactive is None:
+            return
+
+        audio_reactive_added = True
+        async_add_entities([WLEDAudioReactiveSwitch(coordinator)])
+
+    entry.async_on_unload(
+        coordinator.async_add_listener(async_add_audio_reactive_switch)
+    )
+    async_add_audio_reactive_switch()
 
     update_segments = partial(
         async_update_segments,
