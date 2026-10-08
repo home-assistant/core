@@ -58,6 +58,10 @@ def test_fetch_pull_request_maps_the_api_fields(requests_mock: rm.Mocker) -> Non
         "homeassistant/components/peblar/sensor.py": "added",
         "tests/components/peblar/snapshots/test_sensor.ambr": "added",
     }
+    assert pr.filenames == [
+        "homeassistant/components/peblar/sensor.py",
+        "tests/components/peblar/snapshots/test_sensor.ambr",
+    ]
 
 
 def test_fetch_pull_request_reads_an_empty_body_as_a_string(
