@@ -126,7 +126,7 @@ class PVOutputSensorEntity(
         *,
         coordinator: PVOutputDataUpdateCoordinator,
         description: PVOutputSensorEntityDescription,
-        system_id: str,
+        system_id: int,
     ) -> None:
         """Initialize a PVOutput sensor."""
         super().__init__(coordinator=coordinator)
