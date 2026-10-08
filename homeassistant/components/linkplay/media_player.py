@@ -23,11 +23,15 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.dt import utcnow
 
 from . import SHARED_DATA, LinkPlayConfigEntry
-from .const import DOMAIN
+from .const import DOMAIN, ENTITY_ID_CHANGED_SIGNAL
 from .entity import LinkPlayBaseEntity, exception_wrap
 
 _LOGGER = logging.getLogger(__name__)
@@ -145,6 +149,11 @@ class LinkPlayMediaPlayerEntity(LinkPlayBaseEntity, MediaPlayerEntity):
         entity_to_bridge = self.hass.data[DOMAIN][SHARED_DATA].entity_to_bridge
         entity_to_bridge[self.entity_id] = self._bridge.device.uuid
         self.async_on_remove(lambda: entity_to_bridge.pop(self.entity_id, None))
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, ENTITY_ID_CHANGED_SIGNAL, self.async_write_ha_state
+            )
+        )
 
     @callback
     @override
@@ -154,6 +163,8 @@ class LinkPlayMediaPlayerEntity(LinkPlayBaseEntity, MediaPlayerEntity):
         entity_to_bridge.pop(old_entity_id, None)
         entity_to_bridge[self.entity_id] = self._bridge.device.uuid
         super().async_entity_id_changed(old_entity_id)
+        # Every player's group members are derived from entity_to_bridge
+        async_dispatcher_send(self.hass, ENTITY_ID_CHANGED_SIGNAL)
 
     @exception_wrap
     async def async_update(self) -> None:

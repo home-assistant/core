@@ -1,6 +1,7 @@
 """Tests for the LinkPlay media player."""
 
 from collections.abc import AsyncGenerator
+import json
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
@@ -32,6 +33,7 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    CONF_HOST,
     EVENT_STATE_CHANGED,
     SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PAUSE,
@@ -48,7 +50,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
 
 from . import setup_integration
-from .conftest import HOST, mock_lp_aiohttp_client
+from .conftest import HOST, HOST_REENTRY, mock_lp_aiohttp_client
 
 from tests.common import MockConfigEntry, async_capture_events, async_load_fixture
 
@@ -237,3 +239,54 @@ async def test_join_renamed_entity_id(
                 {ATTR_ENTITY_ID: RENAMED_ENTITY_ID, ATTR_GROUP_MEMBERS: [ENTITY_ID]},
                 blocking=True,
             )
+
+
+async def test_group_members_follow_renamed_group_member(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test group members report the new entity_id of another renamed player."""
+    leader_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Leader",
+        data={CONF_HOST: HOST_REENTRY},
+        unique_id=LEADER_UUID,
+    )
+    status = await async_load_fixture(hass, "getStatusEx.json", DOMAIN)
+    leader_status = json.loads(status) | {"uuid": LEADER_UUID, "DeviceName": "Leader"}
+    with (
+        mock_lp_aiohttp_client() as mock_session,
+        patch.object(LinkPlayMultiroom, "update_status", return_value=None),
+    ):
+        for host, host_status in (
+            (HOST, status),
+            (HOST_REENTRY, json.dumps(leader_status)),
+        ):
+            for endpoint in (f"https://{host}", f"http://{host}"):
+                mock_session.get(
+                    API_ENDPOINT.format(endpoint, "getPlayerStatusEx"),
+                    text=await async_load_fixture(hass, "getPlayerEx.json", DOMAIN),
+                )
+                mock_session.get(
+                    API_ENDPOINT.format(endpoint, "getStatusEx"), text=host_status
+                )
+
+        await setup_integration(hass, mock_config_entry)
+        await setup_integration(hass, leader_config_entry)
+
+        follower = mock_config_entry.runtime_data.bridge
+        follower.multiroom = LinkPlayMultiroom(leader_config_entry.runtime_data.bridge)
+        follower.multiroom.followers = [follower]
+        await async_update_entity(hass, ENTITY_ID)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.attributes[ATTR_GROUP_MEMBERS] == [LEADER_ENTITY_ID, ENTITY_ID]
+
+    entity_registry.async_update_entity(
+        LEADER_ENTITY_ID, new_entity_id=RENAMED_ENTITY_ID
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.attributes[ATTR_GROUP_MEMBERS] == [RENAMED_ENTITY_ID, ENTITY_ID]
