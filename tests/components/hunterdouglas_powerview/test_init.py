@@ -1,3 +1,5 @@
+"""Tests for the Hunter Douglas PowerView integration initialization and device removal."""
+
 from homeassistant.components.hunterdouglas_powerview.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
