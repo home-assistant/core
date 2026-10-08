@@ -38,8 +38,21 @@ class OHFEventsConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         if user_input is not None:
-            return self.async_create_entry(title="Open Home Foundation Events", data={})
-        return self.async_show_form(step_id="user")
+            return self.async_create_entry(
+                title="Open Home Foundation Events",
+                data={},
+                subentries=[
+                    {
+                        "subentry_type": SUBENTRY_TYPE_AREA,
+                        "data": user_input[CONF_LOCATION],
+                        "title": user_input[CONF_NAME],
+                        "unique_id": None,
+                    }
+                ],
+            )
+        return self.async_show_form(
+            step_id="user", data_schema=_get_area_schema(self.hass)
+        )
 
     @classmethod
     @callback

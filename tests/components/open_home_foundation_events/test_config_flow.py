@@ -29,12 +29,20 @@ async def test_full_flow(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
+    name_key = next(key for key in result["data_schema"].schema if key == CONF_NAME)
+    assert name_key.default() == "Open Home Foundation events near test home"
 
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_NAME: "Amsterdam", CONF_LOCATION: AREA}
+    )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Open Home Foundation Events"
     assert result["data"] == {}
+    (subentry,) = result["result"].subentries.values()
+    assert subentry.subentry_type == SUBENTRY_TYPE_AREA
+    assert subentry.title == "Amsterdam"
+    assert dict(subentry.data) == AREA
 
 
 async def test_single_instance(

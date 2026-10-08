@@ -5,7 +5,14 @@
     },
     "step": {
       "user": {
-        "description": "Do you want to set up Open Home Foundation Events? You can add areas afterwards to get a calendar of the events nearby."
+        "data": {
+          "location": "[%key:common::config_flow::data::location%]",
+          "name": "[%key:common::config_flow::data::name%]"
+        },
+        "data_description": {
+          "location": "[%key:component::open_home_foundation_events::config_subentries::area::step::area::data_description::location%]",
+          "name": "[%key:component::open_home_foundation_events::config_subentries::area::step::area::data_description::name%]"
+        }
       }
     }
   },
