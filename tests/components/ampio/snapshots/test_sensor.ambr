@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_all_entities[sensor.m_sens_salon_absolute_pressure-entry]
+# name: test_all_entities[sensor.m_sens_salon_object_43_co2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -15,122 +15,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.m_sens_salon_absolute_pressure',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Absolute pressure',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 1,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.ATMOSPHERIC_PRESSURE: 'atmospheric_pressure'>,
-    'original_icon': None,
-    'original_name': 'Absolute pressure',
-    'platform': 'ampio',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'pressure_abs',
-    'unique_id': 'obj_44',
-    'unit_of_measurement': <UnitOfPressure.HPA: 'hPa'>,
-  })
-# ---
-# name: test_all_entities[sensor.m_sens_salon_absolute_pressure-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'atmospheric_pressure',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'm-sens salon Absolute pressure',
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPressure.HPA: 'hPa'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.m_sens_salon_absolute_pressure',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '1013.2',
-  })
-# ---
-# name: test_all_entities[sensor.m_sens_salon_air_quality_index-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.m_sens_salon_air_quality_index',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Air quality index',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 0,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.AQI: 'aqi'>,
-    'original_icon': None,
-    'original_name': 'Air quality index',
-    'platform': 'ampio',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'obj_48',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[sensor.m_sens_salon_air_quality_index-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'aqi',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'm-sens salon Air quality index',
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.m_sens_salon_air_quality_index',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '23.0',
-  })
-# ---
-# name: test_all_entities[sensor.m_sens_salon_co2-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.m_sens_salon_co2',
+    'entity_id': 'sensor.m_sens_salon_object_43_co2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -156,23 +41,23 @@
     'unit_of_measurement': <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
   })
 # ---
-# name: test_all_entities[sensor.m_sens_salon_co2-state]
+# name: test_all_entities[sensor.m_sens_salon_object_43_co2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'carbon_dioxide',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'm-sens salon CO2',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Object 43 CO2',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.m_sens_salon_co2',
+    'entity_id': 'sensor.m_sens_salon_object_43_co2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '900.5',
   })
 # ---
-# name: test_all_entities[sensor.m_sens_salon_illuminance-entry]
+# name: test_all_entities[sensor.m_sens_salon_object_44_absolute_pressure-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -188,7 +73,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.m_sens_salon_illuminance',
+    'entity_id': 'sensor.m_sens_salon_object_44_absolute_pressure',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -196,99 +81,41 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Illuminance',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 0,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.ILLUMINANCE: 'illuminance'>,
-    'original_icon': None,
-    'original_name': 'Illuminance',
-    'platform': 'ampio',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'obj_47',
-    'unit_of_measurement': 'lx',
-  })
-# ---
-# name: test_all_entities[sensor.m_sens_salon_illuminance-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'illuminance',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'm-sens salon Illuminance',
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'lx',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.m_sens_salon_illuminance',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '742.0',
-  })
-# ---
-# name: test_all_entities[sensor.m_sens_salon_loudness-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.m_sens_salon_loudness',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Loudness',
+    'object_id_base': 'Absolute pressure',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
       }),
     }),
-    'original_device_class': <SensorDeviceClass.SOUND_PRESSURE: 'sound_pressure'>,
+    'original_device_class': <SensorDeviceClass.ATMOSPHERIC_PRESSURE: 'atmospheric_pressure'>,
     'original_icon': None,
-    'original_name': 'Loudness',
+    'original_name': 'Absolute pressure',
     'platform': 'ampio',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'loudness',
-    'unique_id': 'obj_46',
-    'unit_of_measurement': <UnitOfSoundPressure.DECIBEL: 'dB'>,
+    'translation_key': 'pressure_abs',
+    'unique_id': 'obj_44',
+    'unit_of_measurement': <UnitOfPressure.HPA: 'hPa'>,
   })
 # ---
-# name: test_all_entities[sensor.m_sens_salon_loudness-state]
+# name: test_all_entities[sensor.m_sens_salon_object_44_absolute_pressure-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'sound_pressure',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'm-sens salon Loudness',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'atmospheric_pressure',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Object 44 Absolute pressure',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfSoundPressure.DECIBEL: 'dB'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPressure.HPA: 'hPa'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.m_sens_salon_loudness',
+    'entity_id': 'sensor.m_sens_salon_object_44_absolute_pressure',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '38.5',
+    'state': '1013.2',
   })
 # ---
-# name: test_all_entities[sensor.m_sens_salon_relative_pressure-entry]
+# name: test_all_entities[sensor.m_sens_salon_object_45_relative_pressure-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -304,7 +131,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.m_sens_salon_relative_pressure',
+    'entity_id': 'sensor.m_sens_salon_object_45_relative_pressure',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -330,20 +157,193 @@
     'unit_of_measurement': <UnitOfPressure.HPA: 'hPa'>,
   })
 # ---
-# name: test_all_entities[sensor.m_sens_salon_relative_pressure-state]
+# name: test_all_entities[sensor.m_sens_salon_object_45_relative_pressure-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pressure',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'm-sens salon Relative pressure',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Object 45 Relative pressure',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPressure.HPA: 'hPa'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.m_sens_salon_relative_pressure',
+    'entity_id': 'sensor.m_sens_salon_object_45_relative_pressure',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1019.7',
+  })
+# ---
+# name: test_all_entities[sensor.m_sens_salon_object_46_loudness-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.m_sens_salon_object_46_loudness',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Loudness',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.SOUND_PRESSURE: 'sound_pressure'>,
+    'original_icon': None,
+    'original_name': 'Loudness',
+    'platform': 'ampio',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'loudness',
+    'unique_id': 'obj_46',
+    'unit_of_measurement': <UnitOfSoundPressure.DECIBEL: 'dB'>,
+  })
+# ---
+# name: test_all_entities[sensor.m_sens_salon_object_46_loudness-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'sound_pressure',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Object 46 Loudness',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfSoundPressure.DECIBEL: 'dB'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.m_sens_salon_object_46_loudness',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '38.5',
+  })
+# ---
+# name: test_all_entities[sensor.m_sens_salon_object_47_illuminance-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.m_sens_salon_object_47_illuminance',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Illuminance',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ILLUMINANCE: 'illuminance'>,
+    'original_icon': None,
+    'original_name': 'Illuminance',
+    'platform': 'ampio',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'obj_47',
+    'unit_of_measurement': 'lx',
+  })
+# ---
+# name: test_all_entities[sensor.m_sens_salon_object_47_illuminance-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'illuminance',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Object 47 Illuminance',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'lx',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.m_sens_salon_object_47_illuminance',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '742.0',
+  })
+# ---
+# name: test_all_entities[sensor.m_sens_salon_object_48_air_quality_index-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.m_sens_salon_object_48_air_quality_index',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Air quality index',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.AQI: 'aqi'>,
+    'original_icon': None,
+    'original_name': 'Air quality index',
+    'platform': 'ampio',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'obj_48',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.m_sens_salon_object_48_air_quality_index-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'aqi',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Object 48 Air quality index',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.m_sens_salon_object_48_air_quality_index',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '23.0',
   })
 # ---
 # name: test_all_entities[sensor.m_sens_salon_temperatura-entry]
@@ -370,7 +370,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Temperatura',
+    'object_id_base': None,
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -378,7 +378,7 @@
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'Temperatura',
+    'original_name': None,
     'platform': 'ampio',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -392,7 +392,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'm-sens salon Temperatura',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Temperatura',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
@@ -428,7 +428,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Wilgotność',
+    'object_id_base': None,
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -436,7 +436,7 @@
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
     'original_icon': None,
-    'original_name': 'Wilgotność',
+    'original_name': None,
     'platform': 'ampio',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -450,7 +450,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidity',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'm-sens salon Wilgotność',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Wilgotność',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),

@@ -26,11 +26,13 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
 from .conftest import (
+    DEFAULT_OBJECTS,
     MSENS_FALLBACK_NAME,
     MSENS_IDENTIFIER,
     STANDARD_USER_INPUT,
     USER_INPUT,
     emit,
+    object_identifier,
 )
 
 from tests.common import MockConfigEntry
@@ -231,7 +233,12 @@ async def test_standard_account_groups_by_module_mac(
         entity_registry, standard_config_entry.entry_id
     )
     assert len(entities) == 8
-    assert all(entity.device_id == module.id for entity in entities)
+    assert {
+        device_registry.async_get_child_device_by_identifier(
+            object_identifier(obj.id), standard_config_entry.entry_id
+        ).parent_device_id
+        for obj in DEFAULT_OBJECTS
+    } == {module.id}
 
 
 @pytest.mark.usefixtures("mock_client")

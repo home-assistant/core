@@ -22,7 +22,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import AmpioConfigEntry, AmpioData
-from .entity import AmpioEntity
+from .entity import AmpioEntity, async_parent_device_id
 
 PARALLEL_UPDATES = 0
 
@@ -107,7 +107,11 @@ async def async_setup_entry(
             continue
         if (description := SENSOR_DESCRIPTIONS.get(kind.key)) is None:
             continue
-        entities.append(AmpioSensor(data, obj, description))
+        entities.append(
+            AmpioSensor(
+                data, obj, description, async_parent_device_id(hass, entry, obj)
+            )
+        )
     async_add_entities(entities)
 
 
@@ -119,9 +123,10 @@ class AmpioSensor(AmpioEntity, SensorEntity):
         data: AmpioData,
         obj: AmpioObject,
         description: SensorEntityDescription,
+        parent_device_id: str,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(data, obj)
+        super().__init__(data, obj, parent_device_id)
         self.entity_description = description
 
     @property

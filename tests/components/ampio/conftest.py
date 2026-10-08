@@ -34,7 +34,13 @@ def object_unique_id(oid: int) -> str:
     return f"obj_{oid}"
 
 
+def object_identifier(oid: int) -> tuple[str, str]:
+    """The registry identifier of the child device of object ``oid``."""
+    return (DOMAIN, f"obj_{oid}")
+
+
 MSENS_IDENTIFIER = module_identifier(MSENS_MAC)
+MREL_MAC = 0xBE82
 
 USER_INPUT = {
     CONF_HOST: "ampio.test",

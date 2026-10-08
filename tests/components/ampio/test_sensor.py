@@ -16,17 +16,20 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.ampio.const import DOMAIN, HUB_IDENTIFIER
 from homeassistant.components.ampio.sensor import SENSOR_DESCRIPTIONS
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
 from .conftest import (
+    MREL_MAC,
     MSENS_FALLBACK_NAME,
     MSENS_IDENTIFIER,
     emit,
     make_object,
     module_identifier,
+    object_identifier,
     object_unique_id,
 )
 
@@ -34,7 +37,8 @@ from tests.common import MockConfigEntry, snapshot_platform
 
 TEMPERATURE_ENTITY_ID = "sensor.m_sens_salon_temperatura"
 HUMIDITY_ENTITY_ID = "sensor.m_sens_salon_wilgotnosc"
-CO2_ENTITY_ID = "sensor.m_sens_salon_co2"
+# An unnamed object's device reads "Object <id>", after its module's name.
+CO2_ENTITY_ID = "sensor.m_sens_salon_object_43_co2"
 
 
 async def _push_value(
@@ -244,7 +248,7 @@ async def test_server_owned_object_anchors_to_hub(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """The M-SERV's own objects attach to the hub device."""
+    """The M-SERV's own objects get child devices under the hub."""
     mock_client.objects[500] = make_object(
         500, "temp", 1, leaf_id="0_1_76_0_1", funkcja=5, name="Hub sensor"
     )
@@ -255,11 +259,16 @@ async def test_server_owned_object_anchors_to_hub(
         HUB_IDENTIFIER, mock_config_entry.entry_id
     )
     assert hub is not None
+    child = device_registry.async_get_child_device_by_identifier(
+        object_identifier(500), mock_config_entry.entry_id
+    )
+    assert child is not None
+    assert child.parent_device_id == hub.id
     entity_id = entity_registry.async_get_entity_id(
         Platform.SENSOR, DOMAIN, object_unique_id(500)
     )
     assert entity_id is not None
-    assert entity_registry.async_get(entity_id).device_id == hub.id
+    assert entity_registry.async_get(entity_id).device_id == child.id
 
 
 async def test_module_without_catalogue_row_gets_bare_device(
@@ -282,11 +291,11 @@ async def test_module_without_catalogue_row_gets_bare_device(
     assert device is not None
     assert device.name == "Ampio module 0xDEAD"
     assert device.model is None
-    entity_id = entity_registry.async_get_entity_id(
-        Platform.SENSOR, DOMAIN, object_unique_id(500)
+    child = device_registry.async_get_child_device_by_identifier(
+        object_identifier(500), mock_config_entry.entry_id
     )
-    assert entity_id is not None
-    assert entity_registry.async_get(entity_id).device_id == device.id
+    assert child is not None
+    assert child.parent_device_id == device.id
 
 
 async def test_nameless_module_row_keeps_fallback_name(
@@ -306,3 +315,61 @@ async def test_nameless_module_row_keeps_fallback_name(
     assert device is not None
     assert device.name == MSENS_FALLBACK_NAME
     assert device.model == "M-SENS"
+
+
+async def test_moved_object_keeps_its_first_parent(
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """An object moved to another module in Designer stays under its first module.
+
+    The registry refuses to re-parent a child device.
+    """
+    await setup_integration(hass, mock_config_entry)
+    first_parent = device_registry.async_get_device_by_identifier(
+        MSENS_IDENTIFIER, mock_config_entry.entry_id
+    )
+    assert first_parent is not None
+
+    mock_client.objects[36] = make_object(
+        36, "temp", 1, leaf_id="0_be82_76_0_1", name="Temperatura", state="24.4"
+    )
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    child = device_registry.async_get_child_device_by_identifier(
+        object_identifier(36), mock_config_entry.entry_id
+    )
+    assert child is not None
+    assert child.parent_device_id == first_parent.id
+    assert hass.states.get(TEMPERATURE_ENTITY_ID).state == "24.4"
+    assert (
+        device_registry.async_get_device_by_identifier(
+            module_identifier(MREL_MAC), mock_config_entry.entry_id
+        )
+        is None
+    )
+
+
+async def test_module_without_sensors_gets_no_device(
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """A module whose objects expose no sensor registers no device."""
+    mock_client.objects[203] = make_object(
+        203, "przekaznik", 0, leaf_id="0_be82_1_0_1", name="Relay", state="1"
+    )
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert (
+        device_registry.async_get_device_by_identifier(
+            module_identifier(MREL_MAC), mock_config_entry.entry_id
+        )
+        is None
+    )

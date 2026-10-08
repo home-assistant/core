@@ -26,6 +26,14 @@
       }
     }
   },
+  "device": {
+    "module": {
+      "name": "Ampio module {mac}"
+    },
+    "object": {
+      "name": "Object {id}"
+    }
+  },
   "entity": {
     "sensor": {
       "co2": {
