@@ -1,13 +1,19 @@
 """Test the System Bridge integration."""
 
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
 from homeassistant.components.system_bridge.config_flow import SystemBridgeConfigFlow
 from homeassistant.components.system_bridge.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT, CONF_TOKEN
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_HOST,
+    CONF_PORT,
+    CONF_TOKEN,
+    EVENT_HOMEASSISTANT_STOP,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -31,6 +37,17 @@ async def test_entry_setup_unload(
     assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
 
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_websocket_closed_on_stop(
+    hass: HomeAssistant, mock_websocket_client: MagicMock
+) -> None:
+    """Test the WebSocket is closed when Home Assistant stops."""
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+
+    mock_websocket_client.close.assert_awaited_once()
 
 
 async def test_migration_minor_1_to_2(hass: HomeAssistant) -> None:
