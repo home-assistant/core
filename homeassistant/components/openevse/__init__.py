@@ -27,6 +27,7 @@ from homeassistant.core import (
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import PowerConverter
 
 from .const import (
@@ -84,6 +85,23 @@ def _parse_int_state(state: State | None) -> int | None:
         return None
 
 
+def _parse_eta_state(state: State | None) -> int | None:
+    """Parse vehicle ETA sensor state in seconds, converting datetime if needed."""
+    if not state or state.state in (None, "unavailable", "unknown", ""):
+        return None
+    try:
+        return round(float(state.state))
+    except ValueError, TypeError:
+        pass
+
+    if dt := dt_util.parse_datetime(state.state):
+        now = dt_util.utcnow()
+        remaining = round((dt - now).total_seconds())
+        return max(0, remaining)
+
+    return None
+
+
 async def _handle_sensor_state_change(
     hass: HomeAssistant,
     entry: OpenEVSEConfigEntry,
@@ -129,7 +147,7 @@ async def _handle_sensor_state_change(
                 if range_sensor
                 else None
             )
-            eta = _parse_int_state(hass.states.get(eta_sensor)) if eta_sensor else None
+            eta = _parse_eta_state(hass.states.get(eta_sensor)) if eta_sensor else None
 
             await charger.soc(
                 battery_level=soc,

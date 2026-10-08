@@ -1,5 +1,6 @@
 """Tests for the OpenEVSE integration."""
 
+from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock
 
 from openevsehttp.exceptions import (
@@ -12,6 +13,7 @@ from homeassistant.components.openevse.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
+from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry
 
@@ -182,6 +184,12 @@ async def test_sensor_state_change_pushes_data(
     mock_charger.soc.assert_called_with(
         battery_level=80, battery_range=220, time_to_full=3600
     )
+
+    # Vehicle ETA update with datetime sensor (converts to remaining seconds)
+    eta_dt = dt_util.utcnow() + timedelta(seconds=1800)
+    hass.states.async_set("sensor.car_eta", eta_dt.isoformat())
+    await hass.async_block_till_done()
+    assert mock_charger.soc.call_args.kwargs["time_to_full"] in (1799, 1800, 1801)
 
     # Home battery SoC update
     hass.states.async_set("sensor.home_battery_soc", "95")
