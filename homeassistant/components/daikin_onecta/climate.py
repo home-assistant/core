@@ -208,7 +208,6 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
     @callback
     @override
     def _handle_coordinator_update(self) -> None:
-        self._async_update_device_registry()
         self._update_state()
         self.async_write_ha_state()
 

@@ -6,7 +6,6 @@ from typing import Never, override
 from daikin_onecta.client import OnectaClient
 
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -78,14 +77,6 @@ class DaikinOnectaEntity(CoordinatorEntity[OnectaDataUpdateCoordinator]):
         ):
             _add_management_point_metadata(info, self._device, embedded_id)
         return info
-
-    def _async_update_device_registry(self) -> None:
-        """Refresh device registry metadata after a coordinator update."""
-        dr.async_get(self.hass).async_get_or_create(
-            config_entry_id=self.coordinator.config_entry.entry_id,
-            **self.device_info,
-        )
-
 
 class DaikinEntity(DaikinOnectaEntity):
     """Compatibility base for entities backed by a Daikin gateway."""
