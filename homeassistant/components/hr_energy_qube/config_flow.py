@@ -8,9 +8,12 @@ from python_qube_heatpump import QubeClient, async_get_device_info, parse_device
 from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.helpers.selector import TextSelector
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import DEFAULT_PORT, DOMAIN, MDNS_LOOKUP_TIMEOUT
+
+HOST_SCHEMA = probatio.Schema({probatio.Required(CONF_HOST): TextSelector()})
 
 
 async def _async_validate_device(host: str) -> str | None:
@@ -19,7 +22,7 @@ async def _async_validate_device(host: str) -> str | None:
     try:
         if not await client.connect():
             return "cannot_connect"
-        if await client.async_get_software_version() is None:
+        if not await client.async_verify_device():
             return "not_qube_device"
     except OSError:
         return "cannot_connect"
@@ -60,12 +63,9 @@ class QubeConfigFlow(ConfigFlow, domain=DOMAIN):
                     self._abort_if_unique_id_configured(updates={CONF_HOST: host})
                 return self._async_create_qube_entry(host)
 
-        schema = probatio.Schema(
-            {
-                probatio.Required(CONF_HOST): str,
-            }
+        return self.async_show_form(
+            step_id="user", data_schema=HOST_SCHEMA, errors=errors
         )
-        return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
 
     @override
     async def async_step_zeroconf(
@@ -111,6 +111,40 @@ class QubeConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="zeroconf_confirm",
             description_placeholders={"host": self._host},
+            errors=errors,
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Change the host of an existing entry."""
+        entry = self._get_reconfigure_entry()
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            host = user_input[CONF_HOST]
+
+            self._async_abort_entries_match({CONF_HOST: host})
+
+            if error := await _async_validate_device(host):
+                errors["base"] = error
+            else:
+                # Refuse a different controller when both uuids are known;
+                # without mDNS the Modbus check above is all we can verify
+                if entry.unique_id is not None:
+                    aiozc = await zeroconf.async_get_async_instance(self.hass)
+                    if device := await async_get_device_info(
+                        host, aiozc, timeout=MDNS_LOOKUP_TIMEOUT
+                    ):
+                        await self.async_set_unique_id(device.uuid)
+                        self._abort_if_unique_id_mismatch()
+                return self.async_update_reload_and_abort(
+                    entry, data_updates={CONF_HOST: host}
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(HOST_SCHEMA, entry.data),
             errors=errors,
         )
 

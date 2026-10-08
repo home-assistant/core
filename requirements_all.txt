@@ -190,7 +190,7 @@ aioairzone-cloud==0.7.2
 aioairzone==1.0.5
 
 # homeassistant.components.alexa_devices
-aioamazondevices==16.3.1
+aioamazondevices==16.3.2
 
 # homeassistant.components.ambient_network
 # homeassistant.components.ambient_station
@@ -553,7 +553,7 @@ anova-wifi==1.0.1
 anthemav==1.4.2
 
 # homeassistant.components.anthropic
-anthropic==0.125.0
+anthropic==1.12.0
 
 # homeassistant.components.mcp_server
 anyio==4.14.2
@@ -792,7 +792,7 @@ colorlog==6.10.1
 colorthief==0.2.1
 
 # homeassistant.components.compit
-compit-inext-api==0.9.1
+compit-inext-api==0.9.2
 
 # homeassistant.components.concord232
 concord232==0.15.1
@@ -888,7 +888,7 @@ dropmqttapi==1.0.3
 dsmr-parser==1.11.1
 
 # homeassistant.components.dwd_weather_warnings
-dwdwfsapi==1.0.7
+dwdwfsapi==1.1.0
 
 # homeassistant.components.dynalite
 dynalite-devices==0.1.47
@@ -2797,7 +2797,7 @@ python-picnic-api2==2.0.1
 python-pooldose==0.9.10
 
 # homeassistant.components.hr_energy_qube
-python-qube-heatpump==1.16.0
+python-qube-heatpump==1.17.0
 
 # homeassistant.components.rabbitair
 python-rabbitair==0.0.8
@@ -3118,13 +3118,13 @@ smart-meter-texas==0.5.6
 snapcast==2.3.8
 
 # homeassistant.components.sonos
-soco==0.31.2
+soco==0.31.5
 
 # homeassistant.components.sofar
 sofar-modbus==0.17.0
 
 # homeassistant.components.solaredge
-solaredge-web==0.4.0
+solaredge-web==0.5.0
 
 # homeassistant.components.solaredge_modbus
 solaredged==0.5.0
