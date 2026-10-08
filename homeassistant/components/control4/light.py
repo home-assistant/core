@@ -20,7 +20,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from . import Control4ConfigEntry, Control4RuntimeData, get_items_of_category
-from .const import CONTROL4_ENTITY_TYPE
+from .const import CONTROL4_ENTITY_TYPE, UPDATE_INTERVAL
 from .director_utils import update_variables_for_config_entry
 from .entity import Control4Entity
 
@@ -38,7 +38,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up Control4 lights from a config entry."""
     runtime_data = entry.runtime_data
-    _LOGGER.debug("Scan interval = %s", runtime_data.scan_interval)
 
     async def async_update_data_non_dimmer() -> dict[int, dict[str, Any]]:
         """Fetch data from Control4 director for non-dimmer lights."""
@@ -63,7 +62,7 @@ async def async_setup_entry(
         _LOGGER,
         name="light",
         update_method=async_update_data_non_dimmer,
-        update_interval=timedelta(seconds=runtime_data.scan_interval),
+        update_interval=timedelta(seconds=UPDATE_INTERVAL),
         config_entry=entry,
     )
     dimmer_coordinator = DataUpdateCoordinator[dict[int, dict[str, Any]]](
@@ -71,7 +70,7 @@ async def async_setup_entry(
         _LOGGER,
         name="light",
         update_method=async_update_data_dimmer,
-        update_interval=timedelta(seconds=runtime_data.scan_interval),
+        update_interval=timedelta(seconds=UPDATE_INTERVAL),
         config_entry=entry,
     )
 

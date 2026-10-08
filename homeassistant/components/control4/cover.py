@@ -18,7 +18,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from . import Control4ConfigEntry, get_items_of_category
-from .const import CONTROL4_ENTITY_TYPE
+from .const import CONTROL4_ENTITY_TYPE, UPDATE_INTERVAL
 from .director_utils import update_variables_for_config_entry
 from .entity import Control4Entity
 
@@ -63,7 +63,7 @@ async def async_setup_entry(
         _LOGGER,
         name="cover",
         update_method=async_update_data,
-        update_interval=timedelta(seconds=runtime_data.scan_interval),
+        update_interval=timedelta(seconds=UPDATE_INTERVAL),
         config_entry=entry,
     )
 

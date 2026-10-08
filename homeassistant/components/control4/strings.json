@@ -34,13 +34,17 @@
       }
     }
   },
-  "options": {
-    "step": {
-      "init": {
-        "data": {
-          "scan_interval": "Seconds between updates"
+  "issues": {
+    "user_configurable_polling_removed": {
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "description": "Polling is now fixed at {default_interval} seconds. Your previous custom interval of {custom_interval} seconds is no longer supported.\n\nIf you need a custom update rate, disable polling in the system options and call {update_entity} from an automation.",
+            "title": "[%key:component::control4::issues::user_configurable_polling_removed::title%]"
+          }
         }
-      }
+      },
+      "title": "Custom polling interval is no longer supported"
     }
   }
 }

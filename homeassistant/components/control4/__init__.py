@@ -11,6 +11,7 @@ from pyControl4.error_handling import BadCredentials
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    ATTR_CONFIG_ENTRY_ID,
     CONF_HOST,
     CONF_PASSWORD,
     CONF_SCAN_INTERVAL,
@@ -20,14 +21,13 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import aiohttp_client, device_registry as dr
-
-from .const import (
-    API_RETRY_TIMES,
-    CONF_CONTROLLER_UNIQUE_ID,
-    DEFAULT_SCAN_INTERVAL,
-    DOMAIN,
+from homeassistant.helpers import (
+    aiohttp_client,
+    device_registry as dr,
+    issue_registry as ir,
 )
+
+from .const import API_RETRY_TIMES, CONF_CONTROLLER_UNIQUE_ID, DOMAIN, UPDATE_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,7 +44,6 @@ class Control4RuntimeData:
     director_all_items: list[dict[str, Any]]
     director_model: str
     director_sw_version: str
-    scan_interval: int
     ui_configuration: dict[str, Any] | None
 
 
@@ -156,9 +155,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: Control4ConfigEntry) -> 
                 f" Control4 controller at {config[CONF_HOST]}"
             ) from err
 
-    # Load options from config entry
-    scan_interval: int = entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
-
     entry.runtime_data = Control4RuntimeData(
         account=account,
         controller_unique_id=controller_unique_id,
@@ -166,7 +162,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: Control4ConfigEntry) -> 
         director_all_items=director_all_items,
         director_model=director_model,
         director_sw_version=director_sw_version,
-        scan_interval=scan_interval,
         ui_configuration=ui_configuration,
     )
 
@@ -189,3 +184,40 @@ async def get_items_of_category(
         for item in entry.runtime_data.director_all_items
         if "categories" in item and category in item["categories"]
     ]
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: Control4ConfigEntry) -> bool:
+    """Migrate config entry."""
+
+    if entry.version == 1 and entry.minor_version < 2:
+        if entry.options.get(CONF_SCAN_INTERVAL) in (None, UPDATE_INTERVAL):
+            options = dict(entry.options)
+            options.pop(CONF_SCAN_INTERVAL, None)
+            hass.config_entries.async_update_entry(
+                entry, options=options, minor_version=2
+            )
+        else:
+            ir.async_create_issue(
+                hass,
+                DOMAIN,
+                f"user_configurable_polling_removed_{entry.entry_id}",
+                is_fixable=True,
+                severity=ir.IssueSeverity.WARNING,
+                translation_key="user_configurable_polling_removed",
+                translation_placeholders={
+                    "custom_interval": str(entry.options[CONF_SCAN_INTERVAL]),
+                    "default_interval": str(UPDATE_INTERVAL),
+                    "update_entity": "`homeassistant.update_entity`",
+                },
+                learn_more_url="https://www.home-assistant.io/common-tasks/general/#defining-a-custom-polling-interval",
+                data={ATTR_CONFIG_ENTRY_ID: entry.entry_id},
+            )
+
+    return True
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: Control4ConfigEntry) -> None:
+    """Remove a config entry."""
+    ir.async_delete_issue(
+        hass, DOMAIN, f"user_configurable_polling_removed_{entry.entry_id}"
+    )
