@@ -684,3 +684,98 @@ async def test_air_quality_condition_unit_conversion_co(
             ),
         ],
     )
+
+
+async def test_air_quality_condition_unit_conversion_radon(
+    hass: HomeAssistant,
+) -> None:
+    """Test that the radon condition converts units correctly."""
+    _unit_bqm3 = {
+        ATTR_UNIT_OF_MEASUREMENT: UnitOfRadiationConcentration.BECQUEREL_PER_CUBIC_METER
+    }
+    _unit_pcil = {
+        ATTR_UNIT_OF_MEASUREMENT: UnitOfRadiationConcentration.PICOCURIES_PER_LITER
+    }
+    _unit_invalid = {ATTR_UNIT_OF_MEASUREMENT: "not_a_valid_unit"}
+
+    await assert_numerical_condition_unit_conversion(
+        hass,
+        condition="air_quality.is_radon_value",
+        entity_id="sensor.test",
+        pass_states=[
+            {
+                "state": "150",
+                "attributes": {"device_class": "radon", **_unit_bqm3},
+            }
+        ],
+        fail_states=[
+            {
+                "state": "50",
+                "attributes": {"device_class": "radon", **_unit_bqm3},
+            }
+        ],
+        numerical_condition_options=[
+            {
+                "threshold": {
+                    "type": "between",
+                    "value_min": {
+                        "number": 2,
+                        "unit_of_measurement": (
+                            UnitOfRadiationConcentration.PICOCURIES_PER_LITER
+                        ),
+                    },
+                    "value_max": {
+                        "number": 8,
+                        "unit_of_measurement": (
+                            UnitOfRadiationConcentration.PICOCURIES_PER_LITER
+                        ),
+                    },
+                }
+            },
+            {
+                "threshold": {
+                    "type": "between",
+                    "value_min": {
+                        "number": 74,
+                        "unit_of_measurement": (
+                            UnitOfRadiationConcentration.BECQUEREL_PER_CUBIC_METER
+                        ),
+                    },
+                    "value_max": {
+                        "number": 296,
+                        "unit_of_measurement": (
+                            UnitOfRadiationConcentration.BECQUEREL_PER_CUBIC_METER
+                        ),
+                    },
+                }
+            },
+        ],
+        limit_entity_condition_options={
+            "threshold": {
+                "type": "between",
+                "value_min": {"entity": "sensor.above"},
+                "value_max": {"entity": "sensor.below"},
+            }
+        },
+        limit_entities=("sensor.above", "sensor.below"),
+        limit_entity_states=[
+            (
+                {"state": "2", "attributes": _unit_pcil},
+                {"state": "8", "attributes": _unit_pcil},
+            ),
+            (
+                {"state": "74", "attributes": _unit_bqm3},
+                {"state": "296", "attributes": _unit_bqm3},
+            ),
+        ],
+        invalid_limit_entity_states=[
+            (
+                {"state": "2", "attributes": _unit_invalid},
+                {"state": "8", "attributes": _unit_invalid},
+            ),
+            (
+                {"state": "74", "attributes": _unit_invalid},
+                {"state": "296", "attributes": _unit_invalid},
+            ),
+        ],
+    )
