@@ -27,6 +27,7 @@ from .const import (
     IMAGE_EXPIRY_TIME,
     AITaskEntityFeature,
 )
+from .permissions import async_check_permissions
 
 
 def _save_camera_snapshot(image_data: camera.Image | image.Image) -> Path:
@@ -122,6 +123,8 @@ async def async_generate_data(
     context: Context | None = None,
 ) -> GenDataTaskResult:
     """Run a data generation task in the AI Task integration."""
+    await async_check_permissions(hass, entity_id, attachments, context)
+
     if entity_id is None:
         entity_id = hass.data[DATA_PREFERENCES].gen_data_entity_id
 
@@ -171,6 +174,8 @@ async def async_generate_image(
     context: Context | None = None,
 ) -> ServiceResponse:
     """Run an image generation task in the AI Task integration."""
+    await async_check_permissions(hass, entity_id, attachments, context)
+
     if entity_id is None:
         entity_id = hass.data[DATA_PREFERENCES].gen_image_entity_id
 
