@@ -13,6 +13,7 @@ from homeassistant.components.weather import (
     llm as weather_llm,
 )
 from homeassistant.core import Context, HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import llm as llm_helper
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -217,11 +218,11 @@ async def test_get_forecast_tool_unavailable_entity(hass: HomeAssistant) -> None
     tool = result.tools[0]
 
     # An unavailable entity can still be matched by name (matching doesn't
-    # filter by availability), but entity services exclude unavailable
-    # entities from the call entirely. Since this is the only targeted
-    # entity, that leaves nothing to call, and the service call raises
-    # instead of returning a response. Without a guard, that exception
-    # propagates instead of producing a graceful ToolResult.
+    # filter by availability), so it must be checked explicitly before
+    # calling the service to retrieve its forecast; otherwise the service
+    # call excludes the unavailable entity from the call entirely, and since
+    # it's the only targeted entity, that leaves nothing to call and raises
+    # instead of returning a response.
     entity._attr_available = False
     entity.async_write_ha_state()
 
@@ -232,6 +233,36 @@ async def test_get_forecast_tool_unavailable_entity(hass: HomeAssistant) -> None
     )
     assert response.error
     assert response.data == {"error": "Weather entity is unavailable"}
+
+
+async def test_get_forecast_tool_service_call_failure(hass: HomeAssistant) -> None:
+    """Test a generic service failure isn't mislabeled as an unavailable entity."""
+
+    class MockWeatherFailure(MockWeatherTest):
+        """Mock weather entity whose forecast retrieval fails."""
+
+        async def async_forecast_daily(self) -> list[Forecast] | None:
+            raise HomeAssistantError("Provider request failed")
+
+    entity = await create_entity(
+        hass,
+        MockWeatherFailure,
+        None,
+        supported_features=WeatherEntityFeature.FORECAST_DAILY,
+    )
+    assert isinstance(entity, MockWeatherFailure)
+    async_expose_entity(hass, "conversation", entity.entity_id, True)
+    result = weather_llm.async_get_tools(hass, _llm_context(), "assist")
+    assert result is not None
+    tool = result.tools[0]
+
+    response = await tool.async_call(
+        hass,
+        llm_helper.ToolInput("weather__get_forecast", _tool_args("today")),
+        _llm_context(),
+    )
+    assert response.error
+    assert response.data == {"error": "Failed to retrieve weather forecast"}
 
 
 async def test_get_forecast_tool_not_offered_without_forecast_support(

@@ -8,6 +8,7 @@ import probatio
 
 from homeassistant.components.homeassistant import async_should_expose
 from homeassistant.components.llm import LLMTools
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er, intent
@@ -181,6 +182,10 @@ class GetForecastTool(Tool):
             return ToolResult(data={"error": message}, error=True)
 
         weather_state = result.states[0]
+        if weather_state.state == STATE_UNAVAILABLE:
+            return ToolResult(
+                data={"error": "Weather entity is unavailable"}, error=True
+            )
         supported_features = weather_state.attributes.get("supported_features", 0)
         forecast_type = _select_forecast_type(data["period"], supported_features)
         if forecast_type is None:
@@ -207,13 +212,14 @@ class GetForecastTool(Tool):
                 return_response=True,
             )
         except HomeAssistantError:
-            # The only targeted entity being unavailable leaves nothing to
-            # call, which raises instead of returning an empty response.
+            # Availability was already checked above, so this is a genuine
+            # provider/validation failure, not an unavailable entity.
             return ToolResult(
-                data={"error": "Weather entity is unavailable"}, error=True
+                data={"error": "Failed to retrieve weather forecast"}, error=True
             )
         # Entity services omit unavailable entities from the response entirely,
-        # so the entity_id may be missing even though it matched above.
+        # so the entity_id may be missing even though it matched above (e.g.
+        # if it became unavailable between the check above and this call).
         entity_response = cast(dict[str, dict[str, list[Forecast]]], response).get(
             weather_state.entity_id
         )
