@@ -244,6 +244,10 @@ async def test_a_read_that_failed_once_recovers(
     a failure here is usually the endpoint missing. It can just as well be
     a moment of bad luck on the heaviest request of the lot, and the next
     poll should be allowed to settle it.
+
+    What that poll finds is the session already running, which says nothing
+    about when it began. It is taken as a starting point rather than
+    reported, the same as a session already running at startup.
     """
     mock_peblar.meter_history.side_effect = PeblarError("Blip")
     mock_config_entry.add_to_hass(hass)
@@ -256,4 +260,34 @@ async def test_a_read_that_failed_once_recovers(
     mock_peblar.meter_history.side_effect = None
     await _async_poll(hass, freezer)
 
-    assert hass.states.get(ENTITY_ID).state != STATE_UNAVAILABLE
+    assert hass.states.get(ENTITY_ID).state == STATE_UNKNOWN
+
+
+async def test_a_new_session_after_a_failed_read_is_reported(
+    hass: HomeAssistant,
+    mock_peblar: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test taking bearings does not swallow the sessions that follow.
+
+    The first read back only sets the starting point. A card shown after
+    that is news like any other.
+    """
+    mock_peblar.meter_history.side_effect = PeblarError("Blip")
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    mock_peblar.meter_history.side_effect = None
+    await _async_poll(hass, freezer)
+
+    mock_peblar.meter_history.return_value = _history(99, "1D0A0B0C0D0E03")
+    await _async_poll(hass, freezer)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state != STATE_UNKNOWN
+    assert state.attributes["session_number"] == 99
+    assert state.attributes["token"] == "Frenck"
