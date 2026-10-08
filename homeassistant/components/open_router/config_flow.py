@@ -34,9 +34,14 @@ from homeassistant.helpers.selector import (
 
 from .const import (
     CONF_PROMPT,
+    CONF_TTS_SPEED,
+    CONF_TTS_VOICE,
     CONF_WEB_SEARCH,
     DOMAIN,
+    FALLBACK_TTS_VOICES,
     RECOMMENDED_CONVERSATION_OPTIONS,
+    RECOMMENDED_TTS_SPEED,
+    RECOMMENDED_TTS_VOICE,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -58,6 +63,7 @@ class OpenRouterConfigFlow(ConfigFlow, domain=DOMAIN):
         return {
             "conversation": ConversationFlowHandler,
             "ai_task_data": AITaskDataFlowHandler,
+            "tts": TtsFlowHandler,
         }
 
     @override
@@ -101,13 +107,13 @@ class OpenRouterSubentryFlowHandler(ConfigSubentryFlow):
         """Initialize the subentry flow."""
         self.models: dict[str, Model] = {}
 
-    async def _get_models(self) -> None:
-        """Fetch models from OpenRouter."""
+    async def _get_models(self, output_modalities: str | None = None) -> None:
+        """Fetch models from OpenRouter, optionally filtered by output modality."""
         entry = self._get_entry()
         client = OpenRouterClient(
             entry.data[CONF_API_KEY], async_get_clientsession(self.hass)
         )
-        models = await client.get_models()
+        models = await client.get_models(output_modalities=output_modalities)
         self.models = {model.id: model for model in models}
 
 
@@ -310,6 +316,142 @@ class AITaskDataFlowHandler(OpenRouterSubentryFlowHandler):
                         SelectSelectorConfig(
                             options=options, mode=SelectSelectorMode.DROPDOWN, sort=True
                         ),
+                    ),
+                }
+            ),
+        )
+
+
+class TtsFlowHandler(OpenRouterSubentryFlowHandler):
+    """Handle TTS subentry flow."""
+
+    def __init__(self) -> None:
+        """Initialize the subentry flow."""
+        super().__init__()
+        self.options: dict[str, Any] = {}
+
+    @property
+    def _is_new(self) -> bool:
+        """Return if this is a new subentry."""
+        return self.source == SOURCE_USER
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """User flow to create a TTS service."""
+        return await self.async_step_init(user_input)
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Handle reconfiguration of a TTS service."""
+        self.options = self._get_reconfigure_subentry().data.copy()
+        return await self.async_step_init(user_input)
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Manage TTS model selection."""
+        if self._get_entry().state is not ConfigEntryState.LOADED:
+            return self.async_abort(reason="entry_not_loaded")
+
+        if user_input is not None:
+            self.options[CONF_MODEL] = user_input[CONF_MODEL]
+            selected_model = self.models.get(user_input[CONF_MODEL])
+            self.options["supported_voices"] = (
+                selected_model.supported_voices if selected_model is not None else None
+            )
+            return await self.async_step_voice()
+
+        try:
+            await self._get_models(output_modalities="speech")
+        except OpenRouterError:
+            return self.async_abort(reason="cannot_connect")
+        except Exception:
+            _LOGGER.exception("Unexpected exception")
+            return self.async_abort(reason="unknown")
+
+        if not self.models:
+            return self.async_abort(reason="no_models")
+
+        models = [
+            SelectOptionDict(value=model.id, label=model.name)
+            for model in self.models.values()
+        ]
+
+        stored_model = self.options.get(CONF_MODEL)
+        if stored_model and any(m["value"] == stored_model for m in models):
+            default_model = stored_model
+        else:
+            default_model = models[0]["value"]
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=probatio.Schema(
+                {
+                    probatio.Required(CONF_MODEL, default=default_model): (
+                        SelectSelector(
+                            SelectSelectorConfig(
+                                options=models,
+                                mode=SelectSelectorMode.DROPDOWN,
+                                sort=True,
+                            ),
+                        )
+                    ),
+                }
+            ),
+        )
+
+    async def async_step_voice(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Manage TTS voice and speed selection."""
+        if user_input is not None:
+            self.options.update(user_input)
+            model = self.models.get(self.options[CONF_MODEL])
+            title = model.name if model else self.options[CONF_MODEL]
+            if self._is_new:
+                return self.async_create_entry(title=title, data=self.options)
+            return self.async_update_and_abort(
+                self._get_entry(),
+                self._get_reconfigure_subentry(),
+                data=self.options,
+            )
+
+        stored_voice = self.options.get(CONF_TTS_VOICE)
+        model_voices = self.options.get("supported_voices")
+        if model_voices:
+            voices = [SelectOptionDict(value=v, label=v) for v in model_voices]
+            default_voice = (
+                stored_voice if stored_voice in model_voices else model_voices[0]
+            )
+        else:
+            voices = [
+                SelectOptionDict(value=v, label=v.title()) for v in FALLBACK_TTS_VOICES
+            ]
+            default_voice = (
+                stored_voice
+                if stored_voice in FALLBACK_TTS_VOICES
+                else RECOMMENDED_TTS_VOICE
+            )
+
+        return self.async_show_form(
+            step_id="voice",
+            data_schema=probatio.Schema(
+                {
+                    probatio.Required(CONF_TTS_VOICE, default=default_voice): (
+                        SelectSelector(
+                            SelectSelectorConfig(
+                                options=voices,
+                                mode=SelectSelectorMode.DROPDOWN,
+                            ),
+                        )
+                    ),
+                    probatio.Optional(
+                        CONF_TTS_SPEED,
+                        default=self.options.get(CONF_TTS_SPEED, RECOMMENDED_TTS_SPEED),
+                    ): probatio.All(
+                        probatio.Coerce(float), probatio.Range(min=0.25, max=4.0)
                     ),
                 }
             ),
