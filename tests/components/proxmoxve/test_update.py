@@ -5,7 +5,6 @@ from unittest.mock import MagicMock, patch
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.proxmoxve.helpers import update_version
 from homeassistant.const import STATE_OFF, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -19,16 +18,17 @@ ENTITY_ID = "update.pve1_software_update"
 
 
 @pytest.mark.parametrize(
-    ("updates", "expected_version"),
+    ("updates", "expected_latest_version"),
     [
+        pytest.param(None, "9.1.7-p4-d1", id="all-entities"),
         pytest.param(
             [{"Package": "ceph-common", "Version": "19.2.6", "Origin": "Proxmox"}],
-            "9.2.3",
+            "9.1.6-p1-d0",
             id="higher-ceph-version-is-not-pve-version",
         ),
         pytest.param(
             [{"Package": "libpve-storage-perl", "Version": "1+16.1+2+pmx1"}],
-            "9.2.3",
+            "9.1.6-p1-d0",
             id="debian-package-version-is-not-parsed",
         ),
         pytest.param(
@@ -36,36 +36,36 @@ ENTITY_ID = "update.pve1_software_update"
                 {"Package": "ceph-common", "Version": "19.2.6", "Origin": "Proxmox"},
                 {"Package": "pve-manager", "Version": "9.2.21-1"},
             ],
-            "9.2.21",
+            "9.2.21-p2-d0",
             id="pve-manager-version-is-used",
         ),
     ],
 )
-def test_update_version_uses_pve_manager(
-    updates: list[dict[str, str]], expected_version: str
-) -> None:
-    """The PVE version must come only from pve-manager."""
-    info = update_version("9.2.3", updates)
-
-    assert info.latest_version == expected_version
-    assert info.total_updates == len(updates)
-
-
 async def test_all_entities(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
     mock_proxmox_client: MagicMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
+    updates: list[dict[str, str]] | None,
+    expected_latest_version: str,
 ) -> None:
     """Test all entities."""
     # Ensure Sys.Modify permissions to ensure update status can be determined
     mock_proxmox_client.access.permissions.get.return_value = MERGED_PERMISSIONS
+    if updates is not None:
+        mock_proxmox_client.nodes.return_value.apt.update.get.return_value = updates
+
     with patch(
         "homeassistant.components.proxmoxve.PLATFORMS",
         [Platform.UPDATE],
     ):
         await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.attributes["latest_version"] == expected_latest_version
+
+    if updates is None:
         await snapshot_platform(
             hass, entity_registry, snapshot, mock_config_entry.entry_id
         )
