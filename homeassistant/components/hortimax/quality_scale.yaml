@@ -71,12 +71,7 @@ rules:
   docs-supported-functions: done
   docs-troubleshooting: done
   docs-use-cases: todo
-  dynamic-devices:
-    status: todo
-    comment: |
-      Sources that appear on a known controller do become devices during
-      normal updates, but the controller list itself is only read once
-      during setup, so a newly added controller needs a reload.
+  dynamic-devices: done
   entity-category: done
   entity-device-class: done
   entity-disabled-by-default: done

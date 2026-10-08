@@ -281,7 +281,7 @@ async def test_number_ui_load(knx: KNXTestKit) -> None:
     )
     knx.assert_state(
         "number.test_options",
-        "3000",
+        "3000.0",  # `min`, `max` and `step` are floats after validation
         unit_of_measurement="kW",
         device_class="power",
         min=3000,

@@ -4,8 +4,8 @@ import logging
 from typing import Any, override
 
 from Netio.exceptions import AuthError, CommunicationError
+import probatio
 import requests
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
@@ -16,7 +16,6 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
-from homeassistant.helpers import config_validation as cv
 
 from .const import DOMAIN
 from .coordinator import create_device
@@ -25,14 +24,14 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_PORT = 80
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): str,
-        vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Required(CONF_USERNAME): str,
-        vol.Required(CONF_PASSWORD): str,
-        vol.Required(CONF_SSL, default=False): bool,
-        vol.Required(CONF_VERIFY_SSL, default=True): bool,
+        probatio.Required(CONF_HOST): str,
+        probatio.Required(CONF_PORT, default=DEFAULT_PORT): probatio.Port(),
+        probatio.Required(CONF_USERNAME): str,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
+        probatio.Required(CONF_SSL, default=False): bool,
+        probatio.Required(CONF_VERIFY_SSL, default=True): bool,
     }
 )
 

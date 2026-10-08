@@ -37,7 +37,10 @@ from .conftest import (
     ConfigurationStyle,
     TemplatePlatformSetup,
     assert_action,
+    assert_attributes_template,
     assert_extra_template_attributes,
+    assert_invalid_config_entry_actions_do_not_create_entities,
+    assert_invalid_yaml_actions_do_not_create_entities,
     assert_state_and_attributes,
     async_get_flow_preview_state,
     async_trigger,
@@ -511,8 +514,8 @@ async def test_position_out_of_bounds(hass: HomeAssistant) -> None:
         (
             ConfigurationStyle.MODERN,
             {},
-            "Invalid config for 'template': must contain at least one"
-            " of open_cover, set_cover_position.",
+            "Invalid config for 'template': at least one of"
+            " ['open_cover', 'set_cover_position'] is required",
         ),
         (
             ConfigurationStyle.MODERN,
@@ -523,8 +526,8 @@ async def test_position_out_of_bounds(hass: HomeAssistant) -> None:
         (
             ConfigurationStyle.TRIGGER,
             {},
-            "Invalid config for 'template': must contain at least one"
-            " of open_cover, set_cover_position.",
+            "Invalid config for 'template': at least one of"
+            " ['open_cover', 'set_cover_position'] is required",
         ),
         (
             ConfigurationStyle.TRIGGER,
@@ -770,7 +773,10 @@ async def test_non_optimistic_template_with_optimistic_state(
 
 @pytest.mark.parametrize(
     ("count", "position_template", "config"),
-    [(1, "{{ 100 }}", SET_COVER_TILT_POSITION)],
+    [
+        (1, "{{ 100 }}", SET_COVER_TILT_POSITION),
+        (1, "{{ 100 }}", {"tilt_optimistic": False, **SET_COVER_TILT_POSITION}),
+    ],
 )
 @pytest.mark.parametrize(
     "style",
@@ -806,6 +812,114 @@ async def test_set_tilt_position_optimistic(
         await hass.async_block_till_done()
         state = hass.states.get(TEST_COVER.entity_id)
         assert state.attributes.get("current_tilt_position") == pos
+
+
+@pytest.mark.parametrize(
+    ("count", "position_template", "config"),
+    [
+        (
+            1,
+            "{{ 100 }}",
+            {
+                "tilt": "{{ states('sensor.test_state') | float }}",
+                "tilt_optimistic": True,
+                **SET_COVER_TILT_POSITION,
+            },
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.usefixtures("setup_position_cover")
+async def test_set_tilt_position_optimistic_with_tilt_optimistic_true(
+    hass: HomeAssistant, calls: list[ServiceCall]
+) -> None:
+    """Test the optimistic tilt_position mode with tilt_optimistic true."""
+    state = hass.states.get(TEST_COVER.entity_id)
+    assert state.attributes.get("current_tilt_position") is None
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_SET_COVER_TILT_POSITION,
+        {ATTR_ENTITY_ID: TEST_COVER.entity_id, ATTR_TILT_POSITION: 42},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get(TEST_COVER.entity_id)
+    assert state.attributes.get("current_tilt_position") == 42.0
+
+    for service, pos in (
+        (SERVICE_CLOSE_COVER_TILT, 0.0),
+        (SERVICE_OPEN_COVER_TILT, 100.0),
+        (SERVICE_TOGGLE_COVER_TILT, 0.0),
+        (SERVICE_TOGGLE_COVER_TILT, 100.0),
+    ):
+        await hass.services.async_call(
+            COVER_DOMAIN, service, {ATTR_ENTITY_ID: TEST_COVER.entity_id}, blocking=True
+        )
+        await hass.async_block_till_done()
+        state = hass.states.get(TEST_COVER.entity_id)
+        assert state.attributes.get("current_tilt_position") == pos
+
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, 45)
+    state = hass.states.get(TEST_COVER.entity_id)
+    assert state.attributes.get("current_tilt_position") == 45.0
+
+
+@pytest.mark.parametrize(
+    ("count", "position_template", "config"),
+    [
+        (
+            1,
+            "{{ 100 }}",
+            {
+                "tilt": "{{ states('sensor.test_state') | float }}",
+                "tilt_optimistic": False,
+                **SET_COVER_TILT_POSITION,
+            },
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.usefixtures("setup_position_cover")
+async def test_set_tilt_position_optimistic_with_tilt_optimistic_false(
+    hass: HomeAssistant, calls: list[ServiceCall]
+) -> None:
+    """Test the optimistic tilt_position mode with tilt_optimistic false."""
+    state = hass.states.get(TEST_COVER.entity_id)
+    assert state.attributes.get("current_tilt_position") is None
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_SET_COVER_TILT_POSITION,
+        {ATTR_ENTITY_ID: TEST_COVER.entity_id, ATTR_TILT_POSITION: 42},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get(TEST_COVER.entity_id)
+    assert state.attributes.get("current_tilt_position") is None
+
+    for service in (
+        SERVICE_CLOSE_COVER_TILT,
+        SERVICE_OPEN_COVER_TILT,
+        SERVICE_TOGGLE_COVER_TILT,
+        SERVICE_TOGGLE_COVER_TILT,
+    ):
+        await hass.services.async_call(
+            COVER_DOMAIN, service, {ATTR_ENTITY_ID: TEST_COVER.entity_id}, blocking=True
+        )
+        await hass.async_block_till_done()
+        state = hass.states.get(TEST_COVER.entity_id)
+        assert state.attributes.get("current_tilt_position") is None
+
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, 45)
+    state = hass.states.get(TEST_COVER.entity_id)
+    assert state.attributes.get("current_tilt_position") == 45.0
 
 
 @pytest.mark.parametrize(
@@ -1294,6 +1408,54 @@ async def test_restore_state(
 @pytest.mark.parametrize(
     "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
 )
+@pytest.mark.parametrize(
+    ("action", "config"),
+    [
+        ("open_cover", {"close_cover": []}),
+        ("close_cover", {"open_cover": []}),
+        ("set_cover_position", COVER_ACTIONS),
+        ("stop_cover", COVER_ACTIONS),
+        ("set_cover_tilt_position", COVER_ACTIONS),
+    ],
+)
+async def test_invalid_yaml_actions_do_not_create_entities(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    action: str,
+    config: ConfigType,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test invalid yaml actions do not create entities."""
+    await assert_invalid_yaml_actions_do_not_create_entities(
+        hass, TEST_COVER, style, config, action, caplog
+    )
+
+
+@pytest.mark.parametrize(
+    ("action", "config"),
+    [
+        ("open_cover", {"close_cover": []}),
+        ("close_cover", {"open_cover": []}),
+        ("set_cover_position", COVER_ACTIONS),
+        ("stop_cover", COVER_ACTIONS),
+        ("set_cover_tilt_position", COVER_ACTIONS),
+    ],
+)
+async def test_invalid_config_entry_actions_do_not_create_entities(
+    hass: HomeAssistant,
+    action: str,
+    config: ConfigType,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test invalid config entry actions do not create entities."""
+    await assert_invalid_config_entry_actions_do_not_create_entities(
+        hass, TEST_COVER, config, action, caplog
+    )
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
 async def test_extra_template_attributes(
     hass: HomeAssistant, style: ConfigurationStyle
 ) -> None:
@@ -1330,3 +1492,55 @@ async def test_blocked_template_attributes(
     assert (
         f"Unsupported attribute(s) found for {DEFAULT_NAME}: {attribute}" in caplog.text
     )
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_attributes_template(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test attributes as a single template."""
+    await assert_attributes_template(
+        hass,
+        TEST_COVER,
+        style,
+        {
+            "state": "{{ 'open' }}",
+            **COVER_ACTIONS,
+        },
+        caplog,
+    )
+
+
+@pytest.mark.parametrize(
+    "attribute", [*list(CoverEntityStateAttribute), "device_class"]
+)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_attributes_template_with_blocked_attributes(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    attribute: CoverEntityStateAttribute,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test blocked attributes for a single attributes template."""
+    await setup_entity(
+        hass,
+        TEST_COVER,
+        style,
+        1,
+        {
+            "state": "{{ 'open' }}",
+            **COVER_ACTIONS,
+            "attributes": f"{{{{ dict({attribute}='does not matter') }}}}",
+        },
+    )
+
+    await async_trigger(hass, "sensor.test_extra_attributes", "anything")
+
+    error = f"Unsupported attribute(s) found for {TEST_COVER.entity_id}: {attribute}"
+    assert error in caplog.text

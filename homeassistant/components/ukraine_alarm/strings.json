@@ -34,6 +34,12 @@
       "air": {
         "name": "Air"
       },
+      "air_red": {
+        "name": "Air (red)"
+      },
+      "air_yellow": {
+        "name": "Air (yellow)"
+      },
       "artillery": {
         "name": "Artillery"
       },

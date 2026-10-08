@@ -1,7 +1,7 @@
 """Support for WattTime sensors."""
 
 from collections.abc import Mapping
-from typing import Any, cast, override
+from typing import Any, override
 
 from homeassistant.components.sensor import (
     SensorEntity,
@@ -110,4 +110,4 @@ class RealtimeEmissionsSensor(CoordinatorEntity[WattTimeCoordinator], SensorEnti
     @override
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
-        return cast(StateType, self.coordinator.data[self.entity_description.key])
+        return self.coordinator.data[self.entity_description.key]

@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from typing import Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import frontend
 from homeassistant.components.recorder import DOMAIN as RECORDER_DOMAIN
@@ -12,13 +12,8 @@ from homeassistant.components.recorder.filters import (
     merge_include_exclude_filters,
     sqlalchemy_filter_from_include_exclude_conf,
 )
-from homeassistant.const import (
-    ATTR_DOMAIN,
-    ATTR_ENTITY_ID,
-    ATTR_NAME,
-    EVENT_LOGBOOK_ENTRY,
-)
-from homeassistant.core import Context, HomeAssistant, ServiceCall, callback
+from homeassistant.const import ATTR_DOMAIN, ATTR_ENTITY_ID, ATTR_NAME
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entityfilter import (
     INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA,
@@ -42,52 +37,22 @@ from .const import (  # noqa: F401
     LOGBOOK_ENTRY_NAME,
     LOGBOOK_ENTRY_SOURCE,
 )
+from .helpers import async_log_entry, log_entry  # noqa: F401
 from .models import LazyEventPartialState, LogbookConfig
 
-CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA}, extra=vol.ALLOW_EXTRA
+CONFIG_SCHEMA = probatio.Schema(
+    {DOMAIN: INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA}, extra=probatio.ALLOW_EXTRA
 )
 
 
-LOG_MESSAGE_SCHEMA = vol.Schema(
+LOG_MESSAGE_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_NAME): cv.string,
-        vol.Required(ATTR_MESSAGE): cv.string,
-        vol.Optional(ATTR_DOMAIN): cv.slug,
-        vol.Optional(ATTR_ENTITY_ID): cv.entity_id,
+        probatio.Required(ATTR_NAME): cv.string,
+        probatio.Required(ATTR_MESSAGE): cv.string,
+        probatio.Optional(ATTR_DOMAIN): cv.slug,
+        probatio.Optional(ATTR_ENTITY_ID): cv.entity_id,
     }
 )
-
-
-def log_entry(
-    hass: HomeAssistant,
-    name: str,
-    message: str,
-    domain: str | None = None,
-    entity_id: str | None = None,
-    context: Context | None = None,
-) -> None:
-    """Add an entry to the logbook."""
-    hass.add_job(async_log_entry, hass, name, message, domain, entity_id, context)
-
-
-@callback
-def async_log_entry(
-    hass: HomeAssistant,
-    name: str,
-    message: str,
-    domain: str | None = None,
-    entity_id: str | None = None,
-    context: Context | None = None,
-) -> None:
-    """Add an entry to the logbook."""
-    data = {LOGBOOK_ENTRY_NAME: name, LOGBOOK_ENTRY_MESSAGE: message}
-
-    if domain is not None:
-        data[LOGBOOK_ENTRY_DOMAIN] = domain
-    if entity_id is not None:
-        data[LOGBOOK_ENTRY_ENTITY_ID] = entity_id
-    hass.bus.async_fire(EVENT_LOGBOOK_ENTRY, data, context=context)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

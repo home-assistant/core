@@ -80,11 +80,16 @@ class HydrawiseEntity(CoordinatorEntity[HydrawiseDataUpdateCoordinator]):
     @override
     def _handle_coordinator_update(self) -> None:
         """Get the latest data and updates the state."""
-        # Guard against updates arriving after the controller has been removed
+        # Guard against updates arriving after what the entity reads on has gone
         # but before the entity has been unsubscribed from the coordinator.
-        if self.controller.id not in self.coordinator.data.controllers:
+        data = self.coordinator.data
+        if (
+            self.controller.id not in data.controllers
+            or (self.zone_id is not None and self.zone_id not in data.zones)
+            or (self.sensor_id is not None and self.sensor_id not in data.sensors)
+        ):
             return
-        self.controller = self.coordinator.data.controllers[self.controller.id]
+        self.controller = data.controllers[self.controller.id]
         self._update_attrs()
         super()._handle_coordinator_update()
 

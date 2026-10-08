@@ -2,7 +2,7 @@
 
 import logging
 
-import voluptuous as vol
+import probatio
 from yeelight import BulbException
 from yeelight.aio import AsyncBulb
 
@@ -18,15 +18,9 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.typing import ConfigType, VolDictType
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
-    ACTION_OFF,
-    ACTION_RECOVER,
-    ACTION_STAY,
-    ATTR_ACTION,
-    ATTR_COUNT,
-    ATTR_TRANSITIONS,
     CONF_CUSTOM_EFFECTS,
     CONF_DETECTED_MODEL,
     CONF_FLOW_PARAMS,
@@ -44,10 +38,7 @@ from .const import (
     DOMAIN,
     NIGHTLIGHT_SWITCH_TYPE_LIGHT,
     PLATFORMS,
-    YEELIGHT_HSV_TRANSACTION,
-    YEELIGHT_RGB_TRANSITION,
-    YEELIGHT_SLEEP_TRANSACTION,
-    YEELIGHT_TEMPERATURE_TRANSACTION,
+    YEELIGHT_FLOW_TRANSITION_SCHEMA,
 )
 from .device import YeelightDevice, async_format_id
 from .scanner import YeelightScanner
@@ -57,57 +48,36 @@ type YeelightConfigEntry = ConfigEntry[YeelightDevice]
 _LOGGER = logging.getLogger(__name__)
 
 
-YEELIGHT_FLOW_TRANSITION_SCHEMA: VolDictType = {
-    vol.Optional(ATTR_COUNT, default=0): cv.positive_int,
-    vol.Optional(ATTR_ACTION, default=ACTION_RECOVER): vol.Any(
-        ACTION_RECOVER, ACTION_OFF, ACTION_STAY
-    ),
-    vol.Required(ATTR_TRANSITIONS): [
-        {
-            vol.Exclusive(YEELIGHT_RGB_TRANSITION, CONF_TRANSITION): vol.All(
-                cv.ensure_list, [cv.positive_int]
-            ),
-            vol.Exclusive(YEELIGHT_HSV_TRANSACTION, CONF_TRANSITION): vol.All(
-                cv.ensure_list, [cv.positive_int]
-            ),
-            vol.Exclusive(YEELIGHT_TEMPERATURE_TRANSACTION, CONF_TRANSITION): vol.All(
-                cv.ensure_list, [cv.positive_int]
-            ),
-            vol.Exclusive(YEELIGHT_SLEEP_TRANSACTION, CONF_TRANSITION): vol.All(
-                cv.ensure_list, [cv.positive_int]
-            ),
-        }
-    ],
-}
-
-DEVICE_SCHEMA = vol.Schema(
+DEVICE_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_TRANSITION, default=DEFAULT_TRANSITION): cv.positive_int,
-        vol.Optional(CONF_MODE_MUSIC, default=False): cv.boolean,
-        vol.Optional(CONF_SAVE_ON_CHANGE, default=False): cv.boolean,
-        vol.Optional(CONF_NIGHTLIGHT_SWITCH_TYPE): vol.Any(
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(CONF_TRANSITION, default=DEFAULT_TRANSITION): cv.positive_int,
+        probatio.Optional(CONF_MODE_MUSIC, default=False): cv.boolean,
+        probatio.Optional(CONF_SAVE_ON_CHANGE, default=False): cv.boolean,
+        probatio.Optional(CONF_NIGHTLIGHT_SWITCH_TYPE): probatio.Any(
             NIGHTLIGHT_SWITCH_TYPE_LIGHT
         ),
-        vol.Optional(CONF_MODEL): cv.string,
+        probatio.Optional(CONF_MODEL): cv.string,
     }
 )
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.Schema(
+        DOMAIN: probatio.Schema(
             {
-                vol.Optional(CONF_DEVICES, default={}): {cv.string: DEVICE_SCHEMA},
-                vol.Optional(CONF_CUSTOM_EFFECTS): [
+                probatio.Optional(CONF_DEVICES, default={}): {cv.string: DEVICE_SCHEMA},
+                probatio.Optional(CONF_CUSTOM_EFFECTS): [
                     {
-                        vol.Required(CONF_NAME): cv.string,
-                        vol.Required(CONF_FLOW_PARAMS): YEELIGHT_FLOW_TRANSITION_SCHEMA,
+                        probatio.Required(CONF_NAME): cv.string,
+                        probatio.Required(
+                            CONF_FLOW_PARAMS
+                        ): YEELIGHT_FLOW_TRANSITION_SCHEMA,
                     }
                 ],
             }
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 

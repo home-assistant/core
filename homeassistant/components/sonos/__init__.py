@@ -13,13 +13,13 @@ from typing import Any, cast
 from urllib.parse import urlparse
 
 from aiohttp import ClientError
+import probatio
 from requests.exceptions import HTTPError, Timeout
 from soco import events_asyncio, zonegroupstate
 import soco.config as soco_config
 from soco.core import SoCo, soco_reset
 from soco.events_base import Event as SonosEvent, SubscriptionBase
 from soco.exceptions import SoCoException
-import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import ssdp
@@ -79,17 +79,17 @@ def _get_soco_uid(soco: SoCo) -> str:
     return soco.uid
 
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.Schema(
+        DOMAIN: probatio.Schema(
             {
-                MP_DOMAIN: vol.All(
+                MP_DOMAIN: probatio.All(
                     cv.deprecated(CONF_INTERFACE_ADDR),
-                    vol.Schema(
+                    probatio.Schema(
                         {
-                            vol.Optional(CONF_ADVERTISE_ADDR): cv.string,
-                            vol.Optional(CONF_INTERFACE_ADDR): cv.string,
-                            vol.Optional(CONF_HOSTS): vol.All(
+                            probatio.Optional(CONF_ADVERTISE_ADDR): cv.string,
+                            probatio.Optional(CONF_INTERFACE_ADDR): cv.string,
+                            probatio.Optional(CONF_HOSTS): probatio.All(
                                 cv.ensure_list_csv, [cv.string]
                             ),
                         }
@@ -98,7 +98,7 @@ CONFIG_SCHEMA = vol.Schema(
             }
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 

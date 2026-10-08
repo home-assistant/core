@@ -76,7 +76,15 @@ async def test_flow_fails(
     """Test user initialized flow with invalid username."""
     with patch("pylast.User", return_value=MockUser(thrown_error=error)):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=CONF_USER_DATA
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=CONF_USER_DATA,
         )
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
@@ -112,7 +120,15 @@ async def test_flow_hidden_recent_tracks(
         ),
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=CONF_USER_DATA
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=CONF_USER_DATA,
         )
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"

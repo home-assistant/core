@@ -1,6 +1,5 @@
 """Vistapool Button entities."""
 
-import asyncio
 from typing import override
 
 from aioaquarite import AquariteError
@@ -60,7 +59,8 @@ class VistapoolLEDPulseButton(VistapoolEntity, ButtonEntity):
     Mirrors the "Next" button under LED Color in the Vistapool app's
     Illumination screen. If the light is on, sends light.status=0, waits a
     moment, then light.status=1; the physical LED fixture advances to the
-    next color on power-on. If the light is off, just turns it on.
+    next color on power-on. If the light is off, just turns it on. The
+    library runs the sequence, so the light never shows the intermediate off.
     """
 
     _attr_translation_key = "led_pulse"
@@ -74,18 +74,21 @@ class VistapoolLEDPulseButton(VistapoolEntity, ButtonEntity):
     async def async_press(self) -> None:
         """Send a color-advance pulse to the pool LED fixture."""
         try:
-            if self.coordinator.get_value(_LIGHT_STATUS_PATH) in (True, "1"):
-                await self.coordinator.api.set_value(
-                    self.coordinator.pool_id, _LIGHT_STATUS_PATH, 0
+            if self.coordinator.get_value(_LIGHT_STATUS_PATH) == 1:
+                await self.coordinator.api.pulse(
+                    self.coordinator.pool_id,
+                    _LIGHT_STATUS_PATH,
+                    0,
+                    1,
+                    _LED_PULSE_DELAY_SECONDS,
                 )
-                await asyncio.sleep(_LED_PULSE_DELAY_SECONDS)
-            await self.coordinator.api.set_value(
-                self.coordinator.pool_id, _LIGHT_STATUS_PATH, 1
-            )
+            else:
+                await self.coordinator.api.set_value(
+                    self.coordinator.pool_id, _LIGHT_STATUS_PATH, 1
+                )
         except AquariteError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="set_failed",
                 translation_placeholders={"entity": self.entity_id},
             ) from err
-        self.coordinator.apply_optimistic(_LIGHT_STATUS_PATH, 1)
