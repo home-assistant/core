@@ -4,10 +4,10 @@ import logging
 from typing import TYPE_CHECKING, Any, override
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .coordinator import DaikinOnectaConfigEntry
 from .device import DaikinOnectaDevice
 from .entity import DaikinManagementPointEntity
 from .entity_descriptions import SWITCH_DESCRIPTIONS
@@ -22,7 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: DaikinOnectaConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Daikin switches based on config_entry."""

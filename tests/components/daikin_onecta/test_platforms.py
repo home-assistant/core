@@ -12,6 +12,7 @@ from homeassistant.components.daikin_onecta.select import DaikinScheduleSelect
 from homeassistant.components.daikin_onecta.sensor import (
     DaikinEnergySensor,
     DaikinValueSensor,
+    add_energy_sensors,
 )
 from homeassistant.components.daikin_onecta.switch import DaikinSwitch
 from homeassistant.components.daikin_onecta.update import DaikinFirmwareUpdateEntity
@@ -95,6 +96,31 @@ def test_platform_availability_requires_coordinator_and_device(
     assert entity.available is expected
 
 
+def test_unsupported_energy_aggregate_is_skipped() -> None:
+    """Do not prevent platform setup for an unrepresented energy aggregate."""
+    sensors = []
+
+    add_energy_sensors(
+        MagicMock(),
+        MagicMock(),
+        SimpleNamespace(
+            embedded_id="outdoorUnit",
+            management_point_type="outdoorUnit",
+            energy_aggregates=[
+                SimpleNamespace(
+                    source="thermal",
+                    operation_mode="heating",
+                    period="day",
+                    data_type="output",
+                )
+            ],
+        ),
+        sensors,
+    )
+
+    assert sensors == []
+
+
 def _execute_typed_command(config_entry: MockConfigEntry) -> AsyncMock:
     """Execute a typed command callback without making a cloud request."""
     api = config_entry.runtime_data.api
@@ -167,6 +193,26 @@ async def test_schedule_select_updates_cached_selection(
     state = hass.states.get("select.master_schedule")
     assert state is not None
     assert state.state == "1"
+
+
+async def test_schedule_select_ignores_current_option(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Do not spend a cloud request when the selected schedule is unchanged."""
+    await _async_setup_fixture(hass, config_entry, "schedule")
+    execute_command = _execute_typed_command(config_entry)
+    config_entry.runtime_data.api.async_execute_command = execute_command
+    state = hass.states.get("select.master_schedule")
+    assert state is not None
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: state.entity_id, "option": state.state},
+        blocking=True,
+    )
+
+    execute_command.assert_not_awaited()
 
 
 async def test_water_heater_turn_off_updates_cached_state(

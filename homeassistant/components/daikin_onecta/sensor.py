@@ -7,7 +7,6 @@ from typing import TYPE_CHECKING, override
 from daikin_onecta.models import ManagementPoint
 
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
@@ -20,6 +19,7 @@ from .const import (
     SENSOR_PERIOD_YEARLY,
     SENSOR_PERIODS,
 )
+from .coordinator import DaikinOnectaConfigEntry
 from .device import DaikinOnectaDevice
 from .entity import DaikinEntity
 from .entity_descriptions import SENSOR_DESCRIPTIONS
@@ -54,6 +54,14 @@ class ValueSensorDetails:
     value: str
 
 
+def _energy_sensor_description_key(details: EnergySensorDetails) -> str:
+    """Return the entity-description key for an energy aggregate."""
+    return (
+        f"{details.operation_mode.capitalize()}{SENSOR_PERIODS[details.period]}"
+        f"{details.sensor_type.capitalize()}{details.datatype.capitalize()}"
+    )
+
+
 def add_energy_sensors(
     coordinator: OnectaDataUpdateCoordinator,
     device: DaikinOnectaDevice,
@@ -68,24 +76,25 @@ def add_energy_sensors(
         "year": SENSOR_PERIOD_YEARLY,
     }
     order = {"day": 0, "week": 1, "year": 2, "month": 3}
-    sensors.extend(
-        DaikinEnergySensor(
-            device,
-            coordinator,
-            EnergySensorDetails(
-                management_point.embedded_id,
-                management_point.management_point_type,
-                aggregate.source,
-                aggregate.operation_mode,
-                periods[aggregate.period],
-                aggregate.data_type,
-            ),
+    for aggregate in sorted(
+        management_point.energy_aggregates,
+        key=lambda aggregate: order[aggregate.period],
+    ):
+        details = EnergySensorDetails(
+            management_point.embedded_id,
+            management_point.management_point_type,
+            aggregate.source,
+            aggregate.operation_mode,
+            periods[aggregate.period],
+            aggregate.data_type,
         )
-        for aggregate in sorted(
-            management_point.energy_aggregates,
-            key=lambda aggregate: order[aggregate.period],
-        )
-    )
+        description_key = _energy_sensor_description_key(details)
+        if description_key not in SENSOR_DESCRIPTIONS:
+            _LOGGER.debug(
+                "Skipping unsupported Daikin energy aggregate '%s'", description_key
+            )
+            continue
+        sensors.append(DaikinEnergySensor(device, coordinator, details))
 
 
 def add_simple_sensors(
@@ -190,7 +199,7 @@ def _energy_sensor_unique_id(device_id: str, details: EnergySensorDetails) -> st
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: DaikinOnectaConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Daikin sensors based on config_entry."""
@@ -222,8 +231,7 @@ class DaikinEnergySensor(DaikinEntity, SensorEntity):
         self._attr_has_entity_name = True
         self._period = details.period
         self._datatype = details.datatype
-        period_name = SENSOR_PERIODS[details.period]
-        buildname = f"{details.operation_mode.capitalize()}{period_name}{details.sensor_type.capitalize()}{details.datatype.capitalize()}"
+        buildname = _energy_sensor_description_key(details)
         self.entity_description = SENSOR_DESCRIPTIONS[buildname]
         self._sensor_type = details.sensor_type
         self._attr_unique_id = _energy_sensor_unique_id(self._device.id, details)

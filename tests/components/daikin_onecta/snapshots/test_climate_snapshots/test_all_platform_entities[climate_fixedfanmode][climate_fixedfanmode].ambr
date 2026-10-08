@@ -530,7 +530,7 @@
         'previous_unique_id': None,
         'suggested_object_id': None,
         'supported_features': 0,
-        'translation_key': None,
+        'translation_key': 'refresh',
         'unique_id': '6f944461-08cb-4fee-979c-710ff66cea77_refresh',
         'unit_of_measurement': None,
       }),
@@ -1581,7 +1581,7 @@
         'suggested_object_id': None,
         'supported_features': <UpdateEntityFeature: 1>,
         'translation_key': 'firmwareupdate',
-        'unique_id': '6f944461-08cb-4fee-979c-710ff66cea77_gateway_firmware_update',
+        'unique_id': '6f944461-08cb-4fee-979c-710ff66cea77_gateway_firmware',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -1643,7 +1643,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'firmwareupdate',
-        'unique_id': '6f944461-08cb-4fee-979c-710ff66cea77_indoorUnit_firmware_update',
+        'unique_id': '6f944461-08cb-4fee-979c-710ff66cea77_indoorUnit_firmware',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({

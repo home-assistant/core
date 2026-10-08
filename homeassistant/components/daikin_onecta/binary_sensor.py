@@ -7,10 +7,10 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .coordinator import DaikinOnectaConfigEntry
 from .device import DaikinOnectaDevice
 from .entity import DaikinEntity
 from .entity_descriptions import BINARY_SENSOR_DESCRIPTIONS
@@ -25,7 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: DaikinOnectaConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Daikin climate based on config_entry."""

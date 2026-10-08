@@ -8,7 +8,6 @@ from daikin_onecta.air_purification import AirPurificationClient
 from daikin_onecta.models import AirPurification
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.percentage import (
@@ -17,7 +16,7 @@ from homeassistant.util.percentage import (
 )
 
 from .const import FANMODE_FIXED
-from .coordinator import OnectaDataUpdateCoordinator
+from .coordinator import DaikinOnectaConfigEntry, OnectaDataUpdateCoordinator
 from .device import DaikinOnectaDevice
 from .entity import DaikinManagementPointEntity
 
@@ -26,7 +25,7 @@ PARALLEL_UPDATES = 1
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: DaikinOnectaConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Daikin air-purifier fan entities."""

@@ -12,11 +12,11 @@
       "oauth_implementation_unavailable": "[%key:common::config_flow::abort::oauth2_implementation_unavailable%]",
       "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
       "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
       "unknown": "Failed due to an unexpected error.",
       "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_user_rejected_authorize%]",
-      "wrong_account": "Please ensure you reconfigure against the same account.",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "wrong_account": "Please ensure you reconfigure against the same account."
     },
     "create_entry": {
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
@@ -41,6 +41,52 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "daylightsavingtimeenabled": {
+        "name": "Daylight saving time enabled"
+      },
+      "iscoolheatmaster": {
+        "name": "Is cool/heat master"
+      },
+      "isfirmwareupdatesupported": {
+        "name": "Is firmware update supported"
+      },
+      "isholidaymodeactive": {
+        "name": "Is holiday mode active"
+      },
+      "isincautionstate": {
+        "name": "Is in caution state"
+      },
+      "isinemergencystate": {
+        "name": "Is in emergency state"
+      },
+      "isinerrorstate": {
+        "name": "Is in error state"
+      },
+      "isininstallerstate": {
+        "name": "Is in installer state"
+      },
+      "isinmodeconflict": {
+        "name": "Is in mode conflict"
+      },
+      "isinwarningstate": {
+        "name": "Is in warning state"
+      },
+      "islockfunctionenabled": {
+        "name": "Is lock function enabled"
+      },
+      "ispowerfulmodeactive": {
+        "name": "Is powerful mode active"
+      },
+      "ledenabled": {
+        "name": "LED enabled"
+      }
+    },
+    "button": {
+      "refresh": {
+        "name": "Refresh"
+      }
+    },
     "climate": {
       "calculated_leaving_water_temperature": {
         "name": "Calculated Leaving Water Temperature"
@@ -82,47 +128,6 @@
       },
       "setpoint": {
         "name": "Setpoint {setpoint}"
-      }
-    },
-    "binary_sensor": {
-      "daylightsavingtimeenabled": {
-        "name": "Daylight saving time enabled"
-      },
-      "iscoolheatmaster": {
-        "name": "Is cool/heat master"
-      },
-      "isfirmwareupdatesupported": {
-        "name": "Is firmware update supported"
-      },
-      "isholidaymodeactive": {
-        "name": "Is holiday mode active"
-      },
-      "isincautionstate": {
-        "name": "Is in caution state"
-      },
-      "isinemergencystate": {
-        "name": "Is in emergency state"
-      },
-      "isinerrorstate": {
-        "name": "Is in error state"
-      },
-      "isininstallerstate": {
-        "name": "Is in installer state"
-      },
-      "isinmodeconflict": {
-        "name": "Is in mode conflict"
-      },
-      "isinwarningstate": {
-        "name": "Is in warning state"
-      },
-      "islockfunctionenabled": {
-        "name": "Is lock function enabled"
-      },
-      "ispowerfulmodeactive": {
-        "name": "Is powerful mode active"
-      },
-      "ledenabled": {
-        "name": "LED enabled"
       }
     },
     "select": {
@@ -179,11 +184,17 @@
       "datetime": {
         "name": "Date/time"
       },
+      "daylightsavingtimeenabled": {
+        "name": "Daylight saving time enabled"
+      },
       "deltad": {
         "name": "DeltaD"
       },
       "drykeepsetting": {
         "name": "Dry keep setting"
+      },
+      "economode": {
+        "name": "Econo mode"
       },
       "errorcode": {
         "name": "Error code"
@@ -230,11 +241,32 @@
       "ipaddress": {
         "name": "IP address"
       },
+      "iscoolheatmaster": {
+        "name": "Is cool/heat master"
+      },
+      "isfirmwareupdatesupported": {
+        "name": "Is firmware update supported"
+      },
+      "isholidaymodeactive": {
+        "name": "Is holiday mode active"
+      },
+      "isininstallerstate": {
+        "name": "Is in installer state"
+      },
+      "islockfunctionenabled": {
+        "name": "Is lock function enabled"
+      },
+      "ispowerfulmodeactive": {
+        "name": "Is powerful mode active"
+      },
       "leavingwateroffset": {
         "name": "Leaving water offset"
       },
       "leavingwatertemperature": {
         "name": "Leaving water temperature"
+      },
+      "ledenabled": {
+        "name": "LED enabled"
       },
       "onoffmode": {
         "name": "On/Off mode"
@@ -269,6 +301,9 @@
       "roomtemperature": {
         "name": "Room temperature"
       },
+      "schedule": {
+        "name": "Schedule"
+      },
       "setpointmode": {
         "name": "Setpoint mode"
       },
@@ -277,6 +312,9 @@
       },
       "ssid": {
         "name": "SSID"
+      },
+      "streamermode": {
+        "name": "Streamer mode"
       },
       "suctiontemperature": {
         "name": "Suction temperature"
@@ -309,11 +347,26 @@
     }
   },
   "exceptions": {
+    "air_purifier_set_mode_failed": {
+      "message": "Failed to set the air-purification mode for {device}"
+    },
+    "air_purifier_set_percentage_failed": {
+      "message": "Failed to set the fan speed for {device}"
+    },
+    "air_purifier_turn_off_failed": {
+      "message": "Failed to turn off {device}"
+    },
+    "air_purifier_turn_on_failed": {
+      "message": "Failed to turn on {device}"
+    },
     "api_error": {
       "message": "Daikin API returned HTTP {status}"
     },
     "connection_failed": {
       "message": "Unable to connect to the Daikin API"
+    },
+    "firmware_install_failed": {
+      "message": "Failed to install firmware on {device}"
     },
     "oauth2_implementation_unavailable": {
       "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
@@ -323,6 +376,9 @@
     },
     "rate_limit_exceeded": {
       "message": "Daikin API rate limit exceeded"
+    },
+    "schedule_select_failed": {
+      "message": "Failed to select schedule for {device}"
     },
     "set_fan_mode_failed": {
       "message": "Failed to set the fan mode for {device}"
@@ -339,55 +395,16 @@
     "set_temperature_failed": {
       "message": "Failed to set the temperature for {device}"
     },
-    "turn_off_failed": {
-      "message": "Failed to turn off {device}"
-    },
-    "turn_on_failed": {
-      "message": "Failed to turn on {device}"
-    },
-    "climate_set_fan_mode_failed": {
-      "message": "Failed to set fan mode for {device}"
-    },
-    "climate_set_hvac_mode_failed": {
-      "message": "Failed to set HVAC mode for {device}"
-    },
-    "climate_set_preset_mode_failed": {
-      "message": "Failed to set preset mode for {device}"
-    },
-    "climate_set_swing_mode_failed": {
-      "message": "Failed to set swing mode for {device}"
-    },
-    "climate_set_temperature_failed": {
-      "message": "Failed to set temperature for {device}"
-    },
-    "climate_turn_off_failed": {
-      "message": "Failed to turn off {device}"
-    },
-    "climate_turn_on_failed": {
-      "message": "Failed to turn on {device}"
-    },
-    "firmware_install_failed": {
-      "message": "Failed to install firmware on {device}"
-    },
-    "air_purifier_turn_on_failed": {
-      "message": "Failed to turn on {device}"
-    },
-    "air_purifier_turn_off_failed": {
-      "message": "Failed to turn off {device}"
-    },
-    "air_purifier_set_mode_failed": {
-      "message": "Failed to set the air-purification mode for {device}"
-    },
-    "air_purifier_set_percentage_failed": {
-      "message": "Failed to set the fan speed for {device}"
-    },
-    "schedule_select_failed": {
-      "message": "Failed to select schedule for {device}"
-    },
     "switch_turn_off_failed": {
       "message": "Failed to turn off {device}"
     },
     "switch_turn_on_failed": {
+      "message": "Failed to turn on {device}"
+    },
+    "turn_off_failed": {
+      "message": "Failed to turn off {device}"
+    },
+    "turn_on_failed": {
       "message": "Failed to turn on {device}"
     },
     "water_heater_set_operation_mode_failed": {

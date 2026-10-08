@@ -1371,7 +1371,7 @@
         'previous_unique_id': None,
         'suggested_object_id': None,
         'supported_features': 0,
-        'translation_key': None,
+        'translation_key': 'refresh',
         'unique_id': '71f33ee1-a82d-4f08-8f61-bf25fd872731_refresh',
         'unit_of_measurement': None,
       }),
@@ -1420,7 +1420,7 @@
         'previous_unique_id': None,
         'suggested_object_id': None,
         'supported_features': 0,
-        'translation_key': None,
+        'translation_key': 'refresh',
         'unique_id': '27920256-e0af-4780-8f5f-1f88d8fdf0ba_refresh',
         'unit_of_measurement': None,
       }),
@@ -4225,7 +4225,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'firmwareupdate',
-        'unique_id': '71f33ee1-a82d-4f08-8f61-bf25fd872731_gateway_firmware_update',
+        'unique_id': '71f33ee1-a82d-4f08-8f61-bf25fd872731_gateway_firmware',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -4287,7 +4287,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'firmwareupdate',
-        'unique_id': '71f33ee1-a82d-4f08-8f61-bf25fd872731_indoorUnit_firmware_update',
+        'unique_id': '71f33ee1-a82d-4f08-8f61-bf25fd872731_indoorUnit_firmware',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -4349,7 +4349,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'firmwareupdate',
-        'unique_id': '27920256-e0af-4780-8f5f-1f88d8fdf0ba_gateway_firmware_update',
+        'unique_id': '27920256-e0af-4780-8f5f-1f88d8fdf0ba_gateway_firmware',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -4411,7 +4411,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'firmwareupdate',
-        'unique_id': '27920256-e0af-4780-8f5f-1f88d8fdf0ba_indoorUnit_firmware_update',
+        'unique_id': '27920256-e0af-4780-8f5f-1f88d8fdf0ba_indoorUnit_firmware',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({

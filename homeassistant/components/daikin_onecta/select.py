@@ -6,11 +6,11 @@ from typing import TYPE_CHECKING, override
 from daikin_onecta.models import ScheduleSelection
 
 from homeassistant.components.select import SelectEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import SCHEDULE_OFF
+from .coordinator import DaikinOnectaConfigEntry
 from .device import DaikinOnectaDevice
 from .entity import DaikinManagementPointEntity
 from .entity_descriptions import SELECT_DESCRIPTIONS
@@ -25,7 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: DaikinOnectaConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Daikin climate based on config_entry."""
@@ -107,6 +107,8 @@ class DaikinScheduleSelect(DaikinManagementPointEntity, SelectEntity):
         _LOGGER.debug("Device '%s' selecting schedule %s", self._device.name, option)
         selection = self.selection()
         if selection is None:
+            return
+        if option == self.get_current_option():
             return
 
         schedule_id = selection.selected

@@ -578,7 +578,7 @@
         'previous_unique_id': None,
         'suggested_object_id': None,
         'supported_features': 0,
-        'translation_key': None,
+        'translation_key': 'refresh',
         'unique_id': '29e9a6af-0a8e-49ac-bc19-361c1347ba95_refresh',
         'unit_of_measurement': None,
       }),
@@ -2100,7 +2100,7 @@
         'suggested_object_id': None,
         'supported_features': <UpdateEntityFeature: 5>,
         'translation_key': 'firmwareupdate',
-        'unique_id': '29e9a6af-0a8e-49ac-bc19-361c1347ba95_gateway_firmware_update',
+        'unique_id': '29e9a6af-0a8e-49ac-bc19-361c1347ba95_gateway_firmware',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -2163,7 +2163,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'firmwareupdate',
-        'unique_id': '29e9a6af-0a8e-49ac-bc19-361c1347ba95_indoorUnitHydro_firmware_update',
+        'unique_id': '29e9a6af-0a8e-49ac-bc19-361c1347ba95_indoorUnitHydro_firmware',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -2225,7 +2225,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'firmwareupdate',
-        'unique_id': '29e9a6af-0a8e-49ac-bc19-361c1347ba95_outdoorUnit_firmware_update',
+        'unique_id': '29e9a6af-0a8e-49ac-bc19-361c1347ba95_outdoorUnit_firmware',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -2287,7 +2287,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'firmwareupdate',
-        'unique_id': '29e9a6af-0a8e-49ac-bc19-361c1347ba95_userInterface_firmware_update',
+        'unique_id': '29e9a6af-0a8e-49ac-bc19-361c1347ba95_userInterface_firmware',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({

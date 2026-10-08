@@ -428,7 +428,7 @@
         'previous_unique_id': None,
         'suggested_object_id': None,
         'supported_features': 0,
-        'translation_key': None,
+        'translation_key': 'refresh',
         'unique_id': 'b84e8af3-310a-4e6e-8e52-295573423485_refresh',
         'unit_of_measurement': None,
       }),
@@ -1826,7 +1826,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'firmwareupdate',
-        'unique_id': 'b84e8af3-310a-4e6e-8e52-295573423485_userInterface_firmware_update',
+        'unique_id': 'b84e8af3-310a-4e6e-8e52-295573423485_userInterface_firmware',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({

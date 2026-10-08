@@ -131,7 +131,7 @@
         'previous_unique_id': None,
         'suggested_object_id': None,
         'supported_features': 0,
-        'translation_key': None,
+        'translation_key': 'refresh',
         'unique_id': '7edb544e-2c53-405b-98bc-3d9392f4d1f9_refresh',
         'unit_of_measurement': None,
       }),
@@ -1867,7 +1867,7 @@
         'suggested_object_id': None,
         'supported_features': <UpdateEntityFeature: 4>,
         'translation_key': 'firmwareupdate',
-        'unique_id': '7edb544e-2c53-405b-98bc-3d9392f4d1f9_0_firmware_update',
+        'unique_id': '7edb544e-2c53-405b-98bc-3d9392f4d1f9_0_firmware',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -1930,7 +1930,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'firmwareupdate',
-        'unique_id': '7edb544e-2c53-405b-98bc-3d9392f4d1f9_3_firmware_update',
+        'unique_id': '7edb544e-2c53-405b-98bc-3d9392f4d1f9_3_firmware',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -1992,7 +1992,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'firmwareupdate',
-        'unique_id': '7edb544e-2c53-405b-98bc-3d9392f4d1f9_4_firmware_update',
+        'unique_id': '7edb544e-2c53-405b-98bc-3d9392f4d1f9_4_firmware',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({

@@ -7,7 +7,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntityDescription,
 )
-from homeassistant.components.climate import ClimateEntityDescription
+from homeassistant.components.button import ButtonEntityDescription
 from homeassistant.components.select import SelectEntityDescription
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -26,13 +26,6 @@ from homeassistant.const import (
     UnitOfPower,
     UnitOfTemperature,
 )
-
-
-@dataclass(frozen=True, kw_only=True)
-class DaikinSensorEntityDescription(SensorEntityDescription):
-    """Describe a Daikin sensor and its source-model attribute."""
-
-    model_attribute: str | None = None
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -845,19 +838,36 @@ def _entity_description_kwargs(metadata: DaikinEntityMetadata) -> dict[str, Any]
     }
 
 
-SENSOR_DESCRIPTIONS: dict[str, DaikinSensorEntityDescription] = {
-    metadata.key: DaikinSensorEntityDescription(
+SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
+    metadata.key: SensorEntityDescription(
         key=metadata.key,
         device_class=metadata.device_class,
         native_unit_of_measurement=metadata.native_unit_of_measurement,
         state_class=metadata.state_class,
-        model_attribute=metadata.model_attribute,
         **_entity_description_kwargs(metadata),
     )
     for metadata in ENTITY_METADATA
     if not isinstance(metadata.device_class, BinarySensorDeviceClass)
     and not isinstance(metadata.device_class, UpdateDeviceClass)
 }
+
+BINARY_SENSOR_TRANSLATION_KEYS = frozenset(
+    {
+        "daylightsavingtimeenabled",
+        "iscoolheatmaster",
+        "isfirmwareupdatesupported",
+        "isholidaymodeactive",
+        "isincautionstate",
+        "isinemergencystate",
+        "isinerrorstate",
+        "isininstallerstate",
+        "isinmodeconflict",
+        "isinwarningstate",
+        "islockfunctionenabled",
+        "ispowerfulmodeactive",
+        "ledenabled",
+    }
+)
 
 BINARY_SENSOR_DESCRIPTIONS = {
     metadata.key: BinarySensorEntityDescription(
@@ -868,20 +878,23 @@ BINARY_SENSOR_DESCRIPTIONS = {
         **_entity_description_kwargs(metadata),
     )
     for metadata in ENTITY_METADATA
+    if metadata.translation_key in BINARY_SENSOR_TRANSLATION_KEYS
 }
+
+SWITCH_TRANSLATION_KEYS = frozenset({"economode", "streamermode"})
 
 SWITCH_DESCRIPTIONS = {
     metadata.key: SwitchEntityDescription(
         key=metadata.key, **_entity_description_kwargs(metadata)
     )
     for metadata in ENTITY_METADATA
+    if metadata.translation_key in SWITCH_TRANSLATION_KEYS
 }
 
 SELECT_DESCRIPTIONS = {
-    metadata.key: SelectEntityDescription(
-        key=metadata.key, **_entity_description_kwargs(metadata)
+    "schedule": SelectEntityDescription(
+        key="schedule", translation_key="schedule", icon="mdi:calendar-clock"
     )
-    for metadata in ENTITY_METADATA
 }
 
 UPDATE_DESCRIPTIONS = {
@@ -894,9 +907,11 @@ UPDATE_DESCRIPTIONS = {
     if isinstance(metadata.device_class, UpdateDeviceClass)
 }
 
-CLIMATE_DESCRIPTIONS: dict[str, ClimateEntityDescription] = {
-    metadata.key: ClimateEntityDescription(
-        key=metadata.key, translation_key=metadata.translation_key
+BUTTON_DESCRIPTIONS = {
+    "refresh": ButtonEntityDescription(
+        key="refresh",
+        translation_key="refresh",
+        icon="mdi:refresh",
+        entity_category=EntityCategory.CONFIG,
     )
-    for metadata in ENTITY_METADATA
 }

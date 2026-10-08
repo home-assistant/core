@@ -6,11 +6,10 @@ from typing import Any, override
 from daikin_onecta.models import ManagementPoint
 
 from homeassistant.components.update import UpdateEntity, UpdateEntityFeature
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import OnectaDataUpdateCoordinator
+from .coordinator import DaikinOnectaConfigEntry, OnectaDataUpdateCoordinator
 from .device import DaikinOnectaDevice
 from .entity import DaikinManagementPointEntity
 from .entity_descriptions import UPDATE_DESCRIPTIONS
@@ -24,8 +23,8 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: DaikinOnectaConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Daikin update entities from a config entry."""
     coordinator: OnectaDataUpdateCoordinator = config_entry.runtime_data
@@ -65,7 +64,7 @@ class DaikinFirmwareUpdateEntity(DaikinManagementPointEntity, UpdateEntity):
         self._attr_has_entity_name = True
         self.entity_description = UPDATE_DESCRIPTIONS["FirmwareUpdate"]
 
-        self._attr_unique_id = f"{device.id}_{self._embedded_id}_firmware_update"
+        self._attr_unique_id = f"{device.id}_{self._embedded_id}_firmware"
 
         # Populate initial state
         self._update_from_management_point(gateway_mp)

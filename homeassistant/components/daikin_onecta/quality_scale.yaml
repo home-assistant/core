@@ -37,7 +37,7 @@ rules:
   integration-owner: done
   log-when-unavailable: done
   parallel-updates: done
-  reauthentication-flow: todo
+  reauthentication-flow: done
   test-coverage: done
   devices: done
   diagnostics: done
@@ -55,15 +55,11 @@ rules:
   docs-troubleshooting: done
   docs-use-cases: done
   dynamic-devices: todo
-  entity-category:
-    status: exempt
-    comment: All current climate entities are primary entities.
-  entity-device-class:
-    status: exempt
-    comment: Climate entities do not support entity device classes.
+  entity-category: done
+  entity-device-class: done
   entity-disabled-by-default:
     status: exempt
-    comment: No current climate entity is noisy or less commonly used.
+    comment: All exposed entities are useful during normal operation.
   entity-translations: done
   exception-translations: done
   icon-translations:
