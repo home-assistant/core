@@ -504,7 +504,7 @@ async def test_send_message_with_inline_keyboard_dict_format(
         AsyncMock(
             return_value=Message(
                 message_id=12345,
-                date=datetime.now(),  # pylint: disable=home-assistant-enforce-naive-now
+                date=dt_util.utcnow(),
                 chat=Chat(id=12345678, type=ChatType.PRIVATE),
             )
         ),
@@ -679,7 +679,7 @@ async def test_send_message_with_deprecated_inline_keyboard_http_url(
         AsyncMock(
             return_value=Message(
                 message_id=12345,
-                date=datetime.now(),  # pylint: disable=home-assistant-enforce-naive-now
+                date=dt_util.utcnow(),
                 chat=Chat(id=12345678, type=ChatType.PRIVATE),
             )
         ),
@@ -720,7 +720,7 @@ async def test_deprecated_inline_keyboard_creates_issue(
         AsyncMock(
             return_value=Message(
                 message_id=12345,
-                date=datetime.now(),  # pylint: disable=home-assistant-enforce-naive-now
+                date=dt_util.utcnow(),
                 chat=Chat(id=12345678, type=ChatType.PRIVATE),
             )
         ),
@@ -762,7 +762,7 @@ async def test_inline_keyboard_dict_format_creates_no_issue(
         AsyncMock(
             return_value=Message(
                 message_id=12345,
-                date=datetime.now(),  # pylint: disable=home-assistant-enforce-naive-now
+                date=dt_util.utcnow(),
                 chat=Chat(id=12345678, type=ChatType.PRIVATE),
             )
         ),
