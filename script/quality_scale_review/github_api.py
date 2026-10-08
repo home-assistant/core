@@ -50,6 +50,8 @@ def fetch_pull_request(repo: str, number: int, token: str) -> PullRequest:
     response = session.get(url, timeout=_TIMEOUT)
     response.raise_for_status()
     data = response.json()
+    files = list(_paginate(session, f"{url}/files"))
+    snapshots = [file for file in files if file["filename"].endswith(".ambr")]
     return PullRequest(
         number=data["number"],
         title=data["title"],
@@ -59,10 +61,9 @@ def fetch_pull_request(repo: str, number: int, token: str) -> PullRequest:
         additions=data["additions"],
         deletions=data["deletions"],
         changed_files=data["changed_files"],
-        file_statuses={
-            file["filename"]: file["status"]
-            for file in _paginate(session, f"{url}/files")
-        },
+        file_statuses={file["filename"]: file["status"] for file in files},
+        snapshot_lines=sum(file["changes"] for file in snapshots),
+        snapshot_files=len(snapshots),
     )
 
 

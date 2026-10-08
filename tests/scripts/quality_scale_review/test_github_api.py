@@ -30,7 +30,16 @@ def test_fetch_pull_request_maps_the_api_fields(requests_mock: rm.Mocker) -> Non
     requests_mock.get(
         f"{_PULL_URL}/files",
         json=[
-            {"filename": "homeassistant/components/peblar/sensor.py", "status": "added"}
+            {
+                "filename": "homeassistant/components/peblar/sensor.py",
+                "status": "added",
+                "changes": 22,
+            },
+            {
+                "filename": "tests/components/peblar/snapshots/test_sensor.ambr",
+                "status": "added",
+                "changes": 20,
+            },
         ],
     )
 
@@ -43,8 +52,12 @@ def test_fetch_pull_request_maps_the_api_fields(requests_mock: rm.Mocker) -> Non
     assert pr.base_ref == "dev"
     assert pr.changed_lines == 42
     assert pr.changed_files == 3
-    assert pr.file_statuses == {"homeassistant/components/peblar/sensor.py": "added"}
-    assert pr.filenames == ["homeassistant/components/peblar/sensor.py"]
+    assert pr.reviewed_lines == 22
+    assert pr.reviewed_files == 2
+    assert pr.file_statuses == {
+        "homeassistant/components/peblar/sensor.py": "added",
+        "tests/components/peblar/snapshots/test_sensor.ambr": "added",
+    }
 
 
 def test_fetch_pull_request_reads_an_empty_body_as_a_string(

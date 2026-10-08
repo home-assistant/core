@@ -16,6 +16,8 @@ _PR = PullRequest(
     deletions=12,
     changed_files=3,
     file_statuses={"homeassistant/components/peblar/sensor.py": "modified"},
+    snapshot_lines=0,
+    snapshot_files=0,
 )
 _RESULTS = Results(
     pr_number=42,
@@ -23,8 +25,6 @@ _RESULTS = Results(
     skip=False,
     too_long=False,
     skip_reason="",
-    changed_lines=42,
-    changed_files=3,
     domains=["adax", "peblar"],
 )
 
@@ -48,8 +48,6 @@ def test_domains_file_is_empty_without_domains(tmp_path: Path) -> None:
         skip=True,
         too_long=False,
         skip_reason="touches no integration with a quality_scale.yaml",
-        changed_lines=42,
-        changed_files=3,
         domains=[],
     )
 
