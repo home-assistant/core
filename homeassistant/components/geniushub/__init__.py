@@ -90,7 +90,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: GeniusHubConfigEntry) ->
         raise ConfigEntryError(
             translation_domain=DOMAIN,
             translation_key="setup_failed",
-            translation_placeholders={"error": str(err)},
         ) from err
     broker.make_debug_log_entries()
 

@@ -57,7 +57,4 @@ async def test_setup_client_response_error(
     await hass.async_block_till_done()
 
     assert mock_cloud_config_entry.state is ConfigEntryState.SETUP_ERROR
-    assert mock_cloud_config_entry.reason == (
-        "Setup failed, check your configuration: 401, message='Unauthorized',"
-        " url='https://hub'"
-    )
+    assert mock_cloud_config_entry.reason == "Setup failed, check your configuration"
