@@ -44,7 +44,7 @@ class HitachiAirToWaterHeatingZone(OverkizEntity, ClimateEntity):
     _attr_max_temp = 35.0
     _attr_precision = 0.1
     _attr_target_temperature_step = 0.5
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_translation_key = DOMAIN
 
     # Each zone is its own device; zone 1 is the default, zone 2 overrides below.
@@ -114,7 +114,7 @@ class HitachiAirToWaterHeatingZone(OverkizEntity, ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         current_temperature = self.device.states.get(self._room_temperature_state)
 
@@ -125,7 +125,7 @@ class HitachiAirToWaterHeatingZone(OverkizEntity, ClimateEntity):
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         target_temperature = self.device.states.get(self._thermostat_setting_state)
 
