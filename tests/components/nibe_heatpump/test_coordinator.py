@@ -132,6 +132,7 @@ async def test_pushed_update_during_refresh(
         return data
 
     with patch.object(mock_connection, "read_coil", side_effect=read_coil):
+        # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
         await coordinator.async_refresh()
 
     assert hass.states.get(entity_id).state == "22.0"
@@ -141,6 +142,7 @@ async def test_pushed_update_during_refresh(
     # Without more broadcasts, the following refresh must read both coils again.
     coils[40031] = 30
     coils[40035] = 40
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
     await coordinator.async_refresh()
 
     assert hass.states.get(entity_id).state == "30.0"
@@ -176,6 +178,7 @@ async def test_pushed_update_during_partial_refresh(
         return data
 
     with patch.object(mock_connection, "read_coil", side_effect=read_coil):
+        # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
         await coordinator.async_refresh()
 
     assert hass.states.get(entity_id).state == "22.0"
@@ -187,6 +190,7 @@ async def test_pushed_update_during_partial_refresh(
     # Without more broadcasts, the following refresh must read both coils again.
     coils[40031] = 30
     coils[40035] = 40
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
     await coordinator.async_refresh()
 
     assert hass.states.get(entity_id).state == "30.0"
@@ -231,6 +235,7 @@ async def test_pushed_update_during_failed_refresh(
                 mock_connection.mock_coil_update(address, 22)
 
     with patch.object(mock_connection, "read_coil", side_effect=read_coil):
+        # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
         await coordinator.async_refresh()
 
     assert coordinator.last_update_success is expected_success
@@ -239,6 +244,7 @@ async def test_pushed_update_during_failed_refresh(
     # The following refresh must recover with fresh reads, without more broadcasts.
     coils[40031] = 30
     coils[40035] = 40
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
     await coordinator.async_refresh()
 
     assert coordinator.last_update_success

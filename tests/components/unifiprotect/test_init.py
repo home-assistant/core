@@ -912,6 +912,7 @@ async def test_public_only_manual_refresh(
     await setup_public_only()
     ufp_public_only.api.update_public.reset_mock()
 
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
     await ufp_public_only.entry.runtime_data.async_refresh()
     await hass.async_block_till_done()
 
@@ -934,9 +935,11 @@ async def test_public_only_manual_refresh_revoked_key_triggers_reauth(
     ufp_public_only.api.update_public = AsyncMock(side_effect=NotAuthorized)
 
     for _ in range(AUTH_RETRIES):
+        # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
         await ufp_public_only.entry.runtime_data.async_refresh()
         assert not _reauth_flow_started(hass)
 
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
     await ufp_public_only.entry.runtime_data.async_refresh()
     await hass.async_block_till_done()
 

@@ -261,6 +261,7 @@ async def init_integration(hass: HomeAssistant):
         await hass.async_block_till_done()
 
         # For a first refresh
+        # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
         await entry.runtime_data.async_refresh()
         await hass.async_block_till_done()
 

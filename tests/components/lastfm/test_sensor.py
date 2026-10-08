@@ -57,6 +57,7 @@ async def test_sensor_hidden_listening_information(
     warnings = caplog.text.count("has hidden their recent listening information")
     assert warnings > 0
 
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
     await config_entry.runtime_data.async_refresh()
 
     assert (

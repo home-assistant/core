@@ -114,6 +114,7 @@ async def test_set_value_around_dst(
 
     time_based = mock_lametric.device.return_value.display.screensaver.modes.time_based
     time_based.start_time = expected
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
     await mock_config_entry.runtime_data.async_refresh()
     await hass.async_block_till_done()
 
