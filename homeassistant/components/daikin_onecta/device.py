@@ -2,6 +2,12 @@
 
 from daikin_onecta.models import GatewayDevice, ManagementPoint
 
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
+
+from .const import DOMAIN
+
 
 class DaikinOnectaDevice:
     """Class to represent and control one Daikin Onecta Device."""
@@ -36,3 +42,31 @@ class DaikinOnectaDevice:
     def mark_unavailable(self) -> None:
         """Mark the device unavailable after it is absent from a cloud response."""
         self._is_present_in_cloud = False
+
+    def async_update_device_registry(self, config_entry: ConfigEntry) -> None:
+        """Refresh gateway metadata in the Home Assistant device registry."""
+        gateway = self.device
+        connections = (
+            {(CONNECTION_NETWORK_MAC, gateway.mac_address)}
+            if gateway.mac_address
+            else set()
+        )
+        metadata = {}
+        if (embedded_id := gateway.gateway_embedded_id) is not None and (
+            management_point := gateway.management_point(embedded_id)
+        ) is not None:
+            if management_point.model is not None:
+                metadata["model"] = management_point.model
+            if management_point.serial is not None:
+                metadata["serial_number"] = management_point.serial
+            if management_point.version is not None:
+                metadata["sw_version"] = management_point.version
+        dr.async_get(config_entry.hass).async_get_or_create(
+            config_entry_id=config_entry.entry_id,
+            identifiers={(DOMAIN, self.id)},
+            connections=connections,
+            manufacturer="Daikin",
+            model_id=gateway.device_model,
+            name=self.name,
+            **metadata,
+        )
