@@ -70,6 +70,20 @@ def test_platform_availability_requires_coordinator_and_device(
     assert entity.available is expected
 
 
+def _execute_typed_command(config_entry: MockConfigEntry) -> AsyncMock:
+    """Execute a typed command callback without making a cloud request."""
+    api = config_entry.runtime_data.api
+    api.client.patch_characteristic = AsyncMock()
+    api.client.put_management_point = AsyncMock()
+    api.client.install_firmware = AsyncMock()
+
+    async def execute(command) -> bool:
+        await command(api.client)
+        return True
+
+    return AsyncMock(side_effect=execute)
+
+
 async def test_refresh_button_requests_coordinator_refresh(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
@@ -93,7 +107,7 @@ async def test_switch_service_updates_cached_state(
 ) -> None:
     """A successful switch command updates the state without a cloud refresh."""
     await _async_setup_fixture(hass, config_entry, "altherma")
-    config_entry.runtime_data.api.async_execute_command = AsyncMock(return_value=True)
+    config_entry.runtime_data.api.async_execute_command = _execute_typed_command(config_entry)
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
@@ -112,7 +126,7 @@ async def test_schedule_select_updates_cached_selection(
 ) -> None:
     """Selecting a schedule updates the entity state without a cloud refresh."""
     await _async_setup_fixture(hass, config_entry, "schedule")
-    config_entry.runtime_data.api.async_execute_command = AsyncMock(return_value=True)
+    config_entry.runtime_data.api.async_execute_command = _execute_typed_command(config_entry)
 
     await hass.services.async_call(
         SELECT_DOMAIN,
@@ -131,7 +145,7 @@ async def test_water_heater_turn_off_updates_cached_state(
 ) -> None:
     """A successful water-heater command updates the cached operation mode."""
     await _async_setup_fixture(hass, config_entry, "altherma_boost")
-    config_entry.runtime_data.api.async_execute_command = AsyncMock(return_value=True)
+    config_entry.runtime_data.api.async_execute_command = _execute_typed_command(config_entry)
 
     await hass.services.async_call(
         WATER_HEATER_DOMAIN,
@@ -150,7 +164,7 @@ async def test_firmware_install_executes_command(
 ) -> None:
     """The update service executes the typed firmware-install command."""
     await _async_setup_fixture(hass, config_entry, "dx4_firmwareavailable")
-    config_entry.runtime_data.api.async_execute_command = AsyncMock(return_value=True)
+    config_entry.runtime_data.api.async_execute_command = _execute_typed_command(config_entry)
 
     await hass.services.async_call(
         UPDATE_DOMAIN,
@@ -170,7 +184,7 @@ async def test_air_purifier_preset_updates_cached_state(
 ) -> None:
     """A successful purifier command updates its native preset state."""
     await _async_setup_fixture(hass, config_entry, "mc80z")
-    config_entry.runtime_data.api.async_execute_command = AsyncMock(return_value=True)
+    config_entry.runtime_data.api.async_execute_command = _execute_typed_command(config_entry)
 
     await hass.services.async_call(
         FAN_DOMAIN,
