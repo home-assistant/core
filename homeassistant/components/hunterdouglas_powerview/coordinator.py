@@ -97,8 +97,5 @@ class PowerviewShadeUpdateCoordinator(DataUpdateCoordinator[PowerviewShadeData])
                         "Removing device for shade %s that no longer exists on hub",
                         identifier[1]
                     )
-                    device_registry.async_update_device(
-                        device.id,
-                        remove_config_entry_id=self.config_entry.entry_id
-                    )
+                    device_registry.async_remove_device(device.id)
                     break
