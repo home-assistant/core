@@ -27,7 +27,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Is firmware update supported',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -40,7 +40,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'air-purifier Is firmware update supported',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'binary_sensor.air_purifier_is_firmware_update_supported',
@@ -76,7 +75,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Is holiday mode active',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -89,7 +88,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'air-purifier Is holiday mode active',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'binary_sensor.air_purifier_is_holiday_mode_active',
@@ -125,7 +123,7 @@
         'options': dict({
         }),
         'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Is in caution state',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -139,7 +137,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'air-purifier Is in caution state',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'binary_sensor.air_purifier_is_in_caution_state',
@@ -175,7 +172,7 @@
         'options': dict({
         }),
         'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Is in error state',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -189,7 +186,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'air-purifier Is in error state',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'binary_sensor.air_purifier_is_in_error_state',
@@ -225,7 +221,7 @@
         'options': dict({
         }),
         'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Is in error state',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -239,7 +235,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'air-purifier Is in error state',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'binary_sensor.air_purifier_is_in_error_state_2',
@@ -275,7 +270,7 @@
         'options': dict({
         }),
         'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Is in warning state',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -289,7 +284,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'air-purifier Is in warning state',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'binary_sensor.air_purifier_is_in_warning_state',
@@ -325,7 +319,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Is firmware update supported',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -338,7 +332,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vloerverwarming Is firmware update supported',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'binary_sensor.vloerverwarming_is_firmware_update_supported',
@@ -374,7 +367,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Is holiday mode active',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -387,7 +380,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vloerverwarming Is holiday mode active',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'binary_sensor.vloerverwarming_is_holiday_mode_active',
@@ -423,7 +415,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Is holiday mode active',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -436,7 +428,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vloerverwarming Is holiday mode active',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'binary_sensor.vloerverwarming_is_holiday_mode_active_2',
@@ -472,7 +463,7 @@
         'options': dict({
         }),
         'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Is in emergency state',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -486,7 +477,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vloerverwarming Is in emergency state',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'binary_sensor.vloerverwarming_is_in_emergency_state',
@@ -522,7 +512,7 @@
         'options': dict({
         }),
         'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Is in emergency state',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -536,7 +526,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vloerverwarming Is in emergency state',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'binary_sensor.vloerverwarming_is_in_emergency_state_2',
@@ -572,7 +561,7 @@
         'options': dict({
         }),
         'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Is in error state',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -586,7 +575,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vloerverwarming Is in error state',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'binary_sensor.vloerverwarming_is_in_error_state',
@@ -622,7 +610,7 @@
         'options': dict({
         }),
         'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Is in error state',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -636,7 +624,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vloerverwarming Is in error state',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'binary_sensor.vloerverwarming_is_in_error_state_2',
@@ -672,7 +659,7 @@
         'options': dict({
         }),
         'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Is in error state',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -686,7 +673,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vloerverwarming Is in error state',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'binary_sensor.vloerverwarming_is_in_error_state_3',
@@ -722,7 +708,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Is in installer state',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -735,7 +721,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vloerverwarming Is in installer state',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'binary_sensor.vloerverwarming_is_in_installer_state',
@@ -771,7 +756,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Is in installer state',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -784,7 +769,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vloerverwarming Is in installer state',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'binary_sensor.vloerverwarming_is_in_installer_state_2',
@@ -820,7 +804,7 @@
         'options': dict({
         }),
         'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Is in warning state',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -834,7 +818,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vloerverwarming Is in warning state',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'binary_sensor.vloerverwarming_is_in_warning_state',
@@ -870,7 +853,7 @@
         'options': dict({
         }),
         'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Is in warning state',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -884,7 +867,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vloerverwarming Is in warning state',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'binary_sensor.vloerverwarming_is_in_warning_state_2',
@@ -920,7 +902,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Is powerful mode active',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -933,7 +915,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vloerverwarming Is powerful mode active',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'binary_sensor.vloerverwarming_is_powerful_mode_active',
@@ -969,7 +950,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:refresh',
+        'original_icon': None,
         'original_name': 'Refresh',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -982,7 +963,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'air-purifier Refresh',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:refresh',
         }),
         'context': <ANY>,
         'entity_id': 'button.air_purifier_refresh',
@@ -1018,7 +998,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:refresh',
+        'original_icon': None,
         'original_name': 'Refresh',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -1031,7 +1011,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vloerverwarming Refresh',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:refresh',
         }),
         'context': <ANY>,
         'entity_id': 'button.vloerverwarming_refresh',
@@ -1223,7 +1202,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:calendar-clock',
+        'original_icon': None,
         'original_name': 'Schedule',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -1236,7 +1215,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'air-purifier Schedule',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:calendar-clock',
           <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
             '0',
             '1',
@@ -1282,7 +1260,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:calendar-clock',
+        'original_icon': None,
         'original_name': 'Schedule',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -1295,7 +1273,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vloerverwarming Schedule',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:calendar-clock',
           <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
             'User defined',
           ]),
@@ -1334,7 +1311,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:alphabetical',
+        'original_icon': None,
         'original_name': 'Air purification mode',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -1347,7 +1324,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'air-purifier Air purification mode',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:alphabetical',
         }),
         'context': <ANY>,
         'entity_id': 'sensor.air_purifier_air_purification_mode',
@@ -1383,7 +1359,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Error code',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -1396,7 +1372,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'air-purifier Error code',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'sensor.air_purifier_error_code',
@@ -1432,7 +1407,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Error code',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -1445,7 +1420,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'air-purifier Error code',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'sensor.air_purifier_error_code_2',
@@ -1481,7 +1455,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:ip-network',
+        'original_icon': None,
         'original_name': 'IP address',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -1494,7 +1468,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'air-purifier IP address',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:ip-network',
         }),
         'context': <ANY>,
         'entity_id': 'sensor.air_purifier_ip_address',
@@ -1532,7 +1505,7 @@
         'options': dict({
         }),
         'original_device_class': <SensorDeviceClass.PM10: 'pm10'>,
-        'original_icon': 'mdi:blur',
+        'original_icon': None,
         'original_name': 'PM10 concentration',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -1546,7 +1519,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pm10',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'air-purifier PM10 concentration',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:blur',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
         }),
@@ -1586,7 +1558,7 @@
         'options': dict({
         }),
         'original_device_class': <SensorDeviceClass.PM1: 'pm1'>,
-        'original_icon': 'mdi:blur',
+        'original_icon': None,
         'original_name': 'PM1 concentration',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -1600,7 +1572,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pm1',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'air-purifier PM1 concentration',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:blur',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
         }),
@@ -1640,7 +1611,7 @@
         'options': dict({
         }),
         'original_device_class': <SensorDeviceClass.PM25: 'pm25'>,
-        'original_icon': 'mdi:blur',
+        'original_icon': None,
         'original_name': 'PM2.5 concentration',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -1654,7 +1625,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pm25',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'air-purifier PM2.5 concentration',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:blur',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
         }),
@@ -1694,7 +1664,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Ratelimit remaining day',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -1707,7 +1677,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'air-purifier Ratelimit remaining day',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
         }),
         'context': <ANY>,
@@ -1746,7 +1715,7 @@
         'options': dict({
         }),
         'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
-        'original_icon': 'mdi:water-percent',
+        'original_icon': None,
         'original_name': 'Room humidity',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -1760,7 +1729,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidity',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'air-purifier Room humidity',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:water-percent',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
         }),
@@ -1803,7 +1771,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
-        'original_icon': '',
+        'original_icon': None,
         'original_name': 'Room temperature',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -1817,7 +1785,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'air-purifier Room temperature',
-          <EntityStateAttribute.ICON: 'icon'>: '',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
         }),
@@ -1855,7 +1822,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:alphabetical',
+        'original_icon': None,
         'original_name': 'Control mode',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -1868,7 +1835,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vloerverwarming Control mode',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:alphabetical',
         }),
         'context': <ANY>,
         'entity_id': 'sensor.vloerverwarming_control_mode',
@@ -1909,7 +1875,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-        'original_icon': 'mdi:snowflake',
+        'original_icon': None,
         'original_name': 'Cooling daily electrical consumption',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -1923,7 +1889,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vloerverwarming Cooling daily electrical consumption',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:snowflake',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
@@ -1966,7 +1931,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-        'original_icon': 'mdi:snowflake',
+        'original_icon': None,
         'original_name': 'Cooling monthly electrical consumption',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -1980,7 +1945,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vloerverwarming Cooling monthly electrical consumption',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:snowflake',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
@@ -2023,7 +1987,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-        'original_icon': 'mdi:snowflake',
+        'original_icon': None,
         'original_name': 'Cooling weekly electrical consumption',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -2037,7 +2001,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vloerverwarming Cooling weekly electrical consumption',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:snowflake',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
@@ -2080,7 +2043,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-        'original_icon': 'mdi:snowflake',
+        'original_icon': None,
         'original_name': 'Cooling yearly electrical consumption',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -2094,7 +2057,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vloerverwarming Cooling yearly electrical consumption',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:snowflake',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
@@ -2132,7 +2094,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Error code',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -2145,7 +2107,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vloerverwarming Error code',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'sensor.vloerverwarming_error_code',
@@ -2181,7 +2142,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Error code',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -2194,7 +2155,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vloerverwarming Error code',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'sensor.vloerverwarming_error_code_2',
@@ -2230,7 +2190,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Error code',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -2243,7 +2203,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vloerverwarming Error code',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'sensor.vloerverwarming_error_code_3',
@@ -2279,7 +2238,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:alphabetical',
+        'original_icon': None,
         'original_name': 'Heat up mode',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -2292,7 +2251,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vloerverwarming Heat up mode',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:alphabetical',
         }),
         'context': <ANY>,
         'entity_id': 'sensor.vloerverwarming_heat_up_mode',
@@ -2333,7 +2291,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-        'original_icon': 'mdi:fire',
+        'original_icon': None,
         'original_name': 'Heating daily electrical consumption',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -2347,7 +2305,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vloerverwarming Heating daily electrical consumption',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:fire',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
@@ -2390,7 +2347,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-        'original_icon': 'mdi:fire',
+        'original_icon': None,
         'original_name': 'Heating daily electrical consumption',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -2404,7 +2361,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vloerverwarming Heating daily electrical consumption',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:fire',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
@@ -2447,7 +2403,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-        'original_icon': 'mdi:fire',
+        'original_icon': None,
         'original_name': 'Heating monthly electrical consumption',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -2461,7 +2417,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vloerverwarming Heating monthly electrical consumption',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:fire',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
@@ -2504,7 +2459,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-        'original_icon': 'mdi:fire',
+        'original_icon': None,
         'original_name': 'Heating monthly electrical consumption',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -2518,7 +2473,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vloerverwarming Heating monthly electrical consumption',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:fire',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
@@ -2561,7 +2515,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-        'original_icon': 'mdi:fire',
+        'original_icon': None,
         'original_name': 'Heating weekly electrical consumption',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -2575,7 +2529,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vloerverwarming Heating weekly electrical consumption',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:fire',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
@@ -2618,7 +2571,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-        'original_icon': 'mdi:fire',
+        'original_icon': None,
         'original_name': 'Heating weekly electrical consumption',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -2632,7 +2585,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vloerverwarming Heating weekly electrical consumption',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:fire',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
@@ -2675,7 +2627,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-        'original_icon': 'mdi:fire',
+        'original_icon': None,
         'original_name': 'Heating yearly electrical consumption',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -2689,7 +2641,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vloerverwarming Heating yearly electrical consumption',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:fire',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
@@ -2732,7 +2683,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-        'original_icon': 'mdi:fire',
+        'original_icon': None,
         'original_name': 'Heating yearly electrical consumption',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -2746,7 +2697,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vloerverwarming Heating yearly electrical consumption',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:fire',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
@@ -2784,7 +2734,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:ip-network',
+        'original_icon': None,
         'original_name': 'IP address',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -2797,7 +2747,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vloerverwarming IP address',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:ip-network',
         }),
         'context': <ANY>,
         'entity_id': 'sensor.vloerverwarming_ip_address',
@@ -2838,7 +2787,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
-        'original_icon': '',
+        'original_icon': None,
         'original_name': 'Leaving water temperature',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -2852,7 +2801,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vloerverwarming Leaving water temperature',
-          <EntityStateAttribute.ICON: 'icon'>: '',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
         }),
@@ -2895,7 +2843,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
-        'original_icon': '',
+        'original_icon': None,
         'original_name': 'Outdoor temperature',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -2909,7 +2857,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vloerverwarming Outdoor temperature',
-          <EntityStateAttribute.ICON: 'icon'>: '',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
         }),
@@ -2949,7 +2896,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Ratelimit remaining day',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -2962,7 +2909,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vloerverwarming Ratelimit remaining day',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
         }),
         'context': <ANY>,
@@ -2999,7 +2945,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:alphabetical',
+        'original_icon': None,
         'original_name': 'Setpoint mode',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -3012,7 +2958,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vloerverwarming Setpoint mode',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:alphabetical',
         }),
         'context': <ANY>,
         'entity_id': 'sensor.vloerverwarming_setpoint_mode',
@@ -3048,7 +2993,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:alphabetical',
+        'original_icon': None,
         'original_name': 'Setpoint mode',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -3061,7 +3006,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vloerverwarming Setpoint mode',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:alphabetical',
         }),
         'context': <ANY>,
         'entity_id': 'sensor.vloerverwarming_setpoint_mode_2',
@@ -3102,7 +3046,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
-        'original_icon': 'mdi:bathtub-outline',
+        'original_icon': None,
         'original_name': 'Tank temperature',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -3116,7 +3060,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vloerverwarming Tank temperature',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:bathtub-outline',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
         }),
@@ -3154,7 +3097,7 @@
         'options': dict({
         }),
         'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
-        'original_icon': 'mdi:update',
+        'original_icon': None,
         'original_name': 'Firmware update',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -3171,7 +3114,6 @@
           <UpdateEntityStateAttribute.DISPLAY_PRECISION: 'display_precision'>: 0,
           <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/daikin_onecta/icon.png',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'air-purifier Firmware update',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:update',
           <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
           <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: '1_28_0',
           <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: '1_28_0',
@@ -3216,7 +3158,7 @@
         'options': dict({
         }),
         'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
-        'original_icon': 'mdi:update',
+        'original_icon': None,
         'original_name': 'Firmware update',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -3233,7 +3175,6 @@
           <UpdateEntityStateAttribute.DISPLAY_PRECISION: 'display_precision'>: 0,
           <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/daikin_onecta/icon.png',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'air-purifier Firmware update',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:update',
           <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
           <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: '22014C01',
           <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: '22014C01',
@@ -3278,7 +3219,7 @@
         'options': dict({
         }),
         'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
-        'original_icon': 'mdi:update',
+        'original_icon': None,
         'original_name': 'Firmware update',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -3295,7 +3236,6 @@
           <UpdateEntityStateAttribute.DISPLAY_PRECISION: 'display_precision'>: 0,
           <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/daikin_onecta/icon.png',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vloerverwarming Firmware update',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:update',
           <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
           <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: '436CC166000',
           <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: '436CC166000',
@@ -3340,7 +3280,7 @@
         'options': dict({
         }),
         'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
-        'original_icon': 'mdi:update',
+        'original_icon': None,
         'original_name': 'Firmware update',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -3357,7 +3297,6 @@
           <UpdateEntityStateAttribute.DISPLAY_PRECISION: 'display_precision'>: 0,
           <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/daikin_onecta/icon.png',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vloerverwarming Firmware update',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:update',
           <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
           <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: 'ID7401',
           <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: 'ID7401',
@@ -3402,7 +3341,7 @@
         'options': dict({
         }),
         'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
-        'original_icon': 'mdi:update',
+        'original_icon': None,
         'original_name': 'Firmware update',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -3419,7 +3358,6 @@
           <UpdateEntityStateAttribute.DISPLAY_PRECISION: 'display_precision'>: 0,
           <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/daikin_onecta/icon.png',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vloerverwarming Firmware update',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:update',
           <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
           <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: 'IDE7C4',
           <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: 'IDE7C4',
@@ -3464,7 +3402,7 @@
         'options': dict({
         }),
         'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
-        'original_icon': 'mdi:update',
+        'original_icon': None,
         'original_name': 'Firmware update',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -3481,7 +3419,6 @@
           <UpdateEntityStateAttribute.DISPLAY_PRECISION: 'display_precision'>: 0,
           <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/daikin_onecta/icon.png',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vloerverwarming Firmware update',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:update',
           <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
           <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: 'v01.07.00',
           <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: 'v01.07.00',

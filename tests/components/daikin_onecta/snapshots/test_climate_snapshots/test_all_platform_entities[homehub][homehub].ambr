@@ -27,7 +27,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:refresh',
+        'original_icon': None,
         'original_name': 'Refresh',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -40,7 +40,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'homehub Refresh',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:refresh',
         }),
         'context': <ANY>,
         'entity_id': 'button.homehub_refresh',
@@ -78,7 +77,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Ratelimit remaining day',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -91,7 +90,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'homehub Ratelimit remaining day',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
         }),
         'context': <ANY>,
@@ -128,7 +126,7 @@
         'options': dict({
         }),
         'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
-        'original_icon': 'mdi:update',
+        'original_icon': None,
         'original_name': 'Firmware update',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -145,7 +143,6 @@
           <UpdateEntityStateAttribute.DISPLAY_PRECISION: 'display_precision'>: 0,
           <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/daikin_onecta/icon.png',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'homehub Firmware update',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:update',
           <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
           <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: '2.3.0',
           <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: '2.3.0',

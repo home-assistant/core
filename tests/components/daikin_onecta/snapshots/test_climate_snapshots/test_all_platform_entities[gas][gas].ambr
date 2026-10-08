@@ -27,7 +27,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Is holiday mode active',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -40,7 +40,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Living Room Is holiday mode active',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'binary_sensor.my_living_room_is_holiday_mode_active',
@@ -76,7 +75,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Is powerful mode active',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -89,7 +88,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Living Room Is powerful mode active',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'binary_sensor.my_living_room_is_powerful_mode_active',
@@ -125,7 +123,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:refresh',
+        'original_icon': None,
         'original_name': 'Refresh',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -138,7 +136,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Living Room Refresh',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:refresh',
         }),
         'context': <ANY>,
         'entity_id': 'button.my_living_room_refresh',
@@ -418,7 +415,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:calendar-clock',
+        'original_icon': None,
         'original_name': 'Schedule',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -431,7 +428,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Living Room Schedule',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:calendar-clock',
           <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
             'althermaClimateControl0',
             'althermaClimateControl1',
@@ -472,7 +468,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:alphabetical',
+        'original_icon': None,
         'original_name': 'Control mode',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -485,7 +481,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Living Room Control mode',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:alphabetical',
         }),
         'context': <ANY>,
         'entity_id': 'sensor.my_living_room_control_mode',
@@ -526,7 +521,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-        'original_icon': 'mdi:snowflake',
+        'original_icon': None,
         'original_name': 'Cooling daily electrical consumption',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -540,7 +535,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Living Room Cooling daily electrical consumption',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:snowflake',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
@@ -583,7 +577,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-        'original_icon': 'mdi:snowflake',
+        'original_icon': None,
         'original_name': 'Cooling daily gas consumption',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -597,7 +591,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Living Room Cooling daily gas consumption',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:snowflake',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
@@ -640,7 +633,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-        'original_icon': 'mdi:snowflake',
+        'original_icon': None,
         'original_name': 'Cooling monthly electrical consumption',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -654,7 +647,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Living Room Cooling monthly electrical consumption',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:snowflake',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
@@ -697,7 +689,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-        'original_icon': 'mdi:snowflake',
+        'original_icon': None,
         'original_name': 'Cooling monthly gas consumption',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -711,7 +703,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Living Room Cooling monthly gas consumption',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:snowflake',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
@@ -754,7 +745,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-        'original_icon': 'mdi:snowflake',
+        'original_icon': None,
         'original_name': 'Cooling weekly electrical consumption',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -768,7 +759,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Living Room Cooling weekly electrical consumption',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:snowflake',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
@@ -811,7 +801,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-        'original_icon': 'mdi:snowflake',
+        'original_icon': None,
         'original_name': 'Cooling weekly gas consumption',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -825,7 +815,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Living Room Cooling weekly gas consumption',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:snowflake',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
@@ -868,7 +857,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-        'original_icon': 'mdi:snowflake',
+        'original_icon': None,
         'original_name': 'Cooling yearly electrical consumption',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -882,7 +871,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Living Room Cooling yearly electrical consumption',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:snowflake',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
@@ -925,7 +913,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-        'original_icon': 'mdi:snowflake',
+        'original_icon': None,
         'original_name': 'Cooling yearly gas consumption',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -939,7 +927,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Living Room Cooling yearly gas consumption',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:snowflake',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
@@ -977,7 +964,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:alphabetical',
+        'original_icon': None,
         'original_name': 'Heat up mode',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -990,7 +977,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Living Room Heat up mode',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:alphabetical',
         }),
         'context': <ANY>,
         'entity_id': 'sensor.my_living_room_heat_up_mode',
@@ -1031,7 +1017,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-        'original_icon': 'mdi:fire',
+        'original_icon': None,
         'original_name': 'Heating daily electrical consumption',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -1045,7 +1031,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Living Room Heating daily electrical consumption',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:fire',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
@@ -1088,7 +1073,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-        'original_icon': 'mdi:fire',
+        'original_icon': None,
         'original_name': 'Heating daily gas consumption',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -1102,7 +1087,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Living Room Heating daily gas consumption',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:fire',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
@@ -1145,7 +1129,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-        'original_icon': 'mdi:fire',
+        'original_icon': None,
         'original_name': 'Heating monthly electrical consumption',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -1159,7 +1143,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Living Room Heating monthly electrical consumption',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:fire',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
@@ -1202,7 +1185,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-        'original_icon': 'mdi:fire',
+        'original_icon': None,
         'original_name': 'Heating monthly gas consumption',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -1216,7 +1199,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Living Room Heating monthly gas consumption',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:fire',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
@@ -1259,7 +1241,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-        'original_icon': 'mdi:fire',
+        'original_icon': None,
         'original_name': 'Heating weekly electrical consumption',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -1273,7 +1255,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Living Room Heating weekly electrical consumption',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:fire',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
@@ -1316,7 +1297,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-        'original_icon': 'mdi:fire',
+        'original_icon': None,
         'original_name': 'Heating weekly gas consumption',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -1330,7 +1311,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Living Room Heating weekly gas consumption',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:fire',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
@@ -1373,7 +1353,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-        'original_icon': 'mdi:fire',
+        'original_icon': None,
         'original_name': 'Heating yearly electrical consumption',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -1387,7 +1367,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Living Room Heating yearly electrical consumption',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:fire',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
@@ -1430,7 +1409,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-        'original_icon': 'mdi:fire',
+        'original_icon': None,
         'original_name': 'Heating yearly gas consumption',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -1444,7 +1423,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Living Room Heating yearly gas consumption',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:fire',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
@@ -1482,7 +1460,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:ip-network',
+        'original_icon': None,
         'original_name': 'IP address',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -1495,7 +1473,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Living Room IP address',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:ip-network',
         }),
         'context': <ANY>,
         'entity_id': 'sensor.my_living_room_ip_address',
@@ -1536,7 +1513,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
-        'original_icon': '',
+        'original_icon': None,
         'original_name': 'Leaving water temperature',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -1550,7 +1527,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Living Room Leaving water temperature',
-          <EntityStateAttribute.ICON: 'icon'>: '',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
         }),
@@ -1593,7 +1569,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
-        'original_icon': '',
+        'original_icon': None,
         'original_name': 'Outdoor temperature',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -1607,7 +1583,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Living Room Outdoor temperature',
-          <EntityStateAttribute.ICON: 'icon'>: '',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
         }),
@@ -1647,7 +1622,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Ratelimit remaining day',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -1660,7 +1635,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Living Room Ratelimit remaining day',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
         }),
         'context': <ANY>,
@@ -1702,7 +1676,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
-        'original_icon': '',
+        'original_icon': None,
         'original_name': 'Room temperature',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -1716,7 +1690,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Living Room Room temperature',
-          <EntityStateAttribute.ICON: 'icon'>: '',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
         }),
@@ -1754,7 +1727,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:alphabetical',
+        'original_icon': None,
         'original_name': 'Setpoint mode',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -1767,7 +1740,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Living Room Setpoint mode',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:alphabetical',
         }),
         'context': <ANY>,
         'entity_id': 'sensor.my_living_room_setpoint_mode',
@@ -1808,7 +1780,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
-        'original_icon': 'mdi:bathtub-outline',
+        'original_icon': None,
         'original_name': 'Tank temperature',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -1822,7 +1794,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Living Room Tank temperature',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:bathtub-outline',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
         }),
@@ -1860,7 +1831,7 @@
         'options': dict({
         }),
         'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
-        'original_icon': 'mdi:update',
+        'original_icon': None,
         'original_name': 'Firmware update',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -1878,7 +1849,6 @@
           <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/daikin_onecta/icon.png',
           'firmware_update_type': 'blocking',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Living Room Firmware update',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:update',
           <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: True,
           <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: '436CC038000',
           <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: '436CC038000',
@@ -1923,7 +1893,7 @@
         'options': dict({
         }),
         'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
-        'original_icon': 'mdi:update',
+        'original_icon': None,
         'original_name': 'Firmware update',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -1940,7 +1910,6 @@
           <UpdateEntityStateAttribute.DISPLAY_PRECISION: 'display_precision'>: 0,
           <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/daikin_onecta/icon.png',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Living Room Firmware update',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:update',
           <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
           <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: 'ID66F2',
           <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: 'ID66F2',
@@ -1985,7 +1954,7 @@
         'options': dict({
         }),
         'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
-        'original_icon': 'mdi:update',
+        'original_icon': None,
         'original_name': 'Firmware update',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -2002,7 +1971,6 @@
           <UpdateEntityStateAttribute.DISPLAY_PRECISION: 'display_precision'>: 0,
           <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/daikin_onecta/icon.png',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Living Room Firmware update',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:update',
           <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
           <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: 'ID0000',
           <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: 'ID0000',

@@ -1,0 +1,83 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "daylightsavingtimeenabled": { "default": "mdi:information-outline" },
+      "iscoolheatmaster": { "default": "mdi:information-outline" },
+      "isfirmwareupdatesupported": { "default": "mdi:information-outline" },
+      "isholidaymodeactive": { "default": "mdi:information-outline" },
+      "isincautionstate": { "default": "mdi:information-outline" },
+      "isinemergencystate": { "default": "mdi:information-outline" },
+      "isinerrorstate": { "default": "mdi:information-outline" },
+      "isininstallerstate": { "default": "mdi:information-outline" },
+      "isinmodeconflict": { "default": "mdi:information-outline" },
+      "isinwarningstate": { "default": "mdi:information-outline" },
+      "islockfunctionenabled": { "default": "mdi:information-outline" },
+      "ispowerfulmodeactive": { "default": "mdi:information-outline" },
+      "ledenabled": { "default": "mdi:information-outline" }
+    },
+    "button": {
+      "refresh": { "default": "mdi:refresh" }
+    },
+    "select": {
+      "schedule": { "default": "mdi:calendar-clock" }
+    },
+    "sensor": {
+      "airpurificationmode": { "default": "mdi:alphabetical" },
+      "controlmode": { "default": "mdi:alphabetical" },
+      "coolingdailyelectricalconsumption": { "default": "mdi:snowflake" },
+      "coolingdailygasconsumption": { "default": "mdi:snowflake" },
+      "coolingmonthlyelectricalconsumption": { "default": "mdi:snowflake" },
+      "coolingmonthlygasconsumption": { "default": "mdi:snowflake" },
+      "coolingmonthlythermaloutput": { "default": "mdi:snowflake" },
+      "coolingweeklyelectricalconsumption": { "default": "mdi:snowflake" },
+      "coolingweeklygasconsumption": { "default": "mdi:snowflake" },
+      "coolingyearlyelectricalconsumption": { "default": "mdi:snowflake" },
+      "coolingyearlygasconsumption": { "default": "mdi:snowflake" },
+      "coolingyearlythermaloutput": { "default": "mdi:snowflake" },
+      "currentpowerconsumption": { "default": "mdi:lightning-bolt" },
+      "currentthermaloutput": { "default": "mdi:fire" },
+      "datetime": { "default": "mdi:information-outline" },
+      "drykeepsetting": { "default": "mdi:water-percent" },
+      "economode": { "default": "mdi:leaf" },
+      "errorcode": { "default": "mdi:information-outline" },
+      "fanmotorrotationspeed": { "default": "mdi:fan" },
+      "heatingdailyelectricalconsumption": { "default": "mdi:fire" },
+      "heatingdailygasconsumption": { "default": "mdi:fire" },
+      "heatingmonthlyelectricalconsumption": { "default": "mdi:fire" },
+      "heatingmonthlygasconsumption": { "default": "mdi:fire" },
+      "heatingmonthlythermaloutput": { "default": "mdi:fire" },
+      "heatingweeklyelectricalconsumption": { "default": "mdi:fire" },
+      "heatingweeklygasconsumption": { "default": "mdi:fire" },
+      "heatingyearlyelectricalconsumption": { "default": "mdi:fire" },
+      "heatingyearlygasconsumption": { "default": "mdi:fire" },
+      "heatingyearlythermaloutput": { "default": "mdi:fire" },
+      "heatupmode": { "default": "mdi:alphabetical" },
+      "ipaddress": { "default": "mdi:ip-network" },
+      "onoffmode": { "default": "mdi:toggle-switch-variant" },
+      "operationmode": { "default": "mdi:alphabetical" },
+      "pm10concentration": { "default": "mdi:blur" },
+      "pm1concentration": { "default": "mdi:blur" },
+      "pm25concentration": { "default": "mdi:blur" },
+      "powerfulmode": { "default": "mdi:rocket-launch" },
+      "ratelimitremainingday": { "default": "mdi:information-outline" },
+      "regioncode": { "default": "mdi:information-outline" },
+      "roomhumidity": { "default": "mdi:water-percent" },
+      "schedule": { "default": "mdi:calendar-clock" },
+      "setpointmode": { "default": "mdi:alphabetical" },
+      "sgtin": { "default": "mdi:information-outline" },
+      "ssid": { "default": "mdi:access-point-network" },
+      "streamermode": { "default": "mdi:air-filter" },
+      "tanktemperature": { "default": "mdi:bathtub-outline" },
+      "timezone": { "default": "mdi:information-outline" },
+      "wificonnectionssid": { "default": "mdi:access-point-network" },
+      "wificonnectionstrength": { "default": "mdi:wifi" }
+    },
+    "switch": {
+      "economode": { "default": "mdi:leaf" },
+      "streamermode": { "default": "mdi:air-filter" }
+    },
+    "update": {
+      "firmwareupdate": { "default": "mdi:update" }
+    }
+  }
+}

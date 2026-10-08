@@ -27,7 +27,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Is firmware update supported',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -40,7 +40,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Johnny&Maaike Is firmware update supported',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'binary_sensor.johnny_maaike_is_firmware_update_supported',
@@ -76,7 +75,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Is holiday mode active',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -89,7 +88,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Johnny&Maaike Is holiday mode active',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'binary_sensor.johnny_maaike_is_holiday_mode_active',
@@ -125,7 +123,7 @@
         'options': dict({
         }),
         'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Is in caution state',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -139,7 +137,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Johnny&Maaike Is in caution state',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'binary_sensor.johnny_maaike_is_in_caution_state',
@@ -175,7 +172,7 @@
         'options': dict({
         }),
         'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Is in caution state',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -189,7 +186,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Johnny&Maaike Is in caution state',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'binary_sensor.johnny_maaike_is_in_caution_state_2',
@@ -225,7 +221,7 @@
         'options': dict({
         }),
         'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Is in error state',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -239,7 +235,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Johnny&Maaike Is in error state',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'binary_sensor.johnny_maaike_is_in_error_state',
@@ -275,7 +270,7 @@
         'options': dict({
         }),
         'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Is in error state',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -289,7 +284,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Johnny&Maaike Is in error state',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'binary_sensor.johnny_maaike_is_in_error_state_2',
@@ -325,7 +319,7 @@
         'options': dict({
         }),
         'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Is in error state',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -339,7 +333,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Johnny&Maaike Is in error state',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'binary_sensor.johnny_maaike_is_in_error_state_3',
@@ -375,7 +368,7 @@
         'options': dict({
         }),
         'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Is in mode conflict',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -389,7 +382,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Johnny&Maaike Is in mode conflict',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'binary_sensor.johnny_maaike_is_in_mode_conflict',
@@ -425,7 +417,7 @@
         'options': dict({
         }),
         'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Is in warning state',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -439,7 +431,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Johnny&Maaike Is in warning state',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'binary_sensor.johnny_maaike_is_in_warning_state',
@@ -475,7 +466,7 @@
         'options': dict({
         }),
         'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Is in warning state',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -489,7 +480,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Johnny&Maaike Is in warning state',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'binary_sensor.johnny_maaike_is_in_warning_state_2',
@@ -525,7 +515,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Is powerful mode active',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -538,7 +528,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Johnny&Maaike Is powerful mode active',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'binary_sensor.johnny_maaike_is_powerful_mode_active',
@@ -574,7 +563,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:refresh',
+        'original_icon': None,
         'original_name': 'Refresh',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -587,7 +576,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Johnny&Maaike Refresh',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:refresh',
         }),
         'context': <ANY>,
         'entity_id': 'button.johnny_maaike_refresh',
@@ -753,7 +741,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:calendar-clock',
+        'original_icon': None,
         'original_name': 'Schedule',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -766,7 +754,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Johnny&Maaike Schedule',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:calendar-clock',
           <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
             '0',
             'off',
@@ -811,7 +798,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-        'original_icon': 'mdi:snowflake',
+        'original_icon': None,
         'original_name': 'Cooling daily electrical consumption',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -825,7 +812,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Johnny&Maaike Cooling daily electrical consumption',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:snowflake',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
@@ -868,7 +854,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-        'original_icon': 'mdi:snowflake',
+        'original_icon': None,
         'original_name': 'Cooling monthly electrical consumption',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -882,7 +868,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Johnny&Maaike Cooling monthly electrical consumption',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:snowflake',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
@@ -925,7 +910,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-        'original_icon': 'mdi:snowflake',
+        'original_icon': None,
         'original_name': 'Cooling weekly electrical consumption',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -939,7 +924,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Johnny&Maaike Cooling weekly electrical consumption',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:snowflake',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
@@ -982,7 +966,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-        'original_icon': 'mdi:snowflake',
+        'original_icon': None,
         'original_name': 'Cooling yearly electrical consumption',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -996,7 +980,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Johnny&Maaike Cooling yearly electrical consumption',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:snowflake',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
@@ -1034,7 +1017,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Error code',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -1047,7 +1030,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Johnny&Maaike Error code',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'sensor.johnny_maaike_error_code',
@@ -1083,7 +1065,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Error code',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -1096,7 +1078,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Johnny&Maaike Error code',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'sensor.johnny_maaike_error_code_2',
@@ -1132,7 +1113,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Error code',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -1145,7 +1126,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Johnny&Maaike Error code',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'sensor.johnny_maaike_error_code_3',
@@ -1186,7 +1166,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-        'original_icon': 'mdi:fire',
+        'original_icon': None,
         'original_name': 'Heating daily electrical consumption',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -1200,7 +1180,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Johnny&Maaike Heating daily electrical consumption',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:fire',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
@@ -1243,7 +1222,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-        'original_icon': 'mdi:fire',
+        'original_icon': None,
         'original_name': 'Heating monthly electrical consumption',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -1257,7 +1236,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Johnny&Maaike Heating monthly electrical consumption',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:fire',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
@@ -1300,7 +1278,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-        'original_icon': 'mdi:fire',
+        'original_icon': None,
         'original_name': 'Heating weekly electrical consumption',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -1314,7 +1292,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Johnny&Maaike Heating weekly electrical consumption',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:fire',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
@@ -1357,7 +1334,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-        'original_icon': 'mdi:fire',
+        'original_icon': None,
         'original_name': 'Heating yearly electrical consumption',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -1371,7 +1348,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Johnny&Maaike Heating yearly electrical consumption',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:fire',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
@@ -1409,7 +1385,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:ip-network',
+        'original_icon': None,
         'original_name': 'IP address',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -1422,7 +1398,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Johnny&Maaike IP address',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:ip-network',
         }),
         'context': <ANY>,
         'entity_id': 'sensor.johnny_maaike_ip_address',
@@ -1463,7 +1438,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
-        'original_icon': '',
+        'original_icon': None,
         'original_name': 'Outdoor temperature',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -1477,7 +1452,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Johnny&Maaike Outdoor temperature',
-          <EntityStateAttribute.ICON: 'icon'>: '',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
         }),
@@ -1517,7 +1491,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Ratelimit remaining day',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -1530,7 +1504,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Johnny&Maaike Ratelimit remaining day',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
         }),
         'context': <ANY>,
@@ -1572,7 +1545,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
-        'original_icon': '',
+        'original_icon': None,
         'original_name': 'Room temperature',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -1586,7 +1559,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Johnny&Maaike Room temperature',
-          <EntityStateAttribute.ICON: 'icon'>: '',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
         }),
@@ -1624,7 +1596,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:access-point-network',
+        'original_icon': None,
         'original_name': 'SSID',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -1637,7 +1609,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Johnny&Maaike SSID',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:access-point-network',
         }),
         'context': <ANY>,
         'entity_id': 'sensor.johnny_maaike_ssid',
@@ -1673,7 +1644,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Time zone',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -1686,7 +1657,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Johnny&Maaike Time zone',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'sensor.johnny_maaike_time_zone',
@@ -1722,7 +1692,7 @@
         'options': dict({
         }),
         'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
-        'original_icon': 'mdi:update',
+        'original_icon': None,
         'original_name': 'Firmware update',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -1740,7 +1710,6 @@
           <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/daikin_onecta/icon.png',
           'firmware_update_type': 'optional',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Johnny&Maaike Firmware update',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:update',
           <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
           <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: '2_0_0',
           <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: '2_3_0',
@@ -1785,7 +1754,7 @@
         'options': dict({
         }),
         'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
-        'original_icon': 'mdi:update',
+        'original_icon': None,
         'original_name': 'Firmware update',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -1802,7 +1771,6 @@
           <UpdateEntityStateAttribute.DISPLAY_PRECISION: 'display_precision'>: 0,
           <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/daikin_onecta/icon.png',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Johnny&Maaike Firmware update',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:update',
           <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
           <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: '20003001',
           <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: '20003001',

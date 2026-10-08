@@ -27,7 +27,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Is holiday mode active',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -40,7 +40,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Altherma Is holiday mode active',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'binary_sensor.altherma_is_holiday_mode_active',
@@ -76,7 +75,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Is holiday mode active',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -89,7 +88,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Altherma Is holiday mode active',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'binary_sensor.altherma_is_holiday_mode_active_2',
@@ -125,7 +123,7 @@
         'options': dict({
         }),
         'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Is in emergency state',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -139,7 +137,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Altherma Is in emergency state',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'binary_sensor.altherma_is_in_emergency_state',
@@ -175,7 +172,7 @@
         'options': dict({
         }),
         'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Is in emergency state',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -189,7 +186,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Altherma Is in emergency state',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'binary_sensor.altherma_is_in_emergency_state_2',
@@ -225,7 +221,7 @@
         'options': dict({
         }),
         'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Is in error state',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -239,7 +235,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Altherma Is in error state',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'binary_sensor.altherma_is_in_error_state',
@@ -275,7 +270,7 @@
         'options': dict({
         }),
         'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Is in error state',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -289,7 +284,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Altherma Is in error state',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'binary_sensor.altherma_is_in_error_state_2',
@@ -325,7 +319,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Is in installer state',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -338,7 +332,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Altherma Is in installer state',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'binary_sensor.altherma_is_in_installer_state',
@@ -374,7 +367,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Is in installer state',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -387,7 +380,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Altherma Is in installer state',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'binary_sensor.altherma_is_in_installer_state_2',
@@ -423,7 +415,7 @@
         'options': dict({
         }),
         'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Is in warning state',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -437,7 +429,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Altherma Is in warning state',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'binary_sensor.altherma_is_in_warning_state',
@@ -473,7 +464,7 @@
         'options': dict({
         }),
         'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Is in warning state',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -487,7 +478,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Altherma Is in warning state',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'binary_sensor.altherma_is_in_warning_state_2',
@@ -523,7 +513,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Is powerful mode active',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -536,7 +526,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Altherma Is powerful mode active',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'binary_sensor.altherma_is_powerful_mode_active',
@@ -572,7 +561,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Daylight saving time enabled',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -585,7 +574,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Johnny&Maaike Daylight saving time enabled',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'binary_sensor.johnny_maaike_daylight_saving_time_enabled',
@@ -621,7 +609,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Is cool/heat master',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -634,7 +622,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Johnny&Maaike Is cool/heat master',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'binary_sensor.johnny_maaike_is_cool_heat_master',
@@ -670,7 +657,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Is holiday mode active',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -683,7 +670,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Johnny&Maaike Is holiday mode active',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'binary_sensor.johnny_maaike_is_holiday_mode_active',
@@ -719,7 +705,7 @@
         'options': dict({
         }),
         'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Is in caution state',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -733,7 +719,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Johnny&Maaike Is in caution state',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'binary_sensor.johnny_maaike_is_in_caution_state',
@@ -769,7 +754,7 @@
         'options': dict({
         }),
         'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Is in caution state',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -783,7 +768,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Johnny&Maaike Is in caution state',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'binary_sensor.johnny_maaike_is_in_caution_state_2',
@@ -819,7 +803,7 @@
         'options': dict({
         }),
         'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Is in error state',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -833,7 +817,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Johnny&Maaike Is in error state',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'binary_sensor.johnny_maaike_is_in_error_state',
@@ -869,7 +852,7 @@
         'options': dict({
         }),
         'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Is in error state',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -883,7 +866,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Johnny&Maaike Is in error state',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'binary_sensor.johnny_maaike_is_in_error_state_2',
@@ -919,7 +901,7 @@
         'options': dict({
         }),
         'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Is in error state',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -933,7 +915,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Johnny&Maaike Is in error state',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'binary_sensor.johnny_maaike_is_in_error_state_3',
@@ -969,7 +950,7 @@
         'options': dict({
         }),
         'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Is in mode conflict',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -983,7 +964,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Johnny&Maaike Is in mode conflict',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'binary_sensor.johnny_maaike_is_in_mode_conflict',
@@ -1019,7 +999,7 @@
         'options': dict({
         }),
         'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Is in warning state',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -1033,7 +1013,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Johnny&Maaike Is in warning state',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'binary_sensor.johnny_maaike_is_in_warning_state',
@@ -1069,7 +1048,7 @@
         'options': dict({
         }),
         'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Is in warning state',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -1083,7 +1062,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Johnny&Maaike Is in warning state',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'binary_sensor.johnny_maaike_is_in_warning_state_2',
@@ -1119,7 +1097,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Is lock function enabled',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -1132,7 +1110,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Johnny&Maaike Is lock function enabled',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'binary_sensor.johnny_maaike_is_lock_function_enabled',
@@ -1168,7 +1145,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Is powerful mode active',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -1181,7 +1158,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Johnny&Maaike Is powerful mode active',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'binary_sensor.johnny_maaike_is_powerful_mode_active',
@@ -1217,7 +1193,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'LED enabled',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -1230,7 +1206,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Johnny&Maaike LED enabled',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'binary_sensor.johnny_maaike_led_enabled',
@@ -1266,7 +1241,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Daylight saving time enabled',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -1279,7 +1254,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Linde Daylight saving time enabled',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'binary_sensor.linde_daylight_saving_time_enabled',
@@ -1315,7 +1289,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Is cool/heat master',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -1328,7 +1302,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Linde Is cool/heat master',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'binary_sensor.linde_is_cool_heat_master',
@@ -1364,7 +1337,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Is holiday mode active',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -1377,7 +1350,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Linde Is holiday mode active',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'binary_sensor.linde_is_holiday_mode_active',
@@ -1413,7 +1385,7 @@
         'options': dict({
         }),
         'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Is in caution state',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -1427,7 +1399,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Linde Is in caution state',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'binary_sensor.linde_is_in_caution_state',
@@ -1463,7 +1434,7 @@
         'options': dict({
         }),
         'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Is in caution state',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -1477,7 +1448,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Linde Is in caution state',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'binary_sensor.linde_is_in_caution_state_2',
@@ -1513,7 +1483,7 @@
         'options': dict({
         }),
         'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Is in error state',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -1527,7 +1497,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Linde Is in error state',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'binary_sensor.linde_is_in_error_state',
@@ -1563,7 +1532,7 @@
         'options': dict({
         }),
         'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Is in error state',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -1577,7 +1546,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Linde Is in error state',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'binary_sensor.linde_is_in_error_state_2',
@@ -1613,7 +1581,7 @@
         'options': dict({
         }),
         'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Is in error state',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -1627,7 +1595,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Linde Is in error state',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'binary_sensor.linde_is_in_error_state_3',
@@ -1663,7 +1630,7 @@
         'options': dict({
         }),
         'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Is in mode conflict',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -1677,7 +1644,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Linde Is in mode conflict',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'binary_sensor.linde_is_in_mode_conflict',
@@ -1713,7 +1679,7 @@
         'options': dict({
         }),
         'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Is in warning state',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -1727,7 +1693,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Linde Is in warning state',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'binary_sensor.linde_is_in_warning_state',
@@ -1763,7 +1728,7 @@
         'options': dict({
         }),
         'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Is in warning state',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -1777,7 +1742,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Linde Is in warning state',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'binary_sensor.linde_is_in_warning_state_2',
@@ -1813,7 +1777,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Is lock function enabled',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -1826,7 +1790,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Linde Is lock function enabled',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'binary_sensor.linde_is_lock_function_enabled',
@@ -1862,7 +1825,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Is powerful mode active',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -1875,7 +1838,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Linde Is powerful mode active',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'binary_sensor.linde_is_powerful_mode_active',
@@ -1911,7 +1873,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'LED enabled',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -1924,7 +1886,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Linde LED enabled',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'binary_sensor.linde_led_enabled',
@@ -1960,7 +1921,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Daylight saving time enabled',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -1973,7 +1934,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sanne Daylight saving time enabled',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'binary_sensor.sanne_daylight_saving_time_enabled',
@@ -2009,7 +1969,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Is cool/heat master',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -2022,7 +1982,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sanne Is cool/heat master',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'binary_sensor.sanne_is_cool_heat_master',
@@ -2058,7 +2017,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Is holiday mode active',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -2071,7 +2030,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sanne Is holiday mode active',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'binary_sensor.sanne_is_holiday_mode_active',
@@ -2107,7 +2065,7 @@
         'options': dict({
         }),
         'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Is in caution state',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -2121,7 +2079,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sanne Is in caution state',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'binary_sensor.sanne_is_in_caution_state',
@@ -2157,7 +2114,7 @@
         'options': dict({
         }),
         'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Is in caution state',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -2171,7 +2128,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sanne Is in caution state',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'binary_sensor.sanne_is_in_caution_state_2',
@@ -2207,7 +2163,7 @@
         'options': dict({
         }),
         'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Is in error state',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -2221,7 +2177,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sanne Is in error state',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'binary_sensor.sanne_is_in_error_state',
@@ -2257,7 +2212,7 @@
         'options': dict({
         }),
         'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Is in error state',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -2271,7 +2226,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sanne Is in error state',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'binary_sensor.sanne_is_in_error_state_2',
@@ -2307,7 +2261,7 @@
         'options': dict({
         }),
         'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Is in error state',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -2321,7 +2275,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sanne Is in error state',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'binary_sensor.sanne_is_in_error_state_3',
@@ -2357,7 +2310,7 @@
         'options': dict({
         }),
         'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Is in mode conflict',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -2371,7 +2324,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sanne Is in mode conflict',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'binary_sensor.sanne_is_in_mode_conflict',
@@ -2407,7 +2359,7 @@
         'options': dict({
         }),
         'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Is in warning state',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -2421,7 +2373,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sanne Is in warning state',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'binary_sensor.sanne_is_in_warning_state',
@@ -2457,7 +2408,7 @@
         'options': dict({
         }),
         'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Is in warning state',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -2471,7 +2422,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sanne Is in warning state',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'binary_sensor.sanne_is_in_warning_state_2',
@@ -2507,7 +2457,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Is lock function enabled',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -2520,7 +2470,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sanne Is lock function enabled',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'binary_sensor.sanne_is_lock_function_enabled',
@@ -2556,7 +2505,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Is powerful mode active',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -2569,7 +2518,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sanne Is powerful mode active',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'binary_sensor.sanne_is_powerful_mode_active',
@@ -2605,7 +2553,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'LED enabled',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -2618,7 +2566,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sanne LED enabled',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'binary_sensor.sanne_led_enabled',
@@ -2654,7 +2601,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Daylight saving time enabled',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -2667,7 +2614,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Werkkamer Daylight saving time enabled',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'binary_sensor.werkkamer_daylight_saving_time_enabled',
@@ -2703,7 +2649,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Is cool/heat master',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -2716,7 +2662,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Werkkamer Is cool/heat master',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'binary_sensor.werkkamer_is_cool_heat_master',
@@ -2752,7 +2697,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Is holiday mode active',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -2765,7 +2710,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Werkkamer Is holiday mode active',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'binary_sensor.werkkamer_is_holiday_mode_active',
@@ -2801,7 +2745,7 @@
         'options': dict({
         }),
         'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Is in caution state',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -2815,7 +2759,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Werkkamer Is in caution state',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'binary_sensor.werkkamer_is_in_caution_state',
@@ -2851,7 +2794,7 @@
         'options': dict({
         }),
         'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Is in caution state',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -2865,7 +2808,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Werkkamer Is in caution state',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'binary_sensor.werkkamer_is_in_caution_state_2',
@@ -2901,7 +2843,7 @@
         'options': dict({
         }),
         'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Is in error state',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -2915,7 +2857,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Werkkamer Is in error state',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'binary_sensor.werkkamer_is_in_error_state',
@@ -2951,7 +2892,7 @@
         'options': dict({
         }),
         'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Is in error state',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -2965,7 +2906,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Werkkamer Is in error state',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'binary_sensor.werkkamer_is_in_error_state_2',
@@ -3001,7 +2941,7 @@
         'options': dict({
         }),
         'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Is in error state',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -3015,7 +2955,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Werkkamer Is in error state',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'binary_sensor.werkkamer_is_in_error_state_3',
@@ -3051,7 +2990,7 @@
         'options': dict({
         }),
         'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Is in mode conflict',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -3065,7 +3004,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Werkkamer Is in mode conflict',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'binary_sensor.werkkamer_is_in_mode_conflict',
@@ -3101,7 +3039,7 @@
         'options': dict({
         }),
         'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Is in warning state',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -3115,7 +3053,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Werkkamer Is in warning state',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'binary_sensor.werkkamer_is_in_warning_state',
@@ -3151,7 +3088,7 @@
         'options': dict({
         }),
         'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Is in warning state',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -3165,7 +3102,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Werkkamer Is in warning state',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'binary_sensor.werkkamer_is_in_warning_state_2',
@@ -3201,7 +3137,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Is lock function enabled',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -3214,7 +3150,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Werkkamer Is lock function enabled',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'binary_sensor.werkkamer_is_lock_function_enabled',
@@ -3250,7 +3185,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Is powerful mode active',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -3263,7 +3198,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Werkkamer Is powerful mode active',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'binary_sensor.werkkamer_is_powerful_mode_active',
@@ -3299,7 +3233,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'LED enabled',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -3312,7 +3246,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Werkkamer LED enabled',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'binary_sensor.werkkamer_led_enabled',
@@ -3348,7 +3281,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:refresh',
+        'original_icon': None,
         'original_name': 'Refresh',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -3361,7 +3294,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Altherma Refresh',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:refresh',
         }),
         'context': <ANY>,
         'entity_id': 'button.altherma_refresh',
@@ -3397,7 +3329,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:refresh',
+        'original_icon': None,
         'original_name': 'Refresh',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -3410,7 +3342,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Johnny&Maaike Refresh',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:refresh',
         }),
         'context': <ANY>,
         'entity_id': 'button.johnny_maaike_refresh',
@@ -3446,7 +3377,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:refresh',
+        'original_icon': None,
         'original_name': 'Refresh',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -3459,7 +3390,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Linde Refresh',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:refresh',
         }),
         'context': <ANY>,
         'entity_id': 'button.linde_refresh',
@@ -3495,7 +3425,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:refresh',
+        'original_icon': None,
         'original_name': 'Refresh',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -3508,7 +3438,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sanne Refresh',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:refresh',
         }),
         'context': <ANY>,
         'entity_id': 'button.sanne_refresh',
@@ -3544,7 +3473,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:refresh',
+        'original_icon': None,
         'original_name': 'Refresh',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -3557,7 +3486,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Werkkamer Refresh',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:refresh',
         }),
         'context': <ANY>,
         'entity_id': 'button.werkkamer_refresh',
@@ -4343,7 +4271,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:calendar-clock',
+        'original_icon': None,
         'original_name': 'Schedule',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -4356,7 +4284,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Altherma Schedule',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:calendar-clock',
           <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
             'User defined',
             'off',
@@ -4403,7 +4330,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:calendar-clock',
+        'original_icon': None,
         'original_name': 'Schedule',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -4416,7 +4343,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Johnny&Maaike Schedule',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:calendar-clock',
           <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
             '0',
             '1',
@@ -4465,7 +4391,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:calendar-clock',
+        'original_icon': None,
         'original_name': 'Schedule',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -4478,7 +4404,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Linde Schedule',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:calendar-clock',
           <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
             '0',
             '1',
@@ -4527,7 +4452,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:calendar-clock',
+        'original_icon': None,
         'original_name': 'Schedule',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -4540,7 +4465,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sanne Schedule',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:calendar-clock',
           <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
             '0',
             '1',
@@ -4589,7 +4513,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:calendar-clock',
+        'original_icon': None,
         'original_name': 'Schedule',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -4602,7 +4526,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Werkkamer Schedule',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:calendar-clock',
           <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
             '0',
             '1',
@@ -4644,7 +4567,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:alphabetical',
+        'original_icon': None,
         'original_name': 'Control mode',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -4657,7 +4580,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Altherma Control mode',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:alphabetical',
         }),
         'context': <ANY>,
         'entity_id': 'sensor.altherma_control_mode',
@@ -4698,7 +4620,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-        'original_icon': 'mdi:snowflake',
+        'original_icon': None,
         'original_name': 'Cooling daily electrical consumption',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -4712,7 +4634,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Altherma Cooling daily electrical consumption',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:snowflake',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
@@ -4755,7 +4676,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-        'original_icon': 'mdi:snowflake',
+        'original_icon': None,
         'original_name': 'Cooling monthly electrical consumption',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -4769,7 +4690,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Altherma Cooling monthly electrical consumption',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:snowflake',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
@@ -4812,7 +4732,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-        'original_icon': 'mdi:snowflake',
+        'original_icon': None,
         'original_name': 'Cooling weekly electrical consumption',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -4826,7 +4746,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Altherma Cooling weekly electrical consumption',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:snowflake',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
@@ -4869,7 +4788,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-        'original_icon': 'mdi:snowflake',
+        'original_icon': None,
         'original_name': 'Cooling yearly electrical consumption',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -4883,7 +4802,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Altherma Cooling yearly electrical consumption',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:snowflake',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
@@ -4921,7 +4839,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Date/time',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -4934,7 +4852,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Altherma Date/time',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'sensor.altherma_date_time',
@@ -4970,7 +4887,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Error code',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -4983,7 +4900,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Altherma Error code',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'sensor.altherma_error_code',
@@ -5019,7 +4935,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Error code',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -5032,7 +4948,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Altherma Error code',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'sensor.altherma_error_code_2',
@@ -5073,7 +4988,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-        'original_icon': 'mdi:fire',
+        'original_icon': None,
         'original_name': 'Heating daily electrical consumption',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -5087,7 +5002,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Altherma Heating daily electrical consumption',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:fire',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
@@ -5130,7 +5044,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-        'original_icon': 'mdi:fire',
+        'original_icon': None,
         'original_name': 'Heating daily electrical consumption',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -5144,7 +5058,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Altherma Heating daily electrical consumption',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:fire',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
@@ -5187,7 +5100,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-        'original_icon': 'mdi:fire',
+        'original_icon': None,
         'original_name': 'Heating monthly electrical consumption',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -5201,7 +5114,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Altherma Heating monthly electrical consumption',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:fire',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
@@ -5244,7 +5156,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-        'original_icon': 'mdi:fire',
+        'original_icon': None,
         'original_name': 'Heating monthly electrical consumption',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -5258,7 +5170,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Altherma Heating monthly electrical consumption',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:fire',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
@@ -5301,7 +5212,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-        'original_icon': 'mdi:fire',
+        'original_icon': None,
         'original_name': 'Heating weekly electrical consumption',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -5315,7 +5226,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Altherma Heating weekly electrical consumption',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:fire',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
@@ -5358,7 +5268,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-        'original_icon': 'mdi:fire',
+        'original_icon': None,
         'original_name': 'Heating weekly electrical consumption',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -5372,7 +5282,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Altherma Heating weekly electrical consumption',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:fire',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
@@ -5415,7 +5324,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-        'original_icon': 'mdi:fire',
+        'original_icon': None,
         'original_name': 'Heating yearly electrical consumption',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -5429,7 +5338,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Altherma Heating yearly electrical consumption',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:fire',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
@@ -5472,7 +5380,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-        'original_icon': 'mdi:fire',
+        'original_icon': None,
         'original_name': 'Heating yearly electrical consumption',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -5486,7 +5394,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Altherma Heating yearly electrical consumption',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:fire',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
@@ -5524,7 +5431,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:ip-network',
+        'original_icon': None,
         'original_name': 'IP address',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -5537,7 +5444,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Altherma IP address',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:ip-network',
         }),
         'context': <ANY>,
         'entity_id': 'sensor.altherma_ip_address',
@@ -5578,7 +5484,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
-        'original_icon': '',
+        'original_icon': None,
         'original_name': 'Leaving water temperature',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -5592,7 +5498,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Altherma Leaving water temperature',
-          <EntityStateAttribute.ICON: 'icon'>: '',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
         }),
@@ -5635,7 +5540,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
-        'original_icon': '',
+        'original_icon': None,
         'original_name': 'Outdoor temperature',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -5649,7 +5554,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Altherma Outdoor temperature',
-          <EntityStateAttribute.ICON: 'icon'>: '',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
         }),
@@ -5689,7 +5593,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Ratelimit remaining day',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -5702,7 +5606,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Altherma Ratelimit remaining day',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
         }),
         'context': <ANY>,
@@ -5744,7 +5647,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
-        'original_icon': '',
+        'original_icon': None,
         'original_name': 'Room temperature',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -5758,7 +5661,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Altherma Room temperature',
-          <EntityStateAttribute.ICON: 'icon'>: '',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
         }),
@@ -5796,7 +5698,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:alphabetical',
+        'original_icon': None,
         'original_name': 'Setpoint mode',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -5809,7 +5711,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Altherma Setpoint mode',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:alphabetical',
         }),
         'context': <ANY>,
         'entity_id': 'sensor.altherma_setpoint_mode',
@@ -5845,7 +5746,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:alphabetical',
+        'original_icon': None,
         'original_name': 'Setpoint mode',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -5858,7 +5759,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Altherma Setpoint mode',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:alphabetical',
         }),
         'context': <ANY>,
         'entity_id': 'sensor.altherma_setpoint_mode_2',
@@ -5894,7 +5794,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:access-point-network',
+        'original_icon': None,
         'original_name': 'SSID',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -5907,7 +5807,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Altherma SSID',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:access-point-network',
         }),
         'context': <ANY>,
         'entity_id': 'sensor.altherma_ssid',
@@ -5948,7 +5847,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
-        'original_icon': 'mdi:bathtub-outline',
+        'original_icon': None,
         'original_name': 'Tank temperature',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -5962,7 +5861,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Altherma Tank temperature',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:bathtub-outline',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
         }),
@@ -6000,7 +5898,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:access-point-network',
+        'original_icon': None,
         'original_name': 'WiFi connection SSID',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -6013,7 +5911,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Altherma WiFi connection SSID',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:access-point-network',
         }),
         'context': <ANY>,
         'entity_id': 'sensor.altherma_wifi_connection_ssid',
@@ -6051,7 +5948,7 @@
         'options': dict({
         }),
         'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
-        'original_icon': 'mdi:wifi',
+        'original_icon': None,
         'original_name': 'WiFi connection strength',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -6065,7 +5962,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'signal_strength',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Altherma WiFi connection strength',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:wifi',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'dBm',
         }),
@@ -6108,7 +6004,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-        'original_icon': 'mdi:snowflake',
+        'original_icon': None,
         'original_name': 'Cooling daily electrical consumption',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -6122,7 +6018,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Johnny&Maaike Cooling daily electrical consumption',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:snowflake',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
@@ -6165,7 +6060,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-        'original_icon': 'mdi:snowflake',
+        'original_icon': None,
         'original_name': 'Cooling monthly electrical consumption',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -6179,7 +6074,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Johnny&Maaike Cooling monthly electrical consumption',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:snowflake',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
@@ -6222,7 +6116,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-        'original_icon': 'mdi:snowflake',
+        'original_icon': None,
         'original_name': 'Cooling weekly electrical consumption',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -6236,7 +6130,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Johnny&Maaike Cooling weekly electrical consumption',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:snowflake',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
@@ -6279,7 +6172,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-        'original_icon': 'mdi:snowflake',
+        'original_icon': None,
         'original_name': 'Cooling yearly electrical consumption',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -6293,7 +6186,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Johnny&Maaike Cooling yearly electrical consumption',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:snowflake',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
@@ -6331,7 +6223,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:water-percent',
+        'original_icon': None,
         'original_name': 'Dry keep setting',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -6344,7 +6236,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Johnny&Maaike Dry keep setting',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:water-percent',
         }),
         'context': <ANY>,
         'entity_id': 'sensor.johnny_maaike_dry_keep_setting',
@@ -6380,7 +6271,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Error code',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -6393,7 +6284,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Johnny&Maaike Error code',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'sensor.johnny_maaike_error_code',
@@ -6429,7 +6319,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Error code',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -6442,7 +6332,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Johnny&Maaike Error code',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'sensor.johnny_maaike_error_code_2',
@@ -6478,7 +6367,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Error code',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -6491,7 +6380,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Johnny&Maaike Error code',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'sensor.johnny_maaike_error_code_3',
@@ -6532,7 +6420,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-        'original_icon': 'mdi:fire',
+        'original_icon': None,
         'original_name': 'Heating daily electrical consumption',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -6546,7 +6434,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Johnny&Maaike Heating daily electrical consumption',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:fire',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
@@ -6589,7 +6476,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-        'original_icon': 'mdi:fire',
+        'original_icon': None,
         'original_name': 'Heating monthly electrical consumption',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -6603,7 +6490,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Johnny&Maaike Heating monthly electrical consumption',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:fire',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
@@ -6646,7 +6532,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-        'original_icon': 'mdi:fire',
+        'original_icon': None,
         'original_name': 'Heating weekly electrical consumption',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -6660,7 +6546,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Johnny&Maaike Heating weekly electrical consumption',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:fire',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
@@ -6703,7 +6588,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-        'original_icon': 'mdi:fire',
+        'original_icon': None,
         'original_name': 'Heating yearly electrical consumption',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -6717,7 +6602,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Johnny&Maaike Heating yearly electrical consumption',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:fire',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
@@ -6760,7 +6644,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
-        'original_icon': '',
+        'original_icon': None,
         'original_name': 'Outdoor temperature',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -6774,7 +6658,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Johnny&Maaike Outdoor temperature',
-          <EntityStateAttribute.ICON: 'icon'>: '',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
         }),
@@ -6814,7 +6697,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Ratelimit remaining day',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -6827,7 +6710,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Johnny&Maaike Ratelimit remaining day',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
         }),
         'context': <ANY>,
@@ -6864,7 +6746,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Region code',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -6877,7 +6759,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Johnny&Maaike Region code',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'sensor.johnny_maaike_region_code',
@@ -6918,7 +6799,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
-        'original_icon': '',
+        'original_icon': None,
         'original_name': 'Room temperature',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -6932,7 +6813,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Johnny&Maaike Room temperature',
-          <EntityStateAttribute.ICON: 'icon'>: '',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
         }),
@@ -6970,7 +6850,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:access-point-network',
+        'original_icon': None,
         'original_name': 'SSID',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -6983,7 +6863,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Johnny&Maaike SSID',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:access-point-network',
         }),
         'context': <ANY>,
         'entity_id': 'sensor.johnny_maaike_ssid',
@@ -7019,7 +6898,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Time zone',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -7032,7 +6911,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Johnny&Maaike Time zone',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'sensor.johnny_maaike_time_zone',
@@ -7068,7 +6946,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:access-point-network',
+        'original_icon': None,
         'original_name': 'WiFi connection SSID',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -7081,7 +6959,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Johnny&Maaike WiFi connection SSID',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:access-point-network',
         }),
         'context': <ANY>,
         'entity_id': 'sensor.johnny_maaike_wifi_connection_ssid',
@@ -7119,7 +6996,7 @@
         'options': dict({
         }),
         'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
-        'original_icon': 'mdi:wifi',
+        'original_icon': None,
         'original_name': 'WiFi connection strength',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -7133,7 +7010,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'signal_strength',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Johnny&Maaike WiFi connection strength',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:wifi',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'dBm',
         }),
@@ -7176,7 +7052,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-        'original_icon': 'mdi:snowflake',
+        'original_icon': None,
         'original_name': 'Cooling daily electrical consumption',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -7190,7 +7066,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Linde Cooling daily electrical consumption',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:snowflake',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
@@ -7233,7 +7108,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-        'original_icon': 'mdi:snowflake',
+        'original_icon': None,
         'original_name': 'Cooling monthly electrical consumption',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -7247,7 +7122,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Linde Cooling monthly electrical consumption',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:snowflake',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
@@ -7290,7 +7164,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-        'original_icon': 'mdi:snowflake',
+        'original_icon': None,
         'original_name': 'Cooling weekly electrical consumption',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -7304,7 +7178,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Linde Cooling weekly electrical consumption',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:snowflake',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
@@ -7347,7 +7220,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-        'original_icon': 'mdi:snowflake',
+        'original_icon': None,
         'original_name': 'Cooling yearly electrical consumption',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -7361,7 +7234,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Linde Cooling yearly electrical consumption',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:snowflake',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
@@ -7399,7 +7271,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:water-percent',
+        'original_icon': None,
         'original_name': 'Dry keep setting',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -7412,7 +7284,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Linde Dry keep setting',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:water-percent',
         }),
         'context': <ANY>,
         'entity_id': 'sensor.linde_dry_keep_setting',
@@ -7448,7 +7319,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Error code',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -7461,7 +7332,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Linde Error code',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'sensor.linde_error_code',
@@ -7497,7 +7367,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Error code',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -7510,7 +7380,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Linde Error code',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'sensor.linde_error_code_2',
@@ -7546,7 +7415,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Error code',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -7559,7 +7428,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Linde Error code',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'sensor.linde_error_code_3',
@@ -7600,7 +7468,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-        'original_icon': 'mdi:fire',
+        'original_icon': None,
         'original_name': 'Heating daily electrical consumption',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -7614,7 +7482,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Linde Heating daily electrical consumption',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:fire',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
@@ -7657,7 +7524,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-        'original_icon': 'mdi:fire',
+        'original_icon': None,
         'original_name': 'Heating monthly electrical consumption',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -7671,7 +7538,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Linde Heating monthly electrical consumption',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:fire',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
@@ -7714,7 +7580,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-        'original_icon': 'mdi:fire',
+        'original_icon': None,
         'original_name': 'Heating weekly electrical consumption',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -7728,7 +7594,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Linde Heating weekly electrical consumption',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:fire',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
@@ -7771,7 +7636,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-        'original_icon': 'mdi:fire',
+        'original_icon': None,
         'original_name': 'Heating yearly electrical consumption',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -7785,7 +7650,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Linde Heating yearly electrical consumption',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:fire',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
@@ -7828,7 +7692,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
-        'original_icon': '',
+        'original_icon': None,
         'original_name': 'Outdoor temperature',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -7842,7 +7706,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Linde Outdoor temperature',
-          <EntityStateAttribute.ICON: 'icon'>: '',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
         }),
@@ -7882,7 +7745,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Ratelimit remaining day',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -7895,7 +7758,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Linde Ratelimit remaining day',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
         }),
         'context': <ANY>,
@@ -7932,7 +7794,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Region code',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -7945,7 +7807,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Linde Region code',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'sensor.linde_region_code',
@@ -7986,7 +7847,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
-        'original_icon': '',
+        'original_icon': None,
         'original_name': 'Room temperature',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -8000,7 +7861,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Linde Room temperature',
-          <EntityStateAttribute.ICON: 'icon'>: '',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
         }),
@@ -8038,7 +7898,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:access-point-network',
+        'original_icon': None,
         'original_name': 'SSID',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -8051,7 +7911,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Linde SSID',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:access-point-network',
         }),
         'context': <ANY>,
         'entity_id': 'sensor.linde_ssid',
@@ -8087,7 +7946,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Time zone',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -8100,7 +7959,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Linde Time zone',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'sensor.linde_time_zone',
@@ -8136,7 +7994,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:access-point-network',
+        'original_icon': None,
         'original_name': 'WiFi connection SSID',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -8149,7 +8007,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Linde WiFi connection SSID',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:access-point-network',
         }),
         'context': <ANY>,
         'entity_id': 'sensor.linde_wifi_connection_ssid',
@@ -8187,7 +8044,7 @@
         'options': dict({
         }),
         'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
-        'original_icon': 'mdi:wifi',
+        'original_icon': None,
         'original_name': 'WiFi connection strength',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -8201,7 +8058,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'signal_strength',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Linde WiFi connection strength',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:wifi',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'dBm',
         }),
@@ -8244,7 +8100,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-        'original_icon': 'mdi:snowflake',
+        'original_icon': None,
         'original_name': 'Cooling daily electrical consumption',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -8258,7 +8114,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sanne Cooling daily electrical consumption',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:snowflake',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
@@ -8301,7 +8156,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-        'original_icon': 'mdi:snowflake',
+        'original_icon': None,
         'original_name': 'Cooling monthly electrical consumption',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -8315,7 +8170,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sanne Cooling monthly electrical consumption',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:snowflake',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
@@ -8358,7 +8212,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-        'original_icon': 'mdi:snowflake',
+        'original_icon': None,
         'original_name': 'Cooling weekly electrical consumption',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -8372,7 +8226,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sanne Cooling weekly electrical consumption',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:snowflake',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
@@ -8415,7 +8268,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-        'original_icon': 'mdi:snowflake',
+        'original_icon': None,
         'original_name': 'Cooling yearly electrical consumption',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -8429,7 +8282,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sanne Cooling yearly electrical consumption',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:snowflake',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
@@ -8467,7 +8319,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:water-percent',
+        'original_icon': None,
         'original_name': 'Dry keep setting',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -8480,7 +8332,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sanne Dry keep setting',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:water-percent',
         }),
         'context': <ANY>,
         'entity_id': 'sensor.sanne_dry_keep_setting',
@@ -8516,7 +8367,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Error code',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -8529,7 +8380,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sanne Error code',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'sensor.sanne_error_code',
@@ -8565,7 +8415,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Error code',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -8578,7 +8428,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sanne Error code',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'sensor.sanne_error_code_2',
@@ -8614,7 +8463,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Error code',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -8627,7 +8476,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sanne Error code',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'sensor.sanne_error_code_3',
@@ -8668,7 +8516,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-        'original_icon': 'mdi:fire',
+        'original_icon': None,
         'original_name': 'Heating daily electrical consumption',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -8682,7 +8530,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sanne Heating daily electrical consumption',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:fire',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
@@ -8725,7 +8572,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-        'original_icon': 'mdi:fire',
+        'original_icon': None,
         'original_name': 'Heating monthly electrical consumption',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -8739,7 +8586,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sanne Heating monthly electrical consumption',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:fire',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
@@ -8782,7 +8628,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-        'original_icon': 'mdi:fire',
+        'original_icon': None,
         'original_name': 'Heating weekly electrical consumption',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -8796,7 +8642,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sanne Heating weekly electrical consumption',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:fire',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
@@ -8839,7 +8684,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-        'original_icon': 'mdi:fire',
+        'original_icon': None,
         'original_name': 'Heating yearly electrical consumption',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -8853,7 +8698,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sanne Heating yearly electrical consumption',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:fire',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
@@ -8896,7 +8740,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
-        'original_icon': '',
+        'original_icon': None,
         'original_name': 'Outdoor temperature',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -8910,7 +8754,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sanne Outdoor temperature',
-          <EntityStateAttribute.ICON: 'icon'>: '',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
         }),
@@ -8950,7 +8793,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Ratelimit remaining day',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -8963,7 +8806,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sanne Ratelimit remaining day',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
         }),
         'context': <ANY>,
@@ -9000,7 +8842,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Region code',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -9013,7 +8855,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sanne Region code',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'sensor.sanne_region_code',
@@ -9054,7 +8895,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
-        'original_icon': '',
+        'original_icon': None,
         'original_name': 'Room temperature',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -9068,7 +8909,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sanne Room temperature',
-          <EntityStateAttribute.ICON: 'icon'>: '',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
         }),
@@ -9106,7 +8946,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:access-point-network',
+        'original_icon': None,
         'original_name': 'SSID',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -9119,7 +8959,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sanne SSID',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:access-point-network',
         }),
         'context': <ANY>,
         'entity_id': 'sensor.sanne_ssid',
@@ -9155,7 +8994,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Time zone',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -9168,7 +9007,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sanne Time zone',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'sensor.sanne_time_zone',
@@ -9204,7 +9042,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:access-point-network',
+        'original_icon': None,
         'original_name': 'WiFi connection SSID',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -9217,7 +9055,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sanne WiFi connection SSID',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:access-point-network',
         }),
         'context': <ANY>,
         'entity_id': 'sensor.sanne_wifi_connection_ssid',
@@ -9255,7 +9092,7 @@
         'options': dict({
         }),
         'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
-        'original_icon': 'mdi:wifi',
+        'original_icon': None,
         'original_name': 'WiFi connection strength',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -9269,7 +9106,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'signal_strength',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sanne WiFi connection strength',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:wifi',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'dBm',
         }),
@@ -9312,7 +9148,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-        'original_icon': 'mdi:snowflake',
+        'original_icon': None,
         'original_name': 'Cooling daily electrical consumption',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -9326,7 +9162,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Werkkamer Cooling daily electrical consumption',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:snowflake',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
@@ -9369,7 +9204,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-        'original_icon': 'mdi:snowflake',
+        'original_icon': None,
         'original_name': 'Cooling monthly electrical consumption',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -9383,7 +9218,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Werkkamer Cooling monthly electrical consumption',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:snowflake',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
@@ -9426,7 +9260,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-        'original_icon': 'mdi:snowflake',
+        'original_icon': None,
         'original_name': 'Cooling weekly electrical consumption',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -9440,7 +9274,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Werkkamer Cooling weekly electrical consumption',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:snowflake',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
@@ -9483,7 +9316,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-        'original_icon': 'mdi:snowflake',
+        'original_icon': None,
         'original_name': 'Cooling yearly electrical consumption',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -9497,7 +9330,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Werkkamer Cooling yearly electrical consumption',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:snowflake',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
@@ -9535,7 +9367,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:water-percent',
+        'original_icon': None,
         'original_name': 'Dry keep setting',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -9548,7 +9380,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Werkkamer Dry keep setting',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:water-percent',
         }),
         'context': <ANY>,
         'entity_id': 'sensor.werkkamer_dry_keep_setting',
@@ -9584,7 +9415,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Error code',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -9597,7 +9428,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Werkkamer Error code',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'sensor.werkkamer_error_code',
@@ -9633,7 +9463,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Error code',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -9646,7 +9476,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Werkkamer Error code',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'sensor.werkkamer_error_code_2',
@@ -9682,7 +9511,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Error code',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -9695,7 +9524,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Werkkamer Error code',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'sensor.werkkamer_error_code_3',
@@ -9736,7 +9564,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-        'original_icon': 'mdi:fire',
+        'original_icon': None,
         'original_name': 'Heating daily electrical consumption',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -9750,7 +9578,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Werkkamer Heating daily electrical consumption',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:fire',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
@@ -9793,7 +9620,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-        'original_icon': 'mdi:fire',
+        'original_icon': None,
         'original_name': 'Heating monthly electrical consumption',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -9807,7 +9634,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Werkkamer Heating monthly electrical consumption',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:fire',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
@@ -9850,7 +9676,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-        'original_icon': 'mdi:fire',
+        'original_icon': None,
         'original_name': 'Heating weekly electrical consumption',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -9864,7 +9690,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Werkkamer Heating weekly electrical consumption',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:fire',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
@@ -9907,7 +9732,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-        'original_icon': 'mdi:fire',
+        'original_icon': None,
         'original_name': 'Heating yearly electrical consumption',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -9921,7 +9746,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Werkkamer Heating yearly electrical consumption',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:fire',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
         }),
@@ -9964,7 +9788,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
-        'original_icon': '',
+        'original_icon': None,
         'original_name': 'Outdoor temperature',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -9978,7 +9802,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Werkkamer Outdoor temperature',
-          <EntityStateAttribute.ICON: 'icon'>: '',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
         }),
@@ -10018,7 +9841,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Ratelimit remaining day',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -10031,7 +9854,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Werkkamer Ratelimit remaining day',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
         }),
         'context': <ANY>,
@@ -10068,7 +9890,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Region code',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -10081,7 +9903,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Werkkamer Region code',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'sensor.werkkamer_region_code',
@@ -10122,7 +9943,7 @@
           }),
         }),
         'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
-        'original_icon': '',
+        'original_icon': None,
         'original_name': 'Room temperature',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -10136,7 +9957,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Werkkamer Room temperature',
-          <EntityStateAttribute.ICON: 'icon'>: '',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
         }),
@@ -10174,7 +9994,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:access-point-network',
+        'original_icon': None,
         'original_name': 'SSID',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -10187,7 +10007,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Werkkamer SSID',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:access-point-network',
         }),
         'context': <ANY>,
         'entity_id': 'sensor.werkkamer_ssid',
@@ -10223,7 +10042,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:information-outline',
+        'original_icon': None,
         'original_name': 'Time zone',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -10236,7 +10055,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Werkkamer Time zone',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:information-outline',
         }),
         'context': <ANY>,
         'entity_id': 'sensor.werkkamer_time_zone',
@@ -10272,7 +10090,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:access-point-network',
+        'original_icon': None,
         'original_name': 'WiFi connection SSID',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -10285,7 +10103,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Werkkamer WiFi connection SSID',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:access-point-network',
         }),
         'context': <ANY>,
         'entity_id': 'sensor.werkkamer_wifi_connection_ssid',
@@ -10323,7 +10140,7 @@
         'options': dict({
         }),
         'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
-        'original_icon': 'mdi:wifi',
+        'original_icon': None,
         'original_name': 'WiFi connection strength',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -10337,7 +10154,6 @@
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'signal_strength',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Werkkamer WiFi connection strength',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:wifi',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
           <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'dBm',
         }),
@@ -10375,7 +10191,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:leaf',
+        'original_icon': None,
         'original_name': 'Econo mode',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -10388,7 +10204,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Johnny&Maaike Econo mode',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:leaf',
         }),
         'context': <ANY>,
         'entity_id': 'switch.johnny_maaike_econo_mode',
@@ -10424,7 +10239,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'hass:air-filter',
+        'original_icon': None,
         'original_name': 'Streamer mode',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -10437,7 +10252,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Johnny&Maaike Streamer mode',
-          <EntityStateAttribute.ICON: 'icon'>: 'hass:air-filter',
         }),
         'context': <ANY>,
         'entity_id': 'switch.johnny_maaike_streamer_mode',
@@ -10473,7 +10287,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:leaf',
+        'original_icon': None,
         'original_name': 'Econo mode',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -10486,7 +10300,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Linde Econo mode',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:leaf',
         }),
         'context': <ANY>,
         'entity_id': 'switch.linde_econo_mode',
@@ -10522,7 +10335,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'hass:air-filter',
+        'original_icon': None,
         'original_name': 'Streamer mode',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -10535,7 +10348,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Linde Streamer mode',
-          <EntityStateAttribute.ICON: 'icon'>: 'hass:air-filter',
         }),
         'context': <ANY>,
         'entity_id': 'switch.linde_streamer_mode',
@@ -10571,7 +10383,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:leaf',
+        'original_icon': None,
         'original_name': 'Econo mode',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -10584,7 +10396,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sanne Econo mode',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:leaf',
         }),
         'context': <ANY>,
         'entity_id': 'switch.sanne_econo_mode',
@@ -10620,7 +10431,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'hass:air-filter',
+        'original_icon': None,
         'original_name': 'Streamer mode',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -10633,7 +10444,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sanne Streamer mode',
-          <EntityStateAttribute.ICON: 'icon'>: 'hass:air-filter',
         }),
         'context': <ANY>,
         'entity_id': 'switch.sanne_streamer_mode',
@@ -10669,7 +10479,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'mdi:leaf',
+        'original_icon': None,
         'original_name': 'Econo mode',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -10682,7 +10492,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Werkkamer Econo mode',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:leaf',
         }),
         'context': <ANY>,
         'entity_id': 'switch.werkkamer_econo_mode',
@@ -10718,7 +10527,7 @@
         'options': dict({
         }),
         'original_device_class': None,
-        'original_icon': 'hass:air-filter',
+        'original_icon': None,
         'original_name': 'Streamer mode',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -10731,7 +10540,6 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Werkkamer Streamer mode',
-          <EntityStateAttribute.ICON: 'icon'>: 'hass:air-filter',
         }),
         'context': <ANY>,
         'entity_id': 'switch.werkkamer_streamer_mode',
@@ -10767,7 +10575,7 @@
         'options': dict({
         }),
         'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
-        'original_icon': 'mdi:update',
+        'original_icon': None,
         'original_name': 'Firmware update',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -10784,7 +10592,6 @@
           <UpdateEntityStateAttribute.DISPLAY_PRECISION: 'display_precision'>: 0,
           <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/daikin_onecta/icon.png',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Altherma Firmware update',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:update',
           <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
           <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: '3.2.1',
           <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: '3.2.1',
@@ -10829,7 +10636,7 @@
         'options': dict({
         }),
         'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
-        'original_icon': 'mdi:update',
+        'original_icon': None,
         'original_name': 'Firmware update',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -10846,7 +10653,6 @@
           <UpdateEntityStateAttribute.DISPLAY_PRECISION: 'display_precision'>: 0,
           <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/daikin_onecta/icon.png',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Altherma Firmware update',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:update',
           <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
           <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: '0221',
           <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: '0221',
@@ -10891,7 +10697,7 @@
         'options': dict({
         }),
         'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
-        'original_icon': 'mdi:update',
+        'original_icon': None,
         'original_name': 'Firmware update',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -10908,7 +10714,6 @@
           <UpdateEntityStateAttribute.DISPLAY_PRECISION: 'display_precision'>: 0,
           <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/daikin_onecta/icon.png',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Altherma Firmware update',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:update',
           <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
           <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: 'FFFF',
           <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: 'FFFF',
@@ -10953,7 +10758,7 @@
         'options': dict({
         }),
         'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
-        'original_icon': 'mdi:update',
+        'original_icon': None,
         'original_name': 'Firmware update',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -10970,7 +10775,6 @@
           <UpdateEntityStateAttribute.DISPLAY_PRECISION: 'display_precision'>: 0,
           <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/daikin_onecta/icon.png',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Altherma Firmware update',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:update',
           <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
           <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: '6.3.0',
           <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: '6.3.0',
@@ -11015,7 +10819,7 @@
         'options': dict({
         }),
         'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
-        'original_icon': 'mdi:update',
+        'original_icon': None,
         'original_name': 'Firmware update',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -11032,7 +10836,6 @@
           <UpdateEntityStateAttribute.DISPLAY_PRECISION: 'display_precision'>: 0,
           <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/daikin_onecta/icon.png',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Johnny&Maaike Firmware update',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:update',
           <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
           <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: '1_12_51',
           <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: '1_12_51',
@@ -11077,7 +10880,7 @@
         'options': dict({
         }),
         'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
-        'original_icon': 'mdi:update',
+        'original_icon': None,
         'original_name': 'Firmware update',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -11094,7 +10897,6 @@
           <UpdateEntityStateAttribute.DISPLAY_PRECISION: 'display_precision'>: 0,
           <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/daikin_onecta/icon.png',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Johnny&Maaike Firmware update',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:update',
           <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
           <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: '20003001',
           <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: '20003001',
@@ -11139,7 +10941,7 @@
         'options': dict({
         }),
         'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
-        'original_icon': 'mdi:update',
+        'original_icon': None,
         'original_name': 'Firmware update',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -11156,7 +10958,6 @@
           <UpdateEntityStateAttribute.DISPLAY_PRECISION: 'display_precision'>: 0,
           <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/daikin_onecta/icon.png',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Linde Firmware update',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:update',
           <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
           <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: '1_12_84',
           <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: '1_12_84',
@@ -11201,7 +11002,7 @@
         'options': dict({
         }),
         'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
-        'original_icon': 'mdi:update',
+        'original_icon': None,
         'original_name': 'Firmware update',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -11218,7 +11019,6 @@
           <UpdateEntityStateAttribute.DISPLAY_PRECISION: 'display_precision'>: 0,
           <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/daikin_onecta/icon.png',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Linde Firmware update',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:update',
           <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
           <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: '20003001',
           <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: '20003001',
@@ -11263,7 +11063,7 @@
         'options': dict({
         }),
         'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
-        'original_icon': 'mdi:update',
+        'original_icon': None,
         'original_name': 'Firmware update',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -11280,7 +11080,6 @@
           <UpdateEntityStateAttribute.DISPLAY_PRECISION: 'display_precision'>: 0,
           <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/daikin_onecta/icon.png',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sanne Firmware update',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:update',
           <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
           <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: '1_12_51',
           <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: '1_12_51',
@@ -11325,7 +11124,7 @@
         'options': dict({
         }),
         'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
-        'original_icon': 'mdi:update',
+        'original_icon': None,
         'original_name': 'Firmware update',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -11342,7 +11141,6 @@
           <UpdateEntityStateAttribute.DISPLAY_PRECISION: 'display_precision'>: 0,
           <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/daikin_onecta/icon.png',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sanne Firmware update',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:update',
           <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
           <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: '20003001',
           <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: '20003001',
@@ -11387,7 +11185,7 @@
         'options': dict({
         }),
         'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
-        'original_icon': 'mdi:update',
+        'original_icon': None,
         'original_name': 'Firmware update',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -11404,7 +11202,6 @@
           <UpdateEntityStateAttribute.DISPLAY_PRECISION: 'display_precision'>: 0,
           <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/daikin_onecta/icon.png',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Werkkamer Firmware update',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:update',
           <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
           <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: '1_12_51',
           <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: '1_12_51',
@@ -11449,7 +11246,7 @@
         'options': dict({
         }),
         'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
-        'original_icon': 'mdi:update',
+        'original_icon': None,
         'original_name': 'Firmware update',
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
@@ -11466,7 +11263,6 @@
           <UpdateEntityStateAttribute.DISPLAY_PRECISION: 'display_precision'>: 0,
           <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/brands/integration/daikin_onecta/icon.png',
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Werkkamer Firmware update',
-          <EntityStateAttribute.ICON: 'icon'>: 'mdi:update',
           <UpdateEntityStateAttribute.IN_PROGRESS: 'in_progress'>: False,
           <UpdateEntityStateAttribute.INSTALLED_VERSION: 'installed_version'>: '20003001',
           <UpdateEntityStateAttribute.LATEST_VERSION: 'latest_version'>: '20003001',
