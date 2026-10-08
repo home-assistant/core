@@ -389,10 +389,10 @@ async def async_evaluate(
         )
     if (
         attachments
-        and AITaskEntityFeature.EVALUATE_ATTACHMENTS not in entity.supported_features
+        and AITaskEntityFeature.SUPPORT_ATTACHMENTS not in entity.supported_features
     ):
         raise HomeAssistantError(
-            f"AI Task entity {entity_id} does not support evaluation attachments"
+            f"AI Task entity {entity_id} does not support attachments"
         )
     with async_get_chat_session(hass) as session:
         resolved_attachments = await _resolve_attachments(hass, session, attachments)

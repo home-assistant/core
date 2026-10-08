@@ -45,13 +45,10 @@ class AITaskEntityFeature(IntFlag):
     """Generate data based on instructions."""
 
     SUPPORT_ATTACHMENTS = 2
-    """Support attachments with generate data."""
+    """Support attachments for all supported tasks."""
 
     GENERATE_IMAGE = 4
     """Generate images based on instructions."""
 
     EVALUATE = 8
     """Evaluate typed questions."""
-
-    EVALUATE_ATTACHMENTS = 16
-    """Support attachments when evaluating questions."""

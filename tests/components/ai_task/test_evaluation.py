@@ -53,7 +53,7 @@ def mock_evaluate(mock_ai_task_entity: MockAITaskEntity) -> Generator[AsyncMock]
     """Enable evaluation without a generation or conversation dependency."""
     mock_ai_task_entity._attr_supported_features = (
         ai_task.AITaskEntityFeature.EVALUATE
-        | ai_task.AITaskEntityFeature.EVALUATE_ATTACHMENTS
+        | ai_task.AITaskEntityFeature.SUPPORT_ATTACHMENTS
     )
     with patch.object(
         mock_ai_task_entity,
@@ -158,22 +158,22 @@ async def test_missing_entity(
     ("features", "attachments", "error"),
     [
         pytest.param(
-            ai_task.AITaskEntityFeature.GENERATE_DATA,
+            ai_task.AITaskEntityFeature.GENERATE_DATA
+            | ai_task.AITaskEntityFeature.SUPPORT_ATTACHMENTS,
             [],
             "does not support evaluation",
             id="no-evaluation",
         ),
         pytest.param(
-            ai_task.AITaskEntityFeature.EVALUATE
-            | ai_task.AITaskEntityFeature.SUPPORT_ATTACHMENTS,
+            ai_task.AITaskEntityFeature.EVALUATE,
             [
                 {
                     "media_content_id": "media-source://camera/camera.front_door",
                     "media_content_type": "image/jpeg",
                 }
             ],
-            "does not support evaluation attachments",
-            id="generation-attachments-only",
+            "does not support attachments",
+            id="no-attachments",
         ),
     ],
 )
@@ -185,7 +185,7 @@ async def test_features(
     error: str,
     mock_evaluate: AsyncMock,
 ) -> None:
-    """Generation attachment support does not imply evaluation support."""
+    """Require evaluation support and the shared attachment capability."""
     mock_ai_task_entity.supported_features = features
     with pytest.raises(HomeAssistantError, match=error):
         await ai_task.async_evaluate(
