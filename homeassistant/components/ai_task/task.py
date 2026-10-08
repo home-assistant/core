@@ -33,7 +33,6 @@ from .evaluation import (
     EvaluationQuestion,
     EvaluationTask,
     EvaluationTaskResult,
-    validate_state,
 )
 
 
@@ -373,7 +372,6 @@ async def async_evaluate(
 ) -> EvaluationTaskResult:
     """Evaluate questions using the selected AI task entity."""
     questions = QUESTIONS_SCHEMA(questions)
-    validate_state(state)
     if state is None and not attachments:
         raise HomeAssistantError("Evaluation requires state or attachments")
     if entity_id is None:

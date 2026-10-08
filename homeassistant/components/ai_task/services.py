@@ -32,7 +32,7 @@ from .const import (
     SERVICE_GENERATE_DATA,
     SERVICE_GENERATE_IMAGE,
 )
-from .evaluation import QUESTIONS_SCHEMA, validate_state
+from .evaluation import QUESTIONS_SCHEMA
 from .task import async_evaluate, async_generate_data, async_generate_image
 
 STRUCTURE_FIELD_SCHEMA = probatio.Schema(
@@ -128,7 +128,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
             {
                 probatio.Required(ATTR_TASK_NAME): cv.string,
                 probatio.Optional(ATTR_ENTITY_ID): cv.entity_id,
-                probatio.Optional(ATTR_STATE): validate_state,
+                probatio.Optional(ATTR_STATE): cv.match_all,
                 probatio.Required(ATTR_QUESTIONS): QUESTIONS_SCHEMA,
                 probatio.Optional(ATTR_ATTACHMENTS): selector.MediaSelector(
                     {"accept": ["*/*"], "multiple": True}
