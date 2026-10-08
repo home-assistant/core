@@ -22,6 +22,7 @@ from . import DOMAIN, LogErrorHandler
 
 _LOG_LEVELS = ["error", "warning", "critical"]
 _DEFAULT_LIMIT = 25
+_MAX_LIMIT = 50
 
 
 def _filter_log_entries(
@@ -104,9 +105,11 @@ class SystemLogGetEntriesTool(Tool):
             ): str,
             probatio.Optional(
                 "limit",
-                description=f"Maximum number of log entries to return (default: {_DEFAULT_LIMIT}, max: 50).",
+                description=f"Maximum number of log entries to return (default: {_DEFAULT_LIMIT}, max: {_MAX_LIMIT}).",
                 default=_DEFAULT_LIMIT,
-            ): probatio.All(probatio.Coerce(int), probatio.Range(min=1, max=50)),
+            ): probatio.All(
+                probatio.Coerce(int), probatio.Range(min=1, max=_MAX_LIMIT)
+            ),
             probatio.Optional(
                 "include_traceback",
                 description=(
