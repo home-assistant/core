@@ -1028,3 +1028,67 @@ async def test_time_of_use_too_many_periods(
             },
             blocking=True,
         )
+
+
+async def test_time_of_use_labels_per_season(
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test labels follow each season's own rate order, four periods each."""
+    await setup_platform(hass, normal_config_entry)
+
+    energy_device = entity_registry.async_get(ENERGY_SITE_ENTITY).device_id
+    hours = [(0, 6), (6, 12), (12, 18), (18, 0)]
+
+    def season(name, months, prefix, rates):
+        return {
+            "name": name,
+            "start_month": months[0],
+            "start_day": 1,
+            "end_month": months[1],
+            "end_day": 30 if months[1] in (9, 4) else 31,
+            "periods": [
+                {
+                    "name": f"{prefix} {index}",
+                    "start_time": f"{hours[index][0]:02d}:00:00",
+                    "end_time": f"{hours[index][1]:02d}:00:00",
+                    "buy_rate": rate,
+                }
+                for index, rate in enumerate(rates)
+            ],
+        }
+
+    with patch(
+        "tesla_fleet_api.tesla.EnergySite.time_of_use_settings",
+        return_value=RESPONSE_OK,
+    ) as set_time_of_use:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_TIME_OF_USE,
+            {
+                CONF_DEVICE_ID: energy_device,
+                "name": "Eight bands",
+                "utility": "Octopus Energy",
+                "seasons": [
+                    season("Summer", (5, 9), "Summer", [0.1, 0.2, 0.3, 0.4]),
+                    season("Winter", (10, 4), "Winter", [0.4, 0.3, 0.2, 0.1]),
+                ],
+            },
+            blocking=True,
+        )
+
+    charges = set_time_of_use.call_args[0][0]["energy_charges"]
+    assert charges["Summer"]["rates"] == {
+        "SUPER_OFF_PEAK": 0.1,
+        "OFF_PEAK": 0.2,
+        "PARTIAL_PEAK": 0.3,
+        "ON_PEAK": 0.4,
+    }
+    # Same labels, cheapest first, even though the order is reversed here.
+    assert charges["Winter"]["rates"] == {
+        "ON_PEAK": 0.4,
+        "PARTIAL_PEAK": 0.3,
+        "OFF_PEAK": 0.2,
+        "SUPER_OFF_PEAK": 0.1,
+    }

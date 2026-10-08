@@ -149,21 +149,21 @@ def _period_key(name: str) -> str:
     return key
 
 
-def _period_labels(seasons: list[dict[str, Any]]) -> dict[str, str]:
-    """Map each period name to a Tesla label, cheapest import rate first."""
-    cheapest: dict[str, float] = {}
-    for season in seasons:
-        for period in season[ATTR_PERIODS]:
-            key = _period_key(period[ATTR_NAME])
-            cheapest[key] = min(
-                cheapest.get(key, period[ATTR_BUY_RATE]), period[ATTR_BUY_RATE]
-            )
-    if len(cheapest) > len(TESLA_LABELS):
+def _period_labels(season: dict[str, Any]) -> dict[str, str]:
+    """Map a season's period names to Tesla labels, cheapest import rate first.
+
+    Labels are assigned per season, so OFF_PEAK is always the cheaper rate
+    within the season it prices, whatever the other seasons charge.
+    """
+    rates: dict[str, float] = {}
+    for period in season[ATTR_PERIODS]:
+        rates.setdefault(_period_key(period[ATTR_NAME]), period[ATTR_BUY_RATE])
+    if len(rates) > len(TESLA_LABELS):
         raise vol.Invalid(
-            f"Tesla supports at most {len(TESLA_LABELS)} distinct periods, "
-            f"got {len(cheapest)}"
+            f"Tesla supports at most {len(TESLA_LABELS)} distinct periods per "
+            f"season, {season[ATTR_NAME]!r} has {len(rates)}"
         )
-    ordered = sorted(cheapest, key=lambda key: cheapest[key])
+    ordered = sorted(rates, key=lambda key: rates[key])
     return dict(zip(ordered, TESLA_LABELS[len(ordered)], strict=True))
 
 
@@ -347,8 +347,8 @@ def _validate_seasons(seasons: list[dict[str, Any]]) -> list[dict[str, Any]]:
                 )
 
         _check_period_overlaps(season)
+        _period_labels(season)
 
-    _period_labels(seasons)
     return seasons
 
 
@@ -398,7 +398,6 @@ def _build_seasons(
 ) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
     """Build the Tesla seasons tree and the import and export energy charges."""
     year_round = _is_year_round(seasons)
-    labels = _period_labels(seasons)
     tesla_seasons: dict[str, Any] = {}
     buy_charges: dict[str, Any] = {ALL_SEASON: {"rates": {ALL_SEASON: 0}}}
     sell_charges: dict[str, Any] = {ALL_SEASON: {"rates": {ALL_SEASON: 0}}}
@@ -406,6 +405,7 @@ def _build_seasons(
 
     for season in seasons:
         key = YEAR_ROUND_SEASON if year_round else season[ATTR_NAME]
+        labels = _period_labels(season)
         tou_periods: dict[str, Any] = {}
         buy_rates: dict[str, float] = {}
         sell_rates: dict[str, float] = {}
