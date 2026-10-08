@@ -3,6 +3,7 @@
 from abc import ABC, abstractmethod
 from collections import UserDict, defaultdict
 from collections.abc import Mapping, Sequence, ValuesView
+from enum import StrEnum
 from typing import TYPE_CHECKING, Any, Literal, override
 
 from homeassistant.core import CoreState, HomeAssistant, callback
@@ -12,6 +13,15 @@ if TYPE_CHECKING:
 
 SAVE_DELAY = 10
 SAVE_DELAY_LONG = 180
+
+
+class NextNamePart(StrEnum):
+    """Next name part of a registry entry."""
+
+    AREA = "area"
+    DEVICE = "device"
+    PARENT_DEVICE = "parent_device"
+
 
 type RegistryIndexType = defaultdict[str, dict[str, Literal[True]]]
 

@@ -27,12 +27,17 @@ from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.typing import ConfigType
 
 from .const import API_MAX_RETRIES, DOMAIN
-from .coordinator import PortainerCoordinator, PortainerDockerDiskSpaceCoordinator
+from .coordinator import (
+    PortainerCoordinator,
+    PortainerDockerDiskSpaceCoordinator,
+    PortainerSystemVersionCoordinator,
+)
 from .services import async_setup_services
 
 _PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
+    Platform.EVENT,
     Platform.SENSOR,
     Platform.SWITCH,
     Platform.UPDATE,
@@ -78,16 +83,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: PortainerConfigEntry) ->
     )
     coordinator.docker_disk_space = docker_disk_space_coordinator
 
-    async def _defer_docker_disk_space_refresh(_: HomeAssistant) -> None:
+    system_version_coordinator = PortainerSystemVersionCoordinator(hass, entry, client)
+    coordinator.system_version = system_version_coordinator
+
+    async def _defer_initial_refreshes(_: HomeAssistant) -> None:
         """Defer the first refresh until Home Assistant has started."""
         hass.async_create_task(
             docker_disk_space_coordinator.async_refresh(),
             "portainer_docker_disk_space_initial_refresh",
         )
+        hass.async_create_task(
+            system_version_coordinator.async_refresh(),
+            "portainer_system_version_initial_refresh",
+        )
 
-    # On lower-end hardware, the DF endpoint can take long
-    # Do not block the setup, but defer the first refresh until HA is fully started
-    entry.async_on_unload(async_at_started(hass, _defer_docker_disk_space_refresh))
+    # On lower-end hardware, the DF endpoint can take long, and the version check
+    # waits for GitHub. Do not block the setup, but defer both until HA has started
+    entry.async_on_unload(async_at_started(hass, _defer_initial_refreshes))
 
     entry.runtime_data = coordinator
 
@@ -122,12 +134,29 @@ async def async_setup_entry(hass: HomeAssistant, entry: PortainerConfigEntry) ->
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _stop_watcher)
     )
 
+    @callback
+    def _start_event_listeners(_hass: HomeAssistant) -> None:
+        """Start the Docker event listeners in the event loop."""
+        coordinator.async_start_event_listeners()
+
+    @callback
+    def _stop_event_listeners(_event: Event) -> None:
+        """Stop the Docker event listeners in the event loop."""
+        coordinator.async_stop_event_listeners()
+
+    # Defer the event listener, to avoid a thunderherd of connections during startup
+    entry.async_on_unload(async_at_started(hass, _start_event_listeners))
+    entry.async_on_unload(coordinator.async_stop_event_listeners)
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _stop_event_listeners)
+    )
+
     return True
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Portainer integration."""
-    await async_setup_services(hass)
+    async_setup_services(hass)
     return True
 
 

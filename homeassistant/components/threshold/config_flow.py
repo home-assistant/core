@@ -3,7 +3,7 @@
 from collections.abc import Mapping
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import websocket_api
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
@@ -31,34 +31,34 @@ async def _validate_mode(
     return {CONF_LOWER: None, CONF_UPPER: None, **user_input}
 
 
-OPTIONS_SCHEMA = vol.Schema(
+OPTIONS_SCHEMA = probatio.Schema(
     {
-        vol.Required(
+        probatio.Required(
             CONF_HYSTERESIS, default=DEFAULT_HYSTERESIS
         ): selector.NumberSelector(
             selector.NumberSelectorConfig(
                 mode=selector.NumberSelectorMode.BOX, step="any"
             ),
         ),
-        vol.Optional(CONF_LOWER): selector.NumberSelector(
+        probatio.Optional(CONF_LOWER): selector.NumberSelector(
             selector.NumberSelectorConfig(
                 mode=selector.NumberSelectorMode.BOX, step="any"
             ),
         ),
-        vol.Optional(CONF_UPPER): selector.NumberSelector(
+        probatio.Optional(CONF_UPPER): selector.NumberSelector(
             selector.NumberSelectorConfig(
                 mode=selector.NumberSelectorMode.BOX, step="any"
             ),
         ),
-        vol.Required(CONF_ENTITY_ID): selector.EntitySelector(
+        probatio.Required(CONF_ENTITY_ID): selector.EntitySelector(
             selector.EntitySelectorConfig(domain=SENSOR_DOMAIN)
         ),
     }
 )
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_NAME): selector.TextSelector(),
+        probatio.Required(CONF_NAME): selector.TextSelector(),
     }
 ).extend(OPTIONS_SCHEMA.schema)
 
@@ -99,10 +99,10 @@ class ConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "threshold/start_preview",
-        vol.Required("flow_id"): str,
-        vol.Required("flow_type"): vol.Any("config_flow", "options_flow"),
-        vol.Required("user_input"): dict,
+        probatio.Required("type"): "threshold/start_preview",
+        probatio.Required("flow_id"): str,
+        probatio.Required("flow_type"): probatio.Any("config_flow", "options_flow"),
+        probatio.Required("user_input"): dict,
     }
 )
 @callback

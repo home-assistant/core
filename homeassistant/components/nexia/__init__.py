@@ -6,19 +6,31 @@ import aiohttp
 from nexia.const import BRAND_NEXIA
 from nexia.home import NexiaHome
 from nexia.thermostat import NexiaThermostat
+from nexia.zone import NexiaThermostatZone
 
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_BRAND, DOMAIN, PLATFORMS
 from .coordinator import NexiaDataUpdateCoordinator
+from .services import async_setup_services
 from .types import NexiaConfigEntry
 from .util import is_invalid_auth_code
 
 _LOGGER = logging.getLogger(__name__)
+
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Nexia/American Standard/Trane integration."""
+    async_setup_services(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: NexiaConfigEntry) -> bool:
@@ -62,18 +74,34 @@ async def async_setup_entry(hass: HomeAssistant, entry: NexiaConfigEntry) -> boo
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
 
-    # Register thermostat devices before forwarding platforms so zone sub-devices
-    # can resolve their via_device_id regardless of platform setup order.
+    _preregister_devices(hass, entry, nexia_home)
+
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    if nexia_home.any_room_iq_monitors():
+        # To avoid initially presenting stale data, manually refresh
+        await coordinator.async_config_entry_first_refresh()
+
+    return True
+
+
+def _preregister_devices(
+    hass: HomeAssistant, entry: NexiaConfigEntry, nexia_home: NexiaHome
+) -> None:
+    """Register devices before forwarding platforms so sub-devices resolve via_device_id regardless of setup order."""
     device_registry = dr.async_get(hass)
     for thermostat_id in nexia_home.get_thermostat_ids():
+        thermostat = nexia_home.get_thermostat_by_id(thermostat_id)
         device_registry.async_get_or_create(
             config_entry_id=entry.entry_id,
             identifiers={(DOMAIN, thermostat_id)},  # type: ignore[arg-type] # until fix issue #139773
         )
-
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
-    return True
+        for zone_id in thermostat.get_zone_ids():
+            zone = thermostat.get_zone_by_id(zone_id)
+            device_registry.async_get_or_create(
+                config_entry_id=entry.entry_id,
+                identifiers={(DOMAIN, zone_id)},  # type: ignore[arg-type] # until fix issue #139773
+                suggested_area=zone.get_name(),
+            )
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: NexiaConfigEntry) -> bool:
@@ -95,6 +123,10 @@ async def async_remove_config_entry_device(
         for zone_id in thermostat.get_zone_ids():
             if zone_id in dev_ids:
                 return False
+            zone: NexiaThermostatZone = thermostat.get_zone_by_id(zone_id)
+            for room_iq_sensor in zone.get_sensors():
+                if str(room_iq_sensor.id) in dev_ids:
+                    return False
     return True
 
 

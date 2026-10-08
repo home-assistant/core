@@ -22,18 +22,37 @@ from tests.common import MockConfigEntry
 
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
+TITLE = "jake"
+USER_ID = 12345
+OWNER = {
+    "user_id": str(USER_ID),
+    "preferred_name": "Jake Martin",
+    "preferred_first_name": "Jake",
+}
 TEST_ACCOUNTS = [
     {
         "id": "acc_curr",
         "name": "Current Account",
         "type": "uk_retail",
-        "balance": {"balance": 123, "total_balance": 321, "currency": "GBP"},
+        "owners": [OWNER],
+        "balance": {
+            "balance": 123,
+            "total_balance": 321,
+            "spend_today": -45,
+            "currency": "GBP",
+        },
     },
     {
         "id": "acc_flex",
         "name": "Flex",
         "type": "uk_monzo_flex",
-        "balance": {"balance": 123, "total_balance": 321, "currency": "EUR"},
+        "owners": [OWNER],
+        "balance": {
+            "balance": 123,
+            "total_balance": 321,
+            "spend_today": -67,
+            "currency": "EUR",
+        },
     },
 ]
 TEST_POTS = [
@@ -44,10 +63,9 @@ TEST_POTS = [
         "balance": 134578,
         "currency": "USD",
         "type": "instant_access",
+        "current_account_id": "acc_curr",
     }
 ]
-TITLE = "jake"
-USER_ID = 12345
 WEBHOOK_ID = "test-webhook-id"
 WEBHOOK_URL = f"https://example.com/api/webhook/{WEBHOOK_ID}"
 

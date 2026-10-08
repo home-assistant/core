@@ -34,13 +34,13 @@ from .entity import (
 from .knx_module import KNXModule
 from .schema import FanSchema
 from .storage.const import (
-    CONF_ENTITY,
     CONF_GA_OSCILLATION,
     CONF_GA_SPEED,
     CONF_GA_STEP,
     CONF_GA_SWITCH,
     CONF_SPEED,
 )
+from .storage.entity_store_schema import KnxEntityData
 from .storage.util import ConfigExtractor
 
 _LOGGER = logging.getLogger(__name__)
@@ -122,7 +122,7 @@ async def async_setup_entry(
             KnxYamlFan(knx_module, entity_config)
             for entity_config in yaml_platform_config
         )
-    if ui_config := knx_module.config_store.data["entities"].get(Platform.FAN):
+    if ui_config := knx_module.config_store.get_entity_configs(Platform.FAN):
         entities.extend(
             KnxUiFan(knx_module, unique_id, config)
             for unique_id, config in ui_config.items()
@@ -253,16 +253,16 @@ class KnxUiFan(_KnxFan, KnxUiEntity):
     _device: XknxFan
 
     def __init__(
-        self, knx_module: KNXModule, unique_id: str, config: dict[str, Any]
+        self, knx_module: KNXModule, unique_id: str, config: KnxEntityData[Any]
     ) -> None:
         """Initialize of KNX fan."""
-        knx_conf = ConfigExtractor(config[DOMAIN])
+        knx_conf = ConfigExtractor(config.knx)
         # max_step is required for step mode, thus can be used to differentiate modes
         max_step: int | None = knx_conf.get(CONF_SPEED, FanConf.MAX_STEP)
         super().__init__(
             knx_module=knx_module,
             unique_id=unique_id,
-            entity_config=config[CONF_ENTITY],
+            entity_config=config.entity,
         )
         if max_step:
             # step control
@@ -275,7 +275,7 @@ class KnxUiFan(_KnxFan, KnxUiEntity):
 
         self._device = XknxFan(
             xknx=knx_module.xknx,
-            name=config[CONF_ENTITY][CONF_NAME],
+            name=config.entity.xknx_name,
             group_address_speed=speed_write,
             group_address_speed_state=speed_state,
             group_address_oscillation=knx_conf.get_write(CONF_GA_OSCILLATION),

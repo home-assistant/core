@@ -2,7 +2,7 @@
 
 from unittest.mock import Mock
 
-import voluptuous as vol
+import probatio
 
 from homeassistant import data_entry_flow
 from homeassistant.helpers.data_entry_flow import _BaseFlowManagerView
@@ -11,9 +11,9 @@ from homeassistant.helpers.data_entry_flow import _BaseFlowManagerView
 def test_prepare_result_json_includes_visible() -> None:
     """Test the serialized data_schema carries visible conditions."""
     condition = {"field": "use_tls", "value": True}
-    schema = vol.Schema(
+    schema = probatio.Schema(
         {
-            vol.Required("use_tls", default=True): bool,
+            probatio.Required("use_tls", default=True): bool,
             data_entry_flow.Required("cert_path", visible=condition): str,
         }
     )

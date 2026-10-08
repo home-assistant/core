@@ -218,6 +218,12 @@ async def test_zeroconf_flow_already_configured(
             id="gasleser",
         ),
         pytest.param(
+            "_gaspulse._tcp.local.",
+            "gas-pulse-4466926439.local.",
+            "GAS_PULSE_4466926439",
+            id="gasleser_pulse",
+        ),
+        pytest.param(
             "_wasserleser._tcp.local.",
             "wasser-6940014409.local.",
             "WASSER_6940014409",

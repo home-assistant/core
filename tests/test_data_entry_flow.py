@@ -5,9 +5,8 @@ import dataclasses
 import logging
 from unittest.mock import Mock, patch
 
+import probatio
 import pytest
-import voluptuous as vol
-import voluptuous_serialize
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.core import Event, HomeAssistant, callback
@@ -90,20 +89,24 @@ async def test_configure_two_steps(manager: MockFlowManager) -> None:
         async def async_step_first(self, user_input=None):
             if user_input is not None:
                 return await self.async_step_second()
-            return self.async_show_form(step_id="first", data_schema=vol.Schema([str]))
+            return self.async_show_form(
+                step_id="first", data_schema=probatio.Schema([str])
+            )
 
         async def async_step_second(self, user_input=None):
             if user_input is not None:
                 return self.async_create_entry(
                     title="Test Entry", data=self.init_data + user_input
                 )
-            return self.async_show_form(step_id="second", data_schema=vol.Schema([str]))
+            return self.async_show_form(
+                step_id="second", data_schema=probatio.Schema([str])
+            )
 
     form = await manager.async_init(
         "test", context={"init_step": "first"}, data=["INIT-DATA"]
     )
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         form = await manager.async_configure(form["flow_id"], "INCORRECT-DATA")
 
     form = await manager.async_configure(form["flow_id"], ["SECOND-DATA"])
@@ -117,7 +120,9 @@ async def test_configure_two_steps(manager: MockFlowManager) -> None:
 
 async def test_show_form(manager: MockFlowManager) -> None:
     """Test that we can show a form."""
-    schema = vol.Schema({vol.Required("username"): str, vol.Required("password"): str})
+    schema = probatio.Schema(
+        {probatio.Required("username"): str, probatio.Required("password"): str}
+    )
 
     @manager.mock_reg_handler("test")
     class TestFlow(data_entry_flow.FlowHandler):
@@ -137,7 +142,9 @@ async def test_show_form(manager: MockFlowManager) -> None:
 async def test_form_shows_with_added_suggested_values(manager: MockFlowManager) -> None:
     """Test that we can show a form with suggested values."""
 
-    def compare_schemas(schema: vol.Schema, expected_schema: vol.Schema) -> None:
+    def compare_schemas(
+        schema: probatio.Schema, expected_schema: probatio.Schema
+    ) -> None:
         """Compare two schemas."""
         assert schema.schema is not expected_schema.schema
 
@@ -149,14 +156,14 @@ async def test_form_shows_with_added_suggested_values(manager: MockFlowManager) 
                 continue
             assert validator == expected_schema.schema[key]
 
-    schema = vol.Schema(
+    schema = probatio.Schema(
         {
-            vol.Required("username"): str,
-            vol.Required("password"): str,
-            vol.Required("section_1"): data_entry_flow.section(
-                vol.Schema(
+            probatio.Required("username"): str,
+            probatio.Required("password"): str,
+            probatio.Required("section_1"): data_entry_flow.section(
+                probatio.Schema(
                     {
-                        vol.Optional("full_name"): str,
+                        probatio.Optional("full_name"): str,
                     }
                 ),
                 {"collapsed": False},
@@ -253,6 +260,30 @@ async def test_abort_removes_instance(manager: MockFlowManager) -> None:
     assert form["reason"] == "True"
     assert len(manager.async_progress()) == 0
     assert len(manager.mock_created_entries) == 0
+
+
+@pytest.mark.parametrize(
+    "translation_domain",
+    [None, "homeassistant"],
+    ids=["own_domain", "shared_domain"],
+)
+async def test_abort_translation_domain(
+    manager: MockFlowManager, translation_domain: str | None
+) -> None:
+    """Test the abort reason can be translated by another integration."""
+
+    @manager.mock_reg_handler("test")
+    class TestFlow(data_entry_flow.FlowHandler):
+        async def async_step_init(self, user_input=None):
+            return self.async_abort(
+                reason="some_reason", translation_domain=translation_domain
+            )
+
+    result = await manager.async_init("test")
+
+    assert result["type"] is data_entry_flow.FlowResultType.ABORT
+    assert result["reason"] == "some_reason"
+    assert result.get("translation_domain") == translation_domain
 
 
 async def test_abort_aborted_flow(manager: MockFlowManager) -> None:
@@ -421,7 +452,7 @@ async def test_finish_callback_change_result_type(hass: HomeAssistant) -> None:
             if input is not None:
                 return self.async_create_entry(title="init", data=input)
             return self.async_show_form(
-                step_id="init", data_schema=vol.Schema({"count": int})
+                step_id="init", data_schema=probatio.Schema({"count": int})
             )
 
     class FlowManager(data_entry_flow.FlowManager):
@@ -434,7 +465,7 @@ async def test_finish_callback_change_result_type(hass: HomeAssistant) -> None:
             if result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY:
                 if result["data"] is None or result["data"].get("count", 0) <= 1:
                     return flow.async_show_form(
-                        step_id="init", data_schema=vol.Schema({"count": int})
+                        step_id="init", data_schema=probatio.Schema({"count": int})
                     )
                 result["result"] = result["data"]["count"]
             return result
@@ -972,6 +1003,59 @@ async def test_abort_flow_exception_finish_flow(hass: HomeAssistant) -> None:
     assert form["description_placeholders"] == {"placeholder": "yo"}
 
 
+@pytest.mark.parametrize(
+    "translation_domain",
+    [None, "homeassistant"],
+    ids=["own_domain", "shared_domain"],
+)
+async def test_abort_flow_exception_step_translation_domain(
+    manager: MockFlowManager, translation_domain: str | None
+) -> None:
+    """Test AbortFlow can be translated by another integration from a step."""
+
+    @manager.mock_reg_handler("test")
+    class TestFlow(data_entry_flow.FlowHandler):
+        async def async_step_init(self, user_input=None):
+            raise data_entry_flow.AbortFlow(
+                "mock-reason", translation_domain=translation_domain
+            )
+
+    form = await manager.async_init("test")
+
+    assert form["type"] is data_entry_flow.FlowResultType.ABORT
+    assert form["reason"] == "mock-reason"
+    assert form.get("translation_domain") == translation_domain
+
+
+async def test_abort_flow_exception_finish_flow_translation_domain(
+    hass: HomeAssistant,
+) -> None:
+    """Test AbortFlow can be translated by another integration when finishing."""
+
+    class TestFlow(data_entry_flow.FlowHandler):
+        VERSION = 1
+
+        async def async_step_init(self, input):
+            return self.async_create_entry(title="init", data=input)
+
+    class FlowManager(data_entry_flow.FlowManager):
+        async def async_create_flow(self, handler_key, *, context, data):
+            return TestFlow()
+
+        async def async_finish_flow(self, flow, result):
+            raise data_entry_flow.AbortFlow(
+                "mock-reason", translation_domain="homeassistant"
+            )
+
+    manager = FlowManager(hass)
+
+    form = await manager.async_init("test")
+
+    assert form["type"] is data_entry_flow.FlowResultType.ABORT
+    assert form["reason"] == "mock-reason"
+    assert form["translation_domain"] == "homeassistant"
+
+
 async def test_init_unknown_flow(manager: MockFlowManager) -> None:
     """Test that UnknownFlow is raised when async_create_flow returns None."""
 
@@ -1148,7 +1232,9 @@ async def test_find_flows_by_init_data_type(manager: MockFlowManager) -> None:
         async def async_step_first(self, user_input=None):
             if user_input is not None:
                 return await self.async_step_second()
-            return self.async_show_form(step_id="first", data_schema=vol.Schema([str]))
+            return self.async_show_form(
+                step_id="first", data_schema=probatio.Schema([str])
+            )
 
         async def async_step_second(self, user_input=None):
             if user_input is not None:
@@ -1156,7 +1242,9 @@ async def test_find_flows_by_init_data_type(manager: MockFlowManager) -> None:
                     title="Test Entry",
                     data={"init": self.init_data, "user": user_input},
                 )
-            return self.async_show_form(step_id="second", data_schema=vol.Schema([str]))
+            return self.async_show_form(
+                step_id="second", data_schema=probatio.Schema([str])
+            )
 
     bluetooth_data = BluetoothDiscoveryData("aa:bb:cc:dd:ee:ff")
     wifi_data = WiFiDiscoveryData("host")
@@ -1227,10 +1315,10 @@ def test_section_in_serializer() -> None:
     """Test section with custom_serializer."""
     assert cv.custom_serializer(
         data_entry_flow.section(
-            vol.Schema(
+            probatio.Schema(
                 {
-                    vol.Optional("option_1", default=False): bool,
-                    vol.Required("option_2"): int,
+                    probatio.Optional("option_1", default=False): bool,
+                    probatio.Required("option_2"): int,
                 }
             ),
             {"collapsed": False},
@@ -1258,13 +1346,13 @@ def test_nested_section_in_serializer() -> None:
     ):
         cv.custom_serializer(
             data_entry_flow.section(
-                vol.Schema(
+                probatio.Schema(
                     {
-                        vol.Required("section_1"): data_entry_flow.section(
-                            vol.Schema(
+                        probatio.Required("section_1"): data_entry_flow.section(
+                            probatio.Schema(
                                 {
-                                    vol.Optional("option_1", default=False): bool,
-                                    vol.Required("option_2"): int,
+                                    probatio.Optional("option_1", default=False): bool,
+                                    probatio.Required("option_2"): int,
                                 }
                             )
                         )
@@ -1408,9 +1496,9 @@ async def test_hidden_required_field_skips_validation(
     manager: MockFlowManager,
 ) -> None:
     """Test a required field is only enforced while it is not hidden."""
-    schema = vol.Schema(
+    schema = probatio.Schema(
         {
-            vol.Required("use_tls", default=True): bool,
+            probatio.Required("use_tls", default=True): bool,
             data_entry_flow.Required(
                 "cert_path",
                 visible={"field": "use_tls", "value": True},
@@ -1448,9 +1536,9 @@ async def test_hidden_required_field_skips_validation(
 
 async def test_hidden_field_is_omitted_from_data(manager: MockFlowManager) -> None:
     """Test a hidden field injects no default and drops a stale value."""
-    schema = vol.Schema(
+    schema = probatio.Schema(
         {
-            vol.Required("use_tls", default=True): bool,
+            probatio.Required("use_tls", default=True): bool,
             data_entry_flow.Optional(
                 "cert_path",
                 default="default.pem",
@@ -1486,12 +1574,12 @@ async def test_hidden_field_is_omitted_from_data(manager: MockFlowManager) -> No
 
 async def test_hidden_required_field_in_section(manager: MockFlowManager) -> None:
     """Test conditional required validation inside a section."""
-    schema = vol.Schema(
+    schema = probatio.Schema(
         {
-            vol.Required("advanced"): data_entry_flow.section(
-                vol.Schema(
+            probatio.Required("advanced"): data_entry_flow.section(
+                probatio.Schema(
                     {
-                        vol.Required("mode", default="simple"): str,
+                        probatio.Required("mode", default="simple"): str,
                         data_entry_flow.Required(
                             "token",
                             visible={"field": "mode", "value": "advanced"},
@@ -1526,9 +1614,9 @@ async def test_hidden_required_field_in_section(manager: MockFlowManager) -> Non
 
 async def test_hidden_condition_uses_defaults(manager: MockFlowManager) -> None:
     """Test conditions see schema defaults for fields the client omitted."""
-    schema = vol.Schema(
+    schema = probatio.Schema(
         {
-            vol.Optional("mode", default="simple"): str,
+            probatio.Optional("mode", default="simple"): str,
             data_entry_flow.Required(
                 "token",
                 visible={"field": "mode", "value": "advanced"},
@@ -1552,14 +1640,14 @@ async def test_hidden_condition_uses_defaults(manager: MockFlowManager) -> None:
 
 async def test_hidden_section_is_dropped(manager: MockFlowManager) -> None:
     """Test a hidden section is removed entirely, not kept as an empty dict."""
-    schema = vol.Schema(
+    schema = probatio.Schema(
         {
-            vol.Required("enable_advanced", default=False): bool,
+            probatio.Required("enable_advanced", default=False): bool,
             data_entry_flow.Required(
                 "advanced",
                 visible={"field": "enable_advanced", "value": True},
             ): data_entry_flow.section(
-                vol.Schema({vol.Required("token"): str}),
+                probatio.Schema({probatio.Required("token"): str}),
             ),
         }
     )
@@ -1588,9 +1676,9 @@ async def test_hidden_field_reads_as_absent_to_other_conditions(
     manager: MockFlowManager,
 ) -> None:
     """Test a hidden field holds no value for the conditions of other fields."""
-    schema = vol.Schema(
+    schema = probatio.Schema(
         {
-            vol.Optional("mode", default="simple"): str,
+            probatio.Optional("mode", default="simple"): str,
             # visible only while "advanced", so its default must not leak to "extra"
             data_entry_flow.Optional(
                 "token",
@@ -1628,7 +1716,7 @@ async def test_hidden_fields_resolved_in_schema_order(
     manager: MockFlowManager,
 ) -> None:
     """Test a hidden field drops before a later field's condition is evaluated."""
-    schema = vol.Schema(
+    schema = probatio.Schema(
         {
             # Always hidden but defaulted; must read as absent to "extra" below it.
             data_entry_flow.Optional(
@@ -1659,13 +1747,13 @@ async def test_hidden_fields_resolved_in_schema_order(
 
 async def test_hidden_field_in_defaulted_section(manager: MockFlowManager) -> None:
     """Test nested hidden fields are stripped for an omitted defaulted section."""
-    schema = vol.Schema(
+    schema = probatio.Schema(
         {
-            vol.Optional("advanced", default={"mode": "simple"}): (
+            probatio.Optional("advanced", default={"mode": "simple"}): (
                 data_entry_flow.section(
-                    vol.Schema(
+                    probatio.Schema(
                         {
-                            vol.Required("mode", default="simple"): str,
+                            probatio.Required("mode", default="simple"): str,
                             data_entry_flow.Required(
                                 "token",
                                 visible={"field": "mode", "value": "advanced"},
@@ -1694,15 +1782,13 @@ async def test_hidden_field_in_defaulted_section(manager: MockFlowManager) -> No
 def test_add_visible_conditions_to_serialized_schema() -> None:
     """Test visible conditions are injected into the serialized schema."""
     condition = {"field": "use_tls", "value": True}
-    schema = vol.Schema(
+    schema = probatio.Schema(
         {
-            vol.Required("use_tls", default=True): bool,
+            probatio.Required("use_tls", default=True): bool,
             data_entry_flow.Required("cert_path", visible=condition): str,
         }
     )
-    serialized = voluptuous_serialize.convert(
-        schema, custom_serializer=cv.custom_serializer
-    )
+    serialized = probatio.to_field_list(schema, custom_serializer=cv.custom_serializer)
     data_entry_flow.add_visible_conditions_to_serialized_schema(schema, serialized)
 
     fields = {field["name"]: field for field in serialized}

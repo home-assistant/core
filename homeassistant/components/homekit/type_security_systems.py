@@ -13,13 +13,13 @@ from homeassistant.components.alarm_control_panel import (
 from homeassistant.const import (
     ATTR_CODE,
     ATTR_ENTITY_ID,
-    ATTR_SUPPORTED_FEATURES,
     SERVICE_ALARM_ARM_AWAY,
     SERVICE_ALARM_ARM_HOME,
     SERVICE_ALARM_ARM_NIGHT,
     SERVICE_ALARM_DISARM,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    EntityStateAttribute,
 )
 from homeassistant.core import State, callback
 
@@ -84,7 +84,7 @@ class SecuritySystem(HomeAccessory):
         self._alarm_code = self.config.get(ATTR_CODE)
 
         supported_states = state.attributes.get(
-            ATTR_SUPPORTED_FEATURES,
+            EntityStateAttribute.SUPPORTED_FEATURES,
             (
                 AlarmControlPanelEntityFeature.ARM_HOME
                 | AlarmControlPanelEntityFeature.ARM_VACATION

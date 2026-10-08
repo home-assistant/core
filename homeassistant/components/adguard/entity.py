@@ -2,9 +2,10 @@
 
 from typing import override
 
-from adguardhome import AdGuardHomeError
+from adguardhome import AdGuardHomeAuthenticationError, AdGuardHomeError
 
 from homeassistant.config_entries import SOURCE_HASSIO
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity import Entity
 
@@ -36,6 +37,11 @@ class AdGuardHomeEntity(Entity):
         try:
             await self._adguard_update()
             self._attr_available = True
+        except AdGuardHomeAuthenticationError:
+            # The credentials stopped working, like after a password change in
+            # AdGuard Home. Ask for new ones; Home Assistant only starts one flow.
+            self._attr_available = False
+            self._entry.async_start_reauth(self.hass)
         except AdGuardHomeError:
             if self._attr_available:
                 LOGGER.debug(
@@ -52,23 +58,17 @@ class AdGuardHomeEntity(Entity):
     @override
     def device_info(self) -> DeviceInfo:
         """Return device information about this AdGuard Home instance."""
+        host, port = self._entry.data[CONF_HOST], self._entry.data[CONF_PORT]
         if self._entry.source == SOURCE_HASSIO:
             config_url = "homeassistant://app/a0d7b954_adguard"
-        elif self.adguard.tls:
-            config_url = f"https://{self.adguard.host}:{self.adguard.port}"
+        elif self._entry.data[CONF_SSL]:
+            config_url = f"https://{host}:{port}"
         else:
-            config_url = f"http://{self.adguard.host}:{self.adguard.port}"
+            config_url = f"http://{host}:{port}"
 
         return DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
-            identifiers={
-                (  # type: ignore[arg-type]
-                    DOMAIN,
-                    self.adguard.host,
-                    self.adguard.port,
-                    self.adguard.base_path,
-                )
-            },
+            identifiers={(DOMAIN, self._entry.entry_id)},
             manufacturer="AdGuard Team",
             name="AdGuard Home",
             sw_version=self.data.version,

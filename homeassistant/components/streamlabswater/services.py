@@ -1,6 +1,6 @@
 """Services for Streamlabs Water."""
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv, service
@@ -15,10 +15,12 @@ AWAY_MODE_HOME = "home"
 
 CONF_LOCATION_ID = "location_id"
 
-SET_AWAY_MODE_SCHEMA = vol.Schema(
+SET_AWAY_MODE_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_AWAY_MODE): vol.In([AWAY_MODE_AWAY, AWAY_MODE_HOME]),
-        vol.Optional(CONF_LOCATION_ID): cv.string,
+        probatio.Required(ATTR_AWAY_MODE): probatio.In(
+            [AWAY_MODE_AWAY, AWAY_MODE_HOME]
+        ),
+        probatio.Optional(CONF_LOCATION_ID): cv.string,
     }
 )
 

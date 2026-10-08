@@ -7,7 +7,7 @@ from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.characteristics.const import InputEventValues
 from aiohomekit.model.services import Service, ServicesTypes
 from aiohomekit.utils import clamp_enum_to_char
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.config_entries import ConfigEntry
@@ -41,8 +41,8 @@ CONF_SUBTYPE = "subtype"
 
 TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_TYPE): vol.In(TRIGGER_TYPES),
-        vol.Required(CONF_SUBTYPE): vol.In(TRIGGER_SUBTYPES),
+        probatio.Required(CONF_TYPE): probatio.In(TRIGGER_TYPES),
+        probatio.Required(CONF_SUBTYPE): probatio.In(TRIGGER_SUBTYPES),
     }
 )
 

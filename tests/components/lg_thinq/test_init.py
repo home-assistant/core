@@ -2,10 +2,13 @@
 
 from unittest.mock import AsyncMock, patch
 
+from aiohttp import ClientError
 import pytest
+from thinqconnect import ThinQAPIException
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 
 from . import setup_integration
 
@@ -32,14 +35,52 @@ async def test_load_unload_entry(
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
-@pytest.mark.parametrize("exception", [AttributeError(), TypeError(), ValueError()])
-async def test_config_not_ready(
+@pytest.mark.parametrize(
+    "exception",
+    [
+        ThinQAPIException(code="1309", message="Not allowed api call", headers={}),
+        TypeError(),
+        ValueError(),
+        ClientError(),
+        TimeoutError(),
+    ],
+)
+async def test_unload_entry_with_failing_disconnect(
     hass: HomeAssistant,
     mock_thinq_api: AsyncMock,
     mock_config_entry: MockConfigEntry,
     exception: Exception,
 ) -> None:
-    """Test for setup failure exception occurred."""
+    """Test the entry unloads even when telling LG we are leaving fails."""
+    with patch(
+        "homeassistant.components.lg_thinq.ThinQMQTT.async_connect",
+        return_value=True,
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    mqtt_client = mock_config_entry.runtime_data.mqtt_client
+    mqtt_client.client = AsyncMock()
+    mqtt_client.client.async_disconnect.side_effect = exception
+
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+@pytest.mark.parametrize(
+    "exception",
+    [AttributeError(), TypeError(), ValueError(), ClientError(), TimeoutError()],
+)
+async def test_config_not_ready_mqtt(
+    hass: HomeAssistant,
+    mock_thinq_api: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    exception: Exception,
+) -> None:
+    """Test for setup failure exception occurred during MQTT setup."""
     with patch(
         "homeassistant.components.lg_thinq.ThinQMQTT.async_connect",
         side_effect=exception,
@@ -47,3 +88,86 @@ async def test_config_not_ready(
         await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.parametrize(
+    "exception",
+    [
+        ThinQAPIException(code="1309", message="Not allowed api call", headers={}),
+        ClientError(),
+        TimeoutError(),
+    ],
+)
+async def test_config_not_ready_bridge_list(
+    hass: HomeAssistant,
+    mock_thinq_api: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    exception: Exception,
+) -> None:
+    """Test for setup failure exception occurred during coordinator setup."""
+    with patch(
+        "homeassistant.components.lg_thinq.async_get_ha_bridge_list",
+        side_effect=exception,
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_retry_after_mqtt_failure(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    mock_thinq_api: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test setup succeeds on retry after the MQTT connection failed."""
+    with patch(
+        "homeassistant.components.lg_thinq.ThinQMQTT.async_connect",
+        side_effect=[
+            ThinQAPIException(code="1309", message="Not allowed api call", headers={}),
+            True,
+        ],
+    ):
+        await setup_integration(hass, mock_config_entry)
+        assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+        await hass.config_entries.async_reload(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert "has already been setup" not in caplog.text
+
+
+async def test_mqtt_disconnected_when_setup_fails_after_connecting(
+    hass: HomeAssistant,
+    mock_thinq_api: AsyncMock,
+    mock_thinq_mqtt_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test MQTT is disconnected when setup fails after it connected."""
+    with patch.object(
+        hass.config_entries,
+        "async_forward_entry_setups",
+        side_effect=ConfigEntryNotReady,
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    mock_thinq_mqtt_client.async_disconnect.assert_awaited_once()
+
+
+async def test_mqtt_disconnected_on_unload_when_not_prepared(
+    hass: HomeAssistant,
+    mock_thinq_api: AsyncMock,
+    mock_thinq_mqtt_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the MQTT client is disconnected on unload when it failed to prepare."""
+    mock_thinq_mqtt_client.async_prepare_mqtt.return_value = False
+    await setup_integration(hass, mock_config_entry)
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    mock_thinq_mqtt_client.async_disconnect.assert_awaited_once()

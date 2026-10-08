@@ -39,6 +39,19 @@ async def test_unload_config_entry(
     assert not hass.data.get(DOMAIN)
 
 
+async def test_migrate_config_entry(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test migration adds the Modbus settings to old config entries."""
+    mock_responses(aioclient_mock)
+    entry = await setup_fronius_integration(hass)
+
+    assert entry.version == 1
+    assert entry.minor_version == 3
+    assert entry.data["modbus_port"] == 502
+    assert entry.data["auto_revert_power_limit"] is False
+
+
 async def test_logger_error(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:

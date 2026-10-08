@@ -101,8 +101,8 @@ async def test_humanify_lutron_caseta_button_event_integration_not_loaded(
     await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    for device in device_registry.devices.values():
-        if device.config_entries == {config_entry.entry_id}:
+    for device in device_registry.devices:
+        if device.config_entry_id == config_entry.entry_id:
             dr_device_id = device.id
             break
 

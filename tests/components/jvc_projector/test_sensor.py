@@ -2,8 +2,10 @@
 
 from unittest.mock import MagicMock
 
-from jvcprojector import command as cmd
+from jvcprojector import Command, JvcProjectorTimeoutError, command as cmd
+import pytest
 
+from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -11,6 +13,77 @@ from tests.common import MockConfigEntry
 
 POWER_ID = "sensor.jvc_projector_status"
 HDR_ENTITY_ID = "sensor.jvc_projector_hdr"
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "expected_state"),
+    [
+        ("sensor.jvc_projector_resolution", "4k"),
+        ("sensor.jvc_projector_colorimetry", "bt-709"),
+        ("sensor.jvc_projector_link_rate", "6-gbps-4-lanes"),
+    ],
+)
+async def test_diagnostic_sensor_state(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_device: MagicMock,
+    mock_integration: MockConfigEntry,
+    entity_id: str,
+    expected_state: str,
+) -> None:
+    """Test diagnostic sensor state and disabled-by-default behavior."""
+    entry = entity_registry.async_get(entity_id)
+    assert entry is not None
+    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+
+    entity_registry.async_update_entity(entity_id, disabled_by=None)
+    await hass.config_entries.async_reload(mock_integration.entry_id)
+    await hass.async_block_till_done()
+    await mock_integration.runtime_data.async_refresh()
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == expected_state
+
+
+@pytest.mark.parametrize(
+    "mock_device",
+    [
+        {
+            "fixture_override": {
+                cmd.Source: JvcProjectorTimeoutError,
+                cmd.Colorimetry: JvcProjectorTimeoutError,
+                cmd.LinkRate: JvcProjectorTimeoutError,
+            }
+        }
+    ],
+    indirect=True,
+)
+async def test_diagnostic_sensor_timeout_is_unknown(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_device: MagicMock,
+    mock_integration: MockConfigEntry,
+) -> None:
+    """Test optional diagnostic sensor timeouts do not make entities unavailable."""
+    entity_ids = (
+        "sensor.jvc_projector_resolution",
+        "sensor.jvc_projector_colorimetry",
+        "sensor.jvc_projector_link_rate",
+    )
+    for entity_id in entity_ids:
+        entity_registry.async_update_entity(entity_id, disabled_by=None)
+
+    await hass.config_entries.async_reload(mock_integration.entry_id)
+    await hass.async_block_till_done()
+    await mock_integration.runtime_data.async_refresh()
+    await hass.async_block_till_done()
+
+    for entity_id in entity_ids:
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state == STATE_UNKNOWN
 
 
 async def test_entity_state(
@@ -50,17 +123,29 @@ async def test_enable_hdr_sensor(
     assert state is not None
 
 
+@pytest.mark.parametrize(
+    ("unsupported_command", "entity_id"),
+    [
+        (cmd.Source, "sensor.jvc_projector_resolution"),
+        (cmd.Colorimetry, "sensor.jvc_projector_colorimetry"),
+        (cmd.LinkRate, "sensor.jvc_projector_link_rate"),
+    ],
+)
 async def test_unsupported_sensor_not_added(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_device: MagicMock,
     mock_config_entry: MockConfigEntry,
+    unsupported_command: type[Command],
+    entity_id: str,
 ) -> None:
     """Test unsupported sensor descriptions are skipped."""
-    mock_device.supports.side_effect = lambda command: command is not cmd.ColorDepth
+    mock_device.supports.side_effect = lambda command: (
+        command is not unsupported_command
+    )
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entity_registry.async_get("sensor.jvc_projector_color_depth") is None
+    assert entity_registry.async_get(entity_id) is None

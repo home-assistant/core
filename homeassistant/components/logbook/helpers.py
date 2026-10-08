@@ -68,8 +68,12 @@ def _async_config_entries_for_ids(
     if device_ids:
         dev_reg = dr.async_get(hass)
         for device_id in device_ids:
-            if (device := dev_reg.async_get(device_id)) and device.config_entries:
+            if not (device := dev_reg.async_get(device_id)):
+                continue
+            if device.is_composite_device:
                 config_entry_ids |= device.config_entries
+            else:
+                config_entry_ids.add(device.config_entry_id)
     return config_entry_ids
 
 

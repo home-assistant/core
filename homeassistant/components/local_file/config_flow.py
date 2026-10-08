@@ -3,7 +3,7 @@
 from collections.abc import Mapping
 from typing import Any, cast, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import CONF_FILE_PATH, CONF_NAME
 from homeassistant.helpers.schema_config_entry_flow import (
@@ -35,16 +35,16 @@ async def validate_options(
     return user_input
 
 
-DATA_SCHEMA_OPTIONS = vol.Schema(
+DATA_SCHEMA_OPTIONS = probatio.Schema(
     {
-        vol.Required(CONF_FILE_PATH): TextSelector(),
+        probatio.Required(CONF_FILE_PATH): TextSelector(),
     }
 )
-DATA_SCHEMA_SETUP = vol.Schema(
+DATA_SCHEMA_SETUP = probatio.Schema(
     {
         # Approved exemption: user names the local file camera
         # pylint: disable-next=home-assistant-config-flow-name-field
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): TextSelector(),
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): TextSelector(),
     }
 ).extend(DATA_SCHEMA_OPTIONS.schema)
 

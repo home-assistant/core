@@ -12,6 +12,21 @@ from homeassistant.const import CONF_HOST, CONF_PORT
 from tests.common import MockConfigEntry
 
 
+@pytest.fixture(autouse=True)
+def auto_mock_zeroconf(mock_async_zeroconf: MagicMock) -> None:
+    """Use the mocked zeroconf instance in every test."""
+
+
+@pytest.fixture(autouse=True)
+def mock_device_info() -> Generator[AsyncMock]:
+    """Mock the mDNS lookup; it finds nothing unless a test sets a result."""
+    with patch(
+        "homeassistant.components.hr_energy_qube.config_flow.async_get_device_info",
+        return_value=None,
+    ) as mock:
+        yield mock
+
+
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
@@ -41,6 +56,7 @@ def mock_qube_client() -> Generator[MagicMock]:
         client.connect = AsyncMock(return_value=True)
         client.is_connected = True
         client.close = AsyncMock(return_value=None)
+        client.async_verify_device = AsyncMock(return_value=True)
         client.async_get_software_version = AsyncMock(return_value="2.15")
 
         state = QubeState()
