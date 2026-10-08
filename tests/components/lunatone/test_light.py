@@ -338,6 +338,7 @@ async def test_line_broadcast_available_status(
     assert state
     assert state.state != "unavailable"
 
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
     await mock_config_entry.runtime_data.coordinator_info.async_refresh()
     await hass.async_block_till_done()
 

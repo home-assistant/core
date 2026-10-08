@@ -113,6 +113,7 @@ async def test_polling_coordinator_refreshes_after_interval(
     assert coordinator.update_interval == IDLE_POLL_INTERVAL
 
     with patch.object(coordinator.handler, "items", return_value=[("id", object())]):
+        # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
         await coordinator.async_refresh()
 
     assert coordinator.update_interval == POLL_INTERVAL
@@ -146,6 +147,7 @@ async def test_endpoint_not_found_disables_object_oriented_network_config_pollin
         "update",
         side_effect=EndpointNotFound("endpoint not found"),
     ) as mock_update:
+        # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
         await coordinator.async_refresh()
         await hass.async_block_till_done()
 
@@ -158,6 +160,7 @@ async def test_endpoint_not_found_disables_object_oriented_network_config_pollin
 
         assert mock_update.call_count == 1
 
+        # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
         await coordinator.async_refresh()
         await hass.async_block_till_done()
 
@@ -215,6 +218,7 @@ async def test_entity_unavailable_on_polling_coordinator_failure(
         "update",
         side_effect=RuntimeError("Polling error"),
     ):
+        # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
         await coordinator.async_refresh()
         await hass.async_block_till_done()
 
@@ -223,6 +227,7 @@ async def test_entity_unavailable_on_polling_coordinator_failure(
     assert state is not None
     assert state.state == "unavailable"
 
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
     await coordinator.async_refresh()
     await hass.async_block_till_done()
 

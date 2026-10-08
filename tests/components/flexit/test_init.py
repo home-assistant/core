@@ -176,6 +176,7 @@ async def test_connection_lost_recovers_on_next_update(
     with patch.object(
         hass.config_entries, "async_schedule_reload"
     ) as mock_schedule_reload:
+        # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
         await mock_config_entry.runtime_data.async_refresh()
 
     assert mock_config_entry.runtime_data.last_update_success

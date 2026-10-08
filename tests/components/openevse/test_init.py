@@ -59,6 +59,7 @@ async def test_coordinator_update_auth_error_starts_reauth(
 
     coordinator = mock_config_entry.runtime_data
     mock_charger.update.side_effect = AuthenticationError
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
     await coordinator.async_refresh()
     await hass.async_block_till_done()
 
