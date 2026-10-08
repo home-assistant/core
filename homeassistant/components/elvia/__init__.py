@@ -38,7 +38,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryError(
             translation_domain=DOMAIN,
             translation_key="import_failed",
-            translation_placeholders={"error": str(exception)},
         ) from exception
 
     entry.async_on_unload(

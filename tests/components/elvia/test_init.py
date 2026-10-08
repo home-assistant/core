@@ -30,4 +30,4 @@ async def test_setup_import_failed(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.SETUP_ERROR
-    assert entry.reason == "Failed to import meter values from Elvia: Boom"
+    assert entry.reason == "Failed to import meter values from Elvia"

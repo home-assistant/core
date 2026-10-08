@@ -24,7 +24,7 @@
   },
   "exceptions": {
     "import_failed": {
-      "message": "Failed to import meter values from Elvia: {error}"
+      "message": "Failed to import meter values from Elvia"
     }
   }
 }
