@@ -202,7 +202,7 @@ CONFIG_SCHEMA = probatio.Schema(
             [
                 probatio.Schema(
                     {
-                        probatio.Required(CONF_API_KEY): cv.string,
+                        probatio.Required(probatio.Secret(CONF_API_KEY)): cv.string,
                         probatio.Required(CONF_HOST): cv.string,
                         probatio.Optional(CONF_PORT, default=3344): probatio.Port(),
                         probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,

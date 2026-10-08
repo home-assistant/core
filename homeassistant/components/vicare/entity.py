@@ -123,7 +123,13 @@ class ViCareEntity(Entity):
 
 
 class ViCareCoordinatorEntity(CoordinatorEntity[ViCareCoordinator], ViCareEntity):
-    """Base class for ViCare entities backed by the update coordinator."""
+    """Base class for ViCare entities backed by the update coordinator.
+
+    Values are read in ``_read_value``, which the coordinator calls from its
+    executor job. Properties must only return what was read there: a PyViCare
+    getter takes the library cache lock and does blocking I/O when that cache
+    is cold.
+    """
 
     def __init__(
         self,
@@ -139,3 +145,14 @@ class ViCareCoordinatorEntity(CoordinatorEntity[ViCareCoordinator], ViCareEntity
         ViCareEntity.__init__(
             self, unique_id_suffix, device_serial, device_config, device, component
         )
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Register the value reader and prime the first value."""
+        await super().async_added_to_hass()
+        self.async_on_remove(self.coordinator.async_add_value_reader(self._read_value))
+        # The coordinator's first refresh ran before this entity existed.
+        await self.hass.async_add_executor_job(self._read_value)
+
+    def _read_value(self) -> None:
+        """Read this entity's value from the API. Runs in the executor."""

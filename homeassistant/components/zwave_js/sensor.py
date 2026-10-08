@@ -5,7 +5,6 @@ from dataclasses import dataclass
 from enum import IntEnum
 from typing import Any, cast, override
 
-import probatio
 from zwave_js_server.const import CommandClass, RssiError
 from zwave_js_server.const.command_class.energy_production import (
     CC_SPECIFIC_PARAMETER,
@@ -75,7 +74,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import UNDEFINED, StateType
@@ -109,7 +107,6 @@ from .const import (
     ENTITY_DESC_KEY_UV_INDEX,
     ENTITY_DESC_KEY_VOLTAGE,
     LOGGER,
-    SERVICE_RESET_METER,
 )
 from .discovery_data_template import (
     NumericSensorDataTemplate,
@@ -724,16 +721,6 @@ async def async_setup_entry(
             f"{DOMAIN}_{config_entry.entry_id}_add_statistics_sensors",
             async_add_statistics_sensors,
         )
-    )
-
-    platform = entity_platform.async_get_current_platform()
-    platform.async_register_entity_service(
-        SERVICE_RESET_METER,
-        {
-            probatio.Optional(ATTR_METER_TYPE): probatio.Coerce(int),
-            probatio.Optional(ATTR_VALUE): probatio.Coerce(int),
-        },
-        "async_reset_meter",
     )
 
 

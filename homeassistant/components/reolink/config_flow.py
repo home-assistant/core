@@ -355,7 +355,9 @@ class ReolinkFlowHandler(ConfigFlow, domain=DOMAIN):
         data_schema = probatio.Schema(
             {
                 probatio.Required(CONF_USERNAME, default=self._username): str,
-                probatio.Required(CONF_PASSWORD, default=self._password): str,
+                probatio.Required(
+                    probatio.Secret(CONF_PASSWORD), default=self._password
+                ): str,
             }
         )
         if self._host is None or self.source == SOURCE_RECONFIGURE or errors:

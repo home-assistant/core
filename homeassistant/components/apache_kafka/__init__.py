@@ -39,7 +39,7 @@ CONFIG_SCHEMA = probatio.Schema(
                     CONF_SECURITY_PROTOCOL, default="PLAINTEXT"
                 ): probatio.In(["PLAINTEXT", "SSL", "SASL_SSL"]),
                 probatio.Optional(CONF_USERNAME): cv.string,
-                probatio.Optional(CONF_PASSWORD): cv.string,
+                probatio.Optional(probatio.Secret(CONF_PASSWORD)): cv.string,
             }
         )
     },

@@ -1,6 +1,7 @@
 """Support for tracking people."""
 
 from collections.abc import Callable
+from dataclasses import dataclass
 import logging
 import re
 from typing import Any, Self, override
@@ -60,7 +61,7 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType, VolDictType
 
-from .const import DOMAIN, PersonEntityStateAttribute
+from .const import DATA_PERSON, DOMAIN, PersonEntityStateAttribute
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -114,7 +115,7 @@ async def async_create_person(
     device_trackers: list[str] | None = None,
 ) -> None:
     """Create a new person."""
-    await hass.data[DOMAIN][1].async_create_item(
+    await hass.data[DATA_PERSON].storage_collection.async_create_item(
         {
             ATTR_NAME: name,
             ATTR_USER_ID: user_id,
@@ -127,7 +128,7 @@ async def async_add_user_device_tracker(
     hass: HomeAssistant, user_id: str, device_tracker_entity_id: str
 ) -> None:
     """Add a device tracker to a person linked to a user."""
-    coll: PersonStorageCollection = hass.data[DOMAIN][1]
+    coll = hass.data[DATA_PERSON].storage_collection
 
     for person in coll.async_items():
         if person.get(ATTR_USER_ID) != user_id:
@@ -154,7 +155,7 @@ def persons_with_entity(hass: HomeAssistant, entity_id: str) -> list[str]:
     ):
         return []
 
-    component: EntityComponent[Person] = hass.data[DOMAIN][2]
+    component = hass.data[DATA_PERSON].entity_component
 
     return [
         person_entity.entity_id
@@ -169,7 +170,7 @@ def entities_in_person(hass: HomeAssistant, entity_id: str) -> list[str]:
     if DOMAIN not in hass.data:
         return []
 
-    component: EntityComponent[Person] = hass.data[DOMAIN][2]
+    component = hass.data[DATA_PERSON].entity_component
 
     if (person_entity := component.get_entity(entity_id)) is None:
         return []
@@ -178,7 +179,7 @@ def entities_in_person(hass: HomeAssistant, entity_id: str) -> list[str]:
 
 
 CREATE_FIELDS: VolDictType = {
-    probatio.Required(CONF_NAME): probatio.All(str, probatio.Length(min=1)),
+    probatio.Required(CONF_NAME): probatio.All(str, probatio.NonEmpty()),
     probatio.Optional(CONF_USER_ID): probatio.Any(str, None),
     probatio.Optional(CONF_DEVICE_TRACKERS, default=list): probatio.All(
         probatio.EnsureList(), cv.entities_domain(DEVICE_TRACKER_DOMAIN)
@@ -188,7 +189,7 @@ CREATE_FIELDS: VolDictType = {
 
 
 UPDATE_FIELDS: VolDictType = {
-    probatio.Optional(CONF_NAME): probatio.All(str, probatio.Length(min=1)),
+    probatio.Optional(CONF_NAME): probatio.All(str, probatio.NonEmpty()),
     probatio.Optional(CONF_USER_ID): probatio.Any(str, None),
     probatio.Optional(CONF_DEVICE_TRACKERS, default=list): probatio.All(
         probatio.EnsureList(), cv.entities_domain(DEVICE_TRACKER_DOMAIN)
@@ -334,10 +335,13 @@ class PersonStorageCollectionWebsocket(collection.DictStorageCollectionWebsocket
         msg: dict[str, Any],
     ) -> None:
         """List persons."""
-        yaml, storage, _ = hass.data[DOMAIN]
+        data = hass.data[DATA_PERSON]
         connection.send_result(
             msg[ATTR_ID],
-            {"storage": storage.async_items(), "config": yaml.async_items()},
+            {
+                "storage": data.storage_collection.async_items(),
+                "config": data.yaml_collection.async_items(),
+            },
         )
 
 
@@ -345,7 +349,7 @@ class PersonStorageCollectionWebsocket(collection.DictStorageCollectionWebsocket
     {
         probatio.Required("type"): "person/update_own_profile",
         probatio.Optional(CONF_NAME): probatio.All(
-            str, probatio.Strip, probatio.Length(min=1)
+            str, probatio.Strip, probatio.NonEmpty()
         ),
         probatio.Optional(CONF_PICTURE): probatio.Any(str, None),
     }
@@ -368,9 +372,9 @@ async def ws_update_own_profile(
             translation_key="system_generated_user",
         )
 
-    yaml_collection: collection.YamlCollection
-    storage_collection: PersonStorageCollection
-    yaml_collection, storage_collection, _ = hass.data[DOMAIN]
+    data = hass.data[DATA_PERSON]
+    yaml_collection = data.yaml_collection
+    storage_collection = data.storage_collection
 
     person = next(
         (
@@ -461,6 +465,15 @@ The following persons point at invalid users:
     return filtered
 
 
+@dataclass(slots=True)
+class PersonData:
+    """Runtime data for the person integration."""
+
+    entity_component: EntityComponent[Person]
+    storage_collection: PersonStorageCollection
+    yaml_collection: collection.YamlCollection
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the person component."""
     entity_component = EntityComponent[Person](_LOGGER, DOMAIN, hass)
@@ -486,7 +499,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
     await storage_collection.async_load()
 
-    hass.data[DOMAIN] = (yaml_collection, storage_collection, entity_component)
+    hass.data[DATA_PERSON] = PersonData(
+        entity_component, storage_collection, yaml_collection
+    )
 
     PersonStorageCollectionWebsocket(
         storage_collection, DOMAIN, DOMAIN, CREATE_FIELDS, UPDATE_FIELDS

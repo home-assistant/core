@@ -56,7 +56,7 @@ CONFIG_SCHEMA = probatio.All(
                 probatio.Optional(CONF_WAYPOINT_WHITELIST): probatio.All(
                     probatio.EnsureList(), [cv.string]
                 ),
-                probatio.Optional(CONF_SECRET): probatio.Any(
+                probatio.Optional(probatio.Secret(CONF_SECRET)): probatio.Any(
                     probatio.Schema({probatio.Optional(cv.string): cv.string}),
                     cv.string,
                 ),

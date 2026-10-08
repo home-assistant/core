@@ -171,6 +171,12 @@ class HomematicipGenericEntity(Entity):
         self._hap.hmip_device_by_entity_id[self.entity_id] = self._device
         self._device.on_update(self._async_device_changed)
         self._device.on_remove(self._async_device_removed)
+        self.async_on_remove(
+            lambda: self._device.remove_callback(self._async_device_changed)
+        )
+        self.async_on_remove(
+            lambda: self._device.remove_callback(self._async_device_removed)
+        )
 
     @callback
     def _async_device_changed(self, *args, **kwargs) -> None:
@@ -189,24 +195,16 @@ class HomematicipGenericEntity(Entity):
     @override
     async def async_will_remove_from_hass(self) -> None:
         """Run when hmip device will be removed from hass."""
+        self._hap.hmip_device_by_entity_id.pop(self.entity_id, None)
 
         # Only go further if the device/entity should be removed from registries
         # due to a removal of the HmIP device.
-
         if self.hmip_device_removed:
-            try:
-                del self._hap.hmip_device_by_entity_id[self.entity_id]
-                self.async_remove_from_registries()
-            except KeyError as err:
-                _LOGGER.debug("Error removing HMIP device from registry: %s", err)
+            self.async_remove_from_registries()
 
     @callback
     def async_remove_from_registries(self) -> None:
         """Remove entity/device from registry."""
-        # Remove callback from device.
-        self._device.remove_callback(self._async_device_changed)
-        self._device.remove_callback(self._async_device_removed)
-
         if not self.registry_entry:
             return
 

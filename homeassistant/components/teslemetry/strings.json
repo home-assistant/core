@@ -52,16 +52,18 @@
         "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
         "entry_not_loaded": "The Teslemetry account must be loaded before setting up local control. Try again once it has finished loading.",
         "no_powerwall": "Local control requires a Powerwall, and no energy site with one is currently accessible on your Teslemetry account.",
+        "powerwall_unreachable": "There is a problem communicating with your Powerwall. Ensure it has a reliable network connection and try again later.",
         "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
       },
-      "entry_type": "Energy site",
+      "entry_type": "Local energy site",
       "error": {
         "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
         "invalid_password": "[%key:common::config_flow::error::invalid_auth%]",
         "key_expired": "The approval window on your Powerwall closed before the key was approved. Submit to open a new window, flick the On/Off switch on your primary Powerwall off and back on to approve it, then submit again.",
         "key_not_approved": "Your Powerwall system rejected Home Assistant's key because it has not been approved. Flick the On/Off switch on your primary Powerwall off and back on to approve it, then submit again.",
         "key_not_registered": "Home Assistant's key is no longer registered on your Powerwall system. Restart setup to register it again.",
-        "key_pending": "Home Assistant's key has not been approved yet. Flick the On/Off switch on your primary Powerwall off and back on to approve it, then submit again."
+        "key_pending": "Home Assistant's key has not been approved yet. Flick the On/Off switch on your primary Powerwall off and back on to approve it, then submit again.",
+        "powerwall_unreachable": "[%key:component::teslemetry::config_subentries::energy_site::abort::powerwall_unreachable%]"
       },
       "initiate_flow": {
         "reconfigure": "Reconfigure energy site",
@@ -91,28 +93,39 @@
     },
     "vehicle": {
       "abort": {
+        "all_vehicles_added": "Every accessible vehicle in your Teslemetry account has already been added as a local vehicle.",
         "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-        "bluetooth_not_available": "At least one Bluetooth adapter or remote Bluetooth proxy must be configured to add a vehicle over Bluetooth.",
+        "bluetooth_not_available": "Adding a vehicle over Bluetooth needs a Bluetooth adapter on the Home Assistant host or a remote Bluetooth proxy that supports active connections, such as an ESPHome Bluetooth proxy. Shelly devices only listen for Bluetooth devices and cannot connect to a vehicle.",
         "entry_not_loaded": "The Teslemetry configuration entry is not loaded. Please ensure it is set up correctly before adding a vehicle.",
-        "no_vehicles": "Every eligible vehicle in your Teslemetry account has already been added over Bluetooth."
+        "no_supported_vehicles": "None of the vehicles left to add support Bluetooth commands. Vehicles without the vehicle command protocol, such as Model S and Model X built before 2021, cannot be added as a local vehicle.",
+        "no_vehicles": "Home Assistant cannot access any vehicles in your Teslemetry account. Check that the vehicle is in your account and that Teslemetry has access to it."
       },
-      "entry_type": "Bluetooth vehicle",
+      "entry_type": "Local vehicle",
       "error": {
+        "auth_not_started": "The vehicle could not start the key card request. Wake the vehicle, then select Submit to try again.",
         "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-        "device_not_found": "No matching Tesla vehicle was found nearby over Bluetooth. Make sure the vehicle is awake and within range, then try again.",
+        "confirm_timeout": "The key was not confirmed on the vehicle's touchscreen in time. Select Submit, tap a key card, then confirm the prompt on the vehicle's touchscreen.",
+        "device_not_found": "No matching Tesla vehicle was found nearby over Bluetooth. Make sure the vehicle is within range of a Bluetooth adapter or proxy, then try again.",
+        "key_load_failed": "The Bluetooth key file {key_file} could not be loaded. Make sure it is a valid private key and that Home Assistant has permission to read it, then try again.",
+        "key_unverified": "The key was added, but the vehicle's reply could not be verified. Select Submit to try again.",
+        "no_connection_slot": "Every Bluetooth adapter or proxy that can reach the vehicle has no free connection slot. Free a connection slot on a Bluetooth proxy, or add another proxy near the vehicle, then try again.",
+        "pair_denied": "The key was declined on the vehicle's touchscreen. Select Submit and tap a key card to try again.",
         "pair_failed": "The vehicle rejected the key. Make sure it is not in valet mode and does not already have the maximum number of keys, then try again.",
-        "timeout": "Timed out waiting for the vehicle to accept the key. Try again after approving the key on the vehicle's touchscreen."
+        "tap_timeout": "The key card was not tapped in time. Select Submit and tap a key card within 30 seconds.",
+        "timeout": "Timed out waiting for the vehicle to add the key. Select Submit and tap a key card on the center console card reader.",
+        "vehicle_busy": "The vehicle is busy and may already have its maximum number of Bluetooth connections. Disconnect other phones or devices from the vehicle, then try again.",
+        "weak_signal": "The vehicle's Bluetooth signal is too weak to connect. Move the vehicle closer to a Bluetooth adapter, or add a Bluetooth proxy near it, then try again."
       },
       "initiate_flow": {
         "user": "Add local vehicle"
       },
       "progress": {
-        "pair": "Approve Home Assistant's virtual key on the vehicle's touchscreen. Waiting for the vehicle to accept the key."
+        "pair": "Tap a key card on the center console card reader now. The vehicle stops waiting after about 30 seconds."
       },
       "step": {
         "instructions": {
-          "description": "Select **Submit**, then place your key card against the center console card reader of vehicle {vin} to approve Home Assistant's virtual key. This only needs to be done once.",
-          "title": "Approve the virtual key"
+          "description": "Vehicle {vin} does not have Home Assistant's Bluetooth key on its key list. This is expected the first time, and happens again if the key was removed from the vehicle. To add it, select **Submit**, then tap a key card on the center console card reader within about 30 seconds. The vehicle's touchscreen shows a prompt while it waits for the card.",
+          "title": "Add Home Assistant's key to the vehicle"
         },
         "scan": {
           "description": "Home Assistant will look for vehicle {vin} over Bluetooth. Make sure the vehicle is within Bluetooth range of a Home Assistant Bluetooth adapter and has fewer than three phone keys in range, then continue.",

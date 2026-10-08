@@ -277,7 +277,7 @@ async def test_light_availability_follows_ir_entity(
     await assert_availability_follows_source_entity(
         hass,
         "light.osram_light",
-        EMITTER_ENTITY_ID,
+        [EMITTER_ENTITY_ID],
     )
 
 

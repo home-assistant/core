@@ -1,7 +1,8 @@
 """Tests for the Habitica calendar platform."""
 
 from collections.abc import Generator
-from unittest.mock import patch
+from datetime import UTC, datetime
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -92,3 +93,34 @@ async def test_api_events(
     )
 
     assert await response.json() == snapshot
+
+
+@pytest.mark.freeze_time("2024-09-25T10:00:00.000Z")
+@pytest.mark.parametrize(
+    ("last_cron", "expected_start"),
+    [
+        pytest.param(
+            # Already September 22 in Berlin, while still September 21 in UTC
+            datetime(2024, 9, 21, 22, 1, 55, tzinfo=UTC),
+            "2024-09-22 00:00:00",
+            id="local_day_of_last_cron",
+        ),
+        pytest.param(None, "2024-09-25 00:00:00", id="no_last_cron"),
+    ],
+)
+async def test_dailies_start_of_today(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    habitica: AsyncMock,
+    last_cron: datetime | None,
+    expected_start: str,
+) -> None:
+    """Test the dailies start on the local day of the last cron, or today without one."""
+    habitica.get_user.return_value.data.lastCron = last_cron
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get("calendar.test_user_dailies"))
+    assert state.attributes["start_time"] == expected_start

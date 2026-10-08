@@ -103,11 +103,11 @@ CONFIG_SCHEMA = probatio.Schema(
                         CONF_DEBUG_UI, DOMAIN, DEBUG_UI_URL_MESSAGE
                     ): cv.boolean,
                     probatio.Inclusive(CONF_USERNAME, _AUTH): probatio.All(
-                        cv.string, probatio.Length(min=1)
+                        cv.string, probatio.NonEmpty()
                     ),
-                    probatio.Inclusive(CONF_PASSWORD, _AUTH): probatio.All(
-                        cv.string, probatio.Length(min=1)
-                    ),
+                    probatio.Inclusive(
+                        probatio.Secret(CONF_PASSWORD), _AUTH
+                    ): probatio.All(cv.string, probatio.NonEmpty()),
                 }
             ),
             _validate_auth,

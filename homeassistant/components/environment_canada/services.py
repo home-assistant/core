@@ -5,6 +5,8 @@ from typing import Any
 from env_canada import ECPrecipForecast, ECWeather
 import probatio
 
+from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
+from homeassistant.components.weather import DOMAIN as WEATHER_DOMAIN
 from homeassistant.const import (
     ATTR_CONFIG_ENTRY_ID,
     CONF_LANGUAGE,
@@ -14,8 +16,16 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, service
+from homeassistant.helpers.service import async_register_platform_entity_service
+from homeassistant.helpers.typing import VolDictType
 
-from .const import DOMAIN
+from .const import DOMAIN, SERVICE_ENVIRONMENT_CANADA_FORECASTS, SERVICE_SET_RADAR_TYPE
+
+SET_RADAR_TYPE_SCHEMA: VolDictType = {
+    probatio.Required("radar_type"): probatio.In(
+        ["Auto", "Rain", "Snow", "Precipitation type"]
+    ),
+}
 
 SERVICE_GET_ALERTS = "get_alerts"
 SERVICE_GET_ALERTS_SCHEMA = probatio.Schema(
@@ -117,5 +127,22 @@ def async_setup_services(hass: HomeAssistant) -> None:
         SERVICE_GET_PRECIPITATION_FORECAST,
         _async_get_precipitation_forecast,
         schema=SERVICE_GET_PRECIPITATION_FORECAST_SCHEMA,
+        supports_response=SupportsResponse.ONLY,
+    )
+    async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        SERVICE_SET_RADAR_TYPE,
+        entity_domain=CAMERA_DOMAIN,
+        func="async_set_radar_type",
+        schema=SET_RADAR_TYPE_SCHEMA,
+    )
+    async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        SERVICE_ENVIRONMENT_CANADA_FORECASTS,
+        entity_domain=WEATHER_DOMAIN,
+        func="_async_environment_canada_forecasts",
+        schema=None,
         supports_response=SupportsResponse.ONLY,
     )

@@ -34,7 +34,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 DATA_SCHEMA = probatio.Schema(
-    {probatio.Required(CONF_API_KEY): str}, extra=probatio.ALLOW_EXTRA
+    {probatio.Required(probatio.Secret(CONF_API_KEY)): str}, extra=probatio.ALLOW_EXTRA
 )
 
 

@@ -180,15 +180,15 @@ CONFIGURATION_URL_PROTOCOL_SCHEMA_LIST = frozenset(
 )
 
 # Home Assistant types
-byte = probatio.All(probatio.Coerce(int), probatio.Range(min=0, max=255))
-small_float = probatio.All(probatio.Coerce(float), probatio.Range(min=0, max=1))
-positive_int = probatio.All(probatio.Coerce(int), probatio.Range(min=0))
-positive_float = probatio.All(probatio.Coerce(float), probatio.Range(min=0))
+byte = probatio.All(probatio.Coerce(int), probatio.Byte())
+small_float = probatio.All(probatio.Coerce(float), probatio.SmallFloat())
+positive_int = probatio.All(probatio.Coerce(int), probatio.NonNegative())
+positive_float = probatio.All(probatio.Coerce(float), probatio.NonNegative())
 latitude = probatio.All(
-    probatio.Coerce(float), probatio.Range(min=-90, max=90), msg="invalid latitude"
+    probatio.Coerce(float), probatio.Latitude(), msg="invalid latitude"
 )
 longitude = probatio.All(
-    probatio.Coerce(float), probatio.Range(min=-180, max=180), msg="invalid longitude"
+    probatio.Coerce(float), probatio.Longitude(), msg="invalid longitude"
 )
 gps = probatio.ExactSequence([latitude, longitude])
 sun_event = probatio.All(

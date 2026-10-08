@@ -99,6 +99,7 @@ PLATFORMS = (
     Platform.DEVICE_TRACKER,
     Platform.EVENT,
     Platform.FAN,
+    Platform.INFRARED,
     Platform.LIGHT,
     Platform.LOCK,
     Platform.NUMBER,

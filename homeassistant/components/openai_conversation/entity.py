@@ -438,6 +438,19 @@ async def _transform_stream(  # noqa: C901 - This is complex, but better to have
                 ]
             }
         elif isinstance(event, ResponseCompletedEvent):
+            if (
+                event.response.output
+                and isinstance(
+                    message := event.response.output[-1], ResponseOutputMessage
+                )
+                and message.status == "completed"
+                and message.content
+                and all(
+                    part.type == "output_text" and part.text == ""
+                    for part in message.content
+                )
+            ):
+                yield {"content": ""}
             if event.response.usage is not None:
                 chat_log.async_trace(
                     {

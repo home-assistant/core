@@ -5,8 +5,12 @@ from contextlib import suppress
 import hashlib
 import re
 import shlex
-from typing import Literal, overload
+from typing import Any, Literal, overload
 
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
+from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import issue_registry as ir
@@ -73,16 +77,38 @@ def _update_issue(
     )
 
 
-@callback
-def async_clear_shell_template_issues(hass: HomeAssistant) -> None:
-    """Delete all shell command template deprecation issues.
+def build_shell_template_issue_id(platform: str, name: str) -> str:
+    """Build the shell command template deprecation issue id for an entity.
 
-    Called on reload so issues for removed or renamed entities are not left
-    stale. Entities that still need one recreate it on their next update.
+    A hash of the raw name is appended because slugify is not injective (e.g.
+    "Test More" and "Test_(More)" both slugify to "test_more"), which would
+    otherwise let one entity clear another's issue. Hashing the name rather than
+    the command keeps the id stable across command edits so following the repair
+    instructions clears it.
+    """
+    name_hash = hashlib.sha256(name.encode()).hexdigest()[:8]
+    return f"{_ISSUE_ID_PREFIX}{platform}_{slugify(name)}_{name_hash}"
+
+
+@callback
+def async_prune_shell_template_issues(
+    hass: HomeAssistant, valid_issue_ids: set[str]
+) -> None:
+    """Delete deprecation issues for entities that no longer exist.
+
+    Called on reload to remove issues left behind by removed or renamed
+    entities. Issues for still-configured entities are kept so a user's decision
+    to ignore an issue survives the reload; each entity refreshes or clears its
+    own issue on its next update. Deleting and later recreating an issue would
+    reset the ignore state, so we never delete an issue we cannot prove is stale.
     """
     registry = ir.async_get(hass)
     for domain, issue_id in list(registry.issues):
-        if domain == DOMAIN and issue_id.startswith(_ISSUE_ID_PREFIX):
+        if (
+            domain == DOMAIN
+            and issue_id.startswith(_ISSUE_ID_PREFIX)
+            and issue_id not in valid_issue_ids
+        ):
             ir.async_delete_issue(hass, DOMAIN, issue_id)
 
 
@@ -240,13 +266,8 @@ def render_template_args(
 
     # Template substitution occurred. Determine the safe execution path.
     # The name makes the issue id unique per entity so two entities that happen
-    # to share a command string get their own issue. A hash of the raw name is
-    # appended because slugify is not injective (e.g. "Test More" and
-    # "Test_(More)" both slugify to "test_more"), which would otherwise let one
-    # entity clear another's issue. Hashing the name rather than the command
-    # keeps the id stable across command edits so the repair instructions clear it.
-    name_hash = hashlib.sha256(name.encode()).hexdigest()[:8]
-    issue_id = f"{_ISSUE_ID_PREFIX}{platform}_{slugify(name)}_{name_hash}"
+    # to share a command string get their own issue.
+    issue_id = build_shell_template_issue_id(platform, name)
 
     # Classify and parse the whole command, not just the rendered args, so shell
     # features and quoting in the executable token are handled too.
@@ -289,3 +310,26 @@ def create_platform_yaml_not_supported_issue(
         learn_more_url="https://www.home-assistant.io/integrations/command_line/",
         logger=LOGGER,
     )
+
+
+def shell_template_issue_ids(
+    command_line_config: list[dict[str, dict[str, Any]]],
+) -> set[str]:
+    """Return the shell template deprecation issue ids for the given config.
+
+    Only sensor, binary_sensor and notify run templated commands and can raise
+    the issue. The name mirrors each platform's setup: sensor and binary_sensor
+    always have a name (schema default), while notify falls back to the
+    integration domain when no name is configured.
+    """
+    issue_ids: set[str] = set()
+    for platform_config in command_line_config:
+        for platform, platform_conf in platform_config.items():
+            if platform == NOTIFY_DOMAIN:
+                name = platform_conf.get(CONF_NAME) or DOMAIN
+            elif platform in (SENSOR_DOMAIN, BINARY_SENSOR_DOMAIN):
+                name = platform_conf[CONF_NAME]
+            else:
+                continue
+            issue_ids.add(build_shell_template_issue_id(platform, name))
+    return issue_ids

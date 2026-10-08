@@ -11,7 +11,7 @@ from ccm15 import (
     CCM15SlaveDevice,
     TriState,
 )
-import httpx
+import httpx2
 
 from homeassistant.components.climate import SWING_ON, HVACMode
 from homeassistant.config_entries import ConfigEntry
@@ -59,7 +59,7 @@ class CCM15Coordinator(DataUpdateCoordinator[CCM15DeviceState]):
         """Fetch data from Rain Bird device."""
         try:
             return await self._fetch_data()
-        except httpx.RequestError as err:  # pragma: no cover
+        except httpx2.RequestError as err:  # pragma: no cover
             raise UpdateFailed("Error communicating with Device") from err
 
     async def _fetch_data(self) -> CCM15DeviceState:

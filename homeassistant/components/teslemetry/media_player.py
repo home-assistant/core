@@ -226,8 +226,8 @@ class TeslemetryStreamingMediaEntity(
             self._attr_media_album_name = state.attributes.get(
                 MediaPlayerEntityStateAttribute.MEDIA_ALBUM_NAME
             )
-            self._attr_media_playlist = state.attributes.get(
-                MediaPlayerEntityStateAttribute.MEDIA_PLAYLIST
+            self._attr_media_channel = state.attributes.get(
+                MediaPlayerEntityStateAttribute.MEDIA_CHANNEL
             )
             self._attr_media_duration = state.attributes.get(
                 MediaPlayerEntityStateAttribute.MEDIA_DURATION

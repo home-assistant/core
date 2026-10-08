@@ -87,7 +87,7 @@ class HitachiAirToAirHeatPumpHLRRWIFI(OverkizEntity, ClimateEntity):
     _attr_preset_modes = [PRESET_NONE, PRESET_HOLIDAY_MODE]
     _attr_swing_modes = [*SWING_MODES_TO_OVERKIZ]
     _attr_target_temperature_step = 1.0
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_translation_key = DOMAIN
 
     def __init__(
@@ -175,7 +175,7 @@ class HitachiAirToAirHeatPumpHLRRWIFI(OverkizEntity, ClimateEntity):
 
     @property
     @override
-    def target_temperature(self) -> int | None:
+    def native_target_temperature(self) -> int | None:
         """Return the temperature."""
         if (
             temperature := self.device.states.get(OverkizState.CORE_TARGET_TEMPERATURE)
@@ -186,7 +186,7 @@ class HitachiAirToAirHeatPumpHLRRWIFI(OverkizEntity, ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> int | None:
+    def native_current_temperature(self) -> int | None:
         """Return current temperature."""
         if (
             state := self.device.states.get(ROOM_TEMPERATURE_STATE)
@@ -259,7 +259,7 @@ class HitachiAirToAirHeatPumpHLRRWIFI(OverkizEntity, ClimateEntity):
         main_operation = self._control_backfill(
             main_operation, MAIN_OPERATION_STATE, OverkizCommandParam.ON
         )
-        target_temperature = target_temperature or self.target_temperature
+        target_temperature = target_temperature or self.native_target_temperature
 
         fan_mode = self._control_backfill(
             fan_mode,

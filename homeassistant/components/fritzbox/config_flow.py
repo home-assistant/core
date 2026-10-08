@@ -38,7 +38,7 @@ DATA_SCHEMA_USER = probatio.Schema(
             config=TextSelectorConfig(type=TextSelectorType.URL)
         ),
         probatio.Required(CONF_USERNAME, default=DEFAULT_USERNAME): str,
-        probatio.Required(CONF_PASSWORD): TextSelector(
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): TextSelector(
             config=TextSelectorConfig(type=TextSelectorType.PASSWORD)
         ),
         probatio.Required(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): bool,
@@ -48,7 +48,7 @@ DATA_SCHEMA_USER = probatio.Schema(
 DATA_SCHEMA_CONFIRM = probatio.Schema(
     {
         probatio.Required(CONF_USERNAME, default=DEFAULT_USERNAME): str,
-        probatio.Required(CONF_PASSWORD): TextSelector(
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): TextSelector(
             config=TextSelectorConfig(type=TextSelectorType.PASSWORD)
         ),
     }
@@ -269,7 +269,7 @@ class FritzboxConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=probatio.Schema(
                 {
                     probatio.Required(CONF_USERNAME, default=self._username): str,
-                    probatio.Required(CONF_PASSWORD): str,
+                    probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
                 }
             ),
             description_placeholders={"name": self._name},

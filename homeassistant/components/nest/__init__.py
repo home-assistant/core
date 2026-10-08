@@ -85,7 +85,7 @@ CONFIG_SCHEMA = probatio.Schema(
         DOMAIN: probatio.Schema(
             {
                 probatio.Required(CONF_CLIENT_ID): cv.string,
-                probatio.Required(CONF_CLIENT_SECRET): cv.string,
+                probatio.Required(probatio.Secret(CONF_CLIENT_SECRET)): cv.string,
                 # Required to use the new API (optional for compatibility)
                 probatio.Optional(CONF_PROJECT_ID): cv.string,
                 probatio.Optional(CONF_SUBSCRIBER_ID): cv.string,
