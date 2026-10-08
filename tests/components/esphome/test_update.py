@@ -98,6 +98,7 @@ async def test_update_entity(
 ) -> None:
     """Test ESPHome update entity."""
     mock_dashboard["configured"] = devices_payload
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
     await async_get_dashboard(hass).async_refresh()
 
     await mock_esphome_device(
@@ -206,6 +207,7 @@ async def test_update_static_info(
             "current_version": "1.2.3",
         },
     ]
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
     await async_get_dashboard(hass).async_refresh()
 
     mock_device = await mock_esphome_device(
@@ -251,6 +253,7 @@ async def test_update_device_state_for_availability(
             "current_version": "1.2.3",
         },
     ]
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
     await async_get_dashboard(hass).async_refresh()
     mock_device = await mock_esphome_device(
         mock_client=mock_client,
@@ -278,6 +281,7 @@ async def test_update_entity_dashboard_not_available_startup(
             side_effect=TimeoutError,
         ),
     ):
+        # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
         await async_get_dashboard(hass).async_refresh()
         await mock_esphome_device(
             mock_client=mock_client,
@@ -294,6 +298,7 @@ async def test_update_entity_dashboard_not_available_startup(
             "configuration": "test.yaml",
         }
     ]
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
     await async_get_dashboard(hass).async_refresh()
     await hass.async_block_till_done()
 
@@ -319,6 +324,7 @@ async def test_update_entity_dashboard_discovered_after_startup_but_update_faile
         "homeassistant.components.esphome.coordinator.ESPHomeDashboardAPI.get_devices",
         side_effect=TimeoutError,
     ):
+        # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
         await async_get_dashboard(hass).async_refresh()
         await hass.async_block_till_done()
         mock_device = await mock_esphome_device(
@@ -338,6 +344,7 @@ async def test_update_entity_dashboard_discovered_after_startup_but_update_faile
         }
     ]
     # Device goes unavailable, and dashboard becomes available
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
     await async_get_dashboard(hass).async_refresh()
     await hass.async_block_till_done()
 
@@ -346,6 +353,7 @@ async def test_update_entity_dashboard_discovered_after_startup_but_update_faile
 
     # Finally both are available
     await mock_device.mock_connect()
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
     await async_get_dashboard(hass).async_refresh()
     await hass.async_block_till_done()
     state = hass.states.get("update.test_firmware")
@@ -389,6 +397,7 @@ async def test_update_becomes_available_at_runtime(
         }
     ]
 
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
     await async_get_dashboard(hass).async_refresh()
     await hass.async_block_till_done()
 
@@ -421,6 +430,7 @@ async def test_update_entity_not_present_with_dashboard_but_unknown_device(
     state = hass.states.get("update.test_firmware")
     assert state is None
 
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
     await async_get_dashboard(hass).async_refresh()
     await hass.async_block_till_done()
 
@@ -767,6 +777,7 @@ async def test_attempt_to_update_twice(
             "configuration": "test.yaml",
         }
     ]
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
     await async_get_dashboard(hass).async_refresh()
     await mock_esphome_device(
         mock_client=mock_client,
@@ -826,6 +837,7 @@ async def test_update_dashboard_with_build_queue_skips_global_lock(
             "configuration": "test.yaml",
         }
     ]
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
     await async_get_dashboard(hass).async_refresh()
     await mock_esphome_device(mock_client=mock_client)
     await hass.async_block_till_done()
@@ -869,6 +881,7 @@ async def test_update_dashboard_without_build_queue_waits_for_global_lock(
             "configuration": "test.yaml",
         }
     ]
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
     await async_get_dashboard(hass).async_refresh()
     await mock_esphome_device(mock_client=mock_client)
     await hass.async_block_till_done()
@@ -918,6 +931,7 @@ async def test_update_deep_sleep_already_online(
             "configuration": "test.yaml",
         }
     ]
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
     await async_get_dashboard(hass).async_refresh()
     await mock_esphome_device(
         mock_client=mock_client,
@@ -960,6 +974,7 @@ async def test_update_deep_sleep_offline(
             "configuration": "test.yaml",
         }
     ]
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
     await async_get_dashboard(hass).async_refresh()
     device = await mock_esphome_device(
         mock_client=mock_client,
@@ -1009,6 +1024,7 @@ async def test_update_deep_sleep_offline_sleep_during_ota(
             "configuration": "test.yaml",
         }
     ]
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
     await async_get_dashboard(hass).async_refresh()
     device = await mock_esphome_device(
         mock_client=mock_client,
@@ -1087,6 +1103,7 @@ async def test_update_deep_sleep_offline_cancelled_unload(
             "configuration": "test.yaml",
         }
     ]
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
     await async_get_dashboard(hass).async_refresh()
     device = await mock_esphome_device(
         mock_client=mock_client,

@@ -25,10 +25,10 @@ from .const import (
 SERVER_CONFIG_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_NAME): cv.string,
-        probatio.Required(CONF_LISTEN_PORT): cv.port,
+        probatio.Required(CONF_LISTEN_PORT): probatio.Port(),
         probatio.Optional(CONF_HOST_IP): cv.string,
         probatio.Optional(CONF_ADVERTISE_IP): cv.string,
-        probatio.Optional(CONF_ADVERTISE_PORT): cv.port,
+        probatio.Optional(CONF_ADVERTISE_PORT): probatio.Port(),
         probatio.Optional(CONF_UPNP_BIND_MULTICAST): cv.boolean,
     }
 )
@@ -38,7 +38,7 @@ CONFIG_SCHEMA = probatio.Schema(
         DOMAIN: probatio.Schema(
             {
                 probatio.Required(CONF_SERVERS): probatio.All(
-                    cv.ensure_list, [SERVER_CONFIG_SCHEMA]
+                    probatio.EnsureList(), [SERVER_CONFIG_SCHEMA]
                 )
             }
         )

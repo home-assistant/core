@@ -234,6 +234,7 @@ async def test_runtime_token_refresh_failures(
 
     # The expired token forces a refresh during the update, hitting our mock.
     coordinator = config_entry.runtime_data
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
     await coordinator.async_refresh()
 
     reauth_flows = [

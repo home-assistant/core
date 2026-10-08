@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock, MagicMock
 
+from lyngdorf import LyngdorfInvalidValueError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -12,6 +13,7 @@ from homeassistant.components.select import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import notify_receiver_update
@@ -109,3 +111,26 @@ async def test_voicing_select_option(
     )
 
     mock_receiver.set_voicing.assert_called_once_with("Movie")
+
+
+async def test_select_invalid_option(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_receiver: MagicMock,
+) -> None:
+    """Test an option the device no longer offers is reported to the user."""
+    mock_receiver.set_voicing.side_effect = LyngdorfInvalidValueError("not valid")
+
+    with pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {ATTR_ENTITY_ID: VOICING_ENTITY_ID, ATTR_OPTION: "Movie"},
+            blocking=True,
+        )
+
+    assert err.value.translation_key == "invalid_option"
+    assert err.value.translation_placeholders == {
+        "option": "Movie",
+        "options": "Neutral, Music, Movie",
+    }

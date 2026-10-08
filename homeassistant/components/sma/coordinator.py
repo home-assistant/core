@@ -15,7 +15,6 @@ from pysma.helpers import DeviceInfo
 from pysma.sensor import Sensors
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -50,11 +49,7 @@ class SMADataUpdateCoordinator(DataUpdateCoordinator[SMACoordinatorData]):
             _LOGGER,
             config_entry=config_entry,
             name=DOMAIN,
-            update_interval=timedelta(
-                seconds=config_entry.options.get(
-                    CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
-                )
-            ),
+            update_interval=timedelta(seconds=DEFAULT_SCAN_INTERVAL),
         )
         self.sma = sma
         self._sma_device_info = DeviceInfo()
@@ -107,5 +102,9 @@ class SMADataUpdateCoordinator(DataUpdateCoordinator[SMACoordinatorData]):
 
     async def async_close_sma_session(self) -> None:
         """Close the SMA session."""
-        await self.sma.close_session()
+        try:
+            await self.sma.close_session()
+        except SmaConnectionException as err:
+            _LOGGER.debug("Could not close the SMA session: %s", err)
+            return
         _LOGGER.debug("SMA session closed")

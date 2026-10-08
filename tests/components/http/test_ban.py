@@ -4,6 +4,7 @@ from http import HTTPStatus
 from ipaddress import ip_address
 import logging
 import os
+from typing import NoReturn
 from unittest.mock import AsyncMock, Mock, mock_open, patch
 
 from aiohttp import web
@@ -460,6 +461,33 @@ async def test_failed_login_attempts_counter(
     resp = await client.get("/auth_false")
     assert resp.status == HTTPStatus.UNAUTHORIZED
     assert app[KEY_FAILED_LOGIN_ATTEMPTS][remote_ip] == 2
+
+
+async def test_failed_login_attempts_counter_reverse_dns_unicode_decode_error(
+    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
+) -> None:
+    """Test a wrong login still gets a 401 if the reverse DNS lookup fails to decode."""
+    app = web.Application()
+    app[KEY_HASS] = hass
+
+    async def unauth_handler(request: web.Request) -> NoReturn:
+        """Return a mock web response."""
+        raise HTTPUnauthorized
+
+    app.router.add_get("/example", unauth_handler)
+    setup_bans(hass, app, 5)
+    remote_ip = ip_address("200.201.202.204")
+    mock_real_ip(app)("200.201.202.204")
+
+    with patch(
+        "homeassistant.components.http.ban.gethostbyaddr",
+        side_effect=UnicodeDecodeError("utf-8", b"\x8a", 0, 1, "invalid start byte"),
+    ):
+        client = await aiohttp_client(app)
+        resp = await client.get("/example")
+
+    assert resp.status == HTTPStatus.UNAUTHORIZED
+    assert app[KEY_FAILED_LOGIN_ATTEMPTS][remote_ip] == 1
 
 
 async def test_single_ban_file_entry(

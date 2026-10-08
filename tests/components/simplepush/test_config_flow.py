@@ -3,7 +3,7 @@
 from unittest.mock import patch
 
 import pytest
-from simplepush import UnknownError
+from simplepush.legacy import UnknownError
 
 from homeassistant import config_entries
 from homeassistant.components.simplepush.const import CONF_DEVICE_KEY, CONF_SALT, DOMAIN

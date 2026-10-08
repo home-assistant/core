@@ -14,7 +14,7 @@ from .const import DOMAIN, LOGGER
 STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_USERNAME): str,
-        probatio.Required(CONF_PASSWORD): str,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
     }
 )
 
@@ -57,7 +57,7 @@ class IntelliClimaConfigFlow(ConfigFlow, domain=DOMAIN):
                 LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                if devices.num_devices == 0:
+                if not devices.ecocomfort2_devices:
                     errors["base"] = "no_devices"
                 else:
                     return self.async_create_entry(

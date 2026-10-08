@@ -38,7 +38,9 @@ from .const import (
     STT_MODELS,
 )
 
-USER_STEP_SCHEMA = probatio.Schema({probatio.Required(CONF_API_KEY): str})
+USER_STEP_SCHEMA = probatio.Schema(
+    {probatio.Required(probatio.Secret(CONF_API_KEY)): str}
+)
 
 
 _LOGGER = logging.getLogger(__name__)

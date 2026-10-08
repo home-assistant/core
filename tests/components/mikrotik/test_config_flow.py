@@ -1,6 +1,6 @@
 """Test Mikrotik setup process."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from librouteros.exceptions import ConnectionClosed, TrapError
 import pytest
@@ -160,6 +160,7 @@ async def test_wrong_credentials(hass: HomeAssistant) -> None:
 async def test_reauth_success(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntryFactory,
+    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test we can reauth."""
     entry = mock_config_entry(data=DEMO_USER_INPUT)
@@ -183,6 +184,9 @@ async def test_reauth_success(
 
     assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"
+
+    await hass.async_block_till_done()
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 @pytest.mark.parametrize("mock_api_error", [AUTH_ERROR], indirect=True)
@@ -251,6 +255,7 @@ RECONFIGURE_INPUT = {
 async def test_reconfigure_success(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntryFactory,
+    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test reconfiguring the integration updates the config entry."""
     entry = mock_config_entry(data=DEMO_USER_INPUT)
@@ -268,6 +273,9 @@ async def test_reconfigure_success(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert entry.data == RECONFIGURE_INPUT
+
+    await hass.async_block_till_done()
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_reconfigure_host_already_configured(
@@ -304,6 +312,7 @@ async def test_reconfigure_host_already_configured(
 async def test_reconfigure_error_recovery(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntryFactory,
+    mock_setup_entry: AsyncMock,
     side_effect: Exception,
     expected_errors: dict[str, str],
 ) -> None:
@@ -331,3 +340,6 @@ async def test_reconfigure_error_recovery(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert entry.data == RECONFIGURE_INPUT
+
+    await hass.async_block_till_done()
+    assert len(mock_setup_entry.mock_calls) == 1

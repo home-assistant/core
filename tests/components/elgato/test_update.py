@@ -285,6 +285,7 @@ async def test_catalog_refresh_during_an_install(
 
     async def install(image: FirmwareImage, **kwargs: Any) -> None:
         """Let Elgato publish something while the device is busy."""
+        # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
         await hass.data[ELGATO_KEY].async_refresh()
         await hass.async_block_till_done()
 
@@ -516,6 +517,7 @@ async def test_install_keeps_the_device_to_itself(
         """Ask for a refresh while the device is busy taking firmware."""
         nonlocal refresh, polls_during_install
         before = mock_elgato.state.call_count
+        # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
         refresh = hass.async_create_task(coordinator.async_refresh())
         for _ in range(5):
             await asyncio.sleep(0)
