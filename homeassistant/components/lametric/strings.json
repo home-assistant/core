@@ -122,6 +122,9 @@
     "communication_error": {
       "message": "Error communicating with the LaMetric device"
     },
+    "invalid_repeat": {
+      "message": "Invalid repeat value: {repeat}. The value must be a non-negative integer."
+    },
     "invalid_response": {
       "message": "Invalid response from the LaMetric device"
     },

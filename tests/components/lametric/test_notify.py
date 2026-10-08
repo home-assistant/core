@@ -122,9 +122,11 @@ async def test_notification_options(
     assert frame.text == "The secret of getting ahead is getting started"
 
 
+@pytest.mark.parametrize("repeat", [0, 3])
 async def test_notification_sound_repeat(
     hass: HomeAssistant,
     mock_lametric: MagicMock,
+    repeat: int,
 ) -> None:
     """Test the sound repeat count is passed to the device."""
     await hass.services.async_call(
@@ -132,7 +134,7 @@ async def test_notification_sound_repeat(
         NOTIFY_SERVICE,
         {
             ATTR_MESSAGE: "Meow!",
-            ATTR_DATA: {"sound": "positive1", "repeat": 3},
+            ATTR_DATA: {"sound": "positive1", "repeat": repeat},
         },
         blocking=True,
     )
@@ -142,7 +144,35 @@ async def test_notification_sound_repeat(
     notification: Notification = mock_lametric.notify.mock_calls[0][2]["notification"]
     assert notification.model.sound is not None
     assert notification.model.sound.sound is NotificationSound.POSITIVE1
-    assert notification.model.sound.repeat == 3
+    assert notification.model.sound.repeat == repeat
+
+
+@pytest.mark.parametrize(
+    "repeat",
+    [
+        pytest.param(None, id="none"),
+        pytest.param("abc", id="string"),
+        pytest.param(-1, id="negative"),
+    ],
+)
+async def test_notification_invalid_repeat(
+    hass: HomeAssistant,
+    mock_lametric: MagicMock,
+    repeat: int | str | None,
+) -> None:
+    """Test an invalid sound repeat count is refused without calling the device."""
+    with pytest.raises(ServiceValidationError, match="Invalid repeat value"):
+        await hass.services.async_call(
+            NOTIFY_DOMAIN,
+            NOTIFY_SERVICE,
+            {
+                ATTR_MESSAGE: "Meow!",
+                ATTR_DATA: {"sound": "positive1", "repeat": repeat},
+            },
+            blocking=True,
+        )
+
+    mock_lametric.notify.assert_not_called()
 
 
 async def test_notification_unknown_sound(
