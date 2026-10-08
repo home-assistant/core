@@ -11,7 +11,7 @@ from homeassistant.components.light import (
     ATTR_COLOR_TEMP_KELVIN,
     DOMAIN as LIGHT_DOMAIN,
 )
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_ON
+from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -91,6 +91,54 @@ async def test_brightness_change(
             LIGHT_DOMAIN,
             SERVICE_TURN_ON,
             {ATTR_ENTITY_ID: "light.dimmable_light", ATTR_BRIGHTNESS: 128},
+            blocking=True,
+        )
+
+    method_mock.assert_called_once()
+    assert mark_mock.call_count == int(api_response)
+
+
+@pytest.mark.parametrize("service", [SERVICE_TURN_ON, SERVICE_TURN_OFF])
+@pytest.mark.parametrize(
+    ("api_response", "expectation"),
+    [
+        (True, nullcontext()),
+        (False, pytest.raises(HomeAssistantError, match="no response found")),
+    ],
+)
+async def test_turn_on_off(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+    service: str,
+    api_response: bool,
+    expectation,
+) -> None:
+    """Test turning a light on or off holds the device on success and raises on failure."""
+    mock_devices_response(aioclient_mock, "Dimmable Light")
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    async def command(device) -> bool:
+        device.last_response = None
+        return api_response
+
+    with (
+        expectation,
+        patch(
+            f"pyvesync.devices.vesyncbulb.VeSyncBulbESL100.{service}",
+            autospec=True,
+            side_effect=command,
+        ) as method_mock,
+        patch(
+            "homeassistant.components.vesync.coordinator.VeSyncDataCoordinator.async_mark_command"
+        ) as mark_mock,
+    ):
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            service,
+            {ATTR_ENTITY_ID: "light.dimmable_light"},
             blocking=True,
         )
 
