@@ -1,12 +1,18 @@
 """Test template entity."""
 
+import asyncio
+from unittest.mock import patch
+
 import pytest
 
 from homeassistant.components.template import template_entity
-from homeassistant.core import HomeAssistant
+from homeassistant.components.template.entity import AbstractTemplateEntity
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er, template
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
+
+from tests.common import async_capture_events
 
 
 async def test_template_entity_requires_hass_set(hass: HomeAssistant) -> None:
@@ -77,8 +83,19 @@ async def test_this_variable_after_entity_id_change(
     assert state.state == "sensor.test"
     assert state.attributes["me"] == "sensor.test"
 
-    entity_registry.async_update_entity("sensor.test", new_entity_id="sensor.renamed")
-    await hass.async_block_till_done()
+    with patch.object(
+        AbstractTemplateEntity,
+        "async_will_remove_from_hass",
+        autospec=True,
+        side_effect=AbstractTemplateEntity.async_will_remove_from_hass,
+    ) as mock_will_remove:
+        entity_registry.async_update_entity(
+            "sensor.test", new_entity_id="sensor.renamed"
+        )
+        await hass.async_block_till_done()
+
+    # The entity_id is changed in place, the entity is not removed and re-added
+    mock_will_remove.assert_not_called()
     hass.bus.async_fire("go")
     await hass.async_block_till_done()
 
@@ -114,11 +131,74 @@ async def test_this_state_after_entity_id_change(
     await hass.async_block_till_done()
     assert hass.states.get("sensor.test").state == "5"
 
-    entity_registry.async_update_entity("sensor.test", new_entity_id="sensor.renamed")
-    await hass.async_block_till_done()
+    with patch.object(
+        AbstractTemplateEntity,
+        "async_will_remove_from_hass",
+        autospec=True,
+        side_effect=AbstractTemplateEntity.async_will_remove_from_hass,
+    ) as mock_will_remove:
+        entity_registry.async_update_entity(
+            "sensor.test", new_entity_id="sensor.renamed"
+        )
+        await hass.async_block_till_done()
 
+    mock_will_remove.assert_not_called()
     # The templates are re-rendered after the state is written under the new id
     assert hass.states.get("sensor.renamed").state == "5"
     hass.states.async_set("sensor.source", "7")
     await hass.async_block_till_done()
     assert hass.states.get("sensor.renamed").state == "7"
+
+
+async def test_running_action_after_entity_id_change(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test a running action continues and its this follows an entity_id change."""
+    running = asyncio.Event()
+
+    @callback
+    def running_cb(event: Event) -> None:
+        running.set()
+
+    hass.bus.async_listen("running", running_cb)
+    events = async_capture_events(hass, "test_event")
+    assert await async_setup_component(
+        hass,
+        "template",
+        {
+            "template": {
+                "button": {
+                    "unique_id": "test",
+                    "name": "test",
+                    "press": [
+                        {"event": "running"},
+                        {"wait_for_trigger": {"trigger": "event", "event_type": "go"}},
+                        {
+                            "event": "test_event",
+                            "event_data": {
+                                "entity_id": "{{ this.entity_id }}",
+                                "state": "{{ this.state }}",
+                            },
+                        },
+                    ],
+                },
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        "button", "press", {"entity_id": "button.test"}, blocking=False
+    )
+    # Can't block till done while the action is waiting
+    await asyncio.wait_for(running.wait(), 1)
+    entity_registry.async_update_entity("button.test", new_entity_id="button.renamed")
+    hass.bus.async_fire("go")
+    await hass.async_block_till_done()
+
+    # The action was not stopped by the entity_id change, and this follows it
+    state = hass.states.get("button.renamed")
+    assert [event.data for event in events] == [
+        {"entity_id": "button.renamed", "state": state.state}
+    ]
+    assert state.state != "unknown"
