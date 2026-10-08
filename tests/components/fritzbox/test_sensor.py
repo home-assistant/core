@@ -189,9 +189,7 @@ async def test_next_change_sensors(
         pytest.param(
             "energy", None, f"{ENTITY_ID}_energy", STATE_UNKNOWN, id="energy_missing"
         ),
-        pytest.param(
-            "energy", 0, f"{ENTITY_ID}_energy", STATE_UNKNOWN, id="energy_zero"
-        ),
+        pytest.param("energy", 0, f"{ENTITY_ID}_energy", "0.0", id="energy_zero"),
     ],
 )
 async def test_powermeter_missing_values(
