@@ -71,9 +71,10 @@ from homeassistant.components.media_player import (
     MediaType,
     RepeatMode,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, EVENT_STATE_CHANGED
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.setup import async_setup_component
 
@@ -118,7 +119,7 @@ from .const import (
     TEST_VOLUME_MUTED_HOME_ASSISTANT_FORMAT,
 )
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_capture_events
 from tests.typing import WebSocketGenerator
 
 
@@ -607,6 +608,48 @@ async def test_async_update_beolink_listener(
     # Secondary entity
     assert (states := hass.states.get(TEST_MEDIA_PLAYER_ENTITY_ID_2))
     assert states == snapshot(exclude=props("media_position_updated_at"))
+
+
+@pytest.mark.usefixtures("integration")
+async def test_group_members_after_entity_id_change(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_mozart_client: AsyncMock,
+) -> None:
+    """Test the own entity_id in group_members follows an entity_id change."""
+    new_entity_id = "media_player.renamed_balance"
+    state_changes = async_capture_events(hass, EVENT_STATE_CHANGED)
+    entity_registry.async_update_entity(
+        TEST_MEDIA_PLAYER_ENTITY_ID, new_entity_id=new_entity_id
+    )
+    await hass.async_block_till_done()
+
+    assert (states := hass.states.get(new_entity_id))
+    assert states.attributes["group_members"] == [
+        new_entity_id,
+        f"listener_not_in_hass-{TEST_JID_3}",
+        f"listener_not_in_hass-{TEST_JID_4}",
+    ]
+    # The state is written once under the new entity_id, already re-keyed
+    assert [
+        (
+            event.data["old_state"],
+            event.data["new_state"].attributes["group_members"],
+        )
+        for event in state_changes
+        if event.data["entity_id"] == new_entity_id
+    ] == [
+        (
+            None,
+            [
+                new_entity_id,
+                f"listener_not_in_hass-{TEST_JID_3}",
+                f"listener_not_in_hass-{TEST_JID_4}",
+            ],
+        )
+    ]
+    # Called during _initialize only, the rename does not query the device
+    assert mock_mozart_client.get_beolink_listeners.call_count == 2
 
 
 async def test_async_update_name_and_beolink(
