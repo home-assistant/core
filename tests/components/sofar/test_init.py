@@ -402,11 +402,13 @@ async def test_setup_while_asleep_reloads_once_the_inverter_answers(
     mock_connection: MockModbusConnection,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test a silent inverter loads without sensors, then sets up in full."""
+    """Test a silent inverter loads unavailable, then sets up in full."""
     await _setup_asleep(hass, mock_connection, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert not hass.states.async_entity_ids(SENSOR_DOMAIN)
+    states = hass.states.async_all()
+    assert len(states) == 36
+    assert {state.state for state in states} == {STATE_UNAVAILABLE}
     assert "inverter is not answering" in caplog.text
 
     mock_connection.for_unit(1).fail_requests(None)
@@ -504,6 +506,24 @@ async def test_setup_retries_on_an_unexpected_error(
     mock_connection.for_unit(1).fail_requests(ValueError("bug"))
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.usefixtures("mock_get_unit")
+async def test_setup_retries_without_the_adapter(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test setup retries when the link itself cannot be opened."""
+    mock_config_entry.add_to_hass(hass)
+    with patch.object(
+        MockModbusConnection,
+        "_connect_client",
+        side_effect=ModbusConnectionError("no adapter"),
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 

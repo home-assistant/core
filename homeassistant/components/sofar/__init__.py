@@ -182,7 +182,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> boo
     try:
         await readings.async_config_entry_first_refresh()
     except ConfigEntryNotReady as err:
-        if not isinstance(err.__cause__, UpdateFailed):
+        # Retry unless the adapter is up and the inverter merely silent.
+        if not link.connected or not isinstance(readings.last_exception, UpdateFailed):
             raise
         answered = False
         _LOGGER.info(
@@ -196,23 +197,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> boo
         # Not tied to a coordinator: identity never changes once read.
         await _async_read_identity(entry, device)
 
-    registry = dr.async_get(hass)
     # Up front: a part's device must name an inverter that has an id.
-    if answered:
-        inverter = registry.async_get_or_create(
-            config_entry_id=entry.entry_id, **readings.device_info
-        )
-    else:
-        inverter = registry.async_get_or_create(
-            config_entry_id=entry.entry_id, identifiers={(DOMAIN, serial)}
-        )
+    inverter = dr.async_get(hass).async_get_or_create(
+        config_entry_id=entry.entry_id, **readings.device_info
+    )
     entry.runtime_data = SofarRuntimeData(readings, settings, inverter.id, link, tuner)
+    _async_remove_denied_meter_energy(
+        hass, serial, entry.runtime_data.served_components
+    )
 
-    if answered:
-        _async_remove_denied_meter_energy(
-            hass, serial, entry.runtime_data.served_components
-        )
-    else:
+    if not answered:
 
         @callback
         def _async_reload_once_answered() -> None:
@@ -250,7 +244,11 @@ async def async_remove_config_entry_device(
         if config_entry.state is ConfigEntryState.LOADED
         else None
     )
-    if runtime_data is not None and not runtime_data.served_components:
+    # Until the inverter first answers, every pack looks unwired.
+    if (
+        runtime_data is not None
+        and not runtime_data.readings.device.readings_components
+    ):
         return False
     packs: set[int] = set()
     for domain, identifier in device_entry.identifiers:

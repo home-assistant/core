@@ -58,6 +58,7 @@ class SofarEntity(CoordinatorEntity[SofarDataUpdateCoordinator]):
     @override
     def available(self) -> bool:
         """Whether this entity's component answered the most recent poll."""
-        if not super().available:
+        # A coordinator that never refreshed still reports success.
+        if not super().available or self.coordinator.data is None:
             return False
         return self.entity_description.component not in self.coordinator.data.failed

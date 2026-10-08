@@ -55,8 +55,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Sofar button platform."""
     runtime_data = entry.runtime_data
-    if not runtime_data.served_components:
-        return
     inverter_type = runtime_data.readings.device.inverter_type
     async_add_entities(
         SofarButton(runtime_data, description)

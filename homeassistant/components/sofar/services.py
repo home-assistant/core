@@ -85,14 +85,7 @@ def _get_entry(
     entry: SofarConfigEntry = async_get_config_entry(
         hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY_ID]
     )
-    served = entry.runtime_data.served_components
-    if not served:
-        # Set up asleep: fail like a write, not as an unsupported action.
-        raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key="write_failed",
-        )
-    if component not in served:
+    if component not in entry.runtime_data.served_components:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="unsupported_action",
