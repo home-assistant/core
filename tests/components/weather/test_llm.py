@@ -624,7 +624,9 @@ async def test_get_forecast_tool_matches_daily_entries_by_entry_own_timezone(
     own local date, which can differ from the date that instant falls on in
     Home Assistant's configured timezone. Re-interpreting the entry's
     calendar date using Home Assistant's timezone instead of the entry's own
-    offset would assign it to the wrong day.
+    offset would assign it to the wrong day, and matching by instant-interval
+    overlap (rather than by date) would wrongly include the adjacent day's
+    entry too.
     """
     await hass.config.async_set_time_zone("UTC")
     entity = await _create_weather_entity(hass, WeatherEntityFeature.FORECAST_DAILY)
@@ -633,6 +635,10 @@ async def test_get_forecast_tool_matches_daily_entries_by_entry_own_timezone(
         # (UTC) timezone this instant falls on 2024-01-15, but the entry's
         # own date is 2024-01-16.
         {"datetime": "2024-01-16T00:00:00+09:00", "condition": "sunny"},
+        # The adjacent day's entry: under UTC interval-overlap math both this
+        # and the entry above would wrongly overlap the UTC "tomorrow"
+        # window, so matching must be restricted to this entry's own date.
+        {"datetime": "2024-01-17T00:00:00+09:00", "condition": "cloudy"},
     ]
     result = weather_llm.async_get_tools(hass, _llm_context(), "assist")
     assert result is not None

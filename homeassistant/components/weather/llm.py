@@ -1,6 +1,6 @@
 """LLM tools for the weather integration."""
 
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from operator import attrgetter
 from typing import cast, override
 
@@ -217,42 +217,39 @@ class GetForecastTool(Tool):
         forecast = entity_response["forecast"]
         duration = FORECAST_TYPE_DURATION[forecast_type]
         matching_forecast: list[Forecast] = []
+        if forecast_type == "daily":
+            # Daily forecasts represent a calendar day, which can't always be
+            # expressed as a literal 24-hour interval: a provider's day can
+            # start at a non-midnight local time (e.g. Google Weather's
+            # daytime entries start at 07:00), and a remote location's own
+            # local date can differ from the date that same instant falls on
+            # in Home Assistant's configured timezone. Match by the entry's
+            # own calendar date against the local calendar dates the window
+            # actually covers, instead of by instant-interval overlap.
+            window_dates = _local_calendar_dates(start, end)
         for index, entry in enumerate(forecast):
             entry_start = _forecast_datetime(entry["datetime"])
             if forecast_type == "daily":
-                # Daily entries aren't guaranteed to start at local midnight
-                # (e.g. Google Weather's daytime entries start at 07:00), so
-                # match by calendar date rather than by the literal
-                # timestamp, or a non-midnight entry would bleed into the
-                # following day's window. Floor using the entry's own tzinfo
-                # rather than Home Assistant's configured timezone: a
-                # forecast for a remote location reports its own local date,
-                # which can differ from the date that instant falls on in
-                # Home Assistant's timezone.
-                match_start = entry_start.replace(
-                    hour=0, minute=0, second=0, microsecond=0
-                )
-                # Apply the duration in local wall-clock time so the end is
-                # the next local midnight, correctly accounting for a DST
-                # change in between.
-                cadence_end = dt_util.as_local(match_start) + duration
+                matched = entry_start.date() in window_dates
             else:
                 # Elapsed-time (not calendar-boundary) cadences must use
                 # absolute time: adding wall-clock time across the autumn
                 # DST transition can span two real elapsed hours (the
                 # repeated 01:00-01:59 hour), overshooting the real end.
-                match_start = entry_start
                 cadence_end = dt_util.as_utc(entry_start) + duration
-            if index + 1 < len(forecast):
-                # Cap at the cadence-derived end in case the provider skipped
-                # an entry, which would otherwise stretch this entry's stale
-                # data across the whole (larger) gap to the next one.
-                entry_end = min(
-                    _forecast_datetime(forecast[index + 1]["datetime"]), cadence_end
-                )
-            else:
-                entry_end = cadence_end
-            if match_start < end and entry_end > start:
+                if index + 1 < len(forecast):
+                    # Cap at the cadence-derived end in case the provider
+                    # skipped an entry, which would otherwise stretch this
+                    # entry's stale data across the whole (larger) gap to
+                    # the next one.
+                    entry_end = min(
+                        _forecast_datetime(forecast[index + 1]["datetime"]),
+                        cadence_end,
+                    )
+                else:
+                    entry_end = cadence_end
+                matched = entry_start < end and entry_end > start
+            if matched:
                 # Normalize to an ISO string: some providers (e.g. IPMA) put a
                 # native datetime object in this field, which isn't JSON-safe.
                 matching_forecast.append({**entry, "datetime": entry_start.isoformat()})
@@ -283,6 +280,17 @@ def _forecast_datetime(value: datetime | str) -> datetime:
     if parsed.tzinfo is None:
         parsed = parsed.replace(tzinfo=dt_util.get_default_time_zone())
     return parsed
+
+
+def _local_calendar_dates(start: datetime, end: datetime) -> set[date]:
+    """Return the local calendar dates the half-open interval [start, end) covers."""
+    dates: set[date] = set()
+    day_start = dt_util.start_of_local_day(dt_util.as_local(start))
+    while day_start < end:
+        if day_start + timedelta(days=1) > start:
+            dates.add(day_start.date())
+        day_start += timedelta(days=1)
+    return dates
 
 
 def _get_forecast_window(period: str) -> tuple[datetime, datetime]:
