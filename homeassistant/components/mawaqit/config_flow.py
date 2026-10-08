@@ -62,6 +62,7 @@ class MawaqitConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             else:
                 self._token = account.api_access_token
+                self._client = self._client.with_options(token=self._token)
                 return await self.async_step_mosques_coordinates()
 
         return self.async_show_form(

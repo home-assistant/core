@@ -41,6 +41,7 @@ def prayer_times() -> PrayerTimes:
 def mock_mawaqit_client(prayer_times: PrayerTimes) -> Generator[MagicMock]:
     """Mock the MAWAQIT client."""
     client = MagicMock()
+    client.with_options.return_value = client
     client.auth.login = AsyncMock(
         return_value=Account(
             id=1, api_access_token=TOKEN, api_quota=None, api_call_number=0

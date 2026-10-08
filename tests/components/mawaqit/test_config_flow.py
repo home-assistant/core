@@ -41,6 +41,7 @@ async def test_full_flow(hass: HomeAssistant, mock_mawaqit_client: MagicMock) ->
     mock_mawaqit_client.auth.login.assert_awaited_once_with(
         email="user@example.com", password="password"
     )
+    mock_mawaqit_client.with_options.assert_called_once_with(token=TOKEN)
     mock_mawaqit_client.mosques.search.assert_awaited_once_with(
         lat=hass.config.latitude, lon=hass.config.longitude
     )
