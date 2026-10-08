@@ -57,7 +57,10 @@ def _get_area_schema(hass: HomeAssistant) -> probatio.Schema:
         {
             # Subentries need a name to be told apart
             # pylint: disable-next=home-assistant-config-flow-name-field
-            probatio.Required(CONF_NAME, default=hass.config.location_name): str,
+            probatio.Required(
+                CONF_NAME,
+                default=f"Open Home Foundation events near {hass.config.location_name}",
+            ): str,
             probatio.Required(
                 CONF_LOCATION,
                 default={
