@@ -55,12 +55,12 @@
       },
       "on_supervisor": {
         "data": {
-          "use_app": "Use the official Music Assistant Supervisor app"
+          "use_app": "Use the official Music Assistant app"
         },
         "data_description": {
           "use_app": "Home Assistant installs and starts the app for you if needed."
         },
-        "description": "Do you want to use the official Music Assistant Supervisor app?\n\nIf you are already running Music Assistant in another app, in a custom container, natively etc., then do not select this option.",
+        "description": "Do you want to use the official Music Assistant app?\n\nIf you are already running Music Assistant in another app, in a custom container, natively etc., then do not select this option.",
         "title": "Select connection method"
       },
       "onboarding": {
