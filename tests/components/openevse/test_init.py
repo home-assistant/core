@@ -1,10 +1,16 @@
 """Tests for the OpenEVSE integration."""
 
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
-from openevsehttp.exceptions import AuthenticationError, MissingSerial
+from openevsehttp.exceptions import (
+    AuthenticationError,
+    MissingSerial,
+    UnsupportedFeature,
+)
 
+from homeassistant.components.openevse.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -97,5 +103,102 @@ async def test_setup_entry_missing_serial(
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
-
     assert mock_config_entry.state is ConfigEntryState.LOADED
+
+
+async def test_sensor_state_change_pushes_data(
+    hass: HomeAssistant,
+    mock_charger: MagicMock,
+) -> None:
+    """Test state changes to configured sensor entities push data to OpenEVSE."""
+    mock_charger.self_production = AsyncMock()
+    mock_charger.grid_voltage = AsyncMock()
+    mock_charger.set_shaper_live_pwr = AsyncMock()
+    mock_charger.soc = AsyncMock()
+    mock_charger.home_battery = AsyncMock()
+
+    config_entry = MockConfigEntry(
+        title="OpenEVSE",
+        domain=DOMAIN,
+        data={CONF_HOST: "192.168.1.100"},
+        entry_id="FAKE",
+        unique_id="deadbeeffeed",
+        options={
+            "grid": "sensor.grid_power",
+            "solar": "sensor.solar_power",
+            "voltage": "sensor.grid_voltage",
+            "shaper": "sensor.shaper_power",
+            "vehicle_soc": "sensor.car_battery",
+            "vehicle_range": "sensor.car_range",
+            "vehicle_eta": "sensor.car_eta",
+            "home_battery_soc": "sensor.home_battery_soc",
+            "home_battery_power": "sensor.home_battery_power",
+            "invert_grid": True,
+        },
+    )
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    # Grid update (with kW conversion and invert)
+    hass.states.async_set("sensor.grid_power", "2.5", {"unit_of_measurement": "kW"})
+    await hass.async_block_till_done()
+    mock_charger.self_production.assert_called_with(grid=2500, solar=None, invert=True)
+
+    # Solar update
+    hass.states.async_set("sensor.solar_power", "1800", {"unit_of_measurement": "W"})
+    await hass.async_block_till_done()
+    mock_charger.self_production.assert_called_with(grid=None, solar=1800, invert=False)
+
+    # Voltage update
+    hass.states.async_set("sensor.grid_voltage", "240.4")
+    await hass.async_block_till_done()
+    mock_charger.grid_voltage.assert_called_with(voltage=240)
+
+    # Shaper power update
+    hass.states.async_set("sensor.shaper_power", "5000", {"unit_of_measurement": "W"})
+    await hass.async_block_till_done()
+    mock_charger.set_shaper_live_pwr.assert_called_with(power=5000)
+
+    # Vehicle SoC update
+    hass.states.async_set("sensor.car_battery", "80")
+    await hass.async_block_till_done()
+    mock_charger.soc.assert_called_with(battery_level=80)
+
+    # Vehicle range update
+    hass.states.async_set("sensor.car_range", "220")
+    await hass.async_block_till_done()
+    mock_charger.soc.assert_called_with(battery_range=220)
+
+    # Vehicle ETA update
+    hass.states.async_set("sensor.car_eta", "3600")
+    await hass.async_block_till_done()
+    mock_charger.soc.assert_called_with(time_to_full=3600)
+
+    # Home battery SoC update
+    hass.states.async_set("sensor.home_battery_soc", "95")
+    await hass.async_block_till_done()
+    mock_charger.home_battery.assert_called_with(soc=95)
+
+    # Home battery power update
+    hass.states.async_set(
+        "sensor.home_battery_power", "3200", {"unit_of_measurement": "W"}
+    )
+    await hass.async_block_till_done()
+    mock_charger.home_battery.assert_called_with(power=3200)
+
+    # Invalid / non-numeric states should not crash
+    hass.states.async_set("sensor.grid_power", "unknown")
+    hass.states.async_set("sensor.grid_voltage", "invalid")
+    await hass.async_block_till_done()
+
+    # UnsupportedFeature and TimeoutError should be caught gracefully
+    mock_charger.soc.side_effect = UnsupportedFeature
+    hass.states.async_set("sensor.car_battery", "85")
+    await hass.async_block_till_done()
+
+    mock_charger.self_production.side_effect = TimeoutError
+    hass.states.async_set("sensor.grid_power", "3000", {"unit_of_measurement": "W"})
+    await hass.async_block_till_done()
