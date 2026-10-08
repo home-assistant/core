@@ -16,7 +16,7 @@ from anthropic import (
 )
 from anthropic.pagination import AsyncPage
 from anthropic.types import ModelInfo
-from httpx import URL, Request, Response
+from httpx2 import URL, Request, Response
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -705,6 +705,7 @@ async def test_invalid_model(
             id="valid-model-4-5",
             created_at=datetime.datetime(1970, 1, 1, tzinfo=datetime.UTC),
             display_name="Valid Model 4-5",
+            lifecycle="active",
         ),
     ):
         options = await hass.config_entries.subentries.async_configure(

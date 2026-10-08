@@ -586,10 +586,10 @@ class FakeLatestMotionService:
         """Register a callback for the given device id."""
         self._event_callbacks[event] = callback
 
-    def subscribe_callback(self, entity_id: str, callback: Any) -> None:
+    def subscribe_callback(self, entity: Any, callback: Any) -> None:
         """No-op: SHCEntity subscribes to every device service's generic callback."""
 
-    def unsubscribe_callback(self, entity_id: str) -> None:
+    def unsubscribe_callback(self, entity: Any) -> None:
         """No-op counterpart to subscribe_callback."""
 
 
@@ -606,10 +606,10 @@ class FakeAlarmService:
         """Register a callback for the given device id."""
         self._event_callbacks[event] = callback
 
-    def subscribe_callback(self, entity_id: str, callback: Any) -> None:
+    def subscribe_callback(self, entity: Any, callback: Any) -> None:
         """No-op: SHCEntity subscribes to every device service's generic callback."""
 
-    def unsubscribe_callback(self, entity_id: str) -> None:
+    def unsubscribe_callback(self, entity: Any) -> None:
         """No-op counterpart to subscribe_callback."""
 
 
@@ -640,6 +640,7 @@ def motion_detector2_device(
     tamper_protection_enabled: bool = False,
     supports_smart_sensitivity: bool = False,
     smart_sensitivity_enabled: bool = False,
+    supports_tamper_reset: bool = True,
     latestmotion: str = "",
     motion_sensitivity: PirSensorConfigurationService.MotionSensitivity
     | None = PirSensorConfigurationService.MotionSensitivity.MIDDLE,
@@ -659,6 +660,7 @@ def motion_detector2_device(
     device.tamper_protection_enabled = tamper_protection_enabled
     device.supports_smart_sensitivity = supports_smart_sensitivity
     device.smart_sensitivity_enabled = smart_sensitivity_enabled
+    device.supports_tamper_reset = supports_tamper_reset
     device.latestmotion = latestmotion
     if motion_sensitivity is None:
         del device.motion_sensitivity

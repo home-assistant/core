@@ -33,6 +33,7 @@ from homeassistant.helpers.selector import (
 )
 
 from .const import (
+    CONF_OUTPUT_MODALITIES,
     CONF_PROMPT,
     CONF_TTS_SPEED,
     CONF_TTS_VOICE,
@@ -51,7 +52,7 @@ class OpenRouterConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for OpenRouter."""
 
     VERSION = 1
-    MINOR_VERSION = 3
+    MINOR_VERSION = 4
 
     @classmethod
     @callback
@@ -282,10 +283,12 @@ class AITaskDataFlowHandler(OpenRouterSubentryFlowHandler):
             return self.async_abort(reason="entry_not_loaded")
 
         if user_input is not None:
+            model = self.models[user_input[CONF_MODEL]]
+            user_input[CONF_OUTPUT_MODALITIES] = [
+                str(modality) for modality in model.architecture.output_modalities
+            ]
             if self._is_new:
-                return self.async_create_entry(
-                    title=self.models[user_input[CONF_MODEL]].name, data=user_input
-                )
+                return self.async_create_entry(title=model.name, data=user_input)
             return self.async_update_and_abort(
                 self._get_entry(),
                 self._get_reconfigure_subentry(),
@@ -330,22 +333,10 @@ class TtsFlowHandler(OpenRouterSubentryFlowHandler):
         super().__init__()
         self.options: dict[str, Any] = {}
 
-    @property
-    def _is_new(self) -> bool:
-        """Return if this is a new subentry."""
-        return self.source == SOURCE_USER
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
         """User flow to create a TTS service."""
-        return await self.async_step_init(user_input)
-
-    async def async_step_reconfigure(
-        self, user_input: dict[str, Any] | None = None
-    ) -> SubentryFlowResult:
-        """Handle reconfiguration of a TTS service."""
-        self.options = self._get_reconfigure_subentry().data.copy()
         return await self.async_step_init(user_input)
 
     async def async_step_init(
@@ -379,17 +370,11 @@ class TtsFlowHandler(OpenRouterSubentryFlowHandler):
             for model in self.models.values()
         ]
 
-        stored_model = self.options.get(CONF_MODEL)
-        if stored_model and any(m["value"] == stored_model for m in models):
-            default_model = stored_model
-        else:
-            default_model = models[0]["value"]
-
         return self.async_show_form(
             step_id="init",
             data_schema=probatio.Schema(
                 {
-                    probatio.Required(CONF_MODEL, default=default_model): (
+                    probatio.Required(CONF_MODEL, default=models[0]["value"]): (
                         SelectSelector(
                             SelectSelectorConfig(
                                 options=models,
@@ -410,30 +395,17 @@ class TtsFlowHandler(OpenRouterSubentryFlowHandler):
             self.options.update(user_input)
             model = self.models.get(self.options[CONF_MODEL])
             title = model.name if model else self.options[CONF_MODEL]
-            if self._is_new:
-                return self.async_create_entry(title=title, data=self.options)
-            return self.async_update_and_abort(
-                self._get_entry(),
-                self._get_reconfigure_subentry(),
-                data=self.options,
-            )
+            return self.async_create_entry(title=title, data=self.options)
 
-        stored_voice = self.options.get(CONF_TTS_VOICE)
         model_voices = self.options.get("supported_voices")
         if model_voices:
             voices = [SelectOptionDict(value=v, label=v) for v in model_voices]
-            default_voice = (
-                stored_voice if stored_voice in model_voices else model_voices[0]
-            )
+            default_voice = model_voices[0]
         else:
             voices = [
                 SelectOptionDict(value=v, label=v.title()) for v in FALLBACK_TTS_VOICES
             ]
-            default_voice = (
-                stored_voice
-                if stored_voice in FALLBACK_TTS_VOICES
-                else RECOMMENDED_TTS_VOICE
-            )
+            default_voice = RECOMMENDED_TTS_VOICE
 
         return self.async_show_form(
             step_id="voice",
@@ -449,7 +421,7 @@ class TtsFlowHandler(OpenRouterSubentryFlowHandler):
                     ),
                     probatio.Optional(
                         CONF_TTS_SPEED,
-                        default=self.options.get(CONF_TTS_SPEED, RECOMMENDED_TTS_SPEED),
+                        default=RECOMMENDED_TTS_SPEED,
                     ): probatio.All(
                         probatio.Coerce(float), probatio.Range(min=0.25, max=4.0)
                     ),

@@ -12,6 +12,7 @@ CONF_RECOMMENDED = "recommended"
 CONF_TTS_SPEED = "tts_speed"
 CONF_TTS_VOICE = "tts_voice"
 CONF_WEB_SEARCH = "web_search"
+CONF_OUTPUT_MODALITIES = "output_modalities"
 
 RECOMMENDED_TTS_SPEED = 1.0
 RECOMMENDED_TTS_VOICE = "alloy"

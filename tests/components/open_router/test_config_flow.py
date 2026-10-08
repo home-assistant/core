@@ -6,13 +6,14 @@ import pytest
 from python_open_router import OpenRouterError
 
 from homeassistant.components.open_router.const import (
+    CONF_OUTPUT_MODALITIES,
     CONF_PROMPT,
     CONF_TTS_SPEED,
     CONF_TTS_VOICE,
     CONF_WEB_SEARCH,
     DOMAIN,
 )
-from homeassistant.config_entries import SOURCE_USER, ConfigSubentryData
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_MODEL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -152,6 +153,10 @@ async def test_create_conversation_agent(
     assert result["data_schema"].schema["model"].config["options"] == [
         {"value": "openai/gpt-3.5-turbo", "label": "OpenAI: GPT-3.5 Turbo"},
         {"value": "openai/gpt-4", "label": "OpenAI: GPT-4"},
+        {
+            "value": "google/gemini-2.5-flash-image",
+            "label": "Google: Gemini 2.5 Flash Image",
+        },
     ]
 
     result = await hass.config_entries.subentries.async_configure(
@@ -193,6 +198,10 @@ async def test_create_conversation_agent_no_control(
     assert result["data_schema"].schema["model"].config["options"] == [
         {"value": "openai/gpt-3.5-turbo", "label": "OpenAI: GPT-3.5 Turbo"},
         {"value": "openai/gpt-4", "label": "OpenAI: GPT-4"},
+        {
+            "value": "google/gemini-2.5-flash-image",
+            "label": "Google: Gemini 2.5 Flash Image",
+        },
     ]
 
     result = await hass.config_entries.subentries.async_configure(
@@ -214,13 +223,22 @@ async def test_create_conversation_agent_no_control(
     }
 
 
+@pytest.mark.parametrize(
+    ("model", "expected_modalities"),
+    [
+        ("openai/gpt-4", ["text"]),
+        ("google/gemini-2.5-flash-image", ["text", "image"]),
+    ],
+)
 async def test_create_ai_task(
     hass: HomeAssistant,
     mock_open_router_client: AsyncMock,
     mock_openai_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    model: str,
+    expected_modalities: list[str],
 ) -> None:
-    """Test creating an AI Task."""
+    """Test creating an AI Task stores the model output modalities."""
     await setup_integration(hass, mock_config_entry)
 
     result = await hass.config_entries.subentries.async_init(
@@ -233,15 +251,22 @@ async def test_create_ai_task(
 
     assert result["data_schema"].schema["model"].config["options"] == [
         {"value": "openai/gpt-4", "label": "OpenAI: GPT-4"},
+        {
+            "value": "google/gemini-2.5-flash-image",
+            "label": "Google: Gemini 2.5 Flash Image",
+        },
     ]
 
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
-        {CONF_MODEL: "openai/gpt-4"},
+        {CONF_MODEL: model},
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"] == {CONF_MODEL: "openai/gpt-4"}
+    assert result["data"] == {
+        CONF_MODEL: model,
+        CONF_OUTPUT_MODALITIES: expected_modalities,
+    }
 
 
 @pytest.mark.parametrize(
@@ -373,63 +398,22 @@ async def test_create_tts_service_fallback_voices(
     }
 
 
-@pytest.mark.usefixtures("mock_openai_client")
-async def test_reconfigure_tts_service(
+async def test_tts_entry_not_loaded(
     hass: HomeAssistant,
     mock_open_router_client: AsyncMock,
+    mock_openai_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test reconfiguring a TTS service, including the voice step."""
-    entry = MockConfigEntry(
-        title="OpenRouter",
-        domain=DOMAIN,
-        data={CONF_API_KEY: "bla"},
-        subentries_data=[
-            ConfigSubentryData(
-                data={
-                    CONF_MODEL: "openai/gpt-4o-mini-tts",
-                    "supported_voices": ["alloy", "echo"],
-                    CONF_TTS_VOICE: "alloy",
-                    CONF_TTS_SPEED: 1.0,
-                },
-                subentry_id="TTSSUB",
-                subentry_type="tts",
-                title="GPT-4o mini TTS",
-                unique_id=None,
-            ),
-        ],
+    """Test creating a TTS service while the entry is not loaded aborts."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, "tts"),
+        context={"source": SOURCE_USER},
     )
-    await setup_integration(hass, entry)
 
-    tts_model = MagicMock()
-    tts_model.id = "openai/gpt-4o-mini-tts"
-    tts_model.name = "GPT-4o mini TTS"
-    tts_model.supported_voices = ["alloy", "echo"]
-    mock_open_router_client.get_models.return_value = [tts_model]
-
-    result = await entry.start_subentry_reconfigure_flow(hass, "TTSSUB")
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "init"
-    # The stored model is offered as the default on reconfigure.
-    model_key = next(k for k in result["data_schema"].schema if k == CONF_MODEL)
-    assert model_key.default() == "openai/gpt-4o-mini-tts"
-
-    result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"],
-        {CONF_MODEL: "openai/gpt-4o-mini-tts"},
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "voice"
-
-    result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"],
-        {CONF_TTS_VOICE: "echo", CONF_TTS_SPEED: 1.5},
-    )
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reconfigure_successful"
-
-    subentry = entry.subentries["TTSSUB"]
-    assert subentry.data[CONF_TTS_VOICE] == "echo"
-    assert subentry.data[CONF_TTS_SPEED] == 1.5
+    assert result["reason"] == "entry_not_loaded"
 
 
 @pytest.mark.usefixtures("mock_openai_client")
@@ -550,10 +534,14 @@ async def test_reconfigure_ai_task(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
 
+    subentry = mock_config_entry.subentries[subentry_id]
+    assert subentry.data[CONF_MODEL] == "openai/gpt-4"
+    assert subentry.data[CONF_OUTPUT_MODALITIES] == ["text"]
+
 
 @pytest.mark.parametrize(
     "subentry_type",
-    ["conversation", "ai_task_data", "tts"],
+    ["conversation", "ai_task_data"],
 )
 async def test_reconfigure_entry_not_loaded(
     hass: HomeAssistant,

@@ -77,7 +77,6 @@
       },
       "entry_type": "Text-to-speech",
       "initiate_flow": {
-        "reconfigure": "Reconfigure text-to-speech service",
         "user": "Add text-to-speech service"
       },
       "step": {
