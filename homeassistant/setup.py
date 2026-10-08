@@ -5,10 +5,11 @@ from collections import defaultdict
 from collections.abc import Awaitable, Callable, Generator, Mapping
 import contextlib
 import contextvars
-from dataclasses import dataclass, field
 from enum import StrEnum
 from functools import partial
 import logging.handlers
+import math
+from operator import itemgetter
 import time
 from types import ModuleType
 from typing import Any, Final, TypedDict
@@ -71,16 +72,16 @@ _DATA_SETUP_TIME: HassKey[
     defaultdict[str, defaultdict[str | None, defaultdict[SetupPhases, float]]]
 ] = HassKey("setup_time")
 
-# _DATA_SETUP_MEASUREMENTS is a dict, holding the waits of each setup
-# that is currently being timed.
-_DATA_SETUP_MEASUREMENTS: HassKey[dict[tuple[str, str | None], _SetupMeasurement]] = (
-    HassKey("setup_measurements")
-)
+# _DATA_SETUP_WAITS is a dict, holding the phase, start and end of each
+# finished wait for every setup that is currently being timed.
+_DATA_SETUP_WAITS: HassKey[
+    dict[tuple[str, str | None], list[tuple[SetupPhases, float, float]]]
+] = HassKey("setup_waits")
 
-# _DATA_SETUP_KEPT_WAITS is a dict, holding the waits of the setup whose
-# time is kept in _DATA_SETUP_TIME for each integration, group and phase.
+# _DATA_SETUP_KEPT_WAITS is a dict, holding for each setup group the waits
+# of the setup whose time is kept in _DATA_SETUP_TIME for each phase.
 _DATA_SETUP_KEPT_WAITS: HassKey[
-    dict[tuple[str, str | None, SetupPhases], dict[SetupPhases, float]]
+    dict[tuple[str, str | None], dict[SetupPhases, dict[SetupPhases, float]]]
 ] = HassKey("setup_kept_waits")
 
 _DATA_DEPS_REQS: HassKey[set[str]] = HassKey("deps_reqs_processed")
@@ -697,17 +698,6 @@ class SetupPhases(StrEnum):
     """Wait time for the packages to import."""
 
 
-@dataclass(slots=True)
-class _SetupMeasurement:
-    """Waits of a setup that is being timed."""
-
-    waits: defaultdict[SetupPhases, float] = field(
-        default_factory=lambda: defaultdict(float)
-    )
-    waiting: int = 0
-    wait_started: float = 0.0
-
-
 @singleton.singleton(_DATA_SETUP_STARTED)
 def _setup_started(
     hass: core.HomeAssistant,
@@ -724,8 +714,9 @@ def async_pause_setup(hass: core.HomeAssistant, phase: SetupPhases) -> Generator
     setting up the base components so we can subtract it
     from the total setup time.
     """
-    if not (running := current_setup_group.get()) or not (
-        measurement := _setup_measurements(hass).get(running)
+    if (
+        not (running := current_setup_group.get())
+        or (waits := _setup_waits(hass).get(running)) is None
     ):
         # This means we are likely in a late platform setup
         # that is running in a task so we do not want
@@ -734,40 +725,47 @@ def async_pause_setup(hass: core.HomeAssistant, phase: SetupPhases) -> Generator
         yield
         return
 
-    if not measurement.waiting:
-        measurement.wait_started = time.monotonic()
-    measurement.waiting += 1
+    started = time.monotonic()
     try:
         yield
     finally:
-        measurement.waiting -= 1
-        # Waits that overlap block the setup once, so the time is
-        # counted when the last of them finishes
-        if not measurement.waiting:
-            time_taken = time.monotonic() - measurement.wait_started
-            measurement.waits[phase] += time_taken
-            integration, group = running
-            _LOGGER.debug(
-                "Adding wait for %s for %s (%s) of %.2f",
-                phase,
-                integration,
-                group,
-                time_taken,
-            )
+        ended = time.monotonic()
+        waits.append((phase, started, ended))
+        integration, group = running
+        _LOGGER.debug(
+            "Adding wait for %s for %s (%s) of %.2f",
+            phase,
+            integration,
+            group,
+            ended - started,
+        )
 
 
-@singleton.singleton(_DATA_SETUP_MEASUREMENTS)
-def _setup_measurements(
+def _merge_waits(
+    waits: list[tuple[SetupPhases, float, float]],
+) -> dict[SetupPhases, float]:
+    """Return the time waited for each phase, counting overlapping waits once."""
+    merged: defaultdict[SetupPhases, float] = defaultdict(float)
+    waited_until = -math.inf
+    for phase, started, ended in sorted(waits, key=itemgetter(1)):
+        if ended > waited_until:
+            merged[phase] += ended - max(started, waited_until)
+            waited_until = ended
+    return dict(merged)
+
+
+@singleton.singleton(_DATA_SETUP_WAITS)
+def _setup_waits(
     hass: core.HomeAssistant,
-) -> dict[tuple[str, str | None], _SetupMeasurement]:
-    """Return the setups being timed dict."""
+) -> dict[tuple[str, str | None], list[tuple[SetupPhases, float, float]]]:
+    """Return the finished waits of the setups being timed dict."""
     return {}
 
 
 @singleton.singleton(_DATA_SETUP_KEPT_WAITS)
 def _setup_kept_waits(
     hass: core.HomeAssistant,
-) -> dict[tuple[str, str | None, SetupPhases], dict[SetupPhases, float]]:
+) -> dict[tuple[str, str | None], dict[SetupPhases, dict[SetupPhases, float]]]:
     """Return the waits of the kept setup times dict."""
     return {}
 
@@ -816,33 +814,39 @@ def async_start_setup(
     started = time.monotonic()
     current_setup_group.set(current)
     setup_started[current] = started
-    measurements = _setup_measurements(hass)
-    measurement = measurements[current] = _SetupMeasurement()
+    setup_waits = _setup_waits(hass)
+    setup_waits[current] = []
 
     try:
         yield
     finally:
         time_taken = time.monotonic() - started
         del setup_started[current]
-        del measurements[current]
-        wait_time = sum(measurement.waits.values())
+        # Waits still running in tasks did not block this setup
+        waits = _merge_waits(setup_waits.pop(current))
+        wait_time = sum(waits.values())
         group_setup_times = _setup_times(hass)[integration][group]
-        kept_waits = _setup_kept_waits(hass)
-        kept_key = (integration, group, phase)
+        group_kept_waits = _setup_kept_waits(hass).setdefault(current, {})
         # We may see the phase multiple times if there are multiple
         # platforms, but we only care about the longest time. The waits
         # are kept with the time they belong to so they are not
         # subtracted from a different setup of the phase.
-        kept = kept_waits.get(kept_key)
+        kept = group_kept_waits.get(phase)
         if kept is None or time_taken - wait_time > group_setup_times[phase] - sum(
             kept.values()
         ):
             group_setup_times[phase] = time_taken
-            for wait_phase, kept_wait in (kept or {}).items():
-                group_setup_times[wait_phase] += kept_wait
-            for wait_phase, wait in measurement.waits.items():
-                group_setup_times[wait_phase] -= wait
-            kept_waits[kept_key] = measurement.waits
+            group_kept_waits[phase] = waits
+            for wait_phase in waits.keys() | (kept or {}).keys():
+                if phase_waits := [
+                    kept_phase_waits[wait_phase]
+                    for kept_phase_waits in group_kept_waits.values()
+                    if wait_phase in kept_phase_waits
+                ]:
+                    # Add negative time for the time we waited
+                    group_setup_times[wait_phase] = -sum(phase_waits)
+                else:
+                    group_setup_times.pop(wait_phase, None)
         if group is None:
             _LOGGER.info(
                 "Setup of domain %s took %.2f seconds", integration, time_taken

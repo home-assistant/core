@@ -1279,7 +1279,8 @@ async def test_async_start_setup_config_entry_overlapping_waits(
     # The two waits overlap for 30 seconds of the 50 spent waiting
     assert setup_time["august"] == {
         "entry_id": {
-            setup.SetupPhases.WAIT_IMPORT_PLATFORMS: -50.0,
+            setup.SetupPhases.WAIT_BASE_PLATFORM_SETUP: -30.0,
+            setup.SetupPhases.WAIT_IMPORT_PLATFORMS: -20.0,
             setup.SetupPhases.CONFIG_ENTRY_SETUP: 60.0,
         },
     }
@@ -1345,6 +1346,87 @@ async def test_async_start_setup_repeated_phase_waits(
 
     assert setup_time["august"] == {"entry_id": expected_times}
     assert setup.async_get_setup_timings(hass) == {"august": expected_timing}
+
+
+async def test_async_start_setup_wait_finishing_after_setup(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test a wait finishing after its setup is timed does not change the times."""
+    hass.set_state(CoreState.not_running)
+    setup_time = setup._setup_times(hass)
+    waiting = asyncio.Event()
+    release = asyncio.Event()
+
+    async def late_wait() -> None:
+        with setup.async_pause_setup(hass, setup.SetupPhases.WAIT_BASE_PLATFORM_SETUP):
+            waiting.set()
+            await release.wait()
+            freezer.tick(10)
+
+    with setup.async_start_setup(
+        hass,
+        integration="august",
+        group="entry_id",
+        phase=setup.SetupPhases.CONFIG_ENTRY_PLATFORM_SETUP,
+    ):
+        task = asyncio.create_task(late_wait())
+        await waiting.wait()
+        freezer.tick(1)
+
+    # The wait started during the first setup but finishes after it
+    release.set()
+    await task
+
+    with setup.async_start_setup(
+        hass,
+        integration="august",
+        group="entry_id",
+        phase=setup.SetupPhases.CONFIG_ENTRY_PLATFORM_SETUP,
+    ):
+        freezer.tick(5)
+
+    assert setup_time["august"] == {
+        "entry_id": {setup.SetupPhases.CONFIG_ENTRY_PLATFORM_SETUP: 5.0},
+    }
+    assert setup.async_get_setup_timings(hass) == {"august": 5.0}
+
+
+async def test_async_start_setup_wait_overlapping_unfinished_wait(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test a wait is subtracted when it overlaps a wait still running in a task."""
+    hass.set_state(CoreState.not_running)
+    setup_time = setup._setup_times(hass)
+    waiting = asyncio.Event()
+    release = asyncio.Event()
+
+    async def unawaited_wait() -> None:
+        with setup.async_pause_setup(hass, setup.SetupPhases.WAIT_BASE_PLATFORM_SETUP):
+            waiting.set()
+            await release.wait()
+
+    with setup.async_start_setup(
+        hass,
+        integration="august",
+        group="entry_id",
+        phase=setup.SetupPhases.CONFIG_ENTRY_SETUP,
+    ):
+        task = asyncio.create_task(unawaited_wait())
+        await waiting.wait()
+        with setup.async_pause_setup(hass, setup.SetupPhases.WAIT_IMPORT_PLATFORMS):
+            freezer.tick(100)
+        freezer.tick(1)
+
+    release.set()
+    await task
+
+    assert setup_time["august"] == {
+        "entry_id": {
+            setup.SetupPhases.WAIT_IMPORT_PLATFORMS: -100.0,
+            setup.SetupPhases.CONFIG_ENTRY_SETUP: 101.0,
+        },
+    }
+    assert setup.async_get_setup_timings(hass) == {"august": 1.0}
 
 
 async def test_async_start_setup_top_level_yaml(hass: HomeAssistant) -> None:
