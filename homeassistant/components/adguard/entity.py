@@ -2,7 +2,7 @@
 
 from typing import override
 
-from adguardhome import AdGuardHomeError
+from adguardhome import AdGuardHomeAuthenticationError, AdGuardHomeError
 
 from homeassistant.config_entries import SOURCE_HASSIO
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL
@@ -37,6 +37,11 @@ class AdGuardHomeEntity(Entity):
         try:
             await self._adguard_update()
             self._attr_available = True
+        except AdGuardHomeAuthenticationError:
+            # The credentials stopped working, like after a password change in
+            # AdGuard Home. Ask for new ones; Home Assistant only starts one flow.
+            self._attr_available = False
+            self._entry.async_start_reauth(self.hass)
         except AdGuardHomeError:
             if self._attr_available:
                 LOGGER.debug(

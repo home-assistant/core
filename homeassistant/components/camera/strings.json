@@ -44,6 +44,9 @@
     "snapshot_timeout": {
       "message": "Unable to get snapshot: timed out after {timeout} seconds."
     },
+    "stream_not_supported": {
+      "message": "Camera {entity_id} does not support streaming."
+    },
     "write_failed": {
       "message": "Cannot write image to {filename}."
     },

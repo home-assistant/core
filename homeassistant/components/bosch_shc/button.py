@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, override
 
-from boschshcpy import SHCSmokeDetector
+from boschshcpy import SHCMotionDetector2, SHCSmokeDetector
 from boschshcpy.device import SHCDevice
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
@@ -32,6 +32,13 @@ SMOKE_TEST_DESCRIPTION = SHCButtonEntityDescription[SHCSmokeDetector](
     press_fn=lambda device: device.smoketest_requested(),
 )
 
+TAMPER_RESET_DESCRIPTION = SHCButtonEntityDescription[SHCMotionDetector2](
+    key="reset_tamper",
+    translation_key="reset_tamper",
+    entity_category=EntityCategory.DIAGNOSTIC,
+    press_fn=lambda device: device.reset_tampered_state(),
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -54,6 +61,17 @@ async def async_setup_entry(
             description=SMOKE_TEST_DESCRIPTION,
         )
         for device in session.device_helper.smoke_detectors
+    )
+    async_add_entities(
+        SHCButton(
+            hass=hass,
+            device=device,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            description=TAMPER_RESET_DESCRIPTION,
+        )
+        for device in session.device_helper.motion_detectors2
+        if device.supports_tamper_reset
     )
 
 

@@ -334,6 +334,9 @@
       "sensitivity": {
         "default": "mdi:walk"
       },
+      "signal_quality": {
+        "default": "mdi:signal"
+      },
       "storage_utilization": {
         "default": "mdi:harddisk"
       },

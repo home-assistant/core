@@ -1,24 +1,37 @@
 """Test Home Assistant Cast."""
 
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
-from homeassistant.components.cast import DOMAIN, home_assistant_cast
+from homeassistant.components.cast import DOMAIN, CastRuntimeData, home_assistant_cast
+from homeassistant.components.cast.const import SIGNAL_HASS_CAST_SHOW_VIEW
+from homeassistant.components.cast.services import async_setup_services
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.core_config import async_process_ha_core_config
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 from tests.common import MockConfigEntry, async_mock_signal
+
+
+async def _async_setup_ha_cast(hass: HomeAssistant) -> None:
+    """Set up Home Assistant Cast on a loaded config entry."""
+    entry = MockConfigEntry(domain=DOMAIN)
+    entry.add_to_hass(hass)
+    entry.runtime_data = CastRuntimeData(
+        cast_platforms=MagicMock(),
+        refresh_token=await home_assistant_cast.async_setup_ha_cast(hass, entry),
+    )
+    entry.mock_state(hass, ConfigEntryState.LOADED)
+    async_setup_services(hass)
 
 
 @pytest.mark.usefixtures("mock_zeroconf")
 async def test_service_show_view(hass: HomeAssistant) -> None:
     """Test showing a view."""
-    entry = MockConfigEntry(domain=DOMAIN)
-    entry.add_to_hass(hass)
-    await home_assistant_cast.async_setup_ha_cast(hass, entry)
-    calls = async_mock_signal(hass, home_assistant_cast.SIGNAL_HASS_CAST_SHOW_VIEW)
+    await _async_setup_ha_cast(hass)
+    calls = async_mock_signal(hass, SIGNAL_HASS_CAST_SHOW_VIEW)
 
     # No valid URL
     with pytest.raises(HomeAssistantError):
@@ -59,10 +72,8 @@ async def test_service_show_view_dashboard(hass: HomeAssistant) -> None:
         hass,
         {"external_url": "https://example.com"},
     )
-    entry = MockConfigEntry(domain=DOMAIN)
-    entry.add_to_hass(hass)
-    await home_assistant_cast.async_setup_ha_cast(hass, entry)
-    calls = async_mock_signal(hass, home_assistant_cast.SIGNAL_HASS_CAST_SHOW_VIEW)
+    await _async_setup_ha_cast(hass)
+    calls = async_mock_signal(hass, SIGNAL_HASS_CAST_SHOW_VIEW)
 
     await hass.services.async_call(
         DOMAIN,
@@ -91,10 +102,8 @@ async def test_use_cloud_url(hass: HomeAssistant) -> None:
     )
     hass.config.components.add("cloud")
 
-    entry = MockConfigEntry(domain=DOMAIN)
-    entry.add_to_hass(hass)
-    await home_assistant_cast.async_setup_ha_cast(hass, entry)
-    calls = async_mock_signal(hass, home_assistant_cast.SIGNAL_HASS_CAST_SHOW_VIEW)
+    await _async_setup_ha_cast(hass)
+    calls = async_mock_signal(hass, SIGNAL_HASS_CAST_SHOW_VIEW)
 
     with patch(
         "homeassistant.components.cloud.async_remote_ui_url",
@@ -136,3 +145,16 @@ async def test_remove_entry(hass: HomeAssistant) -> None:
 
     assert await hass.config_entries.async_remove(entry.entry_id)
     assert not await hass.auth.async_get_user(user_id)
+
+
+async def test_service_show_view_not_loaded(hass: HomeAssistant) -> None:
+    """Test showing a view without a loaded config entry."""
+    async_setup_services(hass)
+
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            DOMAIN,
+            "show_lovelace_view",
+            {"entity_id": "media_player.kitchen", "view_path": "mock_path"},
+            blocking=True,
+        )

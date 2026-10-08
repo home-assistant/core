@@ -124,8 +124,7 @@ async def test_select_setup_light(
 ) -> None:
     """Test select entity setup for light devices."""
 
-    light.light_mode_settings.enable_at = LightModeEnableType.DARK
-    setup_public_light(ufp)
+    setup_public_light(ufp, light_mode_enable_at=LightModeEnableType.DARK)
     await init_entry(hass, ufp, [light])
     assert_entity_counts(hass, Platform.SELECT, 2, 2)
 

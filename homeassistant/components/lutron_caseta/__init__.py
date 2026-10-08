@@ -438,7 +438,10 @@ def async_get_lip_button(device_type: str, leap_button: int) -> int | None:
         leap_button_num_to_name := LEAP_TO_DEVICE_TYPE_SUBTYPE_MAP.get(device_type)
     ) is None:
         return None
-    return lip_buttons_name_to_num[leap_button_num_to_name[leap_button]]
+    # Some devices report button numbers their mapping doesn't list
+    if (button_name := leap_button_num_to_name.get(leap_button)) is None:
+        return None
+    return lip_buttons_name_to_num.get(button_name)
 
 
 @callback
@@ -473,7 +476,7 @@ def _async_subscribe_keypad_events(
         lip_button_number = async_get_lip_button(keypad_type, leap_button_number)
         button_type = LEAP_TO_DEVICE_TYPE_SUBTYPE_MAP.get(
             keypad_type, leap_to_keypad_button_names[keypad_device_id]
-        )[leap_button_number]
+        ).get(leap_button_number)
 
         hass.bus.async_fire(
             LUTRON_CASETA_BUTTON_EVENT,
