@@ -20,19 +20,18 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from tests.common import MockConfigEntry
 
 MSERV_MAC = "47846"
-HUB_IDENTIFIER = (DOMAIN, MSERV_MAC)
 MSENS_MAC = 0xCB8F
 MSENS_FALLBACK_NAME = "Ampio module 0xCB8F"
 
 
 def module_identifier(mac: int) -> tuple[str, str]:
     """The registry identifier of the module device on ``mac``."""
-    return (DOMAIN, f"{MSERV_MAC}:{mac}")
+    return (DOMAIN, f"module:0x{mac:X}")
 
 
 def object_unique_id(oid: int) -> str:
     """The unique id of the entity built from object ``oid``."""
-    return f"{MSERV_MAC}_obj_{oid}"
+    return f"obj_{oid}"
 
 
 MSENS_IDENTIFIER = module_identifier(MSENS_MAC)

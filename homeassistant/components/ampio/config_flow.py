@@ -53,7 +53,7 @@ class AmpioConfigFlow(ConfigFlow, domain=DOMAIN):
                     errors[CONF_USERNAME] = "admin_login_name"
                 else:
                     await self.async_set_unique_id(info.server_key)
-                    self._abort_if_unique_id_configured(updates=user_input)
+                    self._abort_if_unique_id_configured()
                     return self.async_create_entry(
                         title=user_input[CONF_HOST], data=user_input
                     )

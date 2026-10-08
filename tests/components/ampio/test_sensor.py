@@ -14,7 +14,7 @@ from ampio_mqtt import (
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.ampio.const import DOMAIN
+from homeassistant.components.ampio.const import DOMAIN, HUB_IDENTIFIER
 from homeassistant.components.ampio.sensor import SENSOR_DESCRIPTIONS
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
@@ -22,7 +22,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
 from .conftest import (
-    HUB_IDENTIFIER,
     MSENS_FALLBACK_NAME,
     MSENS_IDENTIFIER,
     emit,

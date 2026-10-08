@@ -37,7 +37,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pressure_abs',
-    'unique_id': '47846_obj_44',
+    'unique_id': 'obj_44',
     'unit_of_measurement': <UnitOfPressure.HPA: 'hPa'>,
   })
 # ---
@@ -95,7 +95,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '47846_obj_48',
+    'unique_id': 'obj_48',
     'unit_of_measurement': None,
   })
 # ---
@@ -152,7 +152,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'co2',
-    'unique_id': '47846_obj_43',
+    'unique_id': 'obj_43',
     'unit_of_measurement': <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
   })
 # ---
@@ -210,7 +210,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '47846_obj_47',
+    'unique_id': 'obj_47',
     'unit_of_measurement': 'lx',
   })
 # ---
@@ -268,7 +268,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'loudness',
-    'unique_id': '47846_obj_46',
+    'unique_id': 'obj_46',
     'unit_of_measurement': <UnitOfSoundPressure.DECIBEL: 'dB'>,
   })
 # ---
@@ -326,7 +326,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pressure_rel',
-    'unique_id': '47846_obj_45',
+    'unique_id': 'obj_45',
     'unit_of_measurement': <UnitOfPressure.HPA: 'hPa'>,
   })
 # ---
@@ -384,7 +384,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '47846_obj_36',
+    'unique_id': 'obj_36',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -442,7 +442,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '47846_obj_37',
+    'unique_id': 'obj_37',
     'unit_of_measurement': '%',
   })
 # ---
@@ -477,7 +477,7 @@
     'identifiers': set({
       tuple(
         'ampio',
-        '47846',
+        'hub',
       ),
     }),
     'labels': set({
@@ -507,7 +507,7 @@
     'identifiers': set({
       tuple(
         'ampio',
-        '47846:52111',
+        'module:0xCB8F',
       ),
     }),
     'labels': set({

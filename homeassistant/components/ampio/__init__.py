@@ -30,7 +30,7 @@ from homeassistant.exceptions import (
 )
 from homeassistant.helpers import device_registry as dr
 
-from .const import ADMIN_USERNAME, DOMAIN, PLATFORMS
+from .const import ADMIN_USERNAME, DOMAIN, HUB_IDENTIFIER, PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,9 +45,6 @@ class AmpioData:
     # The same client when the entry signs in as the administrator, the only
     # account served the module catalogue. None on a standard account.
     admin: AmpioAdminClient | None
-    # The server's identity key; scopes unique_ids and device identifiers so
-    # two servers on one Home Assistant instance never collide.
-    prefix: str
     hub_device_id: str
 
 
@@ -102,10 +99,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: AmpioConfigEntry) -> boo
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN, translation_key="discovery_timeout"
         )
-    prefix = info.server_key
-    # A different M-SERV answering at the stored host must fail setup instead
-    # of silently re-keying every unique_id and device under its prefix.
-    if prefix != entry.unique_id:
+    # Object ids are unique per server, so another server's objects would
+    # bind to this entry's entities.
+    if info.server_key != entry.unique_id:
         raise ConfigEntryError(
             translation_domain=DOMAIN, translation_key="unexpected_device"
         )
@@ -113,7 +109,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AmpioConfigEntry) -> boo
     mserv = admin.mserv if admin else None
     hub = dr.async_get(hass).async_get_or_create(
         config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, prefix)},
+        identifiers={HUB_IDENTIFIER},
         manufacturer="Ampio",
         name="M-SERV",
         model=mserv.model if mserv and mserv.model else "M-SERV",
@@ -121,7 +117,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AmpioConfigEntry) -> boo
         serial_number=info.device_id,
         configuration_url=f"http://{info.local_ip}" if info.local_ip else None,
     )
-    entry.runtime_data = AmpioData(client, admin, prefix, hub.id)
+    entry.runtime_data = AmpioData(client, admin, hub.id)
 
     was_unavailable = False
 

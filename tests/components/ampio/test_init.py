@@ -13,7 +13,7 @@ from ampio_mqtt import (
 )
 import pytest
 
-from homeassistant.components.ampio.const import DOMAIN
+from homeassistant.components.ampio.const import DOMAIN, HUB_IDENTIFIER
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     CONF_HOST,
@@ -26,7 +26,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
 from .conftest import (
-    HUB_IDENTIFIER,
     MSENS_FALLBACK_NAME,
     MSENS_IDENTIFIER,
     STANDARD_USER_INPUT,
@@ -166,8 +165,8 @@ async def test_designer_fault_keeps_served_objects(
 async def test_setup_fails_on_server_identity_mismatch(hass: HomeAssistant) -> None:
     """A host now answering as a different M-SERV lands the entry in SETUP_ERROR.
 
-    Proceeding would re-key every unique_id and device identifier under the
-    new server's prefix, orphaning the existing registry entries.
+    Object ids are unique per server, so another server's objects would bind
+    to this entry's entities.
     """
     entry = MockConfigEntry(domain=DOMAIN, data=USER_INPUT, unique_id="99999")
 

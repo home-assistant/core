@@ -12,3 +12,5 @@ DEFAULT_HOST: Final = "ampio.local"
 
 # The reserved login of the administrator account.
 ADMIN_USERNAME: Final = "admin"
+
+HUB_IDENTIFIER: Final = (DOMAIN, "hub")

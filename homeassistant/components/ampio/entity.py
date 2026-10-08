@@ -9,7 +9,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
 from . import AmpioData
-from .const import DOMAIN
+from .const import DOMAIN, HUB_IDENTIFIER
 
 
 def _device_info(data: AmpioData, obj: AmpioObject) -> DeviceInfo:
@@ -21,11 +21,11 @@ def _device_info(data: AmpioData, obj: AmpioObject) -> DeviceInfo:
     always passed so a tier downgrade degrades the whole device coherently.
     """
     if obj.is_server_owned:
-        return DeviceInfo(identifiers={(DOMAIN, data.prefix)})
+        return DeviceInfo(identifiers={HUB_IDENTIFIER})
     mac = obj.address.mac
     module = data.admin.module_for(obj) if data.admin else None
     return DeviceInfo(
-        identifiers={(DOMAIN, f"{data.prefix}:{mac}")},
+        identifiers={(DOMAIN, f"module:0x{mac:X}")},
         name=(module.nazwa_urzadzenia if module else None) or f"Ampio module 0x{mac:X}",
         manufacturer="Ampio",
         via_device_id=data.hub_device_id,
@@ -47,7 +47,7 @@ class AmpioEntity(Entity):
         self._data = data
         self._object_id = obj.id
         # Several Designer objects can drive one output and share its leaf.
-        self._attr_unique_id = f"{data.prefix}_{obj.object_key}"
+        self._attr_unique_id = obj.object_key
         self._attr_device_info = _device_info(data, obj)
         if obj.name:
             self._attr_name = obj.name
