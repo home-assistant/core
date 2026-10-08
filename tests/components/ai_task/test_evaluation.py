@@ -38,13 +38,11 @@ QUESTIONS: dict[str, ai_task.EvaluationQuestion] = {
     },
 }
 ANSWERS: dict[str, ai_task.EvaluationAnswer] = {
-    "delivered": {"type": "noul", "noul": 0.97},
-    "location": {
-        "type": "choice",
-        "choice": "door",
-        "probabilities": {"door": 0.9, "other": 0.1},
-    },
-    "attention": {"type": "score", "score": 0.15, "probabilities": [0.9, 0.05, 0.05]},
+    "delivered": ai_task.NoulAnswer(noul=0.97),
+    "location": ai_task.ChoiceAnswer(
+        choice="door", probabilities={"door": 0.9, "other": 0.1}
+    ),
+    "attention": ai_task.ScoreAnswer(score=0.15, probabilities=[0.9, 0.05, 0.05]),
 }
 
 
@@ -334,49 +332,51 @@ async def test_invalid_state(
 @pytest.mark.parametrize(
     ("question_id", "answer"),
     [
-        pytest.param("delivered", {"type": "noul", "noul": math.nan}, id="nan"),
-        pytest.param("delivered", {"type": "noul", "noul": math.inf}, id="infinity"),
-        pytest.param("delivered", {"type": "noul", "noul": -0.1}, id="negative"),
-        pytest.param("delivered", {"type": "noul", "noul": 1.1}, id="above-one"),
-        pytest.param("delivered", {"type": "noul", "noul": True}, id="boolean"),
-        pytest.param("delivered", {"type": "noul"}, id="missing-probability"),
-        pytest.param("delivered", {"type": "refusal"}, id="wrong-type"),
+        pytest.param("delivered", ai_task.NoulAnswer(noul=math.nan), id="nan"),
+        pytest.param("delivered", ai_task.NoulAnswer(noul=math.inf), id="infinity"),
+        pytest.param("delivered", ai_task.NoulAnswer(noul=-0.1), id="negative"),
+        pytest.param("delivered", ai_task.NoulAnswer(noul=1.1), id="above-one"),
+        pytest.param("delivered", ai_task.NoulAnswer(noul=True), id="boolean"),
+        pytest.param(
+            "delivered", {"type": "noul", "noul": 0.5}, id="dictionary-not-dataclass"
+        ),
+        pytest.param(
+            "delivered",
+            ai_task.ScoreAnswer(score=0, probabilities=[1, 0]),
+            id="wrong-type",
+        ),
         pytest.param(
             "location",
-            {
-                "type": "choice",
-                "choice": "other",
-                "probabilities": {"door": 0.9, "other": 0.1},
-            },
+            ai_task.ChoiceAnswer(
+                choice="other", probabilities={"door": 0.9, "other": 0.1}
+            ),
             id="not-argmax",
         ),
         pytest.param(
             "location",
-            {"type": "choice", "choice": "door", "probabilities": {"door": 1}},
+            ai_task.ChoiceAnswer(choice="door", probabilities={"door": 1}),
             id="missing-option",
         ),
         pytest.param(
             "location",
-            {
-                "type": "choice",
-                "choice": "door",
-                "probabilities": {"door": 0.9, "other": 0.9},
-            },
+            ai_task.ChoiceAnswer(
+                choice="door", probabilities={"door": 0.9, "other": 0.9}
+            ),
             id="unnormalized",
         ),
         pytest.param(
             "attention",
-            {"type": "score", "score": 0.2, "probabilities": [0.9, 0.05, 0.05]},
+            ai_task.ScoreAnswer(score=0.2, probabilities=[0.9, 0.05, 0.05]),
             id="incorrect-expectation",
         ),
         pytest.param(
             "attention",
-            {"type": "score", "score": 0, "probabilities": [1, 0]},
+            ai_task.ScoreAnswer(score=0, probabilities=[1, 0]),
             id="missing-level",
         ),
         pytest.param(
             "attention",
-            {"type": "score", "score": 0, "probabilities": {"0": 1, "1": 0, "2": 0}},
+            ai_task.ScoreAnswer(score=0, probabilities={"0": 1, "1": 0, "2": 0}),
             id="mapping-not-list",
         ),
     ],
@@ -408,7 +408,9 @@ async def test_invalid_answer(
     "answers",
     [
         pytest.param({}, id="missing"),
-        pytest.param({**ANSWERS, "extra": {"type": "noul", "noul": 0.5}}, id="extra"),
+        pytest.param(None, id="none"),
+        pytest.param([], id="list"),
+        pytest.param({**ANSWERS, "extra": ai_task.NoulAnswer(noul=0.5)}, id="extra"),
     ],
 )
 async def test_incomplete_answers(

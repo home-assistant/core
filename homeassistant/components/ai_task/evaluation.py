@@ -1,6 +1,6 @@
 """Types and validation for decision tasks."""
 
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass, field
 import json
 import math
 from typing import Any, Literal, TypedDict
@@ -38,27 +38,30 @@ class ScoreQuestion(TypedDict):
 type EvaluationQuestion = NoulQuestion | ChoiceQuestion | ScoreQuestion
 
 
-class NoulAnswer(TypedDict):
+@dataclass(slots=True)
+class NoulAnswer:
     """The estimated probability of yes."""
 
-    type: Literal["noul"]
     noul: float
+    type: Literal["noul"] = field(default="noul", init=False)
 
 
-class ChoiceAnswer(TypedDict):
+@dataclass(slots=True)
+class ChoiceAnswer:
     """A selected alternative and its distribution."""
 
-    type: Literal["choice"]
     choice: str
     probabilities: dict[str, float]
+    type: Literal["choice"] = field(default="choice", init=False)
 
 
-class ScoreAnswer(TypedDict):
+@dataclass(slots=True)
+class ScoreAnswer:
     """An expected level index and its distribution."""
 
-    type: Literal["score"]
     score: float
     probabilities: list[float]
+    type: Literal["score"] = field(default="score", init=False)
 
 
 type EvaluationAnswer = NoulAnswer | ChoiceAnswer | ScoreAnswer
@@ -120,7 +123,7 @@ class EvaluationTaskResult:
 
     def as_dict(self) -> dict[str, Any]:
         """Return the action response."""
-        return {"answers": self.answers}
+        return asdict(self)
 
 
 def _probability(value: float) -> bool:
@@ -130,28 +133,28 @@ def _probability(value: float) -> bool:
 
 def _valid_answer(question: EvaluationQuestion, answer: EvaluationAnswer) -> bool:
     """Validate an answer against its question."""
-    if question["type"] == "noul" and answer["type"] == "noul":
-        return _probability(answer["noul"])
-    if question["type"] == "choice" and answer["type"] == "choice":
-        probabilities = answer["probabilities"]
+    if question["type"] == "noul" and isinstance(answer, NoulAnswer):
+        return _probability(answer.noul)
+    if question["type"] == "choice" and isinstance(answer, ChoiceAnswer):
+        probabilities = answer.probabilities
         return (
             probabilities.keys() == question["criteria"].keys()
-            and answer["choice"] in probabilities
+            and answer.choice in probabilities
             and all(_probability(value) for value in probabilities.values())
             and math.isclose(sum(probabilities.values()), 1, abs_tol=1e-6)
-            and probabilities[answer["choice"]] == max(probabilities.values())
+            and probabilities[answer.choice] == max(probabilities.values())
         )
-    if question["type"] == "score" and answer["type"] == "score":
-        levels = answer["probabilities"]
+    if question["type"] == "score" and isinstance(answer, ScoreAnswer):
+        levels = answer.probabilities
         return (
             isinstance(levels, list)
             and len(levels) == len(question["criteria"])
             and all(_probability(value) for value in levels)
             and math.isclose(sum(levels), 1, abs_tol=1e-6)
-            and type(answer["score"]) in (int, float)
-            and math.isfinite(answer["score"])
+            and type(answer.score) in (int, float)
+            and math.isfinite(answer.score)
             and math.isclose(
-                answer["score"],
+                answer.score,
                 sum(index * value for index, value in enumerate(levels)),
                 abs_tol=1e-6,
             )
@@ -161,7 +164,10 @@ def _valid_answer(question: EvaluationQuestion, answer: EvaluationAnswer) -> boo
 
 def validate_result(task: EvaluationTask, result: EvaluationTaskResult) -> None:
     """Reject incomplete or invalid provider results."""
-    if result.answers.keys() != task.questions.keys():
+    if (
+        not isinstance(result.answers, dict)
+        or result.answers.keys() != task.questions.keys()
+    ):
         raise HomeAssistantError("Evaluation did not return every requested answer")
     for question_id, question in task.questions.items():
         try:
