@@ -58,6 +58,7 @@ APP_PANEL_PATH = f"/app/{APP_SLUG}"
 APP_START_INTERVAL = 5
 APP_START_ROUNDS = 40
 ONBOARDING_POLL_INTERVAL = 5
+ONBOARDING_POLL_ROUNDS = 720  # an hour
 
 
 STEP_MANUAL_SCHEMA = probatio.Schema({probatio.Required(CONF_URL): str})
@@ -260,7 +261,7 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
 
         try:
             await self._start_task
-        except (AddonError, TimeoutError, MusicAssistantClientException) as err:
+        except (AddonError, TimeoutError) as err:
             LOGGER.error(err)
             return self.async_show_progress_done(next_step_id="start_failed")
         finally:
@@ -288,8 +289,11 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
                     APP_START_INTERVAL,
                     err,
                 )
-            else:
-                return
+                continue
+            except MusicAssistantClientException:
+                # The server answers, the finish step reports what is wrong with it
+                pass
+            return
 
         raise TimeoutError("Timeout waiting for the Music Assistant app to start")
 
@@ -364,8 +368,12 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
             try:
                 frontend_base = _get_frontend_base(self.hass)
             except NoURLAvailableError:
-                LOGGER.error("No URL available to open the Music Assistant app")
-                return self.async_abort(reason="unknown")
+                return self.async_abort(
+                    reason="no_url_available",
+                    description_placeholders={
+                        "docs_url": "https://www.home-assistant.io/more-info/no-url-available"
+                    },
+                )
             self._onboarding_url = f"{frontend_base}{APP_PANEL_PATH}"
 
         if not self._removed and (
@@ -382,7 +390,7 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
         if TYPE_CHECKING:
             assert self.url is not None
 
-        while True:
+        for _ in range(ONBOARDING_POLL_ROUNDS):
             await asyncio.sleep(ONBOARDING_POLL_INTERVAL)
             try:
                 server_info = await _get_server_info(self.hass, self.url)
@@ -391,9 +399,13 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
                 continue
             if server_info.onboard_done:
                 break
+        else:
+            LOGGER.debug("Stopped waiting for app onboarding")
+            return
 
-        # Resume in a separate task, so the step can cancel this one
-        self.hass.async_create_task(self._async_resume_flow())
+        # Resume in a separate task that runs after this one has finished,
+        # so the step can cancel or restart this one
+        self.hass.async_create_task(self._async_resume_flow(), eager_start=False)
 
     async def _async_resume_flow(self) -> None:
         """Resume the flow, ignoring that it may have been removed meanwhile."""
