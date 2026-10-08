@@ -11,17 +11,23 @@ from pyControl4.error_handling import BadCredentials
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    ATTR_CONFIG_ENTRY_ID,
     CONF_HOST,
     CONF_PASSWORD,
+    CONF_SCAN_INTERVAL,
     CONF_TOKEN,
     CONF_USERNAME,
     Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import aiohttp_client, device_registry as dr
+from homeassistant.helpers import (
+    aiohttp_client,
+    device_registry as dr,
+    issue_registry as ir,
+)
 
-from .const import API_RETRY_TIMES, CONF_CONTROLLER_UNIQUE_ID, DOMAIN
+from .const import API_RETRY_TIMES, CONF_CONTROLLER_UNIQUE_ID, DOMAIN, UPDATE_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -178,3 +184,40 @@ async def get_items_of_category(
         for item in entry.runtime_data.director_all_items
         if "categories" in item and category in item["categories"]
     ]
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: Control4ConfigEntry) -> bool:
+    """Migrate config entry."""
+
+    if entry.version == 1 and entry.minor_version < 2:
+        if entry.options.get(CONF_SCAN_INTERVAL) in (None, UPDATE_INTERVAL):
+            options = dict(entry.options)
+            options.pop(CONF_SCAN_INTERVAL, None)
+            hass.config_entries.async_update_entry(
+                entry, options=options, minor_version=2
+            )
+        else:
+            ir.async_create_issue(
+                hass,
+                DOMAIN,
+                f"user_configurable_polling_removed_{entry.entry_id}",
+                is_fixable=True,
+                severity=ir.IssueSeverity.WARNING,
+                translation_key="user_configurable_polling_removed",
+                translation_placeholders={
+                    "custom_interval": str(entry.options[CONF_SCAN_INTERVAL]),
+                    "default_interval": str(UPDATE_INTERVAL),
+                    "update_entity": "`homeassistant.update_entity`",
+                },
+                learn_more_url="https://www.home-assistant.io/common-tasks/general/#defining-a-custom-polling-interval",
+                data={ATTR_CONFIG_ENTRY_ID: entry.entry_id},
+            )
+
+    return True
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: Control4ConfigEntry) -> None:
+    """Remove a config entry."""
+    ir.async_delete_issue(
+        hass, DOMAIN, f"user_configurable_polling_removed_{entry.entry_id}"
+    )

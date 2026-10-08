@@ -31,6 +31,7 @@ class Control4ConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Control4."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
     async def _async_try_connect(
         self, user_input: dict[str, Any]
