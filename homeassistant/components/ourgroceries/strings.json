@@ -13,5 +13,10 @@
         }
       }
     }
+  },
+  "exceptions": {
+    "invalid_login": {
+      "message": "Login to OurGroceries failed, the username or password is incorrect"
+    }
   }
 }
