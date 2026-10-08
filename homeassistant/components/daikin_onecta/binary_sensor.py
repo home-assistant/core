@@ -27,7 +27,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up Daikin climate based on config_entry."""
     coordinator: OnectaDataUpdateCoordinator = config_entry.runtime_data
-    sensors = []
+    sensors: list[DaikinBinarySensor] = []
     for device in (coordinator.data or {}).values():
         for management_point in device.device.management_points:
             for (
@@ -56,10 +56,10 @@ class DaikinBinarySensor(DaikinEntity, BinarySensorEntity):
     def __init__(
         self,
         device: DaikinOnectaDevice,
-        coordinator,
-        embedded_id,
-        management_point_type,
-        value,
+        coordinator: OnectaDataUpdateCoordinator,
+        embedded_id: str,
+        management_point_type: str,
+        value: str,
     ) -> None:
         """Initialize the binary sensor from a device characteristic."""
         _LOGGER.info("DaikinBinarySensor '%s' '%s'", management_point_type, value)
@@ -89,9 +89,9 @@ class DaikinBinarySensor(DaikinEntity, BinarySensorEntity):
         self.update_state()
         self.async_write_ha_state()
 
-    def sensor_value(self):
+    def sensor_value(self) -> bool | None:
         """Return the binary characteristic value."""
-        point = self._device.management_point(self._embedded_id)
+        point = self._device.management_point(self._embedded_id or "")
         characteristic = (
             point.scalar_characteristic(self._value) if point is not None else None
         )
@@ -102,4 +102,4 @@ class DaikinBinarySensor(DaikinEntity, BinarySensorEntity):
             self._value,
             result,
         )
-        return result
+        return result if isinstance(result, bool) else None

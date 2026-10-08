@@ -54,22 +54,26 @@ class DaikinOnectaDevice:
             if gateway.mac_address
             else set()
         )
-        metadata = {}
+        model = None
+        serial_number = None
+        sw_version = None
         if (embedded_id := gateway.gateway_embedded_id) is not None and (
             management_point := gateway.management_point(embedded_id)
         ) is not None:
             if management_point.model is not None:
-                metadata["model"] = management_point.model
+                model = management_point.model
             if management_point.serial is not None:
-                metadata["serial_number"] = management_point.serial
+                serial_number = management_point.serial
             if management_point.version is not None:
-                metadata["sw_version"] = management_point.version
+                sw_version = management_point.version
         dr.async_get(hass).async_get_or_create(
             config_entry_id=config_entry.entry_id,
             identifiers={(DOMAIN, self.id)},
             connections=connections,
             manufacturer="Daikin",
+            model=model,
             model_id=gateway.device_model,
             name=self.name,
-            **metadata,
+            serial_number=serial_number,
+            sw_version=sw_version,
         )

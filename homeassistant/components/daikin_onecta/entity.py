@@ -6,6 +6,7 @@ from typing import Never, override
 from daikin_onecta.client import OnectaClient
 
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -29,6 +30,7 @@ def _add_management_point_metadata(
 
 
 def management_point_device_info(
+    coordinator: OnectaDataUpdateCoordinator,
     device: DaikinOnectaDevice,
     embedded_id: str,
     management_point_type: str,
@@ -36,10 +38,13 @@ def management_point_device_info(
     """Build registry metadata for a Daikin management point."""
     info = DeviceInfo(
         identifiers={(DOMAIN, f"{device.id}{embedded_id}")},
-        via_device=(DOMAIN, device.id),
         manufacturer="Daikin",
         name=f"{device.name} {management_point_type[0].upper()}{management_point_type[1:]}",
     )
+    if gateway_device := dr.async_get(coordinator.hass).async_get_device_by_identifier(
+        (DOMAIN, device.id), coordinator.config_entry.entry_id
+    ):
+        info["via_device_id"] = gateway_device.id
     _add_management_point_metadata(info, device, embedded_id)
     return info
 
@@ -78,6 +83,7 @@ class DaikinOnectaEntity(CoordinatorEntity[OnectaDataUpdateCoordinator]):
             _add_management_point_metadata(info, self._device, embedded_id)
         return info
 
+
 class DaikinEntity(DaikinOnectaEntity):
     """Compatibility base for entities backed by a Daikin gateway."""
 
@@ -93,7 +99,7 @@ class DaikinEntity(DaikinOnectaEntity):
         self._embedded_id = embedded_id
         if embedded_id is not None and management_point_type is not None:
             self._attr_device_info = management_point_device_info(
-                device, embedded_id, management_point_type
+                coordinator, device, embedded_id, management_point_type
             )
 
     @property
