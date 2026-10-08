@@ -43,7 +43,6 @@ from homeassistant.core import (
     Event,
     EventStateChangedData,
     HomeAssistant,
-    ServiceCall,
     State,
     callback,
     split_entity_id,
@@ -53,7 +52,6 @@ from homeassistant.helpers import (
     collection,
     config_validation as cv,
     entity_registry as er,
-    service,
 )
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_state_change_event
@@ -63,6 +61,7 @@ from homeassistant.helpers.typing import ConfigType, VolDictType
 
 from .const import CONF_USER_ID, DATA_PERSON, DOMAIN, PersonEntityStateAttribute
 from .helpers import filter_yaml_data
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -483,16 +482,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     hass.bus.async_listen(EVENT_USER_REMOVED, _handle_user_removed)
 
-    async def async_reload_yaml(call: ServiceCall) -> None:
-        """Reload YAML."""
-        conf = await entity_component.async_prepare_reload(skip_reset=True)
-        await yaml_collection.async_load(
-            await filter_yaml_data(hass, conf.get(DOMAIN, []))
-        )
-
-    service.async_register_admin_service(
-        hass, DOMAIN, SERVICE_RELOAD, async_reload_yaml
-    )
+    async_setup_services(hass)
 
     return True
 
