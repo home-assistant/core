@@ -68,7 +68,7 @@ class PowerviewShadeUpdateCoordinator(DataUpdateCoordinator[PowerviewShadeData])
         self.data.store_group_data(shade_entries)
 
         # Clean up stale devices
-        current_shade_ids = set(self.data._shade_group_data_by_id.keys())
+        current_shade_ids = set(self.data.shades.keys())
         device_registry = dr.async_get(self.hass)
         registered_shade_ids = {
             identifier[1]
