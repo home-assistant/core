@@ -4,12 +4,15 @@ from dataclasses import dataclass
 import logging
 
 from ampio_mqtt import (
+    AmpioAdminClient,
     AmpioAuthError,
     AmpioClient,
     AmpioConnectionError,
+    AmpioNotConfigured,
     AuthFailed,
     AvailabilityChanged,
     ConnectionDied,
+    format_mac,
 )
 
 from homeassistant.config_entries import ConfigEntry
@@ -27,7 +30,7 @@ from homeassistant.exceptions import (
 )
 from homeassistant.helpers import device_registry as dr
 
-from .const import DOMAIN, PLATFORMS
+from .const import ADMIN_USERNAME, DOMAIN, PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,6 +42,9 @@ class AmpioData:
     """Runtime data for one Ampio server."""
 
     client: AmpioClient
+    # The same client when the entry signs in as the administrator, the only
+    # account served the module catalogue. None on a standard account.
+    admin: AmpioAdminClient | None
     # The server's identity key; scopes unique_ids and device identifiers so
     # two servers on one Home Assistant instance never collide.
     prefix: str
@@ -47,38 +53,56 @@ class AmpioData:
 
 async def async_setup_entry(hass: HomeAssistant, entry: AmpioConfigEntry) -> bool:
     """Set up Ampio from a config entry."""
-    client = AmpioClient(
-        entry.data[CONF_HOST],
-        entry.data[CONF_USERNAME],
-        entry.data[CONF_PASSWORD],
-    )
-    entry.async_on_unload(client.stop)
+    admin: AmpioAdminClient | None = None
+    client: AmpioClient
+    if entry.data[CONF_USERNAME] == ADMIN_USERNAME:
+        client = admin = AmpioAdminClient(
+            entry.data[CONF_HOST], entry.data[CONF_PASSWORD]
+        )
+    else:
+        client = AmpioClient(
+            entry.data[CONF_HOST],
+            entry.data[CONF_USERNAME],
+            entry.data[CONF_PASSWORD],
+        )
+    entry.async_on_unload(client.disconnect)
 
     # Home Assistant does not unload entries when it stops, so without this the
     # connection dies by task cancellation and is reported as a lost connection.
-    async def _async_stop_client(event: Event) -> None:
-        await client.stop()
+    async def _async_disconnect(event: Event) -> None:
+        await client.disconnect()
 
     entry.async_on_unload(
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_stop_client)
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_disconnect)
     )
 
     try:
-        discovered = await client.start()
+        discovered = await client.connect()
     except AmpioAuthError as err:
         raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN, translation_key="invalid_auth"
         ) from err
+    except AmpioNotConfigured as err:
+        # The library still serves every other row. Its message embeds
+        # Designer names, so only ids and macs reach the log.
+        _LOGGER.warning(
+            "Ampio Designer leaves objects %s without a bus address and module "
+            "addresses %s without exactly one module row; fix them in Ampio "
+            "Designer",
+            sorted(oid for oid, _ in err.objects),
+            sorted(format_mac(mac) for mac, _ in err.collisions),
+        )
+        discovered = True
     except AmpioConnectionError as err:
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN, translation_key="cannot_connect"
         ) from err
-    # A True start() guarantees the server identity; the None check narrows the type.
+    # A True connect() guarantees the server identity; the None check narrows the type.
     if not discovered or (info := client.server_info) is None:
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN, translation_key="discovery_timeout"
         )
-    prefix = info.key
+    prefix = info.server_key
     # A different M-SERV answering at the stored host must fail setup instead
     # of silently re-keying every unique_id and device under its prefix.
     if prefix != entry.unique_id:
@@ -86,20 +110,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: AmpioConfigEntry) -> boo
             translation_domain=DOMAIN, translation_key="unexpected_device"
         )
 
-    # The hub is built from the server-info reply both account tiers receive;
-    # an administrator's M-SERV module row contributes the user-given name.
-    mserv = client.mserv
+    mserv = admin.mserv if admin else None
     hub = dr.async_get(hass).async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, prefix)},
         manufacturer="Ampio",
-        name=mserv.name if mserv and mserv.name else "M-SERV",
+        name="M-SERV",
         model=mserv.model if mserv and mserv.model else "M-SERV",
         sw_version=info.server_version,
         serial_number=info.device_id,
         configuration_url=f"http://{info.local_ip}" if info.local_ip else None,
     )
-    entry.runtime_data = AmpioData(client, prefix, hub.id)
+    entry.runtime_data = AmpioData(client, admin, prefix, hub.id)
 
     was_unavailable = False
 

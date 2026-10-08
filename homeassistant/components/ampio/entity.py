@@ -1,15 +1,8 @@
 """Base entity for the Ampio integration."""
 
-from collections.abc import Iterator
 from typing import override
 
-from ampio_mqtt import (
-    AmpioClient,
-    AmpioObject,
-    AvailabilityChanged,
-    ObjectRemoved,
-    ObjectUpdated,
-)
+from ampio_mqtt import AmpioObject, AvailabilityChanged, ObjectRemoved, ObjectUpdated
 
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -19,46 +12,27 @@ from . import AmpioData
 from .const import DOMAIN
 
 
-def eligible_objects(client: AmpioClient) -> Iterator[AmpioObject]:
-    """The objects any platform may expose as entities.
-
-    ``visible`` is the M-SERV's own predicate for what the user still sees
-    in Ampio Designer; ghost rows that survived removal fail it. A missing
-    ``stable_key`` would otherwise leak into the unique_id.
-    """
-    return (
-        obj
-        for obj in client.objects.values()
-        if obj.visible and obj.stable_key is not None
-    )
-
-
-def _opt_str(value: object | None) -> str | None:
-    """Stringify a catalogue field, passing None through."""
-    return None if value is None else str(value)
-
-
 def _device_info(data: AmpioData, obj: AmpioObject) -> DeviceInfo:
     """Device info for the module owning ``obj``, or the M-SERV hub.
 
-    Keyed on the leaf-derived module mac, which both account tiers receive,
-    so the grouping survives an account-tier switch; the admin-only module
-    catalogue contributes metadata only. Every catalogue-derived field is
-    always passed so a tier downgrade degrades the whole device coherently
-    instead of mixing the fallback name with stale metadata.
+    Keyed on the module mac in the object's address, which both account
+    tiers receive, so the grouping survives an account-tier switch. The
+    admin-only module catalogue contributes metadata only, and every field is
+    always passed so a tier downgrade degrades the whole device coherently.
     """
-    if obj.is_server_owned or (mac := obj.module_mac) is None:
+    if obj.is_server_owned:
         return DeviceInfo(identifiers={(DOMAIN, data.prefix)})
-    module = data.client.module_for(obj)
+    mac = obj.address.mac
+    module = data.admin.module_for(obj) if data.admin else None
     return DeviceInfo(
         identifiers={(DOMAIN, f"{data.prefix}:{mac}")},
-        name=(module.name if module else None) or f"Ampio module 0x{mac:X}",
+        name=(module.nazwa_urzadzenia if module else None) or f"Ampio module 0x{mac:X}",
         manufacturer="Ampio",
         via_device_id=data.hub_device_id,
         model=module.model if module else None,
-        sw_version=_opt_str(module.sw_version) if module else None,
-        hw_version=_opt_str(module.hw_version) if module else None,
-        serial_number=_opt_str(module.mac_global) if module else None,
+        sw_version=str(module.wersja_softu) if module else None,
+        hw_version=str(module.wersja_pcb) if module else None,
+        serial_number=str(module.mac_global) if module else None,
     )
 
 
@@ -72,8 +46,8 @@ class AmpioEntity(Entity):
         """Initialize from the discovery-time object snapshot."""
         self._data = data
         self._object_id = obj.id
-        # ``stable_key`` survives a module swap; the prefix scopes it per server.
-        self._attr_unique_id = f"{data.prefix}_{obj.stable_key}"
+        # Several Designer objects can drive one output and share its leaf.
+        self._attr_unique_id = f"{data.prefix}_{obj.object_key}"
         self._attr_device_info = _device_info(data, obj)
         if obj.name:
             self._attr_name = obj.name

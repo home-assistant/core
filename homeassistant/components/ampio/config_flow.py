@@ -3,13 +3,13 @@
 import logging
 from typing import Any, override
 
-from ampio_mqtt import AmpioAuthError, AmpioClient, AmpioConnectionError
+from ampio_mqtt import AccessTier, AmpioAuthError, AmpioClient, AmpioConnectionError
 import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 
-from .const import DEFAULT_HOST, DOMAIN
+from .const import ADMIN_USERNAME, DEFAULT_HOST, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,7 +33,7 @@ class AmpioConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             try:
-                info = await AmpioClient.test_connection(
+                info = await AmpioClient.check_connection(
                     user_input[CONF_HOST],
                     user_input[CONF_USERNAME],
                     user_input[CONF_PASSWORD],
@@ -46,11 +46,17 @@ class AmpioConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                await self.async_set_unique_id(info.key)
-                self._abort_if_unique_id_configured(updates=user_input)
-                return self.async_create_entry(
-                    title=user_input[CONF_HOST], data=user_input
-                )
+                # Setup picks the client class by username, so the name must match the tier.
+                if (info.access_tier is AccessTier.ADMIN) != (
+                    user_input[CONF_USERNAME] == ADMIN_USERNAME
+                ):
+                    errors[CONF_USERNAME] = "admin_login_name"
+                else:
+                    await self.async_set_unique_id(info.server_key)
+                    self._abort_if_unique_id_configured(updates=user_input)
+                    return self.async_create_entry(
+                        title=user_input[CONF_HOST], data=user_input
+                    )
 
         return self.async_show_form(
             step_id="user",

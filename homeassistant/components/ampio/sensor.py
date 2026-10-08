@@ -22,7 +22,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import AmpioConfigEntry, AmpioData
-from .entity import AmpioEntity, eligible_objects
+from .entity import AmpioEntity
 
 PARALLEL_UPDATES = 0
 
@@ -102,7 +102,7 @@ async def async_setup_entry(
     """Set up Ampio sensors from the discovery-time object catalogue."""
     data = entry.runtime_data
     entities: list[AmpioSensor] = []
-    for obj in eligible_objects(data.client):
+    for obj in data.client.objects.values():
         if not isinstance(kind := obj.kind, SensorKind):
             continue
         if (description := SENSOR_DESCRIPTIONS.get(kind.key)) is None:

@@ -2,7 +2,12 @@
 
 from unittest.mock import MagicMock
 
-from ampio_mqtt import AmpioAuthError, AmpioConnectionError, AmpioTimeoutError
+from ampio_mqtt import (
+    AmpioAuthError,
+    AmpioConnectionError,
+    AmpioServerInfo,
+    AmpioTimeoutError,
+)
 import pytest
 
 from homeassistant.components.ampio.const import DOMAIN
@@ -11,7 +16,13 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .conftest import MSERV_MAC, USER_INPUT
+from .conftest import (
+    MSERV_MAC,
+    SERVER_INFO,
+    STANDARD_SERVER_INFO,
+    STANDARD_USER_INPUT,
+    USER_INPUT,
+)
 
 from tests.common import MockConfigEntry, get_schema_suggested_value
 
@@ -20,7 +31,7 @@ pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 @pytest.mark.usefixtures("mock_client_class")
 async def test_user_flow_success(hass: HomeAssistant) -> None:
-    """A valid connection creates the entry with the server mac as unique_id."""
+    """A valid connection creates the entry with the server key as unique_id."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -49,7 +60,7 @@ async def test_user_flow_success(hass: HomeAssistant) -> None:
             AmpioConnectionError("boom"), "cannot_connect", id="cannot_connect"
         ),
         pytest.param(AmpioAuthError("bad creds"), "invalid_auth", id="invalid_auth"),
-        # A slow broker and an identity-less info reply both raise the retryable
+        # A slow broker and an unreadable info reply both raise the retryable
         # timeout: a connection problem, not an account problem.
         pytest.param(
             AmpioTimeoutError("no usable info reply"),
@@ -67,7 +78,7 @@ async def test_user_flow_errors_and_recovers(
     expected_error: str,
 ) -> None:
     """Each error shape stays on the user form; a valid retry creates the entry."""
-    mock_client_class.test_connection.side_effect = side_effect
+    mock_client_class.check_connection.side_effect = side_effect
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -84,7 +95,43 @@ async def test_user_flow_errors_and_recovers(
         == USER_INPUT[CONF_HOST]
     )
 
-    mock_client_class.test_connection.side_effect = None
+    mock_client_class.check_connection.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+@pytest.mark.parametrize(
+    ("user_input", "server_info"),
+    [
+        pytest.param(
+            STANDARD_USER_INPUT, SERVER_INFO, id="admin-tier-under-another-name"
+        ),
+        pytest.param(USER_INPUT, STANDARD_SERVER_INFO, id="standard-tier-as-admin"),
+    ],
+)
+async def test_user_flow_rejects_tier_mismatch(
+    hass: HomeAssistant,
+    mock_client_class: MagicMock,
+    user_input: dict[str, str],
+    server_info: AmpioServerInfo,
+) -> None:
+    """The username must agree with the tier that the server reports for it."""
+    mock_client_class.check_connection.return_value = server_info
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {CONF_USERNAME: "admin_login_name"}
+
+    mock_client_class.check_connection.return_value = SERVER_INFO
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], USER_INPUT
     )

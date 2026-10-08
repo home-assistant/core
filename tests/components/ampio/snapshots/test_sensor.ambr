@@ -37,7 +37,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pressure_abs',
-    'unique_id': '47846_leaf_0_cb8f_lin_0_4',
+    'unique_id': '47846_obj_44',
     'unit_of_measurement': <UnitOfPressure.HPA: 'hPa'>,
   })
 # ---
@@ -95,7 +95,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '47846_leaf_0_cb8f_lin_0_8',
+    'unique_id': '47846_obj_48',
     'unit_of_measurement': None,
   })
 # ---
@@ -152,7 +152,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'co2',
-    'unique_id': '47846_leaf_0_cb8f_lin_0_3',
+    'unique_id': '47846_obj_43',
     'unit_of_measurement': <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
   })
 # ---
@@ -210,7 +210,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '47846_leaf_0_cb8f_lin_0_7',
+    'unique_id': '47846_obj_47',
     'unit_of_measurement': 'lx',
   })
 # ---
@@ -268,7 +268,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'loudness',
-    'unique_id': '47846_leaf_0_cb8f_lin_0_6',
+    'unique_id': '47846_obj_46',
     'unit_of_measurement': <UnitOfSoundPressure.DECIBEL: 'dB'>,
   })
 # ---
@@ -326,7 +326,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pressure_rel',
-    'unique_id': '47846_leaf_0_cb8f_lin_0_5',
+    'unique_id': '47846_obj_45',
     'unit_of_measurement': <UnitOfPressure.HPA: 'hPa'>,
   })
 # ---
@@ -384,7 +384,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '47846_leaf_0_cb8f_temp_0_1',
+    'unique_id': '47846_obj_36',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -442,7 +442,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '47846_leaf_0_cb8f_lin_0_2',
+    'unique_id': '47846_obj_37',
     'unit_of_measurement': '%',
   })
 # ---
@@ -462,7 +462,7 @@
     'state': '42.0',
   })
 # ---
-# name: test_devices[device-MSERV]
+# name: test_devices[device-M-SERV]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entry_id': <ANY>,
@@ -485,7 +485,7 @@
     'manufacturer': 'Ampio',
     'model': 'M-SERV-s',
     'model_id': None,
-    'name': 'MSERV',
+    'name': 'M-SERV',
     'name_by_user': None,
     'serial_number': '0011223344556677',
     'sw_version': '1865',

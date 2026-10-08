@@ -6,6 +6,7 @@ from unittest.mock import MagicMock
 from ampio_mqtt import (
     AmpioAuthError,
     AmpioConnectionError,
+    AmpioNotConfigured,
     AuthFailed,
     AvailabilityChanged,
     ConnectionDied,
@@ -14,12 +15,24 @@ import pytest
 
 from homeassistant.components.ampio.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    EVENT_HOMEASSISTANT_STOP,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
-from .conftest import MSENS_FALLBACK_NAME, MSENS_IDENTIFIER, MSERV_MAC, USER_INPUT, emit
+from .conftest import (
+    HUB_IDENTIFIER,
+    MSENS_FALLBACK_NAME,
+    MSENS_IDENTIFIER,
+    STANDARD_USER_INPUT,
+    USER_INPUT,
+    emit,
+)
 
 from tests.common import MockConfigEntry
 
@@ -27,7 +40,7 @@ from tests.common import MockConfigEntry
 async def test_setup_and_unload(
     hass: HomeAssistant, mock_client: MagicMock, mock_config_entry: MockConfigEntry
 ) -> None:
-    """The entry loads, and unloading stops the client."""
+    """The entry loads, and unloading disconnects the client."""
     await setup_integration(hass, mock_config_entry)
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
@@ -35,10 +48,10 @@ async def test_setup_and_unload(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
-    mock_client.stop.assert_awaited_once()
+    mock_client.disconnect.assert_awaited_once()
 
 
-async def test_shutdown_stops_client(
+async def test_shutdown_disconnects_client(
     hass: HomeAssistant, mock_client: MagicMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Home Assistant stopping closes the connection.
@@ -52,11 +65,11 @@ async def test_shutdown_stops_client(
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
 
-    mock_client.stop.assert_awaited_once()
+    mock_client.disconnect.assert_awaited_once()
 
 
 @pytest.mark.parametrize(
-    ("start_result", "expected_state"),
+    ("connect_result", "expected_state"),
     [
         pytest.param(
             AmpioConnectionError("refused"),
@@ -70,20 +83,83 @@ async def test_shutdown_stops_client(
         pytest.param(False, ConfigEntryState.SETUP_RETRY, id="incomplete-discovery"),
     ],
 )
-async def test_setup_failure_stops_client(
+async def test_setup_failure_disconnects_client(
     hass: HomeAssistant,
     mock_client: MagicMock,
     mock_config_entry: MockConfigEntry,
-    start_result: Exception | bool,
+    connect_result: Exception | bool,
     expected_state: ConfigEntryState,
 ) -> None:
-    """A failed start maps to the right entry state and stops the client."""
-    mock_client.start.side_effect = [start_result]
+    """A failed connect maps to the right entry state and disconnects the client."""
+    mock_client.connect.side_effect = [connect_result]
 
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is expected_state
-    mock_client.stop.assert_awaited_once()
+    mock_client.disconnect.assert_awaited_once()
+
+
+async def test_admin_login_builds_admin_client(
+    hass: HomeAssistant,
+    mock_client_class: MagicMock,
+    mock_admin_client_class: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """The reserved admin login runs on the administrator client."""
+    await setup_integration(hass, mock_config_entry)
+
+    mock_admin_client_class.assert_called_once_with(
+        USER_INPUT[CONF_HOST], USER_INPUT[CONF_PASSWORD]
+    )
+    mock_client_class.assert_not_called()
+
+
+async def test_standard_login_builds_standard_client(
+    hass: HomeAssistant,
+    mock_client_class: MagicMock,
+    mock_admin_client_class: MagicMock,
+    standard_config_entry: MockConfigEntry,
+) -> None:
+    """Any other login runs on the standard client."""
+    await setup_integration(hass, standard_config_entry)
+
+    mock_client_class.assert_called_once_with(
+        STANDARD_USER_INPUT[CONF_HOST],
+        STANDARD_USER_INPUT[CONF_USERNAME],
+        STANDARD_USER_INPUT[CONF_PASSWORD],
+    )
+    mock_admin_client_class.assert_not_called()
+
+
+async def test_designer_fault_keeps_served_objects(
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """A Designer fault that the library reports still loads every served object.
+
+    The warning names object ids and module macs, never a Designer name.
+    """
+    mock_client.connect.side_effect = AmpioNotConfigured(
+        objects=((61, "Podlewanie"),), collisions=((0xCB8F, (17, 18)),)
+    )
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert (
+        len(
+            er.async_entries_for_config_entry(
+                entity_registry, mock_config_entry.entry_id
+            )
+        )
+        == 8
+    )
+    assert "objects [61]" in caplog.text
+    assert "0xCB8F" in caplog.text
+    assert "Podlewanie" not in caplog.text
 
 
 @pytest.mark.usefixtures("mock_client")
@@ -111,38 +187,7 @@ async def test_hub_device(
     await setup_integration(hass, mock_config_entry)
 
     hub = device_registry.async_get_device_by_identifier(
-        (DOMAIN, MSERV_MAC), mock_config_entry.entry_id
-    )
-    assert hub is not None
-
-    module = device_registry.async_get_device_by_identifier(
-        MSENS_IDENTIFIER, mock_config_entry.entry_id
-    )
-    assert module is not None
-    assert module.via_device_id == hub.id
-
-
-async def test_restricted_account_groups_by_module_mac(
-    hass: HomeAssistant,
-    mock_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
-    device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Without the module catalogue, grouping still keys on the leaf-derived mac.
-
-    A standard (non-administrator) account is served the object catalogue but
-    no module list, so the module device carries a fallback name and no
-    metadata while the entity-to-device mapping matches the admin tier.
-    """
-    mock_client.modules = {}
-    mock_client.mserv = None
-
-    await setup_integration(hass, mock_config_entry)
-    assert mock_config_entry.state is ConfigEntryState.LOADED
-
-    hub = device_registry.async_get_device_by_identifier(
-        (DOMAIN, MSERV_MAC), mock_config_entry.entry_id
+        HUB_IDENTIFIER, mock_config_entry.entry_id
     )
     assert hub is not None
     assert hub.name == "M-SERV"
@@ -151,73 +196,91 @@ async def test_restricted_account_groups_by_module_mac(
         MSENS_IDENTIFIER, mock_config_entry.entry_id
     )
     assert module is not None
+    assert module.via_device_id == hub.id
+
+
+@pytest.mark.usefixtures("mock_client")
+async def test_standard_account_groups_by_module_mac(
+    hass: HomeAssistant,
+    standard_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """A standard account groups entities by the module mac in each address.
+
+    It is served no module catalogue, so the module device carries a
+    fallback name and no metadata.
+    """
+    await setup_integration(hass, standard_config_entry)
+    assert standard_config_entry.state is ConfigEntryState.LOADED
+
+    hub = device_registry.async_get_device_by_identifier(
+        HUB_IDENTIFIER, standard_config_entry.entry_id
+    )
+    assert hub is not None
+    assert hub.name == "M-SERV"
+
+    module = device_registry.async_get_device_by_identifier(
+        MSENS_IDENTIFIER, standard_config_entry.entry_id
+    )
+    assert module is not None
     assert module.name == MSENS_FALLBACK_NAME
     assert module.model is None
     assert module.via_device_id == hub.id
 
     entities = er.async_entries_for_config_entry(
-        entity_registry, mock_config_entry.entry_id
+        entity_registry, standard_config_entry.entry_id
     )
     assert len(entities) == 8
     assert all(entity.device_id == module.id for entity in entities)
 
 
+@pytest.mark.usefixtures("mock_client")
 async def test_tier_switch_keeps_device_grouping(
     hass: HomeAssistant,
-    mock_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
+    standard_config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """An entry keeps its devices across account-tier switches in both directions.
 
-    Metadata enriches on an upgrade to admin; a downgrade back to restricted
-    degrades the whole device coherently instead of mixing the fallback name
-    with stale admin-era metadata.
+    Metadata enriches on a switch to the admin login; a switch back degrades
+    the whole device coherently instead of mixing the fallback name with
+    stale admin-era metadata.
     """
-    admin_modules = mock_client.modules
-    admin_mserv = mock_client.mserv
-    mock_client.modules = {}
-    mock_client.mserv = None
-
-    await setup_integration(hass, mock_config_entry)
+    entry = standard_config_entry
+    await setup_integration(hass, entry)
     module = device_registry.async_get_device_by_identifier(
-        MSENS_IDENTIFIER, mock_config_entry.entry_id
+        MSENS_IDENTIFIER, entry.entry_id
     )
     assert module is not None
     entity_devices = {
         entity.entity_id: entity.device_id
-        for entity in er.async_entries_for_config_entry(
-            entity_registry, mock_config_entry.entry_id
-        )
+        for entity in er.async_entries_for_config_entry(entity_registry, entry.entry_id)
     }
 
-    mock_client.modules = admin_modules
-    mock_client.mserv = admin_mserv
-    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    hass.config_entries.async_update_entry(entry, data=USER_INPUT)
+    await hass.config_entries.async_reload(entry.entry_id)
     await hass.async_block_till_done()
 
     enriched = device_registry.async_get_device_by_identifier(
-        MSENS_IDENTIFIER, mock_config_entry.entry_id
+        MSENS_IDENTIFIER, entry.entry_id
     )
     assert enriched is not None
     assert enriched.id == module.id
     assert enriched.name == "m-sens salon"
-    assert enriched.model == admin_modules[17].model
+    assert enriched.model == "M-SENS"
     assert {
         entity.entity_id: entity.device_id
-        for entity in er.async_entries_for_config_entry(
-            entity_registry, mock_config_entry.entry_id
-        )
+        for entity in er.async_entries_for_config_entry(entity_registry, entry.entry_id)
     } == entity_devices
 
-    mock_client.modules = {}
-    mock_client.mserv = None
-    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    hass.config_entries.async_update_entry(entry, data=STANDARD_USER_INPUT)
+    await hass.config_entries.async_reload(entry.entry_id)
     await hass.async_block_till_done()
 
     downgraded = device_registry.async_get_device_by_identifier(
-        MSENS_IDENTIFIER, mock_config_entry.entry_id
+        MSENS_IDENTIFIER, entry.entry_id
     )
     assert downgraded is not None
     assert downgraded.id == module.id
@@ -238,7 +301,7 @@ async def test_runtime_auth_failure_reloads_into_auth_error(
     ConfigEntryAuthFailed and lands the entry in SETUP_ERROR.
     """
     await setup_integration(hass, mock_config_entry)
-    mock_client.start.side_effect = AmpioAuthError("credentials changed")
+    mock_client.connect.side_effect = AmpioAuthError("credentials changed")
 
     emit(mock_client, AuthFailed(reason="not authorized"))
     await hass.async_block_till_done()
@@ -258,7 +321,7 @@ async def test_connection_died_reloads_and_recovers(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert mock_client.start.await_count == 2
+    assert mock_client.connect.await_count == 2
 
 
 async def test_availability_transitions_log_once_per_edge(

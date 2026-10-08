@@ -4,6 +4,7 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
+      "admin_login_name": "The administrator account signs in as admin, in lowercase. Every other account uses its own name.",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
@@ -18,7 +19,7 @@
         "data_description": {
           "host": "Hostname or IP address of the Ampio server (M-SERV).",
           "password": "Your Ampio account password.",
-          "username": "Your Ampio account username."
+          "username": "Your Ampio account username. The administrator account signs in as admin."
         },
         "description": "Enter the address and credentials of your Ampio server. A standard user account is recommended. An administrator account additionally provides per-module device information and faster state updates.",
         "title": "Connect to Ampio"
