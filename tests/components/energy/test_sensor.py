@@ -1126,6 +1126,90 @@ async def test_cost_sensor_handle_gas_kwh(
 
 
 @pytest.mark.parametrize(
+    ("usage_unit", "price_unit"),
+    [
+        pytest.param(
+            UnitOfVolume.CUBIC_METERS,
+            UnitOfEnergy.KILO_WATT_HOUR,
+            id="volume_usage_energy_price",
+        ),
+        pytest.param(
+            UnitOfEnergy.KILO_WATT_HOUR,
+            UnitOfVolume.CUBIC_METERS,
+            id="energy_usage_volume_price",
+        ),
+    ],
+)
+async def test_cost_sensor_gas_price_unit_mismatch(
+    setup_integration: Callable[[HomeAssistant], Coroutine[Any, Any, None]],
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    caplog: pytest.LogCaptureFixture,
+    usage_unit: str,
+    price_unit: str,
+) -> None:
+    """Test a gas price unit that cannot be converted to the usage unit."""
+    energy_attributes = {
+        ATTR_UNIT_OF_MEASUREMENT: usage_unit,
+        ATTR_STATE_CLASS: SensorStateClass.TOTAL_INCREASING,
+    }
+    energy_data = data.EnergyManager.default_preferences()
+    energy_data["energy_sources"].append(
+        {
+            "type": "gas",
+            "stat_energy_from": "sensor.gas_consumption",
+            "stat_cost": None,
+            "entity_energy_price": "sensor.gas_price",
+            "number_energy_price": None,
+        }
+    )
+
+    hass_storage[data.STORAGE_KEY] = {
+        "version": 1,
+        "data": energy_data,
+    }
+
+    hass.states.async_set(
+        "sensor.gas_price", "0.5", {ATTR_UNIT_OF_MEASUREMENT: f"EUR/{price_unit}"}
+    )
+    hass.states.async_set("sensor.gas_consumption", 100, energy_attributes)
+
+    await setup_integration(hass)
+
+    state = hass.states.get("sensor.gas_consumption_cost")
+    assert state.state == "0.0"
+
+    hass.states.async_set("sensor.gas_consumption", 200, energy_attributes)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.gas_consumption_cost")
+    assert state.state == "0.0"
+    assert (
+        f"Not updating cost of sensor.gas_consumption: unit {usage_unit} does not "
+        f"match price unit per {price_unit} of sensor.gas_price" in caplog.text
+    )
+    assert "Error while dispatching event" not in caplog.text
+
+    # Warned once only
+    caplog.clear()
+    hass.states.async_set("sensor.gas_consumption", 300, energy_attributes)
+    await hass.async_block_till_done()
+
+    assert "Not updating cost" not in caplog.text
+    assert "Error while dispatching event" not in caplog.text
+
+    # Usage since the last update is priced once the units match
+    hass.states.async_set(
+        "sensor.gas_price", "0.5", {ATTR_UNIT_OF_MEASUREMENT: f"EUR/{usage_unit}"}
+    )
+    hass.states.async_set("sensor.gas_consumption", 310, energy_attributes)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.gas_consumption_cost")
+    assert state.state == "105.0"
+
+
+@pytest.mark.parametrize(
     ("unit_system", "usage_unit", "growth"),
     [
         # 1 cubic foot = 7.47 gl, 100 ft3 growth @ 0.5/ft3:
@@ -2441,6 +2525,96 @@ async def test_power_sensor_combined_invalid_value(
     )
     assert state
     assert state.state == "unknown"
+
+
+@pytest.mark.usefixtures("recorder_mock")
+@pytest.mark.parametrize(
+    ("invalid_source", "value"),
+    [
+        pytest.param("sensor.battery_discharge", "150.0", id="discharge"),
+        pytest.param("sensor.battery_charge", "50.0", id="charge"),
+    ],
+)
+async def test_power_sensor_combined_invalid_unit(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    invalid_source: str,
+    value: str,
+) -> None:
+    """Test combined power sensor with a source in a non-power unit."""
+    assert await async_setup_component(hass, DOMAIN, {"energy": {}})
+    manager = await async_get_manager(hass)
+    manager.data = manager.default_preferences()
+
+    hass.states.async_set(
+        "sensor.battery_discharge",
+        "150.0",
+        {ATTR_UNIT_OF_MEASUREMENT: UnitOfPower.WATT},
+    )
+    hass.states.async_set(
+        "sensor.battery_charge",
+        "50.0",
+        {ATTR_UNIT_OF_MEASUREMENT: UnitOfPower.WATT},
+    )
+    hass.states.async_set(
+        invalid_source,
+        value,
+        {ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR},
+    )
+    await hass.async_block_till_done()
+
+    await manager.async_update(
+        {
+            "energy_sources": [
+                {
+                    "type": "battery",
+                    "stat_energy_from": "sensor.battery_energy_from",
+                    "stat_energy_to": "sensor.battery_energy_to",
+                    "power_config": {
+                        "stat_rate_from": "sensor.battery_discharge",
+                        "stat_rate_to": "sensor.battery_charge",
+                    },
+                }
+            ],
+        }
+    )
+    await hass.async_block_till_done()
+
+    # The sensor is still added when a source has a non-power unit at setup
+    state = hass.states.get(
+        "sensor.energy_battery_battery_discharge_battery_charge_net_power"
+    )
+    assert state
+    assert state.state == "unknown"
+    assert (
+        "Unable to combine sensor.battery_discharge and sensor.battery_charge: "
+        "kWh is not a recognized power unit" in caplog.text
+    )
+
+    hass.states.async_set(
+        invalid_source, value, {ATTR_UNIT_OF_MEASUREMENT: UnitOfPower.WATT}
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(
+        "sensor.energy_battery_battery_discharge_battery_charge_net_power"
+    )
+    assert state
+    assert state.state == "100.0"
+
+    hass.states.async_set(
+        invalid_source,
+        value,
+        {ATTR_UNIT_OF_MEASUREMENT: UnitOfEnergy.KILO_WATT_HOUR},
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(
+        "sensor.energy_battery_battery_discharge_battery_charge_net_power"
+    )
+    assert state
+    assert state.state == "unknown"
+    assert caplog.text.count("kWh is not a recognized power unit") == 1
 
 
 async def test_power_sensor_naming_fallback(

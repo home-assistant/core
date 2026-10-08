@@ -1,7 +1,7 @@
 """Fixtures for the Sofar integration tests."""
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from modbus_connection.mock import MockModbusConnection
 import pytest
@@ -45,19 +45,25 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-async def init_integration(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_connection: MockModbusConnection,
-) -> MockConfigEntry:
-    """Set up the Sofar integration for testing."""
-    mock_config_entry.add_to_hass(hass)
+def mock_get_unit(mock_connection: MockModbusConnection) -> Generator[MagicMock]:
+    """Hand out units on the mock connection when the entry sets up."""
     with patch(
         "homeassistant.components.sofar.async_get_unit",
         side_effect=lambda hass, entry, params, unit_id: mock_connection.for_unit(
             unit_id
         ),
-    ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done(wait_background_tasks=True)
+    ) as mock_get_unit:
+        yield mock_get_unit
+
+
+@pytest.fixture
+async def init_integration(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_get_unit: MagicMock,
+) -> MockConfigEntry:
+    """Set up the Sofar integration for testing."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
     return mock_config_entry

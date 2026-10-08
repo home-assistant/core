@@ -24,7 +24,9 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import (
+    ATTR_BUZZER,
     ATTR_DAILY_GOAL,
+    ATTR_LED,
     ATTR_MINUTES_ACTIVE,
     ATTR_MINUTES_DAY_SLEEP,
     ATTR_MINUTES_NIGHT_SLEEP,
@@ -323,6 +325,13 @@ class TractiveClient:
         for switch, key in SWITCH_KEY_MAP.items():
             if switch_data := event.get(key):
                 payload[switch] = switch_data["active"]
+                # A timed out LED or buzzer is still reported as active, with
+                # no time remaining
+                if (
+                    switch in (ATTR_BUZZER, ATTR_LED)
+                    and switch_data.get("remaining") == 0
+                ):
+                    payload[switch] = False
         if hardware := event.get("hardware", {}):
             payload[ATTR_POWER_SAVING] = (
                 hardware.get("power_saving_zone_id") is not None
