@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_all_entities[update.pve1_software_update-entry]
+# name: test_all_entities[all-entities][update.pve1_software_update-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -36,7 +36,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[update.pve1_software_update-state]
+# name: test_all_entities[all-entities][update.pve1_software_update-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <UpdateEntityStateAttribute.AUTO_UPDATE: 'auto_update'>: False,
