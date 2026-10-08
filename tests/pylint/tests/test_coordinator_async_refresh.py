@@ -42,11 +42,11 @@ async def test_refresh(coordinator):
         ),
         pytest.param(
             """
-async def test_refresh(coordinator):
-    await coordinator.async_request_refresh()
+async def test_refresh(mock_coordinator):
+    mock_coordinator.async_refresh.assert_called_once()
 """,
             "tests.components.sun.test_sensor",
-            id="request_refresh",
+            id="mock_assertion",
         ),
         pytest.param(
             """
@@ -154,6 +154,37 @@ async def test_refresh(hass, coordinator):
     await refresh
 """,
             id="not_awaited",
+        ),
+        pytest.param(
+            """
+async def test_refresh(coordinator):
+    await coordinator.async_request_refresh()
+""",
+            id="request_refresh",
+        ),
+        pytest.param(
+            """
+async def test_refresh(coordinator):
+    await coordinator._async_refresh(log_failures=False)
+""",
+            id="private_refresh",
+        ),
+        pytest.param(
+            """
+async def test_refresh(hass, coordinator):
+    hass.async_add_job(coordinator.async_refresh)
+""",
+            id="method_reference",
+        ),
+        pytest.param(
+            """
+from unittest.mock import MagicMock
+
+async def test_refresh(hass, mock_config_entry, use_mock):
+    coordinator = MagicMock() if use_mock else mock_config_entry.runtime_data
+    await coordinator.async_refresh()
+""",
+            id="partly_inferred",
         ),
     ],
 )
