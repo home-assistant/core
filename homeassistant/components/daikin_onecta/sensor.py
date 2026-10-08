@@ -4,6 +4,8 @@ from dataclasses import dataclass
 import logging
 from typing import TYPE_CHECKING, override
 
+from daikin_onecta.models import ManagementPoint
+
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -52,7 +54,12 @@ class ValueSensorDetails:
     value: str
 
 
-def add_energy_sensors(coordinator, device, management_point, sensors) -> None:
+def add_energy_sensors(
+    coordinator: OnectaDataUpdateCoordinator,
+    device: DaikinOnectaDevice,
+    management_point: ManagementPoint,
+    sensors: list[SensorEntity],
+) -> None:
     """Add sensors for every typed energy aggregate exposed by a point."""
     periods = {
         "day": SENSOR_PERIOD_DAILY,
@@ -61,27 +68,32 @@ def add_energy_sensors(coordinator, device, management_point, sensors) -> None:
         "year": SENSOR_PERIOD_YEARLY,
     }
     order = {"day": 0, "week": 1, "year": 2, "month": 3}
-    for aggregate in sorted(
-        management_point.energy_aggregates,
-        key=lambda aggregate: order[aggregate.period],
-    ):
-        sensors.append(
-            DaikinEnergySensor(
-                device,
-                coordinator,
-                EnergySensorDetails(
-                    management_point.embedded_id,
-                    management_point.management_point_type,
-                    aggregate.source,
-                    aggregate.operation_mode,
-                    periods[aggregate.period],
-                    aggregate.data_type,
-                ),
-            )
+    sensors.extend(
+        DaikinEnergySensor(
+            device,
+            coordinator,
+            EnergySensorDetails(
+                management_point.embedded_id,
+                management_point.management_point_type,
+                aggregate.source,
+                aggregate.operation_mode,
+                periods[aggregate.period],
+                aggregate.data_type,
+            ),
         )
+        for aggregate in sorted(
+            management_point.energy_aggregates,
+            key=lambda aggregate: order[aggregate.period],
+        )
+    )
 
 
-def add_simple_sensors(coordinator, device, management_point, sensors) -> None:
+def add_simple_sensors(
+    coordinator: OnectaDataUpdateCoordinator,
+    device: DaikinOnectaDevice,
+    management_point: ManagementPoint,
+    sensors: list[SensorEntity],
+) -> None:
     """Add sensors for simple characteristics of one management point."""
     supported_management_point_types = {
         "domesticHotWaterTank",
@@ -123,7 +135,12 @@ def add_simple_sensors(coordinator, device, management_point, sensors) -> None:
             )
 
 
-def add_sensory_sensors(coordinator, device, management_point, sensors) -> None:
+def add_sensory_sensors(
+    coordinator: OnectaDataUpdateCoordinator,
+    device: DaikinOnectaDevice,
+    management_point: ManagementPoint,
+    sensors: list[SensorEntity],
+) -> None:
     """Add sensors for sensory data exposed by one management point."""
     sensors.extend(
         DaikinValueSensor(
@@ -152,7 +169,10 @@ def add_sensory_sensors(coordinator, device, management_point, sensors) -> None:
 
 
 def add_management_point_sensors(
-    coordinator, device, management_point, sensors
+    coordinator: OnectaDataUpdateCoordinator,
+    device: DaikinOnectaDevice,
+    management_point: ManagementPoint,
+    sensors: list[SensorEntity],
 ) -> None:
     """Add all sensors exposed by a management point."""
     add_simple_sensors(coordinator, device, management_point, sensors)
@@ -175,11 +195,9 @@ async def async_setup_entry(
 ) -> None:
     """Set up Daikin sensors based on config_entry."""
     coordinator: OnectaDataUpdateCoordinator = config_entry.runtime_data
-    sensors = []
+    sensors: list[SensorEntity] = []
     for device in (coordinator.data or {}).values():
-        sensors.append(
-            DaikinLimitSensor(hass, config_entry, device, coordinator, "remaining_day")
-        )
+        sensors.append(DaikinLimitSensor(device, coordinator, "remaining_day"))
         for management_point in device.device.management_points:
             add_management_point_sensors(coordinator, device, management_point, sensors)
 
@@ -190,7 +208,10 @@ class DaikinEnergySensor(DaikinEntity, SensorEntity):
     """Representation of a power/energy sensor."""
 
     def __init__(
-        self, device: DaikinOnectaDevice, coordinator, details: EnergySensorDetails
+        self,
+        device: DaikinOnectaDevice,
+        coordinator: OnectaDataUpdateCoordinator,
+        details: EnergySensorDetails,
     ) -> None:
         """Initialize an energy sensor for a management point."""
         super().__init__(
@@ -224,7 +245,7 @@ class DaikinEnergySensor(DaikinEntity, SensorEntity):
         self.update_state()
         self.async_write_ha_state()
 
-    def sensor_value(self):
+    def sensor_value(self) -> float | None:
         """Return energy aggregated for the current day, week, month, or year.
 
         Daikin returns rolling windows for each aggregation period. The first
@@ -238,7 +259,7 @@ class DaikinEnergySensor(DaikinEntity, SensorEntity):
         that a time slot is not available yet and contributes no consumption
         until a later update supplies its value.
         """
-        point = self._device.management_point(self._embedded_id)
+        point = self._device.management_point(self._embedded_id or "")
         if point is None:
             return None
         period = {
@@ -269,7 +290,10 @@ class DaikinValueSensor(DaikinEntity, SensorEntity):
     """Represent a Daikin characteristic or sensory-data value."""
 
     def __init__(
-        self, device: DaikinOnectaDevice, coordinator, details: ValueSensorDetails
+        self,
+        device: DaikinOnectaDevice,
+        coordinator: OnectaDataUpdateCoordinator,
+        details: ValueSensorDetails,
     ) -> None:
         """Initialize the sensor from a device value."""
         _LOGGER.info(
@@ -307,9 +331,9 @@ class DaikinValueSensor(DaikinEntity, SensorEntity):
         self.update_state()
         self.async_write_ha_state()
 
-    def sensor_value(self):
+    def sensor_value(self) -> str | int | float | None:
         """Return a typed characteristic or sensory value."""
-        point = self._device.management_point(self._embedded_id)
+        point = self._device.management_point(self._embedded_id or "")
         if point is None:
             return None
         if self._sub_type == "sensoryData":
@@ -320,7 +344,7 @@ class DaikinValueSensor(DaikinEntity, SensorEntity):
         _LOGGER.debug(
             "Device '%s' sensor '%s' value '%s'", self._device.name, self._value, result
         )
-        return result
+        return result if isinstance(result, str | int | float) else None
 
 
 class DaikinLimitSensor(DaikinEntity, SensorEntity):
@@ -328,19 +352,15 @@ class DaikinLimitSensor(DaikinEntity, SensorEntity):
 
     def __init__(
         self,
-        hass: HomeAssistant,
-        config_entry: ConfigEntry,
         device: DaikinOnectaDevice,
-        coordinator,
-        limit_key,
+        coordinator: OnectaDataUpdateCoordinator,
+        limit_key: str,
     ) -> None:
         """Initialize a rate-limit sensor."""
         _LOGGER.info("Device '%s' LimitSensor '%s'", device.name, limit_key)
         super().__init__(
             device, coordinator, device.gateway_embedded_id or "gateway", "Gateway"
         )
-        self._hass = hass
-        self._config_entry = config_entry
         self._limit_key = limit_key
         self._attr_has_entity_name = True
         self._attr_unique_id = f"{self._device.id}_limitsensor_{self._limit_key}"
@@ -368,7 +388,6 @@ class DaikinLimitSensor(DaikinEntity, SensorEntity):
         self.update_state()
         self.async_write_ha_state()
 
-    def sensor_value(self):
+    def sensor_value(self) -> int | None:
         """Return the current API rate-limit value."""
-        daikin_api = self._config_entry.runtime_data.api
-        return daikin_api.rate_limits[self._limit_key]
+        return self.coordinator.api.rate_limits[self._limit_key]
