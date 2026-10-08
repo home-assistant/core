@@ -22,7 +22,6 @@ from .helpers import handle_command
 from .models import TeslaFleetEnergyData
 
 ATTR_BUY_RATE = "buy_rate"
-ATTR_CURRENCY = "currency"
 ATTR_DAILY_CHARGE = "daily_charge"
 ATTR_DAYS = "days"
 ATTR_END_DAY = "end_day"
@@ -50,8 +49,22 @@ DAY_TO_TESLA = {
 SEASON_DATE_FIELDS = frozenset(
     {ATTR_START_MONTH, ATTR_START_DAY, ATTR_END_MONTH, ATTR_END_DAY}
 )
-# Tesla uses the reserved "ALL" key for a tariff that applies year-round.
+# Tesla's charge trees carry a reserved "ALL" fallback entry, so no season may
+# use that name.
 ALL_SEASON = "ALL"
+# A year-round tariff is sent the way the Tesla app stores one: a "Summer"
+# season covering the whole year plus an empty "Winter". Tesla accepts other
+# shapes (e.g. a season keyed "ALL") but then doesn't act on the tariff.
+YEAR_ROUND_SEASON = "Summer"
+EMPTY_SEASON = "Winter"
+# Tesla only acts on its canonical time-of-use labels, assigned here by import
+# rate from cheapest to dearest. Free-form labels are stored but ignored.
+TESLA_LABELS: dict[int, tuple[str, ...]] = {
+    1: ("OFF_PEAK",),
+    2: ("OFF_PEAK", "ON_PEAK"),
+    3: ("OFF_PEAK", "PARTIAL_PEAK", "ON_PEAK"),
+    4: ("SUPER_OFF_PEAK", "OFF_PEAK", "PARTIAL_PEAK", "ON_PEAK"),
+}
 
 
 def async_get_device_for_service_call(
@@ -121,11 +134,6 @@ def _non_empty_string(value: Any) -> str:
     return result
 
 
-def _currency(value: Any) -> str:
-    """Validate an ISO 4217 currency code."""
-    return cv.currency(_non_empty_string(value).upper())
-
-
 def _whole_minute(value: Any) -> time:
     """Validate a time Tesla can express, which is only hours and minutes."""
     result = cv.time(value)
@@ -135,10 +143,28 @@ def _whole_minute(value: Any) -> time:
 
 
 def _period_key(name: str) -> str:
-    """Convert a period name into a Tesla time-of-use label."""
+    """Normalise a period name so differently cased spellings match."""
     if not (key := slugify(name).upper()):
         raise vol.Invalid(f"Unable to derive a tariff label from {name!r}")
     return key
+
+
+def _period_labels(seasons: list[dict[str, Any]]) -> dict[str, str]:
+    """Map each period name to a Tesla label, cheapest import rate first."""
+    cheapest: dict[str, float] = {}
+    for season in seasons:
+        for period in season[ATTR_PERIODS]:
+            key = _period_key(period[ATTR_NAME])
+            cheapest[key] = min(
+                cheapest.get(key, period[ATTR_BUY_RATE]), period[ATTR_BUY_RATE]
+            )
+    if len(cheapest) > len(TESLA_LABELS):
+        raise vol.Invalid(
+            f"Tesla supports at most {len(TESLA_LABELS)} distinct periods, "
+            f"got {len(cheapest)}"
+        )
+    ordered = sorted(cheapest, key=lambda key: cheapest[key])
+    return dict(zip(ordered, TESLA_LABELS[len(ordered)], strict=True))
 
 
 def _whole_number(value: Any) -> int:
@@ -322,6 +348,7 @@ def _validate_seasons(seasons: list[dict[str, Any]]) -> list[dict[str, Any]]:
 
         _check_period_overlaps(season)
 
+    _period_labels(seasons)
     return seasons
 
 
@@ -330,7 +357,6 @@ TIME_OF_USE_SCHEMA = vol.Schema(
         vol.Required(CONF_DEVICE_ID): cv.string,
         vol.Required(ATTR_NAME): _non_empty_string,
         vol.Required(ATTR_UTILITY): _non_empty_string,
-        vol.Required(ATTR_CURRENCY): _currency,
         vol.Optional(ATTR_DAILY_CHARGE): vol.All(_finite_float, vol.Range(min=0)),
         vol.Required(ATTR_SEASONS): vol.All(
             cv.ensure_list, vol.Length(min=1), [TOU_SEASON_SCHEMA], _validate_seasons
@@ -372,18 +398,20 @@ def _build_seasons(
 ) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
     """Build the Tesla seasons tree and the import and export energy charges."""
     year_round = _is_year_round(seasons)
+    labels = _period_labels(seasons)
     tesla_seasons: dict[str, Any] = {}
-    buy_charges: dict[str, Any] = {}
-    sell_charges: dict[str, Any] = {}
+    buy_charges: dict[str, Any] = {ALL_SEASON: {"rates": {ALL_SEASON: 0}}}
+    sell_charges: dict[str, Any] = {ALL_SEASON: {"rates": {ALL_SEASON: 0}}}
+    has_sell = False
 
     for season in seasons:
-        key = ALL_SEASON if year_round else season[ATTR_NAME]
+        key = YEAR_ROUND_SEASON if year_round else season[ATTR_NAME]
         tou_periods: dict[str, Any] = {}
         buy_rates: dict[str, float] = {}
         sell_rates: dict[str, float] = {}
 
         for period in season[ATTR_PERIODS]:
-            label = _period_key(period[ATTR_NAME])
+            label = labels[_period_key(period[ATTR_NAME])]
             buy_rates[label] = period[ATTR_BUY_RATE]
             if ATTR_SELL_RATE in period:
                 sell_rates[label] = period[ATTR_SELL_RATE]
@@ -403,70 +431,61 @@ def _build_seasons(
                 for from_day, to_day in _tesla_day_ranges(period.get(ATTR_DAYS))
             )
 
-        tesla_season: dict[str, Any] = {"tou_periods": tou_periods}
-        if not year_round:
-            tesla_season |= {
+        if year_round:
+            dates = {"fromMonth": 1, "fromDay": 1, "toMonth": 12, "toDay": 31}
+        else:
+            dates = {
                 "fromMonth": season[ATTR_START_MONTH],
                 "fromDay": season[ATTR_START_DAY],
                 "toMonth": season[ATTR_END_MONTH],
                 "toDay": season[ATTR_END_DAY],
             }
 
-        tesla_seasons[key] = tesla_season
+        tesla_seasons[key] = {**dates, "tou_periods": tou_periods}
         buy_charges[key] = {"rates": buy_rates}
-        if sell_rates:
-            sell_charges[key] = {"rates": sell_rates}
+        sell_charges[key] = {"rates": sell_rates}
+        has_sell = has_sell or bool(sell_rates)
 
-    # Tesla expects an ALL fallback alongside named seasons.
-    if not year_round:
-        fallback = {"rates": {ALL_SEASON: 0}}
-        buy_charges[ALL_SEASON] = fallback
-        if sell_charges:
-            sell_charges[ALL_SEASON] = deepcopy(fallback)
+    if year_round:
+        tesla_seasons[EMPTY_SEASON] = {}
+        buy_charges[EMPTY_SEASON] = {}
+        sell_charges[EMPTY_SEASON] = {}
 
-    return tesla_seasons, buy_charges, sell_charges
+    return tesla_seasons, buy_charges, sell_charges if has_sell else {}
 
 
 def build_tariff_content_v2(data: dict[str, Any]) -> dict[str, Any]:
-    """Build a Tesla tariff_content_v2 payload from the action input."""
+    """Build a Tesla tariff_content_v2 payload from the action input.
+
+    The shape mirrors a tariff created in the Tesla app (as returned by
+    site_info): no version, currency or unused charge fields, canonical
+    labels, and a reserved "ALL" fallback in each charge tree.
+    """
     seasons, buy_charges, sell_charges = _build_seasons(data[ATTR_SEASONS])
     demand_charges: dict[str, Any] = {ALL_SEASON: {"rates": {ALL_SEASON: 0}}}
-    demand_charges |= {key: {"rates": {}} for key in seasons if key != ALL_SEASON}
-
-    # Tesla's published tariffs always carry these, zeroed when unused.
-    unused_charges: dict[str, Any] = {
-        "monthly_minimum_bill": 0,
-        "min_applicable_demand": 0,
-        "max_applicable_demand": 0,
-        "monthly_charges": 0,
-        "daily_demand_charges": {},
-    }
+    demand_charges |= {key: {} for key in seasons}
+    daily_charge: dict[str, Any] = {"name": "Charge"}
+    if data.get(ATTR_DAILY_CHARGE):
+        daily_charge["amount"] = data[ATTR_DAILY_CHARGE]
 
     tariff: dict[str, Any] = {
-        "version": 1,
         "code": "home_assistant",
         "name": data[ATTR_NAME],
         "utility": data[ATTR_UTILITY],
-        "currency": data[ATTR_CURRENCY],
-        "daily_charges": [{"name": "Charge", "amount": data.get(ATTR_DAILY_CHARGE, 0)}],
+        "daily_charges": [daily_charge],
         "demand_charges": demand_charges,
         "energy_charges": buy_charges,
         "seasons": seasons,
-        **unused_charges,
     }
 
     if sell_charges:
         tariff["sell_tariff"] = {
-            "version": 1,
-            "code": "",
-            "currency": "",
             "name": data[ATTR_NAME],
             "utility": data[ATTR_UTILITY],
-            "daily_charges": [{"name": "Charge", "amount": 0}],
+            "daily_charges": [{"name": "Charge"}],
             "demand_charges": deepcopy(demand_charges),
             "energy_charges": sell_charges,
             "seasons": deepcopy(seasons),
-            **deepcopy(unused_charges),
         }
 
     return tariff

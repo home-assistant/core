@@ -30,7 +30,6 @@ ENERGY_SITE_ENTITY = "sensor.energy_site_grid_power"
 TIME_OF_USE_DATA = {
     "name": "Agile",
     "utility": "Octopus Energy",
-    "currency": "gbp",
     "daily_charge": 0.6,
     "seasons": [
         {
@@ -126,14 +125,14 @@ async def test_time_of_use_day_ranges(
                 CONF_DEVICE_ID: energy_device,
                 "name": "Days",
                 "utility": "Octopus Energy",
-                "currency": "GBP",
                 "seasons": [{"name": "All year", "periods": [period]}],
             },
             blocking=True,
         )
 
     tariff = set_time_of_use.call_args[0][0]
-    entries = tariff["seasons"]["ALL"]["tou_periods"]["PEAK"]["periods"]
+    # A single period takes Tesla's cheapest canonical label.
+    entries = tariff["seasons"]["Summer"]["tou_periods"]["OFF_PEAK"]["periods"]
     assert [(e["fromDayOfWeek"], e["toDayOfWeek"]) for e in entries] == expected
 
 
@@ -158,7 +157,6 @@ async def test_time_of_use_split_period(
                 CONF_DEVICE_ID: energy_device,
                 "name": "Split",
                 "utility": "Octopus Energy",
-                "currency": "GBP",
                 "seasons": [
                     {
                         "name": "All year",
@@ -183,8 +181,8 @@ async def test_time_of_use_split_period(
         )
 
     tariff = set_time_of_use.call_args[0][0]
-    assert tariff["energy_charges"]["ALL"]["rates"] == {"OFF_PEAK": 0.09}
-    assert tariff["seasons"]["ALL"]["tou_periods"]["OFF_PEAK"]["periods"] == [
+    assert tariff["energy_charges"]["Summer"]["rates"] == {"OFF_PEAK": 0.09}
+    assert tariff["seasons"]["Summer"]["tou_periods"]["OFF_PEAK"]["periods"] == [
         {
             "fromDayOfWeek": 0,
             "toDayOfWeek": 6,
@@ -251,7 +249,6 @@ async def test_time_of_use_seasons(
                 CONF_DEVICE_ID: energy_device,
                 "name": "Seasonal",
                 "utility": "Octopus Energy",
-                "currency": "GBP",
                 "seasons": [
                     {
                         "name": "Summer",
@@ -285,20 +282,21 @@ async def test_time_of_use_seasons(
             "toMinute": 0,
         }
     ]
-    assert tariff["daily_charges"] == [{"name": "Charge", "amount": 0}]
+    assert tariff["daily_charges"] == [{"name": "Charge"}]
     assert "sell_tariff" not in tariff
+    # One distinct period name across both seasons: one canonical label.
     assert tariff["energy_charges"] == {
-        "Summer": {"rates": {"ON_PEAK": 0.3}},
-        "Winter": {"rates": {"ON_PEAK": 0.4}},
         "ALL": {"rates": {"ALL": 0}},
+        "Summer": {"rates": {"OFF_PEAK": 0.3}},
+        "Winter": {"rates": {"OFF_PEAK": 0.4}},
     }
     assert tariff["demand_charges"] == {
         "ALL": {"rates": {"ALL": 0}},
-        "Summer": {"rates": {}},
-        "Winter": {"rates": {}},
+        "Summer": {},
+        "Winter": {},
     }
     assert tariff["seasons"]["Summer"] == {
-        "tou_periods": {"ON_PEAK": {"periods": all_week}},
+        "tou_periods": {"OFF_PEAK": {"periods": all_week}},
         "fromMonth": 4,
         "fromDay": 1,
         "toMonth": 9,
@@ -602,7 +600,6 @@ async def test_time_of_use_seasons(
             },
             id="overlapping_seasons",
         ),
-        pytest.param({"currency": "pounds"}, id="invalid_currency"),
         pytest.param({"daily_charge": -1}, id="negative_daily_charge"),
     ],
 )
@@ -773,7 +770,6 @@ async def test_time_of_use_zero_sell_rate(
                 CONF_DEVICE_ID: energy_device,
                 "name": "Flat",
                 "utility": "Octopus Energy",
-                "currency": "GBP",
                 "seasons": [
                     {
                         "name": "All year",
@@ -785,7 +781,9 @@ async def test_time_of_use_zero_sell_rate(
         )
 
     tariff = set_time_of_use.call_args[0][0]
-    assert tariff["sell_tariff"]["energy_charges"]["ALL"]["rates"] == {"FLAT": 0.0}
+    assert tariff["sell_tariff"]["energy_charges"]["Summer"]["rates"] == {
+        "OFF_PEAK": 0.0
+    }
 
 
 async def test_time_of_use_site_not_tou_capable(
@@ -837,7 +835,6 @@ async def test_time_of_use_period_wraps_to_next_day(
                 CONF_DEVICE_ID: energy_device,
                 "name": "Overnight",
                 "utility": "Octopus Energy",
-                "currency": "GBP",
                 "seasons": [
                     {
                         "name": "All year",
@@ -864,3 +861,170 @@ async def test_time_of_use_period_wraps_to_next_day(
         )
 
     set_time_of_use.assert_called_once()
+
+
+async def test_time_of_use_matches_tesla_app_shape(
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a year-round tariff is sent the way the Tesla app stores one.
+
+    A live A/B on a Powerwall 3 showed Tesla stores, but does not act on, a
+    tariff keyed by an "ALL" season with free-form labels and version and
+    currency fields, while it acts on this shape within minutes.
+    """
+    await setup_platform(hass, normal_config_entry)
+
+    energy_device = entity_registry.async_get(ENERGY_SITE_ENTITY).device_id
+
+    with patch(
+        "tesla_fleet_api.tesla.EnergySite.time_of_use_settings",
+        return_value=RESPONSE_OK,
+    ) as set_time_of_use:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_TIME_OF_USE,
+            {
+                CONF_DEVICE_ID: energy_device,
+                "name": "Overnight",
+                "utility": "Octopus Energy",
+                "seasons": [
+                    {
+                        "name": "All year",
+                        "periods": [
+                            {
+                                "name": "Day",
+                                "start_time": "05:30:00",
+                                "end_time": "23:30:00",
+                                "buy_rate": 0.32,
+                                "sell_rate": 0.12,
+                            },
+                            {
+                                "name": "Night",
+                                "start_time": "23:30:00",
+                                "end_time": "05:30:00",
+                                "buy_rate": 0.055,
+                                "sell_rate": 0.12,
+                            },
+                        ],
+                    }
+                ],
+            },
+            blocking=True,
+        )
+
+    tariff = set_time_of_use.call_args[0][0]
+    assert not {"version", "currency"} & set(tariff)
+    assert not {"version", "currency", "code"} & set(tariff["sell_tariff"])
+    assert set(tariff["seasons"]) == {"Summer", "Winter"}
+    assert tariff["seasons"]["Winter"] == {}
+    summer = tariff["seasons"]["Summer"]
+    assert (
+        summer["fromMonth"],
+        summer["fromDay"],
+        summer["toMonth"],
+        summer["toDay"],
+    ) == (
+        1,
+        1,
+        12,
+        31,
+    )
+    # Labels follow the import rate, not the period names.
+    assert tariff["energy_charges"] == {
+        "ALL": {"rates": {"ALL": 0}},
+        "Summer": {"rates": {"ON_PEAK": 0.32, "OFF_PEAK": 0.055}},
+        "Winter": {},
+    }
+    assert tariff["sell_tariff"]["energy_charges"]["Summer"]["rates"] == {
+        "ON_PEAK": 0.12,
+        "OFF_PEAK": 0.12,
+    }
+
+
+@pytest.mark.parametrize(
+    ("rates", "labels"),
+    [
+        ([0.3, 0.1, 0.2], ["ON_PEAK", "OFF_PEAK", "PARTIAL_PEAK"]),
+        (
+            [0.4, 0.05, 0.2, 0.1],
+            ["ON_PEAK", "SUPER_OFF_PEAK", "PARTIAL_PEAK", "OFF_PEAK"],
+        ),
+    ],
+)
+async def test_time_of_use_canonical_labels(
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    rates: list[float],
+    labels: list[str],
+) -> None:
+    """Test periods get Tesla's canonical labels, cheapest import rate first."""
+    await setup_platform(hass, normal_config_entry)
+
+    energy_device = entity_registry.async_get(ENERGY_SITE_ENTITY).device_id
+    hours = [(0, 6), (6, 12), (12, 18), (18, 0)]
+    periods = [
+        {
+            "name": f"Band {index}",
+            "start_time": f"{hours[index][0]:02d}:00:00",
+            "end_time": f"{hours[index][1]:02d}:00:00",
+            "buy_rate": rate,
+        }
+        for index, rate in enumerate(rates)
+    ]
+
+    with patch(
+        "tesla_fleet_api.tesla.EnergySite.time_of_use_settings",
+        return_value=RESPONSE_OK,
+    ) as set_time_of_use:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_TIME_OF_USE,
+            {
+                CONF_DEVICE_ID: energy_device,
+                "name": "Bands",
+                "utility": "Octopus Energy",
+                "seasons": [{"name": "All year", "periods": periods}],
+            },
+            blocking=True,
+        )
+
+    rates_by_label = set_time_of_use.call_args[0][0]["energy_charges"]["Summer"][
+        "rates"
+    ]
+    assert rates_by_label == dict(zip(labels, rates, strict=True))
+
+
+async def test_time_of_use_too_many_periods(
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test more distinct periods than Tesla has labels is rejected."""
+    await setup_platform(hass, normal_config_entry)
+
+    energy_device = entity_registry.async_get(ENERGY_SITE_ENTITY).device_id
+    periods = [
+        {
+            "name": f"Band {index}",
+            "start_time": f"{index * 4:02d}:00:00",
+            "end_time": f"{(index * 4 + 4) % 24:02d}:00:00",
+            "buy_rate": 0.1 + index / 100,
+        }
+        for index in range(5)
+    ]
+
+    with pytest.raises(vol.Invalid):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_TIME_OF_USE,
+            {
+                CONF_DEVICE_ID: energy_device,
+                "name": "Too many",
+                "utility": "Octopus Energy",
+                "seasons": [{"name": "All year", "periods": periods}],
+            },
+            blocking=True,
+        )

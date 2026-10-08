@@ -2,38 +2,46 @@
 # name: test_time_of_use
   dict({
     'code': 'home_assistant',
-    'currency': 'GBP',
     'daily_charges': list([
       dict({
         'amount': 0.6,
         'name': 'Charge',
       }),
     ]),
-    'daily_demand_charges': dict({
-    }),
     'demand_charges': dict({
       'ALL': dict({
         'rates': dict({
           'ALL': 0,
         }),
       }),
+      'Summer': dict({
+      }),
+      'Winter': dict({
+      }),
     }),
     'energy_charges': dict({
       'ALL': dict({
         'rates': dict({
-          'AGILE_LOW': -0.05,
+          'ALL': 0,
         }),
       }),
+      'Summer': dict({
+        'rates': dict({
+          'OFF_PEAK': -0.05,
+        }),
+      }),
+      'Winter': dict({
+      }),
     }),
-    'max_applicable_demand': 0,
-    'min_applicable_demand': 0,
-    'monthly_charges': 0,
-    'monthly_minimum_bill': 0,
     'name': 'Agile',
     'seasons': dict({
-      'ALL': dict({
+      'Summer': dict({
+        'fromDay': 1,
+        'fromMonth': 1,
+        'toDay': 31,
+        'toMonth': 12,
         'tou_periods': dict({
-          'AGILE_LOW': dict({
+          'OFF_PEAK': dict({
             'periods': list([
               dict({
                 'fromDayOfWeek': 0,
@@ -63,41 +71,49 @@
           }),
         }),
       }),
+      'Winter': dict({
+      }),
     }),
     'sell_tariff': dict({
-      'code': '',
-      'currency': '',
       'daily_charges': list([
         dict({
-          'amount': 0,
           'name': 'Charge',
         }),
       ]),
-      'daily_demand_charges': dict({
-      }),
       'demand_charges': dict({
         'ALL': dict({
           'rates': dict({
             'ALL': 0,
           }),
         }),
+        'Summer': dict({
+        }),
+        'Winter': dict({
+        }),
       }),
       'energy_charges': dict({
         'ALL': dict({
           'rates': dict({
-            'AGILE_LOW': 0.15,
+            'ALL': 0,
           }),
         }),
+        'Summer': dict({
+          'rates': dict({
+            'OFF_PEAK': 0.15,
+          }),
+        }),
+        'Winter': dict({
+        }),
       }),
-      'max_applicable_demand': 0,
-      'min_applicable_demand': 0,
-      'monthly_charges': 0,
-      'monthly_minimum_bill': 0,
       'name': 'Agile',
       'seasons': dict({
-        'ALL': dict({
+        'Summer': dict({
+          'fromDay': 1,
+          'fromMonth': 1,
+          'toDay': 31,
+          'toMonth': 12,
           'tou_periods': dict({
-            'AGILE_LOW': dict({
+            'OFF_PEAK': dict({
               'periods': list([
                 dict({
                   'fromDayOfWeek': 0,
@@ -127,11 +143,11 @@
             }),
           }),
         }),
+        'Winter': dict({
+        }),
       }),
       'utility': 'Octopus Energy',
-      'version': 1,
     }),
     'utility': 'Octopus Energy',
-    'version': 1,
   })
 # ---

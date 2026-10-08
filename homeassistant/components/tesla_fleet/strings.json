@@ -744,12 +744,8 @@
     "time_of_use": {
       "description": "Configures a time-of-use tariff on a Tesla energy site.",
       "fields": {
-        "currency": {
-          "description": "Three-letter currency code for the rates, such as GBP or USD.",
-          "name": "Currency"
-        },
         "daily_charge": {
-          "description": "Fixed standing charge applied each day, in the selected currency.",
+          "description": "Fixed standing charge applied each day.",
           "name": "Daily standing charge"
         },
         "device_id": {

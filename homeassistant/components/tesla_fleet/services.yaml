@@ -16,11 +16,6 @@ time_of_use:
       example: Octopus Energy
       selector:
         text:
-    currency:
-      required: true
-      example: GBP
-      selector:
-        text:
     daily_charge:
       required: false
       example: 0.6
