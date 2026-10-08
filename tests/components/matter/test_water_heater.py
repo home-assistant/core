@@ -5,6 +5,7 @@ from unittest.mock import MagicMock, call
 from chip.clusters import Objects as clusters
 from matter_server.client.models.node import MatterNode
 from matter_server.common.helpers.util import create_attribute_path_from_attribute
+from matter_server.common.models import EventType
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -21,7 +22,7 @@ from homeassistant.components.water_heater import (
     STATE_OFF,
     WaterHeaterEntityFeature,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -332,3 +333,67 @@ async def test_async_boost_actions(
         ),
     )
     matter_client.send_device_command.reset_mock()
+
+
+@pytest.mark.parametrize("node_fixture", ["silabs_water_heater"])
+async def test_water_heater_missing_boost_state(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test a device that never reports the BoostState attribute.
+
+    The read path defaults to 0, which equals kInactive, so the entity must not
+    claim eco from a value the device never sent. See #182557.
+    """
+    boost_path = create_attribute_path_from_attribute(
+        endpoint_id=2,
+        attribute=clusters.WaterHeaterManagement.Attributes.BoostState,
+    )
+    # The fixture reports BoostState as inactive, so the entity starts on eco.
+    assert matter_node.node_data.attributes[boost_path] == int(
+        clusters.WaterHeaterManagement.Enums.BoostStateEnum.kInactive
+    )
+    assert hass.states.get("water_heater.water_heater").state == STATE_ECO
+    # The device never reports the attribute, but the cluster instance keeps
+    # its default (0 == kInactive). That default must not read as eco.
+    matter_node.node_data.attributes.pop(boost_path)
+    await trigger_subscription_callback(
+        hass,
+        matter_client,
+        EventType.ATTRIBUTE_UPDATED,
+    )
+
+    state = hass.states.get("water_heater.water_heater")
+    assert state
+    # The entity must not report eco from a value the device never reported.
+    assert state.state == STATE_UNKNOWN
+
+
+@pytest.mark.parametrize("node_fixture", ["silabs_water_heater"])
+async def test_water_heater_missing_boost_state_system_mode_off(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test that SystemMode off still wins when BoostState is absent.
+
+    See #182557.
+    """
+    boost_path = create_attribute_path_from_attribute(
+        endpoint_id=2,
+        attribute=clusters.WaterHeaterManagement.Attributes.BoostState,
+    )
+    assert hass.states.get("water_heater.water_heater").state == STATE_ECO
+    # The device never reports BoostState, but reports SystemMode as off.
+    matter_node.node_data.attributes.pop(boost_path)
+    set_node_attribute(matter_node, 2, 513, 28, 0)
+    await trigger_subscription_callback(
+        hass,
+        matter_client,
+        EventType.ATTRIBUTE_UPDATED,
+    )
+
+    state = hass.states.get("water_heater.water_heater")
+    assert state
+    assert state.state == STATE_OFF
