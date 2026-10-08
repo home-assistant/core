@@ -143,6 +143,13 @@ class BluesoundPlayer(CoordinatorEntity[BluesoundCoordinator], MediaPlayerEntity
             )
         )
 
+    @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Rebuild the group members, which contain the entity_id."""
+        super().async_entity_id_changed(old_entity_id)
+        self._group_members = self.rebuild_group_members()
+
     @override
     async def async_will_remove_from_hass(self) -> None:
         """Stop the polling task."""
