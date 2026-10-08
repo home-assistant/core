@@ -2,8 +2,10 @@
 
 from unittest.mock import MagicMock, patch
 
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.proxmoxve.helpers import update_version
 from homeassistant.const import STATE_OFF, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -14,6 +16,39 @@ from tests.common import MockConfigEntry, snapshot_platform
 from tests.typing import WebSocketGenerator
 
 ENTITY_ID = "update.pve1_software_update"
+
+
+@pytest.mark.parametrize(
+    ("updates", "expected_version"),
+    [
+        pytest.param(
+            [{"Package": "ceph-common", "Version": "19.2.6", "Origin": "Proxmox"}],
+            "9.2.3",
+            id="higher-ceph-version-is-not-pve-version",
+        ),
+        pytest.param(
+            [{"Package": "libpve-storage-perl", "Version": "1+16.1+2+pmx1"}],
+            "9.2.3",
+            id="debian-package-version-is-not-parsed",
+        ),
+        pytest.param(
+            [
+                {"Package": "ceph-common", "Version": "19.2.6", "Origin": "Proxmox"},
+                {"Package": "pve-manager", "Version": "9.2.21-1"},
+            ],
+            "9.2.21",
+            id="pve-manager-version-is-used",
+        ),
+    ],
+)
+def test_update_version_uses_pve_manager(
+    updates: list[dict[str, str]], expected_version: str
+) -> None:
+    """The PVE version must come only from pve-manager."""
+    info = update_version("9.2.3", updates)
+
+    assert info.latest_version == expected_version
+    assert info.total_updates == len(updates)
 
 
 async def test_all_entities(
