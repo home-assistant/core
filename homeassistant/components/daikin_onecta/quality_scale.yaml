@@ -73,7 +73,7 @@ rules:
   repair-issues:
     status: exempt
     comment: The integration has no user-actionable repair cases.
-  stale-devices: todo
+  stale-devices: done
   async-dependency: done
   inject-websession: done
   strict-typing: done
