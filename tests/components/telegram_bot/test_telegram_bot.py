@@ -1461,6 +1461,27 @@ async def test_edit_message(
     mock.assert_called_once()
 
 
+@pytest.mark.usefixtures("mock_external_calls")
+async def test_async_setup_entry_platform_failed(
+    hass: HomeAssistant, mock_broadcast_config_entry: MockConfigEntry
+) -> None:
+    """Test setup entry failed when setting up the bot platform fails."""
+    mock_broadcast_config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.telegram_bot.broadcast.async_setup_bot_platform",
+        side_effect=Exception("mock platform error"),
+    ):
+        await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_broadcast_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert (
+        mock_broadcast_config_entry.reason
+        == "Error setting up the Telegram bot broadcast platform"
+    )
+
+
 async def test_async_setup_entry_failed(
     hass: HomeAssistant, mock_broadcast_config_entry: MockConfigEntry
 ) -> None:

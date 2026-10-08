@@ -227,6 +227,9 @@
     },
     "multiple_errors": {
       "message": "Action failed with multiple errors.\n{errors}"
+    },
+    "platform_setup_failed": {
+      "message": "Error setting up the Telegram bot {platform} platform"
     }
   },
   "issues": {

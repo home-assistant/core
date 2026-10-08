@@ -9,7 +9,11 @@ from telegram.error import InvalidToken, TelegramError
 
 from homeassistant.const import CONF_API_KEY, CONF_PLATFORM, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -184,10 +188,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: TelegramBotConfigEntry) 
     module = cast(BotPlatformModule, MODULES[p_type])
     try:
         receiver_service = await module.async_setup_bot_platform(hass, bot, entry)
-    except Exception:
-        _LOGGER.exception("Error setting up Telegram bot %s", p_type)
+    except Exception as err:
         await bot.shutdown()
-        return False
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="platform_setup_failed",
+            translation_placeholders={"platform": p_type},
+        ) from err
 
     notify_service = TelegramNotificationService(
         hass, receiver_service, bot, entry, entry.options[ATTR_PARSER]
