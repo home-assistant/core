@@ -789,6 +789,7 @@ async def test_removing_entity_with_update_override_pending_does_not_cancel_task
 
 async def test_removed_entity_queued_for_permit_is_cancelled_not_leaked(
     hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test a removed entity's task queued for a permit is cancelled, not leaked.
 
@@ -858,6 +859,9 @@ async def test_removed_entity_queued_for_permit_is_cancelled_not_leaked(
     assert queued_task.cancelled()
     assert id(entity_b) not in platform_handle._polling_tasks
     entity_b.async_update.assert_not_called()
+    # A removal-initiated cancellation is expected, not a sign of a hung
+    # entity, so it must not be logged as a warning.
+    assert "was cancelled" not in caplog.text
 
 
 async def test_concurrent_update_not_skipped_by_suspended_poll_of_same_entity(

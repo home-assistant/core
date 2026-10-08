@@ -316,6 +316,16 @@ class EntityPlatform:
         # `_async_handle_entity_update_result` below) so it does not grow
         # unbounded for entities that are never reused.
         self._entity_poll_cycle_claims: dict[int, int] = {}
+        # Tasks deliberately cancelled by `remove_entity_cb` (entity
+        # removed while its poll was still queued for a `PARALLEL_UPDATES`
+        # permit). That cancellation happens independently of whichever
+        # `_async_await_polling_tasks` call originally started the task
+        # and will eventually observe its result, so this set is the only
+        # way for that call to know the cancellation was expected (an
+        # ordinary removal or rename) rather than a sign of a hung entity,
+        # and should not be logged as a warning. Entries are removed by
+        # `_async_handle_entity_update_result` once handled.
+        self._expected_cancelled_polling_tasks: set[asyncio.Task[None]] = set()
         # Monotonically increasing id identifying each call to
         # `_async_update_entity_states`, used to detect when a newer
         # polling cycle has already claimed an entity.
@@ -956,6 +966,7 @@ class EntityPlatform:
                 # since `async_update_ha_state` is itself overridable and
                 # an override may already be running non-cancellation-safe
                 # user code before ever reaching that point.
+                self._expected_cancelled_polling_tasks.add(tracked[1])
                 tracked[1].cancel()
 
         entity.async_on_remove(remove_entity_cb)
@@ -1601,6 +1612,13 @@ class EntityPlatform:
         expected_cancel: bool = False,
     ) -> BaseException | None:
         """Clear a finished polling task, log its outcome, and return any fatal exception to re-raise."""
+        # A cancellation requested by `remove_entity_cb` is also expected,
+        # even though it reaches this method through the normal (not the
+        # outer-poll-cancellation) path.
+        expected_cancel = expected_cancel or (
+            task in self._expected_cancelled_polling_tasks
+        )
+        self._expected_cancelled_polling_tasks.discard(task)
         # Only clear the tracked task if it is still the one we started;
         # a fast-finishing entity could already have been re-scheduled by a
         # later cycle by the time we get here.
