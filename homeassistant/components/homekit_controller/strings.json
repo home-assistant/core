@@ -71,6 +71,17 @@
     }
   },
   "entity": {
+    "button": {
+      "clear_hold": {
+        "name": "Clear hold"
+      },
+      "provision_preferred_thread_credentials": {
+        "name": "Provision preferred Thread credentials"
+      },
+      "setup": {
+        "name": "Setup"
+      }
+    },
     "event": {
       "button": {
         "state_attributes": {
@@ -95,14 +106,33 @@
         }
       }
     },
+    "number": {
+      "duration": {
+        "name": "Duration"
+      },
+      "elevation": {
+        "name": "Elevation"
+      },
+      "sensitivity": {
+        "name": "Sensitivity"
+      },
+      "spray_quantity": {
+        "name": "Spray quantity"
+      },
+      "volume": {
+        "name": "Volume"
+      }
+    },
     "select": {
       "air_purifier_state_target": {
+        "name": "Air purifier mode",
         "state": {
           "automatic": "Automatic",
           "manual": "[%key:common::state::manual%]"
         }
       },
       "ecobee_mode": {
+        "name": "Current mode",
         "state": {
           "away": "[%key:common::state::not_home%]",
           "home": "[%key:common::state::home%]",
@@ -110,6 +140,7 @@
         }
       },
       "temperature_display_units": {
+        "name": "Temperature display units",
         "state": {
           "celsius": "Celsius",
           "fahrenheit": "Fahrenheit"
@@ -118,6 +149,7 @@
     },
     "sensor": {
       "air_purifier_state_current": {
+        "name": "Air purifier status",
         "state": {
           "idle": "[%key:common::state::idle%]",
           "inactive": "Inactive",
@@ -125,6 +157,7 @@
         }
       },
       "thread_node_capabilities": {
+        "name": "Thread capabilities",
         "state": {
           "border_router_capable": "Border Router Capable",
           "full": "Full End Device",
@@ -135,6 +168,7 @@
         }
       },
       "thread_status": {
+        "name": "Thread status",
         "state": {
           "border_router": "Border Router",
           "child": "Child",
@@ -145,8 +179,28 @@
           "router": "Router"
         }
       },
+      "valve_position": {
+        "name": "Valve position"
+      },
       "water_level": {
         "name": "Water level"
+      }
+    },
+    "switch": {
+      "airplay_enable": {
+        "name": "AirPlay enable"
+      },
+      "lock_physical_controls": {
+        "name": "Lock physical controls"
+      },
+      "mute": {
+        "name": "Mute"
+      },
+      "pairing_mode": {
+        "name": "Pairing mode"
+      },
+      "sleep_mode": {
+        "name": "Sleep mode"
       }
     }
   },

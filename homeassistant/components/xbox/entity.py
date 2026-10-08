@@ -155,6 +155,12 @@ class XboxConsoleBaseEntity(CoordinatorEntity[XboxConsoleStatusCoordinator]):
         """Return if entity is available."""
         return self.coordinator.data.get(self._console.id) is not None
 
+    @property
+    @override
+    def entity_picture(self) -> str | None:
+        """Return the entity picture."""
+        return super().entity_picture if self.available else None
+
 
 def to_https(image_url: str) -> str:
     """Convert image URLs to secure URLs."""

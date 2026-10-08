@@ -77,7 +77,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 SENSOR_SCHEMA = probatio.Schema(
-    {probatio.Optional(CONF_MONITORED_CONDITIONS): probatio.All(cv.ensure_list)}
+    {probatio.Optional(CONF_MONITORED_CONDITIONS): probatio.All(probatio.EnsureList())}
 )
 
 CONFIG_SCHEMA = probatio.Schema(
@@ -85,13 +85,13 @@ CONFIG_SCHEMA = probatio.Schema(
         DOMAIN: probatio.Schema(
             {
                 probatio.Required(CONF_CLIENT_ID): cv.string,
-                probatio.Required(CONF_CLIENT_SECRET): cv.string,
+                probatio.Required(probatio.Secret(CONF_CLIENT_SECRET)): cv.string,
                 # Required to use the new API (optional for compatibility)
                 probatio.Optional(CONF_PROJECT_ID): cv.string,
                 probatio.Optional(CONF_SUBSCRIBER_ID): cv.string,
                 # Config that only currently works on the old API
                 probatio.Optional(CONF_STRUCTURE): probatio.All(
-                    cv.ensure_list, [cv.string]
+                    probatio.EnsureList(), [cv.string]
                 ),
                 probatio.Optional(CONF_SENSORS): SENSOR_SCHEMA,
                 probatio.Optional(CONF_BINARY_SENSORS): SENSOR_SCHEMA,

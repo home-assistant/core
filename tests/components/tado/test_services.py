@@ -6,12 +6,8 @@ from unittest.mock import patch
 import pytest
 from requests.exceptions import RequestException
 
-from homeassistant.components.tado.const import (
-    CONF_CONFIG_ENTRY,
-    CONF_READING,
-    DOMAIN,
-    SERVICE_ADD_METER_READING,
-)
+from homeassistant.components.tado.const import DOMAIN
+from homeassistant.components.tado.services import TadoService, TadoServiceArgument
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
@@ -24,7 +20,7 @@ async def test_has_services(
 ) -> None:
     """Test the existence of the Tado Service."""
 
-    assert hass.services.has_service(DOMAIN, SERVICE_ADD_METER_READING)
+    assert hass.services.has_service(DOMAIN, TadoService.ADD_METER_READING)
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -41,10 +37,10 @@ async def test_add_meter_readings(
     ):
         response: None = await hass.services.async_call(
             DOMAIN,
-            SERVICE_ADD_METER_READING,
+            TadoService.ADD_METER_READING,
             service_data={
-                CONF_CONFIG_ENTRY: config_entry.entry_id,
-                CONF_READING: 1234,
+                TadoServiceArgument.CONFIG_ENTRY: config_entry.entry_id,
+                TadoServiceArgument.READING: 1234,
             },
             blocking=True,
         )
@@ -67,10 +63,10 @@ async def test_add_meter_readings_exception(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_ADD_METER_READING,
+            TadoService.ADD_METER_READING,
             service_data={
-                CONF_CONFIG_ENTRY: config_entry.entry_id,
-                CONF_READING: 1234,
+                TadoServiceArgument.CONFIG_ENTRY: config_entry.entry_id,
+                TadoServiceArgument.READING: 1234,
             },
             blocking=True,
         )
@@ -97,10 +93,10 @@ async def test_add_meter_readings_invalid(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_ADD_METER_READING,
+            TadoService.ADD_METER_READING,
             service_data={
-                CONF_CONFIG_ENTRY: config_entry.entry_id,
-                CONF_READING: 1234,
+                TadoServiceArgument.CONFIG_ENTRY: config_entry.entry_id,
+                TadoServiceArgument.READING: 1234,
             },
             blocking=True,
         )
@@ -127,10 +123,10 @@ async def test_add_meter_readings_duplicate(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_ADD_METER_READING,
+            TadoService.ADD_METER_READING,
             service_data={
-                CONF_CONFIG_ENTRY: config_entry.entry_id,
-                CONF_READING: 1234,
+                TadoServiceArgument.CONFIG_ENTRY: config_entry.entry_id,
+                TadoServiceArgument.READING: 1234,
             },
             blocking=True,
         )

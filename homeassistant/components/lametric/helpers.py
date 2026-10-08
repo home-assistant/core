@@ -3,7 +3,7 @@
 from collections.abc import Callable, Coroutine
 from typing import Any, Concatenate
 
-from demetriek import LaMetricConnectionError, LaMetricError
+from demetriek import Device, LaMetricConnectionError, LaMetricError
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -55,3 +55,11 @@ def async_get_coordinator_by_device_id(
     config_entry: LaMetricConfigEntry
     _, config_entry = service.async_get_device_and_config_entry(hass, DOMAIN, device_id)
     return config_entry.runtime_data
+
+
+def has_audio(device: Device) -> bool:
+    """Return whether the device can play sounds.
+
+    A device without audio, like a SKY, refuses a notification with a sound.
+    """
+    return bool(device.audio and device.audio.available)

@@ -29,7 +29,7 @@ from homeassistant.const import (
     FORMAT_DATETIME,
     Platform,
 )
-from homeassistant.core import Event, HassJob, HomeAssistant, ServiceCall, callback
+from homeassistant.core import Event, HassJob, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entityfilter
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -39,7 +39,6 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.event import async_call_later
-from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_integration
 from homeassistant.util.signal_type import SignalType
@@ -82,6 +81,7 @@ from .helpers import FixedSizeQueueLogHandler
 from .models import auto_login_failure_key
 from .prefs import CloudPreferences
 from .repairs import async_manage_legacy_subscription_issue
+from .services import async_setup_services
 from .subscription import async_subscription_info
 
 DEFAULT_MODE = MODE_PROD
@@ -97,8 +97,6 @@ LLM_PLATFORMS = [
     Platform.CONVERSATION,
 ]
 
-SERVICE_REMOTE_CONNECT = "remote_connect"
-SERVICE_REMOTE_DISCONNECT = "remote_disconnect"
 
 SIGNAL_CLOUD_CONNECTION_STATE: SignalType[CloudConnectionState] = SignalType(
     "CLOUD_CONNECTION_STATE"
@@ -121,7 +119,9 @@ ALEXA_ENTITY_SCHEMA = probatio.Schema(
 GOOGLE_ENTITY_SCHEMA = probatio.Schema(
     {
         probatio.Optional(CONF_NAME): cv.string,
-        probatio.Optional(CONF_ALIASES): probatio.All(cv.ensure_list, [cv.string]),
+        probatio.Optional(CONF_ALIASES): probatio.All(
+            probatio.EnsureList(), [cv.string]
+        ),
         probatio.Optional(google_assistant.CONF_ROOM_HINT): cv.string,
     }
 )
@@ -334,7 +334,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _shutdown)
 
     _handle_prefs_updated(hass, cloud)
-    _setup_services(hass, prefs)
+    async_setup_services(hass)
 
     async def async_startup_repairs(_: datetime) -> None:
         """Create repair issues after startup."""
@@ -524,23 +524,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(
         entry, entry.runtime_data["platforms"]
-    )
-
-
-@callback
-def _setup_services(hass: HomeAssistant, prefs: CloudPreferences) -> None:
-    """Set up services for cloud component."""
-
-    async def _service_handler(service: ServiceCall) -> None:
-        """Handle service for cloud."""
-        if service.service == SERVICE_REMOTE_CONNECT:
-            await prefs.async_update(remote_enabled=True)
-        elif service.service == SERVICE_REMOTE_DISCONNECT:
-            await prefs.async_update(remote_enabled=False)
-
-    async_register_admin_service(hass, DOMAIN, SERVICE_REMOTE_CONNECT, _service_handler)
-    async_register_admin_service(
-        hass, DOMAIN, SERVICE_REMOTE_DISCONNECT, _service_handler
     )
 
 

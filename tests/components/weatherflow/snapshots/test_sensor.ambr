@@ -575,7 +575,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': 'unknown',
   })
 # ---
 # name: test_all_entities[sensor.st_00000001_lightning_count-entry]
@@ -687,7 +687,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': 'unknown',
   })
 # ---
 # name: test_all_entities[sensor.st_00000001_lightning_last_energy-entry]
@@ -740,7 +740,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': 'unknown',
   })
 # ---
 # name: test_all_entities[sensor.st_00000001_lightning_last_strike-entry]
@@ -791,7 +791,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': 'unknown',
   })
 # ---
 # name: test_all_entities[sensor.st_00000001_precipitation-entry]

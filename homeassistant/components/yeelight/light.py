@@ -37,7 +37,7 @@ from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.typing import VolDictType
 from homeassistant.util import color as color_util
 
-from . import YEELIGHT_FLOW_TRANSITION_SCHEMA, YeelightConfigEntry
+from . import YeelightConfigEntry
 from .const import (
     ACTION_RECOVER,
     ACTIVE_COLOR_FLOWING,
@@ -55,6 +55,7 @@ from .const import (
     DOMAIN,
     MODELS_WITH_DELAYED_ON_TRANSITION,
     POWER_STATE_CHANGE_TIME,
+    YEELIGHT_FLOW_TRANSITION_SCHEMA,
 )
 from .device import YeelightDevice
 from .entity import YeelightEntity
@@ -187,7 +188,7 @@ SERVICE_SCHEMA_SET_HSV_SCENE: VolDictType = {
         probatio.ExactSequence(
             (
                 probatio.All(probatio.Coerce(float), probatio.Range(min=0, max=359)),
-                probatio.All(probatio.Coerce(float), probatio.Range(min=0, max=100)),
+                probatio.All(probatio.Coerce(float), probatio.Percentage()),
             )
         ),
     ),

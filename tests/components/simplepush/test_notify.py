@@ -5,7 +5,7 @@ from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
-from simplepush import BadRequest, UnknownError
+from simplepush.legacy import BadRequest, UnknownError
 
 from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.components.simplepush.const import CONF_DEVICE_KEY, CONF_SALT, DOMAIN

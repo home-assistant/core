@@ -658,7 +658,7 @@ async def test_shared_context(hass: HomeAssistant) -> None:
         started_flag.set()
 
     hass.bus.async_listen(event, event_started)
-    hass.bus.async_listen(EVENT_SCRIPT_STARTED, run_mock)
+    hass.bus.async_listen(EVENT_SCRIPT_STARTED, callback(run_mock))
 
     assert await async_setup_component(
         hass,

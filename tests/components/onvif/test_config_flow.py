@@ -368,6 +368,67 @@ async def test_flow_manual_entry(hass: HomeAssistant) -> None:
         }
 
 
+async def test_flow_manual_entry_multiple_interfaces(hass: HomeAssistant) -> None:
+    """Test the unique ID comes from the last enabled network interface.
+
+    Some Dahua based cameras (like Imou) report a dummy eth0 that has the same
+    MAC address on every unit, next to the interface they actually use.
+    """
+    shared_mac = "00:30:1b:ba:02:db"
+    own_mac = "a8:31:62:73:43:60"
+    # Another camera of the same kind, configured with the shared MAC
+    MockConfigEntry(domain=DOMAIN, unique_id=shared_mac).add_to_hass(hass)
+
+    dummy_interface = MagicMock(Enabled=True)
+    dummy_interface.Info.HwAddress = shared_mac
+    wifi_interface = MagicMock(Enabled=True)
+    wifi_interface.Info.HwAddress = own_mac
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with (
+        patch(
+            "homeassistant.components.onvif.config_flow.get_device"
+        ) as mock_onvif_camera,
+        patch(
+            "homeassistant.components.onvif.config_flow.WSDiscovery"
+        ) as mock_discovery,
+        patch("homeassistant.components.onvif.ONVIFDevice") as mock_device,
+    ):
+        setup_mock_onvif_camera(mock_onvif_camera)
+        devicemgmt = mock_onvif_camera.create_devicemgmt_service.return_value
+        devicemgmt.GetNetworkInterfaces = AsyncMock(
+            return_value=[dummy_interface, wifi_interface]
+        )
+        mock_discovery.return_value = []
+        setup_mock_device(mock_device)
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={"auto": False},
+        )
+
+        with patch(
+            "homeassistant.components.onvif.async_setup_entry", return_value=True
+        ):
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"],
+                user_input={
+                    config_flow.CONF_NAME: NAME,
+                    config_flow.CONF_HOST: HOST,
+                    config_flow.CONF_PORT: PORT,
+                    config_flow.CONF_USERNAME: USERNAME,
+                    config_flow.CONF_PASSWORD: PASSWORD,
+                },
+            )
+            await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == own_mac
+
+
 async def test_flow_manual_entry_no_profiles(hass: HomeAssistant) -> None:
     """Test that config flow when no profiles are returned."""
     result = await hass.config_entries.flow.async_init(

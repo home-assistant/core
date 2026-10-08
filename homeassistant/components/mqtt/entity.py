@@ -43,7 +43,10 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
-from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    async_get_current_platform,
+)
 from homeassistant.helpers.event import (
     async_track_device_registry_updated_event,
     async_track_entity_registry_updated_event,
@@ -257,6 +260,22 @@ def async_setup_entity_entry_helper(  # noqa: C901
 ) -> None:
     """Set up entity creation dynamically through MQTT discovery."""
     mqtt_data = hass.data[DATA_MQTT]
+    platform = async_get_current_platform()
+
+    async def _async_add_discovered_entity(
+        entity: MqttEntity, discovery_data: DiscoveryInfoType
+    ) -> None:
+        """Add a discovered entity and acknowledge the discovery once done.
+
+        The discovery is acknowledged only after async_add_entities returns, i.e.
+        after the entity wrote its initial state on success or the add was
+        aborted. This keeps a queued update for the same discovery hash from
+        draining into an entity that is not yet in the state machine.
+        """
+        try:
+            await platform.async_add_entities([entity])
+        finally:
+            send_discovery_done(hass, discovery_data)
 
     @callback
     def _async_migrate_subentry(
@@ -335,12 +354,16 @@ def async_setup_entity_entry_helper(  # noqa: C901
                     "and repair flow must be completed first"
                 )
             else:
-                async_add_entities(
-                    [
-                        entity_class(
-                            hass, config, entry, discovery_payload.discovery_data
-                        )
-                    ]
+                entity = entity_class(
+                    hass, config, entry, discovery_payload.discovery_data
+                )
+                entry.async_create_task(
+                    hass,
+                    _async_add_discovered_entity(
+                        entity, discovery_payload.discovery_data
+                    ),
+                    f"mqtt add discovered {domain} entity",
+                    eager_start=True,
                 )
         except probatio.Invalid as err:
             _handle_discovery_failure(hass, discovery_payload)
@@ -1010,6 +1033,7 @@ class MqttDiscoveryUpdateMixin(Entity):
         self._discovery_update = discovery_update
         self._remove_discovery_updated: Callable[[], None] | None = None
         self._removed_from_hass = False
+        self._added_to_hass = False
         if discovery_data is None:
             return
         mqtt_data = hass.data[DATA_MQTT]
@@ -1018,6 +1042,14 @@ class MqttDiscoveryUpdateMixin(Entity):
         self._migrate_discovery: str | None = None
         if discovery_hash in self._registry_hooks:
             self._registry_hooks.pop(discovery_hash)()
+
+    @override
+    async def async_prepare_to_add_to_hass(self) -> None:
+        """Register discovery cleanup that must also run if the add is aborted."""
+        self._added_to_hass = False
+        await super().async_prepare_to_add_to_hass()
+        if self._discovery_data is not None:
+            self.async_on_remove(self._async_teardown_discovery_on_remove)
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -1219,37 +1251,32 @@ class MqttDiscoveryUpdateMixin(Entity):
             # rediscovered after a restart
             await async_remove_discovery_payload(self.hass, self._discovery_data)
 
-    @final
-    @override
-    async def add_to_platform_finish(self) -> None:
-        """Finish adding entity to platform."""
-        await super().add_to_platform_finish()
-        # Only send the discovery done after the entity is fully added
-        # and the state is written to the state machine.
-        if self._discovery_data is not None:
-            send_discovery_done(self.hass, self._discovery_data)
-
     @callback
-    @override
-    def add_to_platform_abort(self) -> None:
-        """Abort adding an entity to a platform."""
-        if self._discovery_data is not None:
+    def _async_teardown_discovery_on_remove(self) -> None:
+        """Tear down discovery when the entity is removed or its add is aborted.
+
+        Registered via async_on_remove in async_prepare_to_add_to_hass so it also
+        runs on the abort path, where async_will_remove_from_hass is never called.
+        When the add is aborted while the entity is already registered (e.g. a
+        disabled entity), a registry hook is installed so the retained discovery
+        topic is cleared if the entity is later removed from the registry.
+        """
+        if TYPE_CHECKING:
+            assert self._discovery_data is not None
+        if not self._added_to_hass and self.registry_entry is not None:
             discovery_hash: tuple[str, str] = self._discovery_data[ATTR_DISCOVERY_HASH]
-            if self.registry_entry is not None:
-                self._registry_hooks[discovery_hash] = (
-                    async_track_entity_registry_updated_event(
+            self._registry_hooks[discovery_hash] = (
+                async_track_entity_registry_updated_event(
+                    self.hass,
+                    self.entity_id,
+                    partial(
+                        async_clear_discovery_topic_if_entity_removed,
                         self.hass,
-                        self.entity_id,
-                        partial(
-                            async_clear_discovery_topic_if_entity_removed,
-                            self.hass,
-                            self._discovery_data,
-                        ),
-                    )
+                        self._discovery_data,
+                    ),
                 )
-            stop_discovery_updates(self.hass, self._discovery_data)
-            send_discovery_done(self.hass, self._discovery_data)
-        super().add_to_platform_abort()
+            )
+        self._cleanup_discovery_on_remove()
 
     @override
     async def async_will_remove_from_hass(self) -> None:
@@ -1570,6 +1597,7 @@ class MqttEntity(
             )
         await self._subscribe_topics()
         await self.mqtt_async_added_to_hass()
+        self._added_to_hass = True
 
     async def mqtt_async_added_to_hass(self) -> None:
         """Call before the discovery message is acknowledged.

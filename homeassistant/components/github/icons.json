@@ -31,6 +31,9 @@
       "latest_release": {
         "default": "mdi:github"
       },
+      "latest_release_downloads": {
+        "default": "mdi:download"
+      },
       "latest_tag": {
         "default": "mdi:tag"
       },

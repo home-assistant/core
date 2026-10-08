@@ -50,13 +50,13 @@ RFLINK_PLATFORM = {
                     TYPE_STANDARD, TYPE_INVERTED
                 ),
                 probatio.Optional(CONF_ALIASES, default=[]): probatio.All(
-                    cv.ensure_list, [cv.string]
+                    probatio.EnsureList(), [cv.string]
                 ),
                 probatio.Optional(CONF_GROUP_ALIASES, default=[]): probatio.All(
-                    cv.ensure_list, [cv.string]
+                    probatio.EnsureList(), [cv.string]
                 ),
                 probatio.Optional(CONF_NOGROUP_ALIASES, default=[]): probatio.All(
-                    cv.ensure_list, [cv.string]
+                    probatio.EnsureList(), [cv.string]
                 ),
                 probatio.Optional(CONF_FIRE_EVENT, default=False): cv.boolean,
                 probatio.Optional(CONF_SIGNAL_REPETITIONS): probatio.Coerce(int),

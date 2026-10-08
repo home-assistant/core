@@ -125,7 +125,7 @@ class PhilipsJSConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         schema = probatio.Schema(
             {
-                probatio.Required(CONF_PIN): str,
+                probatio.Required(probatio.Secret(CONF_PIN)): str,
             }
         )
 

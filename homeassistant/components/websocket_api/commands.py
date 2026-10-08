@@ -37,6 +37,7 @@ from homeassistant.exceptions import (
 from homeassistant.helpers import (
     config_validation as cv,
     entity,
+    system_state as system_state_helper,
     target as target_helpers,
     template,
     trace,
@@ -132,6 +133,8 @@ def async_register_commands(
     async_reg(hass, handle_subscribe_condition)
     async_reg(hass, handle_subscribe_condition_platforms)
     async_reg(hass, handle_subscribe_events)
+    async_reg(hass, handle_subscribe_system_state)
+    async_reg(hass, handle_dismiss_system_state)
     async_reg(hass, handle_subscribe_trigger)
     async_reg(hass, handle_subscribe_trigger_platforms)
     async_reg(hass, handle_test_condition)
@@ -240,6 +243,50 @@ def handle_subscribe_bootstrap_integrations(
         hass, SIGNAL_BOOTSTRAP_INTEGRATIONS, forward_bootstrap_integrations
     )
 
+    connection.send_result(msg["id"])
+
+
+@callback
+@decorators.require_admin
+@decorators.websocket_command(
+    {
+        probatio.Required("type"): "subscribe_system_state",
+    }
+)
+def handle_subscribe_system_state(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Handle subscribe system state command."""
+
+    @callback
+    def forward_system_state(
+        system_state: system_state_helper.SystemState,
+    ) -> None:
+        """Forward the system state to the websocket."""
+        connection.send_message(
+            messages.event_message(msg["id"], system_state.as_dict())
+        )
+
+    connection.subscriptions[msg["id"]] = system_state_helper.async_subscribe(
+        hass, forward_system_state
+    )
+
+    connection.send_result(msg["id"])
+    forward_system_state(system_state_helper.async_get(hass))
+
+
+@callback
+@decorators.require_admin
+@decorators.websocket_command(
+    {
+        probatio.Required("type"): "dismiss_system_state",
+    }
+)
+def handle_dismiss_system_state(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Handle dismiss system state command."""
+    system_state_helper.async_dismiss(hass)
     connection.send_result(msg["id"])
 
 
@@ -1178,14 +1225,19 @@ async def handle_subscribe_condition(
     def unsubscribe() -> None:
         """Unsubscribe from condition updates."""
         condition.async_unload()
-        unsub()
+        for unsub in unsubs:
+            unsub()
 
-    unsub = async_track_time_interval(
-        hass,
-        evaluate_condition,
-        timedelta(seconds=1),
-        name="websocket_api_condition_subscription",
-    )
+    unsubs = [await condition.async_track_changes(partial(evaluate_condition, None))]
+    if condition.needs_polling:
+        unsubs.append(
+            async_track_time_interval(
+                hass,
+                evaluate_condition,
+                timedelta(seconds=1),
+                name="websocket_api_condition_subscription",
+            )
+        )
     connection.subscriptions[msg["id"]] = unsubscribe
     connection.send_result(msg["id"])
     evaluate_condition(None)
