@@ -644,6 +644,9 @@
     "circuit_breaker_remote_disabled": {
       "message": "Circuit breaker for {entity} of {device} is tripped and cannot be turned on remotely"
     },
+    "custom_integration_entry": {
+      "message": "The config entry {title} probably comes from a custom integration, please remove it if you want to use core Shelly integration"
+    },
     "device_communication_action_error": {
       "message": "Device communication error occurred while calling action for {entity} of {device}"
     },
