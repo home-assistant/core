@@ -1123,13 +1123,10 @@ async def test_climate_service_updates_entity_state(
         21,
     )
 
+    device.async_update_device_registry.reset_mock()
     device.name = "Renamed Daikin"
     coordinator.async_update_listeners()
-    gateway = device_registry.async_get_device_by_identifier(
-        (DOMAIN, "gateway"), config_entry.entry_id
-    )
-    assert gateway is not None
-    assert gateway.name == "Renamed Daikin"
+    device.async_update_device_registry.assert_called_once_with(hass, config_entry)
 
 
 async def test_climate_platform_services_and_management_points(

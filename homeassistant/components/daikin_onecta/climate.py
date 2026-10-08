@@ -39,7 +39,7 @@ from homeassistant.util import dt as dt_util
 from .const import CONF_HOMEKIT_FAN_MODE_ALIASES, DOMAIN, FANMODE_FIXED
 from .coordinator import DaikinOnectaConfigEntry, OnectaDataUpdateCoordinator
 from .device import DaikinOnectaDevice
-from .entity import DaikinOnectaEntity, management_point_device_info
+from .entity import DaikinOnectaEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -154,12 +154,6 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
         """Initialize the climate device."""
         super().__init__(coordinator, device)
         self._embedded_id = embedded_id
-        self._attr_device_info = management_point_device_info(
-            coordinator,
-            device,
-            embedded_id,
-            "climateControl",
-        )
         self._setpoint = setpoint
         self._attr_unique_id = f"{self._device.id}_{self._embedded_id}_{self._setpoint}"
         self.entity_description = CLIMATE_ENTITY_DESCRIPTIONS.get(
@@ -214,6 +208,9 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
     @callback
     @override
     def _handle_coordinator_update(self) -> None:
+        self._device.async_update_device_registry(
+            self.hass, self.coordinator.config_entry
+        )
         self._update_state()
         self.async_write_ha_state()
 

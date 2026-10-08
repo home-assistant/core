@@ -2,7 +2,7 @@
 
 from collections.abc import Awaitable, Callable
 import logging
-from typing import TYPE_CHECKING, Any, override
+from typing import TYPE_CHECKING, Any, cast, override
 
 from daikin_onecta.client import DomesticHotWaterClient
 from daikin_onecta.models import ManagementPoint, Setpoint
@@ -87,10 +87,8 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
         self._attr_supported_features = self.get_supported_features()
         self._attr_native_current_temperature = self.get_current_temperature()
         self._attr_native_target_temperature = self.get_target_temperature()
-        if (min_temp := self.get_min_temp()) is not None:
-            self._attr_min_temp = min_temp
-        if (max_temp := self.get_max_temp()) is not None:
-            self._attr_max_temp = max_temp
+        self._attr_min_temp = cast("float", self.get_min_temp())
+        self._attr_max_temp = cast("float", self.get_max_temp())
         self._attr_operation_list = self.get_operation_list()
         self._attr_current_operation = self.get_current_operation()
 

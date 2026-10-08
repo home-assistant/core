@@ -5,7 +5,6 @@ from unittest.mock import AsyncMock
 import pytest
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
-from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.components.daikin_onecta.binary_sensor import DaikinBinarySensor
 from homeassistant.components.daikin_onecta.fan import DaikinAirPurifier
 from homeassistant.components.daikin_onecta.select import DaikinScheduleSelect
@@ -32,7 +31,6 @@ from homeassistant.components.water_heater import (
 )
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .test_climate_snapshots import _async_setup_fixture
 
@@ -102,32 +100,6 @@ async def test_refresh_button_requests_coordinator_refresh(
     )
 
     coordinator.async_refresh.assert_awaited_once()
-
-
-async def test_management_point_device_links_to_gateway(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Management-point devices are linked to their registered gateway."""
-    await _async_setup_fixture(hass, config_entry, "dry")
-
-    climate_entry = next(
-        entry
-        for entry in er.async_entries_for_config_entry(
-            entity_registry, config_entry.entry_id
-        )
-        if entry.domain == CLIMATE_DOMAIN
-    )
-    assert climate_entry.device_id is not None
-    management_point = device_registry.async_get(climate_entry.device_id)
-
-    assert management_point is not None
-    assert management_point.via_device_id is not None
-    gateway = device_registry.async_get(management_point.via_device_id)
-    assert gateway is not None
-    assert gateway.config_entry_id == config_entry.entry_id
 
 
 async def test_switch_service_updates_cached_state(
