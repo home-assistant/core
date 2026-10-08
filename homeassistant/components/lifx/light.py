@@ -211,6 +211,7 @@ class LIFXLight(LIFXEntity, LightEntity):
     _attr_name = None
     # A light without hue runs the effects that do not paint a color
     _attr_effect_list = [SERVICE_EFFECT_PULSE, SERVICE_EFFECT_STOP]
+    _unregister_manager: CALLBACK_TYPE
 
     def __init__(
         self,
@@ -421,10 +422,26 @@ class LIFXLight(LIFXEntity, LightEntity):
     @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
-        self.async_on_remove(
-            self.manager.async_register_entity(self.entity_id, self.coordinator)
+        self._unregister_manager = self.manager.async_register_entity(
+            self.entity_id, self.coordinator
         )
+        self.async_on_remove(self._async_unregister_from_manager)
         return await super().async_added_to_hass()
+
+    @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Re-register with the manager under the new entity_id."""
+        self._unregister_manager()
+        self._unregister_manager = self.manager.async_register_entity(
+            self.entity_id, self.coordinator
+        )
+        super().async_entity_id_changed(old_entity_id)
+
+    @callback
+    def _async_unregister_from_manager(self) -> None:
+        """Unregister from the manager under the current entity_id."""
+        self._unregister_manager()
 
     def _cancel_postponed_update(self) -> None:
         """Cancel postponed update, if applicable."""
