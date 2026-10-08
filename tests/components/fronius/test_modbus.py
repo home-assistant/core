@@ -705,6 +705,7 @@ async def test_turning_the_setting_off_frees_a_running_limit(
 
     assert config_entry.data[CONF_AUTO_REVERT_POWER_LIMIT] is False
     coordinator = config_entry.runtime_data.modbus_settings_coordinators[0]
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
     await coordinator.async_refresh()
     controls = coordinator.modbus_inverter.controls
     assert controls.enabled is True

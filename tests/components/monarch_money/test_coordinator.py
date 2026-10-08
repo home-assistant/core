@@ -115,6 +115,7 @@ async def test_update_auth_error_starts_reauthentication(
         TransportServerError("forbidden", code=403)
     )
 
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
     await coordinator.async_refresh()
     await hass.async_block_till_done()
 
@@ -171,6 +172,7 @@ async def test_update_connection_error_is_retryable(
         api_error
     )
 
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
     await coordinator.async_refresh()
     await hass.async_block_till_done()
 

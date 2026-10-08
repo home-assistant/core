@@ -305,6 +305,7 @@ async def test_light_unavailable_when_fixture_disappears_gen4(
     assert state.state == STATE_ON
 
     removed_addresses.add(2)
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
     await entry.runtime_data.async_refresh()
     await hass.async_block_till_done()
 

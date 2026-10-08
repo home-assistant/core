@@ -134,6 +134,7 @@ async def test_budget_sensors_discover_and_recover_categories(
     )
 
     coordinator = mock_config_entry.runtime_data
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
     await coordinator.async_refresh()
     await hass.async_block_till_done()
 
@@ -142,12 +143,14 @@ async def test_budget_sensors_discover_and_recover_categories(
     )
     assert vacation_entity_id is not None
 
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
     await coordinator.async_refresh()
     await hass.async_block_till_done()
     vacation_state = hass.states.get(vacation_entity_id)
     assert vacation_state is not None
     assert vacation_state.state == "unavailable"
 
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
     await coordinator.async_refresh()
     await hass.async_block_till_done()
     vacation_state = hass.states.get(vacation_entity_id)
@@ -229,6 +232,7 @@ async def test_budget_sensors_recover_when_current_month_appears(
     assert budget_state is not None
     assert budget_state.state == "unavailable"
 
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
     await mock_config_entry.runtime_data.async_refresh()
     await hass.async_block_till_done()
 

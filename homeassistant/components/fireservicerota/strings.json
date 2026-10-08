@@ -42,5 +42,10 @@
         "name": "Incident response"
       }
     }
+  },
+  "exceptions": {
+    "token_refresh_failed": {
+      "message": "Failed to refresh the FireServiceRota authentication tokens"
+    }
   }
 }

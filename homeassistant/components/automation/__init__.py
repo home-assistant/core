@@ -317,6 +317,7 @@ async def _create_automation_entities(
                     automation_id,
                     name,
                     automation_config.raw_config,
+                    automation_config.raw_blueprint_inputs,
                     cast(str, automation_config.validation_error),
                     automation_config.validation_status,
                 )

@@ -162,6 +162,7 @@ async def test_update_recovers_after_error_state_clears(
 
     feature_mock.is_error = False
     feature_mock.native_value = 21.5
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
     await config_entry.runtime_data.async_refresh()
     await hass.async_block_till_done()
 

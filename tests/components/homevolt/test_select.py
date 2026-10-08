@@ -93,6 +93,7 @@ async def test_select_unknown_mode(
     """Test missing and unsupported modes are unknown."""
     mock_homevolt_client.schedule["mode"] = mode
 
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
     await init_integration.runtime_data.async_request_refresh()
 
     state = hass.states.get(ENTITY_ID)
@@ -108,6 +109,7 @@ async def test_select_unavailable_without_local_mode(
     """Test mode changes are unavailable until local mode is enabled."""
     mock_homevolt_client.local_mode_enabled = False
 
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
     await init_integration.runtime_data.async_request_refresh()
 
     state = hass.states.get(ENTITY_ID)

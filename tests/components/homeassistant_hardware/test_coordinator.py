@@ -46,12 +46,14 @@ async def test_firmware_update_coordinator_fetching(
     coordinator.async_add_listener(listener)
 
     # The first update will fail
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
     await coordinator.async_refresh()
     assert listener.mock_calls == [call()]
     assert coordinator.data is None
     assert "GitHub release assets haven't been uploaded yet" in caplog.text
 
     # The second will succeed
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
     await coordinator.async_refresh()
     assert listener.mock_calls == [call(), call()]
     assert coordinator.data == manifest

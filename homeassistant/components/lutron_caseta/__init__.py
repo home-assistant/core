@@ -13,7 +13,7 @@ from pylutron_caseta.smartbridge import Smartbridge
 from homeassistant import config_entries
 from homeassistant.const import ATTR_DEVICE_ID, CONF_HOST, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -179,9 +179,12 @@ async def async_setup_entry(
             ca_certs=ca_certs,
             on_connect_callback=_on_connect,
         )
-    except ssl.SSLError:
-        _LOGGER.error("Invalid certificate used to connect to bridge at %s", host)
-        return False
+    except ssl.SSLError as err:
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="invalid_certificate",
+            translation_placeholders={"host": host},
+        ) from err
 
     connect_task = hass.async_create_task(bridge.connect())
     for future, name, timeout in (

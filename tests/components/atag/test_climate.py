@@ -114,6 +114,7 @@ async def test_update_failed(
     assert hass.states.get(CLIMATE_ID).state == HVACMode.AUTO
     coordinator = entry.runtime_data
     with patch("pyatag.AtagOne.update", side_effect=TimeoutError) as updater:
+        # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
         await coordinator.async_refresh()
         await hass.async_block_till_done()
         updater.assert_called_once()

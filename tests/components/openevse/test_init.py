@@ -3,6 +3,7 @@
 from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock
 
+from freezegun.api import FrozenDateTimeFactory
 from openevsehttp.exceptions import (
     AuthenticationError,
     MissingSerial,
@@ -10,12 +11,13 @@ from openevsehttp.exceptions import (
 )
 
 from homeassistant.components.openevse.const import DOMAIN
+from homeassistant.components.openevse.coordinator import SCAN_INTERVAL
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_setup_entry_timeout(
@@ -55,6 +57,7 @@ async def test_setup_entry_auth_error_starts_reauth(
 
 async def test_coordinator_update_auth_error_starts_reauth(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     mock_config_entry: MockConfigEntry,
     mock_charger: MagicMock,
 ) -> None:
@@ -65,10 +68,10 @@ async def test_coordinator_update_auth_error_starts_reauth(
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
-    coordinator = mock_config_entry.runtime_data
     mock_charger.update.side_effect = AuthenticationError
-    await coordinator.async_refresh()
-    await hass.async_block_till_done()
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1

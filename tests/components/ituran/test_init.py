@@ -61,6 +61,7 @@ async def test_remove_stale_devices(
     assert len(device_entries) == 1
 
     mock_ituran.get_vehicles.return_value = []
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
     await mock_config_entry.runtime_data.async_refresh()
     await hass.async_block_till_done()
     device_entries = dr.async_entries_for_config_entry(
@@ -86,6 +87,7 @@ async def test_recover_from_errors(
     assert len(device_entries) == 1
 
     mock_ituran.get_vehicles.side_effect = IturanApiError
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
     await mock_config_entry.runtime_data.async_refresh()
     await hass.async_block_till_done()
     device_entries = dr.async_entries_for_config_entry(
@@ -95,6 +97,7 @@ async def test_recover_from_errors(
     assert len(device_entries) == 1
 
     mock_ituran.get_vehicles.side_effect = IturanAuthError
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
     await mock_config_entry.runtime_data.async_refresh()
     await hass.async_block_till_done()
     device_entries = dr.async_entries_for_config_entry(
@@ -104,6 +107,7 @@ async def test_recover_from_errors(
     assert len(device_entries) == 1
 
     mock_ituran.get_vehicles.side_effect = None
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
     await mock_config_entry.runtime_data.async_refresh()
     await hass.async_block_till_done()
     device_entries = dr.async_entries_for_config_entry(

@@ -125,6 +125,7 @@ async def test_repair_auto_resolves_when_cloud_is_re_enabled(
     assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
 
     mock_homewizardenergy.combined.return_value.system.cloud_enabled = True
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
     await mock_config_entry.runtime_data.async_refresh()
     await hass.async_block_till_done()
 
