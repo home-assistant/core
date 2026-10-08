@@ -194,17 +194,24 @@ class GetForecastTool(Tool):
                 error=True,
             )
 
-        response = await hass.services.async_call(
-            DOMAIN,
-            SERVICE_GET_FORECASTS,
-            {
-                "entity_id": weather_state.entity_id,
-                "type": forecast_type,
-            },
-            context=llm_context.context,
-            blocking=True,
-            return_response=True,
-        )
+        try:
+            response = await hass.services.async_call(
+                DOMAIN,
+                SERVICE_GET_FORECASTS,
+                {
+                    "entity_id": weather_state.entity_id,
+                    "type": forecast_type,
+                },
+                context=llm_context.context,
+                blocking=True,
+                return_response=True,
+            )
+        except HomeAssistantError:
+            # The only targeted entity being unavailable leaves nothing to
+            # call, which raises instead of returning an empty response.
+            return ToolResult(
+                data={"error": "Weather entity is unavailable"}, error=True
+            )
         # Entity services omit unavailable entities from the response entirely,
         # so the entity_id may be missing even though it matched above.
         entity_response = cast(dict[str, dict[str, list[Forecast]]], response).get(

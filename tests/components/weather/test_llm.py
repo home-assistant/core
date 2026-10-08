@@ -148,7 +148,12 @@ async def test_get_forecast_tool_selects_twice_daily_cadence(
         hass, WeatherEntityFeature.FORECAST_TWICE_DAILY
     )
     today = dt_util.start_of_local_day()
-    entity.forecast_list = [{"datetime": today.isoformat(), "condition": "sunny"}]
+    # Anchored at 06:00 rather than midnight so its 12-hour cadence end
+    # (18:00) doesn't land exactly on "this_afternoon"'s start (noon), which
+    # the half-open interval match would otherwise treat as non-overlapping.
+    entity.forecast_list = [
+        {"datetime": today.replace(hour=6).isoformat(), "condition": "sunny"}
+    ]
     result = weather_llm.async_get_tools(hass, _llm_context(), "assist")
     assert result is not None
     tool = result.tools[0]
@@ -212,9 +217,11 @@ async def test_get_forecast_tool_unavailable_entity(hass: HomeAssistant) -> None
     tool = result.tools[0]
 
     # An unavailable entity can still be matched by name (matching doesn't
-    # filter by availability), but entity services silently exclude
-    # unavailable entities from their response. Without a guard, indexing the
-    # response by entity_id raises KeyError instead of a graceful ToolResult.
+    # filter by availability), but entity services exclude unavailable
+    # entities from the call entirely. Since this is the only targeted
+    # entity, that leaves nothing to call, and the service call raises
+    # instead of returning a response. Without a guard, that exception
+    # propagates instead of producing a graceful ToolResult.
     entity._attr_available = False
     entity.async_write_ha_state()
 
