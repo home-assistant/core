@@ -65,10 +65,10 @@
   },
   "exceptions": {
     "authentication_failed": {
-      "message": "Authentication failed: {error}"
+      "message": "Authentication failed"
     },
     "customer_overview_failed": {
-      "message": "Getting customer ID failed: {error}"
+      "message": "Getting customer ID failed"
     }
   }
 }

@@ -90,7 +90,7 @@ async def test_setup_entry_error_authenticate(hass: HomeAssistant) -> None:
 
         # Assert integration is loaded with error
         assert config_entry.state is ConfigEntryState.SETUP_ERROR
-        assert config_entry.reason == "Authentication failed: Boom"
+        assert config_entry.reason == "Authentication failed"
         assert DOMAIN not in hass.data
 
         # Assert entities are not loaded
@@ -134,7 +134,7 @@ async def test_setup_entry_error_customer_overview(hass: HomeAssistant) -> None:
 
         # Assert integration is loaded with error
         assert config_entry.state is ConfigEntryState.SETUP_ERROR
-        assert config_entry.reason == "Getting customer ID failed: Boom"
+        assert config_entry.reason == "Getting customer ID failed"
         assert DOMAIN not in hass.data
 
         # Assert entities are not loaded

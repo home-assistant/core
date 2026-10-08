@@ -29,7 +29,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: EnergyFlipConfigEntry) -
         raise ConfigEntryError(
             translation_domain=DOMAIN,
             translation_key="authentication_failed",
-            translation_placeholders={"error": str(exception)},
         ) from exception
 
     # Immediately get customer id, since it is required for all api calls
@@ -39,7 +38,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: EnergyFlipConfigEntry) -
         raise ConfigEntryError(
             translation_domain=DOMAIN,
             translation_key="customer_overview_failed",
-            translation_placeholders={"error": str(exception)},
         ) from exception
 
     # Create a coordinator for polling updates
