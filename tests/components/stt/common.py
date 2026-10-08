@@ -112,13 +112,13 @@ class MockSTTProviderEntity(BaseProvider, SpeechToTextEntity):
 
 
 class MockSTTProviderPartialEntity(BaseProvider, SpeechToTextEntity):
-    """Mock provider entity that emits partial transcripts."""
+    """Mock provider entity that emits partial results."""
 
     url_path = "stt.test_partial"
     _attr_name = "test partial"
     closed = False
 
-    async def async_process_audio_stream_partial(
+    async def async_process_audio_stream_with_progress(
         self, metadata: SpeechMetadata, stream: AsyncIterable[bytes]
     ) -> AsyncGenerator[PartialSpeechResult | SpeechResult]:
         """Process an audio stream, yielding a partial per word."""
@@ -135,12 +135,12 @@ class MockSTTProviderPartialEntity(BaseProvider, SpeechToTextEntity):
 
 
 class MockSTTProviderSpeakersEntity(BaseProvider, SpeechToTextEntity):
-    """Mock provider entity that identifies speakers in partial transcripts."""
+    """Mock provider entity that identifies speakers in partial results."""
 
     url_path = "stt.test_speakers"
     _attr_name = "test speakers"
 
-    async def async_process_audio_stream_partial(
+    async def async_process_audio_stream_with_progress(
         self, metadata: SpeechMetadata, stream: AsyncIterable[bytes]
     ) -> AsyncGenerator[PartialSpeechResult | SpeechResult]:
         """Process an audio stream, yielding partials for two interleaved speakers."""

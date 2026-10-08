@@ -236,15 +236,17 @@ class SpeechToTextEntity(RestoreEntity):
         return await self.async_process_audio_stream(metadata=metadata, stream=stream)
 
     @final
-    async def internal_async_process_audio_stream_partial(
+    async def internal_async_process_audio_stream_with_progress(
         self, metadata: SpeechMetadata, stream: AsyncIterable[bytes]
     ) -> AsyncGenerator[PartialSpeechResult | SpeechResult]:
-        """Process an audio stream to STT service, yielding partial transcripts."""
+        """Process an audio stream to STT service, yielding partial results."""
         self.__last_processed = dt_util.utcnow().isoformat()
         self.async_write_ha_state()
         # aclosing so a consumer that stops early still closes the entity's generator.
         async with aclosing(
-            self.async_process_audio_stream_partial(metadata=metadata, stream=stream)
+            self.async_process_audio_stream_with_progress(
+                metadata=metadata, stream=stream
+            )
         ) as results:
             async for result in results:
                 yield result
@@ -255,12 +257,12 @@ class SpeechToTextEntity(RestoreEntity):
     ) -> SpeechResult:
         """Process an audio stream to STT service."""
 
-    async def async_process_audio_stream_partial(
+    async def async_process_audio_stream_with_progress(
         self, metadata: SpeechMetadata, stream: AsyncIterable[bytes]
     ) -> AsyncGenerator[PartialSpeechResult | SpeechResult]:
-        """Process an audio stream with an STT service, yielding partial transcripts.
+        """Process an audio stream with an STT service, yielding partial results.
 
-        Yield zero or more partial transcripts followed by exactly one final
+        Yield zero or more partial results followed by exactly one final
         speech result. Each partial contains the complete transcript so far for
         its speaker, and replaces the previous partial with the same speaker id.
 

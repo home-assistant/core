@@ -418,7 +418,7 @@ async def test_default_entity_emits_no_partial_results(
 
     results = [
         result
-        async for result in mock_provider_entity.internal_async_process_audio_stream_partial(
+        async for result in mock_provider_entity.internal_async_process_audio_stream_with_progress(
             _TEST_METADATA, _one_chunk_stream()
         )
     ]
@@ -437,7 +437,7 @@ async def test_entity_emits_partial_results(
 
     results = [
         result
-        async for result in mock_provider_partial_entity.internal_async_process_audio_stream_partial(
+        async for result in mock_provider_partial_entity.internal_async_process_audio_stream_with_progress(
             _TEST_METADATA, _one_chunk_stream()
         )
     ]
@@ -461,8 +461,10 @@ async def test_partial_results_update_state(
     entity_id = "stt.test_partial"
     assert hass.states.get(entity_id).state == STATE_UNKNOWN
 
-    results = mock_provider_partial_entity.internal_async_process_audio_stream_partial(
-        _TEST_METADATA, _one_chunk_stream()
+    results = (
+        mock_provider_partial_entity.internal_async_process_audio_stream_with_progress(
+            _TEST_METADATA, _one_chunk_stream()
+        )
     )
     assert await anext(results) == PartialSpeechResult("hello")
 
@@ -480,8 +482,10 @@ async def test_partial_results_closed_when_consumer_stops_early(
     """Test closing the stream early also closes the generator of the entity."""
     await mock_config_entry_setup(hass, tmp_path, mock_provider_partial_entity)
 
-    results = mock_provider_partial_entity.internal_async_process_audio_stream_partial(
-        _TEST_METADATA, _one_chunk_stream()
+    results = (
+        mock_provider_partial_entity.internal_async_process_audio_stream_with_progress(
+            _TEST_METADATA, _one_chunk_stream()
+        )
     )
     assert await anext(results) == PartialSpeechResult("hello")
     assert mock_provider_partial_entity.closed is False
@@ -501,7 +505,7 @@ async def test_partial_results_without_speaker_id(
 
     results = [
         result
-        async for result in mock_provider_partial_entity.internal_async_process_audio_stream_partial(
+        async for result in mock_provider_partial_entity.internal_async_process_audio_stream_with_progress(
             _TEST_METADATA, _one_chunk_stream()
         )
     ]
@@ -523,7 +527,7 @@ async def test_partial_results_with_speaker_id(
 
     results = [
         result
-        async for result in mock_provider_speakers_entity.internal_async_process_audio_stream_partial(
+        async for result in mock_provider_speakers_entity.internal_async_process_audio_stream_with_progress(
             _TEST_METADATA, _one_chunk_stream()
         )
     ]
