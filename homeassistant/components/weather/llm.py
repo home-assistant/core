@@ -240,6 +240,15 @@ class GetForecastTool(Tool):
             # own calendar date against the local calendar dates the window
             # actually covers, instead of by instant-interval overlap.
             window_dates = _local_calendar_dates(start, end)
+        else:
+            # Comparing or subtracting two aware datetimes that share the
+            # same tzinfo object (e.g. entries parsed with the same cached
+            # ZoneInfo) falls back to a wall-clock field comparison that
+            # ignores `fold`, silently mishandling the repeated hour during
+            # the autumn DST transition. Converting to UTC first forces a
+            # real absolute-time comparison.
+            start = dt_util.as_utc(start)
+            end = dt_util.as_utc(end)
         for index, entry in enumerate(forecast):
             entry_start = _forecast_datetime(entry["datetime"])
             if forecast_type == "daily":
@@ -249,9 +258,12 @@ class GetForecastTool(Tool):
                 # absolute time: adding wall-clock time across the autumn
                 # DST transition can span two real elapsed hours (the
                 # repeated 01:00-01:59 hour), overshooting the real end.
-                cadence_end = dt_util.as_utc(entry_start) + duration
+                entry_start_utc = dt_util.as_utc(entry_start)
+                cadence_end = entry_start_utc + duration
                 if index + 1 < len(forecast):
-                    next_start = _forecast_datetime(forecast[index + 1]["datetime"])
+                    next_start_utc = dt_util.as_utc(
+                        _forecast_datetime(forecast[index + 1]["datetime"])
+                    )
                     # Twice-daily entries commonly represent local day/night
                     # boundaries, whose elapsed length varies by up to an
                     # hour across a DST transition, so prefer the next
@@ -259,13 +271,13 @@ class GetForecastTool(Tool):
                     # fall back to the cadence-derived end if the gap is
                     # much larger than expected, which signals the provider
                     # skipped an entry rather than a DST-shifted period.
-                    if next_start - entry_start > duration * 1.5:
-                        entry_end = cadence_end
+                    if next_start_utc - entry_start_utc > duration * 1.5:
+                        entry_end_utc = cadence_end
                     else:
-                        entry_end = next_start
+                        entry_end_utc = next_start_utc
                 else:
-                    entry_end = cadence_end
-                matched = entry_start < end and entry_end > start
+                    entry_end_utc = cadence_end
+                matched = entry_start_utc < end and entry_end_utc > start
             if matched:
                 # Normalize to an ISO string: some providers (e.g. IPMA) put a
                 # native datetime object in this field, which isn't JSON-safe.

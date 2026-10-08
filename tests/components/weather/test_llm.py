@@ -824,6 +824,47 @@ async def test_get_forecast_tool_hourly_fallback_uses_utc_across_fall_back_dst(
     assert response.data["forecast"] == []
 
 
+@pytest.mark.freeze_time("2024-11-02T06:10:00+00:00")
+async def test_get_forecast_tool_matches_native_zoneinfo_across_fall_back_fold(
+    hass: HomeAssistant,
+) -> None:
+    """Test overlap is compared in absolute time, not shared-tzinfo wall time.
+
+    Comparing (or subtracting) two aware datetimes that share the same
+    tzinfo object -- as native ZoneInfo values parsed from naive provider
+    strings and the window bounds derived from dt_util do -- falls back to a
+    wall-clock field comparison that ignores `fold`. During the repeated
+    01:00-01:59 local hour on the November fall-back date, that can make an
+    entry starting at 01:50 EDT appear to start *after* a window ending at
+    01:10 EST, even though 01:50 EDT (05:50 UTC) is actually earlier than
+    01:10 EST (06:10 UTC).
+    """
+    await hass.config.async_set_time_zone("America/New_York")
+    entity = await _create_weather_entity(hass, WeatherEntityFeature.FORECAST_HOURLY)
+    # A naive string (no UTC offset), like some providers supply, so this
+    # gets tagged with Home Assistant's own ZoneInfo instance -- the same one
+    # used to compute the "next_24_hours" window below.
+    entity.forecast_list = [
+        {"datetime": "2024-11-03T01:50:00", "condition": "foggy"},
+    ]
+    result = weather_llm.async_get_tools(hass, _llm_context(), "assist")
+    assert result is not None
+
+    # "now" is frozen so that "next_24_hours" ends at 2024-11-03T01:10:00 EST
+    # (fold=1), the second pass through the ambiguous hour, while the entry
+    # above falls in the first pass (fold=0, EDT) -- the scenario where wall
+    # time and absolute time disagree on ordering.
+    response = await result.tools[0].async_call(
+        hass,
+        llm_helper.ToolInput("weather__get_forecast", _tool_args("next_24_hours")),
+        _llm_context(),
+    )
+
+    assert not response.error
+    conditions = [entry["condition"] for entry in response.data["forecast"]]
+    assert conditions == ["foggy"]
+
+
 @pytest.mark.freeze_time("2024-11-23T10:00:00+00:00")
 async def test_get_forecast_tool_next_24_hours_window_boundaries(
     hass: HomeAssistant,
