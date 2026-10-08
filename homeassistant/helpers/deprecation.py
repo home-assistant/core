@@ -6,6 +6,8 @@ from enum import EnumType, IntEnum, IntFlag, StrEnum, _EnumDict
 import functools
 import inspect
 import logging
+import sys
+from types import CodeType
 from typing import TYPE_CHECKING, Any, NamedTuple, cast, override
 
 from propcache.api import cached_property
@@ -489,9 +491,8 @@ class DeprecatedEntityAlias[_T]:
             return self
         self._report_usage(instance, "reads")
         cls = type(instance)
-        if not isinstance(
-            inspect.getattr_static(cls, self.replacement), _DeprecatedEntityFallback
-        ):
+        # Descriptors on the replacement return themselves when read off the class
+        if not isinstance(getattr(cls, self.replacement), _DeprecatedEntityFallback):
             return getattr(instance, self.replacement)
         # A subclass providing the deprecated name reached it through super(), serve
         # the replacement its fallback shadows instead of bouncing back to it
@@ -518,9 +519,20 @@ class DeprecatedEntityAlias[_T]:
         setattr(instance, self.replacement, value)
 
     def _report_usage(self, instance: object, action: str) -> None:
+        cls = type(instance)
+        # Finding the integration walks the stack, which is too slow for every
+        # access: report each call site once per entity class
+        caller = sys._getframe(2)  # noqa: SLF001
+        key = (cls, caller.f_code, caller.f_lineno)
+        if key in _REPORTED_DEPRECATED_ENTITY_USAGE:
+            return
+        self._report_usage_once(cls, action)
+        # Not marked before reporting, ReportBehavior.ERROR must keep raising
+        _REPORTED_DEPRECATED_ENTITY_USAGE.add(key)
+
+    def _report_usage_once(self, cls: type, action: str) -> None:
         from . import frame  # noqa: PLC0415
 
-        cls = type(instance)
         what = (
             f"{action} the deprecated {cls.__name__}.{self.name}, "
             f"use {self.replacement} instead"
@@ -540,11 +552,6 @@ class DeprecatedEntityAlias[_T]:
                     exclude_integrations={self.domain},
                 )
                 return
-        # Outside an integration, or before the frame helper is set up,
-        # report_usage can't report once per call site, report once per class
-        if (key := (cls, self.name, action)) in _REPORTED_DEPRECATED_ENTITY_USAGE:
-            return
-        _REPORTED_DEPRECATED_ENTITY_USAGE.add(key)
         logging.getLogger(cls.__module__).warning(
             "Detected code that %s. This will stop working in Home Assistant %s",
             what,
@@ -552,7 +559,7 @@ class DeprecatedEntityAlias[_T]:
         )
 
 
-_REPORTED_DEPRECATED_ENTITY_USAGE: set[tuple[type, str, str]] = set()
+_REPORTED_DEPRECATED_ENTITY_USAGE: set[tuple[type, CodeType, int]] = set()
 _MISSING = object()
 
 

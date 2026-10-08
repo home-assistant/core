@@ -1290,14 +1290,18 @@ async def test_deprecated_temperature_member_setter(
     entity = MockShimClimateEntity()
     entity.hass = hass
 
-    setattr(entity, f"_attr_{member}", first_value)
+    def write(value: Any) -> None:
+        """Write the deprecated member, always from the same call site."""
+        setattr(entity, f"_attr_{member}", value)
+
+    write(first_value)
 
     assert getattr(entity, f"_attr_{member}") == first_value
     assert getattr(entity, f"_attr_native_{member}") == first_value
     assert getattr(entity, f"native_{member}") == first_value
     assert caplog.text.count(warning) == 1
 
-    setattr(entity, f"_attr_{member}", second_value)
+    write(second_value)
 
     assert getattr(entity, f"native_{member}") == second_value
     assert caplog.text.count(warning) == 1
@@ -1393,7 +1397,7 @@ async def test_deprecated_temperature_member_read(
     member: str,
     native_value: Any,
 ) -> None:
-    """Test a deprecated read outside an integration is reported once per class."""
+    """Test a deprecated read outside an integration is reported once per call site."""
     warning = _warning(
         USED_WARNING, "MigratedClimateEntity", f"{prefix}{member}", "reads"
     )
@@ -1405,7 +1409,11 @@ async def test_deprecated_temperature_member_read(
     entity = entity_class()
     entity.hass = hass
 
-    assert getattr(entity, f"{prefix}{member}") == native_value
+    def read(entity: MockShimClimateEntity) -> Any:
+        """Read the deprecated member, always from the same call site."""
+        return getattr(entity, f"{prefix}{member}")
+
+    assert read(entity) == native_value
 
     assert _count_warnings(caplog, warning) == 1
     # Serving the read must not report a read of the storage it is served from
@@ -1414,10 +1422,15 @@ async def test_deprecated_temperature_member_read(
     other = entity_class()
     other.hass = hass
 
-    assert getattr(entity, f"{prefix}{member}") == native_value
-    assert getattr(other, f"{prefix}{member}") == native_value
+    assert read(entity) == native_value
+    assert read(other) == native_value
 
     assert _count_warnings(caplog, "reads the deprecated") == 1
+
+    # Another call site is reported again
+    assert getattr(entity, f"{prefix}{member}") == native_value
+
+    assert _count_warnings(caplog, "reads the deprecated") == 2
 
 
 @pytest.mark.parametrize(("member", "native_value"), DEPRECATED_MEMBER_VALUES)
@@ -1536,11 +1549,11 @@ async def test_deprecated_temperature_member_read_reports_the_reader(
 async def test_deprecated_temperature_member_read_without_frame_helper(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test a read before the frame helper is set up is reported once per class."""
+    """Test a read before the frame helper is set up is reported once per call site."""
     entity = _migrated_entity("EarlyReadClimateEntity")
 
-    assert entity.current_temperature == 21.4
-    assert entity.current_temperature == 21.4
+    for _ in range(2):
+        assert entity.current_temperature == 21.4
 
     assert (
         _warning(USED_WARNING, "EarlyReadClimateEntity", "current_temperature", "reads")
