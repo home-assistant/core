@@ -51,6 +51,32 @@
     }
   },
   "entity": {
+    "button": {
+      "decrease_audio_delay": {
+        "name": "Audio delay -25 ms (default step)"
+      },
+      "decrease_subtitle_delay": {
+        "name": "Subtitle delay -100 ms (default step)"
+      },
+      "increase_audio_delay": {
+        "name": "Audio delay +25 ms (default step)"
+      },
+      "increase_subtitle_delay": {
+        "name": "Subtitle delay +100 ms (default step)"
+      },
+      "reset_audio_delay": {
+        "name": "Reset audio delay to zero"
+      },
+      "reset_picture_position": {
+        "name": "Reset picture position"
+      },
+      "reset_subtitle_delay": {
+        "name": "Reset subtitle delay to zero"
+      },
+      "reset_subtitle_position": {
+        "name": "Reset subtitle margin"
+      }
+    },
     "media_player": {
       "media_player": {
         "state_attributes": {
@@ -59,11 +85,98 @@
           }
         }
       }
+    },
+    "number": {
+      "picture_vertical_shift": {
+        "name": "Picture vertical shift"
+      },
+      "subtitle_margin": {
+        "name": "Subtitle vertical margin"
+      },
+      "subtitle_opacity": {
+        "name": "Subtitle opacity"
+      }
+    },
+    "select": {
+      "audio_track": {
+        "name": "Audio track"
+      },
+      "subtitle_track": {
+        "name": "Subtitle track"
+      }
+    },
+    "sensor": {
+      "audio_channels": {
+        "name": "Audio channels"
+      },
+      "audio_codec": {
+        "name": "Audio codec"
+      },
+      "audio_delay": {
+        "name": "Audio delay"
+      },
+      "audio_language": {
+        "name": "Audio language"
+      },
+      "chapter_count": {
+        "name": "Chapter count"
+      },
+      "chapter_name": {
+        "name": "Current chapter"
+      },
+      "chapter_number": {
+        "name": "Chapter number"
+      },
+      "picture_view_mode": {
+        "name": "Picture mode"
+      },
+      "subtitle_delay": {
+        "name": "Subtitle delay"
+      },
+      "video_codec": {
+        "name": "Video codec"
+      },
+      "video_fps": {
+        "name": "Video frame rate"
+      },
+      "video_hdr_type": {
+        "name": "Video dynamic range"
+      },
+      "video_height": {
+        "name": "Video height"
+      },
+      "video_width": {
+        "name": "Video width"
+      }
     }
   },
   "exceptions": {
+    "delay_change_failed": {
+      "message": "Unable to change the Kodi playback delay."
+    },
+    "delay_reset_failed": {
+      "message": "Unable to reset the Kodi playback delay to zero with Kodi's configured step."
+    },
+    "display_change_failed": {
+      "message": "Unable to change the Kodi display setting."
+    },
+    "display_unavailable": {
+      "message": "The Kodi display control is unavailable."
+    },
+    "invalid_display_value": {
+      "message": "The value is outside the supported range or step for this Kodi display control."
+    },
     "notify_failed": {
       "message": "Unable to send the notification to Kodi. Is Kodi online?"
+    },
+    "playback_unavailable": {
+      "message": "Kodi playback is unavailable."
+    },
+    "track_change_failed": {
+      "message": "Unable to change the Kodi track."
+    },
+    "track_unavailable": {
+      "message": "The Kodi track is no longer available."
     }
   },
   "services": {
