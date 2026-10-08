@@ -884,7 +884,7 @@ dropmqttapi==1.0.3
 dsmr-parser==1.11.1
 
 # homeassistant.components.dwd_weather_warnings
-dwdwfsapi==1.0.7
+dwdwfsapi==1.1.0
 
 # homeassistant.components.dynalite
 dynalite-devices==0.1.47
