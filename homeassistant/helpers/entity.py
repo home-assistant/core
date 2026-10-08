@@ -1033,7 +1033,38 @@ class Entity(
         self._context = context
         self._context_set = time.time()
 
-    async def async_update_ha_state(
+    async def async_update_ha_state(self, force_refresh: bool = False) -> None:
+        """Update Home Assistant with current state of entity.
+
+        If force_refresh == True will update entity before setting state.
+
+        This method must be run in the event loop.
+        """
+        await self._async_update_ha_state(force_refresh)
+
+    async def async_update_ha_state_for_poll(
+        self, *, _expected_platform_generation: int
+    ) -> None:
+        """Update Home Assistant with current state of entity for a poll cycle.
+
+        Called only by `EntityPlatform`'s polling, not meant for general
+        use. Routes to the
+        private/final internal implementation when `async_update_ha_state`
+        is not overridden, so the generation-staleness check can be
+        threaded through without widening that method's overridable
+        signature (an integration's own override with the previous
+        signature would otherwise raise `TypeError` on every scheduled
+        poll). Falls back to the public API when it is overridden, since
+        the override has taken responsibility for its own update flow.
+        """
+        if type(self).async_update_ha_state is Entity.async_update_ha_state:
+            await self._async_update_ha_state(
+                True, _expected_platform_generation=_expected_platform_generation
+            )
+        else:
+            await self.async_update_ha_state(True)
+
+    async def _async_update_ha_state(
         self,
         force_refresh: bool = False,
         *,
@@ -1041,9 +1072,12 @@ class Entity(
     ) -> None:
         """Update Home Assistant with current state of entity.
 
-        If force_refresh == True will update entity before setting state.
-
-        This method must be run in the event loop.
+        Do not override: this private/final variant exists only so the
+        entity platform's polling can pass `_expected_platform_generation`
+        without that private, polling-only parameter being part of the
+        overridable `async_update_ha_state` signature (an integration's
+        own override of the public method would otherwise raise
+        `TypeError` on every scheduled poll).
         """
         if self.hass is None:
             raise RuntimeError(f"Attribute hass is None for {self}")
@@ -1056,9 +1090,17 @@ class Entity(
         # update entity data
         if force_refresh:
             try:
-                await self.async_device_update(
-                    _expected_platform_generation=_expected_platform_generation
-                )
+                if type(self).async_device_update is Entity.async_device_update:
+                    # Not overridden: safe to use the private/final variant
+                    # so the generation-staleness check (performed only
+                    # once the `PARALLEL_UPDATES` permit is granted) can be
+                    # threaded through without widening the overridable
+                    # `async_device_update` signature.
+                    await self._async_device_update(
+                        _expected_platform_generation=_expected_platform_generation
+                    )
+                else:
+                    await self.async_device_update()
             except Exception:
                 _LOGGER.exception("Update for %s fails", self.entity_id)
                 return
@@ -1419,13 +1461,27 @@ class Entity(
             SLOW_UPDATE_WARNING,
         )
 
-    async def async_device_update(
+    async def async_device_update(self, warning: bool = True) -> None:
+        """Process 'update' or 'async_update' from entity.
+
+        This method is a coroutine.
+        """
+        await self._async_device_update(warning=warning)
+
+    async def _async_device_update(
         self,
         warning: bool = True,
         *,
         _expected_platform_generation: int | None = None,
     ) -> None:
         """Process 'update' or 'async_update' from entity.
+
+        Do not override: this private/final variant exists only so the
+        entity platform's polling can pass `_expected_platform_generation`
+        without that private, polling-only parameter being part of the
+        overridable `async_device_update` signature (an integration's own
+        override of the public method would otherwise silently skip every
+        scheduled poll after swallowing the resulting `TypeError`).
 
         This method is a coroutine.
         """

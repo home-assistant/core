@@ -1432,8 +1432,7 @@ class EntityPlatform:
                 if self._entity_poll_cycle_claims.get(id(entity), -1) > cycle_id:
                     continue
                 task = create_eager_task(
-                    entity.async_update_ha_state(
-                        True,
+                    entity.async_update_ha_state_for_poll(
                         _expected_platform_generation=entity.platform_generation,
                     ),
                     loop=self.hass.loop,
@@ -1452,8 +1451,7 @@ class EntityPlatform:
             (
                 entity,
                 create_eager_task(
-                    entity.async_update_ha_state(
-                        True,
+                    entity.async_update_ha_state_for_poll(
                         _expected_platform_generation=entity.platform_generation,
                     ),
                     loop=self.hass.loop,

@@ -206,8 +206,7 @@ async def test_overlapping_update_cycles_never_double_update_an_entity(
 
     await component.async_add_entities([slow])
 
-    # Start a cycle and let it begin the entity's update, then start a
-    # second, overlapping cycle before the first has returned.
+    # Start cycle 1, then start cycle 2 before cycle 1 returns.
     cycle1 = asyncio.ensure_future(platform._async_update_entity_states())
     await update_started.wait()
     cycle2 = asyncio.ensure_future(platform._async_update_entity_states())
@@ -307,18 +306,16 @@ async def test_removing_entity_with_in_flight_sync_update_does_not_allow_concurr
         await asyncio.sleep(0.01)
     assert update_started.is_set()
 
-    # Remove the entity (e.g. the first half of an entity_id rename) while
-    # its synchronous update() is still actively running in the executor.
+    # Remove the entity (e.g. an entity_id rename) while its sync
+    # update() is still running in the executor.
     await entity.async_remove()
 
     # Re-add the very same instance (as an entity_id rename does).
     entity._platform_state = EntityPlatformState.NOT_ADDED
     await component.async_add_entities([entity])
 
-    # Give any (buggy) cancellation of the original task's await on the
-    # executor future time to fully unwind before polling again - this
-    # mirrors production, where a real scan_interval is always far longer
-    # than the handful of event-loop ticks this takes.
+    # Let any (buggy) cancellation of the original executor await unwind
+    # before polling again.
     for _ in range(50):
         if entity._update_staged is False:
             break
@@ -330,8 +327,8 @@ async def test_removing_entity_with_in_flight_sync_update_does_not_allow_concurr
             break
         await asyncio.sleep(0.01)
 
-    # The still-running first update() must have prevented a second,
-    # concurrent call to update() from starting.
+    # The still-running first update() must prevent a second, concurrent
+    # call from starting.
     assert len(update_calls) == 1
 
     update_release.set()
@@ -428,16 +425,14 @@ async def test_polling_continues_when_update_hangs_with_parallel_updates(
     async_fire_time_changed(hass, dt_util.utcnow() + scan_interval)
     await blocked_update_started.wait()
     await asyncio.sleep(0)
-    # blocked holds one of the two permits forever; healthy acquired the
-    # other, completed immediately, and released it again - without
-    # needing anything special to happen.
+    # blocked holds one permit forever; healthy acquired and released the
+    # other normally.
     assert semaphore._value == 1
     assert healthy.async_update.call_count == 1
 
     async_fire_time_changed(hass, dt_util.utcnow() + scan_interval * 2)
     await asyncio.sleep(0)
-    # blocked is correctly recognized as stale and skipped; healthy keeps
-    # being polled normally on every subsequent cycle.
+    # blocked is recognized as stale and skipped; healthy keeps polling.
     assert healthy.async_update.call_count == 2
     assert not blocked_update_cancelled.is_set()
     assert blocked.parallel_updates is semaphore
@@ -450,9 +445,8 @@ async def test_polling_continues_when_update_hangs_with_parallel_updates(
     blocked_update_release.set()
     await hass.async_block_till_done()
 
-    # Once the hung update finally finishes on its own, it releases its own
-    # permit exactly once - the semaphore's accounting was never touched by
-    # recovery, so it settles back to its full configured value.
+    # The hung update's own permit release is unaffected by the recovery
+    # above, so the semaphore settles back to its full value.
     assert semaphore._value == 2
 
 
@@ -497,41 +491,33 @@ async def test_stale_poll_does_not_clobber_tracked_task_for_newer_cycle(
     semaphore = entity_a.parallel_updates
     assert semaphore is not None
 
-    # Cycle 1: this outer call gets stuck awaiting entity_a's own update,
-    # holding entity_a's task in its for-loop before it can ever reach
-    # entity_b.
+    # Cycle 1 gets stuck awaiting entity_a's update, blocking its
+    # for-loop before it can reach entity_b.
     async_fire_time_changed(hass, dt_util.utcnow() + scan_interval)
     await a_started.wait()
     await asyncio.sleep(0)
     assert semaphore._value == 0
 
-    # Cycle 2: a separate, newer outer call detects entity_a as stale and
-    # starts its own task for entity_b. With only one permit on the
-    # platform (still held by entity_a), entity_b's task becomes tracked
-    # and legitimately in-flight, queued behind entity_a's permit.
+    # Cycle 2 detects entity_a as stale and starts its own task for
+    # entity_b, which queues behind entity_a's still-held permit.
     async_fire_time_changed(hass, dt_util.utcnow() + scan_interval * 2)
     await asyncio.sleep(0)
     cycle_2_id, task_b = platform_handle._polling_tasks[id(entity_b)]
     assert not task_b.done()
     assert not b_started.is_set()
 
-    # entity_a's update now finally completes and releases its permit. The
-    # very first, ancient outer call (still suspended awaiting entity_a's
-    # original task from cycle 1) resumes and continues its own for-loop
-    # on to entity_b - which it captured in its OWN, now-stale
-    # `pollable_entities` snapshot back in cycle 1, before any of this
-    # happened.
+    # entity_a's update completes, letting the stale cycle 1 resume and
+    # reach entity_b in its own now-stale snapshot.
     a_release.set()
     for _ in range(5):
         await asyncio.sleep(0)
 
-    # entity_b must still be tracked by its own, still-running task from
-    # cycle 2 - not silently replaced or cleared by the fossil cycle-1 call.
+    # entity_b must still be tracked by cycle 2's task, not clobbered by
+    # the stale cycle-1 call.
     assert platform_handle._polling_tasks.get(id(entity_b)) == (cycle_2_id, task_b)
     assert not task_b.done()
 
-    # A later cycle must still correctly recognize entity_b as stale
-    # (still legitimately in-flight), not silently drop it from tracking.
+    # A later cycle must still recognize entity_b as stale, not drop it.
     async_fire_time_changed(hass, dt_util.utcnow() + scan_interval * 3)
     await asyncio.sleep(0)
     assert platform_handle._polling_tasks.get(id(entity_b)) == (cycle_2_id, task_b)
@@ -633,38 +619,29 @@ async def test_stale_poll_does_not_repoll_entity_claimed_by_finished_newer_cycle
 
     await platform_handle.async_add_entities([entity_a, entity_b])
 
-    # entity_b must not queue behind entity_a's shared platform permit:
-    # this test needs to run a newer cycle's task for entity_b to full
-    # completion *before* entity_a is released, so the stale cycle's
-    # later check is deterministically proven to happen after that claim
-    # is gone from `_polling_tasks`, not merely by scheduling luck.
+    # entity_b must not queue behind entity_a's shared permit: it needs
+    # to complete before entity_a is released, so the stale cycle's
+    # later check is proven to happen after its claim is already gone.
     entity_b.parallel_updates = None
 
-    # Cycle 1: this outer call gets stuck awaiting entity_a's own update,
-    # holding entity_a's task in its for-loop before it can ever reach
-    # entity_b.
+    # Cycle 1 gets stuck awaiting entity_a's update, blocking its
+    # for-loop before it can reach entity_b.
     cycle_1 = hass.async_create_task(platform_handle._async_update_entity_states())
     await a_started.wait()
     await asyncio.sleep(0)
 
-    # Cycle 2: a separate, newer outer call detects entity_a as stale and
-    # starts its own task for entity_b, which (its permit removed above)
-    # runs to completion independently of entity_a. Awaiting the whole
-    # call guarantees entity_b's task has finished and its tracked entry
-    # has already been cleared before cycle 1 is ever let to resume.
+    # Cycle 2 detects entity_a as stale, starts its own task for
+    # entity_b (no permit needed) and runs it to completion, clearing
+    # its tracked entry before cycle 1 ever resumes.
     cycle_2 = hass.async_create_task(platform_handle._async_update_entity_states())
     await cycle_2
 
     assert entity_b.async_update.call_count == 1
     assert id(entity_b) not in platform_handle._polling_tasks
 
-    # entity_a's update now finally completes, letting the ancient, stale
-    # cycle 1 (still suspended awaiting entity_a's original task) resume
-    # its own for-loop on to entity_b, which it captured in its OWN,
-    # now-stale `pollable_entities` snapshot back in cycle 1. A
-    # liveness-only check (whether `_polling_tasks` still has a live task)
-    # would wrongly let this stale cycle poll entity_b a second time, since
-    # cycle 2's claim was already proven gone from that dict above.
+    # entity_a's update completes, letting the stale cycle 1 resume and
+    # reach entity_b in its own stale snapshot. A liveness-only check
+    # would wrongly let it poll entity_b again here.
     a_release.set()
     await cycle_1
 
@@ -870,11 +847,9 @@ async def test_polling_skips_update_while_readded_entity_still_attaching(
     await asyncio.sleep(0)
     assert entity._platform_state is EntityPlatformState.ADDING
 
-    # The platform's pre-existing polling timer fires while this
-    # re-attachment is still in progress. Avoid
-    # `hass.async_block_till_done(wait_background_tasks=True)` here: it
-    # would also wait on `add_task`'s own still-pending background work,
-    # which never completes until `attach_release` is set below.
+    # The platform's pre-existing timer fires mid-attach. Avoid
+    # `wait_background_tasks=True` here - it would also wait on
+    # `add_task`, which only completes once `attach_release` is set.
     async_fire_time_changed(hass, dt_util.utcnow() + scan_interval)
     for _ in range(5):
         await asyncio.sleep(0)
@@ -1009,10 +984,9 @@ async def test_polling_handles_every_completed_task_before_reraising_fatal_error
     failing_entity = MockEntity(should_poll=True)
     failing_entity.entity_id = "test_domain.failing"
 
-    # Both tasks are already finished by the time `_async_await_polling_tasks`
-    # registers its completion callbacks below, so both land in its
-    # completion queue in the same batch - in the order the tasks are
-    # passed in, since the fatal one is listed (and so registered) first.
+    # Both tasks finish before `_async_await_polling_tasks` registers its
+    # completion callbacks, so both land in the same completion batch, in
+    # the order passed in (fatal one first).
     fatal_task = hass.async_create_task(_raise_custom_base_exception())
     failing_task = hass.async_create_task(_raise_normal_exception())
     await asyncio.sleep(0)  # let both tasks run to completion

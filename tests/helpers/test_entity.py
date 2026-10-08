@@ -7,7 +7,7 @@ from datetime import timedelta
 import logging
 import threading
 from typing import Any
-from unittest.mock import MagicMock, PropertyMock, patch
+from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import probatio
@@ -449,6 +449,7 @@ async def test_async_device_update_resets_staged_flag_when_semaphore_wait_cancel
             """Test update."""
 
     ent = AsyncEntity("light.test_1", semaphore)
+    ent.async_update = AsyncMock()
 
     task = hass.async_create_task(ent.async_device_update())
     await asyncio.sleep(0)
@@ -462,9 +463,11 @@ async def test_async_device_update_resets_staged_flag_when_semaphore_wait_cancel
 
     assert ent._update_staged is False
 
-    # A later call must not be silently skipped by a stuck staged flag.
+    # A later call must not be silently skipped by a stuck staged flag:
+    # if it were, this would return without ever calling async_update().
     semaphore.release()
     await ent.async_device_update()
+    ent.async_update.assert_called_once()
 
 
 async def test_async_parallel_updates_with_zero(hass: HomeAssistant) -> None:
