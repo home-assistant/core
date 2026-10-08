@@ -15,7 +15,7 @@ It uses binary_sensors/sensors to do black box testing of the read calls.
 
 import asyncio
 from collections.abc import Awaitable, Callable
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 from unittest import mock
 
@@ -69,6 +69,7 @@ from homeassistant.components.modbus.const import (
     CONF_TARGET_TEMP,
     CONF_TARGET_TEMP_OFFSET,
     CONF_TARGET_TEMP_SCALE,
+    CONF_VERIFY,
     CONF_VIRTUAL_COUNT,
     DEFAULT_SCAN_INTERVAL,
     DEVICE_ID,
@@ -82,6 +83,8 @@ from homeassistant.components.modbus.const import (
     UDP,
     DataType,
 )
+from homeassistant.components.modbus.sensor import ModbusRegisterSensor
+from homeassistant.components.modbus.switch import ModbusSwitch
 from homeassistant.components.modbus.validators import (
     check_config,
     duplicate_fan_mode_validator,
@@ -94,6 +97,7 @@ from homeassistant.components.modbus.validators import (
     struct_validator,
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_STATE,
@@ -110,19 +114,23 @@ from homeassistant.const import (
     CONF_SENSORS,
     CONF_SLAVE,
     CONF_STRUCTURE,
+    CONF_SWITCHES,
     CONF_TIMEOUT,
     CONF_TYPE,
     CONF_UNIQUE_ID,
     EVENT_HOMEASSISTANT_STOP,
     SERVICE_RELOAD,
+    STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
+from homeassistant.helpers.entity_component import DATA_INSTANCES
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
+from homeassistant.util.async_ import get_scheduled_timer_handles
 
 from .conftest import (
     TEST_ENTITY_NAME,
@@ -1342,6 +1350,355 @@ async def test_overlapping_updates_keep_one_poll_timer(
     async_fire_time_changed(hass, start + timedelta(seconds=25))
     await hass.async_block_till_done(wait_background_tasks=True)
     assert mock_pymodbus.read_holding_registers.call_count == 1
+
+
+async def _setup_polling_sensor(
+    hass: HomeAssistant, mock_pymodbus: mock.AsyncMock
+) -> tuple[datetime, ModbusRegisterSensor]:
+    """Set up a polling Modbus sensor and return its starting time and entity."""
+    entity_id = f"{SENSOR_DOMAIN}.{TEST_ENTITY_NAME}".replace(" ", "_")
+    config = {
+        DOMAIN: [
+            {
+                CONF_TYPE: TCP,
+                CONF_HOST: TEST_MODBUS_HOST,
+                CONF_PORT: TEST_PORT_TCP,
+                CONF_NAME: TEST_MODBUS_NAME,
+                CONF_SENSORS: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_ADDRESS: 51,
+                        CONF_SLAVE: 2,
+                        CONF_SCAN_INTERVAL: 10,
+                    }
+                ],
+            }
+        ]
+    }
+    start = dt_util.utcnow()
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, DOMAIN, config) is True
+    await hass.async_block_till_done()
+    entity = hass.data[DATA_INSTANCES][SENSOR_DOMAIN].get_entity(entity_id)
+    assert isinstance(entity, ModbusRegisterSensor)
+    return start, entity
+
+
+@pytest.mark.parametrize(
+    "exception",
+    [
+        pytest.param(ValueError("invalid response"), id="value_error"),
+        pytest.param(RuntimeError("unexpected failure"), id="runtime_error"),
+    ],
+)
+async def test_unexpected_poll_exception_reschedules_update(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    mock_pymodbus: mock.AsyncMock,
+    exception: Exception,
+) -> None:
+    """Test an unexpected polling exception does not stop future updates."""
+    mock_pymodbus.read_holding_registers.side_effect = [
+        exception,
+        ReadResult([42]),
+        ReadResult([43]),
+    ]
+    start, _entity = await _setup_polling_sensor(hass, mock_pymodbus)
+
+    async_fire_time_changed(hass, start + timedelta(seconds=1))
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert mock_pymodbus.read_holding_registers.call_count == 1
+
+    async_fire_time_changed(hass, start + timedelta(seconds=12))
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert mock_pymodbus.read_holding_registers.call_count == 2
+    assert hass.states.get(f"{SENSOR_DOMAIN}.test_entity").state == "42"
+    assert type(exception).__name__ in caplog.text
+    assert TEST_ENTITY_NAME in caplog.text
+    assert TEST_MODBUS_NAME in caplog.text
+    assert "device address 2" in caplog.text
+    assert "register address 51" in caplog.text
+
+    mock_pymodbus.read_holding_registers.reset_mock()
+    async_fire_time_changed(hass, start + timedelta(seconds=23))
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert mock_pymodbus.read_holding_registers.call_count == 1
+    assert hass.states.get(f"{SENSOR_DOMAIN}.test_entity").state == "43"
+
+
+def _modbus_poll_timers(hass: HomeAssistant) -> set[asyncio.TimerHandle]:
+    """Return the scheduled Modbus entity polling timers."""
+    timers = set()
+    for handle in get_scheduled_timer_handles(hass.loop):
+        args = handle._args
+        target = getattr(args[1], "target", None) if args and len(args) > 1 else None
+        if getattr(target, "__qualname__", "").endswith(
+            "ModbusBaseEntity._async_call_later.<locals>._run"
+        ):
+            timers.add(handle)
+    return timers
+
+
+async def test_persistent_poll_exception_has_bounded_retry_loop(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    mock_pymodbus: mock.AsyncMock,
+) -> None:
+    """Test persistent polling errors retry once per interval and recover."""
+    mock_pymodbus.read_holding_registers.side_effect = [
+        ValueError("invalid response"),
+        ValueError("invalid response"),
+        ValueError("invalid response"),
+        ReadResult([42]),
+    ]
+    start, entity = await _setup_polling_sensor(hass, mock_pymodbus)
+
+    timer_count: int | None = None
+    for cycle in range(3):
+        async_fire_time_changed(hass, start + timedelta(seconds=1 + 11 * cycle))
+        await hass.async_block_till_done(wait_background_tasks=True)
+        assert mock_pymodbus.read_holding_registers.call_count == cycle + 1
+        assert (
+            sum(
+                record.message.startswith("Unexpected error updating")
+                for record in caplog.records
+            )
+            == cycle + 1
+        )
+        assert not entity._update_tasks
+        if timer_count is None:
+            timer_count = len(_modbus_poll_timers(hass))
+            assert timer_count == 1
+        else:
+            assert len(_modbus_poll_timers(hass)) == timer_count
+        await hass.async_block_till_done(wait_background_tasks=True)
+        assert mock_pymodbus.read_holding_registers.call_count == cycle + 1
+
+    async_fire_time_changed(hass, start + timedelta(seconds=34))
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert mock_pymodbus.read_holding_registers.call_count == 4
+    assert hass.states.get(f"{SENSOR_DOMAIN}.test_entity").state == "42"
+    assert not entity._update_tasks
+    assert len(_modbus_poll_timers(hass)) == timer_count
+
+
+async def test_state_write_exception_reschedules_update(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    mock_pymodbus: mock.AsyncMock,
+) -> None:
+    """Test an unexpected state write exception does not stop future updates."""
+    start, entity = await _setup_polling_sensor(hass, mock_pymodbus)
+    original_write = entity.async_write_ha_state
+    write_calls = 0
+
+    def _write_state() -> None:
+        nonlocal write_calls
+        write_calls += 1
+        if write_calls == 1:
+            raise RuntimeError("state write failed")
+        original_write()
+
+    with mock.patch.object(entity, "async_write_ha_state", side_effect=_write_state):
+        async_fire_time_changed(hass, start + timedelta(seconds=1))
+        await hass.async_block_till_done(wait_background_tasks=True)
+        assert mock_pymodbus.read_holding_registers.call_count == 1
+        assert "RuntimeError" in caplog.text
+
+        mock_pymodbus.read_holding_registers.return_value = ReadResult([42])
+        async_fire_time_changed(hass, start + timedelta(seconds=12))
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert mock_pymodbus.read_holding_registers.call_count == 2
+    assert hass.states.get(f"{SENSOR_DOMAIN}.test_entity").state == "42"
+    assert len(_modbus_poll_timers(hass)) == 1
+
+
+async def test_cancelled_poll_does_not_reschedule_update(
+    hass: HomeAssistant, mock_pymodbus: mock.AsyncMock
+) -> None:
+    """Test a cancelled poll does not schedule another update."""
+    mock_pymodbus.read_holding_registers.side_effect = [
+        asyncio.CancelledError,
+        ReadResult([42]),
+    ]
+    start, _entity = await _setup_polling_sensor(hass, mock_pymodbus)
+
+    async_fire_time_changed(hass, start + timedelta(seconds=1))
+    await hass.async_block_till_done(wait_background_tasks=True)
+    async_fire_time_changed(hass, start + timedelta(seconds=12))
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert mock_pymodbus.read_holding_registers.call_count == 1
+
+
+async def test_manual_update_exception_keeps_polling(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    mock_pymodbus: mock.AsyncMock,
+) -> None:
+    """Test a failed manual update reports the error without stopping polling."""
+    start, _entity = await _setup_polling_sensor(hass, mock_pymodbus)
+    async_fire_time_changed(hass, start + timedelta(seconds=1))
+    await hass.async_block_till_done(wait_background_tasks=True)
+    pending_timers = _modbus_poll_timers(hass)
+    assert len(pending_timers) == 1
+
+    mock_pymodbus.read_holding_registers.side_effect = ValueError("invalid response")
+    await hass.services.async_call(
+        "homeassistant",
+        "update_entity",
+        {ATTR_ENTITY_ID: f"{SENSOR_DOMAIN}.test_entity"},
+        blocking=True,
+    )
+    assert "Update for sensor.test_entity fails" in caplog.text
+    replacement_timers = _modbus_poll_timers(hass)
+    assert len(replacement_timers) == 1
+    assert pending_timers.isdisjoint(replacement_timers)
+
+    mock_pymodbus.read_holding_registers.side_effect = None
+    mock_pymodbus.read_holding_registers.return_value = ReadResult([42])
+    mock_pymodbus.read_holding_registers.reset_mock()
+    async_fire_time_changed(hass, start + timedelta(seconds=12))
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert mock_pymodbus.read_holding_registers.call_count == 1
+    assert hass.states.get(f"{SENSOR_DOMAIN}.test_entity").state == "42"
+    assert len(_modbus_poll_timers(hass)) == 1
+
+
+async def _setup_polling_switch(
+    hass: HomeAssistant, mock_pymodbus: mock.AsyncMock
+) -> tuple[datetime, ModbusSwitch]:
+    """Set up a polling Modbus switch with immediate verification."""
+    config = {
+        DOMAIN: [
+            {
+                CONF_TYPE: TCP,
+                CONF_HOST: TEST_MODBUS_HOST,
+                CONF_PORT: TEST_PORT_TCP,
+                CONF_NAME: TEST_MODBUS_NAME,
+                CONF_SWITCHES: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_ADDRESS: 51,
+                        CONF_SLAVE: 2,
+                        CONF_SCAN_INTERVAL: 10,
+                        CONF_VERIFY: {
+                            CONF_ADDRESS: 52,
+                            CONF_INPUT_TYPE: CALL_TYPE_REGISTER_HOLDING,
+                        },
+                    }
+                ],
+            }
+        ]
+    }
+    start = dt_util.utcnow()
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, DOMAIN, config) is True
+    await hass.async_block_till_done()
+    entity = hass.data[DATA_INSTANCES][SWITCH_DOMAIN].get_entity(
+        f"{SWITCH_DOMAIN}.test_entity"
+    )
+    assert isinstance(entity, ModbusSwitch)
+    return start, entity
+
+
+async def test_switch_action_exception_keeps_polling(
+    hass: HomeAssistant,
+    mock_pymodbus: mock.AsyncMock,
+) -> None:
+    """Test a failed switch verification preserves automatic polling."""
+    mock_pymodbus.read_holding_registers.return_value = ReadResult([0])
+    start, entity = await _setup_polling_switch(hass, mock_pymodbus)
+    async_fire_time_changed(hass, start + timedelta(seconds=1))
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert hass.states.get(f"{SWITCH_DOMAIN}.test_entity").state == STATE_OFF
+    pending_timers = _modbus_poll_timers(hass)
+    assert len(pending_timers) == 1
+
+    mock_pymodbus.read_holding_registers.side_effect = ValueError("invalid response")
+    with pytest.raises(ValueError, match="invalid response"):
+        await entity.async_turn_on()
+    replacement_timers = _modbus_poll_timers(hass)
+    assert len(replacement_timers) == 1
+    assert pending_timers.isdisjoint(replacement_timers)
+
+    mock_pymodbus.read_holding_registers.side_effect = None
+    mock_pymodbus.read_holding_registers.return_value = ReadResult([1])
+    mock_pymodbus.read_holding_registers.reset_mock()
+    async_fire_time_changed(hass, start + timedelta(seconds=12))
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert mock_pymodbus.read_holding_registers.call_count == 1
+    assert hass.states.get(f"{SWITCH_DOMAIN}.test_entity").state == STATE_ON
+    assert len(_modbus_poll_timers(hass)) == 1
+
+
+async def test_removed_entity_does_not_reschedule_update(
+    hass: HomeAssistant, mock_pymodbus: mock.AsyncMock
+) -> None:
+    """Test removing an entity prevents an in-flight update from rescheduling."""
+    start, entity = await _setup_polling_sensor(hass, mock_pymodbus)
+    async_fire_time_changed(hass, start + timedelta(seconds=1))
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    read_started = asyncio.Event()
+    release_read = asyncio.Event()
+    result = mock_pymodbus.read_holding_registers.return_value
+
+    async def _held_read(*args: object, **kwargs: object) -> ReadResult:
+        read_started.set()
+        await release_read.wait()
+        return result
+
+    mock_pymodbus.read_holding_registers.side_effect = _held_read
+    update_task = hass.async_create_task(entity.async_local_update())
+    await read_started.wait()
+    component = hass.data[DATA_INSTANCES][SENSOR_DOMAIN]
+    await component.async_remove_entity(f"{SENSOR_DOMAIN}.test_entity")
+    release_read.set()
+    await update_task
+
+    mock_pymodbus.read_holding_registers.reset_mock()
+    async_fire_time_changed(hass, start + timedelta(seconds=12))
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert mock_pymodbus.read_holding_registers.call_count == 0
+
+
+async def test_stopped_entity_does_not_reschedule_update(
+    hass: HomeAssistant, mock_pymodbus: mock.AsyncMock
+) -> None:
+    """Test a stopped entity does not schedule another update."""
+    start, entity = await _setup_polling_sensor(hass, mock_pymodbus)
+    async_fire_time_changed(hass, start + timedelta(seconds=1))
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    entity.async_disable()
+    mock_pymodbus.read_holding_registers.reset_mock()
+    async_fire_time_changed(hass, start + timedelta(seconds=12))
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert mock_pymodbus.read_holding_registers.call_count == 0
+
+
+async def test_none_poll_response_keeps_existing_reschedule_behavior(
+    hass: HomeAssistant, mock_pymodbus: mock.AsyncMock
+) -> None:
+    """Test a handled empty response continues polling."""
+    mock_pymodbus.read_holding_registers.side_effect = [None, ReadResult([42])]
+    start, _entity = await _setup_polling_sensor(hass, mock_pymodbus)
+
+    async_fire_time_changed(hass, start + timedelta(seconds=1))
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert hass.states.get(f"{SENSOR_DOMAIN}.test_entity").state == STATE_UNAVAILABLE
+    async_fire_time_changed(hass, start + timedelta(seconds=12))
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert mock_pymodbus.read_holding_registers.call_count == 2
+    assert hass.states.get(f"{SENSOR_DOMAIN}.test_entity").state == "42"
 
 
 async def _fire_first_connect_timer(hass: HomeAssistant) -> None:

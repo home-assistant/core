@@ -85,6 +85,7 @@ class ModbusBaseEntity(Entity):
         self._scan_interval = int(entry[CONF_SCAN_INTERVAL])
         self._cancel_call: Callable[[], None] | None = None
         self._update_tasks: set[asyncio.Task[None]] = set()
+        self._removed_from_hass = False
         self._stopped = False
         self._attr_unique_id = entry.get(CONF_UNIQUE_ID)
         self._attr_name = entry[CONF_NAME]
@@ -109,15 +110,40 @@ class ModbusBaseEntity(Entity):
         """Update the entity state."""
         if cancel_pending_update and self._cancel_call:
             self._cancel_call()
-        await self._async_update()
-        self.async_write_ha_state()
-        if self._scan_interval > 0 and not self._stopped:
-            # an overlapping update scheduled one already, keep a single timer
-            if self._cancel_call:
-                self._cancel_call()
-            self._cancel_call = self._async_call_later(
-                self._scan_interval, self.async_local_update
+            self._cancel_call = None
+        cancelled = False
+        try:
+            await self._async_update()
+            self.async_write_ha_state()
+        except asyncio.CancelledError:
+            cancelled = True
+            raise
+        except Exception as err:
+            LOGGER.exception(
+                "Unexpected error updating %s (%s) on hub %s, device address %s, "
+                "register address %s: %s",
+                self._attr_name,
+                self.entity_id,
+                self._hub.name,
+                self._device_address,
+                self._address,
+                type(err).__name__,
             )
+            if cancel_pending_update:
+                raise
+        finally:
+            if (
+                not cancelled
+                and self._scan_interval > 0
+                and not self._removed_from_hass
+                and not self._stopped
+            ):
+                # an overlapping update scheduled one already, keep a single timer
+                if self._cancel_call:
+                    self._cancel_call()
+                self._cancel_call = self._async_call_later(
+                    self._scan_interval, self.async_local_update
+                )
 
     @callback
     def _async_call_later(
@@ -152,6 +178,12 @@ class ModbusBaseEntity(Entity):
             task.cancel()
 
     @callback
+    def _async_remove_updates(self) -> None:
+        """Cancel updates when the entity is removed."""
+        self._removed_from_hass = True
+        self._async_cancel_updates()
+
+    @callback
     def async_disable(self) -> None:
         """Remote stop entity."""
         LOGGER.info(f"hold entity {self._attr_name}")
@@ -164,13 +196,14 @@ class ModbusBaseEntity(Entity):
     async def async_await_connection(self) -> None:
         """Wait for first connect."""
         await self._hub.event_connected.wait()
-        await self.async_local_update(cancel_pending_update=True)
+        await self.async_local_update()
 
     async def async_base_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         # also runs when the add is aborted after the first update is scheduled,
         # and a rename removes and re-adds the entity, so it must not stop it
-        self.async_on_remove(self._async_cancel_updates)
+        self._removed_from_hass = False
+        self.async_on_remove(self._async_remove_updates)
         self._cancel_call = self._async_call_later(
             self._hub.config_delay + 0.1, self.async_await_connection
         )
