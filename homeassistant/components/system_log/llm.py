@@ -3,16 +3,17 @@
 from collections.abc import Callable
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.llm import LLMTools
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.llm import (
     LLM_API_HOME_ASSISTANT,
     LLMContext,
     Tool,
+    ToolAnnotations,
     ToolInput,
+    ToolResult,
 )
 from homeassistant.util import dt as dt_util
 from homeassistant.util.json import JsonObjectType
@@ -77,52 +78,56 @@ class SystemLogGetEntriesTool(Tool):
     """LLM Tool allowing querying the system log."""
 
     name = "system_log__get_entries"
+    title = "Get system log entries"
     description = (
         "Retrieve recent system log errors and warnings from Home Assistant. "
         "This inspects the in-memory system log, which only records WARNING, ERROR, "
         "and CRITICAL events (not DEBUG or INFO). Can filter by log level, integration "
         "or logger name, and choose whether to include full exception tracebacks."
     )
-    parameters = vol.Schema(
+    annotations = ToolAnnotations(
+        read_only=True, destructive=False, idempotent=True, open_world=False
+    )
+    integration = DOMAIN
+    parameters = probatio.Schema(
         {
-            vol.Optional(
+            probatio.Optional(
                 "level",
                 description="Filter by log level. Allowed values: 'error', 'warning', 'critical'.",
-            ): vol.All(cv.string, vol.Lower, vol.In(_LOG_LEVELS)),
-            vol.Optional(
+            ): probatio.All(str, probatio.Lower, probatio.In(_LOG_LEVELS)),
+            probatio.Optional(
                 "logger",
                 description=(
                     "Filter by integration domain or logger name (case-insensitive "
                     "substring match, e.g. 'zwave_js', 'hue', 'automation')."
                 ),
-            ): cv.string,
-            vol.Optional(
+            ): str,
+            probatio.Optional(
                 "limit",
                 description=f"Maximum number of log entries to return (default: {_DEFAULT_LIMIT}, max: 50).",
                 default=_DEFAULT_LIMIT,
-            ): vol.All(vol.Coerce(int), vol.Range(min=1, max=50)),
-            vol.Optional(
+            ): probatio.All(probatio.Coerce(int), probatio.Range(min=1, max=50)),
+            probatio.Optional(
                 "include_traceback",
                 description=(
                     "Whether to include full Python exception stack traces in the "
                     "returned entries (default: false)."
                 ),
                 default=False,
-            ): cv.boolean,
+            ): probatio.All(probatio.Boolean(), bool),
         }
     )
 
     @override
     async def async_call(
         self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
-    ) -> JsonObjectType:
+    ) -> ToolResult:
         """Query the system log."""
         handler: LogErrorHandler | None = hass.data.get(DOMAIN)
         if handler is None:
-            return {
-                "success": False,
-                "error": "System log integration is not loaded.",
-            }
+            return ToolResult(
+                data={"error": "System log integration is not loaded."}, error=True
+            )
 
         args = self.parameters(tool_input.tool_args)
         filtered_entries = _filter_log_entries(
@@ -132,12 +137,14 @@ class SystemLogGetEntriesTool(Tool):
             limit=args["limit"],
         )
         include_traceback: bool = args["include_traceback"]
-        return {
-            "success": True,
-            "result": [
-                _format_entry(entry, include_traceback) for entry in filtered_entries
-            ],
-        }
+        return ToolResult(
+            data={
+                "result": [
+                    _format_entry(entry, include_traceback)
+                    for entry in filtered_entries
+                ]
+            }
+        )
 
 
 @callback

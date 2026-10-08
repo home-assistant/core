@@ -2,16 +2,21 @@
 
 import logging
 
+import probatio
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import system_log
 from homeassistant.components.system_log.llm import (
     SystemLogGetEntriesTool,
     async_get_tools,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import llm
 from homeassistant.setup import async_setup_component
+from homeassistant.util.json import JsonObjectType
+
+from tests.common import MockUser
 
 _LOGGER = logging.getLogger("test_system_log_llm")
 _OTHER_LOGGER = logging.getLogger("custom_integration")
@@ -44,6 +49,52 @@ async def test_async_get_tools(
     assert home_assistant_tools.prompt is None
 
 
+def test_parameters_openapi(snapshot: SnapshotAssertion) -> None:
+    """Test that the tool schema can be exported for LLM clients."""
+    assert probatio.to_openapi(SystemLogGetEntriesTool.parameters) == snapshot
+
+
+@pytest.mark.parametrize(
+    "tool_args",
+    [
+        pytest.param({"level": "debug"}, id="unsupported_level"),
+        pytest.param({"limit": 0}, id="limit_below_minimum"),
+        pytest.param({"limit": 51}, id="limit_above_maximum"),
+        pytest.param({"logger": []}, id="invalid_logger"),
+        pytest.param({"include_traceback": "invalid"}, id="invalid_boolean"),
+        pytest.param({"unknown": True}, id="unknown_argument"),
+    ],
+)
+async def test_invalid_parameters(
+    hass: HomeAssistant, llm_context: llm.LLMContext, tool_args: JsonObjectType
+) -> None:
+    """Test invalid arguments are rejected by the Probatio schema."""
+    assert await async_setup_component(hass, system_log.DOMAIN, {})
+    tool = SystemLogGetEntriesTool()
+
+    with pytest.raises(probatio.Invalid):
+        await tool.async_call(hass, llm.ToolInput(tool.name, tool_args), llm_context)
+
+
+async def test_call_through_api(
+    hass: HomeAssistant, hass_admin_user: MockUser, llm_context: llm.LLMContext
+) -> None:
+    """Test tool discovery and structured results through the Home Assistant API."""
+    assert await async_setup_component(hass, system_log.DOMAIN, {})
+    assert await async_setup_component(hass, "llm", {})
+    llm_context.context = Context(user_id=hass_admin_user.id)
+
+    api = await llm.async_get_api(hass, llm.LLM_API_HOME_ASSISTANT, llm_context)
+    tool = next(tool for tool in api.tools if tool.name == "system_log__get_entries")
+    assert tool.integration == system_log.DOMAIN
+    assert tool.annotations == llm.ToolAnnotations(
+        read_only=True, destructive=False, idempotent=True, open_world=False
+    )
+    assert await api.async_call_tool(llm.ToolInput(tool.name, {})) == llm.ToolResult(
+        data={"result": []}
+    )
+
+
 async def test_system_log_not_loaded(
     hass: HomeAssistant, llm_context: llm.LLMContext
 ) -> None:
@@ -52,10 +103,9 @@ async def test_system_log_not_loaded(
     tool_input = llm.ToolInput(tool_name=tool.name, tool_args={})
     result = await tool.async_call(hass, tool_input, llm_context)
 
-    assert result == {
-        "success": False,
-        "error": "System log integration is not loaded.",
-    }
+    assert result == llm.ToolResult(
+        data={"error": "System log integration is not loaded."}, error=True
+    )
 
 
 async def test_get_entries_default(
@@ -72,8 +122,8 @@ async def test_get_entries_default(
     tool_input = llm.ToolInput(tool_name=tool.name, tool_args={})
     result = await tool.async_call(hass, tool_input, llm_context)
 
-    assert result["success"] is True
-    entries = result["result"]
+    assert result.error is False
+    entries = result.data["result"]
     assert len(entries) == 2
 
     # Most recent entry first
@@ -90,8 +140,14 @@ async def test_get_entries_default(
     assert "exception" not in entries[1]
 
 
+@pytest.mark.parametrize(
+    "include_traceback",
+    [pytest.param(True, id="boolean"), pytest.param("true", id="string")],
+)
 async def test_get_entries_with_traceback(
-    hass: HomeAssistant, llm_context: llm.LLMContext
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    include_traceback: bool | str,
 ) -> None:
     """Test retrieving entries with exception traceback included."""
     assert await async_setup_component(hass, system_log.DOMAIN, {})
@@ -110,15 +166,17 @@ async def test_get_entries_with_traceback(
         tool_name=tool.name, tool_args={"include_traceback": False}
     )
     result_no_tb = await tool.async_call(hass, tool_input_no_tb, llm_context)
-    assert result_no_tb["success"] is True
-    assert "exception" not in result_no_tb["result"][0]
+    assert result_no_tb.error is False
+    assert "exception" not in result_no_tb.data["result"][0]
 
     tool_input_tb = llm.ToolInput(
-        tool_name=tool.name, tool_args={"include_traceback": True}
+        tool_name=tool.name, tool_args={"include_traceback": include_traceback}
     )
     result_tb = await tool.async_call(hass, tool_input_tb, llm_context)
-    assert result_tb["success"] is True
-    assert "ValueError: Something went wrong" in result_tb["result"][0]["exception"]
+    assert result_tb.error is False
+    assert (
+        "ValueError: Something went wrong" in result_tb.data["result"][0]["exception"]
+    )
 
 
 @pytest.mark.parametrize(
@@ -146,8 +204,8 @@ async def test_filter_by_level(
     tool_input = llm.ToolInput(tool_name=tool.name, tool_args={"level": filter_level})
     result = await tool.async_call(hass, tool_input, llm_context)
 
-    assert result["success"] is True
-    assert [entry["level"] for entry in result["result"]] == expected_levels
+    assert result.error is False
+    assert [entry["level"] for entry in result.data["result"]] == expected_levels
 
 
 @pytest.mark.parametrize(
@@ -182,8 +240,8 @@ async def test_filter_by_logger(
     tool_input = llm.ToolInput(tool_name=tool.name, tool_args={"logger": logger_query})
     result = await tool.async_call(hass, tool_input, llm_context)
 
-    assert result["success"] is True
-    assert [entry["name"] for entry in result["result"]] == expected_names
+    assert result.error is False
+    assert [entry["name"] for entry in result.data["result"]] == expected_names
 
 
 async def test_limit(hass: HomeAssistant, llm_context: llm.LLMContext) -> None:
@@ -198,5 +256,5 @@ async def test_limit(hass: HomeAssistant, llm_context: llm.LLMContext) -> None:
     tool_input = llm.ToolInput(tool_name=tool.name, tool_args={"limit": 2})
     result = await tool.async_call(hass, tool_input, llm_context)
 
-    assert result["success"] is True
-    assert len(result["result"]) == 2
+    assert result.error is False
+    assert len(result.data["result"]) == 2
