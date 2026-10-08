@@ -1,5 +1,6 @@
 """Platform for Roth Touchline floor heating controller."""
 
+from datetime import timedelta
 from typing import Any, NamedTuple, override
 
 from pytouchline_extended import PyTouchline
@@ -14,7 +15,7 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, CONF_HOST, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -42,6 +43,8 @@ TOUCHLINE_HA_PRESETS = {
     (settings.mode, settings.program): preset
     for preset, settings in PRESET_MODES.items()
 }
+
+SCAN_INTERVAL = timedelta(minutes=1)
 
 
 async def async_setup_entry(
@@ -111,8 +114,13 @@ class Touchline(ClimateEntity):
     def set_preset_mode(self, preset_mode: str) -> None:
         """Set new target preset mode."""
         preset = PRESET_MODES[preset_mode]
-        self.unit.set_operation_mode(preset.mode)
-        self.unit.set_week_program(preset.program)
+        try:
+            self.unit.set_operation_mode(preset.mode)
+            self.unit.set_week_program(preset.program)
+        except (OSError, ConnectionError) as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="error_set_preset"
+            ) from err
 
     @override
     def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
@@ -122,6 +130,10 @@ class Touchline(ClimateEntity):
     @override
     def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        if kwargs.get(ATTR_TEMPERATURE) is not None:
+        try:
             self._attr_target_temperature = kwargs.get(ATTR_TEMPERATURE)
-        self.unit.set_target_temperature(self._attr_target_temperature)
+            self.unit.set_target_temperature(self._attr_target_temperature)
+        except (OSError, ConnectionError) as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="error_set_temperature"
+            ) from err

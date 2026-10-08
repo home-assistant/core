@@ -2,6 +2,8 @@
 
 from unittest.mock import MagicMock
 
+import pytest
+
 from homeassistant import config_entries
 from homeassistant.components.touchline.const import DOMAIN
 from homeassistant.const import CONF_HOST
@@ -38,10 +40,20 @@ async def test_form_success(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_cannot_connect(
-    hass: HomeAssistant, mock_pytouchline: MagicMock
+@pytest.mark.parametrize(
+    ("side_effect", "error_key"),
+    [
+        (ConnectionError, "cannot_connect"),
+        (Exception("Unexpected backend explosion"), "unknown"),
+    ],
+)
+async def test_form_errors(
+    hass: HomeAssistant,
+    mock_pytouchline: MagicMock,
+    side_effect: Exception,
+    error_key: str,
 ) -> None:
-    """Test we handle cannot connect error."""
+    """Test errors during input validation are handled."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -49,7 +61,7 @@ async def test_form_cannot_connect(
     assert result["type"] is FlowResultType.FORM
     # The config flow runs validation in a thread executor.
     # If `get_number_of_devices` fails, validation fails too.
-    mock_pytouchline.get_number_of_devices.side_effect = ConnectionError
+    mock_pytouchline.get_number_of_devices.side_effect = side_effect
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -57,7 +69,7 @@ async def test_form_cannot_connect(
     )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["errors"] == {"base": error_key}
 
     # "Fix" the problem, and try again.
     mock_pytouchline.get_number_of_devices.side_effect = None
