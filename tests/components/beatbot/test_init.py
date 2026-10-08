@@ -363,14 +363,99 @@ async def test_device_added_event_reloads_entry(
         create_device(),
         create_device(NEW_DEVICE_ID, name="AquaSense 2 Pro"),
     ]
-    # Both arrive before the scheduled reload runs, so only one is acted on.
+    # Concurrent notifications share the coordinator refresh and reload guard.
     device_added = library_callback(mock_event_client, "device_added_callback")
-    device_added(NEW_DEVICE_ID)
-    device_added(NEW_DEVICE_ID)
+    await asyncio.gather(device_added(NEW_DEVICE_ID), device_added(NEW_DEVICE_ID))
     await hass.async_block_till_done()
 
     assert hass.states.get(NEW_STATUS_ENTITY_ID) is not None
-    assert mock_client.get_devices.call_count == 2
+    assert mock_client.get_devices.call_count == 3
+    assert mock_event_client.return_value.async_close.await_count == 1
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_device_added_event_during_poll_reloads_once(
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+    mock_event_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Share the reload guard when polling and an event find the same cleaner."""
+    started = asyncio.Event()
+    release = asyncio.Event()
+    devices = [create_device(), create_device(NEW_DEVICE_ID, name="AquaSense 2 Pro")]
+
+    async def delayed_discovery() -> list[BeatbotDeviceData]:
+        started.set()
+        await release.wait()
+        return devices
+
+    mock_client.get_devices.side_effect = delayed_discovery
+    freezer.tick(timedelta(seconds=NETWORK_REFRESH_INTERVAL))
+    async_fire_time_changed(hass)
+    await started.wait()
+
+    await library_callback(mock_event_client, "device_added_callback")(NEW_DEVICE_ID)
+    release.set()
+    await hass.async_block_till_done()
+
+    assert hass.states.get(NEW_STATUS_ENTITY_ID) is not None
+    assert mock_event_client.return_value.async_close.await_count == 1
+    assert mock_client.get_devices.await_count == 3
+
+
+@pytest.mark.parametrize(
+    ("device", "event_device_id"),
+    [
+        pytest.param(create_device(), DEVICE_ID, id="existing-device"),
+        pytest.param(
+            create_device(NEW_DEVICE_ID, product_category="clean_base_station"),
+            NEW_DEVICE_ID,
+            id="unsupported-device",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("init_integration")
+async def test_device_added_event_without_new_cleaner(
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+    mock_event_client: MagicMock,
+    device: BeatbotDeviceData,
+    event_device_id: str,
+) -> None:
+    """Ignore duplicate and unsupported discoveries without reloading the entry."""
+    mock_client.get_devices.return_value = [create_device(), device]
+
+    await library_callback(mock_event_client, "device_added_callback")(event_device_id)
+    await hass.async_block_till_done()
+
+    assert mock_client.get_devices.await_count == 2
+    mock_event_client.return_value.async_close.assert_not_awaited()
+    assert hass.states.get(NEW_STATUS_ENTITY_ID) is None
+    assert hass.states.get(BATTERY_ENTITY_ID).state == "80"
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_device_added_discovery_failure_recovers(
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+    mock_event_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Keep the entry loaded and let polling retry a failed discovery."""
+    mock_client.get_devices.side_effect = BeatbotConnectionError("offline")
+
+    await library_callback(mock_event_client, "device_added_callback")(NEW_DEVICE_ID)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(BATTERY_ENTITY_ID).state == STATE_UNAVAILABLE
+    mock_event_client.return_value.async_close.assert_not_awaited()
+
+    mock_client.get_devices.side_effect = None
+    await poll(hass, freezer)
+
+    assert hass.states.get(BATTERY_ENTITY_ID).state == "80"
+    mock_event_client.return_value.async_close.assert_not_awaited()
 
 
 @pytest.mark.parametrize(

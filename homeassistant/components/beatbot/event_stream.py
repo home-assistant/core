@@ -44,11 +44,10 @@ class BeatbotEventClient:
             api.event_stream_url,
             api.async_get_access_token,
             state_callback=coordinator.async_apply_device_event,
-            device_added_callback=self._handle_device_added,
+            device_added_callback=self._async_handle_device_added,
             reconnect_callback=coordinator.async_request_refresh,
             token_refresh_callback=self._async_refresh_token,
         )
-        self._reload_scheduled = False
 
     def async_start(self) -> None:
         """Start the connection supervisor without blocking setup."""
@@ -100,13 +99,6 @@ class BeatbotEventClient:
             raise BeatbotAuthenticationError
         return access_token
 
-    def _handle_device_added(self, device_id: str) -> None:
-        """Reload platforms to create entities for a newly discovered device."""
-        self._schedule_entry_reload()
-
-    def _schedule_entry_reload(self) -> None:
-        """Reload all platforms after the account's device set changes."""
-        if self._reload_scheduled:
-            return
-        self._reload_scheduled = True
-        self._hass.config_entries.async_schedule_reload(self._entry.entry_id)
+    async def _async_handle_device_added(self, device_id: str) -> None:
+        """Refresh discovery before deciding whether new entities are needed."""
+        await self._coordinator.async_request_refresh()
