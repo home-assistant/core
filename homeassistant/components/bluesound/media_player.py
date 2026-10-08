@@ -1,6 +1,7 @@
 """Support for Bluesound devices."""
 
 from asyncio import Task
+from collections.abc import Callable
 from datetime import datetime, timedelta
 import logging
 from typing import TYPE_CHECKING, Any, override
@@ -114,6 +115,7 @@ class BluesoundPlayer(CoordinatorEntity[BluesoundCoordinator], MediaPlayerEntity
         self._group_name: str | None = None
         self._group_list: list[str] = []
         self._group_members: list[str] | None = None
+        self._unsub_join_signal: Callable[[], None]
         self._bluesound_device_name = sync_status.name
         self._player = player
         self._last_status_update = dt_util.utcnow()
@@ -150,19 +152,35 @@ class BluesoundPlayer(CoordinatorEntity[BluesoundCoordinator], MediaPlayerEntity
         await super().async_added_to_hass()
 
         assert self._sync_status.id is not None
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                dispatcher_join_signal(self.entity_id),
-                self.async_add_follower,
-            )
-        )
+        self._async_connect_join_signal()
+        # The lambda is needed because _unsub_capture_signal is reassigned
+        # on entity id change.
+        # pylint: disable-next=unnecessary-lambda
+        self.async_on_remove(lambda: self._unsub_join_signal())
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
                 dispatcher_unjoin_signal(self._sync_status.id),
                 self.async_remove_follower,
             )
+        )
+
+    @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Reconnect the join signal and rebuild the group members."""
+        super().async_entity_id_changed(old_entity_id)
+        self._unsub_join_signal()
+        self._async_connect_join_signal()
+        self._group_members = self.rebuild_group_members()
+
+    @callback
+    def _async_connect_join_signal(self) -> None:
+        """Connect the join signal, which is keyed on the entity_id."""
+        self._unsub_join_signal = async_dispatcher_connect(
+            self.hass,
+            dispatcher_join_signal(self.entity_id),
+            self.async_add_follower,
         )
 
     @override
