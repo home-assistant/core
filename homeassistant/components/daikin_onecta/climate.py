@@ -30,7 +30,7 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
+from homeassistant.const import ATTR_TEMPERATURE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -139,7 +139,6 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
     """Representation of one Daikin temperature target in a climate zone."""
 
     _attr_has_entity_name = True
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
     # ``setpoint`` is a Daikin target type under
     # temperatureControl/value/operationModes/<mode>/setpoints, for example
