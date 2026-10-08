@@ -69,12 +69,20 @@ class PowerviewShadeUpdateCoordinator(DataUpdateCoordinator[PowerviewShadeData])
 
         # Clean up stale devices
         current_shade_ids = set(self.data._shade_group_data_by_id.keys())
-        if self._previous_shade_ids:  # Skip on first run
-            removed_shade_ids = self._previous_shade_ids - current_shade_ids
-            if removed_shade_ids:
-                self._remove_stale_devices(removed_shade_ids)
-        self._previous_shade_ids = current_shade_ids
-
+        device_registry = dr.async_get(self.hass)
+        registered_shade_ids = {
+            identifier[1]
+            for device in dr.async_entries_for_config_entry(
+                device_registry, self.config_entry.entry_id
+            )
+            if device.via_device_id is not None
+            for identifier in device.identifiers
+            if identifier[0] == DOMAIN
+        }
+        removed_shade_ids = registered_shade_ids - current_shade_ids
+        if removed_shade_ids:
+            self._remove_stale_devices(removed_shade_ids)
+        
         return self.data
 
     @callback
