@@ -6,6 +6,7 @@ from typing import Any, override
 from adguardhome import AdGuardHomeError
 
 from homeassistant.components.update import UpdateEntity, UpdateEntityFeature
+from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -26,7 +27,7 @@ async def async_setup_entry(
     """Set up AdGuard Home update entity based on a config entry."""
     data = entry.runtime_data
 
-    if (await data.client.update.update_available()).disabled:
+    if (await data.client.update.get()).disabled:
         return
 
     async_add_entities([AdGuardHomeUpdate(data, entry)], True)
@@ -48,15 +49,17 @@ class AdGuardHomeUpdate(AdGuardHomeEntity, UpdateEntity):
 
         # Legacy format, kept as migrating existing unique IDs is not worth the risk
         self._attr_unique_id = "_".join(  # pylint: disable=home-assistant-entity-unique-id-redundant-domain,home-assistant-entity-unique-id-redundant-platform
-            [DOMAIN, self.adguard.host, str(self.adguard.port), "update"]
+            [DOMAIN, entry.data[CONF_HOST], str(entry.data[CONF_PORT]), "update"]
         )
 
     @override
     async def _adguard_update(self) -> None:
         """Update AdGuard Home entity."""
-        value = await self.adguard.update.update_available()
+        value = await self.adguard.update.get()
         self._attr_installed_version = self.data.version
-        self._attr_latest_version = value.new_version
+        self._attr_latest_version = (
+            str(value.new_version) if value.new_version else None
+        )
         self._attr_release_summary = value.announcement
         self._attr_release_url = value.announcement_url
 
@@ -66,7 +69,7 @@ class AdGuardHomeUpdate(AdGuardHomeEntity, UpdateEntity):
     ) -> None:
         """Install latest update."""
         try:
-            await self.adguard.update.begin_update()
+            await self.adguard.update.install()
         except AdGuardHomeError as err:
             raise HomeAssistantError(f"Failed to install update: {err}") from err
         self.hass.config_entries.async_schedule_reload(self._entry.entry_id)

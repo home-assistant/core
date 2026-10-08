@@ -10,7 +10,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import ALL_ITEM_KINDS
+from .const import ALL_ITEM_KINDS, SCAN_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,7 +29,6 @@ class OmniLogicUpdateCoordinator(DataUpdateCoordinator[dict[tuple, dict[str, Any
         api: OmniLogic,
         name: str,
         config_entry: OmniLogicConfigEntry,
-        polling_interval: int,
     ) -> None:
         """Initialize the global Omnilogic data updater."""
         self.api = api
@@ -39,7 +38,7 @@ class OmniLogicUpdateCoordinator(DataUpdateCoordinator[dict[tuple, dict[str, Any
             logger=_LOGGER,
             config_entry=config_entry,
             name=name,
-            update_interval=timedelta(seconds=polling_interval),
+            update_interval=timedelta(seconds=SCAN_INTERVAL),
         )
 
     @override

@@ -58,31 +58,26 @@ def _options_schema(
     require_admin: bool,
 ) -> probatio.Schema:
     """Return the schema for the options flow."""
-    return probatio.Schema(
-        {
-            probatio.Required(
-                CONF_ALL_LLM_APIS, default=all_llm_apis
-            ): BooleanSelector(),
-            probatio.Optional(
-                CONF_LLM_HASS_API,
-                default=default,
-            ): SelectSelector(
-                SelectSelectorConfig(
-                    options=[
-                        SelectOptionDict(
-                            label=name,
-                            value=llm_api_id,
-                        )
-                        for llm_api_id, name in llm_apis.items()
-                    ],
-                    multiple=True,
-                )
-            ),
-            probatio.Required(
-                CONF_REQUIRE_ADMIN, default=require_admin
-            ): BooleanSelector(),
-        }
+    schema: dict[probatio.Marker, Any] = {
+        probatio.Required(CONF_ALL_LLM_APIS, default=all_llm_apis): BooleanSelector(),
+    }
+    if not all_llm_apis:
+        schema[probatio.Optional(CONF_LLM_HASS_API, default=default)] = SelectSelector(
+            SelectSelectorConfig(
+                options=[
+                    SelectOptionDict(
+                        label=name,
+                        value=llm_api_id,
+                    )
+                    for llm_api_id, name in llm_apis.items()
+                ],
+                multiple=True,
+            )
+        )
+    schema[probatio.Required(CONF_REQUIRE_ADMIN, default=require_admin)] = (
+        BooleanSelector()
     )
+    return probatio.Schema(schema)
 
 
 class ModelContextServerProtocolConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -123,46 +118,50 @@ class ModelContextServerProtocolConfigFlow(ConfigFlow, domain=DOMAIN):
 class ModelContextServerProtocolOptionsFlow(OptionsFlow):
     """Handle an options flow to change the exposed LLM APIs."""
 
+    last_rendered_all_llm_apis = False
+
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the options step."""
         errors: dict[str, str] = {}
         llm_apis = _llm_api_names(self.hass)
+        current = _selected_llm_apis(self.config_entry, llm_apis)
         # A disabled config entry has not migrated yet
         current_all = self.config_entry.data.get(CONF_ALL_LLM_APIS, False)
-        current = _selected_llm_apis(self.config_entry, llm_apis)
-        if user_input is not None:
-            if not user_input[CONF_ALL_LLM_APIS] and not user_input[CONF_LLM_HASS_API]:
-                errors[CONF_LLM_HASS_API] = "llm_api_required"
-            else:
-                updates: dict[str, Any] = {
-                    "data": {**self.config_entry.data, **user_input}
-                }
-                # Keep a title the user renamed, only refresh a generated one.
-                if self.config_entry.title == _llm_api_title(
-                    llm_apis, current_all, current
-                ):
-                    updates["title"] = _llm_api_title(
-                        llm_apis,
-                        user_input[CONF_ALL_LLM_APIS],
-                        user_input[CONF_LLM_HASS_API],
-                    )
-                self.hass.config_entries.async_update_entry(
-                    self.config_entry, **updates
+        require_admin = self.config_entry.data.get(CONF_REQUIRE_ADMIN, False)
+
+        if user_input is None:
+            self.last_rendered_all_llm_apis = current_all
+        elif user_input[CONF_ALL_LLM_APIS] != self.last_rendered_all_llm_apis:
+            # Re-render the form to show or hide the LLM API picker
+            self.last_rendered_all_llm_apis = user_input[CONF_ALL_LLM_APIS]
+            require_admin = user_input[CONF_REQUIRE_ADMIN]
+        elif not user_input[CONF_ALL_LLM_APIS] and not user_input[CONF_LLM_HASS_API]:
+            errors[CONF_LLM_HASS_API] = "llm_api_required"
+        else:
+            updates: dict[str, Any] = {"data": {**self.config_entry.data, **user_input}}
+            # Keep a title the user renamed, only refresh a generated one.
+            if self.config_entry.title == _llm_api_title(
+                llm_apis, current_all, current
+            ):
+                updates["title"] = _llm_api_title(
+                    llm_apis,
+                    user_input[CONF_ALL_LLM_APIS],
+                    user_input.get(CONF_LLM_HASS_API, []),
                 )
-                # An open SSE session keeps serving the APIs it started with.
-                await self.hass.config_entries.async_reload(self.config_entry.entry_id)
-                return self.async_create_entry(data={})
+            self.hass.config_entries.async_update_entry(self.config_entry, **updates)
+            # An open SSE session keeps serving the APIs it started with.
+            await self.hass.config_entries.async_reload(self.config_entry.entry_id)
+            return self.async_create_entry(data={})
 
         return self.async_show_form(
             step_id="init",
             data_schema=_options_schema(
                 llm_apis,
-                current_all,
+                self.last_rendered_all_llm_apis,
                 current,
-                # A disabled config entry has not migrated yet
-                self.config_entry.data.get(CONF_REQUIRE_ADMIN, False),
+                require_admin,
             ),
             description_placeholders={"more_info_url": MORE_INFO_URL},
             errors=errors,

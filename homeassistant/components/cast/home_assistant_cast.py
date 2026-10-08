@@ -26,8 +26,8 @@ NO_URL_AVAILABLE_ERROR = (
 )
 
 
-async def async_setup_ha_cast(hass: core.HomeAssistant, entry: CastConfigEntry) -> None:
-    """Set up Home Assistant Cast."""
+async def async_setup_ha_cast(hass: core.HomeAssistant, entry: CastConfigEntry) -> str:
+    """Set up Home Assistant Cast and return its refresh token."""
     user_id: str | None = entry.data.get("user_id")
     user: auth.models.User | None = None
 
@@ -63,7 +63,7 @@ async def async_setup_ha_cast(hass: core.HomeAssistant, entry: CastConfigEntry) 
             hass_url=hass_url,
             hass_uuid=hass_uuid,
             client_id=None,
-            refresh_token=refresh_token.token,
+            refresh_token=entry.runtime_data.refresh_token,
         )
 
         dispatcher.async_dispatcher_send(
@@ -88,6 +88,8 @@ async def async_setup_ha_cast(hass: core.HomeAssistant, entry: CastConfigEntry) 
             }
         ),
     )
+
+    return refresh_token.token
 
 
 async def async_remove_user(hass: core.HomeAssistant, entry: CastConfigEntry) -> None:

@@ -346,6 +346,22 @@ async def async_update_device(
         sw_version=details.get(ADAPTER_SW_VERSION),
         hw_version=details.get(ADAPTER_HW_VERSION),
     )
+    if via_device_id and (
+        split_devices := device_registry.async_get_devices_for_composite_device_id(
+            via_device_id
+        )
+    ):
+        # The stored source device id can predate a device split, link to the
+        # device of the config entry that provides the scanner
+        source_entry_id = entry.data.get(CONF_SOURCE_CONFIG_ENTRY_ID)
+        via_device_id = next(
+            (
+                split_device.id
+                for split_device in split_devices
+                if split_device.config_entry_id == source_entry_id
+            ),
+            None,
+        )
     if via_device_id and (via_device_entry := device_registry.async_get(via_device_id)):
         # The bluetooth scanner may be child device; link to its parent.
         if isinstance(via_device_entry, dr.ChildDeviceEntry):

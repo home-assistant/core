@@ -4,6 +4,7 @@ from collections import deque
 from collections.abc import Callable, Mapping
 import contextlib
 from datetime import datetime, timedelta
+from itertools import pairwise
 import logging
 import math
 import statistics
@@ -120,8 +121,10 @@ def _stat_average_linear(
         return states[0]
     if len(states) >= 2:
         area: float = 0
-        for i in range(1, len(states)):
-            area += 0.5 * (states[i] + states[i - 1]) * (ages[i] - ages[i - 1])
+        for (previous_state, previous_age), (state, age) in pairwise(
+            zip(states, ages, strict=True)
+        ):
+            area += 0.5 * (state + previous_state) * (age - previous_age)
         age_range_seconds = ages[-1] - ages[0]
         return area / age_range_seconds
     return None
@@ -134,8 +137,10 @@ def _stat_average_step(
         return states[0]
     if len(states) >= 2:
         area: float = 0
-        for i in range(1, len(states)):
-            area += states[i - 1] * (ages[i] - ages[i - 1])
+        for (previous_state, previous_age), (_, age) in pairwise(
+            zip(states, ages, strict=True)
+        ):
+            area += previous_state * (age - previous_age)
         age_range_seconds = ages[-1] - ages[0]
         return area / age_range_seconds
     return None
@@ -373,9 +378,11 @@ def _stat_binary_average_step(
         return 100.0 * int(states[0] is True)
     if len(states) >= 2:
         on_seconds: float = 0
-        for i in range(1, len(states)):
-            if states[i - 1] is True:
-                on_seconds += ages[i] - ages[i - 1]
+        for (previous_state, previous_age), (_, age) in pairwise(
+            zip(states, ages, strict=True)
+        ):
+            if previous_state is True:
+                on_seconds += age - previous_age
         age_range_seconds = ages[-1] - ages[0]
         return 100 / age_range_seconds * on_seconds
     return None

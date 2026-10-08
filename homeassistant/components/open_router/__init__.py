@@ -1,7 +1,5 @@
 """The OpenRouter integration."""
 
-from typing import Any, cast
-
 from openai import AsyncOpenAI, AuthenticationError, OpenAIError
 
 from homeassistant.config_entries import ConfigEntry
@@ -22,8 +20,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenRouterConfigEntry) -
     client = AsyncOpenAI(
         base_url="https://openrouter.ai/api/v1",
         api_key=entry.data[CONF_API_KEY],
-        # Legacy HTTPX clients are supported at runtime only.
-        http_client=cast(Any, get_async_client(hass)),
+        http_client=get_async_client(hass),
     )
 
     # Cache current platform data which gets added to each request
