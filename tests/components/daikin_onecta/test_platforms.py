@@ -19,7 +19,10 @@ from homeassistant.components.daikin_onecta.update import DaikinFirmwareUpdateEn
 from homeassistant.components.daikin_onecta.water_heater import DaikinWaterTank
 from homeassistant.components.fan import (
     DOMAIN as FAN_DOMAIN,
+    SERVICE_SET_PERCENTAGE,
     SERVICE_SET_PRESET_MODE,
+    SERVICE_TURN_OFF as FAN_SERVICE_TURN_OFF,
+    SERVICE_TURN_ON as FAN_SERVICE_TURN_ON,
     FanEntityFeature,
 )
 from homeassistant.components.select import (
@@ -29,12 +32,14 @@ from homeassistant.components.select import (
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
     SERVICE_TURN_OFF as SWITCH_SERVICE_TURN_OFF,
+    SERVICE_TURN_ON as SWITCH_SERVICE_TURN_ON,
 )
 from homeassistant.components.update import DOMAIN as UPDATE_DOMAIN, SERVICE_INSTALL
 from homeassistant.components.water_heater import (
     DOMAIN as WATER_HEATER_DOMAIN,
     SERVICE_SET_TEMPERATURE as WATER_HEATER_SERVICE_SET_TEMPERATURE,
     SERVICE_TURN_OFF as WATER_HEATER_SERVICE_TURN_OFF,
+    SERVICE_TURN_ON as WATER_HEATER_SERVICE_TURN_ON,
     STATE_HEAT_PUMP,
     STATE_PERFORMANCE,
 )
@@ -173,6 +178,14 @@ async def test_switch_service_updates_cached_state(
     assert state is not None
     assert state.state == "off"
 
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SWITCH_SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: state.entity_id},
+        blocking=True,
+    )
+    assert hass.states.get(state.entity_id).state == "on"
+
 
 async def test_schedule_select_updates_cached_selection(
     hass: HomeAssistant, config_entry: MockConfigEntry
@@ -234,6 +247,16 @@ async def test_water_heater_turn_off_updates_cached_state(
     state = hass.states.get("water_heater.altherma")
     assert state is not None
     assert state.attributes["operation_mode"] == "off"
+
+    await hass.services.async_call(
+        WATER_HEATER_DOMAIN,
+        WATER_HEATER_SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: state.entity_id},
+        blocking=True,
+    )
+    state = hass.states.get(state.entity_id)
+    assert state is not None
+    assert state.attributes["operation_mode"] == STATE_PERFORMANCE
 
 
 async def test_water_heater_temperature_updates_typed_cache(
@@ -340,6 +363,82 @@ async def test_air_purifier_preset_updates_cached_state(
     state = hass.states.get("fan.air_purifier")
     assert state is not None
     assert state.attributes["preset_mode"] == "autoFan"
+
+
+async def test_air_purifier_percentage_switches_to_manual_and_updates_cache(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Setting speed selects the writable manual mode and updates its cache."""
+    await _async_setup_fixture(hass, config_entry, "mc80z")
+    config_entry.runtime_data.api.async_execute_command = _execute_typed_command(
+        config_entry
+    )
+
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {ATTR_ENTITY_ID: "fan.air_purifier", "preset_mode": "manualFan"},
+        blocking=True,
+    )
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        SERVICE_SET_PERCENTAGE,
+        {ATTR_ENTITY_ID: "fan.air_purifier", "percentage": 100},
+        blocking=True,
+    )
+
+    state = hass.states.get("fan.air_purifier")
+    assert state is not None
+    assert state.attributes["preset_mode"] == "manualFan"
+    assert state.attributes["percentage"] == 100
+
+
+async def test_air_purifier_turn_off_then_on_updates_cached_state(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Power commands immediately publish their successful local state."""
+    await _async_setup_fixture(hass, config_entry, "mc80z")
+    config_entry.runtime_data.api.async_execute_command = _execute_typed_command(
+        config_entry
+    )
+
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        FAN_SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: "fan.air_purifier"},
+        blocking=True,
+    )
+    state = hass.states.get("fan.air_purifier")
+    assert state is not None
+    assert state.state == "off"
+
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        FAN_SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "fan.air_purifier"},
+        blocking=True,
+    )
+    state = hass.states.get("fan.air_purifier")
+    assert state is not None
+    assert state.state == "on"
+
+
+async def test_air_purifier_ignores_unchanged_preset(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Do not spend a cloud request when the selected purifier mode is unchanged."""
+    await _async_setup_fixture(hass, config_entry, "mc80z")
+    execute_command = _execute_typed_command(config_entry)
+    config_entry.runtime_data.api.async_execute_command = execute_command
+
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {ATTR_ENTITY_ID: "fan.air_purifier", "preset_mode": "econo"},
+        blocking=True,
+    )
+
+    execute_command.assert_not_awaited()
 
 
 async def test_air_purifier_does_not_expose_read_only_preset_modes() -> None:
