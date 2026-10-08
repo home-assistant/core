@@ -1,6 +1,6 @@
 """Test UniFi backoff policy."""
 
-from homeassistant.components.unifi.hub.backoff import BackoffPolicy
+from homeassistant.components.unifi.hub.connection import BackoffPolicy
 
 
 def test_default_delay_sequence_grows_and_caps() -> None:

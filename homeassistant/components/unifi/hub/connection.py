@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import Callable
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 import aiounifi
@@ -10,10 +11,22 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from ..const import LOGGER
-from .backoff import BackoffPolicy
 
 if TYPE_CHECKING:
     from .. import UnifiConfigEntry
+
+
+@dataclass
+class BackoffPolicy:
+    """Exponential retry delay capped at a maximum interval."""
+
+    base: float = 15
+    factor: float = 2
+    maximum: float = 300
+
+    def next_delay(self, attempt: int) -> float:
+        """Return the delay in seconds for a zero-based attempt number."""
+        return min(self.base * (self.factor**attempt), self.maximum)
 
 
 class UnifiConnectionManager:

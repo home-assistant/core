@@ -13,7 +13,7 @@ import pytest
 
 from homeassistant.components.unifi import STORAGE_KEY, STORAGE_VERSION
 from homeassistant.components.unifi.const import CONF_SITE_ID, DOMAIN
-from homeassistant.components.unifi.hub.backoff import BackoffPolicy
+from homeassistant.components.unifi.hub.connection import BackoffPolicy
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
