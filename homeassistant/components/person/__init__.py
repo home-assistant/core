@@ -9,7 +9,7 @@ from typing import Any, Self, override
 import probatio
 
 from homeassistant.auth import EVENT_USER_REMOVED
-from homeassistant.components import persistent_notification, websocket_api
+from homeassistant.components import websocket_api
 from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
     DeviceTrackerEntityCapabilityAttribute,
@@ -61,7 +61,8 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType, VolDictType
 
-from .const import DATA_PERSON, DOMAIN, PersonEntityStateAttribute
+from .const import CONF_USER_ID, DATA_PERSON, DOMAIN, PersonEntityStateAttribute
+from .helpers import filter_yaml_data
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -70,7 +71,6 @@ ATTR_USER_ID = "user_id"
 ATTR_DEVICE_TRACKERS = "device_trackers"
 
 CONF_DEVICE_TRACKERS = "device_trackers"
-CONF_USER_ID = "user_id"
 CONF_PICTURE = "picture"
 
 STORAGE_KEY = DOMAIN
@@ -427,42 +427,6 @@ def _validate_own_picture(hass: HomeAssistant, picture: str | None) -> None:
             translation_domain=DOMAIN,
             translation_key="invalid_picture",
         )
-
-
-async def filter_yaml_data(hass: HomeAssistant, persons: list[dict]) -> list[dict]:
-    """Validate YAML data that we can't validate via schema."""
-    filtered = []
-    person_invalid_user = []
-
-    for person_conf in persons:
-        user_id = person_conf.get(CONF_USER_ID)
-
-        if user_id is not None and await hass.auth.async_get_user(user_id) is None:
-            _LOGGER.error(
-                "Invalid user_id detected for person %s",
-                person_conf[CONF_ID],
-            )
-            person_invalid_user.append(
-                f"- Person {person_conf[CONF_NAME]} (id: {person_conf[CONF_ID]}) points"
-                f" at invalid user {user_id}"
-            )
-            continue
-
-        filtered.append(person_conf)
-
-    if person_invalid_user:
-        persistent_notification.async_create(
-            hass,
-            f"""
-The following persons point at invalid users:
-
-{"- ".join(person_invalid_user)}
-            """,
-            "Invalid Person Configuration",
-            DOMAIN,
-        )
-
-    return filtered
 
 
 @dataclass(slots=True)
