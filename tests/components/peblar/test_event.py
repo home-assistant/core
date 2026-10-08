@@ -4,10 +4,11 @@ from datetime import timedelta
 from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
-from peblar import PeblarMeterHistory
+from peblar import PeblarError, PeblarMeterHistory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -203,4 +204,25 @@ async def test_nothing_to_report(
 @pytest.mark.usefixtures("init_integration")
 async def test_no_reader_no_entity(hass: HomeAssistant) -> None:
     """Test a charger without a reader shows nobody in."""
+    assert hass.states.get(ENTITY_ID) is None
+
+
+async def test_a_charger_without_meter_history(
+    hass: HomeAssistant,
+    mock_peblar: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a charger that cannot answer for its meter history still loads.
+
+    Firmware older than the statistics endpoint answers it with a 404.
+    Reading back who was shown in is one entity, and it must not take the
+    rest of the integration down with it.
+    """
+    mock_peblar.meter_history.side_effect = PeblarError("Not Found")
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
     assert hass.states.get(ENTITY_ID) is None

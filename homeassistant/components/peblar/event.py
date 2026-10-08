@@ -36,6 +36,13 @@ async def async_setup_entry(
     if not entry.runtime_data.system_information.hardware_has_rfid:
         return
 
+    # Older firmware has no meter history to read this back from. The
+    # charger was reachable a moment ago, for the rest of the setup, so a
+    # read that failed here is the endpoint missing rather than the
+    # charger being away.
+    if not entry.runtime_data.authorization_coordinator.last_update_success:
+        return
+
     async_add_entities(
         [
             PeblarAuthorizationEventEntity(
