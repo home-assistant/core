@@ -77,10 +77,12 @@ async def test_device_tracker_disconnect(
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize(
-    ("consider_home", "expected_state"),
+    ("consider_home", "elapsed", "expected_state"),
     [
-        pytest.param(0, STATE_NOT_HOME, id="disabled"),
-        pytest.param(900, STATE_HOME, id="maximum"),
+        # Both cases use an elapsed time that the default of 180 seconds would
+        # resolve the other way, so they only pass if the option is honored.
+        pytest.param(0, timedelta(seconds=30), STATE_NOT_HOME, id="disabled"),
+        pytest.param(900, timedelta(seconds=300), STATE_HOME, id="maximum"),
     ],
 )
 async def test_consider_home_option(
@@ -89,6 +91,7 @@ async def test_consider_home_option(
     mock_luci_client: MagicMock,
     freezer: FrozenDateTimeFactory,
     consider_home: int,
+    elapsed: timedelta,
     expected_state: str,
 ) -> None:
     """Test the consider_home option controls how long a device stays home."""
@@ -101,7 +104,7 @@ async def test_consider_home_option(
 
     mock_luci_client.get_all_connected_devices.return_value = [MOCK_DEVICE_2]
 
-    freezer.tick(timedelta(seconds=300))
+    freezer.tick(elapsed)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 

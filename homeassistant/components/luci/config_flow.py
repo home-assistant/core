@@ -163,9 +163,9 @@ class LuciOptionsFlowHandler(OptionsFlowWithReload):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_CONSIDER_HOME,
                         default=self.config_entry.options.get(
                             CONF_CONSIDER_HOME,
