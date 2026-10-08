@@ -18,6 +18,7 @@ PLATFORMS = [
     Platform.LIGHT,
     Platform.SELECT,
     Platform.SENSOR,
+    Platform.SIREN,
     Platform.SWITCH,
 ]
 
@@ -32,6 +33,14 @@ CAMERA_DATA = "netatmo_camera"
 HOME_DATA = "netatmo_home_data"
 SIGNAL_NAME = "signal_name"
 
+# Siren web session credentials
+CONF_SIREN_EMAIL = "siren_email"
+CONF_SIREN_PASSWORD = "siren_password"
+CONF_SIREN_TOKEN = "siren_token"
+WEB_SESSION_AUTH = "netatmo_web_session_auth"
+NETATMO_LOGIN_URL = "https://auth.netatmo.com/access/postlogin"
+NETATMO_SETSTATE_URL = "https://app.netatmo.net/api/setstate"
+
 API_SCOPES_EXCLUDED_FROM_CLOUD = [
     "access_camerapro",
     "access_doorbell",
@@ -42,6 +51,7 @@ API_SCOPES_EXCLUDED_FROM_CLOUD = [
 
 NETATMO_CREATE_CAMERA = "netatmo_create_camera"
 NETATMO_CREATE_CAMERA_LIGHT = "netatmo_create_camera_light"
+NETATMO_CREATE_CAMERA_SIREN = "netatmo_create_camera_siren"
 NETATMO_CREATE_CLIMATE = "netatmo_create_climate"
 NETATMO_CREATE_CLIMATE_BATTERY_SENSOR = "netatmo_create_climate_battery_sensor"
 NETATMO_CREATE_COVER = "netatmo_create_cover"
@@ -91,6 +101,13 @@ ATTR_SCHEDULE_ID = "schedule_id"
 ATTR_SCHEDULE_NAME = "schedule_name"
 ATTR_SELECTED_SCHEDULE = "selected_schedule"
 ATTR_SELECTED_SCHEDULE_ID = "selected_schedule_id"
+ATTR_SCHEDULED_TEMPERATURE = "scheduled_temperature"
+ATTR_SCHEDULED_ZONE_NAME = "scheduled_zone_name"
+ATTR_ANTICIPATING = "anticipating"
+ATTR_AWAY_TEMPERATURE = "away_temperature"
+ATTR_FROST_GUARD_TEMPERATURE = "frost_guard_temperature"
+ATTR_OPEN_WINDOW = "open_window"
+ATTR_SETPOINT_END_TIME = "setpoint_end_time"
 ATTR_TARGET_TEMPERATURE = "target_temperature"
 ATTR_TIME_PERIOD = "time_period"
 

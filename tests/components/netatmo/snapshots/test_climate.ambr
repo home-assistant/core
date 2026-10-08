@@ -132,9 +132,12 @@
 # name: test_entity[climate.cocina_cocina-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'anticipating': False,
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Netatmo',
+      'away_temperature': 14,
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 27,
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Cocina',
+      'frost_guard_temperature': 7,
       'heating_power_request': 0,
       <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.IDLE: 'idle'>,
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
@@ -143,6 +146,7 @@
       ]),
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 30,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
+      'open_window': False,
       <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'frost_guard',
       <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'away',
@@ -150,12 +154,14 @@
         'frost_guard',
         'schedule',
       ]),
+      'scheduled_temperature': None,
+      'scheduled_zone_name': 'Eco',
       'selected_schedule': 'Default',
       'selected_schedule_id': '591b54a2764ff4d50d8b5795',
+      'setpoint_end_time': None,
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
       <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.5,
       <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 7,
-      <ClimateEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.cocina_cocina',
@@ -219,9 +225,13 @@
 # name: test_entity[climate.corridor_corridor-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'anticipating': False,
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Netatmo',
+      'away_temperature': 14,
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 22,
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Corridor',
+      'frost_guard_temperature': 7,
+      'heating_power_request': 0,
       <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.HEATING: 'heating'>,
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.AUTO: 'auto'>,
@@ -229,6 +239,7 @@
       ]),
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 30,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
+      'open_window': False,
       <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'schedule',
       <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'away',
@@ -236,12 +247,14 @@
         'frost_guard',
         'schedule',
       ]),
+      'scheduled_temperature': None,
+      'scheduled_zone_name': 'Eco',
       'selected_schedule': 'Default',
       'selected_schedule_id': '591b54a2764ff4d50d8b5795',
+      'setpoint_end_time': None,
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
       <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.5,
       <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 22,
-      <ClimateEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.corridor_corridor',
@@ -305,9 +318,12 @@
 # name: test_entity[climate.entrada_entrada-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'anticipating': False,
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Netatmo',
+      'away_temperature': 14,
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 24.5,
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Entrada',
+      'frost_guard_temperature': 7,
       'heating_power_request': 0,
       <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.IDLE: 'idle'>,
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
@@ -316,6 +332,7 @@
       ]),
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 30,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
+      'open_window': False,
       <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'frost_guard',
       <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'away',
@@ -323,12 +340,14 @@
         'frost_guard',
         'schedule',
       ]),
+      'scheduled_temperature': None,
+      'scheduled_zone_name': 'Eco',
       'selected_schedule': 'Default',
       'selected_schedule_id': '591b54a2764ff4d50d8b5795',
+      'setpoint_end_time': None,
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
       <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.5,
       <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 7,
-      <ClimateEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.entrada_entrada',
@@ -393,9 +412,13 @@
 # name: test_entity[climate.livingroom_livingroom-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'anticipating': None,
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Netatmo',
+      'away_temperature': 14,
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 19.8,
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Livingroom',
+      'frost_guard_temperature': 7,
+      'heating_power_request': None,
       <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.IDLE: 'idle'>,
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.AUTO: 'auto'>,
@@ -404,6 +427,7 @@
       ]),
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 30,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
+      'open_window': None,
       <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'away',
       <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'away',
@@ -411,12 +435,14 @@
         'frost_guard',
         'schedule',
       ]),
+      'scheduled_temperature': None,
+      'scheduled_zone_name': 'Eco',
       'selected_schedule': 'Default',
       'selected_schedule_id': '591b54a2764ff4d50d8b5795',
+      'setpoint_end_time': None,
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
       <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.5,
       <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 12,
-      <ClimateEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.livingroom_livingroom',

@@ -3,8 +3,10 @@
 import logging
 from typing import Any, cast, override
 
+import probatio
 from pyatmo.modules import NATherm1
 from pyatmo.modules.device_types import DeviceType
+from pyatmo.schedule import Zone
 
 from homeassistant.components.climate import (
     ATTR_PRESET_MODE,
@@ -24,16 +26,24 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from .const import (
+    ATTR_ANTICIPATING,
+    ATTR_AWAY_TEMPERATURE,
     ATTR_END_DATETIME,
+    ATTR_FROST_GUARD_TEMPERATURE,
     ATTR_HEATING_POWER_REQUEST,
+    ATTR_OPEN_WINDOW,
     ATTR_SCHEDULE_NAME,
+    ATTR_SCHEDULED_TEMPERATURE,
+    ATTR_SCHEDULED_ZONE_NAME,
     ATTR_SELECTED_SCHEDULE,
     ATTR_SELECTED_SCHEDULE_ID,
+    ATTR_SETPOINT_END_TIME,
     ATTR_TARGET_TEMPERATURE,
     ATTR_TIME_PERIOD,
     DOMAIN,
@@ -42,6 +52,11 @@ from .const import (
     EVENT_TYPE_SET_POINT,
     EVENT_TYPE_THERM_MODE,
     NETATMO_CREATE_CLIMATE,
+    SERVICE_CLEAR_TEMPERATURE_SETTING,
+    SERVICE_SET_PRESET_MODE_WITH_END_DATETIME,
+    SERVICE_SET_SCHEDULE,
+    SERVICE_SET_TEMPERATURE_WITH_END_DATETIME,
+    SERVICE_SET_TEMPERATURE_WITH_TIME_PERIOD,
 )
 from .coordinator import HOME, SIGNAL_NAME, NetatmoConfigEntry, NetatmoRoom
 from .entity import NetatmoRoomEntity
@@ -128,6 +143,49 @@ async def async_setup_entry(
 
     entry.async_on_unload(
         async_dispatcher_connect(hass, NETATMO_CREATE_CLIMATE, _create_entity)
+    )
+
+    platform = entity_platform.async_get_current_platform()
+    platform.async_register_entity_service(
+        SERVICE_SET_SCHEDULE,
+        {probatio.Required(ATTR_SCHEDULE_NAME): cv.string},
+        "_async_service_set_schedule",
+    )
+    platform.async_register_entity_service(
+        SERVICE_SET_PRESET_MODE_WITH_END_DATETIME,
+        {
+            probatio.Required(ATTR_PRESET_MODE): probatio.In(THERM_MODES),
+            probatio.Required(ATTR_END_DATETIME): cv.datetime,
+        },
+        "_async_service_set_preset_mode_with_end_datetime",
+    )
+    platform.async_register_entity_service(
+        SERVICE_SET_TEMPERATURE_WITH_END_DATETIME,
+        {
+            probatio.Required(ATTR_TARGET_TEMPERATURE): probatio.All(
+                probatio.Coerce(float), probatio.Range(min=7, max=30)
+            ),
+            probatio.Required(ATTR_END_DATETIME): cv.datetime,
+        },
+        "_async_service_set_temperature_with_end_datetime",
+    )
+    platform.async_register_entity_service(
+        SERVICE_SET_TEMPERATURE_WITH_TIME_PERIOD,
+        {
+            probatio.Required(ATTR_TARGET_TEMPERATURE): probatio.All(
+                probatio.Coerce(float), probatio.Range(min=7, max=30)
+            ),
+            probatio.Required(ATTR_TIME_PERIOD): probatio.All(
+                cv.time_period,
+                cv.positive_timedelta,
+            ),
+        },
+        "_async_service_set_temperature_with_time_period",
+    )
+    platform.async_register_entity_service(
+        SERVICE_CLEAR_TEMPERATURE_SETTING,
+        None,
+        "_async_service_clear_temperature_setting",
     )
 
 
@@ -234,9 +292,9 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
             self._attr_preset_mode = NETATMO_MAP_PRESET[home[EVENT_TYPE_THERM_MODE]]
             self._attr_hvac_mode = HVAC_MAP_NETATMO[self._attr_preset_mode]
             if self._attr_preset_mode == PRESET_FROST_GUARD:
-                self._attr_native_target_temperature = self._hg_temperature
+                self._attr_target_temperature = self._hg_temperature
             elif self._attr_preset_mode == PRESET_AWAY:
-                self._attr_native_target_temperature = self._away_temperature
+                self._attr_target_temperature = self._away_temperature
             elif self._attr_preset_mode in [PRESET_SCHEDULE, PRESET_HOME]:
                 self.async_update_callback()
                 self.data_handler.async_force_update(self._signal_name)
@@ -252,21 +310,17 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
                 if room["therm_setpoint_mode"] == STATE_NETATMO_OFF:
                     self._attr_hvac_mode = HVACMode.OFF
                     self._attr_preset_mode = STATE_NETATMO_OFF
-                    self._attr_native_target_temperature = 0
+                    self._attr_target_temperature = 0
                 elif room["therm_setpoint_mode"] == STATE_NETATMO_MAX:
                     self._attr_hvac_mode = HVACMode.HEAT
                     self._attr_preset_mode = PRESET_MAP_NETATMO[PRESET_BOOST]
-                    self._attr_native_target_temperature = DEFAULT_MAX_TEMP
+                    self._attr_target_temperature = DEFAULT_MAX_TEMP
                 elif room["therm_setpoint_mode"] == STATE_NETATMO_MANUAL:
                     self._attr_hvac_mode = HVACMode.HEAT
-                    self._attr_native_target_temperature = room[
-                        "therm_setpoint_temperature"
-                    ]
+                    self._attr_target_temperature = room["therm_setpoint_temperature"]
                 else:
-                    self._attr_native_target_temperature = room[
-                        "therm_setpoint_temperature"
-                    ]
-                    if self._attr_native_target_temperature == DEFAULT_MAX_TEMP:
+                    self._attr_target_temperature = room["therm_setpoint_temperature"]
+                    if self._attr_target_temperature == DEFAULT_MAX_TEMP:
                         self._attr_hvac_mode = HVACMode.HEAT
                 self.async_write_ha_state()
                 return
@@ -384,8 +438,8 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
 
         self._away_temperature = self.home.get_away_temp()
         self._hg_temperature = self.home.get_hg_temp()
-        self._attr_native_current_temperature = self.device.therm_measured_temperature
-        self._attr_native_target_temperature = self.device.therm_setpoint_temperature
+        self._attr_current_temperature = self.device.therm_measured_temperature
+        self._attr_target_temperature = self.device.therm_setpoint_temperature
 
         therm_setpoint_mode = getattr(self.device, "therm_setpoint_mode", None)
 
@@ -404,12 +458,41 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
         self._attr_extra_state_attributes[ATTR_SELECTED_SCHEDULE_ID] = getattr(
             selected_schedule, "entity_id", None
         )
+        self._attr_extra_state_attributes[ATTR_SCHEDULED_TEMPERATURE] = (
+            self._get_scheduled_setpoint()
+        )
+        self._attr_extra_state_attributes[ATTR_SCHEDULED_ZONE_NAME] = (
+            self._get_scheduled_zone_name()
+        )
+        self._attr_extra_state_attributes[ATTR_AWAY_TEMPERATURE] = getattr(
+            selected_schedule, "away_temp", None
+        )
+        self._attr_extra_state_attributes[ATTR_FROST_GUARD_TEMPERATURE] = getattr(
+            selected_schedule, "hg_temp", None
+        )
+        self._attr_extra_state_attributes[ATTR_OPEN_WINDOW] = getattr(
+            self.device, "open_window", None
+        )
+        self._attr_extra_state_attributes[ATTR_ANTICIPATING] = getattr(
+            self.device, "anticipating", None
+        )
+
+        # setpoint_end_time ΓÇö convert Unix timestamp to ISO datetime string
+        end_time = getattr(self.device, "therm_setpoint_end_time", None)
+        self._attr_extra_state_attributes[ATTR_SETPOINT_END_TIME] = (
+            dt_util.utc_from_timestamp(end_time).isoformat() if end_time else None
+        )
 
         if self.device_type == NA_VALVE:
             self._attr_extra_state_attributes[ATTR_HEATING_POWER_REQUEST] = (
                 self.device.heating_power_request
             )
         else:
+            # Also expose heating_power_request for NATherm1 rooms
+            if hasattr(self.device, "heating_power_request"):
+                self._attr_extra_state_attributes[ATTR_HEATING_POWER_REQUEST] = (
+                    self.device.heating_power_request
+                )
             for module in self.device.modules.values():
                 if hasattr(module, "boiler_status"):
                     module = cast(NATherm1, module)
@@ -418,6 +501,46 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
                         break
 
         self.async_write_ha_state()
+
+    def _get_scheduled_setpoint(self) -> float | None:
+        """Return the scheduled setpoint temperature for this room at the current time."""
+        zone = self._get_active_zone()
+        if zone is None:
+            return None
+        return next(
+            (
+                r.therm_setpoint_temperature
+                for r in zone.rooms
+                if r.entity_id == self.device.entity_id
+            ),
+            None,
+        )
+
+    def _get_scheduled_zone_name(self) -> str | None:
+        """Return the name of the active schedule zone (e.g. Confort, Eco, Nuit)."""
+        zone = self._get_active_zone()
+        return zone.name if zone is not None else None
+
+    def _get_active_zone(self) -> Zone | None:
+        """Return the currently active schedule zone."""
+        schedule = self.home.get_selected_schedule()
+        if schedule is None or not schedule.timetable:
+            return None
+
+        now = dt_util.utcnow()
+        minute_of_week = now.weekday() * 1440 + now.hour * 60 + now.minute
+
+        active_zone_id = schedule.timetable[0].zone_id
+        for entry in schedule.timetable:
+            if entry.m_offset is not None and entry.m_offset <= minute_of_week:
+                active_zone_id = entry.zone_id
+            else:
+                break
+
+        return next(
+            (z for z in schedule.zones if int(z.entity_id) == active_zone_id),
+            None,
+        )
 
     async def _async_service_set_schedule(self, **kwargs: Any) -> None:
         schedule_name = kwargs.get(ATTR_SCHEDULE_NAME)
