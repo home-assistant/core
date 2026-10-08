@@ -378,7 +378,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
         await super().async_added_to_hass()
 
         self._logger = logging.getLogger(
-            f"{__name__}.{split_entity_id(self.entity_id)[1]}"
+            f"{LOGGER.name}.{split_entity_id(self.entity_id)[1]}"
         )
         self.action_script.update_logger(self._logger)
 
