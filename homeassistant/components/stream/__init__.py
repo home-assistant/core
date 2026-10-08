@@ -150,7 +150,8 @@ def _convert_stream_options(
         raise HomeAssistantError("Stream integration is not set up.")
 
     stream_settings = copy.copy(hass.data[DOMAIN][ATTR_SETTINGS])
-    pyav_options: dict[str, str] = {}
+    # FFmpeg 9 verifies TLS peers by default; cameras use self-signed certificates
+    pyav_options: dict[str, str] = {"tls_verify": "0"}
     try:
         STREAM_OPTIONS_SCHEMA(stream_options)
     except probatio.Invalid as exc:
