@@ -17,6 +17,7 @@ from homeassistant.components.daikin_onecta.coordinator import (
 )
 from homeassistant.components.daikin_onecta.device import DaikinOnectaDevice
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from tests.common import MockConfigEntry
@@ -50,6 +51,41 @@ def test_device_update_refreshes_cached_name() -> None:
     )
 
     assert device.name == "New name"
+
+
+async def test_device_registry_refreshes_without_climate_entity(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Refresh a gateway registry entry even when it has no climate entity."""
+    gateway = DaikinOnectaDevice(
+        SimpleNamespace(
+            id="gateway",
+            display_name="Old name",
+            available=True,
+            mac_address=None,
+            device_model="Old model",
+            gateway_embedded_id=None,
+        )
+    )
+    gateway.async_update_device_registry(hass, config_entry)
+    gateway.set_device_data(
+        SimpleNamespace(
+            id="gateway",
+            display_name="New name",
+            available=True,
+            mac_address=None,
+            device_model="New model",
+            gateway_embedded_id=None,
+        )
+    )
+    gateway.async_update_device_registry(hass, config_entry)
+
+    entry = dr.async_get(hass).async_get_device_by_identifier(
+        (DOMAIN, "gateway"), config_entry.entry_id
+    )
+    assert entry is not None
+    assert entry.name == "New name"
+    assert entry.model_id == "New model"
 
 
 def _patch_polling_schedule(

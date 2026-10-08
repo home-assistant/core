@@ -130,7 +130,7 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
                     else:
                         device = DaikinOnectaDevice(dev_data)
                         devices[dev_data.id] = device
-                    device.async_update_device_registry(self.config_entry)
+                    device.async_update_device_registry(self.hass, self.config_entry)
 
                 self.update_interval = self._determine_update_interval()
 
