@@ -52,14 +52,6 @@ class ValueSensorDetails:
     value: str
 
 
-async def async_setup(hass, async_add_entities):
-    """Old way of setting up the Daikin sensors.
-
-    Can only be called when a user accidentally mentions the platform in their
-    config. But even in that case it would have been ignored.
-    """
-
-
 def add_energy_sensors(coordinator, device, management_point, sensors) -> None:
     """Add sensors for every typed energy aggregate exposed by a point."""
     periods = {
