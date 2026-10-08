@@ -4,7 +4,7 @@ from collections.abc import AsyncGenerator, Generator
 from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from httpx import HTTPStatusError, Request, RequestError, Response
+from httpx2 import HTTPStatusError, Request, RequestError, Response
 from pyocat.models import (
     DeviceResponse,
     EventResponse,
