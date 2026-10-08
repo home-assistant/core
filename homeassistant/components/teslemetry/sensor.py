@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import override
+from typing import Any, override
 
 from tesla_fleet_api import firmware_at_least
 from tesla_fleet_api.const import Scope
@@ -58,6 +58,12 @@ PARALLEL_UPDATES = 0
 # Tesla only reports the self-driving/mileage-since-reset fields (258-259) on HW4
 # vehicles, identified by this driver-assist capability in the vehicle config.
 DRIVER_ASSIST_HW4 = "TeslaAP4"
+
+
+def _tires_in_warning(warnings: dict[str, Any] | None) -> int | None:
+    """Count the tires flagged in a per-tire TPMS warning field."""
+    return None if warnings is None else sum(bool(v) for v in warnings.values())
+
 
 BMS_STATES = {
     "Standby": "standby",
@@ -561,7 +567,7 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
         key="drive_state_active_route_traffic_minutes_delay",
         polling=True,
         streaming_listener=lambda vehicle, callback: (
-            vehicle.listen_RouteTrafficMinutesDelay(callback)
+            vehicle.listen_ActiveRouteTrafficMinutesDelay(callback)
         ),
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTime.MINUTES,
@@ -572,7 +578,7 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
         key="drive_state_active_route_energy_at_arrival",
         polling=True,
         streaming_listener=lambda vehicle, callback: (
-            vehicle.listen_ExpectedEnergyPercentAtTripArrival(callback)
+            vehicle.listen_ActiveRouteExpectedEnergyPercentAtTripArrival(callback)
         ),
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
@@ -1430,7 +1436,7 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
     TeslemetryVehicleSensorEntityDescription(
         key="tpms_hard_warnings",
         streaming_listener=lambda vehicle, callback: vehicle.listen_TpmsHardWarnings(
-            callback
+            lambda value: callback(_tires_in_warning(value))
         ),
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -1438,7 +1444,7 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
     TeslemetryVehicleSensorEntityDescription(
         key="tpms_soft_warnings",
         streaming_listener=lambda vehicle, callback: vehicle.listen_TpmsSoftWarnings(
-            callback
+            lambda value: callback(_tires_in_warning(value))
         ),
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -1660,8 +1666,14 @@ async def async_setup_entry(
     """Set up the Teslemetry sensor platform from a config entry."""
 
     location_scope = Scope.VEHICLE_LOCATION in entry.runtime_data.scopes
+    # Streaming vehicles are never polled, so their vehicle_config comes from metadata
+    vehicles_metadata = entry.runtime_data.metadata_coordinator.data["vehicles"]
     entities: list[SensorEntity] = []
     for vehicle in entry.runtime_data.vehicles:
+        hw4 = (
+            vehicles_metadata[vehicle.vin].get("config", {}).get("driver_assist")
+            == DRIVER_ASSIST_HW4
+        )
         for description in VEHICLE_DESCRIPTIONS:
             if description.requires_location_scope and not location_scope:
                 continue
@@ -1669,11 +1681,7 @@ async def async_setup_entry(
                 not vehicle.poll
                 and description.streaming_listener
                 and firmware_at_least(vehicle.firmware, description.streaming_firmware)
-                and (
-                    not description.requires_hw4
-                    or vehicle.coordinator.data.get("vehicle_config_driver_assist")
-                    == DRIVER_ASSIST_HW4
-                )
+                and (not description.requires_hw4 or hw4)
             ):
                 entities.append(TeslemetryStreamSensorEntity(vehicle, description))
             elif description.polling and vehicle.poll is not False:
@@ -1724,6 +1732,14 @@ async def async_setup_entry(
         for energysite in entry.runtime_data.energysites
         for description in ENERGY_HISTORY_DESCRIPTIONS
         if energysite.history_coordinator is not None
+        and (
+            "battery" not in description.key
+            or energysite.info_coordinator.data.get("components_battery")
+        )
+        and (
+            "solar" not in description.key
+            or energysite.info_coordinator.data.get("components_solar")
+        )
     )
 
     if entry.runtime_data.stream is not None:

@@ -28,7 +28,7 @@
           "host": "The hostname or IP address of your Rain Bird device.",
           "password": "The password used to authenticate with the Rain Bird device."
         },
-        "description": "Please enter the LNK WiFi module information for your Rain Bird device.",
+        "description": "Please enter the LNK Wi-Fi module information for your Rain Bird device.",
         "title": "Configure Rain Bird"
       }
     }
@@ -50,6 +50,9 @@
       }
     },
     "sensor": {
+      "program_next_run": {
+        "name": "{program} next run"
+      },
       "raindelay": {
         "name": "Raindelay"
       }

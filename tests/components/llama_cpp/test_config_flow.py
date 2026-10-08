@@ -4,7 +4,7 @@ from collections.abc import Generator
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
-import httpx
+import httpx2
 import openai
 import pytest
 
@@ -99,15 +99,17 @@ async def test_config_flow(
     ("side_effect", "expected_error"),
     [
         (
-            openai.APIConnectionError(request=httpx.Request(method="POST", url="test")),
+            openai.APIConnectionError(
+                request=httpx2.Request(method="POST", url="test")
+            ),
             "cannot_connect",
         ),
         (
             openai.AuthenticationError(
                 message="Invalid key",
-                response=httpx.Response(
+                response=httpx2.Response(
                     status_code=401,
-                    request=httpx.Request(method="POST", url="test"),
+                    request=httpx2.Request(method="POST", url="test"),
                 ),
                 body=None,
             ),
@@ -409,9 +411,9 @@ async def test_config_flow_connection_errors(
         "homeassistant.components.llama_cpp.config_flow.openai.resources.models.AsyncModels.list",
         side_effect=openai.AuthenticationError(
             message="Invalid Key",
-            response=httpx.Response(
+            response=httpx2.Response(
                 status_code=401,
-                request=httpx.Request(method="GET", url="test"),
+                request=httpx2.Request(method="GET", url="test"),
             ),
             body=None,
         ),
@@ -429,7 +431,7 @@ async def test_config_flow_connection_errors(
     with patch(
         "homeassistant.components.llama_cpp.config_flow.openai.resources.models.AsyncModels.list",
         side_effect=openai.APIConnectionError(
-            request=httpx.Request(method="GET", url="test")
+            request=httpx2.Request(method="GET", url="test")
         ),
     ):
         result3 = await hass.config_entries.flow.async_configure(
