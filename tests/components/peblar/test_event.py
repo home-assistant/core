@@ -9,7 +9,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_UNKNOWN, Platform
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
@@ -216,7 +216,9 @@ async def test_a_charger_without_meter_history(
 
     Firmware older than the statistics endpoint answers it with a 404.
     Reading back who was shown in is one entity, and it must not take the
-    rest of the integration down with it.
+    rest of the integration down with it. The entity says it has nothing
+    rather than going missing: a read can fail for a moment too, and the
+    poll that follows is free to put it right.
     """
     mock_peblar.meter_history.side_effect = PeblarError("Not Found")
     mock_config_entry.add_to_hass(hass)
@@ -225,4 +227,33 @@ async def test_a_charger_without_meter_history(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert hass.states.get(ENTITY_ID) is None
+    state = hass.states.get(ENTITY_ID)
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+
+
+async def test_a_read_that_failed_once_recovers(
+    hass: HomeAssistant,
+    mock_peblar: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a read that failed at startup is not held against the entity.
+
+    The charger answers three other coordinators right before this one, so
+    a failure here is usually the endpoint missing. It can just as well be
+    a moment of bad luck on the heaviest request of the lot, and the next
+    poll should be allowed to settle it.
+    """
+    mock_peblar.meter_history.side_effect = PeblarError("Blip")
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
+
+    mock_peblar.meter_history.side_effect = None
+    await _async_poll(hass, freezer)
+
+    assert hass.states.get(ENTITY_ID).state != STATE_UNAVAILABLE
