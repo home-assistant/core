@@ -34,6 +34,10 @@ async def init_integration(hass: HomeAssistant) -> MockConfigEntry:
 
     with (
         patch("homeassistant.components.kodi.Kodi.ping", return_value=True),
+        patch("homeassistant.components.kodi.Kodi.get_players", return_value=[]),
+        patch(
+            "homeassistant.components.kodi.Kodi.call_method", return_value={"value": 80}
+        ),
         patch(
             "homeassistant.components.kodi.Kodi.get_application_properties",
             return_value={"version": {"major": 1, "minor": 1}},

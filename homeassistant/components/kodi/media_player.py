@@ -43,6 +43,7 @@ from .browse_media import (
     media_source_content_filter,
 )
 from .const import DOMAIN, EVENT_TURN_OFF, EVENT_TURN_ON
+from .coordinator import KodiPlaybackCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -88,7 +89,7 @@ async def async_setup_entry(
     if (uid := config_entry.unique_id) is None:
         uid = config_entry.entry_id
 
-    entity = KodiEntity(data.connection, data.kodi, name, uid)
+    entity = KodiEntity(data.connection, data.kodi, name, uid, data.playback)
     async_add_entities([entity])
 
 
@@ -141,16 +142,19 @@ class KodiEntity(MediaPlayerEntity):
         | MediaPlayerEntityFeature.VOLUME_STEP
     )
 
-    def __init__(self, connection, kodi, name, uid):
+    def __init__(
+        self, connection, kodi, name, uid, playback: KodiPlaybackCoordinator
+    ) -> None:
         """Initialize the Kodi entity."""
         self._connection = connection
+        self._playback = playback
         self._kodi = kodi
         self._attr_unique_id = uid
         self._device_id = None
         self._players = None
-        self._properties = {}
-        self._item = {}
-        self._app_properties = {}
+        self._properties: dict[str, Any] = {}
+        self._item: dict[str, Any] = {}
+        self._app_properties: dict[str, Any] = {}
         self._media_position_updated_at = None
         self._media_position = None
         self._connect_error = False
@@ -253,6 +257,9 @@ class KodiEntity(MediaPlayerEntity):
         if not self._connection.can_subscribe:
             return
 
+        self.async_on_remove(
+            self._playback.async_add_connection_listener(self._on_ws_connected)
+        )
         if self._connection.connected:
             await self._on_ws_connected()
 
@@ -292,8 +299,7 @@ class KodiEntity(MediaPlayerEntity):
     async def _async_ws_connect(self):
         """Connect to Kodi via websocket protocol."""
         try:
-            await self._connection.connect()
-            await self._on_ws_connected()
+            await self._playback.async_connect()
         except TransportError, CannotConnectError:
             if not self._connect_error:
                 self._connect_error = True

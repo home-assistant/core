@@ -1,4 +1,86 @@
 {
+  "entity": {
+    "button": {
+      "decrease_audio_delay": {
+        "default": "mdi:volume-minus"
+      },
+      "decrease_subtitle_delay": {
+        "default": "mdi:subtitles"
+      },
+      "increase_audio_delay": {
+        "default": "mdi:volume-plus"
+      },
+      "increase_subtitle_delay": {
+        "default": "mdi:subtitles"
+      },
+      "reset_audio_delay": {
+        "default": "mdi:restore"
+      },
+      "reset_picture_position": {
+        "default": "mdi:fit-to-screen"
+      },
+      "reset_subtitle_delay": {
+        "default": "mdi:restore"
+      },
+      "reset_subtitle_position": {
+        "default": "mdi:subtitles"
+      }
+    },
+    "number": {
+      "picture_vertical_shift": {
+        "default": "mdi:arrow-expand-vertical"
+      },
+      "subtitle_margin": {
+        "default": "mdi:subtitles"
+      },
+      "subtitle_opacity": {
+        "default": "mdi:opacity"
+      }
+    },
+    "select": {
+      "audio_track": {
+        "default": "mdi:audio-input-stereo-minijack"
+      },
+      "subtitle_track": {
+        "default": "mdi:subtitles"
+      }
+    },
+    "sensor": {
+      "audio_channels": {
+        "default": "mdi:surround-sound"
+      },
+      "audio_codec": {
+        "default": "mdi:music"
+      },
+      "audio_delay": {
+        "default": "mdi:timer-outline"
+      },
+      "audio_language": {
+        "default": "mdi:translate"
+      },
+      "picture_view_mode": {
+        "default": "mdi:crop"
+      },
+      "subtitle_delay": {
+        "default": "mdi:subtitles"
+      },
+      "video_codec": {
+        "default": "mdi:video"
+      },
+      "video_fps": {
+        "default": "mdi:speedometer"
+      },
+      "video_hdr_type": {
+        "default": "mdi:brightness-5"
+      },
+      "video_height": {
+        "default": "mdi:arrow-expand-vertical"
+      },
+      "video_width": {
+        "default": "mdi:arrow-expand-horizontal"
+      }
+    }
+  },
   "services": {
     "add_to_playlist": {
       "service": "mdi:playlist-plus"
