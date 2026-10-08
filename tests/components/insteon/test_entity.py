@@ -13,6 +13,7 @@ from homeassistant.components import insteon
 from homeassistant.components.insteon import (
     DOMAIN,
     entity as insteon_entity,
+    services as insteon_services,
     utils as insteon_utils,
 )
 from homeassistant.components.insteon.entity import InsteonEntity
@@ -55,6 +56,7 @@ def patch_setup_and_devices() -> Generator[None]:
         patch.object(insteon, "devices", devices),
         patch.object(insteon_utils, "devices", devices),
         patch.object(insteon_entity, "devices", devices),
+        patch.object(insteon_services, "devices", devices),
     ):
         yield
 
