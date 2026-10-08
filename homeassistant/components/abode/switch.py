@@ -73,7 +73,7 @@ class AbodeAutomationSwitch(AbodeAutomation, SwitchEntity):
         await super().async_added_to_hass()
 
         self._async_connect_trigger_signal()
-        # The lambda is needed because _unsub_capture_signal is reassigned
+        # The lambda is needed because _unsub_trigger_signal is reassigned
         # on entity id change.
         # pylint: disable-next=unnecessary-lambda
         self.async_on_remove(lambda: self._unsub_trigger_signal())
