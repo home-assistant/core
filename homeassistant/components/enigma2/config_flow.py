@@ -54,7 +54,7 @@ CONFIG_SCHEMA = probatio.Schema(
             probatio.Coerce(int),
         ),
         probatio.Optional(CONF_USERNAME): selector.TextSelector(),
-        probatio.Optional(CONF_PASSWORD): selector.TextSelector(
+        probatio.Optional(probatio.Secret(CONF_PASSWORD)): selector.TextSelector(
             selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
         ),
         probatio.Required(CONF_SSL, default=DEFAULT_SSL): selector.BooleanSelector(),

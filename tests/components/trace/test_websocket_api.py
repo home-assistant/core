@@ -1,7 +1,7 @@
 """Test Trace websocket API."""
 
 import asyncio
-from collections import defaultdict, deque
+from collections import defaultdict
 import json
 from typing import Any
 from unittest.mock import patch
@@ -1677,7 +1677,7 @@ def _serialize_trace(not_triggered: bool, reason: str) -> dict[str, Any]:
     trace.not_triggered = not_triggered
     element = TraceElement({"trigger": {"idx": "0"}}, "trigger/0")
     element.set_result(reason=reason)
-    trace.set_trace({"trigger/0": deque([element])})
+    trace.set_trace({"trigger/0": [element]})
     trace.finished()
     return json.loads(json.dumps(trace.as_dict(), cls=ExtendedJSONEncoder))
 

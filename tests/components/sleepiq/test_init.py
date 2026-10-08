@@ -369,3 +369,103 @@ async def test_duplicate_beds_none_sleeper_ids_not_filtered(
     entry = await setup_platform(hass, "sensor")
     assert entry.state is ConfigEntryState.LOADED
     assert "ghost_001" in mock_asyncsleepiq.beds
+
+
+async def test_real_beds_sharing_sleeper_not_filtered(
+    hass: HomeAssistant,
+    mock_asyncsleepiq: MagicMock,
+) -> None:
+    """Test that two real beds sharing a sleeper profile are both preserved."""
+    second_bed = create_autospec(SleepIQBed)
+    second_bed.name = "Bedroom 2"
+    second_bed.id = "bed_002"
+    second_bed.mac_addr = "AA:BB:CC:DD:EE:03"
+    second_bed.model = "C10"
+    second_bed.paused = False
+
+    shared_sleeper = create_autospec(SleepIQSleeper)
+    shared_sleeper.side = Side.LEFT
+    shared_sleeper.name = SLEEPER_L_NAME
+    shared_sleeper.sleeper_id = SLEEPER_L_ID
+    shared_sleeper.in_bed = False
+    shared_sleeper.sleep_number = 50
+    shared_sleeper.pressure = 1200
+    shared_sleeper.sleep_data = SleepData(
+        duration=0, sleep_score=0, heart_rate=0, respiratory_rate=0, hrv=0
+    )
+
+    other_sleeper = create_autospec(SleepIQSleeper)
+    other_sleeper.side = Side.RIGHT
+    other_sleeper.name = "Other Person"
+    other_sleeper.sleeper_id = "99999"
+    other_sleeper.in_bed = False
+    other_sleeper.sleep_number = 60
+    other_sleeper.pressure = 1100
+    other_sleeper.sleep_data = SleepData(
+        duration=0, sleep_score=0, heart_rate=0, respiratory_rate=0, hrv=0
+    )
+
+    second_bed.sleepers = [shared_sleeper, other_sleeper]
+    second_bed.foundation = create_autospec(SleepIQFoundation)
+    second_bed.foundation.lights = [MagicMock()]
+    second_bed.foundation.actuators = []
+    second_bed.foundation.presets = []
+    second_bed.foundation.foot_warmers = []
+    second_bed.foundation.core_climates = []
+
+    mock_asyncsleepiq.beds["bed_002"] = second_bed
+
+    entry = await setup_platform(hass, "sensor")
+    assert entry.state is ConfigEntryState.LOADED
+    assert BED_ID in mock_asyncsleepiq.beds
+    assert "bed_002" in mock_asyncsleepiq.beds
+
+
+async def test_identical_sleepers_both_with_features_preserved(
+    hass: HomeAssistant,
+    mock_asyncsleepiq: MagicMock,
+) -> None:
+    """Test that two feature-bearing beds with identical sleeper sets are both kept."""
+    duplicate_bed = create_autospec(SleepIQBed)
+    duplicate_bed.name = "Living Room Bed"
+    duplicate_bed.id = "bed_003"
+    duplicate_bed.mac_addr = "AA:BB:CC:DD:EE:04"
+    duplicate_bed.model = "C10"
+    duplicate_bed.paused = False
+
+    dup_sleeper_l = create_autospec(SleepIQSleeper)
+    dup_sleeper_l.side = Side.LEFT
+    dup_sleeper_l.name = SLEEPER_L_NAME
+    dup_sleeper_l.sleeper_id = SLEEPER_L_ID
+    dup_sleeper_l.in_bed = False
+    dup_sleeper_l.sleep_number = 50
+    dup_sleeper_l.pressure = 1200
+    dup_sleeper_l.sleep_data = SleepData(
+        duration=0, sleep_score=0, heart_rate=0, respiratory_rate=0, hrv=0
+    )
+
+    dup_sleeper_r = create_autospec(SleepIQSleeper)
+    dup_sleeper_r.side = Side.RIGHT
+    dup_sleeper_r.name = SLEEPER_R_NAME
+    dup_sleeper_r.sleeper_id = SLEEPER_R_ID
+    dup_sleeper_r.in_bed = False
+    dup_sleeper_r.sleep_number = 60
+    dup_sleeper_r.pressure = 1100
+    dup_sleeper_r.sleep_data = SleepData(
+        duration=0, sleep_score=0, heart_rate=0, respiratory_rate=0, hrv=0
+    )
+
+    duplicate_bed.sleepers = [dup_sleeper_l, dup_sleeper_r]
+    duplicate_bed.foundation = create_autospec(SleepIQFoundation)
+    duplicate_bed.foundation.lights = [MagicMock()]
+    duplicate_bed.foundation.actuators = []
+    duplicate_bed.foundation.presets = []
+    duplicate_bed.foundation.foot_warmers = []
+    duplicate_bed.foundation.core_climates = []
+
+    mock_asyncsleepiq.beds["bed_003"] = duplicate_bed
+
+    entry = await setup_platform(hass, "sensor")
+    assert entry.state is ConfigEntryState.LOADED
+    assert BED_ID in mock_asyncsleepiq.beds
+    assert "bed_003" in mock_asyncsleepiq.beds

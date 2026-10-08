@@ -80,7 +80,7 @@ class PiHoleFlowHandler(ConfigFlow, domain=DOMAIN):
                         default=user_input.get(CONF_LOCATION, DEFAULT_LOCATION),
                     ): str,
                     probatio.Required(
-                        CONF_API_KEY,
+                        probatio.Secret(CONF_API_KEY),
                         default=user_input.get(CONF_API_KEY),
                     ): str,
                     probatio.Required(
@@ -122,7 +122,9 @@ class PiHoleFlowHandler(ConfigFlow, domain=DOMAIN):
                 CONF_HOST: self._config[CONF_HOST],
                 CONF_LOCATION: self._config[CONF_LOCATION],
             },
-            data_schema=probatio.Schema({probatio.Required(CONF_API_KEY): str}),
+            data_schema=probatio.Schema(
+                {probatio.Required(probatio.Secret(CONF_API_KEY)): str}
+            ),
             errors=errors,
         )
 

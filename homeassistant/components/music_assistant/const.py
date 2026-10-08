@@ -43,6 +43,7 @@ ATTR_PODCASTS = "podcasts"
 ATTR_RADIO = "radio"
 ATTR_ITEMS = "items"
 ATTR_RADIO_MODE = "radio_mode"
+ATTR_START_ITEM = "start_item"
 ATTR_MEDIA_ID = "media_id"
 ATTR_ARTIST = "artist"
 ATTR_ALBUM = "album"
@@ -79,5 +80,10 @@ ATTR_FANART_IMAGE = "fanart_image"
 ATTR_USERNAME = "username"
 
 ATTR_CONF_EXPOSE_PLAYER_TO_HA = "expose_player_to_ha"
+
+# prefix of dashboard device identifiers and entity unique ids, which tells
+# them apart from player ids (a display may share its id with a player)
+DASHBOARD_ID_PREFIX = "dashboard:"
+DASHBOARD_DEVICE_MODEL = "Dashboard display"
 
 LOGGER = logging.getLogger(__package__)

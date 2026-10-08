@@ -106,19 +106,19 @@ class BalboaClimateEntity(BalboaEntity, ClimateEntity):
 
     @property
     @override
-    def temperature_unit(self) -> str:
+    def native_temperature_unit(self) -> str:
         """Return the unit of measurement used by the platform."""
         return TEMPERATURE_UNIT_MAP[self._client.temperature_unit]
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self._client.temperature
 
     @property
     @override
-    def target_temperature(self) -> float:
+    def native_target_temperature(self) -> float:
         """Return the target temperature we try to reach."""
         return self._client.target_temperature
 

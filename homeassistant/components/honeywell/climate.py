@@ -188,9 +188,9 @@ class HoneywellUSThermostat(ClimateEntity):
         )
 
         self._attr_translation_placeholders = {"name": device.name}
-        self._attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
+        self._attr_native_temperature_unit = UnitOfTemperature.FAHRENHEIT
         if device.temperature_unit == "C":
-            self._attr_temperature_unit = UnitOfTemperature.CELSIUS
+            self._attr_native_temperature_unit = UnitOfTemperature.CELSIUS
         self._attr_preset_modes = [PRESET_NONE, PRESET_AWAY, PRESET_HOLD]
 
         # not all honeywell HVACs support all modes
@@ -258,7 +258,7 @@ class HoneywellUSThermostat(ClimateEntity):
                 ]
             )
         return TemperatureConverter.convert(
-            DEFAULT_MIN_TEMP, UnitOfTemperature.CELSIUS, self.temperature_unit
+            DEFAULT_MIN_TEMP, UnitOfTemperature.CELSIUS, self.native_temperature_unit
         )
 
     @property
@@ -277,7 +277,7 @@ class HoneywellUSThermostat(ClimateEntity):
                 ]
             )
         return TemperatureConverter.convert(
-            DEFAULT_MAX_TEMP, UnitOfTemperature.CELSIUS, self.temperature_unit
+            DEFAULT_MAX_TEMP, UnitOfTemperature.CELSIUS, self.native_temperature_unit
         )
 
     @property
@@ -302,13 +302,13 @@ class HoneywellUSThermostat(ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self._device.current_temperature
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         if self.hvac_mode == HVACMode.COOL:
             return self._device.setpoint_cool
@@ -318,7 +318,7 @@ class HoneywellUSThermostat(ClimateEntity):
 
     @property
     @override
-    def target_temperature_high(self) -> float | None:
+    def native_target_temperature_high(self) -> float | None:
         """Return the highbound target temperature we try to reach."""
         if self.hvac_mode == HVACMode.HEAT_COOL:
             return self._device.setpoint_cool
@@ -326,7 +326,7 @@ class HoneywellUSThermostat(ClimateEntity):
 
     @property
     @override
-    def target_temperature_low(self) -> float | None:
+    def native_target_temperature_low(self) -> float | None:
         """Return the lowbound target temperature we try to reach."""
         if self.hvac_mode == HVACMode.HEAT_COOL:
             return self._device.setpoint_heat

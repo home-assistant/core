@@ -32,7 +32,7 @@ PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
     {
         probatio.Required(CONF_MAC): cv.string,
         probatio.Optional(CONF_BROADCAST_ADDRESS): cv.string,
-        probatio.Optional(CONF_BROADCAST_PORT): cv.port,
+        probatio.Optional(CONF_BROADCAST_PORT): probatio.Port(),
         probatio.Optional(CONF_HOST): cv.string,
         probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         probatio.Optional(CONF_OFF_ACTION): cv.SCRIPT_SCHEMA,

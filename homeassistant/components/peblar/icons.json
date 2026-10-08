@@ -13,6 +13,11 @@
         "default": "mdi:lock-open"
       }
     },
+    "event": {
+      "session_authorization": {
+        "default": "mdi:card-account-details"
+      }
+    },
     "number": {
       "charge_current_limit": {
         "default": "mdi:speedometer"

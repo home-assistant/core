@@ -83,7 +83,7 @@ def async_setup_services(
         probatio.Schema(
             {
                 probatio.Required(ATTR_DEVICE_ID): cv.string,
-                probatio.Required(CONF_PIN): cv.string,
+                probatio.Required(probatio.Secret(CONF_PIN)): cv.string,
             }
         ),
     )

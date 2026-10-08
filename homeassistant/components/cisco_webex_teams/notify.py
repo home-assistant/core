@@ -22,7 +22,7 @@ CONF_ROOM_ID = "room_id"
 
 PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {
-        probatio.Required(CONF_TOKEN): cv.string,
+        probatio.Required(probatio.Secret(CONF_TOKEN)): cv.string,
         probatio.Required(CONF_ROOM_ID): cv.string,
     }
 )

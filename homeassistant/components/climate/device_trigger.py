@@ -53,7 +53,7 @@ CURRENT_TRIGGER_SCHEMA = probatio.All(
             probatio.Optional(CONF_FOR): cv.positive_time_period_dict,
         }
     ),
-    cv.has_at_least_one_key(CONF_BELOW, CONF_ABOVE),
+    probatio.AtLeastOne(CONF_BELOW, CONF_ABOVE),
 )
 
 TRIGGER_SCHEMA = probatio.Any(HVAC_MODE_TRIGGER_SCHEMA, CURRENT_TRIGGER_SCHEMA)

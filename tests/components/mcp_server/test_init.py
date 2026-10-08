@@ -1,6 +1,12 @@
 """Test the Model Context Protocol Server init module."""
 
-from homeassistant.components.mcp_server.const import CONF_REQUIRE_ADMIN, DOMAIN
+import pytest
+
+from homeassistant.components.mcp_server.const import (
+    CONF_ALL_LLM_APIS,
+    CONF_REQUIRE_ADMIN,
+    DOMAIN,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_LLM_HASS_API
 from homeassistant.core import HomeAssistant
@@ -30,8 +36,9 @@ async def test_migrate_entry_require_admin(hass: HomeAssistant) -> None:
     await hass.config_entries.async_setup(config_entry.entry_id)
     assert config_entry.state is ConfigEntryState.LOADED
 
-    assert config_entry.minor_version == 2
+    assert config_entry.minor_version == 3
     assert config_entry.data == {
+        CONF_ALL_LLM_APIS: False,
         CONF_LLM_HASS_API: [llm.LLM_API_ASSIST],
         CONF_REQUIRE_ADMIN: False,
     }
@@ -49,5 +56,38 @@ async def test_migrate_entry_keeps_require_admin(hass: HomeAssistant) -> None:
     await hass.config_entries.async_setup(config_entry.entry_id)
     assert config_entry.state is ConfigEntryState.LOADED
 
-    assert config_entry.minor_version == 2
+    assert config_entry.minor_version == 3
     assert config_entry.data[CONF_REQUIRE_ADMIN] is True
+
+
+@pytest.mark.parametrize(
+    ("data", "expected_all_llm_apis"),
+    [
+        pytest.param({}, False, id="selected_llm_apis"),
+        pytest.param({CONF_ALL_LLM_APIS: True}, True, id="saved_by_options_flow"),
+    ],
+)
+async def test_migrate_entry_all_llm_apis(
+    hass: HomeAssistant, data: dict[str, bool], expected_all_llm_apis: bool
+) -> None:
+    """Test an entry created before the all LLM APIs option keeps its selection."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_LLM_HASS_API: [llm.LLM_API_ASSIST],
+            CONF_REQUIRE_ADMIN: True,
+            **data,
+        },
+        minor_version=2,
+    )
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    assert config_entry.minor_version == 3
+    assert config_entry.data == {
+        CONF_ALL_LLM_APIS: expected_all_llm_apis,
+        CONF_LLM_HASS_API: [llm.LLM_API_ASSIST],
+        CONF_REQUIRE_ADMIN: True,
+    }

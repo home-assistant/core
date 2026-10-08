@@ -189,7 +189,7 @@ PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
         probatio.Optional(CONF_DEVICE_CLASS): cv.string,
         probatio.Required(CONF_OBSERVATIONS): probatio.Schema(
             probatio.All(
-                cv.ensure_list,
+                probatio.EnsureList(),
                 [probatio.Any(TEMPLATE_SCHEMA, STATE_SCHEMA, NUMERIC_STATE_SCHEMA)],
                 no_overlapping,
             )
@@ -318,6 +318,7 @@ class BayesianBinarySensor(BinarySensorEntity):
     ) -> None:
         """Initialize the Bayesian sensor."""
         self._attr_name = name
+        # Legacy format, kept as migrating existing unique IDs is not worth the risk
         self._attr_unique_id = unique_id and f"bayesian-{unique_id}"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
 
         self._observations = [

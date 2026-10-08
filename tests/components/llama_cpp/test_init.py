@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock, patch
 
-import httpx
+import httpx2
 import openai
 import pytest
 
@@ -37,9 +37,9 @@ async def test_setup_unload_entry(
         (
             openai.AuthenticationError(
                 message="Invalid API key",
-                response=httpx.Response(
+                response=httpx2.Response(
                     status_code=401,
-                    request=httpx.Request(method="GET", url="test"),
+                    request=httpx2.Request(method="GET", url="test"),
                 ),
                 body=None,
             ),
