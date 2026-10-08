@@ -20,7 +20,7 @@ from .hub import VictronGxConfigEntry
 
 PARALLEL_UPDATES = 0  # There is no I/O in the entity itself.
 
-_FIRMWARE_UPDATE_URL = "https://www.victronenergy.com/blog/category/firmware-software/"
+_FIRMWARE_UPDATE_URL = "https://professional.victronenergy.com/news/"
 
 
 async def async_setup_entry(
