@@ -270,6 +270,40 @@ async def test_change_advanced_property(
         assert devices["33.33.33"].properties["on_mask_3"].is_dirty
 
 
+async def test_get_properties_schema_ranges(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, kpl_properties_data
+) -> None:
+    """Test the schema carries the documented range of each integer property."""
+    ws_client, devices = await _setup(
+        hass, hass_ws_client, "33.33.33", kpl_properties_data
+    )
+
+    with patch.object(insteon.api.properties, "devices", devices):
+        await ws_client.send_json(
+            {
+                ID: 2,
+                TYPE: "insteon/properties/get",
+                DEVICE_ADDRESS: "33.33.33",
+                SHOW_ADVANCED: True,
+            }
+        )
+        msg = await ws_client.receive_json()
+        assert msg["success"]
+        schema = msg["result"]["schema"]
+        assert (schema["ramp_rate"]["valueMin"], schema["ramp_rate"]["valueMax"]) == (
+            0,
+            31,
+        )
+        assert (
+            schema["led_dimming"]["valueMin"],
+            schema["led_dimming"]["valueMax"],
+        ) == (0, 127)
+        assert (schema["on_mask_3"]["valueMin"], schema["on_mask_3"]["valueMax"]) == (
+            0,
+            255,
+        )
+
+
 async def test_change_ramp_rate_property(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator, kpl_properties_data
 ) -> None:

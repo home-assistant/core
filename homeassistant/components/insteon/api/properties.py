@@ -5,8 +5,14 @@ from typing import Any
 import probatio
 from pyinsteon import devices
 from pyinsteon.config import (
+    LED_BRIGHTNESS,
+    LED_DIMMING,
     LOAD_BUTTON,
+    LOAD_BUTTON_NUMBER,
+    NIGHT_MODE_LED_BRIGHTNESS,
+    NIGHT_MODE_RAMP_RATE,
     RADIO_BUTTON_GROUPS,
+    RAMP_RATE,
     RAMP_RATE_IN_SEC,
     get_usable_value,
 )
@@ -40,15 +46,44 @@ RAMP_RATE_LIST = [str(seconds) for seconds in RAMP_RATE_SECONDS]
 TOGGLE_MODES = [str(ToggleMode(v)).lower() for v in list(ToggleMode)]
 RELAY_MODES = [str(RelayMode(v)).lower() for v in list(RelayMode)]
 
+# Device guides define ramp rate as 0x00-0x1F and LED brightness as up to 0x7F
+RAMP_RATE_MAX = 0x1F
+LED_BRIGHTNESS_MAX = 0x7F
+RAMP_RATE_NAMES = {RAMP_RATE, NIGHT_MODE_RAMP_RATE}
+LED_BRIGHTNESS_NAMES = {LED_DIMMING, LED_BRIGHTNESS, NIGHT_MODE_LED_BRIGHTNESS}
+
 
 def _bool_schema(name):
     return probatio.to_field_list(probatio.Schema({probatio.Required(name): bool}))[0]
 
 
-def _byte_schema(name):
-    return probatio.to_field_list(probatio.Schema({probatio.Required(name): cv.byte}))[
-        0
-    ]
+def _base_name(name):
+    """Return a per-button property name without its button suffix."""
+    base, _, suffix = name.rpartition("_")
+    return base if suffix.isdigit() else name
+
+
+def _int_range(name, groups):
+    """Return the valid range of an integer property."""
+    base = _base_name(name)
+    if base in RAMP_RATE_NAMES:
+        return 0, RAMP_RATE_MAX
+    if base in LED_BRIGHTNESS_NAMES:
+        return 0, LED_BRIGHTNESS_MAX
+    if name == LOAD_BUTTON_NUMBER:
+        return 1, max(groups)
+    return 0, 255
+
+
+def _int_validator(name, groups):
+    low, high = _int_range(name, groups)
+    return probatio.All(probatio.Coerce(int), probatio.Range(min=low, max=high))
+
+
+def _int_schema(name, groups):
+    return probatio.to_field_list(
+        probatio.Schema({probatio.Required(name): _int_validator(name, groups)})
+    )[0]
 
 
 def _float_schema(name):
@@ -89,7 +124,7 @@ def get_schema(prop, name, groups):
     if prop.value_type is bool:
         return _bool_schema(name)
     if prop.value_type is int:
-        return _byte_schema(name)
+        return _int_schema(name, groups)
     if prop.value_type is float:
         return _float_schema(name)
     if prop.value_type == ToggleMode:
