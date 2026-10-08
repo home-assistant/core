@@ -8,10 +8,14 @@ from requests.exceptions import ConnectionError as RequestsConnectionError
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 
 from .base import FritzBoxPhonebook
-from .const import CONF_PHONEBOOK, CONF_PREFIXES, PLATFORMS
+from .const import CONF_PHONEBOOK, CONF_PREFIXES, DOMAIN, PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,14 +37,10 @@ async def async_setup_entry(
     try:
         await hass.async_add_executor_job(fritzbox_phonebook.init_phonebook)
     except FritzSecurityError as ex:
-        _LOGGER.error(
-            (
-                "User has insufficient permissions to access FRITZ!Box settings and"
-                " its phonebooks: %s"
-            ),
-            ex,
-        )
-        return False
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="insufficient_permissions",
+        ) from ex
     except FritzConnectionException as ex:
         raise ConfigEntryAuthFailed from ex
     except RequestsConnectionError as ex:
