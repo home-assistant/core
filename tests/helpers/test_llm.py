@@ -11,7 +11,7 @@ from homeassistant.components.intent import async_register_timer_handler
 from homeassistant.components.script import ScriptConfig
 from homeassistant.const import EntityStateAttribute
 from homeassistant.core import Context, HomeAssistant, State
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.helpers import (
     area_registry as ar,
     config_validation as cv,
@@ -173,16 +173,16 @@ async def test_get_api_requires_admin(
     assert await llm.async_get_api(hass, "admin-api", admin_context)
 
     # Denied for admin API without admin user
-    with pytest.raises(llm.Unauthorized):
+    with pytest.raises(Unauthorized):
         await llm.async_get_api(hass, "admin-api", read_only_context)
 
-    with pytest.raises(llm.Unauthorized):
+    with pytest.raises(Unauthorized):
         await llm.async_get_api(hass, "admin-api", no_user_context)
 
     # Merged API requiring admin also enforces check
     assert await llm.async_get_api(hass, ["user-api", "admin-api"], admin_context)
 
-    with pytest.raises(llm.Unauthorized):
+    with pytest.raises(Unauthorized):
         await llm.async_get_api(hass, ["user-api", "admin-api"], read_only_context)
 
 

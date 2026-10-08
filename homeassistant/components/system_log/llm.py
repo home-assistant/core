@@ -37,8 +37,7 @@ def _filter_log_entries(
     if level:
         predicates.append(lambda entry: entry["level"].lower() == level)
 
-    if logger:
-        logger_lower = logger.strip().lower()
+    if logger and (logger_lower := logger.strip().lower()):
         predicates.append(
             lambda entry: (
                 logger_lower in entry["name"].lower()
