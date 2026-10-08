@@ -13,7 +13,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 NUMBER_ENTITY = "number.thermostat_hvac_valve_control"
-VOLUME_NUMBER_ENTITY = "number.indoor_siren_6_default_volume_2"
+VOLUME_NUMBER_ENTITY = "number.indoor_siren_6_endpoint_2_default_volume"
 
 
 async def test_number(
