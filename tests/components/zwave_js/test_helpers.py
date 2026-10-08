@@ -1,21 +1,27 @@
 """Test the Z-Wave JS helpers module."""
 
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import probatio
 import pytest
 from zwave_js_server.const import SecurityClass
 from zwave_js_server.model.controller import ProvisioningEntry
+from zwave_js_server.model.node import Node
 
 from homeassistant.components.zwave_js.const import DOMAIN
 from homeassistant.components.zwave_js.helpers import (
     async_get_node_status_sensor_entity_id,
     async_get_nodes_from_area_id,
     async_get_provisioning_entry_from_device_id,
+    endpoint_device_value_ids,
     format_home_id_for_display,
+    get_device_id,
+    get_home_and_node_id_from_device_entry,
     get_value_state_schema,
 )
+from homeassistant.components.zwave_js.models import PlatformZwaveDiscoveryInfo
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import area_registry as ar, device_registry as dr
 
@@ -166,6 +172,104 @@ async def test_async_get_provisioning_entry_from_device_id(
     ):
         result = await async_get_provisioning_entry_from_device_id(hass, device.id)
         assert result == provisioning_entry
+
+
+async def test_get_device_id_with_endpoint(
+    client: MagicMock, vision_security_zl7432: Node
+) -> None:
+    """Test get_device_id with an endpoint argument."""
+    driver = client.driver
+    node = vision_security_zl7432
+    home_id = driver.controller.home_id
+
+    node_device_id = get_device_id(driver, node)
+    assert node_device_id == (DOMAIN, f"{home_id}-{node.node_id}")
+
+    # Endpoint 0 and None map to the node device.
+    assert get_device_id(driver, node, 0) == node_device_id
+    assert get_device_id(driver, node, None) == node_device_id
+
+    # A non-root endpoint maps to a child device identifier.
+    assert get_device_id(driver, node, 2) == (
+        DOMAIN,
+        f"{home_id}-{node.node_id}-2",
+    )
+
+
+async def test_endpoint_device_value_ids(
+    client: MagicMock,
+    vision_security_zl7432: Node,
+    fibaro_fgr223_shutter: Node,
+) -> None:
+    """Test endpoint_device_value_ids detects collisions from discovered entities."""
+
+    def make_info(node: Node, value_id: str) -> PlatformZwaveDiscoveryInfo:
+        return PlatformZwaveDiscoveryInfo(
+            node=node,
+            primary_value=node.values[value_id],
+            assumed_state=False,
+            platform=Platform.SWITCH,
+            additional_value_ids_to_watch=set(),
+        )
+
+    # ZL7432: root-endpoint value never triggers a split.
+    zl7432 = vision_security_zl7432
+    root_id = f"{zl7432.node_id}-114-0-manufacturerId"
+    ep1_id = f"{zl7432.node_id}-37-1-currentValue"
+    ep2_id = f"{zl7432.node_id}-37-2-currentValue"
+    result = endpoint_device_value_ids(
+        [
+            make_info(zl7432, root_id),
+            make_info(zl7432, ep1_id),
+            make_info(zl7432, ep2_id),
+        ]
+    )
+    # Both non-root endpoints share the same signature and get their own child device.
+    assert ep1_id in result
+    assert ep2_id in result
+    assert root_id not in result
+
+    # FGR-223: endpoint 2 is suppressed (not included in disc_infos), so endpoint 1
+    # has no collision partner and must NOT get its own child device.
+    fgr223 = fibaro_fgr223_shutter
+    fgr223_ep1_id = f"{fgr223.node_id}-38-1-currentValue"
+    result = endpoint_device_value_ids([make_info(fgr223, fgr223_ep1_id)])
+    assert fgr223_ep1_id not in result
+
+
+async def test_get_home_and_node_id_from_device_entry(
+    hass: HomeAssistant,
+    client: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    integration: MockConfigEntry,
+) -> None:
+    """Test get_home_and_node_id_from_device_entry with node and endpoint identifiers."""
+    driver = client.driver
+    home_id = driver.controller.home_id
+
+    # 2-segment node identifier resolves to (home_id, node_id).
+    node_device = device_registry.async_get_or_create(
+        config_entry_id=integration.entry_id,
+        identifiers={(DOMAIN, f"{home_id}-7")},
+    )
+    result = get_home_and_node_id_from_device_entry(node_device)
+    assert result == (str(home_id), 7)
+
+    # 3-segment endpoint identifier resolves to the same (home_id, node_id); the
+    # endpoint segment is ignored so services targeting a child device resolve to the
+    # node.
+    endpoint_device = device_registry.async_get_or_create(
+        config_entry_id=integration.entry_id,
+        identifiers={(DOMAIN, f"{home_id}-7-2")},
+    )
+    assert get_home_and_node_id_from_device_entry(endpoint_device) == (str(home_id), 7)
+
+    # A provision_ identifier resolves to None.
+    provision_device = device_registry.async_get_or_create(
+        config_entry_id=integration.entry_id,
+        identifiers={(DOMAIN, f"provision_{home_id}-7")},
+    )
+    assert get_home_and_node_id_from_device_entry(provision_device) is None
 
 
 def test_format_home_id_for_display() -> None:

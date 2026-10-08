@@ -1,10 +1,11 @@
 """Helper functions for Z-Wave JS integration."""
 
 import asyncio
-from collections.abc import Callable, Coroutine
+from collections import defaultdict
+from collections.abc import Callable, Coroutine, Sequence
 from dataclasses import astuple, dataclass
 import logging
-from typing import Any, cast
+from typing import Any, cast, overload
 
 import aiohttp
 import probatio
@@ -20,6 +21,7 @@ from zwave_js_server.const.command_class.notification import (
 )
 from zwave_js_server.model.controller import Controller, ProvisioningEntry
 from zwave_js_server.model.driver import Driver
+from zwave_js_server.model.endpoint import Endpoint
 from zwave_js_server.model.log_config import LogConfig
 from zwave_js_server.model.node import Node as ZwaveNode
 from zwave_js_server.model.value import (
@@ -44,7 +46,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import ChildDeviceInfo, DeviceInfo
 from homeassistant.helpers.group import expand_entity_ids
 from homeassistant.helpers.typing import ConfigType, VolSchemaType
 
@@ -59,7 +61,7 @@ from .const import (
     NOTIFICATION_ACCESS_CONTROL_PROPERTY,
     OPENING_STATE_PROPERTY_KEY,
 )
-from .models import ZwaveJSConfigEntry
+from .models import PlatformZwaveDiscoveryInfo, ZwaveJSConfigEntry
 
 DRIVER_READY_EVENT_TIMEOUT = 60
 SERVER_VERSION_TIMEOUT = 10
@@ -239,9 +241,53 @@ def get_unique_id(driver: Driver, value_id: str) -> str:
     return f"{driver.controller.home_id}.{value_id}"
 
 
-def get_device_id(driver: Driver, node: ZwaveNode) -> tuple[str, str]:
-    """Get device registry identifier for Z-Wave node."""
-    return (DOMAIN, f"{driver.controller.home_id}-{node.node_id}")
+def get_device_id(
+    driver: Driver, node: ZwaveNode, endpoint: int | None = None
+) -> tuple[str, str]:
+    """Get device registry identifier for Z-Wave node.
+
+    When an endpoint is given (and not the root endpoint 0), the identifier
+    refers to the endpoint child device of the node. Endpoint 0 and ``None`` both
+    map to the main node device.
+    """
+    device_id = (DOMAIN, f"{driver.controller.home_id}-{node.node_id}")
+    if endpoint:
+        return (device_id[0], f"{device_id[1]}-{endpoint}")
+    return device_id
+
+
+def endpoint_device_value_ids(
+    disc_infos: Sequence[PlatformZwaveDiscoveryInfo],
+) -> set[str]:
+    """Return the set of primary value IDs that require their own endpoint child device.
+
+    A value on a non-root endpoint requires a child device when 2 or more distinct
+    non-root endpoints produce a discovered (non-suppressed) entity with the same value
+    signature (command class, property, property key). The collision is determined from
+    actual discovered entities, not raw node values, so suppressed endpoint values do
+    not trigger a false split.
+    """
+    endpoints_by_signature: dict[tuple, set[int]] = defaultdict(set)
+    for info in disc_infos:
+        pv = info.primary_value
+        if pv.endpoint:
+            sig = (pv.command_class, pv.property_, pv.property_key)
+            endpoints_by_signature[sig].add(pv.endpoint)
+    return {
+        info.primary_value.value_id
+        for info in disc_infos
+        if info.primary_value.endpoint
+        and len(
+            endpoints_by_signature[
+                (
+                    info.primary_value.command_class,
+                    info.primary_value.property_,
+                    info.primary_value.property_key,
+                )
+            ]
+        )
+        > 1
+    }
 
 
 def get_device_id_ext(driver: Driver, node: ZwaveNode) -> tuple[str, str] | None:
@@ -274,6 +320,8 @@ def get_home_and_node_id_from_device_entry(
     if device_id is None or device_id.startswith("provision_"):
         return None
     id_ = device_id.split("-")
+    # A third segment, if present, is the endpoint index of a child device and is
+    # intentionally ignored here so that child devices resolve to their node.
     return (id_[0], int(id_[1]))
 
 
@@ -598,15 +646,45 @@ def get_value_state_schema(
     )
 
 
-def get_device_info(driver: Driver, node: ZwaveNode) -> DeviceInfo:
-    """Get DeviceInfo for node."""
-    return DeviceInfo(
-        identifiers={get_device_id(driver, node)},
-        sw_version=node.firmware_version,
-        name=node.name or node.device_config.description or f"Node {node.node_id}",
-        model=node.device_config.label,
-        manufacturer=node.device_config.manufacturer,
-        suggested_area=node.location or None,
+@overload
+def get_device_info(
+    driver: Driver,
+    node: ZwaveNode,
+) -> DeviceInfo: ...
+
+
+@overload
+def get_device_info(
+    driver: Driver,
+    node: ZwaveNode,
+    endpoint: Endpoint,
+    parent_device_id: str,
+) -> ChildDeviceInfo: ...
+
+
+def get_device_info(
+    driver: Driver,
+    node: ZwaveNode,
+    endpoint: Endpoint | None = None,
+    parent_device_id: str | None = None,
+) -> DeviceInfo | ChildDeviceInfo:
+    """Get DeviceInfo for a node or one of its endpoint child devices."""
+    node_name = node.name or node.device_config.description or f"Node {node.node_id}"
+    if endpoint is None or endpoint.index == 0:
+        return DeviceInfo(
+            identifiers={get_device_id(driver, node)},
+            sw_version=node.firmware_version,
+            name=node_name,
+            model=node.device_config.label,
+            manufacturer=node.device_config.manufacturer,
+            suggested_area=node.location or None,
+        )
+
+    assert parent_device_id is not None
+    return ChildDeviceInfo(
+        identifiers={get_device_id(driver, node, endpoint.index)},
+        name=endpoint.endpoint_label or f"Endpoint {endpoint.index}",
+        parent_device_id=parent_device_id,
     )
 
 
