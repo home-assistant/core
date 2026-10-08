@@ -19,6 +19,7 @@ DOMAIN = "xiaomi_miio"
 # Config flow
 CONF_FLOW_TYPE = "config_flow_device"
 CONF_GATEWAY = "gateway"
+CONF_WIFI_REPEATER = "wifi_repeater"
 CONF_CLOUD_USERNAME = "cloud_username"
 CONF_CLOUD_PASSWORD = "cloud_password"
 CONF_CLOUD_COUNTRY = "cloud_country"
@@ -194,6 +195,8 @@ MODELS_LIGHT_MONO = [
 
 # Model lists
 MODELS_GATEWAY = ["lumi.gateway", "lumi.acpartner"]
+MODEL_WIFI_REPEATER_V2 = "xiaomi.repeater.v2"
+MODELS_WIFI_REPEATER = [MODEL_WIFI_REPEATER_V2]
 MODELS_SWITCH = [
     "chuangmi.plug.v1",
     "chuangmi.plug.v3",
@@ -266,6 +269,7 @@ MODELS_ALL_DEVICES = (
     + MODELS_FAN
     + MODELS_HUMIDIFIER
     + MODELS_LIGHT
+    + MODELS_WIFI_REPEATER
 )
 MODELS_ALL = MODELS_ALL_DEVICES + MODELS_GATEWAY
 

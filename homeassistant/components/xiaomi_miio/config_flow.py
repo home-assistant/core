@@ -18,6 +18,7 @@ from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_MAC, CONF_MODEL, CO
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_CLOUD_COUNTRY,
@@ -27,11 +28,13 @@ from .const import (
     CONF_FLOW_TYPE,
     CONF_GATEWAY,
     CONF_MANUAL,
+    CONF_WIFI_REPEATER,
     DEFAULT_CLOUD_COUNTRY,
     DOMAIN,
     MODELS_ALL,
     MODELS_ALL_DEVICES,
     MODELS_GATEWAY,
+    MODELS_WIFI_REPEATER,
     SERVER_COUNTRY_CODES,
     AuthException,
     SetupException,
@@ -121,6 +124,7 @@ class XiaomiMiioFlowHandler(ConfigFlow, domain=DOMAIN):
         self.cloud_password = None
         self.cloud_country = None
         self.cloud_devices: dict[str, dict[str, Any]] = {}
+        self.reauth = False
 
     @staticmethod
     @callback
@@ -139,6 +143,7 @@ class XiaomiMiioFlowHandler(ConfigFlow, domain=DOMAIN):
         self.token = entry_data[CONF_TOKEN]
         self.mac = entry_data[CONF_MAC]
         self.model = entry_data.get(CONF_MODEL)
+        self.reauth = True
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -329,10 +334,12 @@ class XiaomiMiioFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_manual(
-        self, user_input: dict[str, Any] | None = None
+        self,
+        user_input: dict[str, Any] | None = None,
+        *,
+        errors: dict[str, str] | None = None,
     ) -> ConfigFlowResult:
         """Configure a xiaomi miio device Manually."""
-        errors: dict[str, str] = {}
         if user_input is not None:
             self.token = user_input[CONF_TOKEN]
             if user_input.get(CONF_HOST):
@@ -348,9 +355,50 @@ class XiaomiMiioFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="manual",
             data_schema=schema,
-            errors=errors,
+            errors=errors or {},
             description_placeholders={
                 "retrieving_token_url": "https://www.home-assistant.io/integrations/xiaomi_miio#retrieving-the-access-token",
+            },
+        )
+
+    async def async_step_import(self, import_data: ConfigType) -> ConfigFlowResult:
+        """Import a legacy YAML-configured Xiaomi Mi WiFi Repeater 2."""
+        self.host = import_data[CONF_HOST]
+        self.token = import_data[CONF_TOKEN]
+
+        connect_device_class = ConnectXiaomiDevice(self.hass)
+        try:
+            await connect_device_class.async_connect_device(self.host, self.token)
+        except AuthException:
+            return self.async_abort(reason="invalid_auth")
+        except SetupException:
+            return self.async_abort(reason="cannot_connect")
+
+        device_info = connect_device_class.device_info
+        # The YAML platform only supported the WiFi repeater, so anything
+        # else must be added through the UI instead of being imported.
+        if device_info is None or device_info.model != MODELS_WIFI_REPEATER[0]:
+            return self.async_abort(reason="unsupported_model")
+
+        self.mac = format_mac(device_info.mac_address)
+
+        await self.async_set_unique_id(self.mac)
+        # Update the host/token in case the user changed them in YAML.
+        self._abort_if_unique_id_configured(
+            {CONF_HOST: self.host, CONF_TOKEN: self.token}
+        )
+
+        return self.async_create_entry(
+            title="Xiaomi Home",
+            data={
+                CONF_FLOW_TYPE: CONF_WIFI_REPEATER,
+                CONF_HOST: self.host,
+                CONF_TOKEN: self.token,
+                CONF_MODEL: MODELS_WIFI_REPEATER[0],
+                CONF_MAC: self.mac,
+                CONF_CLOUD_USERNAME: None,
+                CONF_CLOUD_PASSWORD: None,
+                CONF_CLOUD_COUNTRY: None,
             },
         )
 
@@ -370,10 +418,16 @@ class XiaomiMiioFlowHandler(ConfigFlow, domain=DOMAIN):
         try:
             await connect_device_class.async_connect_device(self.host, self.token)
         except AuthException:
-            if self.model is None:
-                errors["base"] = "wrong_token"
+            errors["base"] = "wrong_token"
         except SetupException:
-            if self.model is None:
+            # The generic probe never succeeds for repeaters (repeater
+            # entries are created through the model dropdown), so a failed
+            # probe during repeater reauth is a definitive cannot_connect.
+            # Other models can be configured with the model dropdown even
+            # when the probe fails, so a failed probe is not decisive there.
+            if self.model is None or (
+                self.reauth and self.model == MODELS_WIFI_REPEATER[0]
+            ):
                 errors["base"] = "cannot_connect"
         except Exception:
             _LOGGER.exception("Unexpected exception in connect Xiaomi device")
@@ -388,6 +442,9 @@ class XiaomiMiioFlowHandler(ConfigFlow, domain=DOMAIN):
             errors["base"] = "cannot_connect"
 
         if errors:
+            if self.reauth:
+                # The model is already fixed; only the manual form accepts a new token.
+                return await self.async_step_manual(errors=errors)
             return self.async_show_form(
                 step_id="connect", data_schema=DEVICE_MODEL_CONFIG, errors=errors
             )
@@ -421,10 +478,25 @@ class XiaomiMiioFlowHandler(ConfigFlow, domain=DOMAIN):
             if self.model.startswith(gateway_model):
                 flow_type = CONF_GATEWAY
 
+        # The repeater must match before the MODELS_ALL_DEVICES loop, which
+        # also contains the repeater models.
+        if flow_type is None:
+            for repeater_model in MODELS_WIFI_REPEATER:
+                if self.model.startswith(repeater_model):
+                    flow_type = CONF_WIFI_REPEATER
+
         if flow_type is None:
             for device_model in MODELS_ALL_DEVICES:
                 if self.model.startswith(device_model):
                     flow_type = CONF_DEVICE
+
+        # The entry is keyed by the repeater MAC, which the probe did not
+        # provide when it failed.
+        if flow_type == CONF_WIFI_REPEATER and self.mac is None:
+            errors["base"] = "cannot_connect"
+            return self.async_show_form(
+                step_id="connect", data_schema=DEVICE_MODEL_CONFIG, errors=errors
+            )
 
         if flow_type is not None:
             return self.async_create_entry(
