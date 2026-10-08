@@ -130,6 +130,38 @@ async def test_setting_sensor_value_via_mqtt_message(
                 sensor.DOMAIN: {
                     "name": "test",
                     "state_topic": "test-topic",
+                    "unique_id": "very_unique",
+                    "value_template": "{{ this.entity_id }} {{ value }}",
+                }
+            }
+        }
+    ],
+)
+async def test_value_template_this_after_entity_id_change(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test this in a value template refers to the entity after a rename."""
+    await mqtt_mock_entry()
+    async_fire_mqtt_message(hass, "test-topic", "1")
+    assert hass.states.get("sensor.test").state == "sensor.test 1"
+
+    entity_registry.async_update_entity("sensor.test", new_entity_id="sensor.renamed")
+    await hass.async_block_till_done()
+    async_fire_mqtt_message(hass, "test-topic", "2")
+
+    assert hass.states.get("sensor.renamed").state == "sensor.renamed 2"
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            DOMAIN: {
+                sensor.DOMAIN: {
+                    "name": "test",
+                    "state_topic": "test-topic",
                     "device_class": "enum",
                     "options": ["red", "green", "blue"],
                 }
