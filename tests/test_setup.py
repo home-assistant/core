@@ -1286,6 +1286,67 @@ async def test_async_start_setup_config_entry_overlapping_waits(
     assert setup.async_get_setup_timings(hass) == {"august": 10.0}
 
 
+@pytest.mark.parametrize(
+    ("measurements", "expected_times", "expected_timing"),
+    [
+        pytest.param(
+            [(10, 1), (10, 1)],
+            {
+                setup.SetupPhases.CONFIG_ENTRY_PLATFORM_SETUP: 11.0,
+                setup.SetupPhases.WAIT_BASE_PLATFORM_SETUP: -10.0,
+            },
+            1.0,
+            id="same_time",
+        ),
+        pytest.param(
+            [(10, 1), (0, 5)],
+            {
+                setup.SetupPhases.CONFIG_ENTRY_PLATFORM_SETUP: 5.0,
+                setup.SetupPhases.WAIT_BASE_PLATFORM_SETUP: 0.0,
+            },
+            5.0,
+            id="later_is_longer",
+        ),
+        pytest.param(
+            [(0, 5), (10, 1)],
+            {
+                setup.SetupPhases.CONFIG_ENTRY_PLATFORM_SETUP: 5.0,
+                setup.SetupPhases.WAIT_BASE_PLATFORM_SETUP: 0.0,
+            },
+            5.0,
+            id="earlier_is_longer",
+        ),
+    ],
+)
+async def test_async_start_setup_repeated_phase_waits(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    measurements: list[tuple[int, int]],
+    expected_times: dict[setup.SetupPhases, float],
+    expected_timing: float,
+) -> None:
+    """Test waits are only subtracted from the setup of a phase they belong to."""
+    hass.set_state(CoreState.not_running)
+    setup_time = setup._setup_times(hass)
+
+    # Late platform forwards, each measured separately for the same entry
+    for wait, work in measurements:
+        with setup.async_start_setup(
+            hass,
+            integration="august",
+            group="entry_id",
+            phase=setup.SetupPhases.CONFIG_ENTRY_PLATFORM_SETUP,
+        ):
+            with setup.async_pause_setup(
+                hass, setup.SetupPhases.WAIT_BASE_PLATFORM_SETUP
+            ):
+                freezer.tick(wait)
+            freezer.tick(work)
+
+    assert setup_time["august"] == {"entry_id": expected_times}
+    assert setup.async_get_setup_timings(hass) == {"august": expected_timing}
+
+
 async def test_async_start_setup_top_level_yaml(hass: HomeAssistant) -> None:
     """Test setup started tracks setup times with modern yaml."""
     hass.set_state(CoreState.not_running)
