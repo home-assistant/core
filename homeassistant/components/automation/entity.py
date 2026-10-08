@@ -610,16 +610,17 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
         """
         super().async_entity_id_change_finished(old_entity_id)
         if (detach_triggers := self._async_detach_triggers) is None:
-            # Not attached, or another entity_id change is re-attaching them
+            # Not attached, or an attach in progress retries with the new entity_id
             return
         self._async_detach_triggers = None
         detach_triggers()
         self.hass.async_create_task(
-            self._async_reattach_triggers(), f"automation {self.entity_id} reattach"
+            self._async_attach_triggers_for_entity_id(),
+            f"automation {self.entity_id} reattach",
         )
 
-    async def _async_reattach_triggers(self) -> None:
-        """Attach the triggers again after an entity_id change.
+    async def _async_attach_triggers_for_entity_id(self) -> None:
+        """Attach the triggers, retrying if the entity_id changes while attaching.
 
         Not cancelled on removal, the checks after each attach detach what is no
         longer wanted.
@@ -653,7 +654,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
         if not self._is_enabled or self._async_detach_triggers is not None:
             return
 
-        self._async_detach_triggers = await self._async_attach_triggers()
+        await self._async_attach_triggers_for_entity_id()
         self.async_write_ha_state()
 
     async def _async_enable(self) -> None:
@@ -668,7 +669,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
         self._is_enabled = True
         # HomeAssistant is starting up
         if self.hass.state is not CoreState.not_running:
-            self._async_detach_triggers = await self._async_attach_triggers()
+            await self._async_attach_triggers_for_entity_id()
             return
 
         # Arm the triggers in a startup job, which runs after all listeners to

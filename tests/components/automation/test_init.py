@@ -4430,6 +4430,90 @@ async def test_automation_changed_entity_id_while_attaching(
     assert trigger_listeners() == expected_listeners
 
 
+async def _start_hass(hass: HomeAssistant) -> None:
+    """Start Home Assistant, which enables the automation."""
+    await hass.async_start()
+
+
+async def _turn_on_automation(hass: HomeAssistant) -> None:
+    """Turn on the automation."""
+    await hass.services.async_call(
+        automation.DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "automation.first"},
+        blocking=True,
+    )
+
+
+@pytest.mark.parametrize(
+    ("core_state", "initial_state", "enable"),
+    [
+        pytest.param(CoreState.not_running, True, _start_hass, id="startup"),
+        pytest.param(CoreState.running, False, _turn_on_automation, id="turn_on"),
+    ],
+)
+async def test_automation_changed_entity_id_while_enabling(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    core_state: CoreState,
+    initial_state: bool,
+    enable: Callable[[HomeAssistant], Coroutine[Any, Any, None]],
+) -> None:
+    """Test triggers attached while enabling follow an entity_id change."""
+    entity_registry.async_get_or_create(
+        "automation", "automation", "test_automation", suggested_object_id="first"
+    )
+    hass.set_state(core_state)
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "id": "test_automation",
+                "initial_state": initial_state,
+                "trigger_variables": {"this_id": "{{ this.entity_id }}"},
+                "trigger": {"platform": "event", "event_type": "{{ this_id }}_event"},
+                "action": {"action": "test.automation"},
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    def trigger_listeners() -> dict[str, int]:
+        return {
+            event_type: count
+            for event_type, count in hass.bus.async_listeners().items()
+            if event_type.endswith("_event")
+        }
+
+    attaching = asyncio.Event()
+    release = asyncio.Event()
+    initialize_triggers = trigger_helper.async_initialize_triggers
+
+    async def blocked_initialize_triggers(
+        *args: Any, **kwargs: Any
+    ) -> Callable[[], None] | None:
+        attaching.set()
+        await release.wait()
+        return await initialize_triggers(*args, **kwargs)
+
+    with patch.object(
+        trigger_helper, "async_initialize_triggers", blocked_initialize_triggers
+    ):
+        # Starting or turning on waits until the triggers are attached
+        enable_task = hass.async_create_task(enable(hass))
+        await asyncio.wait_for(attaching.wait(), 1)
+        entity_registry.async_update_entity(
+            "automation.first", new_entity_id="automation.second"
+        )
+        await asyncio.sleep(0)
+        release.set()
+        await enable_task
+        await hass.async_block_till_done()
+
+    assert trigger_listeners() == {"automation.second_event": 1}
+
+
 async def test_unavailable_automation_changed_entity_id(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
