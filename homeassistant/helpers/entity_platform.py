@@ -942,8 +942,19 @@ class EntityPlatform:
             # otherwise `_async_handle_entity_update_result` clears it once
             # that task finishes, but only if the entity was not meanwhile
             # re-added under the same id (see there for why).
-            if id(entity) not in self._polling_tasks:
+            if (tracked := self._polling_tasks.get(id(entity))) is None:
                 self._entity_poll_cycle_claims.pop(id(entity), None)
+            elif not tracked[1].done() and not entity.update_permit_acquired:
+                # Cancel rather than leave it queued indefinitely: if
+                # another entity permanently holds the platform's last
+                # `PARALLEL_UPDATES` permit, this removed entity's task
+                # would otherwise never reach its post-acquire removal
+                # check and complete, leaking the task (and this entity)
+                # forever. Only safe while still queued for the permit -
+                # once it has acquired one and is actually running
+                # `update()`, it must be left alone (see
+                # `update_permit_acquired`).
+                tracked[1].cancel()
 
         entity.async_on_remove(remove_entity_cb)
 

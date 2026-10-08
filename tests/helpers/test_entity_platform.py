@@ -719,6 +719,79 @@ async def test_stale_poll_skips_update_for_entity_removed_while_queued_on_permit
     entity_b.async_update.assert_not_called()
 
 
+async def test_removed_entity_queued_for_permit_is_cancelled_not_leaked(
+    hass: HomeAssistant,
+) -> None:
+    """Test a removed entity's task queued for a permit is cancelled, not leaked.
+
+    Regression contract: if the sibling holding the platform's last
+    `PARALLEL_UPDATES` permit never releases it, a removed entity's task
+    still queued behind that permit must be cancelled on removal rather
+    than left to wait forever - otherwise the task, the entity, and its
+    tracked polling entry would never be cleaned up.
+    """
+    scan_interval = timedelta(seconds=1)
+    platform = MockPlatform()
+    platform.PARALLEL_UPDATES = 1
+    mock_platform(hass, "platform.test_domain", platform)
+
+    component = EntityComponent(_LOGGER, DOMAIN, hass, scan_interval)
+    component._platforms = {}
+    await component.async_setup({DOMAIN: {"platform": "platform"}})
+    await hass.async_block_till_done()
+
+    platform_handle = list(component._platforms.values())[-1]
+
+    a_started = asyncio.Event()
+    hang_forever = asyncio.Event()
+
+    async def _hung_update() -> None:
+        a_started.set()
+        await hang_forever.wait()
+
+    entity_a = MockEntity(should_poll=True)
+    entity_a.async_update = _hung_update
+
+    entity_b = MockEntity(should_poll=True)
+    entity_b.async_update = AsyncMock()
+
+    await platform_handle.async_add_entities([entity_a, entity_b])
+
+    semaphore = entity_a.parallel_updates
+    assert semaphore is not None
+
+    # Cycle 1: holds the platform's only permit and never releases it.
+    async_fire_time_changed(hass, dt_util.utcnow() + scan_interval)
+    await a_started.wait()
+    await asyncio.sleep(0)
+    assert semaphore._value == 0
+
+    # Cycle 2: entity_b's task is created but queues behind entity_a's
+    # never-to-be-released permit.
+    async_fire_time_changed(hass, dt_util.utcnow() + scan_interval * 2)
+    await asyncio.sleep(0)
+    assert id(entity_b) in platform_handle._polling_tasks
+    _, queued_task = platform_handle._polling_tasks[id(entity_b)]
+    assert not entity_b.update_permit_acquired
+
+    # entity_b is removed while still queued for the permit, which will
+    # now never arrive.
+    await entity_b.async_remove()
+
+    try:
+        async with asyncio.timeout(1):
+            await asyncio.gather(queued_task, return_exceptions=True)
+    finally:
+        hang_forever.set()
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    # The queued task must have been cancelled rather than left hanging,
+    # and its tracked entry cleared.
+    assert queued_task.cancelled()
+    assert id(entity_b) not in platform_handle._polling_tasks
+    entity_b.async_update.assert_not_called()
+
+
 async def test_stale_poll_skips_update_for_entity_readded_while_queued_on_permit(
     hass: HomeAssistant,
 ) -> None:

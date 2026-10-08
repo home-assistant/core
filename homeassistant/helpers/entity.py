@@ -559,6 +559,10 @@ class Entity(
     # Protect for multiple updates
     _update_staged = False
 
+    # True once the current update has acquired its `PARALLEL_UPDATES`
+    # permit and is actually running, rather than merely queued for one.
+    _update_permit_acquired = False
+
     # _verified_state_writable is set to True if the entity has been verified
     # to be writable. This is used to avoid repeated checks.
     _verified_state_writable = False
@@ -1034,6 +1038,18 @@ class Entity(
         """
         return self._platform_generation
 
+    @property
+    def update_permit_acquired(self) -> bool:
+        """Return whether the current update has acquired its permit.
+
+        Used by the entity platform to decide whether a removed entity's
+        still-tracked polling task is safe to cancel outright (it is only
+        queued for a `PARALLEL_UPDATES` permit, not yet running), versus
+        one that has already acquired its permit and is running `update()`
+        for real, which must be left to finish on its own.
+        """
+        return self._update_permit_acquired
+
     @callback
     def async_set_context(self, context: Context) -> None:
         """Set the context the entity currently operates under."""
@@ -1473,6 +1489,13 @@ class Entity(
                 self._update_staged = False
                 raise
 
+        # Past this point the update is actually running (not merely
+        # queued for a permit): `EntityPlatform` uses this to decide
+        # whether a removed entity's still-tracked task is safe to
+        # cancel outright, versus one already running `update()` that
+        # must be left to finish on its own.
+        self._update_permit_acquired = True
+
         if warning:
             update_warn = hass.loop.call_at(
                 hass.loop.time() + SLOW_UPDATE_WARNING, self._async_slow_update_warning
@@ -1512,6 +1535,7 @@ class Entity(
                 return
         finally:
             self._update_staged = False
+            self._update_permit_acquired = False
             if warning:
                 update_warn.cancel()
             if semaphore:
