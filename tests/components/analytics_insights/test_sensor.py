@@ -14,6 +14,7 @@ from python_homeassistant_analytics import (
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.analytics_insights.coordinator import RETRY_AFTER
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -122,3 +123,17 @@ async def test_data_not_modified_uses_other_endpoints(
 
     assert hass.states.get("sensor.homeassistant_analytics_core_samba").state == "76357"
     assert hass.states.get("sensor.homeassistant_analytics_spotify").state == "1"
+
+
+async def test_data_not_modified_without_previous_data(
+    hass: HomeAssistant,
+    mock_analytics_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a 304 with no earlier response to fall back on retries setup."""
+    mock_analytics_client.get_addons.side_effect = (
+        HomeassistantAnalyticsNotModifiedError
+    )
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY

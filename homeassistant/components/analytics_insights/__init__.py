@@ -15,7 +15,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_TRACKED_APPS, CONF_TRACKED_INTEGRATIONS, LOGGER
+from .const import CONF_TRACKED_APPS, CONF_TRACKED_INTEGRATIONS
 from .coordinator import HomeassistantAnalyticsDataUpdateCoordinator
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
@@ -34,15 +34,12 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: AnalyticsInsightsConfigEntry
 ) -> bool:
     """Set up Homeassistant Analytics from a config entry."""
-    LOGGER.debug("Setting up entry %s (options: %s)", entry.entry_id, entry.options)
     client = HomeassistantAnalyticsClient(session=async_get_clientsession(hass))
 
     try:
         integrations = await client.get_integrations(Environment.NEXT)
     except HomeassistantAnalyticsConnectionError as ex:
-        LOGGER.warning("Fetching integration list failed: %s", ex)
         raise ConfigEntryNotReady("Could not fetch integration list") from ex
-    LOGGER.debug("Fetched %s integrations", len(integrations))
 
     names = {}
     for integration in entry.options[CONF_TRACKED_INTEGRATIONS]:
@@ -59,7 +56,6 @@ async def async_setup_entry(
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    LOGGER.debug("Entry %s set up", entry.entry_id)
     return True
 
 
@@ -91,5 +87,4 @@ async def async_unload_entry(
     hass: HomeAssistant, entry: AnalyticsInsightsConfigEntry
 ) -> bool:
     """Unload a config entry."""
-    LOGGER.debug("Unloading entry %s", entry.entry_id)
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

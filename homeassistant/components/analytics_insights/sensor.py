@@ -2,7 +2,6 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-import logging
 from typing import override
 
 from homeassistant.components.sensor import (
@@ -11,14 +10,14 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import AnalyticsInsightsConfigEntry
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN
 from .coordinator import AnalyticsData, HomeassistantAnalyticsDataUpdateCoordinator
 
 PARALLEL_UPDATES = 0
@@ -155,25 +154,6 @@ class HomeassistantAnalyticsSensor(
             identifiers={(DOMAIN, DOMAIN)},
             entry_type=DeviceEntryType.SERVICE,
         )
-        self._last_available: bool | None = None
-
-    @callback
-    @override
-    def _handle_coordinator_update(self) -> None:
-        """Log availability transitions before writing the state."""
-        if (available := self.available) != self._last_available:
-            LOGGER.log(
-                logging.DEBUG if available else logging.WARNING,
-                "%s availability %s -> %s (last_update_success: %s, "
-                "last_exception: %r)",
-                self.entity_id,
-                self._last_available,
-                available,
-                self.coordinator.last_update_success,
-                self.coordinator.last_exception,
-            )
-            self._last_available = available
-        super()._handle_coordinator_update()
 
     @property
     @override
