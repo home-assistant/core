@@ -2,7 +2,19 @@
 
 from unittest.mock import AsyncMock
 
+import pytest
+
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.components.daikin_onecta.binary_sensor import DaikinBinarySensor
+from homeassistant.components.daikin_onecta.fan import DaikinAirPurifier
+from homeassistant.components.daikin_onecta.select import DaikinScheduleSelect
+from homeassistant.components.daikin_onecta.sensor import (
+    DaikinEnergySensor,
+    DaikinValueSensor,
+)
+from homeassistant.components.daikin_onecta.switch import DaikinSwitch
+from homeassistant.components.daikin_onecta.update import DaikinFirmwareUpdateEntity
+from homeassistant.components.daikin_onecta.water_heater import DaikinWaterTank
 from homeassistant.components.fan import DOMAIN as FAN_DOMAIN, SERVICE_SET_PRESET_MODE
 from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
@@ -23,6 +35,39 @@ from homeassistant.core import HomeAssistant
 from .test_climate_snapshots import _async_setup_fixture
 
 from tests.common import MockConfigEntry
+
+
+@pytest.mark.parametrize(
+    "entity_class",
+    [
+        DaikinAirPurifier,
+        DaikinBinarySensor,
+        DaikinEnergySensor,
+        DaikinFirmwareUpdateEntity,
+        DaikinScheduleSelect,
+        DaikinValueSensor,
+        DaikinSwitch,
+        DaikinWaterTank,
+    ],
+)
+@pytest.mark.parametrize(
+    ("last_update_success", "device_available", "expected"),
+    [(True, True, True), (False, True, False), (True, False, False)],
+)
+def test_platform_availability_requires_coordinator_and_device(
+    entity_class: type,
+    last_update_success: bool,
+    device_available: bool,
+    expected: bool,
+) -> None:
+    """Entities are unavailable after failed polling or when their device is absent."""
+    entity = object.__new__(entity_class)
+    entity.coordinator = type(
+        "Coordinator", (), {"last_update_success": last_update_success}
+    )()
+    entity._device = type("Device", (), {"available": device_available})()
+
+    assert entity.available is expected
 
 
 async def test_refresh_button_requests_coordinator_refresh(
