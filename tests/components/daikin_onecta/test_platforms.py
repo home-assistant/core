@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock
 import pytest
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.components.daikin_onecta.binary_sensor import DaikinBinarySensor
 from homeassistant.components.daikin_onecta.fan import DaikinAirPurifier
 from homeassistant.components.daikin_onecta.select import DaikinScheduleSelect
@@ -31,6 +32,7 @@ from homeassistant.components.water_heater import (
 )
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .test_climate_snapshots import _async_setup_fixture
 
@@ -102,12 +104,40 @@ async def test_refresh_button_requests_coordinator_refresh(
     coordinator.async_refresh.assert_awaited_once()
 
 
+async def test_management_point_device_links_to_gateway(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Management-point devices are linked to their registered gateway."""
+    await _async_setup_fixture(hass, config_entry, "dry")
+
+    climate_entry = next(
+        entry
+        for entry in er.async_entries_for_config_entry(
+            entity_registry, config_entry.entry_id
+        )
+        if entry.domain == CLIMATE_DOMAIN
+    )
+    assert climate_entry.device_id is not None
+    management_point = device_registry.async_get(climate_entry.device_id)
+
+    assert management_point is not None
+    assert management_point.via_device_id is not None
+    gateway = device_registry.async_get(management_point.via_device_id)
+    assert gateway is not None
+    assert gateway.config_entry_id == config_entry.entry_id
+
+
 async def test_switch_service_updates_cached_state(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
     """A successful switch command updates the state without a cloud refresh."""
     await _async_setup_fixture(hass, config_entry, "altherma")
-    config_entry.runtime_data.api.async_execute_command = _execute_typed_command(config_entry)
+    config_entry.runtime_data.api.async_execute_command = _execute_typed_command(
+        config_entry
+    )
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
@@ -126,7 +156,9 @@ async def test_schedule_select_updates_cached_selection(
 ) -> None:
     """Selecting a schedule updates the entity state without a cloud refresh."""
     await _async_setup_fixture(hass, config_entry, "schedule")
-    config_entry.runtime_data.api.async_execute_command = _execute_typed_command(config_entry)
+    config_entry.runtime_data.api.async_execute_command = _execute_typed_command(
+        config_entry
+    )
 
     await hass.services.async_call(
         SELECT_DOMAIN,
@@ -145,7 +177,9 @@ async def test_water_heater_turn_off_updates_cached_state(
 ) -> None:
     """A successful water-heater command updates the cached operation mode."""
     await _async_setup_fixture(hass, config_entry, "altherma_boost")
-    config_entry.runtime_data.api.async_execute_command = _execute_typed_command(config_entry)
+    config_entry.runtime_data.api.async_execute_command = _execute_typed_command(
+        config_entry
+    )
 
     await hass.services.async_call(
         WATER_HEATER_DOMAIN,
@@ -164,7 +198,9 @@ async def test_firmware_install_executes_command(
 ) -> None:
     """The update service executes the typed firmware-install command."""
     await _async_setup_fixture(hass, config_entry, "dx4_firmwareavailable")
-    config_entry.runtime_data.api.async_execute_command = _execute_typed_command(config_entry)
+    config_entry.runtime_data.api.async_execute_command = _execute_typed_command(
+        config_entry
+    )
 
     await hass.services.async_call(
         UPDATE_DOMAIN,
@@ -184,7 +220,9 @@ async def test_air_purifier_preset_updates_cached_state(
 ) -> None:
     """A successful purifier command updates its native preset state."""
     await _async_setup_fixture(hass, config_entry, "mc80z")
-    config_entry.runtime_data.api.async_execute_command = _execute_typed_command(config_entry)
+    config_entry.runtime_data.api.async_execute_command = _execute_typed_command(
+        config_entry
+    )
 
     await hass.services.async_call(
         FAN_DOMAIN,

@@ -1,7 +1,7 @@
 """Base entities for the Daikin Onecta integration."""
 
 from collections.abc import Awaitable, Callable
-from typing import Never, override
+from typing import Never, cast, override
 
 from daikin_onecta.client import OnectaClient
 
@@ -65,6 +65,8 @@ class DaikinOnectaEntity(CoordinatorEntity[OnectaDataUpdateCoordinator]):
     @override
     def device_info(self) -> DeviceInfo:
         """Return the gateway device registry information."""
+        if (info := getattr(self, "_attr_device_info", None)) is not None:
+            return cast("DeviceInfo", info)
         gateway = self._device.device
         connections = set()
         if gateway.mac_address:
