@@ -3,9 +3,14 @@
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import probatio
+from pyinsteon.address import Address
 from pyinsteon.config import MOMENTARY_DELAY, RELAY_MODE, TOGGLE_BUTTON
 from pyinsteon.config.extended_property import ExtendedProperty
 from pyinsteon.constants import RelayMode, ToggleMode
+from pyinsteon.device_types.dimmable_lighting_control import (
+    DimmableLightingControl_KeypadLinc_6,
+)
 import pytest
 
 from homeassistant.components import insteon
@@ -20,6 +25,7 @@ from homeassistant.components.insteon.api.properties import (
     RAMP_RATE_IN_SEC,
     SHOW_ADVANCED,
     TYPE,
+    update_property,
 )
 from homeassistant.core import HomeAssistant
 
@@ -268,6 +274,50 @@ async def test_change_advanced_property(
         assert msg["success"]
         assert devices["33.33.33"].properties["on_mask_3"].new_value == 5
         assert devices["33.33.33"].properties["on_mask_3"].is_dirty
+
+
+@pytest.mark.parametrize(
+    ("prop_name", "value"),
+    [
+        pytest.param("ramp_rate", 32, id="ramp_rate_above_0x1f"),
+        pytest.param("led_dimming", 128, id="led_dimming_above_0x7f"),
+    ],
+)
+async def test_change_property_out_of_range(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    kpl_properties_data,
+    prop_name: str,
+    value: int,
+) -> None:
+    """Test a value outside the device's documented range is rejected."""
+    ws_client, devices = await _setup(
+        hass, hass_ws_client, "33.33.33", kpl_properties_data
+    )
+
+    with patch.object(insteon.api.properties, "devices", devices):
+        await ws_client.send_json(
+            {
+                ID: 4,
+                TYPE: "insteon/properties/change",
+                DEVICE_ADDRESS: "33.33.33",
+                PROPERTY_NAME: prop_name,
+                PROPERTY_VALUE: value,
+            }
+        )
+        msg = await ws_client.receive_json()
+        assert not msg["success"]
+        assert msg["error"]["code"] == "invalid_format"
+        assert not devices["33.33.33"].properties[prop_name].is_dirty
+
+
+def test_change_mask_outside_buttons() -> None:
+    """Test a button mask cannot set a bit for a button the keypad lacks."""
+    device = DimmableLightingControl_KeypadLinc_6(Address("11.22.33"), 0x01, 0x42)
+    update_property(device, "on_mask_3", 0x3D)
+    assert device.properties["on_mask_3"].new_value == 0x3D
+    with pytest.raises(probatio.Invalid):
+        update_property(device, "on_mask_3", 0x02)
 
 
 async def test_get_properties_schema_ranges(

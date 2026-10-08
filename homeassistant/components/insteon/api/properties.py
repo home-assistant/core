@@ -11,9 +11,14 @@ from pyinsteon.config import (
     LOAD_BUTTON_NUMBER,
     NIGHT_MODE_LED_BRIGHTNESS,
     NIGHT_MODE_RAMP_RATE,
+    NON_TOGGLE_MASK,
+    NON_TOGGLE_ON_OFF_MASK,
+    OFF_MASK,
+    ON_MASK,
     RADIO_BUTTON_GROUPS,
     RAMP_RATE,
     RAMP_RATE_IN_SEC,
+    TRIGGER_GROUP_MASK,
     get_usable_value,
 )
 from pyinsteon.constants import (
@@ -51,6 +56,13 @@ RAMP_RATE_MAX = 0x1F
 LED_BRIGHTNESS_MAX = 0x7F
 RAMP_RATE_NAMES = {RAMP_RATE, NIGHT_MODE_RAMP_RATE}
 LED_BRIGHTNESS_NAMES = {LED_DIMMING, LED_BRIGHTNESS, NIGHT_MODE_LED_BRIGHTNESS}
+BUTTON_MASK_NAMES = {
+    ON_MASK,
+    OFF_MASK,
+    NON_TOGGLE_MASK,
+    NON_TOGGLE_ON_OFF_MASK,
+    TRIGGER_GROUP_MASK,
+}
 
 
 def _bool_schema(name):
@@ -84,6 +96,18 @@ def _int_schema(name, groups):
     return probatio.to_field_list(
         probatio.Schema({probatio.Required(name): _int_validator(name, groups)})
     )[0]
+
+
+def _validate_int(name, value, groups):
+    """Check an integer value against the property's range and button bits."""
+    value = _int_validator(name, groups)(value)
+    if _base_name(name) in BUTTON_MASK_NAMES:
+        buttons = sum(1 << (button - 1) for button in groups)
+        if value & ~buttons:
+            raise probatio.Invalid(
+                f"{name} can only set bits for buttons {sorted(groups)}"
+            )
+    return value
 
 
 def _float_schema(name):
@@ -192,6 +216,8 @@ def update_property(device, prop_name, value):
     elif prop.value_type == RelayMode:
         relay_mode = getattr(RelayMode, value.upper())
         prop.new_value = relay_mode
+    elif prop.value_type is int:
+        prop.new_value = _validate_int(prop_name, value, device.groups)
     else:
         prop.new_value = value
 
