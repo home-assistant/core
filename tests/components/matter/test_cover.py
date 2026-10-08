@@ -1333,3 +1333,78 @@ async def test_closure_cover_movement_direction_from_child_targets(
     assert state
     # Should be opening
     assert state.state == CoverState.OPENING
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_closure_venetian_blinds"])
+async def test_closure_cover_infer_movement_from_child_panels(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test movement direction inference from child panel targets.
+
+    When movement is ongoing but OverallTargetState position is unknown,
+    movement direction is inferred by comparing child panel current and
+    target positions.
+    """
+    cover_states = hass.states.async_all(Platform.COVER)
+    assert len(cover_states) == 1
+    entity_id = cover_states[0].entity_id
+
+    # Set up moving state without explicit target position (target position is unknown)
+    set_node_attribute(
+        matter_node,
+        1,
+        clusters.ClosureControl.id,
+        clusters.ClosureControl.Attributes.MainState.attribute_id,
+        clusters.ClosureControl.Enums.MainStateEnum.kMoving.value,
+    )
+    set_node_attribute(
+        matter_node,
+        1,
+        clusters.ClosureControl.id,
+        clusters.ClosureControl.Attributes.OverallTargetState.attribute_id,
+        {0: clusters.ClosureControl.Enums.TargetPositionEnum.kUnknownEnumValue.value},
+    )
+    # Endpoint 2 (Lift panel): current position 5000, target position 3000 -> opening
+    set_node_attribute(
+        matter_node,
+        2,
+        clusters.ClosureDimension.id,
+        clusters.ClosureDimension.Attributes.CurrentState.attribute_id,
+        {0: 5000, 1: True, 2: 0},
+    )
+    set_node_attribute(
+        matter_node,
+        2,
+        clusters.ClosureDimension.id,
+        clusters.ClosureDimension.Attributes.TargetState.attribute_id,
+        {0: 3000, 1: True, 2: 0},
+    )
+    await trigger_subscription_callback_debounced(hass, freezer, matter_client)
+    state = hass.states.get(entity_id)
+    assert state
+    # Since target < current (3000 < 5000), should be opening
+    assert state.state == CoverState.OPENING
+
+    # Now update to closing direction: current position 3000, target position 5000
+    set_node_attribute(
+        matter_node,
+        2,
+        clusters.ClosureDimension.id,
+        clusters.ClosureDimension.Attributes.CurrentState.attribute_id,
+        {0: 3000, 1: True, 2: 0},
+    )
+    set_node_attribute(
+        matter_node,
+        2,
+        clusters.ClosureDimension.id,
+        clusters.ClosureDimension.Attributes.TargetState.attribute_id,
+        {0: 5000, 1: True, 2: 0},
+    )
+    await trigger_subscription_callback_debounced(hass, freezer, matter_client)
+    state = hass.states.get(entity_id)
+    assert state
+    # Since target > current (5000 > 3000), should be closing
+    assert state.state == CoverState.CLOSING
