@@ -38,4 +38,4 @@ async def test_setup_invalid_auth(hass: HomeAssistant) -> None:
         entry = await init_integration(hass)
 
     assert entry.state is ConfigEntryState.SETUP_ERROR
-    assert entry.reason == "Login to 1.1.1.1 failed: Unauthorized"
+    assert entry.reason == "Login to 1.1.1.1 failed"

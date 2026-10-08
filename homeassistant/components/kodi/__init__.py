@@ -66,10 +66,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: KodiConfigEntry) -> bool
         raise ConfigEntryError(
             translation_domain=DOMAIN,
             translation_key="login_failed",
-            translation_placeholders={
-                "host": entry.data[CONF_HOST],
-                "error": str(error),
-            },
+            translation_placeholders={"host": entry.data[CONF_HOST]},
         ) from error
 
     async def _close(event):
