@@ -32,7 +32,7 @@
   },
   "exceptions": {
     "unexpected_response": {
-      "message": "Unexpected response from the CalDAV server: {error}"
+      "message": "Unexpected response from the CalDAV server"
     }
   }
 }

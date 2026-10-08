@@ -51,7 +51,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: CalDavConfigEntry) -> bo
         raise ConfigEntryError(
             translation_domain=DOMAIN,
             translation_key="unexpected_response",
-            translation_placeholders={"error": str(err)},
         ) from err
     except caldav_requests.exceptions.Timeout as err:
         raise ConfigEntryNotReady("Timeout connecting to CalDAV server") from err
