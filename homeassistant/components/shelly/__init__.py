@@ -7,7 +7,7 @@ from typing import Final
 from aioshelly.ble.const import BLE_SCRIPT_NAME
 from aioshelly.block_device import BlockDevice
 from aioshelly.common import ConnectionOptions
-from aioshelly.const import DEFAULT_COAP_PORT, RPC_GENERATIONS
+from aioshelly.const import BLU_TRV_IDENTIFIER, DEFAULT_COAP_PORT, RPC_GENERATIONS
 from aioshelly.exceptions import (
     DeviceConnectionError,
     InvalidAuthError,
@@ -15,7 +15,7 @@ from aioshelly.exceptions import (
     RpcCallError,
 )
 from aioshelly.rpc_device import RpcDevice, bluetooth_mac_from_primary_mac
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.bluetooth import async_remove_scanner
 from homeassistant.const import (
@@ -29,7 +29,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import (
-    config_validation as cv,
     device_registry as dr,
     entity_registry as er,
     issue_registry as ir,
@@ -53,6 +52,7 @@ from .const import (
 )
 from .coordinator import (
     ShellyBlockCoordinator,
+    ShellyBluTrvUpdateCoordinator,
     ShellyConfigEntry,
     ShellyEntryData,
     ShellyRestCoordinator,
@@ -74,6 +74,7 @@ from .utils import (
     get_coap_context,
     get_device_entry_gen,
     get_http_port,
+    get_rpc_key_ids,
     get_rpc_scripts_event_types,
     get_ws_context,
     is_rpc_ble_scanner_supported,
@@ -112,12 +113,14 @@ RPC_SLEEPING_PLATFORMS: Final = [
     Platform.UPDATE,
 ]
 
-COAP_SCHEMA: Final = vol.Schema(
+COAP_SCHEMA: Final = probatio.Schema(
     {
-        vol.Optional(CONF_COAP_PORT, default=DEFAULT_COAP_PORT): cv.port,
+        probatio.Optional(CONF_COAP_PORT, default=DEFAULT_COAP_PORT): probatio.Port(),
     }
 )
-CONFIG_SCHEMA: Final = vol.Schema({DOMAIN: COAP_SCHEMA}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA: Final = probatio.Schema(
+    {DOMAIN: COAP_SCHEMA}, extra=probatio.ALLOW_EXTRA
+)
 
 # Max time to wait at startup for a BLE proxy to register its scanner.
 STARTUP_SCANNER_WAIT: Final = 3.0
@@ -381,6 +384,17 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ShellyConfigEntry) 
                 )
 
         runtime_data.rpc_poll = ShellyRpcPollingCoordinator(hass, entry, device)
+        if get_rpc_key_ids(device.status, BLU_TRV_IDENTIFIER):
+            runtime_data.rpc_blu_trv_update = ShellyBluTrvUpdateCoordinator(
+                hass, entry, device
+            )
+            # Checking the firmware repository reaches out to the internet, so it must
+            # not hold up setup; the update entities pick the result up when it lands.
+            entry.async_create_background_task(
+                hass,
+                runtime_data.rpc_blu_trv_update.async_refresh(),
+                "blu trv firmware check",
+            )
         await hass.config_entries.async_forward_entry_setups(
             entry, runtime_data.platforms
         )

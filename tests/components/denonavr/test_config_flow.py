@@ -2,6 +2,7 @@
 
 from unittest.mock import patch
 
+from denonavr.exceptions import AvrNetworkError
 import pytest
 
 from homeassistant import config_entries
@@ -394,6 +395,35 @@ async def test_config_flow_ssdp_missing_info(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "not_denonavr_missing"
+
+
+async def test_config_flow_ssdp_no_receiver_api(hass: HomeAssistant) -> None:
+    """Failed flow initialized by ssdp discovery.
+
+    HEOS-only devices (like a Denon Home speaker) are discovered, but don't
+    serve the receiver API.
+    """
+    with patch(
+        "homeassistant.components.denonavr.receiver.DenonAVR.async_setup",
+        side_effect=AvrNetworkError("NetworkError", "async_setup"),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_SSDP},
+            data=SsdpServiceInfo(
+                ssdp_usn="mock_usn",
+                ssdp_st="mock_st",
+                ssdp_location=TEST_SSDP_LOCATION,
+                upnp={
+                    ATTR_UPNP_MANUFACTURER: TEST_MANUFACTURER,
+                    ATTR_UPNP_MODEL_NAME: "Denon Home 150",
+                    ATTR_UPNP_SERIAL: TEST_SERIALNUMBER,
+                },
+            ),
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
 
 
 async def test_config_flow_ssdp_ignored_model(hass: HomeAssistant) -> None:

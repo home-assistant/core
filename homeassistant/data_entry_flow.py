@@ -13,7 +13,7 @@ from types import MappingProxyType
 import typing
 from typing import Any, Generic, Literal, NotRequired, TypedDict, TypeVar, cast
 
-import voluptuous as vol
+import probatio
 
 from .core import HomeAssistant, callback
 from .exceptions import HomeAssistantError
@@ -185,7 +185,7 @@ def is_field_visible(
     return all(evaluate_condition(condition, data) for condition in conditions)
 
 
-class Required(vol.Required):
+class Required(probatio.Required):
     """Required schema marker that can be conditionally shown.
 
     Unless the ``visible`` condition matches the other fields, the field is not
@@ -204,7 +204,7 @@ class Required(vol.Required):
         self.visible = visible
 
 
-class Optional(vol.Optional):
+class Optional(probatio.Optional):
     """Optional schema marker that can be conditionally shown.
 
     Unless the ``visible`` condition matches the other fields, the field is not
@@ -251,7 +251,7 @@ class UnknownStep(FlowError):
     """Unknown step specified."""
 
 
-class InvalidData(vol.Invalid):
+class InvalidData(probatio.Invalid):
     """Invalid data provided."""
 
     def __init__(
@@ -294,7 +294,7 @@ class FlowResult(TypedDict, Generic[_FlowContextT, _HandlerT], total=False):
     """Typed result dict."""
 
     context: _FlowContextT
-    data_schema: vol.Schema | None
+    data_schema: probatio.Schema | None
     data: Mapping[str, Any]
     description_placeholders: Mapping[str, str] | None
     description: str | None
@@ -319,8 +319,8 @@ class FlowResult(TypedDict, Generic[_FlowContextT, _HandlerT], total=False):
 
 def _map_error_to_schema_errors(
     schema_errors: dict[str, Any],
-    error: vol.Invalid,
-    data_schema: vol.Schema,
+    error: probatio.Invalid,
+    data_schema: probatio.Schema,
 ) -> None:
     """Map an error to the correct position in the schema_errors.
 
@@ -335,7 +335,7 @@ def _map_error_to_schema_errors(
     if len(error_path) > 1:
         raise ValueError("Nested schemas are not supported")
 
-    # path_part can also be vol.Marker, but we need a string key
+    # path_part can also be probatio.Marker, but we need a string key
     path_part_str = str(path_part)
     schema_errors[path_part_str] = error.error_message
 
@@ -519,15 +519,15 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         if (
             data_schema := cur_step.get("data_schema")
         ) is not None and user_input is not None:
-            data_schema = cast(vol.Schema, data_schema)
+            data_schema = cast(probatio.Schema, data_schema)
             validation_schema, validation_input = _strip_hidden_fields(
                 data_schema, user_input
             )
             try:
                 user_input = validation_schema(validation_input)
-            except vol.Invalid as ex:
+            except probatio.Invalid as ex:
                 raised_errors = [ex]
-                if isinstance(ex, vol.MultipleInvalid):
+                if isinstance(ex, probatio.MultipleInvalid):
                     raised_errors = ex.errors
 
                 schema_errors: dict[str, Any] = {}
@@ -833,8 +833,8 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         return True
 
     def add_suggested_values_to_schema(
-        self, data_schema: vol.Schema, suggested_values: Mapping[str, Any] | None
-    ) -> vol.Schema:
+        self, data_schema: probatio.Schema, suggested_values: Mapping[str, Any] | None
+    ) -> probatio.Schema:
         """Make a copy of the schema, populated with suggested values.
 
         For each schema marker matching items in `suggested_values`,
@@ -861,20 +861,20 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
             if (
                 suggested_values
                 and key in suggested_values
-                and isinstance(key, vol.Marker)
+                and isinstance(key, probatio.Marker)
             ):
                 # Copy the marker to not modify the flow schema
                 new_key = copy.copy(key)
                 new_key.description = {"suggested_value": suggested_values[key.schema]}
             schema[new_key] = val
-        return vol.Schema(schema)
+        return probatio.Schema(schema)
 
     @callback
     def async_show_form(
         self,
         *,
         step_id: str | None = None,
-        data_schema: vol.Schema | None = None,
+        data_schema: probatio.Schema | None = None,
         errors: dict[str, str] | None = None,
         description_placeholders: Mapping[str, str] | None = None,
         last_step: bool | None = None,
@@ -1058,7 +1058,7 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
             type=FlowResultType.MENU,
             flow_id=self.flow_id,
             handler=self.handler,
-            data_schema=vol.Schema({"next_step_id": vol.In(menu_options)}),
+            data_schema=probatio.Schema({"next_step_id": probatio.In(menu_options)}),
             menu_options=menu_options,
             description_placeholders=description_placeholders,
         )
@@ -1106,14 +1106,14 @@ class SectionConfig(TypedDict, total=False):
 class section:
     """Data entry flow section."""
 
-    CONFIG_SCHEMA = vol.Schema(
+    CONFIG_SCHEMA = probatio.Schema(
         {
-            vol.Optional("collapsed", default=False): bool,
+            probatio.Optional("collapsed", default=False): bool,
         },
     )
 
     def __init__(
-        self, schema: vol.Schema, options: SectionConfig | None = None
+        self, schema: probatio.Schema, options: SectionConfig | None = None
     ) -> None:
         """Initialize."""
         self.schema = schema
@@ -1124,7 +1124,7 @@ class section:
         return self.schema(value)
 
 
-def _schema_has_visible(data_schema: vol.Schema) -> bool:
+def _schema_has_visible(data_schema: probatio.Schema) -> bool:
     """Return True if the schema (or a nested section) has a visible marker."""
     if not isinstance(data_schema.schema, dict):
         return False
@@ -1137,8 +1137,8 @@ def _schema_has_visible(data_schema: vol.Schema) -> bool:
 
 
 def _strip_hidden_fields[_T: Mapping[str, Any]](
-    data_schema: vol.Schema, user_input: _T
-) -> tuple[vol.Schema, _T]:
+    data_schema: probatio.Schema, user_input: _T
+) -> tuple[probatio.Schema, _T]:
     """Remove currently hidden fields from the schema and the submitted input.
 
     A field whose ``visible`` condition does not match is treated as optional and
@@ -1157,11 +1157,11 @@ def _strip_hidden_fields[_T: Mapping[str, Any]](
     eval_data = dict(user_input)
     conditions: dict[Any, Any] = {}
     for key in data_schema.schema:
-        name = key.schema if isinstance(key, vol.Marker) else key
+        name = key.schema if isinstance(key, probatio.Marker) else key
         if (
-            isinstance(key, (vol.Optional, vol.Required))
+            isinstance(key, (probatio.Optional, probatio.Required))
             and name not in eval_data
-            and not isinstance(key.default, vol.Undefined)
+            and not isinstance(key.default, probatio.Undefined)
         ):
             eval_data[name] = key.default()
         if (visible_condition := getattr(key, "visible", None)) is not None:
@@ -1182,7 +1182,7 @@ def _strip_hidden_fields[_T: Mapping[str, Any]](
     new_schema: dict[Any, Any] = {}
     new_input: dict[str, Any] | None = None
     for key, val in data_schema.schema.items():
-        name = key.schema if isinstance(key, vol.Marker) else key
+        name = key.schema if isinstance(key, probatio.Marker) else key
 
         if name in hidden_names:
             if name in user_input:
@@ -1209,13 +1209,15 @@ def _strip_hidden_fields[_T: Mapping[str, Any]](
     if new_input is None and len(new_schema) == len(data_schema.schema):
         return data_schema, user_input
     return (
-        vol.Schema(new_schema, extra=data_schema.extra, required=data_schema.required),
+        probatio.Schema(
+            new_schema, extra=data_schema.extra, required=data_schema.required
+        ),
         cast(_T, new_input if new_input is not None else user_input),
     )
 
 
 def add_visible_conditions_to_serialized_schema(
-    data_schema: vol.Schema, serialized: list[dict[str, Any]]
+    data_schema: probatio.Schema, serialized: list[dict[str, Any]]
 ) -> None:
     """Add `visible` conditions from schema markers to the serialized fields.
 
@@ -1228,7 +1230,7 @@ def add_visible_conditions_to_serialized_schema(
 
     fields_by_name: dict[Any, tuple[Any, Any]] = {}
     for key, val in data_schema.schema.items():
-        name = key.schema if isinstance(key, vol.Marker) else key
+        name = key.schema if isinstance(key, probatio.Marker) else key
         fields_by_name[name] = (key, val)
 
     for field in serialized:

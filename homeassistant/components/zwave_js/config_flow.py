@@ -10,8 +10,8 @@ from pathlib import Path
 from typing import Any, Self, cast, override
 
 from awesomeversion import AwesomeVersion
+import probatio
 from propcache.api import cached_property
-import voluptuous as vol
 from zwave_js_server.client import Client
 from zwave_js_server.exceptions import BaseZwaveJSServerError, FailedCommand
 from zwave_js_server.model.driver import Driver
@@ -30,7 +30,7 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
 )
 from homeassistant.const import CONF_NAME, CONF_URL
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import selector
@@ -127,18 +127,20 @@ class SecurityKeys:
         """Return the keys as add-on config options or config entry data."""
         return asdict(self)
 
-    def get_schema(self, *, suggested: bool = False) -> dict[vol.Optional, type[str]]:
+    def get_schema(
+        self, *, suggested: bool = False
+    ) -> dict[probatio.Optional, type[str]]:
         """Return a data schema dict for the keys, prefilled from these keys."""
         if suggested:
             return {
-                vol.Optional(
+                probatio.Optional(
                     field.name,
                     description={"suggested_value": getattr(self, field.name)},
                 ): str
                 for field in fields(self)
             }
         return {
-            vol.Optional(field.name, default=getattr(self, field.name)): str
+            probatio.Optional(field.name, default=getattr(self, field.name)): str
             for field in fields(self)
         }
 
@@ -146,7 +148,9 @@ class SecurityKeys:
 CONF_ADDON_RF_REGION = "rf_region"
 
 EXAMPLE_SERVER_URL = "ws://localhost:3000"
-ON_SUPERVISOR_SCHEMA = vol.Schema({vol.Optional(CONF_USE_ADDON, default=True): bool})
+ON_SUPERVISOR_SCHEMA = probatio.Schema(
+    {probatio.Optional(CONF_USE_ADDON, default=True): bool}
+)
 MIN_MIGRATION_SDK_VERSION = AwesomeVersion("6.61")
 
 # Flags the flow that owns the shared add-on config. Kept in the flow
@@ -202,16 +206,18 @@ IGNORED_USB_DEVICES = {
 }
 
 
-def get_manual_schema(user_input: dict[str, Any]) -> vol.Schema:
+def get_manual_schema(user_input: dict[str, Any]) -> probatio.Schema:
     """Return a schema for the manual step."""
     default_url = user_input.get(CONF_URL, DEFAULT_URL)
-    return vol.Schema({vol.Required(CONF_URL, default=default_url): str})
+    return probatio.Schema({probatio.Required(CONF_URL, default=default_url): str})
 
 
-def get_on_supervisor_schema(user_input: dict[str, Any]) -> vol.Schema:
+def get_on_supervisor_schema(user_input: dict[str, Any]) -> probatio.Schema:
     """Return a schema for the on Supervisor step."""
     default_use_addon = user_input[CONF_USE_ADDON]
-    return vol.Schema({vol.Required(CONF_USE_ADDON, default=default_use_addon): bool})
+    return probatio.Schema(
+        {probatio.Required(CONF_USE_ADDON, default=default_use_addon): bool}
+    )
 
 
 async def validate_input(hass: HomeAssistant, user_input: dict) -> VersionInfo:
@@ -462,7 +468,10 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                 return await self.async_step_rf_region()
         if config_updates := self._addon_config_updates:
             if not self._async_acquire_addon_ownership():
-                return self.async_abort(reason="already_in_progress")
+                return self.async_abort(
+                    reason="already_in_progress",
+                    translation_domain=HOMEASSISTANT_DOMAIN,
+                )
             # If we have updates to the add-on config,
             # set them before starting the add-on.
             self._addon_config_updates = {}
@@ -628,7 +637,9 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             # at least for a short time.
             # Zeroconf flows never touch the add-on,
             # so an idle discovery prompt should not block USB discovery.
-            return self.async_abort(reason="already_in_progress")
+            return self.async_abort(
+                reason="already_in_progress", translation_domain=HOMEASSISTANT_DOMAIN
+            )
         if current_config_entries := self._async_current_entries(include_ignore=False):
             self._reconfigure_config_entry = next(
                 (
@@ -779,7 +790,9 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             # prompt should not block the add-on discovery.
             if flow["context"].get("source") != SOURCE_ZEROCONF
         ):
-            return self.async_abort(reason="already_in_progress")
+            return self.async_abort(
+                reason="already_in_progress", translation_domain=HOMEASSISTANT_DOMAIN
+            )
 
         if discovery_info.slug != ADDON_SLUG:
             return self.async_abort(reason="not_zwave_js_addon")
@@ -834,9 +847,9 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             )
             return await self.async_step_start_addon()
 
-        schema = vol.Schema(
+        schema = probatio.Schema(
             {
-                vol.Required("rf_region"): selector.SelectSelector(
+                probatio.Required("rf_region"): selector.SelectSelector(
                     selector.SelectSelectorConfig(
                         options=RF_REGIONS,
                         mode=selector.SelectSelectorMode.DROPDOWN,
@@ -932,12 +945,12 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.error("Failed to get USB ports: %s", err)
             return self.async_abort(reason="usb_ports_failed")
 
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
-                vol.Optional(
+                probatio.Optional(
                     CONF_USB_PATH, description={"suggested_value": self.usb_path}
-                ): vol.In(ports),
-                vol.Optional(
+                ): probatio.In(ports),
+                probatio.Optional(
                     CONF_SOCKET_PATH,
                     description={"suggested_value": self.socket_path or ""},
                 ): str,
@@ -1028,9 +1041,9 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="network_type",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required("network_type", default=""): vol.In(
+                    probatio.Required("network_type", default=""): probatio.In(
                         [NETWORK_TYPE_NEW, NETWORK_TYPE_EXISTING]
                     )
                 }
@@ -1054,7 +1067,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             }
             return await self.async_step_start_addon()
 
-        data_schema = vol.Schema(default_keys.get_schema())
+        data_schema = probatio.Schema(default_keys.get_schema())
 
         return self.async_show_form(
             step_id="configure_security_keys", data_schema=data_schema
@@ -1264,7 +1277,9 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
         if not self._async_acquire_addon_ownership():
-            return self.async_abort(reason="already_in_progress")
+            return self.async_abort(
+                reason="already_in_progress", translation_domain=HOMEASSISTANT_DOMAIN
+            )
 
         # Remaining prompts, e.g. for other discovered adapters,
         # are superseded by this migration.
@@ -1471,7 +1486,10 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                 }
 
                 if not self._async_acquire_addon_ownership():
-                    return self.async_abort(reason="already_in_progress")
+                    return self.async_abort(
+                        reason="already_in_progress",
+                        translation_domain=HOMEASSISTANT_DOMAIN,
+                    )
 
                 addon_config_updates = self._addon_config_updates | addon_config_updates
                 self._addon_config_updates = {}
@@ -1506,12 +1524,12 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             **ports,
         }
 
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
-                vol.Optional(
+                probatio.Optional(
                     CONF_USB_PATH, description={"suggested_value": usb_path}
-                ): vol.In(ports),
-                vol.Optional(
+                ): probatio.In(ports),
+                probatio.Optional(
                     CONF_SOCKET_PATH, description={"suggested_value": socket_path}
                 ): str,
                 **default_keys.get_schema(suggested=True),
@@ -1560,10 +1578,10 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             **ports,
         }
 
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
-                vol.Optional(CONF_USB_PATH): vol.In(ports),
-                vol.Optional(CONF_SOCKET_PATH): str,
+                probatio.Optional(CONF_USB_PATH): probatio.In(ports),
+                probatio.Optional(CONF_SOCKET_PATH): str,
             }
         )
         return self.async_show_form(
@@ -1713,7 +1731,10 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                         # Config entry already has correct config
                         return self.async_abort(reason="already_configured")
                     if not self._async_acquire_addon_ownership():
-                        return self.async_abort(reason="already_in_progress")
+                        return self.async_abort(
+                            reason="already_in_progress",
+                            translation_domain=HOMEASSISTANT_DOMAIN,
+                        )
                     await self._addon_setup.async_set_addon_config(
                         {CONF_ADDON_SOCKET: discovery_info.socket_path}
                     )
@@ -1735,7 +1756,10 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                 flow["context"].get("unique_id") == placeholder_unique_id
                 for flow in self._async_in_progress()
             ):
-                return self.async_abort(reason="already_in_progress")
+                return self.async_abort(
+                    reason="already_in_progress",
+                    translation_domain=HOMEASSISTANT_DOMAIN,
+                )
             # We are not aborting if home ID configured
             # here, we just want to make sure that it's set
             # We will update a USB based config entry

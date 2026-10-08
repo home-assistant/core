@@ -73,9 +73,6 @@ def mock_vistapool_client(
     # default to an empty dict so always-on sensors come up with
     # `native_value=None` and module-gated sensors are skipped.
     client.fetch_pool_data = AsyncMock(return_value={})
-    # The token-refresh loop awaits `auth.get_client()` and expects
-    # `(client, refreshed)`.
-    mock_vistapool_auth.get_client = AsyncMock(return_value=(client, False))
     with (
         patch("homeassistant.components.vistapool.AquariteClient", return_value=client),
         patch(

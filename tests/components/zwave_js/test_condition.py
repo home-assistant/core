@@ -3,8 +3,8 @@
 from typing import Any
 from unittest.mock import MagicMock
 
+import probatio
 import pytest
-import voluptuous as vol
 from zwave_js_server.const import CommandClass
 from zwave_js_server.event import Event
 from zwave_js_server.model.node import Node
@@ -316,7 +316,7 @@ async def test_value_missing_on_node(
     )
     assert checker.async_check() is False
 
-    with pytest.raises(vol.Invalid, match="No targeted node has value"):
+    with pytest.raises(probatio.Invalid, match="No targeted node has value"):
         await _checker(
             hass,
             {
@@ -361,7 +361,7 @@ async def test_no_nodes_resolved(
     other = device_registry.async_get_or_create(
         config_entry_id=integration.entry_id, identifiers={("other", "1")}
     )
-    with pytest.raises(vol.Invalid, match="No nodes found"):
+    with pytest.raises(probatio.Invalid, match="No nodes found"):
         await _checker(
             hass,
             {
@@ -423,42 +423,20 @@ async def test_config_parameter_with_bitmask(
     assert checker.async_check() is True
 
 
-async def test_top_level_fields_moved_to_options(
+@pytest.mark.parametrize(
+    ("behavior", "expected"),
+    [("any", False), ("all", True)],
+)
+async def test_check_when_nodes_disappear(
     hass: HomeAssistant,
     client: MagicMock,
     lock_schlage_be469: Node,
     integration: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
+    behavior: str,
+    expected: bool,
 ) -> None:
-    """Test top level option fields are moved into the options block."""
-    device_id = _device_id(device_registry, client, lock_schlage_be469, integration)
-    validated = await condition.async_validate_condition_config(
-        hass,
-        cv.CONDITION_SCHEMA(
-            {
-                "condition": f"{DOMAIN}.node_status",
-                "device_id": device_id,
-                "status": "alive",
-                "behavior": "all",
-            }
-        ),
-    )
-    assert validated["options"] == {
-        "device_id": [device_id],
-        "behavior": "all",
-        "status": "alive",
-    }
-    assert "status" not in validated
-
-
-async def test_check_false_when_nodes_disappear(
-    hass: HomeAssistant,
-    client: MagicMock,
-    lock_schlage_be469: Node,
-    integration: MockConfigEntry,
-    device_registry: dr.DeviceRegistry,
-) -> None:
-    """Test the condition is False once the devices no longer resolve to nodes."""
+    """Test an empty node set follows any/all semantics like entity conditions."""
     checker = await _checker(
         hass,
         {
@@ -467,19 +445,17 @@ async def test_check_false_when_nodes_disappear(
                 "device_id": _device_id(
                     device_registry, client, lock_schlage_be469, integration
                 ),
+                "behavior": behavior,
                 "status": "alive",
             },
         },
     )
     assert checker.async_check() is True
     await hass.config_entries.async_unload(integration.entry_id)
-    assert checker.async_check() is False
+    assert checker.async_check() is expected
 
 
-@pytest.mark.parametrize(
-    ("behavior", "expected"),
-    [("any", True), ("all", False)],
-)
+@pytest.mark.parametrize("behavior", ["any", "all"])
 async def test_partially_unresolved_target(
     hass: HomeAssistant,
     client: MagicMock,
@@ -488,9 +464,8 @@ async def test_partially_unresolved_target(
     integration: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
     behavior: str,
-    expected: bool,
 ) -> None:
-    """Test a targeted Z-Wave node that cannot be resolved fails an all behavior."""
+    """Test a targeted Z-Wave node that cannot be resolved is ignored."""
     device_ids = [
         _device_id(device_registry, client, lock_schlage_be469, integration),
         _device_id(device_registry, client, multisensor_6, integration),
@@ -507,7 +482,7 @@ async def test_partially_unresolved_target(
             },
         },
     )
-    assert checker.async_check() is expected
+    assert checker.async_check() is True
 
 
 async def test_config_parameter_missing_on_node(
@@ -519,7 +494,7 @@ async def test_config_parameter_missing_on_node(
 ) -> None:
     """Test validation fails when no node in the target has the parameter."""
     device_id = _device_id(device_registry, client, lock_schlage_be469, integration)
-    with pytest.raises(vol.Invalid, match="configuration parameter"):
+    with pytest.raises(probatio.Invalid, match="configuration parameter"):
         await _checker(
             hass,
             {
@@ -539,7 +514,7 @@ async def test_condition_description_fields_match_schema(
     hass: HomeAssistant, condition_type: str
 ) -> None:
     """Test the described fields and required flags match the options schema."""
-    schema = CONDITIONS[condition_type].options_schema_dict
+    schema = next(iter(CONDITIONS[condition_type]._schema.schema.values()))
     descriptions = await condition.async_get_all_descriptions(hass)
     description = descriptions[f"{DOMAIN}.{condition_type}"]
     # Nodes are targeted with a device selector field, not a target selector
@@ -547,7 +522,7 @@ async def test_condition_description_fields_match_schema(
     fields = description["fields"]
     assert set(fields) == {str(key) for key in schema}
     assert {name for name, field in fields.items() if field["required"]} == {
-        str(key) for key in schema if isinstance(key, vol.Required)
+        str(key) for key in schema if isinstance(key, probatio.Required)
     }
 
 
@@ -587,14 +562,16 @@ async def test_node_status_selector_translations(hass: HomeAssistant) -> None:
     } == {"alive", "asleep", "awake", "dead"}
 
 
-async def test_non_zwave_device_is_unresolved(
+@pytest.mark.parametrize("behavior", ["any", "all"])
+async def test_non_zwave_device_is_ignored(
     hass: HomeAssistant,
     client: MagicMock,
     lock_schlage_be469: Node,
     integration: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
+    behavior: str,
 ) -> None:
-    """Test a device from another integration counts as an unresolved node."""
+    """Test a device from another integration is ignored when checking."""
     other_entry = MockConfigEntry(domain="other")
     other_entry.add_to_hass(hass)
     other_device = device_registry.async_get_or_create(
@@ -604,32 +581,18 @@ async def test_non_zwave_device_is_unresolved(
         _device_id(device_registry, client, lock_schlage_be469, integration),
         other_device.id,
     ]
-    assert (
-        await _checker(
-            hass,
-            {
-                "condition": f"{DOMAIN}.node_status",
-                "options": {
-                    "device_id": device_ids,
-                    "behavior": "any",
-                    "status": "alive",
-                },
+    checker = await _checker(
+        hass,
+        {
+            "condition": f"{DOMAIN}.node_status",
+            "options": {
+                "device_id": device_ids,
+                "behavior": behavior,
+                "status": "alive",
             },
-        )
-    ).async_check() is True
-    assert (
-        await _checker(
-            hass,
-            {
-                "condition": f"{DOMAIN}.node_status",
-                "options": {
-                    "device_id": device_ids,
-                    "behavior": "all",
-                    "status": "alive",
-                },
-            },
-        )
-    ).async_check() is False
+        },
+    )
+    assert checker.async_check() is True
 
 
 async def test_value_empty_property_key(

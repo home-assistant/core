@@ -8,7 +8,7 @@ from typing import Any
 
 from gcal_sync.api import GoogleCalendarService
 from gcal_sync.exceptions import ApiException, AuthException
-import voluptuous as vol
+import probatio
 import yaml
 
 from homeassistant.const import (
@@ -23,9 +23,11 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_entry_oauth2_flow, config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import generate_entity_id
+from homeassistant.helpers.typing import ConfigType
 
 from .api import ApiAuthImpl, get_feature_access
 from .const import DOMAIN
+from .services import async_setup_services
 from .store import GoogleConfigEntry, GoogleRuntimeData, LocalCalendarStore
 
 _LOGGER = logging.getLogger(__name__)
@@ -47,33 +49,39 @@ YAML_DEVICES = f"{DOMAIN}_calendars.yaml"
 PLATFORMS = [Platform.CALENDAR]
 
 
-CONFIG_SCHEMA = vol.Schema(cv.removed(DOMAIN), extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = probatio.Schema(cv.removed(DOMAIN), extra=probatio.ALLOW_EXTRA)
 
 
-_SINGLE_CALSEARCH_CONFIG = vol.All(
+_SINGLE_CALSEARCH_CONFIG = probatio.All(
     cv.deprecated(CONF_MAX_RESULTS),
-    vol.Schema(
+    probatio.Schema(
         {
-            vol.Required(CONF_NAME): cv.string,
-            vol.Required(CONF_DEVICE_ID): cv.string,
-            vol.Optional(CONF_IGNORE_AVAILABILITY, default=True): cv.boolean,
-            vol.Optional(CONF_OFFSET): cv.string,
-            vol.Optional(CONF_SEARCH): cv.string,
-            vol.Optional(CONF_TRACK): cv.boolean,
-            vol.Optional(CONF_MAX_RESULTS): cv.positive_int,  # Now unused
+            probatio.Required(CONF_NAME): cv.string,
+            probatio.Required(CONF_DEVICE_ID): cv.string,
+            probatio.Optional(CONF_IGNORE_AVAILABILITY, default=True): cv.boolean,
+            probatio.Optional(CONF_OFFSET): cv.string,
+            probatio.Optional(CONF_SEARCH): cv.string,
+            probatio.Optional(CONF_TRACK): cv.boolean,
+            probatio.Optional(CONF_MAX_RESULTS): cv.positive_int,  # Now unused
         }
     ),
 )
 
-DEVICE_SCHEMA = vol.Schema(
+DEVICE_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_CAL_ID): cv.string,
-        vol.Required(CONF_ENTITIES, None): vol.All(
-            cv.ensure_list, [_SINGLE_CALSEARCH_CONFIG]
+        probatio.Required(CONF_CAL_ID): cv.string,
+        probatio.Required(CONF_ENTITIES, None): probatio.All(
+            probatio.EnsureList(), [_SINGLE_CALSEARCH_CONFIG]
         ),
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Google Calendar integration."""
+    async_setup_services(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: GoogleConfigEntry) -> bool:
@@ -82,7 +90,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: GoogleConfigEntry) -> bo
     # helpful error messages.
     try:
         await hass.async_add_executor_job(load_config, hass.config.path(YAML_DEVICES))
-    except vol.Invalid as err:
+    except probatio.Invalid as err:
         _LOGGER.error("Configuration error in %s: %s", YAML_DEVICES, str(err))
         return False
 

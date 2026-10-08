@@ -1,296 +1,215 @@
 """Tests the lifx migration."""
 
-from datetime import timedelta
-from typing import Any
-from unittest.mock import patch
+import pytest
 
-from homeassistant import setup
-from homeassistant.components import lifx
-from homeassistant.components.lifx import DOMAIN, discovery
-from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STARTED
+from homeassistant.components.lifx import DOMAIN
+from homeassistant.components.lifx.config_flow import LIFXConfigFlow
+from homeassistant.components.lifx.const import CONF_SERIAL
+from homeassistant.components.lifx.util import async_entry_serial, normalize_serial
+from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.setup import async_setup_component
-from homeassistant.util import dt as dt_util
 
-from . import (
-    IP_ADDRESS,
-    LABEL,
-    MAC_ADDRESS,
-    SERIAL,
-    _mocked_bulb,
-    _patch_config_flow_try_connect,
-    _patch_device,
-    _patch_discovery,
+from . import IP_ADDRESS, LABEL, SERIAL
+from .helpers import LEGACY_SERIAL, MAC_ADDRESS
+
+from tests.common import MockConfigEntry
+
+
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        ("d073d5ddeecc", "d073d5ddeecc"),
+        ("D073D5DDEECC", "d073d5ddeecc"),
+        ("d0:73:d5:dd:ee:cc", "d073d5ddeecc"),
+        ("D0:73:D5:DD:EE:CC", "d073d5ddeecc"),
+    ],
 )
-
-from tests.common import MockConfigEntry, async_fire_time_changed
-
-
-async def test_migration_device_online_end_to_end(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test migration from single config entry."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN, title="LEGACY", data={}, unique_id=DOMAIN
-    )
-    config_entry.add_to_hass(hass)
-    device = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        identifiers={(DOMAIN, SERIAL)},
-        connections={(dr.CONNECTION_NETWORK_MAC, MAC_ADDRESS)},
-        name=LABEL,
-    )
-    light_entity_reg = entity_registry.async_get_or_create(
-        config_entry=config_entry,
-        platform=DOMAIN,
-        domain="light",
-        unique_id=dr.format_mac(SERIAL),
-        original_name=LABEL,
-        device_id=device.id,
-    )
-
-    with _patch_discovery(), _patch_config_flow_try_connect(), _patch_device():
-        await setup.async_setup_component(hass, DOMAIN, {})
-        await hass.async_block_till_done()
-
-        migrated_entry = None
-        for entry in hass.config_entries.async_entries(DOMAIN):
-            if entry.unique_id == DOMAIN:
-                migrated_entry = entry
-                break
-
-        assert migrated_entry is not None
-
-        assert device.config_entries == {migrated_entry.entry_id}
-        assert light_entity_reg.config_entry_id == migrated_entry.entry_id
-        assert er.async_entries_for_config_entry(entity_registry, config_entry) == []
-
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
-        await hass.async_block_till_done()
-        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=20))
-        await hass.async_block_till_done()
-
-        legacy_entry = None
-        for entry in hass.config_entries.async_entries(DOMAIN):
-            if entry.unique_id == DOMAIN:
-                legacy_entry = entry
-                break
-
-        assert legacy_entry is None
+def test_normalize_serial(value: str, expected: str) -> None:
+    """Test normalization of valid raw and colon-formatted serials."""
+    assert normalize_serial(value) == expected
 
 
-async def test_discovery_is_more_frequent_during_migration(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test that discovery is more frequent during migration."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN, title="LEGACY", data={}, unique_id=DOMAIN
-    )
-    config_entry.add_to_hass(hass)
-    device = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        identifiers={(DOMAIN, SERIAL)},
-        connections={(dr.CONNECTION_NETWORK_MAC, MAC_ADDRESS)},
-        name=LABEL,
-    )
-    entity_registry.async_get_or_create(
-        config_entry=config_entry,
-        platform=DOMAIN,
-        domain="light",
-        unique_id=dr.format_mac(SERIAL),
-        original_name=LABEL,
-        device_id=device.id,
-    )
+@pytest.mark.parametrize(
+    "value",
+    [
+        "",
+        "d073d5ddee",
+        "d073d5ddeeff00",
+        "ggbbccddeecc",
+        "gg:bb:cc:dd:ee:cc",
+        "aa-bb-cc-dd-ee-cc",
+        "aabb.ccdd.eecc",
+    ],
+)
+def test_normalize_serial_rejects_invalid_value(value: str) -> None:
+    """Test rejection of malformed serials."""
+    with pytest.raises(ValueError):
+        normalize_serial(value)
 
-    bulb = _mocked_bulb()
-    start_calls = 0
 
-    class MockLifxDiscovery:
-        """Mock lifx discovery."""
-
-        def __init__(self, *args: Any, **kwargs: Any) -> None:
-            """Init discovery."""
-            self.bulb = bulb
-            self.lights = {}
-
-        def start(self):
-            """Mock start."""
-            nonlocal start_calls
-            start_calls += 1
-            # Discover the bulb so we can complete migration
-            # and verify we switch back to normal discovery
-            # interval
-            if start_calls == 4:
-                self.lights = {self.bulb.mac_addr: self.bulb}
-
-        def cleanup(self):
-            """Mock cleanup."""
-
-    with (
-        _patch_device(device=bulb),
-        _patch_config_flow_try_connect(device=bulb),
-        patch.object(discovery, "DEFAULT_TIMEOUT", 0),
-        patch(
-            "homeassistant.components.lifx.discovery.LifxDiscovery", MockLifxDiscovery
+@pytest.mark.parametrize(
+    ("version", "unique_id", "data"),
+    [
+        (
+            2,
+            "d0:73:d5:dd:ee:cc",
+            {CONF_HOST: IP_ADDRESS, CONF_SERIAL: "ggbbccddeecc"},
         ),
-    ):
-        await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
-        await hass.async_block_till_done()
-        assert start_calls == 0
+        (1, "gg:bb:cc:dd:ee:cc", {CONF_HOST: IP_ADDRESS}),
+    ],
+)
+def test_entry_serial_returns_none_for_malformed_identity(
+    version: int, unique_id: str, data: dict[str, str]
+) -> None:
+    """Test malformed stored identity is ignored."""
+    entry = MockConfigEntry(
+        domain=DOMAIN, version=version, unique_id=unique_id, data=data
+    )
 
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
-        await hass.async_block_till_done()
-        assert start_calls == 1
-
-        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5))
-        await hass.async_block_till_done(wait_background_tasks=True)
-        assert start_calls == 3
-
-        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=10))
-        await hass.async_block_till_done(wait_background_tasks=True)
-        assert start_calls == 4
-
-        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=15))
-        await hass.async_block_till_done(wait_background_tasks=True)
-        assert start_calls == 5
+    assert async_entry_serial(entry) is None
 
 
-async def test_migration_device_online_end_to_end_after_downgrade(
+async def test_migrate_current_entry_to_version_2(
+    hass: HomeAssistant,
+) -> None:
+    """Test migration of a current per-device entry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        version=1,
+        unique_id=LEGACY_SERIAL,
+        data={CONF_HOST: IP_ADDRESS},
+    )
+    entry.add_to_hass(hass)
+
+    assert await entry.async_migrate(hass)
+    assert entry.version == 2
+    assert entry.unique_id == SERIAL
+    assert entry.data == {CONF_HOST: IP_ADDRESS, CONF_SERIAL: SERIAL}
+
+
+async def test_migrate_registries_off_the_colon_separated_serial(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test migration from single config entry can happen again after a downgrade."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN, title="LEGACY", data={}, unique_id=DOMAIN
+    """Test the registries move to the raw serial."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        version=1,
+        unique_id=LEGACY_SERIAL,
+        data={CONF_HOST: IP_ADDRESS},
     )
-    config_entry.add_to_hass(hass)
-
-    already_migrated_config_entry = MockConfigEntry(
-        domain=DOMAIN, data={CONF_HOST: IP_ADDRESS}, unique_id=SERIAL
-    )
-    already_migrated_config_entry.add_to_hass(hass)
+    entry.add_to_hass(hass)
     device = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        identifiers={(DOMAIN, SERIAL)},
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, LEGACY_SERIAL), ("other", LEGACY_SERIAL)},
         connections={(dr.CONNECTION_NETWORK_MAC, MAC_ADDRESS)},
         name=LABEL,
     )
-    light_entity_reg = entity_registry.async_get_or_create(
-        config_entry=config_entry,
-        platform=DOMAIN,
-        domain="light",
-        unique_id=SERIAL,
-        original_name=LABEL,
+    light = entity_registry.async_get_or_create(
+        LIGHT_DOMAIN, DOMAIN, LEGACY_SERIAL, config_entry=entry, device_id=device.id
+    )
+    rssi = entity_registry.async_get_or_create(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        f"{LEGACY_SERIAL}_rssi",
+        config_entry=entry,
         device_id=device.id,
     )
 
-    with _patch_discovery(), _patch_config_flow_try_connect(), _patch_device():
-        await setup.async_setup_component(hass, DOMAIN, {})
-        await hass.async_block_till_done()
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
-        await hass.async_block_till_done()
-        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=20))
-        await hass.async_block_till_done()
+    assert await entry.async_migrate(hass)
 
-        assert device.config_entries == {config_entry.entry_id}
-        assert light_entity_reg.config_entry_id == config_entry.entry_id
-        assert er.async_entries_for_config_entry(entity_registry, config_entry) == []
-
-        legacy_entry = None
-        for entry in hass.config_entries.async_entries(DOMAIN):
-            if entry.unique_id == DOMAIN:
-                legacy_entry = entry
-                break
-
-        assert legacy_entry is None
+    migrated = device_registry.async_get(device.id)
+    assert migrated is not None
+    assert migrated.identifiers == {(DOMAIN, SERIAL), ("other", LEGACY_SERIAL)}
+    assert migrated.connections == {(dr.CONNECTION_NETWORK_MAC, MAC_ADDRESS)}
+    assert entity_registry.async_get(light.entity_id).unique_id == SERIAL
+    assert entity_registry.async_get(rssi.entity_id).unique_id == f"{SERIAL}_rssi"
 
 
-async def test_migration_device_online_end_to_end_ignores_other_devices(
+async def test_migrate_leaves_registry_entries_it_cannot_improve_alone(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test migration from single config entry."""
-    legacy_config_entry = MockConfigEntry(
-        domain=DOMAIN, title="LEGACY", data={}, unique_id=DOMAIN
+    """Test an unrecognised identifier and an already raw unique ID are untouched."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        version=1,
+        unique_id=LEGACY_SERIAL,
+        data={CONF_HOST: IP_ADDRESS},
     )
-    legacy_config_entry.add_to_hass(hass)
-
-    other_domain_config_entry = MockConfigEntry(
-        domain="other_domain", data={}, unique_id="other_domain"
-    )
-    other_domain_config_entry.add_to_hass(hass)
+    entry.add_to_hass(hass)
     device = device_registry.async_get_or_create(
-        config_entry_id=legacy_config_entry.entry_id,
-        identifiers={(DOMAIN, SERIAL)},
-        connections={(dr.CONNECTION_NETWORK_MAC, MAC_ADDRESS)},
-        name=LABEL,
+        config_entry_id=entry.entry_id, identifiers={(DOMAIN, "not-a-serial")}
     )
-    other_device = device_registry.async_get_or_create(
-        config_entry_id=other_domain_config_entry.entry_id,
-        connections={(dr.CONNECTION_NETWORK_MAC, "556655665566")},
-        name=LABEL,
+    light = entity_registry.async_get_or_create(
+        LIGHT_DOMAIN, DOMAIN, SERIAL, config_entry=entry, device_id=device.id
     )
-    light_entity_reg = entity_registry.async_get_or_create(
-        config_entry=legacy_config_entry,
-        platform=DOMAIN,
-        domain="light",
+
+    assert await entry.async_migrate(hass)
+
+    migrated = device_registry.async_get(device.id)
+    assert migrated is not None
+    assert migrated.identifiers == {(DOMAIN, "not-a-serial")}
+    assert entity_registry.async_get(light.entity_id).unique_id == SERIAL
+
+
+@pytest.mark.parametrize("unique_id", ["gg:bb:cc:dd:ee:cc", "d0:73:d5:dd:ee"])
+async def test_migrate_malformed_current_entry_fails_cleanly(
+    hass: HomeAssistant, unique_id: str, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test malformed current entries remain unchanged when migration fails."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        version=1,
+        unique_id=unique_id,
+        data={CONF_HOST: IP_ADDRESS},
+    )
+    entry.add_to_hass(hass)
+
+    # Nothing the user can retry makes the entry migratable
+    assert not await hass.config_entries.async_setup(entry.entry_id)
+    assert entry.state is ConfigEntryState.MIGRATION_ERROR
+    assert "that is not a LIFX serial number" in caplog.text
+    assert entry.version == 1
+    assert entry.unique_id == unique_id
+    assert entry.data == {CONF_HOST: IP_ADDRESS}
+
+
+@pytest.mark.parametrize("unique_id", [None, DOMAIN])
+async def test_migrate_removes_the_legacy_shared_entry(
+    hass: HomeAssistant, unique_id: str | None
+) -> None:
+    """Test the shared entry every device once lived on is dropped, not migrated.
+
+    It holds no host for any of its devices, so they are left to discovery,
+    which is how they were found while the entry was in use.
+    """
+    entry = MockConfigEntry(domain=DOMAIN, version=1, unique_id=unique_id, data={})
+    entry.add_to_hass(hass)
+
+    assert not await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.config_entries.async_entries(DOMAIN) == []
+
+
+async def test_migrate_version_2_entry_is_noop(hass: HomeAssistant) -> None:
+    """Test migration leaves a version 2 entry unchanged."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        version=LIFXConfigFlow.VERSION,
         unique_id=SERIAL,
-        original_name=LABEL,
-        device_id=device.id,
+        data={CONF_HOST: IP_ADDRESS, CONF_SERIAL: SERIAL},
     )
-    ignored_entity_reg = entity_registry.async_get_or_create(
-        config_entry=other_domain_config_entry,
-        platform=DOMAIN,
-        domain="sensor",
-        unique_id="00:00:00:00:00:00_sensor",
-        original_name=LABEL,
-        device_id=device.id,
-    )
-    garbage_entity_reg = entity_registry.async_get_or_create(
-        config_entry=legacy_config_entry,
-        platform=DOMAIN,
-        domain="sensor",
-        unique_id="garbage",
-        original_name=LABEL,
-        device_id=other_device.id,
-    )
+    entry.add_to_hass(hass)
 
-    with _patch_discovery(), _patch_config_flow_try_connect(), _patch_device():
-        await setup.async_setup_component(hass, DOMAIN, {})
-        await hass.async_block_till_done()
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
-        await hass.async_block_till_done()
-        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=20))
-        await hass.async_block_till_done()
-
-        new_entry = None
-        legacy_entry = None
-        for entry in hass.config_entries.async_entries(DOMAIN):
-            if entry.unique_id == DOMAIN:
-                legacy_entry = entry
-            else:
-                new_entry = entry
-
-        assert new_entry is not None
-        assert legacy_entry is None
-
-        assert device.config_entries == {legacy_config_entry.entry_id}
-        assert light_entity_reg.config_entry_id == legacy_config_entry.entry_id
-        assert ignored_entity_reg.config_entry_id == other_domain_config_entry.entry_id
-        assert garbage_entity_reg.config_entry_id == legacy_config_entry.entry_id
-
-        assert (
-            er.async_entries_for_config_entry(entity_registry, legacy_config_entry)
-            == []
-        )
-        assert (
-            dr.async_entries_for_config_entry(device_registry, legacy_config_entry)
-            == []
-        )
+    assert await entry.async_migrate(hass)
+    assert entry.version == 2
+    assert entry.unique_id == SERIAL
+    assert entry.data == {CONF_HOST: IP_ADDRESS, CONF_SERIAL: SERIAL}

@@ -37,6 +37,7 @@ class AbodeEntity(Entity):
     @override
     async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe from Abode connection status updates."""
+        self._data.entity_ids.discard(self.entity_id)
         await self.hass.async_add_executor_job(
             self._data.abode.events.remove_connection_status_callback, self.unique_id
         )

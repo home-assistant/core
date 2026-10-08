@@ -3,8 +3,8 @@
 from contextlib import AbstractContextManager, nullcontext as does_not_raise
 from typing import Any
 
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.components.humidifier.const import (
     ATTR_ACTION,
@@ -402,13 +402,13 @@ async def test_humidifier_state_attribute_trigger_behavior_all(
             "humidifier.mode_changed",
             # Empty mode list
             {CONF_MODE: []},
-            pytest.raises(vol.Invalid),
+            pytest.raises(probatio.Invalid),
         ),
         (
             "humidifier.mode_changed",
             # Missing CONF_MODE
             {},
-            pytest.raises(vol.Invalid),
+            pytest.raises(probatio.Invalid),
         ),
     ],
 )

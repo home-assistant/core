@@ -2,7 +2,7 @@
 
 from typing import Final
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.device_automation import (
     DEVICE_TRIGGER_BASE_SCHEMA,
@@ -44,10 +44,10 @@ from .utils import (
 
 TRIGGER_SCHEMA: Final = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_TYPE): vol.In(
+        probatio.Required(CONF_TYPE): probatio.In(
             RPC_INPUTS_EVENTS_TYPES | BLOCK_INPUTS_EVENTS_TYPES
         ),
-        vol.Required(CONF_SUBTYPE): vol.In(INPUTS_EVENTS_SUBTYPES),
+        probatio.Required(CONF_SUBTYPE): probatio.In(INPUTS_EVENTS_SUBTYPES),
     }
 )
 

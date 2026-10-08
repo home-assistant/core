@@ -7,9 +7,9 @@ import re
 from unittest.mock import AsyncMock, Mock, patch
 
 from freezegun import freeze_time
+import probatio
 import pytest
 from pytest_unordered import unordered
-import voluptuous as vol
 
 from homeassistant.const import (
     ENTITY_MATCH_ALL,
@@ -28,7 +28,10 @@ from homeassistant.core import (
 from homeassistant.exceptions import HomeAssistantError, PlatformNotReady, Unauthorized
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.entity_component import EntityComponent, async_update_entity
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddEntitiesCallback,
+    async_get_platforms,
+)
 from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.setup import async_setup_component
@@ -415,9 +418,11 @@ async def test_unload_entry_resets_platform(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert len(hass.states.async_entity_ids()) == 1
+    assert len(async_get_platforms(hass, "entry_domain")) == 1
 
     assert await component.async_unload_entry(entry)
     assert len(hass.states.async_entity_ids()) == 0
+    assert async_get_platforms(hass, "entry_domain") == []
 
 
 async def test_unload_entry_tolerates_never_loaded(
@@ -553,7 +558,7 @@ async def test_register_entity_service(
         "test_placeholder": "beer"
     }
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             DOMAIN,
             "hello",
@@ -761,7 +766,7 @@ async def test_register_batched_entity_service(hass: HomeAssistant) -> None:
         "test_placeholder": "beer"
     }
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             DOMAIN,
             "hello",
@@ -851,9 +856,9 @@ async def test_register_entity_service_non_entity_service_schema(
 
     for idx, schema in enumerate(
         (
-            vol.Schema({"some": str}),
-            vol.All(vol.Schema({"some": str})),
-            vol.Any(vol.Schema({"some": str})),
+            probatio.Schema({"some": str}),
+            probatio.All(probatio.Schema({"some": str})),
+            probatio.Any(probatio.Schema({"some": str})),
         )
     ):
         expected_message = (
@@ -870,8 +875,8 @@ async def test_register_entity_service_non_entity_service_schema(
     for idx, schema in enumerate(
         (
             cv.make_entity_service_schema({"some": str}),
-            vol.Schema(cv.make_entity_service_schema({"some": str})),
-            vol.All(cv.make_entity_service_schema({"some": str})),
+            probatio.Schema(cv.make_entity_service_schema({"some": str})),
+            probatio.All(cv.make_entity_service_schema({"some": str})),
         )
     ):
         component.async_register_entity_service(f"test_service_{idx}", schema, Mock())

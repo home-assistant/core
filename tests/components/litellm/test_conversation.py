@@ -4,7 +4,7 @@ import datetime
 from unittest.mock import AsyncMock, patch
 
 from freezegun import freeze_time
-import httpx
+import httpx2
 import openai
 from openai.types import CompletionUsage
 from openai.types.chat import (
@@ -21,7 +21,7 @@ from homeassistant.components import conversation
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import entity_registry as er, intent
-from homeassistant.helpers.llm import ToolInput
+from homeassistant.helpers.llm import ToolInput, ToolResult
 
 from . import setup_integration
 
@@ -148,7 +148,7 @@ async def test_connection_error_availability(
 
     mock_openai_client.chat.completions.create = AsyncMock(
         side_effect=openai.APIConnectionError(
-            request=httpx.Request("POST", "http://localhost")
+            request=httpx2.Request("POST", "http://localhost")
         )
     )
     result = await conversation.async_converse(
@@ -201,12 +201,14 @@ async def test_function_call(
             agent_id=AGENT_ID,
             tool_call_id="mock_tool_call_id",
             tool_name="HassGetCurrentTime",
-            tool_result={
-                "speech": {"plain": {"speech": "12:00 PM", "extra_data": None}},
-                "response_type": "action_done",
-                "speech_slots": {"time": datetime.time(12, 0)},
-                "data": {"success": [], "failed": []},
-            },
+            result=ToolResult(
+                data={
+                    "speech": {"plain": {"speech": "12:00 PM", "extra_data": None}},
+                    "response_type": "action_done",
+                    "speech_slots": {"time": datetime.time(12, 0)},
+                    "data": {"success": [], "failed": []},
+                }
+            ),
         )
     )
     mock_chat_log.async_add_assistant_content_without_tools(

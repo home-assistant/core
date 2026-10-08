@@ -3,9 +3,9 @@
 from unittest.mock import MagicMock
 
 from freezegun import freeze_time
+import probatio
 import pytest
 from syrupy.assertion import SnapshotAssertion
-import voluptuous as vol
 
 from homeassistant.components.green_planet_energy.const import DOMAIN
 from homeassistant.components.green_planet_energy.services import (
@@ -158,7 +158,7 @@ async def test_get_prices_non_quarter_hour_rejected(
     init_integration: MockConfigEntry,
 ) -> None:
     """Hours must be a multiple of 0.25 according to schema validation."""
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await _call_get_prices(hass, 0.3, init_integration.entry_id)
 
 

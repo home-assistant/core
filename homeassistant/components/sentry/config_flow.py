@@ -3,8 +3,8 @@
 import logging
 from typing import Any, override
 
+import probatio
 from sentry_sdk.utils import BadDsn, Dsn
-import voluptuous as vol
 
 from homeassistant.config_entries import (
     ConfigEntry,
@@ -33,7 +33,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_SCHEMA = vol.Schema({vol.Required(CONF_DSN): str})
+DATA_SCHEMA = probatio.Schema({probatio.Required(CONF_DSN): str})
 
 
 class SentryConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -90,52 +90,54 @@ class SentryOptionsFlow(OptionsFlow):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_LOGGING_EVENT_LEVEL,
                         default=self.config_entry.options.get(
                             CONF_LOGGING_EVENT_LEVEL, DEFAULT_LOGGING_EVENT_LEVEL
                         ),
-                    ): vol.In(LOGGING_LEVELS),
-                    vol.Optional(
+                    ): probatio.In(LOGGING_LEVELS),
+                    probatio.Optional(
                         CONF_LOGGING_LEVEL,
                         default=self.config_entry.options.get(
                             CONF_LOGGING_LEVEL, DEFAULT_LOGGING_LEVEL
                         ),
-                    ): vol.In(LOGGING_LEVELS),
-                    vol.Optional(
+                    ): probatio.In(LOGGING_LEVELS),
+                    probatio.Optional(
                         CONF_ENVIRONMENT,
                         default=self.config_entry.options.get(CONF_ENVIRONMENT),
                     ): str,
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_EVENT_HANDLED,
                         default=self.config_entry.options.get(
                             CONF_EVENT_HANDLED, False
                         ),
                     ): bool,
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_EVENT_CUSTOM_COMPONENTS,
                         default=self.config_entry.options.get(
                             CONF_EVENT_CUSTOM_COMPONENTS, False
                         ),
                     ): bool,
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_EVENT_THIRD_PARTY_PACKAGES,
                         default=self.config_entry.options.get(
                             CONF_EVENT_THIRD_PARTY_PACKAGES, False
                         ),
                     ): bool,
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_TRACING,
                         default=self.config_entry.options.get(CONF_TRACING, False),
                     ): bool,
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_TRACING_SAMPLE_RATE,
                         default=self.config_entry.options.get(
                             CONF_TRACING_SAMPLE_RATE, DEFAULT_TRACING_SAMPLE_RATE
                         ),
-                    ): vol.All(vol.Coerce(float), vol.Range(min=0.0, max=1.0)),
+                    ): probatio.All(
+                        probatio.Coerce(float), probatio.Range(min=0.0, max=1.0)
+                    ),
                 }
             ),
         )

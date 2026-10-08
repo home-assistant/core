@@ -115,10 +115,6 @@ class RainBirdCalendarEntity(
         await super().async_added_to_hass()
 
         # We do not ask for an update with async_add_entities()
-        # because it will update disabled entities. This is started as a
-        # task to let it sync in the background without blocking startup
-        self.coordinator.config_entry.async_create_background_task(
-            self.hass,
-            self.coordinator.async_request_refresh(),
-            "rainbird.calendar-refresh",
-        )
+        # because it will update disabled entities. This loads the schedule
+        # in the background without blocking startup.
+        self.coordinator.async_load()

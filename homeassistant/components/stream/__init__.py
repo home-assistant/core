@@ -25,12 +25,12 @@ import time
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, Final, cast
 
-import voluptuous as vol
+import probatio
 from yarl import URL
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, EVENT_LOGGING_CHANGED
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import SetupPhases, async_pause_setup
@@ -153,7 +153,7 @@ def _convert_stream_options(
     pyav_options: dict[str, str] = {}
     try:
         STREAM_OPTIONS_SCHEMA(stream_options)
-    except vol.Invalid as exc:
+    except probatio.Invalid as exc:
         raise HomeAssistantError(f"Invalid stream options: {exc}") from exc
 
     if extra_wait_time := stream_options.get(CONF_EXTRA_PART_WAIT_TIME):
@@ -213,23 +213,23 @@ def create_stream(
     return stream
 
 
-DOMAIN_SCHEMA = vol.Schema(
+DOMAIN_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_LL_HLS, default=True): cv.boolean,
-        vol.Optional(CONF_SEGMENT_DURATION, default=6): vol.All(
-            cv.positive_float, vol.Range(min=2, max=10)
+        probatio.Optional(CONF_LL_HLS, default=True): cv.boolean,
+        probatio.Optional(CONF_SEGMENT_DURATION, default=6): probatio.All(
+            cv.positive_float, probatio.Range(min=2, max=10)
         ),
-        vol.Optional(CONF_PART_DURATION, default=1): vol.All(
-            cv.positive_float, vol.Range(min=0.2, max=1.5)
+        probatio.Optional(CONF_PART_DURATION, default=1): probatio.All(
+            cv.positive_float, probatio.Range(min=0.2, max=1.5)
         ),
     }
 )
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
         DOMAIN: DOMAIN_SCHEMA,
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 
@@ -567,13 +567,19 @@ class Stream:
 
         # Check for file access
         if not self.hass.config.is_allowed_path(video_path):
-            raise HomeAssistantError(f"Can't write {video_path}, no access to path!")
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="path_not_allowed",
+                translation_placeholders={"filename": video_path},
+            )
 
         # Add recorder
         if recorder := self.outputs().get(RECORDER_PROVIDER):
             assert isinstance(recorder, RecorderOutput)
-            raise HomeAssistantError(
-                f"Stream already recording to {recorder.video_path}!"
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="already_recording",
+                translation_placeholders={"filename": recorder.video_path},
             )
         recorder = cast(
             RecorderOutput, self.add_provider(RECORDER_PROVIDER, timeout=duration)
@@ -625,10 +631,10 @@ def _should_retry() -> bool:
     return True
 
 
-STREAM_OPTIONS_SCHEMA: Final = vol.Schema(
+STREAM_OPTIONS_SCHEMA: Final = probatio.Schema(
     {
-        vol.Optional(CONF_RTSP_TRANSPORT): vol.In(RTSP_TRANSPORTS),
-        vol.Optional(CONF_USE_WALLCLOCK_AS_TIMESTAMPS): bool,
-        vol.Optional(CONF_EXTRA_PART_WAIT_TIME): cv.positive_float,
+        probatio.Optional(CONF_RTSP_TRANSPORT): probatio.In(RTSP_TRANSPORTS),
+        probatio.Optional(CONF_USE_WALLCLOCK_AS_TIMESTAMPS): bool,
+        probatio.Optional(CONF_EXTRA_PART_WAIT_TIME): cv.positive_float,
     }
 )
