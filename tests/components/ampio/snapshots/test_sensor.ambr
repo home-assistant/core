@@ -462,6 +462,166 @@
     'state': '42.0',
   })
 # ---
+# name: test_devices[child-Object 43]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'disabled_by': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'ampio',
+        'obj_43',
+      ),
+    }),
+    'labels': set({
+    }),
+    'name': 'Object 43',
+    'name_by_user': None,
+    'parent_device_id': <ANY>,
+  })
+# ---
+# name: test_devices[child-Object 44]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'disabled_by': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'ampio',
+        'obj_44',
+      ),
+    }),
+    'labels': set({
+    }),
+    'name': 'Object 44',
+    'name_by_user': None,
+    'parent_device_id': <ANY>,
+  })
+# ---
+# name: test_devices[child-Object 45]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'disabled_by': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'ampio',
+        'obj_45',
+      ),
+    }),
+    'labels': set({
+    }),
+    'name': 'Object 45',
+    'name_by_user': None,
+    'parent_device_id': <ANY>,
+  })
+# ---
+# name: test_devices[child-Object 46]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'disabled_by': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'ampio',
+        'obj_46',
+      ),
+    }),
+    'labels': set({
+    }),
+    'name': 'Object 46',
+    'name_by_user': None,
+    'parent_device_id': <ANY>,
+  })
+# ---
+# name: test_devices[child-Object 47]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'disabled_by': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'ampio',
+        'obj_47',
+      ),
+    }),
+    'labels': set({
+    }),
+    'name': 'Object 47',
+    'name_by_user': None,
+    'parent_device_id': <ANY>,
+  })
+# ---
+# name: test_devices[child-Object 48]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'disabled_by': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'ampio',
+        'obj_48',
+      ),
+    }),
+    'labels': set({
+    }),
+    'name': 'Object 48',
+    'name_by_user': None,
+    'parent_device_id': <ANY>,
+  })
+# ---
+# name: test_devices[child-Temperatura]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'disabled_by': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'ampio',
+        'obj_36',
+      ),
+    }),
+    'labels': set({
+    }),
+    'name': 'Temperatura',
+    'name_by_user': None,
+    'parent_device_id': <ANY>,
+  })
+# ---
+# name: test_devices[child-Wilgotność]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'disabled_by': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'ampio',
+        'obj_37',
+      ),
+    }),
+    'labels': set({
+    }),
+    'name': 'Wilgotność',
+    'name_by_user': None,
+    'parent_device_id': <ANY>,
+  })
+# ---
 # name: test_devices[device-M-SERV]
   DeviceRegistryEntrySnapshot({
     'area_id': None,

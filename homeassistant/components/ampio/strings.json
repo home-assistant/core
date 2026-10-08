@@ -61,7 +61,7 @@
       "message": "The Ampio server rejected the stored credentials."
     },
     "unexpected_device": {
-      "message": "The Ampio server at the configured address is not the one this entry was set up with."
+      "message": "The Ampio server at the configured address is not the one this entry was set up with. To use this server, delete the integration and add it again."
     }
   }
 }

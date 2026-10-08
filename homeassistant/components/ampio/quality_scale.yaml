@@ -70,9 +70,7 @@ rules:
   exception-translations: done
   icon-translations: todo
   reconfiguration-flow: todo
-  repair-issues:
-    status: exempt
-    comment: This integration has no repairable conditions.
+  repair-issues: todo
   stale-devices: todo
 
   # Platinum

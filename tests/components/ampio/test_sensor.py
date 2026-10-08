@@ -80,15 +80,21 @@ async def test_devices(
     device_registry: dr.DeviceRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Snapshot every device registry entry the integration creates."""
+    """Snapshot every device and child device the integration creates."""
     await setup_integration(hass, mock_config_entry)
 
     devices = dr.async_entries_for_config_entry(
         device_registry, mock_config_entry.entry_id
     )
+    children = dr.async_child_entries_for_config_entry(
+        device_registry, mock_config_entry.entry_id
+    )
     assert devices
+    assert len(children) == 8
     for device in devices:
         assert device == snapshot(name=f"device-{device.name}")
+    for child in children:
+        assert child == snapshot(name=f"child-{child.name}")
 
 
 async def test_push_update_changes_state(
@@ -276,7 +282,6 @@ async def test_module_without_catalogue_row_gets_bare_device(
     mock_client: MagicMock,
     mock_config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
 ) -> None:
     """A module mac with no catalogue row still keys its own device."""
     mock_client.objects[500] = make_object(
@@ -317,11 +322,19 @@ async def test_nameless_module_row_keeps_fallback_name(
     assert device.model == "M-SENS"
 
 
+@pytest.mark.parametrize(
+    "leaf_id",
+    [
+        pytest.param("0_be82_76_0_1", id="to-another-module"),
+        pytest.param("0_1_76_0_1", id="onto-the-m-serv"),
+    ],
+)
 async def test_moved_object_keeps_its_first_parent(
     hass: HomeAssistant,
     mock_client: MagicMock,
     mock_config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
+    leaf_id: str,
 ) -> None:
     """An object moved to another module in Designer stays under its first module.
 
@@ -334,7 +347,7 @@ async def test_moved_object_keeps_its_first_parent(
     assert first_parent is not None
 
     mock_client.objects[36] = make_object(
-        36, "temp", 1, leaf_id="0_be82_76_0_1", name="Temperatura", state="24.4"
+        36, "temp", 1, leaf_id=leaf_id, name="Temperatura", state="24.4"
     )
     await hass.config_entries.async_reload(mock_config_entry.entry_id)
     await hass.async_block_till_done()

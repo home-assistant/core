@@ -26,8 +26,6 @@ from .entity import AmpioEntity, async_parent_device_id
 
 PARALLEL_UPDATES = 0
 
-# Descriptions for the sensor kinds the library can classify, keyed by
-# ``SensorKind.key``. Objects classified into any other kind are not exposed.
 SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
     description.key: description
     for description in (

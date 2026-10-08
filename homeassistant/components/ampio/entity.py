@@ -96,7 +96,6 @@ class AmpioEntity(Entity):
         """Initialize from the discovery-time object snapshot."""
         self._data = data
         self._object_id = obj.id
-        # Several Designer objects can drive one output and share its leaf.
         self._attr_unique_id = obj.object_key
         device_info = dr.ChildDeviceInfo(
             identifiers={(DOMAIN, obj.object_key)},

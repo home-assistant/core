@@ -82,13 +82,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: AmpioConfigEntry) -> boo
     except AmpioNotConfigured as err:
         # The library still serves every other row. Its message embeds
         # Designer names, so only ids and macs reach the log.
-        _LOGGER.warning(
-            "Ampio Designer leaves objects %s without a bus address and module "
-            "addresses %s without exactly one module row; fix them in Ampio "
-            "Designer",
-            sorted(oid for oid, _ in err.objects),
-            sorted(format_mac(mac) for mac, _ in err.collisions),
-        )
+        if err.objects:
+            _LOGGER.warning(
+                "Ampio Designer leaves objects %s without a bus address; fix "
+                "them in Ampio Designer",
+                ", ".join(str(oid) for oid in sorted(oid for oid, _ in err.objects)),
+            )
+        if err.collisions:
+            _LOGGER.warning(
+                "Ampio Designer leaves module addresses %s without exactly one "
+                "module row; fix them in Ampio Designer",
+                ", ".join(
+                    format_mac(mac) for mac in sorted(mac for mac, _ in err.collisions)
+                ),
+            )
         discovered = True
     except AmpioConnectionError as err:
         raise ConfigEntryNotReady(

@@ -70,18 +70,27 @@ async def test_shutdown_disconnects_client(
 
 
 @pytest.mark.parametrize(
-    ("connect_result", "expected_state"),
+    ("connect_result", "expected_state", "expected_reason"),
     [
         pytest.param(
             AmpioConnectionError("refused"),
             ConfigEntryState.SETUP_RETRY,
+            "cannot_connect",
             id="connection-error",
         ),
         pytest.param(
-            AmpioAuthError("denied"), ConfigEntryState.SETUP_ERROR, id="auth-error"
+            AmpioAuthError("denied"),
+            ConfigEntryState.SETUP_ERROR,
+            "invalid_auth",
+            id="auth-error",
         ),
         # A discovery cycle that does not complete in time is retryable.
-        pytest.param(False, ConfigEntryState.SETUP_RETRY, id="incomplete-discovery"),
+        pytest.param(
+            False,
+            ConfigEntryState.SETUP_RETRY,
+            "discovery_timeout",
+            id="incomplete-discovery",
+        ),
     ],
 )
 async def test_setup_failure_disconnects_client(
@@ -90,6 +99,7 @@ async def test_setup_failure_disconnects_client(
     mock_config_entry: MockConfigEntry,
     connect_result: Exception | bool,
     expected_state: ConfigEntryState,
+    expected_reason: str,
 ) -> None:
     """A failed connect maps to the right entry state and disconnects the client."""
     mock_client.connect.side_effect = [connect_result]
@@ -97,6 +107,7 @@ async def test_setup_failure_disconnects_client(
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is expected_state
+    assert mock_config_entry.error_reason_translation_key == expected_reason
     mock_client.disconnect.assert_awaited_once()
 
 
@@ -132,20 +143,38 @@ async def test_standard_login_builds_standard_client(
     mock_admin_client_class.assert_not_called()
 
 
+@pytest.mark.parametrize(
+    ("error", "expected", "unexpected"),
+    [
+        pytest.param(
+            AmpioNotConfigured(objects=((61, "Podlewanie"),)),
+            "objects 61 without a bus address",
+            "without exactly one module row",
+            id="unaddressable-object",
+        ),
+        pytest.param(
+            AmpioNotConfigured(collisions=((0x1F, (17, 18)), (0x2, (19, 20)))),
+            "module addresses 0x2, 0x1F without exactly one module row",
+            "without a bus address",
+            id="module-collision",
+        ),
+    ],
+)
 async def test_designer_fault_keeps_served_objects(
     hass: HomeAssistant,
     mock_client: MagicMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     caplog: pytest.LogCaptureFixture,
+    error: AmpioNotConfigured,
+    expected: str,
+    unexpected: str,
 ) -> None:
     """A Designer fault that the library reports still loads every served object.
 
-    The warning names object ids and module macs, never a Designer name.
+    Each fault kind gets its own warning, with ids and macs and no Designer name.
     """
-    mock_client.connect.side_effect = AmpioNotConfigured(
-        objects=((61, "Podlewanie"),), collisions=((0xCB8F, (17, 18)),)
-    )
+    mock_client.connect.side_effect = error
 
     await setup_integration(hass, mock_config_entry)
 
@@ -158,8 +187,8 @@ async def test_designer_fault_keeps_served_objects(
         )
         == 8
     )
-    assert "objects [61]" in caplog.text
-    assert "0xCB8F" in caplog.text
+    assert expected in caplog.text
+    assert unexpected not in caplog.text
     assert "Podlewanie" not in caplog.text
 
 
@@ -220,6 +249,7 @@ async def test_standard_account_groups_by_module_mac(
     )
     assert hub is not None
     assert hub.name == "M-SERV"
+    assert hub.model == "M-SERV"
 
     module = device_registry.async_get_device_by_identifier(
         MSENS_IDENTIFIER, standard_config_entry.entry_id
