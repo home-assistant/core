@@ -858,3 +858,39 @@ async def test_color_modes_follow_segment_coming_back(
         await mock_config_entry.runtime_data.async_refresh()
 
     reload.assert_called_once_with(mock_config_entry.entry_id)
+
+
+@pytest.mark.parametrize("device_fixture", ["cct"])
+async def test_color_modes_follow_segment_moving_to_other_leds(
+    hass: HomeAssistant,
+    mock_wled: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a segment growing onto other kinds of LEDs sets up again."""
+    led_config = {
+        "cb": 30,
+        "ins": [
+            {"start": 0, "len": 89, "type": 32},
+            {"start": 89, "len": 89, "type": 30},
+        ],
+    }
+    await _async_load_segment(
+        hass, mock_wled, mock_config_entry, 7, [255, 0, 0, 255], led_config
+    )
+    device = mock_wled.update.return_value
+    device.state.segments[0].stop = 89
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get("light.wled_cct_light"))
+    assert ColorMode.RGBWW in state.attributes[ATTR_SUPPORTED_COLOR_MODES]
+
+    # The segment now covers the RGBW output too, same capabilities.
+    data = await async_load_json_object_fixture(hass, "cct.json", DOMAIN)
+    data["info"]["leds"]["seglc"] = [7]
+    data["state"]["seg"][0]["stop"] = 178
+    device.update_from_dict(data)
+    with patch.object(hass.config_entries, "async_schedule_reload") as reload:
+        await mock_config_entry.runtime_data.async_refresh()
+
+    reload.assert_called_once_with(mock_config_entry.entry_id)

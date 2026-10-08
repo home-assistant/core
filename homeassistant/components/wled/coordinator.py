@@ -64,6 +64,19 @@ def _led_setup(device: WLEDDevice) -> tuple[Any, ...] | None:
     )
 
 
+def _segment_outputs(
+    device: WLEDDevice, segment_id: int
+) -> frozenset[tuple[bool, bool, bool]] | None:
+    """Return the kinds of LED outputs a segment is on, if known."""
+    if device.led_config is None:
+        return None
+
+    return frozenset(
+        (output.has_rgb, output.has_white, output.has_cct)
+        for output in device.segment_led_outputs(segment_id)
+    )
+
+
 class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
     """Class to manage fetching WLED data from single endpoint."""
 
@@ -88,6 +101,7 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
         self._repo: str | None = None
         self._led_setup: tuple[Any, ...] | None = None
         self._light_capabilities: dict[int, LightCapability | None] = {}
+        self._segment_outputs: dict[int, frozenset[tuple[bool, bool, bool]]] = {}
 
         if TYPE_CHECKING:
             assert entry.unique_id
@@ -111,10 +125,10 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
             self._led_setup = led_setup
 
         # Segments that disappear keep their entity, so keep theirs as well.
-        self._light_capabilities.update(
-            (segment_id, segment.light_capabilities)
-            for segment_id, segment in device.state.segments.items()
-        )
+        for segment_id, segment in device.state.segments.items():
+            self._light_capabilities[segment_id] = segment.light_capabilities
+            if (outputs := _segment_outputs(device, segment_id)) is not None:
+                self._segment_outputs[segment_id] = outputs
 
     def _setup_changed(self, device: WLEDDevice) -> bool:
         """Return whether the device changed in a way the entities can't follow."""
@@ -123,13 +137,23 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
         if device.info.repo != self._repo:
             return True
 
-        # A segment can do other colors, like after changing the LED type.
-        if any(
-            segment_id in self._light_capabilities
-            and self._light_capabilities[segment_id] != segment.light_capabilities
-            for segment_id, segment in device.state.segments.items()
-        ):
-            return True
+        for segment_id, segment in device.state.segments.items():
+            # A segment can do other colors, like after changing the LED type.
+            if (
+                segment_id in self._light_capabilities
+                and self._light_capabilities[segment_id] != segment.light_capabilities
+            ):
+                return True
+
+            # A segment moved onto other kinds of LEDs, like from an RGBCCT
+            # output onto an RGBW one, while it reports the same capabilities.
+            outputs = _segment_outputs(device, segment_id)
+            if (
+                outputs is not None
+                and segment_id in self._segment_outputs
+                and outputs != self._segment_outputs[segment_id]
+            ):
+                return True
 
         led_setup = _led_setup(device)
         return led_setup is not None and led_setup != self._led_setup
