@@ -1300,6 +1300,7 @@ async def test_setup_creates_entities_per_management_point(
             "homeassistant.components.daikin_onecta.OnectaDataUpdateCoordinator",
             return_value=coordinator,
         ),
+        patch("homeassistant.components.daikin_onecta.PLATFORMS", [Platform.CLIMATE]),
         patch(
             "homeassistant.components.daikin_onecta.climate.DaikinClimate",
             TestClimateEntity,

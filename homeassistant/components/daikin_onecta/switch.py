@@ -13,6 +13,8 @@ from .device import DaikinOnectaDevice
 from .entity import DaikinManagementPointEntity
 from .entity_descriptions import SWITCH_DESCRIPTIONS
 
+PARALLEL_UPDATES = 1
+
 if TYPE_CHECKING:
     from .coordinator import OnectaDataUpdateCoordinator
 

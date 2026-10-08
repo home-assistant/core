@@ -7,12 +7,10 @@ from typing import TYPE_CHECKING, override
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from .const import (
-    DOMAIN,
     SENSOR_PERIOD_DAILY,
     SENSOR_PERIOD_MONTHLY,
     SENSOR_PERIOD_UNIQUE_IDS,
@@ -23,6 +21,8 @@ from .const import (
 from .device import DaikinOnectaDevice
 from .entity import DaikinEntity
 from .entity_descriptions import SENSOR_DESCRIPTIONS
+
+PARALLEL_UPDATES = 1
 
 if TYPE_CHECKING:
     from .coordinator import OnectaDataUpdateCoordinator
@@ -168,89 +168,12 @@ def add_management_point_sensors(
     add_energy_sensors(coordinator, device, management_point, sensors)
 
 
-def _legacy_value_sensor_id_migrations(device: DaikinOnectaDevice) -> dict[str, str]:
-    """Return legacy-to-current value sensor IDs for a device."""
-    migrations: dict[str, str] = {}
-    for management_point in device.device.management_points:
-        for value in SENSOR_DESCRIPTIONS:
-            for sub_type in (None, "sensoryData"):
-                old_unique_id = f"{device.id}_{management_point.management_point_type}_{sub_type}_{value}"
-                migrations.setdefault(
-                    old_unique_id,
-                    f"{device.id}_{management_point.embedded_id}_{sub_type}_{value}",
-                )
-    return migrations
-
-
-def _legacy_energy_sensor_id_migrations(device: DaikinOnectaDevice) -> dict[str, str]:
-    """Return older energy sensor unique IDs mapped to current IDs."""
-    migrations: dict[str, str] = {}
-    for management_point in device.device.management_points:
-        for datatype in ("consumption", "output"):
-            for sensor_type in ("electrical", "gas", "thermal"):
-                for operation_mode in ("heating", "cooling"):
-                    for period in SENSOR_PERIODS:
-                        details = EnergySensorDetails(
-                            management_point.embedded_id,
-                            management_point.management_point_type,
-                            sensor_type,
-                            operation_mode,
-                            period,
-                            datatype,
-                        )
-                        old_unique_id = f"{device.id}_{management_point.management_point_type}_{sensor_type}_{operation_mode}_{period}"
-                        migrations.setdefault(
-                            old_unique_id, _energy_sensor_unique_id(device.id, details)
-                        )
-                        old_current_unique_id = f"{device.id}_{management_point.embedded_id}_{sensor_type}_{operation_mode}_{period}_{datatype}"
-                        migrations[old_current_unique_id] = _energy_sensor_unique_id(
-                            device.id, details
-                        )
-    return migrations
-
-
 def _energy_sensor_unique_id(device_id: str, details: EnergySensorDetails) -> str:
     """Return the stable unique ID for an energy aggregate."""
     return (
         f"{device_id}_{details.embedded_id}_{details.sensor_type}_{details.operation_mode}_"
         f"{SENSOR_PERIOD_UNIQUE_IDS[details.period]}_{details.datatype}"
     )
-
-
-def migrate_legacy_sensor_unique_ids(
-    hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    devices: dict[str, DaikinOnectaDevice],
-) -> None:
-    """Migrate existing sensor unique IDs without replacing registry entries.
-
-    The previous IDs did not distinguish management points of the same type or
-    energy consumption from output. The former energy IDs also used API period
-    tokens, including ``m`` for yearly data. Update registry entries before
-    platforms are loaded so entity IDs, customizations, and history are kept.
-    """
-    entity_registry = er.async_get(hass)
-    migrations: dict[str, str] = {}
-
-    for device in devices.values():
-        migrations.update(_legacy_value_sensor_id_migrations(device))
-        migrations.update(_legacy_energy_sensor_id_migrations(device))
-
-    for entry in er.async_entries_for_config_entry(
-        entity_registry, config_entry.entry_id
-    ):
-        if entry.domain != "sensor" or entry.platform != DOMAIN:
-            continue
-        new_unique_id = migrations.get(entry.unique_id)
-        if (
-            new_unique_id is None
-            or entity_registry.async_get_entity_id("sensor", DOMAIN, new_unique_id)
-            is not None
-        ):
-            continue
-        entity_registry.async_update_entity(
-            entry.entity_id, new_unique_id=new_unique_id
-        )
 
 
 async def async_setup_entry(

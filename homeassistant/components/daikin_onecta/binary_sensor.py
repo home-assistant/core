@@ -12,6 +12,8 @@ from .device import DaikinOnectaDevice
 from .entity import DaikinEntity
 from .entity_descriptions import BINARY_SENSOR_DESCRIPTIONS
 
+PARALLEL_UPDATES = 1
+
 if TYPE_CHECKING:
     from .coordinator import OnectaDataUpdateCoordinator
 

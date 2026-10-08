@@ -15,6 +15,8 @@ from .device import DaikinOnectaDevice
 from .entity import DaikinManagementPointEntity
 from .entity_descriptions import UPDATE_DESCRIPTIONS
 
+PARALLEL_UPDATES = 1
+
 _LOGGER = logging.getLogger(__name__)
 
 # The Daikin Onecta cloud API exposes firmware updates

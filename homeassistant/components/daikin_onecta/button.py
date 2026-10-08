@@ -13,6 +13,8 @@ from .coordinator import OnectaDataUpdateCoordinator
 from .device import DaikinOnectaDevice
 from .entity import DaikinEntity
 
+PARALLEL_UPDATES = 1
+
 _LOGGER = logging.getLogger(__name__)
 
 

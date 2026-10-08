@@ -20,6 +20,8 @@ from .const import FANMODE_FIXED
 from .coordinator import OnectaDataUpdateCoordinator
 from .entity import DaikinManagementPointEntity
 
+PARALLEL_UPDATES = 1
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
