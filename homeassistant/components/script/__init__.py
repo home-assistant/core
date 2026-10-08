@@ -724,6 +724,8 @@ class ScriptEntity(BaseScriptEntity, RestoreEntity):
             context,
             self._trace_config,
         ) as script_trace:
+            # Prepare tracing the execution of the script's sequence
+            script_trace.set_trace(trace_get())
             self.hass.bus.async_fire(
                 EVENT_SCRIPT_STARTED,
                 {
@@ -734,8 +736,6 @@ class ScriptEntity(BaseScriptEntity, RestoreEntity):
                 },
                 context=context,
             )
-            # Prepare tracing the execution of the script's sequence
-            script_trace.set_trace(trace_get())
             with trace_path("sequence"):
                 this = None
                 if state := self.hass.states.get(self.entity_id):
