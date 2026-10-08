@@ -516,14 +516,17 @@ class UnavailableScriptEntity(BaseScriptEntity):
         """Return a set of referenced entities."""
         return set()
 
-    @override
-    async def async_added_to_hass(self) -> None:
-        """Create a repair issue to notify the user the automation has errors."""
-        await super().async_added_to_hass()
+    def _issue_id(self, entity_id: str) -> str:
+        """Return the repair issue id for the entity_id."""
+        return f"{entity_id}_validation_{self._validation_status}"
+
+    @callback
+    def _async_create_issue(self) -> None:
+        """Create a repair issue to notify the user the script has errors."""
         async_create_issue(
             self.hass,
             DOMAIN,
-            f"{self.entity_id}_validation_{self._validation_status}",
+            self._issue_id(self.entity_id),
             is_fixable=False,
             severity=IssueSeverity.ERROR,
             translation_key=f"validation_{self._validation_status}",
@@ -536,12 +539,24 @@ class UnavailableScriptEntity(BaseScriptEntity):
         )
 
     @override
+    async def async_added_to_hass(self) -> None:
+        """Create a repair issue to notify the user the script has errors."""
+        await super().async_added_to_hass()
+        self._async_create_issue()
+
+    @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Move the repair issue, its id and placeholders use the entity_id."""
+        super().async_entity_id_changed(old_entity_id)
+        async_delete_issue(self.hass, DOMAIN, self._issue_id(old_entity_id))
+        self._async_create_issue()
+
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
         await super().async_will_remove_from_hass()
-        async_delete_issue(
-            self.hass, DOMAIN, f"{self.entity_id}_validation_{self._validation_status}"
-        )
+        async_delete_issue(self.hass, DOMAIN, self._issue_id(self.entity_id))
 
 
 class ScriptEntity(BaseScriptEntity, RestoreEntity):
@@ -739,6 +754,17 @@ class ScriptEntity(BaseScriptEntity, RestoreEntity):
             return response or {}
         return None
 
+    @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Opt in to in-place entity_id changes.
+
+        Can be removed when backwards compatibility is disabled for core
+        integrations, i.e. once all core integrations have been migrated
+        to in-place entity ID change.
+        """
+        super().async_entity_id_changed(old_entity_id)
+
     @override
     async def async_added_to_hass(self) -> None:
         """Restore last triggered on startup and register service."""
@@ -773,11 +799,6 @@ class ScriptEntity(BaseScriptEntity, RestoreEntity):
     async def async_will_remove_from_hass(self) -> None:
         """Stop script and remove service when it will be removed from HA."""
         self.hass.services.async_remove(DOMAIN, self._attr_unique_id)
-
-        if self.registry_entry and self.registry_entry.entity_id != self.entity_id:
-            # Entity ID change, do not unload the script as it will be reused.
-            await self.script.async_stop()
-            return
         await self.script.async_unload()
 
 
