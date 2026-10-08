@@ -15,7 +15,7 @@ from homeassistant.const import (
     EVENT_SERVICE_REMOVED,
 )
 from homeassistant.core import Context, Event, HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import JsonObjectType
 from homeassistant.util.ulid import ulid_now
@@ -41,6 +41,7 @@ APIS_CACHE: HassKey[dict[str, API]] = HassKey("llm_apis")
 
 
 LLM_API_ASSIST = "assist"
+LLM_API_HOME_ASSISTANT = "homeassistant"
 
 TOOL_INTEGRATION_BREAKS_IN_HA_VERSION = "2027.10"
 
@@ -117,12 +118,24 @@ async def async_get_api(
     else:
         api = MergedAPI([apis[key] for key in api_id])
 
+    if api.requires_admin and (
+        not llm_context.context
+        or not llm_context.context.user_id
+        or not (user := await hass.auth.async_get_user(llm_context.context.user_id))
+        or not user.is_admin
+    ):
+        raise Unauthorized(context=llm_context.context)
+
     return await api.async_get_api_instance(llm_context)
 
 
 @callback
 def async_get_apis(hass: HomeAssistant) -> list[API]:
-    """Get all the LLM APIs."""
+    """Get all registered LLM APIs.
+
+    This is intended for discovery (e.g. config flows and UI listing).
+    To obtain an API instance with permission checks applied, use `async_get_api`.
+    """
     return list(_async_get_apis(hass).values())
 
 
@@ -301,10 +314,15 @@ class API(ABC):
     hass: HomeAssistant
     id: str
     name: str
+    requires_admin: bool = False
 
     @abstractmethod
     async def async_get_api_instance(self, llm_context: LLMContext) -> APIInstance:
-        """Return the instance of the API."""
+        """Return the instance of the API.
+
+        This is used internally by `async_get_api`. Callers should use `async_get_api`
+        rather than calling this directly to ensure permission checks are enforced.
+        """
         raise NotImplementedError
 
 
@@ -466,6 +484,7 @@ class MergedAPI(API):
             hass=hass,
             id="|".join(unicode_slug.slugify(api.id) for api in llm_apis),
             name="Merged LLM API",
+            requires_admin=any(api.requires_admin for api in llm_apis),
         )
         self.llm_apis = llm_apis
 
@@ -521,6 +540,12 @@ class MergedAPI(API):
 def selector_serializer(schema: Any) -> Any:  # noqa: C901
     """Convert selectors into OpenAPI schema."""
     if schema is cv.string or schema is intent.non_empty_string:
+        return {"type": "string"}
+    if (
+        schema is cv.entity_id
+        or schema is cv.entity_id_or_uuid
+        or schema is cv.strict_entity_id
+    ):
         return {"type": "string"}
     if schema is cv.boolean:
         return {"type": "boolean"}
@@ -591,7 +616,9 @@ def selector_serializer(schema: Any) -> Any:  # noqa: C901
         return probatio.to_openapi(schema.DATA_SCHEMA)
 
     if isinstance(schema, selector.MediaSelector):
-        item_schema = probatio.to_openapi(schema.DATA_SCHEMA)
+        item_schema = probatio.to_openapi(
+            schema.DATA_SCHEMA, custom_serializer=selector_serializer
+        )
         # Media selector allows multiple when configured
         if schema.config.get("multiple"):
             return {
@@ -646,7 +673,9 @@ def selector_serializer(schema: Any) -> Any:  # noqa: C901
         return {"type": "string", "enum": options}
 
     if isinstance(schema, selector.TargetSelector):
-        return probatio.to_openapi(cv.TARGET_FIELDS)
+        return probatio.to_openapi(
+            cv.TARGET_FIELDS, custom_serializer=selector_serializer
+        )
 
     if isinstance(schema, selector.TemplateSelector):
         return {"type": "string", "format": "jinja2"}

@@ -18,7 +18,11 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PIN, CONF_PORT, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.selector import (
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
+)
 
 from .const import CONF_VEDO_PIN, DEFAULT_PORT, DEVICE_TYPE_LIST, DOMAIN, LOGGER
 from .utils import async_client_session
@@ -28,17 +32,33 @@ DEFAULT_PIN = "111111"
 
 USER_SCHEMA = probatio.Schema(
     {
-        probatio.Required(CONF_HOST, default=DEFAULT_HOST): cv.string,
-        probatio.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        probatio.Optional(CONF_PIN, default=DEFAULT_PIN): cv.string,
+        probatio.Required(CONF_HOST, default=DEFAULT_HOST): TextSelector(),
+        probatio.Required(CONF_PORT, default=DEFAULT_PORT): probatio.Port(),
+        probatio.Optional(probatio.Secret(CONF_PIN), default=DEFAULT_PIN): TextSelector(
+            TextSelectorConfig(
+                type=TextSelectorType.PASSWORD, autocomplete="current-password"
+            )
+        ),
         probatio.Required(CONF_TYPE, default=BRIDGE): probatio.In(DEVICE_TYPE_LIST),
-        probatio.Optional(CONF_VEDO_PIN): cv.string,
+        probatio.Optional(probatio.Secret(CONF_VEDO_PIN)): TextSelector(
+            TextSelectorConfig(
+                type=TextSelectorType.PASSWORD, autocomplete="current-password"
+            )
+        ),
     }
 )
 STEP_REAUTH_DATA_SCHEMA = probatio.Schema(
     {
-        probatio.Required(CONF_PIN): cv.string,
-        probatio.Optional(CONF_VEDO_PIN): cv.string,
+        probatio.Required(probatio.Secret(CONF_PIN)): TextSelector(
+            TextSelectorConfig(
+                type=TextSelectorType.PASSWORD, autocomplete="current-password"
+            )
+        ),
+        probatio.Optional(probatio.Secret(CONF_VEDO_PIN)): TextSelector(
+            TextSelectorConfig(
+                type=TextSelectorType.PASSWORD, autocomplete="current-password"
+            )
+        ),
     }
 )
 
@@ -235,12 +255,20 @@ class ComelitConfigFlow(ConfigFlow, domain=DOMAIN):
             {
                 probatio.Required(
                     CONF_HOST, default=reconfigure_entry.data[CONF_HOST]
-                ): cv.string,
+                ): TextSelector(),
                 probatio.Required(
                     CONF_PORT, default=reconfigure_entry.data[CONF_PORT]
-                ): cv.port,
-                probatio.Optional(CONF_PIN): cv.string,
-                probatio.Optional(CONF_VEDO_PIN): cv.string,
+                ): probatio.Port(),
+                probatio.Optional(probatio.Secret(CONF_PIN)): TextSelector(
+                    TextSelectorConfig(
+                        type=TextSelectorType.PASSWORD, autocomplete="current-password"
+                    )
+                ),
+                probatio.Optional(probatio.Secret(CONF_VEDO_PIN)): TextSelector(
+                    TextSelectorConfig(
+                        type=TextSelectorType.PASSWORD, autocomplete="current-password"
+                    )
+                ),
             }
         )
 

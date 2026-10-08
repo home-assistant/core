@@ -10,7 +10,7 @@ import time
 from types import MappingProxyType
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from aiohttp import ClientError, ClientResponseError
+from aiohttp import ClientConnectionError, ClientError, ClientResponseError
 from aiopowerwall import (
     PowerwallAuthenticationError,
     PowerwallConnectionError,
@@ -119,6 +119,13 @@ ERRORS = [
     (TeslaFleetError, ConfigEntryState.SETUP_RETRY),
 ]
 
+CONNECTION_ERRORS = [
+    pytest.param(
+        ClientConnectionError(), ConfigEntryState.SETUP_RETRY, id="connection_error"
+    ),
+    pytest.param(TimeoutError(), ConfigEntryState.SETUP_RETRY, id="timeout"),
+]
+
 VEHICLE_ERRORS = [
     *ERRORS,
     (InsufficientCredits, ConfigEntryState.SETUP_RETRY),
@@ -137,11 +144,11 @@ async def test_load_unload(hass: HomeAssistant) -> None:
     assert not hasattr(entry, "runtime_data")
 
 
-@pytest.mark.parametrize(("side_effect", "state"), ERRORS)
+@pytest.mark.parametrize(("side_effect", "state"), [*ERRORS, *CONNECTION_ERRORS])
 async def test_init_error(
     hass: HomeAssistant,
     mock_products: AsyncMock,
-    side_effect: TeslaFleetError,
+    side_effect: BaseException,
     state: ConfigEntryState,
 ) -> None:
     """Test init with errors."""
@@ -178,17 +185,29 @@ async def test_vehicle_refresh_error(
 
 
 # Test Energy Live Coordinator
-@pytest.mark.parametrize(("side_effect", "state"), ERRORS)
+@pytest.mark.parametrize(("side_effect", "state"), [*ERRORS, *CONNECTION_ERRORS])
 async def test_energy_live_refresh_error(
     hass: HomeAssistant,
     mock_live_status: AsyncMock,
-    side_effect: TeslaFleetError,
+    side_effect: BaseException,
     state: ConfigEntryState,
 ) -> None:
     """Test coordinator refresh with an error."""
     mock_live_status.side_effect = side_effect
     entry = await setup_platform(hass)
     assert entry.state is state
+
+
+async def test_stream_config_error(
+    hass: HomeAssistant,
+    mock_stream_get_config: AsyncMock,
+) -> None:
+    """Test a failed stream config fetch does not block setup."""
+    mock_stream_get_config.side_effect = ClientResponseError(
+        request_info=MagicMock(), history=(), status=503
+    )
+    entry = await setup_platform(hass)
+    assert entry.state is ConfigEntryState.LOADED
 
 
 # Test Energy Site Coordinator
@@ -848,6 +867,20 @@ async def test_vehicle_polling_version_update(
     )
     assert device is not None
     assert device.sw_version == "2026.2.0"
+
+
+@pytest.mark.usefixtures("mock_legacy")
+async def test_polling_vehicle_skips_stream_setup(
+    hass: HomeAssistant,
+    mock_stream_get_config: AsyncMock,
+    mock_stream_update_config: AsyncMock,
+) -> None:
+    """A polling vehicle never reads or changes its streaming config."""
+    entry = await setup_platform(hass)
+    assert entry.state is ConfigEntryState.LOADED
+
+    mock_stream_get_config.assert_not_called()
+    mock_stream_update_config.assert_not_called()
 
 
 @pytest.mark.parametrize(
@@ -2096,6 +2129,38 @@ async def test_energy_stream_unload_unsubscribes_and_closes_stream(
     tariff_unsub.assert_called_once()
     totals_unsub.assert_called_once()
     mock_close.assert_called_once()
+
+
+async def test_energy_stream_stop_does_not_fail_coordinators(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    mock_stream_listen: MagicMock,
+    mock_add_connection_listener: MagicMock,
+    mock_energy_totals_stream: MagicMock,
+) -> None:
+    """Stopping Home Assistant does not fail the energy coordinators."""
+
+    async def listen() -> None:
+        # Like the library, report a disconnect when the listen task ends.
+        try:
+            await asyncio.Event().wait()
+        finally:
+            mock_add_connection_listener.send(False)
+
+    mock_stream_listen.side_effect = listen
+    await setup_platform(hass, [Platform.SENSOR, Platform.CALENDAR])
+    mock_energy_totals_stream.send()
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.energy_site_solar_power").state == "1.185"
+    assert hass.states.get("calendar.energy_site_buy_tariff").state != STATE_UNAVAILABLE
+    assert hass.states.get("sensor.energy_site_battery_discharged").state == "0.036"
+
+    await hass.async_stop()
+
+    assert hass.states.get("sensor.energy_site_solar_power").state == "1.185"
+    assert hass.states.get("calendar.energy_site_buy_tariff").state != STATE_UNAVAILABLE
+    assert hass.states.get("sensor.energy_site_battery_discharged").state == "0.036"
+    assert "Disconnected from the Teslemetry stream" not in caplog.text
 
 
 async def test_energy_stream_disconnect_marks_unavailable_and_recovers(

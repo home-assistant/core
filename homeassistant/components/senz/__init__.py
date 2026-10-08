@@ -4,7 +4,7 @@ from http import HTTPStatus
 import logging
 
 from aiohttp import ClientResponseError
-from httpx import HTTPStatusError, RequestError
+from httpx2 import HTTPStatusError, RequestError
 import jwt
 from pysenz import SENZAPI
 

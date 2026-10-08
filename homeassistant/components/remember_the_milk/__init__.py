@@ -15,7 +15,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     Platform,
 )
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, async_noop
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
@@ -38,13 +38,14 @@ PLATFORMS = [Platform.TODO]
 RTM_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_NAME): cv.string,
-        probatio.Required(CONF_API_KEY): cv.string,
-        probatio.Required(CONF_SHARED_SECRET): cv.string,
+        probatio.Required(probatio.Secret(CONF_API_KEY)): cv.string,
+        probatio.Required(probatio.Secret(CONF_SHARED_SECRET)): cv.string,
     }
 )
 
 CONFIG_SCHEMA = probatio.Schema(
-    {DOMAIN: probatio.All(cv.ensure_list, [RTM_SCHEMA])}, extra=probatio.ALLOW_EXTRA
+    {DOMAIN: probatio.All(probatio.EnsureList(), [RTM_SCHEMA])},
+    extra=probatio.ALLOW_EXTRA,
 )
 
 SERVICE_CREATE_TASK = "create_task"
@@ -203,7 +204,7 @@ async def async_setup_entry(
     await coordinator.async_config_entry_first_refresh()
     # Keep the coordinator polling even when there are no todo entities so that
     # lists created later in RTM are discovered and synced to subentries.
-    entry.async_on_unload(coordinator.async_add_listener(lambda: None))
+    entry.async_on_unload(coordinator.async_add_listener(async_noop))
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

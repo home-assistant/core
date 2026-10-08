@@ -20,10 +20,12 @@ from .entity import MyPVSetupEntity
 NUMBER_DESCRIPTIONS: Final[dict[str, dict[str, Any]]] = {
     "bsttemp": {
         "device_class": NumberDeviceClass.TEMPERATURE,
+        "entity_category": EntityCategory.CONFIG,
         "translation_key": "ww1boost",
     },
     "ww1boost": {
         "device_class": NumberDeviceClass.TEMPERATURE,
+        "entity_category": EntityCategory.CONFIG,
         "translation_key": "ww1boost",
     },
     "ww_boost_h": {

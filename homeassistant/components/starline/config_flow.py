@@ -113,7 +113,8 @@ class StarlineFlowHandler(ConfigFlow, domain=DOMAIN):
                         CONF_APP_ID, default=self._app_id or probatio.UNDEFINED
                     ): str,
                     probatio.Required(
-                        CONF_APP_SECRET, default=self._app_secret or probatio.UNDEFINED
+                        probatio.Secret(CONF_APP_SECRET),
+                        default=self._app_secret or probatio.UNDEFINED,
                     ): str,
                 }
             ),
@@ -138,7 +139,8 @@ class StarlineFlowHandler(ConfigFlow, domain=DOMAIN):
                         CONF_USERNAME, default=self._username or probatio.UNDEFINED
                     ): str,
                     probatio.Required(
-                        CONF_PASSWORD, default=self._password or probatio.UNDEFINED
+                        probatio.Secret(CONF_PASSWORD),
+                        default=self._password or probatio.UNDEFINED,
                     ): str,
                 }
             ),

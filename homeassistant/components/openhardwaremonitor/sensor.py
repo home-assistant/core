@@ -41,7 +41,7 @@ OHM_NAME = "Text"
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         probatio.Required(CONF_HOST): cv.string,
-        probatio.Optional(CONF_PORT, default=8085): cv.port,
+        probatio.Optional(CONF_PORT, default=8085): probatio.Port(),
     }
 )
 

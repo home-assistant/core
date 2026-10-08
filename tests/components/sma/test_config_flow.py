@@ -195,6 +195,26 @@ async def test_dhcp_already_configured(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_dhcp_updates_host(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test DHCP discovery updates the host of a device that changed IP address."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_DHCP},
+        data=DhcpServiceInfo(
+            ip="1.1.1.2", hostname="SMA123456789", macaddress="0015bb00abcd"
+        ),
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert mock_config_entry.data[CONF_HOST] == "1.1.1.2"
+
+
 async def test_dhcp_already_configured_duplicate(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -220,6 +240,36 @@ async def test_dhcp_already_configured_duplicate(
     assert mock_config_entry.data.get(CONF_MAC) == format_mac(
         DHCP_DISCOVERY_DUPLICATE_001.macaddress
     )
+
+
+@pytest.mark.parametrize(
+    ("hostname", "result_type"),
+    [
+        pytest.param("SMA987654321", FlowResultType.FORM, id="other_serial"),
+        pytest.param("evcharger", FlowResultType.ABORT, id="not_sma"),
+    ],
+)
+async def test_dhcp_other_device_on_same_host(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    hostname: str,
+    result_type: FlowResultType,
+) -> None:
+    """Test another device on the host of an entry doesn't change that entry."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_DHCP},
+        data=DhcpServiceInfo(
+            ip=mock_config_entry.data[CONF_HOST],
+            hostname=hostname,
+            macaddress="0015bb00ffff",
+        ),
+    )
+
+    assert result["type"] is result_type
+    assert CONF_MAC not in mock_config_entry.data
 
 
 @pytest.mark.parametrize(

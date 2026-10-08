@@ -31,6 +31,7 @@ from .const import SITE_INFO, SITE_INFO_MULTI_SEASON, SITE_INFO_WEEK_CROSSING
 ENTITY_BUY = "calendar.energy_site_buy_tariff"
 ENTITY_SELL = "calendar.energy_site_sell_tariff"
 ENTITY_OPERATION_MODE = "select.energy_site_operation_mode"
+SITE_TIME_ZONE = dt_util.get_time_zone("Australia/Brisbane")
 
 TARIFF_V2 = SITE_INFO["response"]["tariff_content_v2"]
 SLIM_SITE_INFO = {
@@ -141,12 +142,33 @@ async def test_calendar(
     mock_legacy: AsyncMock,
 ) -> None:
     """Tests that the calendar entity is correct."""
-    tz = dt_util.get_default_time_zone()
+    tz = SITE_TIME_ZONE
     freezer.move_to(datetime(2024, 1, 1, 10, 0, 0, tzinfo=tz))
 
     entry = await setup_platform(hass, [Platform.CALENDAR])
 
     assert_entities(hass, entry.entry_id, entity_registry, snapshot)
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_calendar_site_time_zone(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_legacy: AsyncMock,
+) -> None:
+    """Test the tariff is evaluated in the site timezone, not the Home Assistant one."""
+    await hass.config.async_set_time_zone("US/Pacific")
+    # 17:00 at the Australia/Brisbane site, inside ON_PEAK 16-21
+    freezer.move_to("2024-01-01T07:00:00Z")
+
+    await setup_platform(hass, [Platform.CALENDAR])
+
+    state = hass.states.get(ENTITY_BUY)
+    assert state
+    assert state.state == "on"
+    assert state.attributes["message"] == "On peak: 0.22/kWh"
+    assert state.attributes["start_time"] == "2023-12-31 22:00:00"
+    assert state.attributes["end_time"] == "2024-01-01 03:00:00"
 
 
 @pytest.mark.parametrize(
@@ -172,7 +194,7 @@ async def test_calendar_events(
     time_tuple: tuple,
 ) -> None:
     """Tests that the energy tariff calendar entity events are correct."""
-    tz = dt_util.get_default_time_zone()
+    tz = SITE_TIME_ZONE
     freezer.move_to(datetime(*time_tuple, tzinfo=tz))
 
     await setup_platform(hass, [Platform.CALENDAR])
@@ -383,7 +405,7 @@ async def test_calendar_midnight_crossing_local_start(
     mock_legacy: AsyncMock,
 ) -> None:
     """Test async_get_events includes overnight period at local midnight."""
-    tz = dt_util.get_default_time_zone()
+    tz = SITE_TIME_ZONE
     freezer.move_to(datetime(2024, 1, 1, 10, 0, 0, tzinfo=tz))
 
     await setup_platform(hass, [Platform.CALENDAR])
@@ -435,7 +457,7 @@ async def test_calendar_end_of_day_period(
     mock_site_info_end_of_day: AsyncMock,
 ) -> None:
     """Test a tariff period ending at the day boundary parses instead of crashing."""
-    tz = dt_util.get_default_time_zone()
+    tz = SITE_TIME_ZONE
     # Sunday 23:45, inside the 23:30->24:00 end-of-day period
     freezer.move_to(datetime(2024, 1, 7, 23, 45, 0, tzinfo=tz))
 

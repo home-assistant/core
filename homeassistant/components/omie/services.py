@@ -39,7 +39,7 @@ SERVICE_GET_PRICES_SCHEMA: Final = probatio.Schema(
         probatio.Required(ATTR_DATE): cv.date,
         probatio.Required(
             ATTR_COUNTRIES, default=[Country.ES, Country.PT]
-        ): probatio.All(cv.ensure_list, [probatio.Coerce(Country)]),
+        ): probatio.All(probatio.EnsureList(), [probatio.Coerce(Country)]),
     }
 )
 

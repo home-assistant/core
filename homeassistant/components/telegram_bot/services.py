@@ -127,21 +127,25 @@ ATTR_PARSER_SCHEMA = probatio.All(
 
 BASE_SERVICE_SCHEMA = probatio.Schema(
     {
-        probatio.Optional(ATTR_ENTITY_ID): probatio.All(cv.ensure_list, [cv.string]),
+        probatio.Optional(ATTR_ENTITY_ID): probatio.All(
+            probatio.EnsureList(), [cv.string]
+        ),
         probatio.Optional(ATTR_TARGET): probatio.All(
-            cv.ensure_list, [probatio.Coerce(int)]
+            probatio.EnsureList(), [probatio.Coerce(int)]
         ),
         probatio.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
         probatio.Optional(ATTR_CHAT_ID): probatio.All(
-            cv.ensure_list, [probatio.Coerce(int)]
+            probatio.EnsureList(), [probatio.Coerce(int)]
         ),
         probatio.Optional(ATTR_PARSER): ATTR_PARSER_SCHEMA,
         probatio.Optional(ATTR_DISABLE_NOTIF): cv.boolean,
         probatio.Optional(ATTR_DISABLE_WEB_PREV): cv.boolean,
         probatio.Optional(ATTR_RESIZE_KEYBOARD): cv.boolean,
         probatio.Optional(ATTR_ONE_TIME_KEYBOARD): cv.boolean,
-        probatio.Optional(ATTR_KEYBOARD): probatio.All(cv.ensure_list, [cv.string]),
-        probatio.Optional(ATTR_KEYBOARD_INLINE): cv.ensure_list,
+        probatio.Optional(ATTR_KEYBOARD): probatio.All(
+            probatio.EnsureList(), [cv.string]
+        ),
+        probatio.Optional(ATTR_KEYBOARD_INLINE): probatio.EnsureList(),
         probatio.Optional(ATTR_TIMEOUT): cv.positive_int,
         probatio.Optional(ATTR_MESSAGE_TAG): cv.string,
         probatio.Optional(ATTR_MESSAGE_THREAD_ID): probatio.Coerce(int),
@@ -161,13 +165,15 @@ SERVICE_SCHEMA_SEND_MESSAGE = probatio.All(
 
 SERVICE_SCHEMA_SEND_MESSAGE_DRAFT = probatio.Schema(
     {
-        probatio.Optional(ATTR_ENTITY_ID): probatio.All(cv.ensure_list, [cv.string]),
+        probatio.Optional(ATTR_ENTITY_ID): probatio.All(
+            probatio.EnsureList(), [cv.string]
+        ),
         probatio.Optional(ATTR_TARGET): probatio.All(
-            cv.ensure_list, [probatio.Coerce(int)]
+            probatio.EnsureList(), [probatio.Coerce(int)]
         ),
         probatio.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
         probatio.Optional(ATTR_CHAT_ID): probatio.All(
-            cv.ensure_list, [probatio.Coerce(int)]
+            probatio.EnsureList(), [probatio.Coerce(int)]
         ),
         probatio.Optional(ATTR_MESSAGE_THREAD_ID): probatio.Coerce(int),
         probatio.Required(ATTR_DRAFT_ID): probatio.All(
@@ -183,14 +189,14 @@ SERVICE_SCHEMA_SEND_CHAT_ACTION = probatio.All(
     probatio.Schema(
         {
             probatio.Optional(ATTR_ENTITY_ID): probatio.All(
-                cv.ensure_list, [cv.string]
+                probatio.EnsureList(), [cv.string]
             ),
             probatio.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
             probatio.Optional(ATTR_TARGET): probatio.All(
-                cv.ensure_list, [probatio.Coerce(int)]
+                probatio.EnsureList(), [probatio.Coerce(int)]
             ),
             probatio.Optional(ATTR_CHAT_ID): probatio.All(
-                cv.ensure_list, [probatio.Coerce(int)]
+                probatio.EnsureList(), [probatio.Coerce(int)]
             ),
             probatio.Required(ATTR_CHAT_ACTION): probatio.In(
                 (
@@ -232,13 +238,15 @@ SERVICE_SCHEMA_SEND_FILE = probatio.All(
 
 SERVICE_SCHEMA_SEND_MEDIA_GROUP = probatio.Schema(
     {
-        probatio.Optional(ATTR_ENTITY_ID): probatio.All(cv.ensure_list, [cv.string]),
+        probatio.Optional(ATTR_ENTITY_ID): probatio.All(
+            probatio.EnsureList(), [cv.string]
+        ),
         probatio.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
         probatio.Optional(ATTR_CHAT_ID): probatio.All(
-            cv.ensure_list, [probatio.Coerce(int)]
+            probatio.EnsureList(), [probatio.Coerce(int)]
         ),
         probatio.Required(ATTR_MEDIA): probatio.All(
-            cv.ensure_list,
+            probatio.EnsureList(),
             [
                 probatio.Schema(
                     {
@@ -293,17 +301,19 @@ SERVICE_SCHEMA_SEND_POLL = probatio.All(
     probatio.Schema(
         {
             probatio.Optional(ATTR_ENTITY_ID): probatio.All(
-                cv.ensure_list, [cv.string]
+                probatio.EnsureList(), [cv.string]
             ),
             probatio.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
             probatio.Optional(ATTR_CHAT_ID): probatio.All(
-                cv.ensure_list, [probatio.Coerce(int)]
+                probatio.EnsureList(), [probatio.Coerce(int)]
             ),
             probatio.Optional(ATTR_TARGET): probatio.All(
-                cv.ensure_list, [probatio.Coerce(int)]
+                probatio.EnsureList(), [probatio.Coerce(int)]
             ),
             probatio.Required(ATTR_QUESTION): cv.string,
-            probatio.Required(ATTR_OPTIONS): probatio.All(cv.ensure_list, [cv.string]),
+            probatio.Required(ATTR_OPTIONS): probatio.All(
+                probatio.EnsureList(), [cv.string]
+            ),
             probatio.Optional(ATTR_OPEN_PERIOD): cv.positive_int,
             probatio.Optional(ATTR_IS_ANONYMOUS, default=True): cv.boolean,
             probatio.Optional(ATTR_ALLOWS_MULTIPLE_ANSWERS, default=False): cv.boolean,
@@ -319,7 +329,7 @@ SERVICE_SCHEMA_EDIT_MESSAGE = probatio.All(
     probatio.Schema(
         {
             probatio.Optional(ATTR_ENTITY_ID): probatio.All(
-                cv.ensure_list, [cv.string]
+                probatio.EnsureList(), [cv.string]
             ),
             probatio.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
             probatio.Optional(ATTR_TITLE): cv.string,
@@ -329,7 +339,7 @@ SERVICE_SCHEMA_EDIT_MESSAGE = probatio.All(
             ),
             probatio.Optional(ATTR_CHAT_ID): probatio.Coerce(int),
             probatio.Optional(ATTR_PARSER): ATTR_PARSER_SCHEMA,
-            probatio.Optional(ATTR_KEYBOARD_INLINE): cv.ensure_list,
+            probatio.Optional(ATTR_KEYBOARD_INLINE): probatio.EnsureList(),
             probatio.Optional(ATTR_DISABLE_WEB_PREV): cv.boolean,
         }
     ),
@@ -340,7 +350,7 @@ SERVICE_SCHEMA_EDIT_MESSAGE_MEDIA = probatio.All(
     probatio.Schema(
         {
             probatio.Optional(ATTR_ENTITY_ID): probatio.All(
-                cv.ensure_list, [cv.string]
+                probatio.EnsureList(), [cv.string]
             ),
             probatio.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
             probatio.Required(ATTR_MESSAGE_ID): probatio.Any(
@@ -364,14 +374,16 @@ SERVICE_SCHEMA_EDIT_MESSAGE_MEDIA = probatio.All(
             probatio.Optional(ATTR_PASSWORD): cv.string,
             probatio.Optional(ATTR_AUTHENTICATION): cv.string,
             probatio.Optional(ATTR_VERIFY_SSL): cv.boolean,
-            probatio.Optional(ATTR_KEYBOARD_INLINE): cv.ensure_list,
+            probatio.Optional(ATTR_KEYBOARD_INLINE): probatio.EnsureList(),
         }
     ),
 )
 
 SERVICE_SCHEMA_EDIT_CAPTION = probatio.Schema(
     {
-        probatio.Optional(ATTR_ENTITY_ID): probatio.All(cv.ensure_list, [cv.string]),
+        probatio.Optional(ATTR_ENTITY_ID): probatio.All(
+            probatio.EnsureList(), [cv.string]
+        ),
         probatio.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
         probatio.Required(ATTR_MESSAGE_ID): probatio.Any(
             cv.positive_int, probatio.All(cv.string, "last")
@@ -379,19 +391,21 @@ SERVICE_SCHEMA_EDIT_CAPTION = probatio.Schema(
         probatio.Optional(ATTR_CHAT_ID): probatio.Coerce(int),
         probatio.Optional(ATTR_PARSER): ATTR_PARSER_SCHEMA,
         probatio.Required(ATTR_CAPTION): cv.string,
-        probatio.Optional(ATTR_KEYBOARD_INLINE): cv.ensure_list,
+        probatio.Optional(ATTR_KEYBOARD_INLINE): probatio.EnsureList(),
     }
 )
 
 SERVICE_SCHEMA_EDIT_REPLYMARKUP = probatio.Schema(
     {
-        probatio.Optional(ATTR_ENTITY_ID): probatio.All(cv.ensure_list, [cv.string]),
+        probatio.Optional(ATTR_ENTITY_ID): probatio.All(
+            probatio.EnsureList(), [cv.string]
+        ),
         probatio.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
         probatio.Required(ATTR_MESSAGE_ID): probatio.Any(
             cv.positive_int, probatio.All(cv.string, "last")
         ),
         probatio.Optional(ATTR_CHAT_ID): probatio.Coerce(int),
-        probatio.Required(ATTR_KEYBOARD_INLINE): cv.ensure_list,
+        probatio.Required(ATTR_KEYBOARD_INLINE): probatio.EnsureList(),
     }
 )
 
@@ -406,7 +420,9 @@ SERVICE_SCHEMA_ANSWER_CALLBACK_QUERY = probatio.Schema(
 
 SERVICE_SCHEMA_DELETE_MESSAGE = probatio.Schema(
     {
-        probatio.Optional(ATTR_ENTITY_ID): probatio.All(cv.ensure_list, [cv.string]),
+        probatio.Optional(ATTR_ENTITY_ID): probatio.All(
+            probatio.EnsureList(), [cv.string]
+        ),
         probatio.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
         probatio.Optional(ATTR_CHAT_ID): probatio.Coerce(int),
         probatio.Required(ATTR_MESSAGE_ID): probatio.Any(
@@ -417,7 +433,9 @@ SERVICE_SCHEMA_DELETE_MESSAGE = probatio.Schema(
 
 SERVICE_SCHEMA_LEAVE_CHAT = probatio.Schema(
     {
-        probatio.Optional(ATTR_ENTITY_ID): probatio.All(cv.ensure_list, [cv.string]),
+        probatio.Optional(ATTR_ENTITY_ID): probatio.All(
+            probatio.EnsureList(), [cv.string]
+        ),
         probatio.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
         probatio.Optional(ATTR_CHAT_ID): probatio.Coerce(int),
     }

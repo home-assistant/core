@@ -709,7 +709,23 @@ class RoborockB01Q7UpdateCoordinator(RoborockDataUpdateCoordinatorB01):
                 translation_domain=DOMAIN,
                 translation_key="update_data_fail",
             )
+        await self.async_refresh_q7_map()
         return data
+
+    async def async_refresh_q7_map(self) -> bool:
+        """Refresh the Q7 map list and map content traits.
+
+        Returns True when the traits were refreshed without errors.
+        Never raises; callers fall back to the cached trait values on failure.
+        """
+        try:
+            await self.api.map.refresh()
+            if self.api.map.current_map_id is not None:
+                await self.api.map_content.refresh()
+        except RoborockException as ex:
+            _LOGGER.debug("Failed to refresh Q7 map: %s", ex)
+            return False
+        return True
 
 
 class RoborockB01Q10UpdateCoordinator(DataUpdateCoordinator[None]):
