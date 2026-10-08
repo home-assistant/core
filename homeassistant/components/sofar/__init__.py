@@ -28,6 +28,7 @@ from homeassistant.helpers import (
     restore_state,
 )
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .const import (
     CONF_UNIT_ID,
@@ -181,6 +182,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> boo
     try:
         await readings.async_config_entry_first_refresh()
     except ConfigEntryNotReady as err:
+        if not isinstance(err.__cause__, UpdateFailed):
+            raise
         answered = False
         _LOGGER.info(
             "%s: inverter is not answering, setting up without it: %s",

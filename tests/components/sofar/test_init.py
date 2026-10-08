@@ -493,6 +493,21 @@ async def test_no_pack_is_removable_while_asleep(
     assert device_registry.async_get(device.id) is not None
 
 
+@pytest.mark.usefixtures("mock_get_unit")
+async def test_setup_retries_on_an_unexpected_error(
+    hass: HomeAssistant,
+    mock_connection: MockModbusConnection,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test an unexpected poll error is not taken for a sleeping inverter."""
+    mock_config_entry.add_to_hass(hass)
+    mock_connection.for_unit(1).fail_requests(ValueError("bug"))
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
 async def test_settings_failure_does_not_block_reading_sensors(
     hass: HomeAssistant,
     mock_connection: MockModbusConnection,
