@@ -23,9 +23,8 @@ from pylint.lint import PyLinter
 from pylint_home_assistant.helpers.module_info import is_test_module, parse_module
 
 _COORDINATOR_QNAME = "homeassistant.helpers.update_coordinator.DataUpdateCoordinator"
-_REFRESH_METHODS = frozenset(
-    {"async_refresh", "async_request_refresh", "_async_refresh"}
-)
+_PUBLIC_REFRESH_METHODS = frozenset({"async_refresh", "async_request_refresh"})
+_REFRESH_METHODS = _PUBLIC_REFRESH_METHODS | {"_async_refresh"}
 
 
 def _is_other_receiver(receiver: nodes.NodeNG) -> bool:
@@ -96,12 +95,13 @@ class CoordinatorAsyncRefresh(BaseChecker):
         if isinstance(node.parent, nodes.Attribute):
             return
 
-        # Positional arguments point at an unrelated method, such as
-        # ``info.async_refresh(now)``
+        # The public refresh methods take no arguments, so a call with
+        # arguments is an unrelated method, such as ``info.async_refresh(now)``
         if (
-            isinstance(node.parent, nodes.Call)
+            node.attrname in _PUBLIC_REFRESH_METHODS
+            and isinstance(node.parent, nodes.Call)
             and node.parent.func is node
-            and node.parent.args
+            and (node.parent.args or node.parent.keywords)
         ):
             return
 

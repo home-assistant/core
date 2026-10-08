@@ -58,6 +58,14 @@ def test_refresh(info, now):
         ),
         pytest.param(
             """
+def test_refresh(info, now):
+    info.async_refresh(now=now)
+""",
+            "tests.components.sun.test_sensor",
+            id="with_keyword_arguments",
+        ),
+        pytest.param(
+            """
 class MockRefresh:
     async def async_refresh(self):
         pass
@@ -168,6 +176,13 @@ async def test_refresh(coordinator):
     await coordinator._async_refresh(log_failures=False)
 """,
             id="private_refresh",
+        ),
+        pytest.param(
+            """
+async def test_refresh(coordinator):
+    await coordinator._async_refresh(False)
+""",
+            id="private_refresh_positional",
         ),
         pytest.param(
             """
