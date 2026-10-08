@@ -22,6 +22,7 @@
 .battery_threshold_number: &battery_threshold_number
   min: 0
   max: 100
+  step: any
   mode: slider
   unit_of_measurement: "%"
 
