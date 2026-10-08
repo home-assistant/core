@@ -19,6 +19,7 @@ from homeassistant.components.daikin_onecta.const import (
 )
 from homeassistant.config_entries import SOURCE_ZEROCONF
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.setup import async_setup_component
 
@@ -214,6 +215,81 @@ async def test_invalid_oauth_token(
 
     assert result["type"] == "abort"
     assert result["reason"] == "invalid_token"
+
+
+async def test_reauth_confirm_form(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Show the reauthentication confirmation form."""
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "entry_id": config_entry.entry_id,
+        },
+        data=config_entry.data,
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "reauth_confirm"
+
+
+async def test_reauth_oauth_create_entry(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Update the existing entry after successful reauthentication."""
+    hass.config_entries.async_update_entry(config_entry, unique_id="1234567890")
+    config_entry.add_to_hass(hass)
+    flow = config_entries.HANDLERS[DOMAIN]()
+    flow.hass = hass
+    flow.context = {
+        "source": config_entries.SOURCE_REAUTH,
+        "entry_id": config_entry.entry_id,
+    }
+    data = {
+        "auth_implementation": "cloud",
+        "token": {
+            "access_token": FAKE_ACCESS_TOKEN,
+            "refresh_token": "new-refresh-token",
+        },
+    }
+
+    with patch.object(hass.config_entries, "async_reload") as reload_entry:
+        result = await flow.async_oauth_create_entry(data)
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "reauth_successful"
+    assert config_entry.data == data
+    reload_entry.assert_called_once_with(config_entry.entry_id)
+
+
+async def test_reauth_rejects_different_account(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Reject reauthentication with a different Daikin account."""
+    hass.config_entries.async_update_entry(config_entry, unique_id="expected-account")
+    config_entry.add_to_hass(hass)
+    flow = config_entries.HANDLERS[DOMAIN]()
+    flow.hass = hass
+    flow.context = {
+        "source": config_entries.SOURCE_REAUTH,
+        "entry_id": config_entry.entry_id,
+    }
+
+    with (
+        patch(
+            "homeassistant.components.daikin_onecta.config_flow.get_account_id",
+            return_value="different-account",
+        ),
+        pytest.raises(AbortFlow) as err,
+    ):
+        await flow.async_oauth_create_entry(
+            {"token": {"access_token": FAKE_ACCESS_TOKEN}}
+        )
+
+    assert err.value.reason == "wrong_account"
 
 
 async def test_zeroconf_already_configured(
