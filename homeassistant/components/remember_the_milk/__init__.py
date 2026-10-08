@@ -164,7 +164,7 @@ async def async_setup_entry(
     except AioRTMError as err:
         raise ConfigEntryNotReady from err
 
-    # The entity is deprecated in favor of the todo platform.
+    # The entity will be deprecated when a todo platform is added.
     entity = RememberTheMilkEntity(
         name=account_name,
         client=client,
