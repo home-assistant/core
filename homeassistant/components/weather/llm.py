@@ -296,7 +296,11 @@ class GetForecastTool(Tool):
         return ToolResult(
             data=cast(
                 dict[str, JsonValueType],
-                {"forecast": matching_forecast, "units": units},
+                {
+                    "forecast": matching_forecast,
+                    "cadence": forecast_type,
+                    "units": units,
+                },
             )
         )
 

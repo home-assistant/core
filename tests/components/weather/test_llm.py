@@ -118,6 +118,7 @@ async def test_get_forecast_tool(hass: HomeAssistant) -> None:
             "temperature": None,
         }
     ]
+    assert response.data["cadence"] == "daily"
     assert response.data["units"].keys() == FORECAST_UNIT_KEYS
 
 
@@ -139,6 +140,9 @@ async def test_get_forecast_tool_auto_selects_supported_cadence(
         _llm_context(),
     )
     assert response.data["forecast"][0]["condition"] == "sunny"
+    # The model needs this to know the forecast covers the whole day, not
+    # specifically the afternoon, since only a daily cadence was available.
+    assert response.data["cadence"] == "daily"
 
 
 async def test_get_forecast_tool_selects_twice_daily_cadence(
@@ -670,27 +674,30 @@ async def test_get_forecast_tool_caps_interval_at_skipped_entry_gap(
     An entry's interval is normally capped by the next entry's start, but if
     the provider skips an entry the gap to the next one is wider than a
     single cadence step. The interval must still be capped at its own
-    cadence-derived end rather than stretched across the whole gap, or the
-    preceding day's forecast would be wrongly returned for a day with no
-    actual forecast data.
+    cadence-derived end rather than stretched across the whole gap, or a
+    preceding entry's forecast would be wrongly returned for a window with no
+    actual forecast data. Daily forecasts are matched by calendar date rather
+    than this elapsed-time interval logic, so this must use an hourly
+    cadence to actually exercise it.
     """
-    entity = await _create_weather_entity(hass, WeatherEntityFeature.FORECAST_DAILY)
+    entity = await _create_weather_entity(hass, WeatherEntityFeature.FORECAST_HOURLY)
     today = dt_util.start_of_local_day()
     entity.forecast_list = [
-        {"datetime": today.isoformat(), "condition": "rainy"},
-        # Day `today + 1` is skipped entirely by the provider.
-        {"datetime": (today + timedelta(days=2)).isoformat(), "condition": "cloudy"},
+        {"datetime": today.replace(hour=10).isoformat(), "condition": "rainy"},
+        # Hours 11-19 are skipped entirely by the provider.
+        {"datetime": today.replace(hour=20).isoformat(), "condition": "cloudy"},
     ]
     result = weather_llm.async_get_tools(hass, _llm_context(), "assist")
     assert result is not None
 
     response = await result.tools[0].async_call(
         hass,
-        llm_helper.ToolInput("weather__get_forecast", _tool_args("tomorrow")),
+        llm_helper.ToolInput("weather__get_forecast", _tool_args("this_afternoon")),
         _llm_context(),
     )
 
     assert not response.error
+    assert response.data["cadence"] == "hourly"
     assert response.data["forecast"] == []
 
 
