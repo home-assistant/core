@@ -143,7 +143,9 @@ SENSOR_TYPES: Final[tuple[FritzSensorEntityDescription, ...]] = (
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         suitable=lambda device: device.has_powermeter,
-        native_value=lambda device: round((device.power or 0.0) / 1000, 3),
+        native_value=lambda device: (
+            round(device.power / 1000, 3) if device.power is not None else None
+        ),
     ),
     FritzSensorEntityDescription(
         key="voltage",
@@ -151,7 +153,9 @@ SENSOR_TYPES: Final[tuple[FritzSensorEntityDescription, ...]] = (
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         suitable=lambda device: device.has_powermeter,
-        native_value=lambda device: round((device.voltage or 0.0) / 1000, 2),
+        native_value=lambda device: (
+            round(device.voltage / 1000, 2) if device.voltage is not None else None
+        ),
     ),
     FritzSensorEntityDescription(
         key="electric_current",
@@ -159,7 +163,9 @@ SENSOR_TYPES: Final[tuple[FritzSensorEntityDescription, ...]] = (
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
         suitable=lambda device: device.has_powermeter,
-        native_value=lambda device: round((device.current or 0.0) / 1000, 3),
+        native_value=lambda device: (
+            round(device.current / 1000, 3) if device.current is not None else None
+        ),
     ),
     FritzSensorEntityDescription(
         key="total_energy",
@@ -167,7 +173,8 @@ SENSOR_TYPES: Final[tuple[FritzSensorEntityDescription, ...]] = (
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         suitable=lambda device: device.has_powermeter,
-        native_value=lambda device: (device.energy or 0.0) / 1000,
+        # a cumulative meter never reports 0, so treat it as missing data
+        native_value=lambda device: device.energy / 1000 if device.energy else None,
     ),
     # Thermostat Sensors
     FritzSensorEntityDescription(
