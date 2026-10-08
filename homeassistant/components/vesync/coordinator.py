@@ -81,9 +81,8 @@ class VeSyncDataCoordinator(DataUpdateCoordinator[None]):
     async def _async_update_data(self) -> None:
         """Fetch data from API endpoint."""
         try:
-            devices = [
-                device for device in self.manager.devices if not self._is_held(device)
-            ]
+            all_devices = list(self.manager.devices)
+            devices = [device for device in all_devices if not self._is_held(device)]
             results = await asyncio.gather(
                 *(device.update() for device in devices), return_exceptions=True
             )
@@ -95,7 +94,7 @@ class VeSyncDataCoordinator(DataUpdateCoordinator[None]):
                 elif isinstance(result, BaseException):
                     raise result
             errors = [r for r in results if isinstance(r, VeSyncError)]
-            if devices and len(errors) == len(devices):
+            if errors and len(errors) == len(all_devices):
                 raise errors[0]
 
             if self.should_update_energy():
