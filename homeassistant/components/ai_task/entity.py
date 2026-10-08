@@ -19,7 +19,7 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.util import dt as dt_util
 
 from .const import DEFAULT_SYSTEM_PROMPT, DOMAIN, AITaskEntityFeature
-from .evaluation import EvaluationTask, EvaluationTaskResult, validate_result
+from .evaluation import EvaluationTask, EvaluationTaskResult
 from .task import GenDataTask, GenDataTaskResult, GenImageTask, GenImageTaskResult
 
 
@@ -146,14 +146,12 @@ class AITaskEntity(RestoreEntity):
     async def internal_async_evaluate(
         self, task: EvaluationTask, context: Context | None = None
     ) -> EvaluationTaskResult:
-        """Run an evaluation task and validate the answers."""
+        """Run an evaluation task."""
         if context is not None:
             self.async_set_context(context)
         self.__last_activity = dt_util.utcnow().isoformat()
         self.async_write_ha_state()
-        result = await self._async_evaluate(task)
-        validate_result(task, result)
-        return result
+        return await self._async_evaluate(task)
 
     async def _async_evaluate(self, task: EvaluationTask) -> EvaluationTaskResult:
         """Handle an evaluation task."""

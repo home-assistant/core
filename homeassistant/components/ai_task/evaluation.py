@@ -170,23 +170,3 @@ class EvaluationTaskResult:
 def _probability(value: float) -> bool:
     """Return whether a value is a finite probability."""
     return type(value) in (int, float) and math.isfinite(value) and 0 <= value <= 1
-
-
-def _valid_answer(question: EvaluationQuestion, answer: EvaluationAnswer) -> bool:
-    """Validate an answer against its question."""
-    if question["type"] == "noul" and isinstance(answer, NoulAnswer):
-        return True
-    if question["type"] == "choice" and isinstance(answer, ChoiceAnswer):
-        return answer.probabilities.keys() == question["criteria"].keys()
-    if question["type"] == "score" and isinstance(answer, ScoreAnswer):
-        return len(answer.probabilities) == len(question["criteria"])
-    return False
-
-
-def validate_result(task: EvaluationTask, result: EvaluationTaskResult) -> None:
-    """Reject incomplete or invalid provider results."""
-    if result.answers.keys() != task.questions.keys():
-        raise HomeAssistantError("Evaluation did not return every requested answer")
-    for question_id, question in task.questions.items():
-        if not _valid_answer(question, result.answers[question_id]):
-            raise HomeAssistantError(f"Invalid evaluation answer for {question_id}")
