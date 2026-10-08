@@ -150,7 +150,7 @@ class LgAcClimateEntity(
     """LG AC climate entity controlled via infrared emitter."""
 
     _attr_name = None
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_target_temperature_step = 1.0
     _attr_min_temp = float(MIN_TEMP)
     _attr_max_temp = float(MAX_TEMP)
@@ -179,7 +179,7 @@ class LgAcClimateEntity(
         )
         self._attr_hvac_modes = [HVACMode.OFF] + [HVACMode(m) for m in configured_modes]
         self._attr_hvac_mode = HVACMode.OFF
-        self._attr_target_temperature = float(MIN_TEMP)
+        self._attr_native_target_temperature = float(MIN_TEMP)
         self._attr_fan_mode = FAN_AUTO
         self._attr_swing_mode = SWING_OFF
         self._attr_swing_horizontal_mode = SWING_OFF
@@ -213,7 +213,7 @@ class LgAcClimateEntity(
         if (fan_mode := last_state.attributes.get(ATTR_FAN_MODE)) in _HA_FAN_TO_LIB:
             self._attr_fan_mode = fan_mode
         if (temperature := last_state.attributes.get(ATTR_TEMPERATURE)) is not None:
-            self._attr_target_temperature = float(temperature)
+            self._attr_native_target_temperature = float(temperature)
         if (swing := last_state.attributes.get(ATTR_SWING_MODE)) in _HA_SWING_TO_LIB:
             self._attr_swing_mode = swing
         if (
@@ -224,7 +224,7 @@ class LgAcClimateEntity(
     @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set HVAC mode."""
-        temp = int(self._attr_target_temperature or MIN_TEMP)
+        temp = int(self._attr_native_target_temperature or MIN_TEMP)
         await self._send_command(
             self._build_command(
                 _HA_MODE_TO_LIB[hvac_mode], temp, self._attr_fan_mode or FAN_AUTO
@@ -251,7 +251,7 @@ class LgAcClimateEntity(
             if hvac_mode is not None:
                 self._attr_hvac_mode = hvac_mode
 
-        self._attr_target_temperature = float(temp)
+        self._attr_native_target_temperature = float(temp)
         self.async_write_ha_state()
 
     @override
@@ -261,7 +261,7 @@ class LgAcClimateEntity(
             self._attr_hvac_mode or HVACMode.OFF, LgAcMode.OFF
         )
         if lib_mode is not LgAcMode.OFF:
-            temp = int(self._attr_target_temperature or MIN_TEMP)
+            temp = int(self._attr_native_target_temperature or MIN_TEMP)
             await self._send_command(self._build_command(lib_mode, temp, fan_mode))
         self._attr_fan_mode = fan_mode
         self.async_write_ha_state()
@@ -321,7 +321,7 @@ class LgAcClimateWithReceiver(LgAcClimateEntity, InfraredReceiverConsumerEntity)
         if command.fan is not None:
             self._attr_fan_mode = _LIB_FAN_TO_HA[command.fan]
         if command.temperature is not None:
-            self._attr_target_temperature = float(command.temperature)
+            self._attr_native_target_temperature = float(command.temperature)
 
         self.async_write_ha_state()
 
