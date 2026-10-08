@@ -522,6 +522,41 @@ async def test_get_forecast_tool_twice_daily_window_boundaries(
     assert conditions == ["rainy", "sunny"]
 
 
+@pytest.mark.freeze_time("2024-11-03T10:30:00+00:00")
+async def test_get_forecast_tool_preserves_twice_daily_period_across_fall_back_dst(
+    hass: HomeAssistant,
+) -> None:
+    """Test a twice-daily entry's full period is preserved across fall-back DST.
+
+    Twice-daily entries commonly represent local day/night boundaries, whose
+    elapsed length varies across a DST transition: 18:00 EDT to 06:00 EST
+    (the night of 2024-11-02/03 in America/New_York, when clocks fall back)
+    is 13 elapsed hours, not the nominal 12. Capping the entry at a fixed
+    12-hour duration instead of the next entry's own start would wrongly
+    return no forecast for a window beginning in that final hour.
+    """
+    await hass.config.async_set_time_zone("America/New_York")
+    entity = await _create_weather_entity(
+        hass, WeatherEntityFeature.FORECAST_TWICE_DAILY
+    )
+    entity.forecast_list = [
+        {"datetime": "2024-11-02T18:00:00-04:00", "condition": "foggy"},
+        {"datetime": "2024-11-03T06:00:00-05:00", "condition": "sunny"},
+    ]
+    result = weather_llm.async_get_tools(hass, _llm_context(), "assist")
+    assert result is not None
+
+    response = await result.tools[0].async_call(
+        hass,
+        llm_helper.ToolInput("weather__get_forecast", _tool_args("next_24_hours")),
+        _llm_context(),
+    )
+
+    assert not response.error
+    conditions = [entry["condition"] for entry in response.data["forecast"]]
+    assert conditions == ["foggy", "sunny"]
+
+
 async def test_get_forecast_tool_next_7_days_window_boundaries(
     hass: HomeAssistant,
 ) -> None:
@@ -655,17 +690,15 @@ async def test_get_forecast_tool_matches_daily_entries_by_entry_own_timezone(
 
 
 @pytest.mark.freeze_time("2024-03-10T20:00:00+00:00")
-async def test_get_forecast_tool_derives_interval_end_from_next_entry(
+async def test_get_forecast_tool_matches_daily_entries_across_spring_dst(
     hass: HomeAssistant,
 ) -> None:
-    """Test a daily entry's end is derived from the next entry, not a fixed duration.
+    """Test daily entries are matched by calendar date across a spring DST change.
 
-    2024-03-10 is the day clocks spring forward in America/New_York, so it is
-    only 23 hours long. Adding a fixed 24-hour duration to its midnight
-    timestamp (which providers supply with a fixed UTC offset) overshoots the
-    real calendar boundary by an hour, which would wrongly pull the previous
-    day's forecast into "tomorrow". Deriving the end from the following
-    entry's own (correctly offset) start avoids this.
+    2024-03-10 is the day clocks spring forward in America/New_York.
+    Matching by calendar date, rather than a literal 24-hour interval,
+    correctly assigns each entry to its own day regardless of the
+    transition.
     """
     await hass.config.async_set_time_zone("America/New_York")
     entity = await _create_weather_entity(hass, WeatherEntityFeature.FORECAST_DAILY)
@@ -689,16 +722,15 @@ async def test_get_forecast_tool_derives_interval_end_from_next_entry(
 
 
 @pytest.mark.freeze_time("2024-03-10T20:00:00+00:00")
-async def test_get_forecast_tool_final_entry_fallback_uses_local_calendar_time(
+async def test_get_forecast_tool_matches_final_daily_entry_across_spring_dst(
     hass: HomeAssistant,
 ) -> None:
-    """Test the final entry's duration fallback doesn't overshoot across DST.
+    """Test the final daily entry is still matched by calendar date across DST.
 
-    When there's no following entry to derive an end from, the fallback must
-    still respect the real calendar boundary: a truncated forecast whose last
-    entry is the DST-shortened 2024-03-10 (America/New_York) must not leak
-    into "tomorrow" just because adding a fixed 24-hour duration to its
-    fixed-offset timestamp overshoots local midnight by an hour.
+    A truncated forecast whose last entry is the DST-shortened 2024-03-10
+    (America/New_York) must not be matched for "tomorrow" (March 11):
+    matching is by the entry's own calendar date, which the spring DST
+    change doesn't affect.
     """
     await hass.config.async_set_time_zone("America/New_York")
     entity = await _create_weather_entity(hass, WeatherEntityFeature.FORECAST_DAILY)

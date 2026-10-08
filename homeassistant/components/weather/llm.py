@@ -238,14 +238,18 @@ class GetForecastTool(Tool):
                 # repeated 01:00-01:59 hour), overshooting the real end.
                 cadence_end = dt_util.as_utc(entry_start) + duration
                 if index + 1 < len(forecast):
-                    # Cap at the cadence-derived end in case the provider
-                    # skipped an entry, which would otherwise stretch this
-                    # entry's stale data across the whole (larger) gap to
-                    # the next one.
-                    entry_end = min(
-                        _forecast_datetime(forecast[index + 1]["datetime"]),
-                        cadence_end,
-                    )
+                    next_start = _forecast_datetime(forecast[index + 1]["datetime"])
+                    # Twice-daily entries commonly represent local day/night
+                    # boundaries, whose elapsed length varies by up to an
+                    # hour across a DST transition, so prefer the next
+                    # entry's own start over the fixed cadence duration. Only
+                    # fall back to the cadence-derived end if the gap is
+                    # much larger than expected, which signals the provider
+                    # skipped an entry rather than a DST-shifted period.
+                    if next_start - entry_start > duration * 1.5:
+                        entry_end = cadence_end
+                    else:
+                        entry_end = next_start
                 else:
                     entry_end = cadence_end
                 matched = entry_start < end and entry_end > start
