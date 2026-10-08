@@ -31,12 +31,14 @@ from homeassistant.exceptions import (
 )
 from homeassistant.helpers import (
     config_entry_oauth2_flow,
+    config_validation as cv,
     device_registry as dr,
     entity_registry as er,
     issue_registry as ir,
 )
 from homeassistant.helpers.config_entry_oauth2_flow import MY_AUTH_CALLBACK_PATH
 from homeassistant.helpers.storage import STORAGE_DIR
+from homeassistant.helpers.typing import ConfigType
 
 from .api import ConfigEntryAuth
 from .const import (
@@ -48,6 +50,7 @@ from .const import (
     VIESSMANN_DEVELOPER_PORTAL,
 )
 from .coordinator import ViCareCoordinator
+from .services import async_setup_services
 from .types import ViCareConfigEntry, ViCareData, ViCareDevice
 from .utils import get_device_serial
 
@@ -124,6 +127,15 @@ async def async_migrate_entry(
         hass.config_entries.async_update_entry(config_entry, version=2, minor_version=1)
         _LOGGER.debug("Promoted pre-merge ViCare config entry from 1.3 to 2.1")
 
+    return True
+
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Viessmann ViCare integration."""
+    async_setup_services(hass)
     return True
 
 
