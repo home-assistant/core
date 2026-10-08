@@ -12,6 +12,7 @@ from homeassistant.components.homekit.const import (
     CONF_AUDIO_PACKET_SIZE,
     CONF_FEATURE,
     CONF_FEATURE_LIST,
+    CONF_FLOOR_RGB_COLOR,
     CONF_LINKED_BATTERY_SENSOR,
     CONF_LINKED_DOORBELL_SENSOR,
     CONF_LINKED_MOTION_SENSOR,
@@ -21,6 +22,7 @@ from homeassistant.components.homekit.const import (
     CONF_MAX_FPS,
     CONF_MAX_HEIGHT,
     CONF_MAX_WIDTH,
+    CONF_RGB_BELOW_KELVIN,
     CONF_STREAM_COUNT,
     CONF_SUPPORT_AUDIO,
     CONF_THRESHOLD_CO,
@@ -29,6 +31,7 @@ from homeassistant.components.homekit.const import (
     CONF_VIDEO_MAP,
     CONF_VIDEO_PACKET_SIZE,
     CONF_VIDEO_PROFILE_NAMES,
+    CONF_WARM_RGB_COLOR,
     DEFAULT_AUDIO_CODEC,
     DEFAULT_AUDIO_MAP,
     DEFAULT_AUDIO_PACKET_SIZE,
@@ -558,3 +561,29 @@ async def test_lock_state_needs_accessory_mode(hass: HomeAssistant) -> None:
     """Test that locks are setup as accessories."""
     hass.states.async_set("lock.mine", "locked")
     assert state_needs_accessory_mode(hass.states.get("lock.mine")) is True
+
+
+def test_validate_entity_config_warm_rgb_color() -> None:
+    """The warm colour and its floor are only accepted together."""
+    assert vec(
+        {
+            "light.demo": {
+                CONF_RGB_BELOW_KELVIN: 2700,
+                CONF_WARM_RGB_COLOR: [255, 124, 7],
+                CONF_FLOOR_RGB_COLOR: [255, 130, 30],
+            }
+        }
+    )["light.demo"][CONF_FLOOR_RGB_COLOR] == (255, 130, 30)
+    for config in (
+        {CONF_RGB_BELOW_KELVIN: 2700},
+        {CONF_WARM_RGB_COLOR: [255, 124, 7]},
+        {CONF_RGB_BELOW_KELVIN: 2700, CONF_WARM_RGB_COLOR: [255, 124]},
+        {CONF_RGB_BELOW_KELVIN: 2700, CONF_WARM_RGB_COLOR: [256, 124, 7]},
+        {
+            CONF_RGB_BELOW_KELVIN: 2700,
+            CONF_WARM_RGB_COLOR: [255, 124, 7],
+            CONF_FLOOR_RGB_COLOR: [255, 130],
+        },
+    ):
+        with pytest.raises(probatio.Invalid):
+            vec({"light.demo": config})
