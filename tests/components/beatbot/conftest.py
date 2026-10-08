@@ -4,13 +4,10 @@ from collections.abc import Generator
 import time
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from beatbot_cloud.const import OAUTH2_CLIENT_ID
 import pytest
 
 from homeassistant.components.application_credentials import (
     DOMAIN as APPLICATION_CREDENTIALS_DOMAIN,
-    ClientCredential,
-    async_import_client_credential,
 )
 from homeassistant.components.beatbot.const import DOMAIN
 from homeassistant.core import HomeAssistant
@@ -34,11 +31,8 @@ def mock_http_session(aioclient_mock: AiohttpClientMocker) -> AiohttpClientMocke
 
 @pytest.fixture(autouse=True)
 async def setup_credentials(hass: HomeAssistant) -> None:
-    """Register the Beatbot OAuth implementation."""
+    """Set up the credential store without pre-registering Beatbot."""
     assert await async_setup_component(hass, APPLICATION_CREDENTIALS_DOMAIN, {})
-    await async_import_client_credential(
-        hass, DOMAIN, ClientCredential(OAUTH2_CLIENT_ID, ""), DOMAIN
-    )
 
 
 @pytest.fixture

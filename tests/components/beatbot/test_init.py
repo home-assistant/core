@@ -11,6 +11,7 @@ from beatbot_cloud import (
     BeatbotDeviceData,
     BeatbotEvent,
 )
+from beatbot_cloud.const import OAUTH2_CLIENT_ID
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
@@ -18,7 +19,11 @@ from homeassistant.components.beatbot.const import DOMAIN, NETWORK_REFRESH_INTER
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    config_entry_oauth2_flow,
+    device_registry as dr,
+    entity_registry as er,
+)
 
 from . import (
     BATTERY_ENTITY_ID,
@@ -55,6 +60,24 @@ async def poll(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
     freezer.tick(timedelta(seconds=NETWORK_REFRESH_INTERVAL))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
+
+
+@pytest.mark.usefixtures("mock_client", "mock_event_client")
+async def test_setup_restores_fixed_credentials(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Load a saved entry even when its stored application credential is missing."""
+    assert not await config_entry_oauth2_flow.async_get_implementations(hass, DOMAIN)
+
+    await setup_integration(hass, mock_config_entry)
+
+    implementations = await config_entry_oauth2_flow.async_get_implementations(
+        hass, DOMAIN
+    )
+    assert implementations[DOMAIN].client_id == OAUTH2_CLIENT_ID
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert hass.states.get(BATTERY_ENTITY_ID).state == "80"
 
 
 async def test_setup_and_unload(

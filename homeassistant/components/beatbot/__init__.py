@@ -7,16 +7,24 @@ from beatbot_cloud import (
     BeatbotClient,
     BeatbotConnectionError,
 )
+from beatbot_cloud.const import OAUTH2_CLIENT_ID
 
+from homeassistant.components.application_credentials import (
+    ClientCredential,
+    async_import_client_credential,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, OAuth2TokenRequestBaseError
-from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.helpers import config_entry_oauth2_flow, config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.typing import ConfigType
 
-from .const import PLATFORMS
+from .const import DOMAIN, PLATFORMS
 from .coordinator import BeatbotCoordinator
 from .event_stream import BeatbotEventClient
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 @dataclass
@@ -30,6 +38,16 @@ class BeatbotRuntimeData:
 
 
 type BeatbotConfigEntry = ConfigEntry[BeatbotRuntimeData]
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Register Beatbot's fixed public OAuth client."""
+    await async_import_client_credential(
+        hass,
+        DOMAIN,
+        ClientCredential(OAUTH2_CLIENT_ID, "", name="Beatbot"),
+    )
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: BeatbotConfigEntry) -> bool:
