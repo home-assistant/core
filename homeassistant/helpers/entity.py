@@ -597,6 +597,13 @@ class Entity(
     # attachment can detect it is stale once its permit is finally granted.
     _platform_generation = 0
 
+    # Set (only around a polling call) by `async_update_ha_state_for_poll`.
+    # Stashed on the instance rather than threaded through as a parameter
+    # so the staleness check is still honored even when an entity's
+    # `async_update_ha_state`/`async_device_update` override delegates to
+    # `super()`, without widening either overridable method's signature.
+    _expected_platform_generation_for_poll: int | None = None
+
     # Attributes to exclude from recording, only set by base components, e.g. light
     _entity_component_unrecorded_attributes: frozenset[str] = frozenset()
     # Additional integration specific attributes to exclude from recording, set by
@@ -1040,45 +1047,6 @@ class Entity(
 
         This method must be run in the event loop.
         """
-        await self._async_update_ha_state(force_refresh)
-
-    async def async_update_ha_state_for_poll(
-        self, *, _expected_platform_generation: int
-    ) -> None:
-        """Update Home Assistant with current state of entity for a poll cycle.
-
-        Called only by `EntityPlatform`'s polling, not meant for general
-        use. Routes to the
-        private/final internal implementation when `async_update_ha_state`
-        is not overridden, so the generation-staleness check can be
-        threaded through without widening that method's overridable
-        signature (an integration's own override with the previous
-        signature would otherwise raise `TypeError` on every scheduled
-        poll). Falls back to the public API when it is overridden, since
-        the override has taken responsibility for its own update flow.
-        """
-        if type(self).async_update_ha_state is Entity.async_update_ha_state:
-            await self._async_update_ha_state(
-                True, _expected_platform_generation=_expected_platform_generation
-            )
-        else:
-            await self.async_update_ha_state(True)
-
-    async def _async_update_ha_state(
-        self,
-        force_refresh: bool = False,
-        *,
-        _expected_platform_generation: int | None = None,
-    ) -> None:
-        """Update Home Assistant with current state of entity.
-
-        Do not override: this private/final variant exists only so the
-        entity platform's polling can pass `_expected_platform_generation`
-        without that private, polling-only parameter being part of the
-        overridable `async_update_ha_state` signature (an integration's
-        own override of the public method would otherwise raise
-        `TypeError` on every scheduled poll).
-        """
         if self.hass is None:
             raise RuntimeError(f"Attribute hass is None for {self}")
 
@@ -1090,17 +1058,7 @@ class Entity(
         # update entity data
         if force_refresh:
             try:
-                if type(self).async_device_update is Entity.async_device_update:
-                    # Not overridden: safe to use the private/final variant
-                    # so the generation-staleness check (performed only
-                    # once the `PARALLEL_UPDATES` permit is granted) can be
-                    # threaded through without widening the overridable
-                    # `async_device_update` signature.
-                    await self._async_device_update(
-                        _expected_platform_generation=_expected_platform_generation
-                    )
-                else:
-                    await self.async_device_update()
+                await self.async_device_update()
             except Exception:
                 _LOGGER.exception("Update for %s fails", self.entity_id)
                 return
@@ -1119,6 +1077,27 @@ class Entity(
             self._async_update_ha_state_reported = True
 
         self._async_write_ha_state()
+
+    async def async_update_ha_state_for_poll(
+        self, *, _expected_platform_generation: int
+    ) -> None:
+        """Update Home Assistant with current state of entity for a poll cycle.
+
+        Called only by `EntityPlatform`'s polling, not meant for general
+        use. The expected generation is stashed on the instance rather
+        than passed as a parameter to `async_update_ha_state`/
+        `async_device_update`, so the staleness check further down is
+        still honored even when an entity overrides either of those
+        methods and delegates to `super()`, without widening either
+        overridable method's signature (which would otherwise raise
+        `TypeError`, or silently drop the keyword, for existing
+        overrides using the previous signature).
+        """
+        self._expected_platform_generation_for_poll = _expected_platform_generation
+        try:
+            await self.async_update_ha_state(True)
+        finally:
+            self._expected_platform_generation_for_poll = None
 
     @callback
     def _async_verify_state_writable(self) -> None:
@@ -1466,25 +1445,6 @@ class Entity(
 
         This method is a coroutine.
         """
-        await self._async_device_update(warning=warning)
-
-    async def _async_device_update(
-        self,
-        warning: bool = True,
-        *,
-        _expected_platform_generation: int | None = None,
-    ) -> None:
-        """Process 'update' or 'async_update' from entity.
-
-        Do not override: this private/final variant exists only so the
-        entity platform's polling can pass `_expected_platform_generation`
-        without that private, polling-only parameter being part of the
-        overridable `async_device_update` signature (an integration's own
-        override of the public method would otherwise silently skip every
-        scheduled poll after swallowing the resulting `TypeError`).
-
-        This method is a coroutine.
-        """
         if self._update_staged:
             return
 
@@ -1527,9 +1487,8 @@ class Entity(
                 # that a permit is finally available.
                 return
             if (
-                _expected_platform_generation is not None
-                and _expected_platform_generation != self._platform_generation
-            ):
+                expected := self._expected_platform_generation_for_poll
+            ) is not None and expected != self._platform_generation:
                 # This is a polling task queued for an earlier attachment of
                 # this entity instance (e.g. it was removed and re-added for
                 # an entity-id rename while the task waited for its permit).
@@ -1538,7 +1497,7 @@ class Entity(
                 # on yet, so skip this now-stale task rather than run it.
                 return
             if (
-                _expected_platform_generation is not None
+                expected is not None
                 and self._platform_state is not EntityPlatformState.ADDED
             ):
                 # Matching generation alone doesn't mean this attachment's
