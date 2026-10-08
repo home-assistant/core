@@ -259,7 +259,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ElkM1ConfigEntry) -> boo
                 raise ConfigEntryError(
                     translation_domain=DOMAIN,
                     translation_key="invalid_config_item",
-                    translation_placeholders={"item": item, "error": str(err)},
+                    translation_placeholders={"item": item},
                 ) from err
 
     elk = Elk(

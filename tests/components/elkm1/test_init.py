@@ -151,6 +151,4 @@ async def test_invalid_config_item(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.SETUP_ERROR
-    assert (
-        config_entry.reason == "Invalid configuration for area: Invalid range [1, 99]"
-    )
+    assert config_entry.reason == "Invalid configuration for area"

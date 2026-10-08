@@ -59,7 +59,7 @@
   },
   "exceptions": {
     "invalid_config_item": {
-      "message": "Invalid configuration for {item}: {error}"
+      "message": "Invalid configuration for {item}"
     },
     "login_failed": {
       "message": "ElkM1 login failed for {host}"
