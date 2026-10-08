@@ -247,9 +247,18 @@ class WaterHeaterEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         return self._attr_native_temperature_unit
 
     if TYPE_CHECKING:
-        _attr_temperature_unit: str
 
-        @cached_property
+        @final  # type: ignore[misc]
+        @property
+        def _attr_temperature_unit(self) -> str:
+            """Deprecated, use _attr_native_temperature_unit instead."""
+
+        @_attr_temperature_unit.setter
+        def _attr_temperature_unit(self, value: str) -> None:
+            """Deprecated, use _attr_native_temperature_unit instead."""
+
+        @final
+        @property
         def temperature_unit(self) -> str:
             """Deprecated, use native_temperature_unit instead."""
 
@@ -277,9 +286,18 @@ class WaterHeaterEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         return self._attr_native_current_temperature
 
     if TYPE_CHECKING:
-        _attr_current_temperature: float | None
 
-        @cached_property
+        @final  # type: ignore[misc]
+        @property
+        def _attr_current_temperature(self) -> float | None:
+            """Deprecated, use _attr_native_current_temperature instead."""
+
+        @_attr_current_temperature.setter
+        def _attr_current_temperature(self, value: float | None) -> None:
+            """Deprecated, use _attr_native_current_temperature instead."""
+
+        @final
+        @property
         def current_temperature(self) -> float | None:
             """Deprecated, use native_current_temperature instead."""
 
@@ -297,9 +315,18 @@ class WaterHeaterEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         return self._attr_native_target_temperature
 
     if TYPE_CHECKING:
-        _attr_target_temperature: float | None
 
-        @cached_property
+        @final  # type: ignore[misc]
+        @property
+        def _attr_target_temperature(self) -> float | None:
+            """Deprecated, use _attr_native_target_temperature instead."""
+
+        @_attr_target_temperature.setter
+        def _attr_target_temperature(self, value: float | None) -> None:
+            """Deprecated, use _attr_native_target_temperature instead."""
+
+        @final
+        @property
         def target_temperature(self) -> float | None:
             """Deprecated, use native_target_temperature instead."""
 
@@ -320,9 +347,18 @@ class WaterHeaterEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         return self._attr_native_target_temperature_high
 
     if TYPE_CHECKING:
-        _attr_target_temperature_high: float | None
 
-        @cached_property
+        @final  # type: ignore[misc]
+        @property
+        def _attr_target_temperature_high(self) -> float | None:
+            """Deprecated, use _attr_native_target_temperature_high instead."""
+
+        @_attr_target_temperature_high.setter
+        def _attr_target_temperature_high(self, value: float | None) -> None:
+            """Deprecated, use _attr_native_target_temperature_high instead."""
+
+        @final
+        @property
         def target_temperature_high(self) -> float | None:
             """Deprecated, use native_target_temperature_high instead."""
 
@@ -343,9 +379,18 @@ class WaterHeaterEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         return self._attr_native_target_temperature_low
 
     if TYPE_CHECKING:
-        _attr_target_temperature_low: float | None
 
-        @cached_property
+        @final  # type: ignore[misc]
+        @property
+        def _attr_target_temperature_low(self) -> float | None:
+            """Deprecated, use _attr_native_target_temperature_low instead."""
+
+        @_attr_target_temperature_low.setter
+        def _attr_target_temperature_low(self, value: float | None) -> None:
+            """Deprecated, use _attr_native_target_temperature_low instead."""
+
+        @final
+        @property
         def target_temperature_low(self) -> float | None:
             """Deprecated, use native_target_temperature_low instead."""
 
