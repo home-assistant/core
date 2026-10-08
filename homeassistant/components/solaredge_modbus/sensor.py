@@ -959,10 +959,16 @@ class SolarEdgeModbusEnergySensorEntity(RestoreSensor):
     ``total_increasing`` sensor registers as a meter reset and corrupts the
     long-term statistics. The highest value seen wins, and it is restored
     across restarts so an overnight restart does not lose that truth.
+
+    Some accumulators do start over from zero for real, though. Where one is
+    known to, a lower reading that goes on to climb is taken as that new start
+    rather than held back: a glitch does not count upwards.
     """
 
     _highest_value: float | None = None
+    _lowest_since_drop: float | None = None
     _glitch_logged = False
+    _accumulator_restarts = False
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -983,8 +989,26 @@ class SolarEdgeModbusEnergySensorEntity(RestoreSensor):
 
         if self._highest_value is None or value >= self._highest_value:
             self._highest_value = value
+            self._lowest_since_drop = None
             self._glitch_logged = False
             return value
+
+        if self._accumulator_restarts:
+            if self._lowest_since_drop is not None and value > self._lowest_since_drop:
+                LOGGER.debug(
+                    "%s counts up again from %s Wh after dropping below the %s Wh"
+                    " seen before; taking that as the accumulator starting over",
+                    self.entity_id,
+                    self._lowest_since_drop,
+                    self._highest_value,
+                )
+                self._highest_value = value
+                self._lowest_since_drop = None
+                return value
+
+            if self._lowest_since_drop is None or value < self._lowest_since_drop:
+                self._lowest_since_drop = value
+            return self._highest_value
 
         if not self._glitch_logged:
             LOGGER.warning(
@@ -1031,4 +1055,11 @@ class SolarEdgeModbusBatterySensorEntity(SolarEdgeModbusBatteryEntity, SensorEnt
 class SolarEdgeModbusBatteryEnergySensorEntity(
     SolarEdgeModbusEnergySensorEntity, SolarEdgeModbusBatterySensorEntity
 ):
-    """Defines a monotonic SolarEdge Modbus battery energy sensor entity."""
+    """Defines a SolarEdge Modbus battery energy sensor entity.
+
+    The battery accumulators restart from zero several times a day on some
+    installations, around the battery switching between idle, charging and
+    discharging.
+    """
+
+    _accumulator_restarts = True

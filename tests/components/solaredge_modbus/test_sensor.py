@@ -29,6 +29,8 @@ from tests.common import (
 
 LIFETIME_ENERGY_ENTITY = "sensor.solaredge_se10000h_energy"
 DER_STORAGE_ENTITY = "sensor.solaredge_se10000h_storage_state_of_charge"
+BATTERY_ENERGY_IMPORTED_ENTITY = "sensor.battery_1_energy_imported"
+BATTERY_ENERGY_IMPORTED = 57722
 
 
 async def _setup_sensor_platform(hass: HomeAssistant, entry: MockConfigEntry) -> None:
@@ -319,6 +321,65 @@ async def test_lifetime_energy_restored_after_restart(
     state = hass.states.get(LIFETIME_ENERGY_ENTITY)
     assert state is not None
     assert float(state.state) == 99999.999  # kWh, from the restored maximum
+
+
+def _set_battery_energy_imported(unit: MockModbusUnit, energy: int) -> None:
+    """Write battery 1's energy imported (Wh), a word-swapped 64-bit counter."""
+    for word in range(4):
+        unit.holding[BATTERY_ENERGY_IMPORTED + word] = (energy >> (16 * word)) & 0xFFFF
+
+
+async def _battery_energy_imported(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    unit: MockModbusUnit,
+    energy: int,
+) -> float:
+    _set_battery_energy_imported(unit, energy)
+    await _tick(hass, freezer)
+    state = hass.states.get(BATTERY_ENERGY_IMPORTED_ENTITY)
+    assert state is not None
+    return float(state.state)
+
+
+async def test_battery_energy_follows_an_accumulator_restart(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """A battery accumulator that drops and then counts up again has restarted."""
+    _set_battery_energy_imported(mock_modbus_unit, 5000)
+    await _setup_sensor_platform(hass, mock_config_entry)
+
+    # The drop on its own is held, it could still be a glitch.
+    assert await _battery_energy_imported(hass, freezer, mock_modbus_unit, 0) == 5.0
+
+    # Counting up from there is the accumulator starting over, so the sensor
+    # follows it and the statistics see a meter reset.
+    assert await _battery_energy_imported(hass, freezer, mock_modbus_unit, 2) == 0.002
+    assert await _battery_energy_imported(hass, freezer, mock_modbus_unit, 10) == 0.01
+
+
+async def test_battery_energy_holds_a_transient_drop(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """A battery accumulator that drops and comes back was a glitch."""
+    _set_battery_energy_imported(mock_modbus_unit, 5000)
+    await _setup_sensor_platform(hass, mock_config_entry)
+
+    # A lower reading that does not climb is held, however long it stays.
+    assert await _battery_energy_imported(hass, freezer, mock_modbus_unit, 1000) == 5.0
+    assert await _battery_energy_imported(hass, freezer, mock_modbus_unit, 1000) == 5.0
+    assert await _battery_energy_imported(hass, freezer, mock_modbus_unit, 900) == 5.0
+
+    # Back at the old value it carries on from there.
+    assert (
+        await _battery_energy_imported(hass, freezer, mock_modbus_unit, 5001) == 5.001
+    )
 
 
 async def test_der_storage_state_of_charge(
