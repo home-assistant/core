@@ -5,7 +5,7 @@ from datetime import timedelta
 import logging
 from typing import TYPE_CHECKING, override
 
-from httpx import HTTPStatusError, RequestError
+from httpx2 import HTTPStatusError, RequestError
 from pyocat import (
     AsyncApiClient,
     WTCApiDisabledError,

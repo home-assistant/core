@@ -3,7 +3,7 @@
 import logging
 from typing import Any, override
 
-from httpx import HTTPStatusError, RequestError
+from httpx2 import HTTPStatusError, RequestError
 import probatio
 from pyocat import (
     AsyncApiClient,

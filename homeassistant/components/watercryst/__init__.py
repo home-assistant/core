@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 
-from httpx import HTTPStatusError, RequestError
+from httpx2 import HTTPStatusError, RequestError
 from pyocat import (
     AsyncApiClient,
     AsyncAuth,
