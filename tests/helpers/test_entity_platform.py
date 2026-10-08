@@ -719,6 +719,73 @@ async def test_stale_poll_skips_update_for_entity_removed_while_queued_on_permit
     entity_b.async_update.assert_not_called()
 
 
+async def test_removing_entity_with_update_override_pending_does_not_cancel_task(
+    hass: HomeAssistant,
+) -> None:
+    """Test a removed entity's task isn't cancelled while its override is running.
+
+    Regression contract: a removed entity's still-tracked polling task is
+    only safe to cancel while genuinely blocked waiting for its
+    `PARALLEL_UPDATES` permit. `async_update_ha_state` is itself
+    overridable, and an override may run arbitrary code before ever
+    delegating to the base implementation (which is what acquires the
+    permit). The inverse of "permit acquired" is not a safe proxy for
+    "waiting for permit": it also covers this pre-acquisition window, so
+    using it would cancel work that is already running for real.
+    """
+    scan_interval = timedelta(seconds=1)
+    component = EntityComponent(_LOGGER, DOMAIN, hass, scan_interval)
+    await component.async_setup({})
+
+    platform = list(component._platforms.values())[-1]
+
+    override_started = asyncio.Event()
+    override_release = asyncio.Event()
+
+    class _OverridingEntity(MockEntity):
+        """An entity whose override runs before calling the base implementation."""
+
+        async def async_update_ha_state(self, force_refresh: bool = False) -> None:
+            override_started.set()
+            await override_release.wait()
+            await super().async_update_ha_state(force_refresh)
+
+    entity = _OverridingEntity(should_poll=True)
+    entity.async_update = AsyncMock()
+
+    await component.async_add_entities([entity])
+
+    async_fire_time_changed(hass, dt_util.utcnow() + scan_interval)
+    await override_started.wait()
+    await asyncio.sleep(0)
+
+    # The task is suspended inside the override, before it has ever
+    # reached (or could reach) the semaphore acquisition.
+    assert not entity.update_permit_acquired
+    assert not entity.update_waiting_for_permit
+    assert id(entity) in platform._polling_tasks
+    _, task = platform._polling_tasks[id(entity)]
+    assert not task.done()
+
+    # Remove the entity (e.g. an entity_id rename) while its override is
+    # still running.
+    await entity.async_remove()
+    await asyncio.sleep(0)
+
+    # The task must be left alone, not cancelled.
+    assert not task.cancelled()
+    assert not task.done()
+
+    override_release.set()
+    await hass.async_block_till_done(wait_background_tasks=True)
+    # The task completed normally (not cancelled); it skips calling
+    # update() on its own via the existing REMOVED-state check, rather
+    # than being cut short mid-flight by a cancellation.
+    assert task.done()
+    assert not task.cancelled()
+    entity.async_update.assert_not_called()
+
+
 async def test_removed_entity_queued_for_permit_is_cancelled_not_leaked(
     hass: HomeAssistant,
 ) -> None:
@@ -772,7 +839,7 @@ async def test_removed_entity_queued_for_permit_is_cancelled_not_leaked(
     await asyncio.sleep(0)
     assert id(entity_b) in platform_handle._polling_tasks
     _, queued_task = platform_handle._polling_tasks[id(entity_b)]
-    assert not entity_b.update_permit_acquired
+    assert entity_b.update_waiting_for_permit
 
     # entity_b is removed while still queued for the permit, which will
     # now never arrive.

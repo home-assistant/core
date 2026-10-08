@@ -79,18 +79,14 @@ SLOW_UPDATE_WARNING = 10
 DATA_ENTITY_SOURCE = "entity_info"
 
 # Carries (id(entity), expected platform generation) for the duration of a
-# single `async_update_ha_state_for_poll` call. Task-local (each polling
-# task gets its own copied context) rather than stashed on the entity
-# instance, so a concurrent non-poll update of the same entity - started
-# in its own task while the poll is suspended inside an overridden
-# `async_update_ha_state`/`async_device_update` - cannot inherit a pending
-# poll's staleness guard. The entity identity is also carried (and checked
-# against `self` at the read site) as a defensive check in case this
-# context is ever propagated into a nested call for a different entity
-# within the same task.
+# single `async_update_ha_state_for_poll` call (see its docstring).
+# Task-local rather than instance state, so a concurrent non-poll update
+# of the same entity, running in its own task, cannot inherit a pending
+# poll's staleness guard.
 _entity_poll_generation: ContextVar[tuple[int, int] | None] = ContextVar(
     "entity_poll_generation", default=None
 )
+
 
 # Used when converting float states to string: limit precision according to machine
 # epsilon to make the string representation readable
@@ -578,6 +574,13 @@ class Entity(
     # permit and is actually running, rather than merely queued for one.
     _update_permit_acquired = False
 
+    # True only while the current update is actually blocked awaiting its
+    # `PARALLEL_UPDATES` permit (not before or after). Unlike the inverse
+    # of `_update_permit_acquired`, this doesn't also cover time spent
+    # running arbitrary user code in an overridden `async_update_ha_state`
+    # before that method ever reaches the semaphore acquisition.
+    _update_waiting_for_permit = False
+
     # _verified_state_writable is set to True if the entity has been verified
     # to be writable. This is used to avoid repeated checks.
     _verified_state_writable = False
@@ -1050,13 +1053,25 @@ class Entity(
     def update_permit_acquired(self) -> bool:
         """Return whether the current update has acquired its permit.
 
-        Used by the entity platform to decide whether a removed entity's
-        still-tracked polling task is safe to cancel outright (it is only
-        queued for a `PARALLEL_UPDATES` permit, not yet running), versus
-        one that has already acquired its permit and is running `update()`
-        for real, which must be left to finish on its own.
+        True once `update()`/`async_update()` is actually running for
+        real, as opposed to merely queued or waiting for a
+        `PARALLEL_UPDATES` permit.
         """
         return self._update_permit_acquired
+
+    @property
+    def update_waiting_for_permit(self) -> bool:
+        """Return whether the current update is blocked waiting for its permit.
+
+        Used by the entity platform to decide whether a removed entity's
+        still-tracked polling task is safe to cancel outright. Unlike
+        `update_permit_acquired`, whose negation also covers time spent
+        running arbitrary user code in an overridden
+        `async_update_ha_state` before that method ever reaches the
+        semaphore acquisition, this is only `True` during the narrow
+        window actually blocked on the acquisition itself.
+        """
+        return self._update_waiting_for_permit
 
     @callback
     def async_set_context(self, context: Context) -> None:
@@ -1490,6 +1505,14 @@ class Entity(
 
         # Process update sequential
         if semaphore:
+            # Only while actually blocked here is it safe for
+            # `EntityPlatform` to cancel this task on entity removal: it
+            # is not a safe proxy for "before the permit was acquired" in
+            # general, since this method is itself reachable from an
+            # overridable `async_update_ha_state`, which may already be
+            # running arbitrary (non-cancellation-safe) user code before
+            # ever calling this far.
+            self._update_waiting_for_permit = True
             try:
                 await semaphore.acquire()
             except BaseException:
@@ -1501,6 +1524,8 @@ class Entity(
                 # would silently skip every future update.
                 self._update_staged = False
                 raise
+            finally:
+                self._update_waiting_for_permit = False
 
         # Past this point the update is actually running (not merely
         # queued for a permit): `EntityPlatform` uses this to decide
