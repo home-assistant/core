@@ -216,7 +216,10 @@ def callback[_CallableT: Callable[..., Any]](func: _CallableT) -> _CallableT:
 
 @callback
 def async_noop() -> None:
-    """Do nothing."""
+    """Do nothing; use instead of `lambda: None` where a callback is expected.
+
+    For example, as the unsubscribe function when nothing was subscribed.
+    """
 
 
 def is_callback(func: Callable[..., Any]) -> bool:
