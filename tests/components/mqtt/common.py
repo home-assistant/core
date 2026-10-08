@@ -567,6 +567,26 @@ MOCK_SUBENTRY_NUMBER_COMPONENT_NONE_UNIT = {
         "entity_picture": "https://example.com/a9261f6feed443e7b7d5f3fbe2a47414",
     },
 }
+MOCK_SUBENTRY_NUMBER_COMPONENT_AQI_UNIT_NONE = {
+    "a9261f6feed443e7b7d5f3fbe2a47414": {
+        "platform": "number",
+        "name": "Purifier",
+        "entity_category": None,
+        "command_topic": "test-topic",
+        "command_template": "{{ value }}",
+        "state_topic": "test-topic",
+        "min": 0.0,
+        "max": 10.0,
+        "step": 2.0,
+        "mode": "auto",
+        "device_class": "aqi",
+        "unit_of_measurement": None,
+        "value_template": "{{ value_json.value }}",
+        "payload_reset": "None",
+        "retain": False,
+        "entity_picture": "https://example.com/a9261f6feed443e7b7d5f3fbe2a47414",
+    },
+}
 MOCK_SUBENTRY_SELECT_COMPONENT = {
     "fa261f6feed443e7b7d5f3fbe2a47414": {
         "platform": "select",
@@ -605,6 +625,18 @@ MOCK_SUBENTRY_SENSOR_COMPONENT_UOM_NULL = {
         # `unit_of_measurement` is stored as a string;
         # it will be filtered from the config when exported or when set up.
         "unit_of_measurement": "None",
+        "entity_picture": "https://example.com/b0f85790a95d4889924602effff06b6e",
+    },
+}
+MOCK_SUBENTRY_SENSOR_COMPONENT_AQI_UNIT_NONE = {
+    "b0f85790a95d4889924602effff06b6e": {
+        "platform": "sensor",
+        "name": "Air quality",
+        "device_class": "aqi",
+        "entity_category": None,
+        "state_class": "measurement",
+        "state_topic": "test-topic",
+        "unit_of_measurement": None,
         "entity_picture": "https://example.com/b0f85790a95d4889924602effff06b6e",
     },
 }
@@ -893,6 +925,10 @@ MOCK_NUMBER_SUBENTRY_DATA_NONE_UNIT = {
     "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
     "components": MOCK_SUBENTRY_NUMBER_COMPONENT_NONE_UNIT,
 }
+MOCK_NUMBER_SUBENTRY_DATA_AQI_UNIT_NONE = {
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
+    "components": MOCK_SUBENTRY_NUMBER_COMPONENT_AQI_UNIT_NONE,
+}
 MOCK_SELECT_SUBENTRY_DATA = {
     "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
     "components": MOCK_SUBENTRY_SELECT_COMPONENT,
@@ -908,6 +944,10 @@ MOCK_SENSOR_SUBENTRY_DATA_STATE_CLASS = {
 MOCK_SENSOR_SUBENTRY_DATA_UOM_NONE = {
     "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
     "components": MOCK_SUBENTRY_SENSOR_COMPONENT_UOM_NULL,
+}
+MOCK_SENSOR_SUBENTRY_DATA_AQI_UNIT_NONE = {
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
+    "components": MOCK_SUBENTRY_SENSOR_COMPONENT_AQI_UNIT_NONE,
 }
 MOCK_SENSOR_SUBENTRY_DATA_LAST_RESET_TEMPLATE = {
     "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},

@@ -586,10 +586,10 @@ class FakeLatestMotionService:
         """Register a callback for the given device id."""
         self._event_callbacks[event] = callback
 
-    def subscribe_callback(self, entity_id: str, callback: Any) -> None:
+    def subscribe_callback(self, entity: Any, callback: Any) -> None:
         """No-op: SHCEntity subscribes to every device service's generic callback."""
 
-    def unsubscribe_callback(self, entity_id: str) -> None:
+    def unsubscribe_callback(self, entity: Any) -> None:
         """No-op counterpart to subscribe_callback."""
 
 
@@ -606,10 +606,10 @@ class FakeAlarmService:
         """Register a callback for the given device id."""
         self._event_callbacks[event] = callback
 
-    def subscribe_callback(self, entity_id: str, callback: Any) -> None:
+    def subscribe_callback(self, entity: Any, callback: Any) -> None:
         """No-op: SHCEntity subscribes to every device service's generic callback."""
 
-    def unsubscribe_callback(self, entity_id: str) -> None:
+    def unsubscribe_callback(self, entity: Any) -> None:
         """No-op counterpart to subscribe_callback."""
 
 

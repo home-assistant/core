@@ -18,7 +18,7 @@ from .const import (
 )
 
 if TYPE_CHECKING:
-    from . import BaseAutomationEntity
+    from .entity import BaseAutomationEntity
 
 
 async def _trigger_service_handler(
