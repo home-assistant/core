@@ -402,6 +402,7 @@ async def test_new_sensor_discovered(hass: HomeAssistant, mock_bridge_v1: Mock) 
     mock_bridge_v1.mock_sensor_responses.append(new_sensor_response)
 
     # Force updates to run again
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
     await mock_bridge_v1.sensor_manager.coordinator.async_refresh()
     await hass.async_block_till_done()
 
@@ -431,6 +432,7 @@ async def test_sensor_removed(hass: HomeAssistant, mock_bridge_v1: Mock) -> None
     mock_bridge_v1.mock_sensor_responses.append({k: SENSOR_RESPONSE[k] for k in keys})
 
     # Force updates to run again
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
     await mock_bridge_v1.sensor_manager.coordinator.async_refresh()
 
     # To flush out the service call to update the group

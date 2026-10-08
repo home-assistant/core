@@ -27,13 +27,13 @@ from .const import DATA_WAIT_TIMEOUT, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 STEP_AUTHENTICATE_DATA_SCHEMA = probatio.Schema(
-    {probatio.Required(CONF_TOKEN): cv.string}
+    {probatio.Required(probatio.Secret(CONF_TOKEN)): cv.string}
 )
 STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_HOST): cv.string,
         probatio.Required(CONF_PORT, default=9170): cv.string,
-        probatio.Required(CONF_TOKEN): cv.string,
+        probatio.Required(probatio.Secret(CONF_TOKEN)): cv.string,
     }
 )
 

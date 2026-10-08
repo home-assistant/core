@@ -23,7 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 OPTIONS_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_THRESHOLD, default=DEFAULT_THRESHOLD): probatio.All(
-            probatio.Coerce(int), probatio.Range(min=0, max=100)
+            probatio.Coerce(int), probatio.Percentage()
         ),
     }
 )

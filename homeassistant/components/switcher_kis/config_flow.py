@@ -20,7 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 CONFIG_SCHEMA: Final = probatio.Schema(
     {
         probatio.Required(CONF_USERNAME): str,
-        probatio.Required(CONF_TOKEN): str,
+        probatio.Required(probatio.Secret(CONF_TOKEN)): str,
     }
 )
 

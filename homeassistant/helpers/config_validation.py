@@ -19,7 +19,7 @@ from socket import (  # type: ignore[attr-defined]  # private, not in typeshed
     _GLOBAL_DEFAULT_TIMEOUT,
 )
 import threading
-from typing import TYPE_CHECKING, Any, cast, overload
+from typing import Any, cast
 from urllib.parse import urlparse
 from uuid import UUID
 
@@ -180,21 +180,21 @@ CONFIGURATION_URL_PROTOCOL_SCHEMA_LIST = frozenset(
 )
 
 # Home Assistant types
-byte = probatio.All(probatio.Coerce(int), probatio.Range(min=0, max=255))
-small_float = probatio.All(probatio.Coerce(float), probatio.Range(min=0, max=1))
-positive_int = probatio.All(probatio.Coerce(int), probatio.Range(min=0))
-positive_float = probatio.All(probatio.Coerce(float), probatio.Range(min=0))
+byte = probatio.All(probatio.Coerce(int), probatio.Byte())
+small_float = probatio.All(probatio.Coerce(float), probatio.SmallFloat())
+positive_int = probatio.All(probatio.Coerce(int), probatio.NonNegative())
+positive_float = probatio.All(probatio.Coerce(float), probatio.NonNegative())
 latitude = probatio.All(
-    probatio.Coerce(float), probatio.Range(min=-90, max=90), msg="invalid latitude"
+    probatio.Coerce(float), probatio.Latitude(), msg="invalid latitude"
 )
 longitude = probatio.All(
-    probatio.Coerce(float), probatio.Range(min=-180, max=180), msg="invalid longitude"
+    probatio.Coerce(float), probatio.Longitude(), msg="invalid longitude"
 )
 gps = probatio.ExactSequence([latitude, longitude])
 sun_event = probatio.All(
     probatio.Lower, probatio.Any(SUN_EVENT_SUNSET, SUN_EVENT_SUNRISE)
 )
-port = probatio.All(probatio.Coerce(int), probatio.Range(min=1, max=65535))
+port = probatio.Port()
 
 
 def path(value: Any) -> str:
@@ -210,39 +210,9 @@ def path(value: Any) -> str:
     return value
 
 
-# Adapted from:
-# https://github.com/alecthomas/voluptuous/issues/115#issuecomment-144464666
-def has_at_least_one_key(*keys: Any) -> Callable[[dict], dict]:
-    """Validate that at least one key exists."""
-    key_set = set(keys)
-
-    def validate(obj: dict) -> dict:
-        """Test keys exist in dict."""
-        if not isinstance(obj, dict):
-            raise probatio.Invalid("expected dictionary")
-
-        if not key_set.isdisjoint(obj):
-            return obj
-        expected = ", ".join(str(k) for k in keys)
-        raise probatio.Invalid(f"must contain at least one of {expected}.")
-
-    return validate
-
-
-def has_at_most_one_key(*keys: Any) -> Callable[[dict], dict]:
-    """Validate that zero keys exist or one key exists."""
-
-    def validate(obj: dict) -> dict:
-        """Test zero keys exist or one key exists in dict."""
-        if not isinstance(obj, dict):
-            raise probatio.Invalid("expected dictionary")
-
-        if len(set(keys) & set(obj)) > 1:
-            expected = ", ".join(str(k) for k in keys)
-            raise probatio.Invalid(f"must contain at most one of {expected}.")
-        return obj
-
-    return validate
+# Kept for custom integrations; core uses the probatio validators directly.
+has_at_least_one_key = probatio.AtLeastOne
+has_at_most_one_key = probatio.AtMostOne
 
 
 def boolean(value: Any) -> bool:
@@ -341,29 +311,7 @@ def isdir(value: Any) -> str:
     return dir_in
 
 
-@overload
-def ensure_list(value: None) -> list[Any]: ...
-
-
-@overload
-def ensure_list[_T](value: list[_T]) -> list[_T]: ...
-
-
-@overload
-def ensure_list[_T](value: list[_T] | _T) -> list[_T]: ...
-
-
-def ensure_list[_T](value: _T | None) -> list[_T] | list[Any]:
-    """Wrap value in list if it is not one."""
-    if value is None:
-        return []
-    if isinstance(value, list):
-        if TYPE_CHECKING:
-            # https://github.com/home-assistant/core/pull/71960
-            # cast with a type variable is still slow.
-            return cast(list[_T], value)
-        return value  # type: ignore[unreachable]
-    return [value]
+ensure_list = probatio.EnsureList()
 
 
 def entity_id(value: Any) -> str:
@@ -535,7 +483,7 @@ time_period_dict = probatio.All(
             "milliseconds": probatio.Coerce(float),
         }
     ),
-    has_at_least_one_key(*_TIME_PERIOD_DICT_KEYS),
+    probatio.AtLeastOne(*_TIME_PERIOD_DICT_KEYS),
     lambda value: timedelta(**value),
 )
 
@@ -1022,7 +970,7 @@ def _deprecated_or_removed(
             ):
                 config[replacement_key] = value
 
-        return has_at_most_one_key(*keys)(config)
+        return probatio.AtMostOne(*keys)(config)
 
     return validator
 
@@ -1387,7 +1335,7 @@ _TARGET_SERVICE_FIELDS_TEMPLATED: VolDictType = {
     ),
 }
 
-_HAS_ENTITY_SERVICE_FIELD = has_at_least_one_key(*ENTITY_SERVICE_FIELDS)
+_HAS_ENTITY_SERVICE_FIELD = probatio.AtLeastOne(*ENTITY_SERVICE_FIELDS)
 
 
 def is_entity_service_schema(validator: VolSchemaType) -> bool:
@@ -1532,7 +1480,7 @@ SERVICE_SCHEMA = probatio.All(
             probatio.Remove("metadata"): dict,
         }
     ),
-    has_at_least_one_key(CONF_ACTION, CONF_SERVICE_TEMPLATE),
+    probatio.AtLeastOne(CONF_ACTION, CONF_SERVICE_TEMPLATE),
 )
 
 NUMERIC_STATE_THRESHOLD_SCHEMA = probatio.Any(
@@ -1558,7 +1506,7 @@ NUMERIC_STATE_CONDITION_SCHEMA = probatio.All(
             probatio.Optional(CONF_VALUE_TEMPLATE): template,
         }
     ),
-    has_at_least_one_key(CONF_BELOW, CONF_ABOVE),
+    probatio.AtLeastOne(CONF_BELOW, CONF_ABOVE),
 )
 
 INPUT_ENTITY_ID = re.compile(
@@ -1648,7 +1596,7 @@ TIME_CONDITION_SCHEMA = probatio.All(
             probatio.Optional("weekday"): weekdays,
         }
     ),
-    has_at_least_one_key("before", "after", "weekday"),
+    probatio.AtLeastOne("before", "after", "weekday"),
 )
 
 TRIGGER_CONDITION_SCHEMA = probatio.Schema(
@@ -1989,7 +1937,7 @@ _SCRIPT_REPEAT_SCHEMA = probatio.Schema(
                 probatio.Exclusive(CONF_UNTIL, "repeat"): CONDITIONS_SCHEMA,
                 probatio.Required(CONF_SEQUENCE): SCRIPT_SCHEMA,
             },
-            has_at_least_one_key(CONF_COUNT, CONF_FOR_EACH, CONF_WHILE, CONF_UNTIL),
+            probatio.AtLeastOne(CONF_COUNT, CONF_FOR_EACH, CONF_WHILE, CONF_UNTIL),
         ),
     }
 )

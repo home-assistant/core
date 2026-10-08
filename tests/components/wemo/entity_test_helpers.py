@@ -7,6 +7,7 @@ import asyncio
 from collections.abc import Callable, Coroutine
 import threading
 from typing import Any
+from unittest.mock import patch
 
 import pywemo
 
@@ -76,21 +77,28 @@ async def _async_multiple_call_helper(
     # https://github.com/home-assistant/core/blob/1ba5c1c9fb1e380549cb655986b5f4d3873d7352/tests/common.py#L179
     pywemo_device.get_state = get_state
 
-    # One of these two calls will block on `event`. The other will return right
-    # away because the `_update_lock` is held.
-    done, pending = await asyncio.wait(
-        [asyncio.create_task(call1()), asyncio.create_task(call2())],
-        return_when=asyncio.FIRST_COMPLETED,
-    )
-    _ = [d.result() for d in done]  # Allow any exceptions to be raised.
+    lock_seen_held = asyncio.Event()
+    lock_locked = asyncio.Lock.locked
 
-    # Allow the blocked call to return.
-    await waiting.wait()
-    event.set()
+    def locked(lock: asyncio.Lock) -> bool:
+        if is_locked := lock_locked(lock):
+            lock_seen_held.set()
+        return is_locked
 
-    if pending:
-        done, _ = await asyncio.wait(pending)
-        _ = [d.result() for d in done]  # Allow any exceptions to be raised.
+    with patch.object(asyncio.Lock, "locked", autospec=True, side_effect=locked):
+        done, pending = await asyncio.wait(
+            [asyncio.create_task(call1()), asyncio.create_task(call2())],
+            return_when=asyncio.FIRST_COMPLETED,
+        )
+        _ = [d.result() for d in done]
+
+        await waiting.wait()
+        await lock_seen_held.wait()
+        event.set()
+
+        if pending:
+            done, _ = await asyncio.wait(pending)
+            _ = [d.result() for d in done]
 
     # Make sure the state update only happened once.
     assert call_count == 1

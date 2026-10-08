@@ -8,6 +8,7 @@ from lifx import (
     CeilingLight,
     CeilingLightState,
     CollectionInfo,
+    Connectivity,
     DeviceCapabilities,
     FirmwareEffect,
     FirmwareInfo,
@@ -23,11 +24,16 @@ from lifx import (
     LightWaveform,
     MatrixLight,
     MatrixLightState,
+    MirrorLight,
+    MirrorLightState,
     MultiZoneLight,
     MultiZoneLightState,
+    ThreadInfo,
+    ThreadRoutingRole,
     TileInfo,
     WifiInfo,
 )
+from lifx.products import get_mirror_layout
 
 from homeassistant.components.lifx.light import LIFX_MIN_COLOR_RAMP
 
@@ -41,13 +47,20 @@ GROUP = "My Group"
 INFRARED_SELECT_ENTITY_ID = "select.my_group_my_bulb_infrared_brightness"
 
 type MockDevice = (
-    Light | MultiZoneLight | MatrixLight | CeilingLight | HevLight | InfraredLight
+    Light
+    | MultiZoneLight
+    | MatrixLight
+    | CeilingLight
+    | MirrorLight
+    | HevLight
+    | InfraredLight
 )
 type MockState = (
     LightState
     | MultiZoneLightState
     | MatrixLightState
     | CeilingLightState
+    | MirrorLightState
     | HevLightState
     | InfraredLightState
 )
@@ -142,7 +155,8 @@ def _create_mock_device(
     device.set_reboot = AsyncMock()
     device.apply_theme = AsyncMock()
     # The library only reads the signal strength once it is switched on
-    device.fetch_wifi_info = False
+    device.fetch_radio_info = False
+    device.connectivity = Connectivity.WIFI
     return cast(_DeviceT, device)
 
 
@@ -211,6 +225,7 @@ def _create_mock_tile(
     tile_index: int = 0,
     product: int = 55,
     width: int = 8,
+    height: int = 8,
     user_x: float = 0.0,
 ) -> TileInfo:
     """Create deterministic public tile metadata."""
@@ -222,7 +237,7 @@ def _create_mock_tile(
         user_x=user_x,
         user_y=0.0,
         width=width,
-        height=8,
+        height=height,
         supported_frame_buffers=0,
         device_version_vendor=1,
         device_version_product=product,
@@ -467,3 +482,76 @@ def create_reference_ceiling_128_light() -> CeilingLight:
     return _create_reference_ceiling_light(
         model="LIFX Ceiling 13x26", product=201, width=16, zone_count=127
     )
+
+
+MIRROR_ZONES = 25
+MIRROR_PRODUCT = 267
+
+
+def create_mock_mirror_light() -> MirrorLight:
+    """Create a deterministic Mirror light double, laid out like the hardware."""
+    # The 50 zones are spread across a 4x13 buffer, so the tile has 52 colors
+    layout = get_mirror_layout(MIRROR_PRODUCT)
+    assert layout is not None
+    color = HSBK(0.0, 0.0, 1.0, 3500)
+    front_colors = [color] * MIRROR_ZONES
+    back_colors = [color] * MIRROR_ZONES
+    state = _create_mock_state(
+        MirrorLightState,
+        chain=[
+            _create_mock_tile(
+                product=MIRROR_PRODUCT, width=layout.width, height=layout.height
+            )
+        ],
+        tile_orientations={0: "Right Side Up"},
+        tile_colors=[color] * layout.buffer_size,
+        tile_count=1,
+        effect=FirmwareEffect.OFF,
+        front_colors=front_colors,
+        back_colors=back_colors,
+        front_is_on=False,
+        back_is_on=False,
+        front_positions=layout.front_positions,
+        back_positions=layout.back_positions,
+    )
+    state.model = "LIFX Mirror"
+    state.capabilities.has_matrix = True
+    device = _create_mock_device(MirrorLight, state)
+    device.set_matrix_colors = AsyncMock()
+    return device
+
+
+def create_reference_mirror_light() -> MirrorLight:
+    """Create a normalized Mirror light with both components on."""
+    device = create_mock_mirror_light()
+    color = HSBK(0.0, 0.0, 0.5, 3500)
+    device.state.front_colors = [color] * MIRROR_ZONES
+    device.state.back_colors = [color] * MIRROR_ZONES
+    device.state.tile_colors = [color] * len(device.state.tile_colors)
+    device.state.front_is_on = True
+    device.state.back_is_on = True
+    _apply_reference_common(
+        device.state,
+        model="LIFX Mirror",
+        color=color,
+        kelvin_min=1500,
+        kelvin_max=9000,
+        firmware=(4, 10),
+    )
+    return device
+
+
+def create_reference_thread_light() -> Light:
+    """Create the normalized released-emulator color light on Thread."""
+    device = create_reference_color_light()
+    device.connectivity = Connectivity.THREAD
+    device.state.thread_info = ThreadInfo(
+        rloc=1024,
+        network_name="Private mesh",
+        role=ThreadRoutingRole.ROUTER,
+        next_hop=2048,
+        link_quality_in=3,
+        link_quality_out=3,
+        link_margin_db=40,
+    )
+    return device

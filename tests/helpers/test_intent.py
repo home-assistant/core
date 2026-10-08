@@ -1118,3 +1118,51 @@ async def test_intent_response_dict() -> None:
 
     # The original dict should not be affected by the mutations
     assert response_dict1 == response_dict2
+
+
+@pytest.mark.parametrize("reason", list(intent.MatchFailedReason))
+def test_match_failed_error_describes_every_reason(
+    reason: intent.MatchFailedReason,
+) -> None:
+    """Test every reason has wording, since str() is spoken by the REST API."""
+    error = intent.MatchFailedError(
+        result=intent.MatchTargetsResult(False, reason),
+        constraints=intent.MatchTargetsConstraints(name="Lamp"),
+    )
+
+    assert str(error) == f"{intent._MATCH_FAILURE_REASONS[reason]} (given name 'Lamp')"
+
+
+def test_match_failed_error_str_names_the_constraints() -> None:
+    """Test the message names what was asked for, and only what was set."""
+    error = intent.MatchFailedError(
+        result=intent.MatchTargetsResult(False, intent.MatchFailedReason.AREA),
+        constraints=intent.MatchTargetsConstraints(
+            name="Lamp", area_name="Kitchen", assistant="conversation"
+        ),
+    )
+
+    assert (
+        str(error) == "No entities were in the area (given name 'Lamp', area 'Kitchen')"
+    )
+
+
+def test_match_failed_error_str_without_constraints() -> None:
+    """Test the message stands alone when nothing was constrained."""
+    error = intent.MatchFailedError(
+        result=intent.MatchTargetsResult(False, intent.MatchFailedReason.DOMAIN),
+        constraints=intent.MatchTargetsConstraints(),
+    )
+
+    assert str(error) == "No entities matched the domain"
+
+
+def test_match_failed_error_repr_keeps_the_detail() -> None:
+    """Test the full state is still available for logs and debugging."""
+    error = intent.MatchFailedError(
+        result=intent.MatchTargetsResult(False, intent.MatchFailedReason.NAME),
+        constraints=intent.MatchTargetsConstraints(name="Lamp"),
+    )
+
+    assert repr(error).startswith("<MatchFailedError result=MatchTargetsResult(")
+    assert "constraints=MatchTargetsConstraints(" in repr(error)

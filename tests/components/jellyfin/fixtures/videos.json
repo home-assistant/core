@@ -1,0 +1,13 @@
+{
+  "Items": [
+    {
+      "Id": "VIDEO-UUID",
+      "ImageTags": {},
+      "IsFolder": false,
+      "MediaType": "Video",
+      "Name": "VIDEO",
+      "ServerId": "string",
+      "Type": "Video"
+    }
+  ]
+}

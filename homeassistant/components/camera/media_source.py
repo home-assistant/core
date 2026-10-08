@@ -16,7 +16,7 @@ from homeassistant.const import EntityStateAttribute
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
-from . import Camera, _async_stream_endpoint_url
+from . import Camera, async_stream_endpoint_url
 from .const import DATA_COMPONENT, DOMAIN, StreamType
 
 
@@ -75,7 +75,7 @@ class CameraMediaSource(MediaSource):
             raise Unresolvable("Stream integration not loaded")
 
         try:
-            url = await _async_stream_endpoint_url(self.hass, camera, HLS_PROVIDER)
+            url = await async_stream_endpoint_url(self.hass, camera, HLS_PROVIDER)
         except HomeAssistantError as err:
             # Handle known error
             if StreamType.HLS not in stream_types:

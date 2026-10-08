@@ -90,6 +90,9 @@
     }
   },
   "exceptions": {
+    "cannot_connect": {
+      "message": "Failed to connect to Roomba at {host}"
+    },
     "invalid_fan_speed": {
       "message": "Invalid fan speed {fan_speed}. Expected one of: {fan_speeds}."
     },

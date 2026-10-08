@@ -5,7 +5,7 @@ from functools import wraps
 import logging
 from typing import Any, Concatenate, override
 
-from httpx import HTTPStatusError, RequestError, TimeoutException
+from httpx2 import HTTPStatusError, RequestError, TimeoutException
 from pythonxbox.api.provider.catalog.models import Image
 from pythonxbox.api.provider.smartglass.models import (
     PlaybackState,
@@ -127,6 +127,7 @@ class XboxMediaPlayer(XboxConsoleBaseEntity, MediaPlayerEntity):
     @override
     def state(self) -> MediaPlayerState | None:
         """State of the player."""
+
         status = self.data.status
         if status.playback_state in XBOX_STATE_MAP:
             return XBOX_STATE_MAP[status.playback_state]
@@ -136,7 +137,10 @@ class XboxMediaPlayer(XboxConsoleBaseEntity, MediaPlayerEntity):
     @override
     def supported_features(self) -> MediaPlayerEntityFeature:
         """Flag media player features that are supported."""
-        if self.state not in [MediaPlayerState.PLAYING, MediaPlayerState.PAUSED]:
+        if not self.available or self.state not in [
+            MediaPlayerState.PLAYING,
+            MediaPlayerState.PAUSED,
+        ]:
             return (
                 SUPPORT_XBOX
                 & ~MediaPlayerEntityFeature.NEXT_TRACK
@@ -181,7 +185,8 @@ class XboxMediaPlayer(XboxConsoleBaseEntity, MediaPlayerEntity):
 
         return (
             to_https(image.uri)
-            if (app_details := self.data.app_details)
+            if self.available
+            and (app_details := self.data.app_details)
             and (image := _find_media_image(app_details.localized_properties[0].images))
             else None
         )

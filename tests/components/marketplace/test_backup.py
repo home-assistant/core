@@ -1,0 +1,527 @@
+"""Tests for the Marketplace backup helper."""
+
+from collections.abc import Generator
+from contextlib import contextmanager
+import errno
+import os
+from pathlib import Path
+import shutil
+from typing import Any
+from unittest.mock import patch
+
+import pytest
+
+from homeassistant.components.marketplace.base import MarketplaceManager
+from homeassistant.components.marketplace.exceptions import MarketplaceError
+from homeassistant.components.marketplace.utils.backup import (
+    BACKUP_DIRECTORY,
+    TARGET_FILE,
+    Backup,
+    backed_up_paths,
+    restore_interrupted_backups,
+)
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.storage import STORAGE_DIR
+
+from . import setup_integration
+
+from tests.common import MockConfigEntry
+
+
+def _backup_root(config_dir: Path) -> Path:
+    """Return where the backups are kept."""
+    return config_dir / STORAGE_DIR / BACKUP_DIRECTORY
+
+
+def _integration(config_dir: Path, name: str = "example") -> Path:
+    """Create an installed integration and return its directory."""
+    directory = config_dir / "custom_components" / name
+    directory.mkdir(parents=True)
+    (directory / "__init__.py").write_text("installed")
+    return directory
+
+
+class Stopped(BaseException):
+    """Home Assistant stopping halfway through."""
+
+
+@contextmanager
+def _backups_on_another_file_system(config_dir: Path) -> Generator[None]:
+    """Make a rename between the backups and the content fail, like across mounts."""
+    root = _backup_root(config_dir)
+    rename = os.rename
+
+    def cross_device_rename(source: Any, destination: Any) -> None:
+        if Path(source).is_relative_to(root) != Path(destination).is_relative_to(root):
+            raise OSError(errno.EXDEV, "Invalid cross-device link")
+        rename(source, destination)
+
+    with patch(
+        "homeassistant.components.marketplace.utils.backup.os.rename",
+        cross_device_rename,
+    ):
+        yield
+
+
+def _stop_after_first_file(directory: Path) -> Any:
+    """Return an rmtree that removes one file of the directory, then stops."""
+    rmtree = shutil.rmtree
+
+    def stopping_rmtree(path: Any, *args: Any, **kwargs: Any) -> None:
+        if Path(path) != directory:
+            rmtree(path, *args, **kwargs)
+            return
+        next(Path(path).iterdir()).unlink()
+        raise Stopped
+
+    return stopping_rmtree
+
+
+def test_backup_directory(marketplace: MarketplaceManager, config_dir: Path) -> None:
+    """Test a directory is moved into the backup and put back."""
+    target = _integration(config_dir)
+    backup = Backup(marketplace, target)
+
+    backup.create()
+    assert not target.exists()
+    assert (backup.content_path / "__init__.py").read_text() == "installed"
+    assert backup.backup_path.parent == _backup_root(config_dir)
+    assert (backup.backup_path / TARGET_FILE).read_text() == (
+        "custom_components/example"
+    )
+
+    backup.restore()
+    assert (target / "__init__.py").read_text() == "installed"
+
+    backup.cleanup()
+    assert not backup.backup_path.exists()
+
+
+def test_backup_file(marketplace: MarketplaceManager, config_dir: Path) -> None:
+    """Test a single file is moved into the backup and put back."""
+    target = config_dir / "python_scripts" / "example.py"
+    target.parent.mkdir()
+    target.write_text("installed")
+    backup = Backup(marketplace, target)
+
+    backup.create()
+    assert not target.exists()
+
+    backup.restore()
+    assert target.read_text() == "installed"
+
+
+def test_backup_on_another_file_system(
+    marketplace: MarketplaceManager, config_dir: Path
+) -> None:
+    """Test content on another file system is copied into the backup and back."""
+    target = _integration(config_dir)
+    (target / "const.py").write_text("installed")
+    backup = Backup(marketplace, target)
+
+    with _backups_on_another_file_system(config_dir):
+        backup.create()
+        assert not target.exists()
+
+        backup.restore()
+
+    assert sorted(path.name for path in target.iterdir()) == [
+        "__init__.py",
+        "const.py",
+    ]
+    assert not backup.has_content
+
+
+def test_file_backup_on_another_file_system(
+    marketplace: MarketplaceManager, config_dir: Path
+) -> None:
+    """Test a single file on another file system is copied into the backup and back."""
+    target = config_dir / "python_scripts" / "example.py"
+    target.parent.mkdir()
+    target.write_text("installed")
+    backup = Backup(marketplace, target)
+
+    with _backups_on_another_file_system(config_dir):
+        backup.create()
+        assert not target.exists()
+
+        backup.restore()
+
+    assert target.read_text() == "installed"
+
+
+def test_failed_move_stops_the_backup(
+    marketplace: MarketplaceManager, config_dir: Path
+) -> None:
+    """Test a move that fails for another reason than the file system is refused."""
+    target = _integration(config_dir)
+    rename = os.rename
+
+    def refused_rename(source: Any, destination: Any) -> None:
+        if Path(source) == target:
+            raise PermissionError(errno.EACCES, "Permission denied")
+        rename(source, destination)
+
+    with (
+        patch(
+            "homeassistant.components.marketplace.utils.backup.os.rename",
+            refused_rename,
+        ),
+        pytest.raises(MarketplaceError, match="Permission denied"),
+    ):
+        Backup(marketplace, target).create()
+
+    assert (target / "__init__.py").read_text() == "installed"
+    assert list(_backup_root(config_dir).iterdir()) == []
+
+
+def test_stop_while_copying_a_backup_back(
+    marketplace: MarketplaceManager, config_dir: Path
+) -> None:
+    """Test half a copy back is replaced at the next start, and not left behind."""
+    target = _integration(config_dir)
+    (target / "const.py").write_text("installed")
+    backup = Backup(marketplace, target)
+    copytree = shutil.copytree
+
+    def stopping_copytree(source: Any, destination: Any, **kwargs: Any) -> None:
+        copytree(source, destination, **kwargs)
+        next(Path(destination).iterdir()).unlink()
+        raise Stopped
+
+    with _backups_on_another_file_system(config_dir):
+        backup.create()
+
+        with (
+            patch.object(shutil, "copytree", stopping_copytree),
+            pytest.raises(Stopped),
+        ):
+            backup.restore()
+
+        restore_interrupted_backups(marketplace)
+
+    assert sorted(path.name for path in target.iterdir()) == [
+        "__init__.py",
+        "const.py",
+    ]
+    assert sorted(path.name for path in target.parent.iterdir()) == ["example"]
+
+
+def test_backed_up_paths(marketplace: MarketplaceManager, config_dir: Path) -> None:
+    """Test only a backup that knows its target counts as waiting to be put back."""
+    Backup(marketplace, _integration(config_dir)).create()
+    (_backup_root(config_dir) / "empty").mkdir()
+
+    assert backed_up_paths(marketplace) == {
+        config_dir / "custom_components" / "example"
+    }
+
+
+def test_stop_while_copying_into_the_backup_keeps_the_original(
+    marketplace: MarketplaceManager, config_dir: Path
+) -> None:
+    """Test half a copy is never restored over the original it came from."""
+    target = _integration(config_dir)
+    (target / "const.py").write_text("installed")
+    copytree = shutil.copytree
+
+    def stopping_copytree(source: Any, destination: Any, **kwargs: Any) -> None:
+        copytree(source, destination, **kwargs)
+        next(Path(destination).iterdir()).unlink()
+        raise Stopped
+
+    with (
+        _backups_on_another_file_system(config_dir),
+        patch.object(shutil, "copytree", stopping_copytree),
+        pytest.raises(Stopped),
+    ):
+        Backup(marketplace, target).create()
+
+    restore_interrupted_backups(marketplace)
+
+    assert sorted(path.name for path in target.iterdir()) == [
+        "__init__.py",
+        "const.py",
+    ]
+    assert list(_backup_root(config_dir).iterdir()) == []
+
+
+def test_original_that_can_not_be_removed_is_put_back(
+    marketplace: MarketplaceManager, config_dir: Path
+) -> None:
+    """Test an original removed halfway comes back whole from its complete copy."""
+    target = _integration(config_dir)
+    (target / "const.py").write_text("installed")
+    rmtree = shutil.rmtree
+    failed: list[Path] = []
+
+    def failing_rmtree(path: Any, *args: Any, **kwargs: Any) -> None:
+        if Path(path) == target and not failed:
+            failed.append(target)
+            next(target.iterdir()).unlink()
+            raise OSError(errno.EBUSY, "Device or resource busy")
+        rmtree(path, *args, **kwargs)
+
+    with (
+        _backups_on_another_file_system(config_dir),
+        patch.object(shutil, "rmtree", failing_rmtree),
+        pytest.raises(MarketplaceError, match="Device or resource busy"),
+    ):
+        Backup(marketplace, target).create()
+
+    assert sorted(path.name for path in target.iterdir()) == [
+        "__init__.py",
+        "const.py",
+    ]
+    assert list(_backup_root(config_dir).iterdir()) == []
+
+
+def test_stop_while_removing_a_restored_backup(
+    marketplace: MarketplaceManager, config_dir: Path
+) -> None:
+    """Test what is left of a backup that was put back is not restored again."""
+    target = _integration(config_dir)
+    (target / "const.py").write_text("installed")
+    backup = Backup(marketplace, target)
+
+    with _backups_on_another_file_system(config_dir):
+        backup.create()
+        target.mkdir()
+        (target / "half_written.py").write_text("broken")
+
+        # Stops while removing what was copied back, at the next start
+        with (
+            patch.object(
+                shutil,
+                "rmtree",
+                _stop_after_first_file(backup.backup_path / "discarded"),
+            ),
+            pytest.raises(Stopped),
+        ):
+            backup.restore()
+
+        restore_interrupted_backups(marketplace)
+
+    assert sorted(path.name for path in target.iterdir()) == [
+        "__init__.py",
+        "const.py",
+    ]
+
+
+def test_restore_replaces_a_partial_install(
+    marketplace: MarketplaceManager, config_dir: Path
+) -> None:
+    """Test restoring removes what a failed install left behind."""
+    target = _integration(config_dir)
+    backup = Backup(marketplace, target)
+    backup.create()
+
+    target.mkdir()
+    (target / "half_written.py").write_text("broken")
+    backup.restore()
+
+    assert sorted(path.name for path in target.iterdir()) == ["__init__.py"]
+
+
+def test_backups_do_not_share_a_directory(
+    marketplace: MarketplaceManager, config_dir: Path
+) -> None:
+    """Test two installs at the same time keep their own backups."""
+    first = Backup(marketplace, _integration(config_dir, "first"))
+    second = Backup(marketplace, _integration(config_dir, "second"))
+
+    first.create()
+    second.create()
+    first.cleanup()
+
+    assert (second.content_path / "__init__.py").exists()
+
+
+def test_nothing_to_back_up(marketplace: MarketplaceManager, config_dir: Path) -> None:
+    """Test a path that is not there is only marked as a first install."""
+    backup = Backup(marketplace, config_dir / "missing")
+
+    backup.create()
+
+    assert backup.is_first_install
+    assert not backup.has_content
+    assert not (config_dir / "missing").exists()
+
+
+@pytest.mark.parametrize(
+    "target",
+    [
+        pytest.param(".", id="config-directory"),
+        pytest.param("custom_components", id="custom-components"),
+    ],
+)
+def test_protected_path_is_refused(
+    marketplace: MarketplaceManager, config_dir: Path, target: str
+) -> None:
+    """Test a path that must never move is refused, not skipped."""
+    (config_dir / "custom_components").mkdir(exist_ok=True)
+    backup = Backup(marketplace, config_dir / target)
+
+    with pytest.raises(MarketplaceError, match="it is protected"):
+        backup.create()
+
+    assert not backup.backup_path.exists()
+    assert (config_dir / "custom_components").exists()
+
+
+def test_restore_interrupted_install(
+    marketplace: MarketplaceManager,
+    config_dir: Path,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a backup left behind by a restart is put back."""
+    target = _integration(config_dir)
+    Backup(marketplace, target).create()
+    target.mkdir()
+    (target / "half_written.py").write_text("broken")
+
+    assert restore_interrupted_backups(marketplace)
+
+    assert sorted(path.name for path in target.iterdir()) == ["__init__.py"]
+    assert list(_backup_root(config_dir).iterdir()) == []
+    assert "an install replacing it did not finish" in caplog.text
+
+
+def test_restore_interrupted_install_with_persistent_directory(
+    marketplace: MarketplaceManager, config_dir: Path
+) -> None:
+    """Test the persistent directory goes back into the restored content."""
+    target = _integration(config_dir)
+    (target / "config").mkdir()
+    (target / "config" / "settings.yaml").write_text("mine")
+
+    # The persistent directory is moved out before the content is
+    Backup(marketplace, target / "config").create()
+    Backup(marketplace, target).create()
+
+    restore_interrupted_backups(marketplace)
+
+    assert (target / "__init__.py").read_text() == "installed"
+    assert (target / "config" / "settings.yaml").read_text() == "mine"
+
+
+def test_restore_after_the_persistent_directory_moved_in(
+    marketplace: MarketplaceManager, config_dir: Path
+) -> None:
+    """Test a stop after the kept data went into the new content does not lose it."""
+    target = _integration(config_dir)
+    (target / "config").mkdir()
+    (target / "config" / "settings.yaml").write_text("mine")
+    persistent = Backup(marketplace, target / "config")
+    persistent.create()
+    Backup(marketplace, target).create()
+
+    # The new content is written and the kept data moved into it, then it stops
+    target.mkdir()
+    (target / "__init__.py").write_text("new version")
+    persistent.restore()
+
+    restore_interrupted_backups(marketplace)
+
+    assert (target / "__init__.py").read_text() == "installed"
+    assert (target / "config" / "settings.yaml").read_text() == "mine"
+
+
+def test_restore_keeps_the_kept_data_when_it_can_not_go_back(
+    marketplace: MarketplaceManager, config_dir: Path
+) -> None:
+    """Test the kept data is never removed with the new content it is in."""
+    target = _integration(config_dir)
+    (target / "config").mkdir()
+    (target / "config" / "settings.yaml").write_text("mine")
+    persistent = Backup(marketplace, target / "config")
+    persistent.create()
+    Backup(marketplace, target).create()
+    target.mkdir()
+    (target / "__init__.py").write_text("new version")
+    persistent.restore()
+
+    with patch(
+        "homeassistant.components.marketplace.utils.backup.shutil.move",
+        side_effect=OSError("device busy"),
+    ):
+        restore_interrupted_backups(marketplace)
+
+    assert (target / "config" / "settings.yaml").read_text() == "mine"
+
+    # Both backups wait for the next start, which can put it all back
+    restore_interrupted_backups(marketplace)
+
+    assert (target / "__init__.py").read_text() == "installed"
+    assert (target / "config" / "settings.yaml").read_text() == "mine"
+
+
+def test_restore_removes_an_unfinished_first_install(
+    marketplace: MarketplaceManager, config_dir: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test a first install that never finished leaves nothing behind."""
+    target = config_dir / "custom_components" / "example"
+    Backup(marketplace, target).create()
+
+    # Part of it is written, then Home Assistant stops
+    target.mkdir(parents=True)
+    (target / "__init__.py").write_text("half of it")
+
+    assert not restore_interrupted_backups(marketplace)
+
+    assert not target.exists()
+    assert list(_backup_root(config_dir).iterdir()) == []
+    assert "a first install of it did not finish" in caplog.text
+
+
+def test_restore_removes_empty_backups(
+    marketplace: MarketplaceManager, config_dir: Path
+) -> None:
+    """Test a backup without a target, from a restart before the move, goes away."""
+    empty = _backup_root(config_dir) / "empty"
+    empty.mkdir(parents=True)
+
+    assert not restore_interrupted_backups(marketplace)
+
+    assert not empty.exists()
+
+
+def test_restore_leaves_unknown_targets_alone(
+    marketplace: MarketplaceManager,
+    config_dir: Path,
+    tmp_path_factory: pytest.TempPathFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a backup that points outside the configuration is never touched."""
+    outside = tmp_path_factory.mktemp("outside")
+    backup = _backup_root(config_dir) / "outside"
+    (backup / "content").mkdir(parents=True)
+    (backup / TARGET_FILE).write_text(str(outside / "example"))
+
+    restore_interrupted_backups(marketplace)
+
+    assert (backup / "content").exists()
+    assert not (outside / "example").exists()
+    assert "Leaving backup" in caplog.text
+
+
+async def test_setup_restores_interrupted_install(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, config_dir: Path
+) -> None:
+    """Test setting up puts back what an interrupted install moved aside."""
+    backup = _backup_root(config_dir) / "interrupted"
+    (backup / "content").mkdir(parents=True)
+    (backup / "content" / "__init__.py").write_text("installed")
+    (backup / TARGET_FILE).write_text("custom_components/example")
+
+    with patch(
+        "homeassistant.components.marketplace.async_clear_custom_components_cache"
+    ) as clear_cache:
+        await setup_integration(hass, mock_config_entry)
+
+    assert (
+        config_dir / "custom_components" / "example" / "__init__.py"
+    ).read_text() == "installed"
+    assert not backup.exists()
+    # The loader has to find the integration that is back in place
+    clear_cache.assert_called_once_with(hass)

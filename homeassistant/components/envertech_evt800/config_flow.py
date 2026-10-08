@@ -14,7 +14,7 @@ from .const import DEFAULT_PORT, DOMAIN, TYPE_TCP_SERVER_MODE
 SCHEMA_DEVICE = probatio.Schema(
     {
         probatio.Required(CONF_IP_ADDRESS): cv.string,
-        probatio.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Required(CONF_PORT, default=DEFAULT_PORT): probatio.Port(),
     }
 )
 

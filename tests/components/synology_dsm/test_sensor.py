@@ -277,6 +277,7 @@ async def test_external_usb_new_device(
     setup_dsm_with_usb.external_usb.get_devices = mock_dsm_external_usb_devices_usb2()
     # Coordinator refresh
     coordinator = setup_dsm_with_usb.mock_entry.runtime_data.coordinator_central
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
     await coordinator.async_request_refresh()
     await hass.async_block_till_done()
 
@@ -343,6 +344,7 @@ async def test_external_usb_availability(
     setup_dsm_with_usb.external_usb.get_devices = mock_dsm_external_usb_devices_usb0()
     # Coordinator refresh
     coordinator = setup_dsm_with_usb.mock_entry.runtime_data.coordinator_central
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
     await coordinator.async_request_refresh()
     await hass.async_block_till_done()
 
