@@ -66,6 +66,7 @@ class DaikinRefreshButton(DaikinEntity, ButtonEntity):
     def _handle_coordinator_update(self) -> None:
         self.async_write_ha_state()
 
+    @override
     async def async_press(self) -> None:
         """Request an immediate coordinator refresh."""
         await self.coordinator.async_refresh()

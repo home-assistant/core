@@ -3,6 +3,8 @@
 import logging
 from typing import TYPE_CHECKING, override
 
+from daikin_onecta.models import ScheduleSelection
+
 from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -28,7 +30,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up Daikin climate based on config_entry."""
     coordinator: OnectaDataUpdateCoordinator = config_entry.runtime_data
-    sensors = []
+    sensors: list[DaikinScheduleSelect] = []
     for device in (coordinator.data or {}).values():
         for management_point in device.device.management_points:
             if management_point.schedule_state is not None:
@@ -52,7 +54,7 @@ class DaikinScheduleSelect(DaikinManagementPointEntity, SelectEntity):
     def __init__(
         self,
         device: DaikinOnectaDevice,
-        coordinator,
+        coordinator: OnectaDataUpdateCoordinator,
         embedded_id: str,
         management_point_type: str,
         value: str,
@@ -84,7 +86,7 @@ class DaikinScheduleSelect(DaikinManagementPointEntity, SelectEntity):
         self.update_state()
         self.async_write_ha_state()
 
-    def selection(self):
+    def selection(self) -> ScheduleSelection | None:
         """Return the schedule selection for the current schedule mode."""
         point = self._device.management_point(self._embedded_id)
         schedule = point.schedule_state if point is not None else None
@@ -92,7 +94,7 @@ class DaikinScheduleSelect(DaikinManagementPointEntity, SelectEntity):
             return None
         return schedule.active_selection
 
-    def get_current_option(self):
+    def get_current_option(self) -> str | None:
         """Return the selected schedule name."""
         selection = self.selection()
         if selection is None or not selection.enabled:
@@ -138,9 +140,8 @@ class DaikinScheduleSelect(DaikinManagementPointEntity, SelectEntity):
             )
         self.update_state()
         self.async_write_ha_state()
-        return
 
-    def get_options(self):
+    def get_options(self) -> list[str]:
         """Return readable configured schedules."""
         selection = self.selection()
         if selection is None:

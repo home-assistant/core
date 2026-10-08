@@ -1,12 +1,11 @@
 """Support for Daikin AirBase zones."""
 
 import logging
-from typing import TYPE_CHECKING, override
+from typing import TYPE_CHECKING, Any, override
 
-from homeassistant.components.switch import SwitchEntityDescription
+from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .device import DaikinOnectaDevice
@@ -28,7 +27,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up Daikin switches based on config_entry."""
     coordinator: OnectaDataUpdateCoordinator = config_entry.runtime_data
-    sensors = []
+    sensors: list[DaikinSwitch] = []
     supported_management_point_types = {
         "domesticHotWaterTank",
         "domesticHotWaterFlowThrough",
@@ -73,13 +72,13 @@ async def async_setup_entry(
     async_add_entities(sensors)
 
 
-class DaikinSwitch(DaikinManagementPointEntity, ToggleEntity):
+class DaikinSwitch(DaikinManagementPointEntity, SwitchEntity):
     """Represent a switchable Daikin characteristic."""
 
     def __init__(
         self,
         device: DaikinOnectaDevice,
-        coordinator,
+        coordinator: OnectaDataUpdateCoordinator,
         embedded_id: str,
         management_point_type: str,
         value: str,
@@ -114,24 +113,24 @@ class DaikinSwitch(DaikinManagementPointEntity, ToggleEntity):
 
     @property
     @override
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return whether the switch is on."""
         return self._switch_state == "on"
 
-    def sensor_value(self):
+    def sensor_value(self) -> str | None:
         """Return the state of the switch."""
         point = self._device.management_point(self._embedded_id)
         characteristic = (
             point.scalar_characteristic(self._value) if point is not None else None
         )
-        result = characteristic.value if characteristic is not None else ""
+        result = characteristic.value if characteristic is not None else None
         _LOGGER.debug(
             "Device '%s' switch '%s' value '%s'", self._device.name, self._value, result
         )
-        return result
+        return result if isinstance(result, str) else None
 
     @override
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the zone on."""
         if not self.is_on:
             await self._async_execute_command(
@@ -158,10 +157,8 @@ class DaikinSwitch(DaikinManagementPointEntity, ToggleEntity):
                 self._value,
             )
 
-        return True
-
     @override
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the zone off."""
         if self.is_on:
             await self._async_execute_command(
@@ -187,5 +184,3 @@ class DaikinSwitch(DaikinManagementPointEntity, ToggleEntity):
                 self._device.name,
                 self._value,
             )
-
-        return True

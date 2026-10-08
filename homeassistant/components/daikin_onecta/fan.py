@@ -18,6 +18,7 @@ from homeassistant.util.percentage import (
 
 from .const import FANMODE_FIXED
 from .coordinator import OnectaDataUpdateCoordinator
+from .device import DaikinOnectaDevice
 from .entity import DaikinManagementPointEntity
 
 PARALLEL_UPDATES = 1
@@ -52,7 +53,10 @@ class DaikinAirPurifier(DaikinManagementPointEntity, FanEntity):
     _attr_has_entity_name = True
 
     def __init__(
-        self, device, embedded_id: str, coordinator: OnectaDataUpdateCoordinator
+        self,
+        device: DaikinOnectaDevice,
+        embedded_id: str,
+        coordinator: OnectaDataUpdateCoordinator,
     ) -> None:
         """Initialize the air purifier."""
         super().__init__(device, coordinator, embedded_id, "climateControl")
@@ -182,7 +186,7 @@ class DaikinAirPurifier(DaikinManagementPointEntity, FanEntity):
             await self.async_set_percentage(percentage)
 
     @override
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the air purifier."""
         if not self.is_on:
             return
