@@ -1,7 +1,6 @@
 """The Bond integration."""
 
 from http import HTTPStatus
-import logging
 from typing import Any
 
 from aiohttp import ClientError, ClientResponseError, ClientTimeout
@@ -15,7 +14,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import SLOW_UPDATE_WARNING
@@ -35,8 +34,6 @@ PLATFORMS = [
     Platform.SWITCH,
 ]
 _API_TIMEOUT = SLOW_UPDATE_WARNING - 1
-
-_LOGGER = logging.getLogger(__name__)
 
 type BondConfigEntry = ConfigEntry[BondData]
 
@@ -65,8 +62,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: BondConfigEntry) -> bool
         await hub.setup()
     except ClientResponseError as ex:
         if ex.status == HTTPStatus.UNAUTHORIZED:
-            _LOGGER.error("Bond token no longer valid: %s", ex)
-            return False
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_token",
+            ) from ex
         raise ConfigEntryNotReady from ex
     except (ClientError, TimeoutError, OSError) as error:
         raise ConfigEntryNotReady from error
