@@ -234,7 +234,7 @@ type ConcentrationMeasurementCluster = (
     | clusters.TotalVolatileOrganicCompoundsConcentrationMeasurement
 )
 
-# The MeasurementUnit enum is shared across all concentration measurement clusters.
+# Every concentration measurement cluster defines the same MeasurementUnitEnum members.
 _mu = clusters.CarbonDioxideConcentrationMeasurement.Enums.MeasurementUnitEnum
 MEASUREMENT_UNIT_MAP: dict[int, str] = {
     _mu.kPpm: UnitOfRatio.PARTS_PER_MILLION,
@@ -247,8 +247,6 @@ MEASUREMENT_UNIT_MAP: dict[int, str] = {
     _mu.kBqm3: CONCENTRATION_BECQUERELS_PER_CUBIC_METER,
 }
 
-# TVOC uses a different device class depending on whether the unit is
-# mass-based or parts-based.
 TVOC_DEVICE_CLASS_MAP: dict[int, SensorDeviceClass] = {
     _mu.kPpm: SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS,
     _mu.kPpb: SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS,
@@ -351,7 +349,7 @@ class MatterConcentrationSensor(MatterSensor):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the entity."""
         super().__init__(*args, **kwargs)
-        # MeasurementUnit is Fixed per spec, so it only needs to be read once.
+        # MeasurementUnit has Fixed quality in the Matter spec.
         if (unit_value := self.matter_measurement_unit) is not None:
             self._apply_measurement_unit(unit_value)
 
@@ -363,8 +361,7 @@ class MatterConcentrationSensor(MatterSensor):
         allowed_units = (
             DEVICE_CLASS_UNITS.get(device_class) if device_class is not None else None
         )
-        # Keep the statically defined unit when the device class does not accept
-        # the reported one; converting between them is left to a future change.
+        # A device class accepts only the units DEVICE_CLASS_UNITS lists for it.
         if allowed_units is not None and mapped_unit not in allowed_units:
             return
         self._attr_native_unit_of_measurement = mapped_unit
@@ -387,8 +384,7 @@ class MatterTVOCConcentrationSensor(MatterConcentrationSensor):
     @override
     def _apply_measurement_unit(self, unit_value: int) -> None:
         """Set the device class and unit from the reported MeasurementUnit."""
-        # Resolve the device class first, so the unit is validated against the
-        # matching mass- or parts-based device class.
+        # super() validates the unit against the device class.
         if (dc := TVOC_DEVICE_CLASS_MAP.get(unit_value)) is not None:
             self._attr_device_class = dc
         super()._apply_measurement_unit(unit_value)
