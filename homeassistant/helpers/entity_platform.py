@@ -925,9 +925,11 @@ class EntityPlatform:
 
         def remove_entity_cb() -> None:
             """Remove entity from entities dict."""
-            del self.entities[entity_id]
-            del self.domain_entities[entity_id]
-            del self.domain_platform_entities[entity_id]
+            # The entity_id may have changed since the entity was added
+            current_entity_id = entity.entity_id
+            del self.entities[current_entity_id]
+            del self.domain_entities[current_entity_id]
+            del self.domain_platform_entities[current_entity_id]
             # Not cleared from `_polling_tasks` here: a hung synchronous
             # update()'s executor thread keeps running regardless, and an
             # entity-id rename could then race a new poll against it (see
@@ -1275,6 +1277,16 @@ class EntityPlatform:
         """
         await self.async_reset()
         self.hass.data[DATA_ENTITY_PLATFORM][self.platform_name].remove(self)
+
+    @callback
+    def async_move_entity(self, old_entity_id: str, new_entity_id: str) -> None:
+        """Move an entity whose entity_id has changed to its new entity_id."""
+        for entities in (
+            self.entities,
+            self.domain_entities,
+            self.domain_platform_entities,
+        ):
+            entities[new_entity_id] = entities.pop(old_entity_id)
 
     async def async_remove_entity(self, entity_id: str) -> None:
         """Remove entity id from platform."""
