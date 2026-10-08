@@ -4,7 +4,7 @@ from datetime import time, timedelta
 import logging
 from typing import Final, TypedDict, cast
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.const import ATTR_TEMPERATURE
@@ -118,27 +118,27 @@ def _validate_cometblue_schedule(
     return normalized_schedule
 
 
-SCHEDULE_ENTRY_SCHEMA = vol.Schema(
+SCHEDULE_ENTRY_SCHEMA = probatio.Schema(
     {
-        vol.Optional(ATTR_FROM): cv.time,
-        vol.Optional(ATTR_TO): cv.time,
+        probatio.Optional(ATTR_FROM): cv.time,
+        probatio.Optional(ATTR_TO): cv.time,
     },
-    extra=vol.REMOVE_EXTRA,
+    extra=probatio.REMOVE_EXTRA,
 )
-SCHEDULE_DAY_SCHEMA = vol.All(
+SCHEDULE_DAY_SCHEMA = probatio.All(
     [SCHEDULE_ENTRY_SCHEMA],
-    vol.Length(max=4),
+    probatio.Length(max=4),
     _validate_cometblue_schedule,
 )
 SERVICE_SCHEDULE_SCHEMA = {
-    vol.Optional(day): SCHEDULE_DAY_SCHEMA for day in ATTR_ALL_DAYS
+    probatio.Optional(day): SCHEDULE_DAY_SCHEMA for day in ATTR_ALL_DAYS
 }
 SERVICE_HOLIDAY_SCHEMA = {
-    vol.Required(ATTR_FROM): cv.datetime,
-    vol.Required(ATTR_TO): cv.datetime,
-    vol.Required(ATTR_TEMPERATURE): vol.All(
-        vol.Coerce(float),
-        vol.Range(min=MIN_TEMP, max=MAX_TEMP),
+    probatio.Required(ATTR_FROM): cv.datetime,
+    probatio.Required(ATTR_TO): cv.datetime,
+    probatio.Required(ATTR_TEMPERATURE): probatio.All(
+        probatio.Coerce(float),
+        probatio.Range(min=MIN_TEMP, max=MAX_TEMP),
         _validate_half_precision,
     ),
 }

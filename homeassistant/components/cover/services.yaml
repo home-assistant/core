@@ -6,6 +6,15 @@ open_cover:
       domain: cover
       supported_features:
         - cover.CoverEntityFeature.OPEN
+  fields:
+    speed:
+      example: "fast"
+      filter:
+        supported_features:
+          - cover.CoverEntityFeature.SPEED
+      selector:
+        state:
+          attribute: speed
 
 close_cover:
   target:
@@ -13,6 +22,15 @@ close_cover:
       domain: cover
       supported_features:
         - cover.CoverEntityFeature.CLOSE
+  fields:
+    speed:
+      example: "fast"
+      filter:
+        supported_features:
+          - cover.CoverEntityFeature.SPEED
+      selector:
+        state:
+          attribute: speed
 
 toggle:
   target:
@@ -36,6 +54,14 @@ set_cover_position:
           min: 0
           max: 100
           unit_of_measurement: "%"
+    speed:
+      filter:
+        supported_features:
+          - cover.CoverEntityFeature.SPEED
+      example: "fast"
+      selector:
+        state:
+          attribute: speed
 
 stop_cover:
   target:

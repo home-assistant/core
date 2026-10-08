@@ -156,7 +156,9 @@ async def test_dhcp_mac(
     """Test updating the mac address in the DHCP discovery."""
     await setup_integration(hass, mock_config_entry)
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, "KNC1-W-00000214")})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "KNC1-W-00000214"), mock_config_entry.entry_id
+    )
     assert device
     assert device.connections == set()
 
@@ -166,7 +168,9 @@ async def test_dhcp_mac(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, "KNC1-W-00000214")})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "KNC1-W-00000214"), mock_config_entry.entry_id
+    )
     assert device
     assert device.connections == {(dr.CONNECTION_NETWORK_MAC, "aa:bb:cc:dd:ee:ff")}
 

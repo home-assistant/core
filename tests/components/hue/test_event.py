@@ -5,6 +5,7 @@ from unittest.mock import Mock
 from homeassistant.components.event import ATTR_EVENT_TYPE, ATTR_EVENT_TYPES
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util.json import JsonArrayType
 
 from .conftest import setup_platform
@@ -112,3 +113,38 @@ async def test_sensor_add_update(hass: HomeAssistant, mock_bridge_v2: Mock) -> N
     assert state.attributes["action"] == "repeat"
     assert state.attributes["steps"] == 60
     assert state.attributes["duration"] == 400
+
+
+async def test_button_without_device(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_bridge_v2: Mock,
+    v2_resources_test_data: JsonArrayType,
+) -> None:
+    """Test a button resource no device lists does not abort the platform."""
+    orphan_button = {
+        "button": {"button_report": {"event": "short_release"}},
+        "id": "8c47a1b2-6b0e-4f6e-9d2a-3f6e2b1c0d9e",
+        "metadata": {"control_id": 2},
+        "owner": {"rid": "3ff06175-29e8-44a8-8fe7-af591b0025da", "rtype": "device"},
+        "type": "button",
+    }
+    await mock_bridge_v2.api.load_test_data([orphan_button, *v2_resources_test_data])
+    await setup_platform(hass, mock_bridge_v2, Platform.EVENT)
+
+    # The 8 entities from the test data and the orphan button
+    assert len(hass.states.async_all()) == 9
+
+    entity_id = entity_registry.async_get_entity_id(
+        Platform.EVENT, "hue", "8c47a1b2-6b0e-4f6e-9d2a-3f6e2b1c0d9e"
+    )
+    assert entity_id
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes[ATTR_EVENT_TYPES] == [
+        "initial_press",
+        "repeat",
+        "short_release",
+        "long_press",
+        "long_release",
+    ]

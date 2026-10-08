@@ -8,7 +8,7 @@ from linkplay.bridge import LinkPlayBridge
 from linkplay.discovery import linkplay_factory_httpapi_bridge
 from linkplay.exceptions import LinkPlayRequestException
 from linkplay.manufacturers import MANUFACTURER_WIIM
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_MODEL
@@ -128,6 +128,6 @@ class LinkPlayConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({vol.Required(CONF_HOST): str}),
+            data_schema=probatio.Schema({probatio.Required(CONF_HOST): str}),
             errors=errors,
         )

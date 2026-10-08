@@ -28,7 +28,7 @@ from . import (
     setup_platform,
 )
 
-from tests.common import MockConfigEntry, async_load_fixture
+from tests.common import MockConfigEntry, async_load_json_object_fixture
 
 
 async def test_new_firmware_version(
@@ -41,20 +41,20 @@ async def test_new_firmware_version(
     assert mock_config_entry.unique_id is not None
 
     await setup_platform(hass, mock_config_entry, [Platform.SENSOR])
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, mock_config_entry.unique_id)}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_config_entry.unique_id), mock_config_entry.entry_id
     )
     assert device_entry is not None
     assert device_entry.sw_version == "build-58/build-65"
 
-    status_data = json.loads(await async_load_fixture(hass, "status.json", DOMAIN))
+    status_data = await async_load_json_object_fixture(hass, "status.json", DOMAIN)
     status_data["device"]["core"]["version"] = "build-62"
     status_data["device"]["bridge"]["version"] = "build-69"
     get_status_callback(mock_iometer_client)(Status.from_json(json.dumps(status_data)))
     await hass.async_block_till_done()
 
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, mock_config_entry.unique_id)}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_config_entry.unique_id), mock_config_entry.entry_id
     )
     assert device_entry is not None
     assert device_entry.sw_version == "build-62/build-69"

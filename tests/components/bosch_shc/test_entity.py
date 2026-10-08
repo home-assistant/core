@@ -47,11 +47,13 @@ async def test_shc_entity_via_device_id(
     """SHCEntity links its device to the SHC hub via via_device_id."""
     await setup_integration(hass, mock_config_entry)
 
-    hub_device = device_registry.async_get_device(identifiers={HUB_IDENTIFIER})
+    hub_device = device_registry.async_get_device_by_identifier(
+        HUB_IDENTIFIER, mock_config_entry.entry_id
+    )
     assert hub_device is not None
 
-    child_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, motion_device.id)}
+    child_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, motion_device.id), mock_config_entry.entry_id
     )
     assert child_device is not None
     assert child_device.via_device_id == hub_device.id
@@ -78,8 +80,8 @@ async def test_shc_entity_via_device_id_mismatch(
 
     await setup_integration(hass, mock_config_entry)
 
-    child_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, motion_device.id)}
+    child_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, motion_device.id), mock_config_entry.entry_id
     )
     assert child_device is not None
     assert child_device.via_device_id is None

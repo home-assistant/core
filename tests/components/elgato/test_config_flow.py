@@ -104,9 +104,14 @@ async def test_connection_error(
     """Test we show user form on Elgato Key Light connection error."""
     mock_elgato.info.side_effect = ElgatoConnectionError
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={CONF_HOST: "127.0.0.1"},
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_HOST: "127.0.0.1"}
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -116,10 +121,8 @@ async def test_connection_error(
     # Recover from error
     mock_elgato.info.side_effect = None
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={CONF_HOST: "127.0.0.2"},
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_HOST: "127.0.0.2"}
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -164,9 +167,14 @@ async def test_user_device_exists_abort(
     """Test we abort zeroconf flow if Elgato Key Light device already configured."""
     mock_config_entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={CONF_HOST: "127.0.0.1"},
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_HOST: "127.0.0.1"}
     )
 
     assert result["type"] is FlowResultType.ABORT

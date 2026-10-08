@@ -153,8 +153,8 @@ async def test_device_info(
     """Test device registry information."""
     entry = await setup_integration(hass, mock_config_entry)
 
-    device_entry = device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, entry.unique_id)}
+    device_entry = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, entry.unique_id), entry.entry_id
     )
     assert device_entry is not None
     assert device_entry == snapshot
@@ -178,8 +178,8 @@ async def test_device_legacy_firmware(
 
     assert entry.unique_id == "aa:bb:cc:dd:ee:ff"
 
-    device_entry = device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, entry.unique_id)}
+    device_entry = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, entry.unique_id), entry.entry_id
     )
     assert LEGACY_VERSION in device_entry.sw_version
 

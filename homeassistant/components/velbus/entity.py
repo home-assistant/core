@@ -32,8 +32,15 @@ class VelbusEntity(Entity):
         self._channel = channel
         self._module_address = str(channel.get_module_address())
         self._attr_name = channel.get_name()
-        serial = channel.get_module_serial() or self._module_address
-        self._attr_unique_id = f"{serial}-{channel.get_channel_number()}"
+        serial = channel.get_module_serial()
+        # Modules like the VMB4RY report a serial of "0"; fall back to the module
+        # address so entities on multiple such modules keep distinct unique ids.
+        if serial in (None, "", "0"):
+            serial = self._module_address
+        if isinstance(channel, VelbusProperty):
+            self._attr_unique_id = f"{serial}-{channel.get_property_key()}"
+        else:
+            self._attr_unique_id = f"{serial}-{channel.get_channel_number()}"
 
     def _get_identifier(self) -> str:
         """Return the identifier of the entity."""

@@ -86,8 +86,8 @@ async def test_create_entry(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data={"type": integration_type}
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"type": integration_type}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == input_form_step
@@ -109,7 +109,8 @@ async def test_create_entry(
     assert result["data"] == {**config, CONF_INTEGRATION_TYPE: integration_type}
 
 
-async def test_duplicate_error(hass: HomeAssistant, config, setup_config_entry) -> None:
+@pytest.mark.usefixtures("setup_config_entry")
+async def test_duplicate_error(hass: HomeAssistant, config) -> None:
     """Test that errors are shown when duplicate entries are added."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -117,10 +118,8 @@ async def test_duplicate_error(hass: HomeAssistant, config, setup_config_entry) 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={"type": INTEGRATION_TYPE_GEOGRAPHY_COORDS},
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"type": INTEGRATION_TYPE_GEOGRAPHY_COORDS}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "geography_by_coords"

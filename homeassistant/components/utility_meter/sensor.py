@@ -5,11 +5,9 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from decimal import Decimal, DecimalException, InvalidOperation
 import logging
-import math
 from typing import Any, Self, override
 
 from cronsim import CronSim
-import voluptuous as vol
 
 from homeassistant.components.sensor import (
     ATTR_LAST_RESET,
@@ -26,13 +24,12 @@ from homeassistant.components.sensor.recorder import (  # pylint: disable=home-a
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
-    ATTR_UNIT_OF_MEASUREMENT,
     CONF_NAME,
     CONF_UNIQUE_ID,
     EVENT_CORE_CONFIG_UPDATE,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    EntityStateAttribute,
 )
 from homeassistant.core import (
     Event,
@@ -41,7 +38,7 @@ from homeassistant.core import (
     State,
     callback,
 )
-from homeassistant.helpers import entity_platform, entity_registry as er
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device import async_entity_id_to_device
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import (
@@ -60,7 +57,6 @@ from homeassistant.util.enum import try_parse_enum
 
 from .const import (
     ATTR_NEXT_RESET,
-    ATTR_VALUE,
     BIMONTHLY,
     CONF_CRON_PATTERN,
     CONF_METER,
@@ -82,7 +78,6 @@ from .const import (
     MONTHLY,
     QUARTER_HOURLY,
     QUARTERLY,
-    SERVICE_CALIBRATE_METER,
     SIGNAL_RESET_METER,
     WEEKLY,
     YEARLY,
@@ -111,16 +106,6 @@ ATTR_TARIFF = "tariff"
 PRECISION = 3
 PAUSED = "paused"
 COLLECTING = "collecting"
-
-
-def validate_is_number(value):
-    """Validate value is a number."""
-    try:
-        if math.isfinite(float(value)):
-            return value
-    except ValueError, TypeError:
-        pass
-    raise vol.Invalid("Value is not a number")
 
 
 async def async_setup_entry(
@@ -198,14 +183,6 @@ async def async_setup_entry(
 
     async_add_entities(meters)
 
-    platform = entity_platform.async_get_current_platform()
-
-    platform.async_register_entity_service(
-        SERVICE_CALIBRATE_METER,
-        {vol.Required(ATTR_VALUE): validate_is_number},
-        "async_calibrate",
-    )
-
 
 async def async_setup_platform(
     hass: HomeAssistant,
@@ -279,14 +256,6 @@ async def async_setup_platform(
         meter_info[DATA_TARIFF_SENSORS].append(meter_sensor)
 
     async_add_entities(meters)
-
-    platform = entity_platform.async_get_current_platform()
-
-    platform.async_register_entity_service(
-        SERVICE_CALIBRATE_METER,
-        {vol.Required(ATTR_VALUE): validate_is_number},
-        "async_calibrate",
-    )
 
 
 @dataclass
@@ -428,8 +397,10 @@ class UtilityMeterSensor(RestoreSensor):
 
     def start(self, attributes: Mapping[str, Any]) -> None:
         """Initialize unit and state upon source initial update."""
-        self._input_device_class = attributes.get(ATTR_DEVICE_CLASS)
-        self._attr_native_unit_of_measurement = attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        self._input_device_class = attributes.get(EntityStateAttribute.DEVICE_CLASS)
+        self._attr_native_unit_of_measurement = attributes.get(
+            EntityStateAttribute.UNIT_OF_MEASUREMENT
+        )
         self._attr_native_value = 0
         self.async_write_ha_state()
 
@@ -523,9 +494,11 @@ class UtilityMeterSensor(RestoreSensor):
             # If net_consumption is off, the adjustment must be non-negative
             self._attr_native_value += adjustment  # type: ignore[operator] # self._attr_native_value will be set to by the start function if it is None, therefore it always has a valid Decimal value at this line
 
-        self._input_device_class = new_state_attributes.get(ATTR_DEVICE_CLASS)
+        self._input_device_class = new_state_attributes.get(
+            EntityStateAttribute.DEVICE_CLASS
+        )
         self._attr_native_unit_of_measurement = new_state_attributes.get(
-            ATTR_UNIT_OF_MEASUREMENT
+            EntityStateAttribute.UNIT_OF_MEASUREMENT
         )
         self._last_valid_state = new_state_val
         self.async_write_ha_state()

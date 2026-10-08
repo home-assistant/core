@@ -30,6 +30,7 @@ from homeassistant.components.homeassistant import (
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_BRIGHTNESS_PCT,
+    ATTR_COLOR_MODE,
     ATTR_COLOR_TEMP_KELVIN,
     ATTR_EFFECT,
     ATTR_FLASH,
@@ -40,6 +41,7 @@ from homeassistant.components.light import (
     FLASH_SHORT,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    ColorMode,
     LightEntityFeature,
 )
 from homeassistant.components.yeelight.const import (
@@ -57,6 +59,7 @@ from homeassistant.components.yeelight.const import (
     DEFAULT_SAVE_ON_CHANGE,
     DEFAULT_TRANSITION,
     DOMAIN,
+    UPDATE_REQUEST_PROPERTIES,
     YEELIGHT_HSV_TRANSACTION,
     YEELIGHT_RGB_TRANSITION,
     YEELIGHT_SLEEP_TRANSACTION,
@@ -1249,6 +1252,139 @@ async def test_ambilight_with_nightlight_disabled(hass: HomeAssistant) -> None:
     assert state.state == "on"
     # bg_power off should not set the brightness to 0
     assert state.attributes[ATTR_BRIGHTNESS] == 128
+
+
+async def test_ambilight_effect(hass: HomeAssistant) -> None:
+    """Test an effect on the ambilight is tracked separately from the main light."""
+    mocked_bulb = _mocked_bulb()
+    capabilities = {**CAPABILITIES, "model": "ceiling10"}
+    mocked_bulb.last_properties = {
+        **PROPERTIES,
+        "flowing": "0",
+        "bg_flowing": "0",
+    }
+    mocked_bulb.bulb_type = BulbType.WhiteTempMood
+
+    config_entry = MockConfigEntry(domain=DOMAIN, data=CONFIG_ENTRY_DATA)
+    config_entry.add_to_hass(hass)
+    with (
+        _patch_discovery(capabilities=capabilities),
+        _patch_discovery_interval(),
+        patch(f"{MODULE}.AsyncBulb", return_value=mocked_bulb),
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    main_light_entity_id = "light.yeelight_ceiling10_0x15243f"
+    ambilight_entity_id = f"{main_light_entity_id}_ambilight"
+    mocked_bulb.async_get_properties.reset_mock()
+
+    async def _async_get_properties(properties: list[str]) -> None:
+        assert properties == UPDATE_REQUEST_PROPERTIES
+        assert mocked_bulb.async_start_flow.await_count > 0
+        mocked_bulb.last_properties["bg_flowing"] = "1"
+
+    mocked_bulb.async_get_properties.side_effect = _async_get_properties
+
+    await hass.services.async_call(
+        "light",
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: ambilight_entity_id, ATTR_EFFECT: EFFECT_DISCO},
+        blocking=True,
+    )
+
+    mocked_bulb.async_start_flow.assert_awaited_once_with(
+        ANY, light_type=LightType.Ambient
+    )
+    mocked_bulb.async_get_properties.assert_awaited_once_with(UPDATE_REQUEST_PROPERTIES)
+
+    assert hass.states.get(main_light_entity_id).attributes.get(ATTR_EFFECT) is None
+    ambilight_state = hass.states.get(ambilight_entity_id)
+    assert ambilight_state.attributes[ATTR_EFFECT] == EFFECT_DISCO
+    assert ambilight_state.attributes["flowing"] is True
+
+    await hass.services.async_call(
+        "light",
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: ambilight_entity_id, ATTR_EFFECT: EFFECT_WHATSAPP},
+        blocking=True,
+    )
+
+    assert mocked_bulb.async_get_properties.await_count == 2
+    assert (
+        hass.states.get(ambilight_entity_id).attributes[ATTR_EFFECT] == EFFECT_WHATSAPP
+    )
+
+    async def _async_get_stopped_properties(properties: list[str]) -> None:
+        assert properties == UPDATE_REQUEST_PROPERTIES
+        assert mocked_bulb.async_stop_flow.await_count > 0
+        mocked_bulb.last_properties["bg_flowing"] = "0"
+
+    mocked_bulb.async_get_properties.side_effect = _async_get_stopped_properties
+    await hass.services.async_call(
+        "light",
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: ambilight_entity_id, ATTR_EFFECT: EFFECT_STOP},
+        blocking=True,
+    )
+
+    mocked_bulb.async_stop_flow.assert_awaited_once_with(light_type=LightType.Ambient)
+    assert mocked_bulb.async_get_properties.await_count == 3
+    ambilight_state = hass.states.get(ambilight_entity_id)
+    assert ambilight_state.attributes.get(ATTR_EFFECT) is None
+    assert ambilight_state.attributes["flowing"] is False
+
+
+async def test_ambilight_without_color_mode(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test the ambilight keeps updating while the bulb does not report its mode.
+
+    A ceiling light stops reporting `bg_lmode` while its main light is off.
+    """
+    assert await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
+    mocked_bulb = _mocked_bulb()
+    capabilities = {**CAPABILITIES, "model": "ceiling10"}
+    properties = {**PROPERTIES}
+    properties.pop("bg_lmode")
+    mocked_bulb.last_properties = properties
+    mocked_bulb.bulb_type = BulbType.WhiteTempMood
+
+    config_entry = MockConfigEntry(domain=DOMAIN, data=CONFIG_ENTRY_DATA)
+    config_entry.add_to_hass(hass)
+    with (
+        _patch_discovery(capabilities=capabilities),
+        _patch_discovery_interval(),
+        patch(f"{MODULE}.AsyncBulb", return_value=mocked_bulb),
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    ambilight_entity_id = "light.yeelight_ceiling10_0x15243f_ambilight"
+    state = hass.states.get(ambilight_entity_id)
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_COLOR_MODE] == ColorMode.UNKNOWN
+
+    # flash needs the mode, so it is refused instead of raising
+    await hass.services.async_call(
+        "light",
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: ambilight_entity_id, ATTR_FLASH: FLASH_LONG},
+        blocking=True,
+    )
+    mocked_bulb.async_start_flow.assert_not_called()
+    assert "Flash supported currently only in RGB mode" in caplog.text
+
+    # the mode is reported again once the main light is back on
+    mocked_bulb.last_properties["bg_lmode"] = "2"
+    await hass.services.async_call(
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: ambilight_entity_id},
+        blocking=True,
+    )
+    state = hass.states.get(ambilight_entity_id)
+    assert state.attributes[ATTR_COLOR_MODE] == ColorMode.COLOR_TEMP
 
 
 async def test_state_fails_to_update_triggers_update(hass: HomeAssistant) -> None:

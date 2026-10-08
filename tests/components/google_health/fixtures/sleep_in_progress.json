@@ -1,0 +1,31 @@
+{
+  "dataPoints": [
+    {
+      "name": "users/me/dataTypes/sleep/dataPoints/session-active-12345",
+      "sleep": {
+        "interval": {
+          "startTime": "2026-08-16T22:00:00Z",
+          "startUtcOffset": "-07:00"
+        }
+      }
+    },
+    {
+      "name": "users/me/dataTypes/sleep/dataPoints/session-12345",
+      "sleep": {
+        "interval": {
+          "startTime": "2026-08-15T22:00:00Z",
+          "endTime": "2026-08-16T06:00:00Z",
+          "startUtcOffset": "-07:00",
+          "endUtcOffset": "-07:00"
+        },
+        "summary": {
+          "minutesToFallAsleep": 15,
+          "minutesAfterWakeUp": 10,
+          "minutesAsleep": 420,
+          "minutesInSleepPeriod": 480,
+          "minutesAwake": 60
+        }
+      }
+    }
+  ]
+}

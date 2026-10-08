@@ -5,12 +5,26 @@
       "existing_instance_updated": "Updated existing configuration."
     },
     "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
       "hassio_confirm": {
         "description": "Do you want to configure Home Assistant to connect to the AdGuard Home provided by the app: {addon}?",
         "title": "AdGuard Home via Home Assistant app"
+      },
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "The password to log in to AdGuard Home with.",
+          "username": "The username to log in to AdGuard Home with."
+        },
+        "description": "AdGuard Home rejected the credentials. Enter the username and password to log in with.",
+        "title": "[%key:common::config_flow::title::reauth%]"
       },
       "user": {
         "data": {
@@ -77,6 +91,12 @@
     }
   },
   "exceptions": {
+    "authentication_failed": {
+      "message": "AdGuard Home rejected the credentials. Please reauthenticate with a valid username and password."
+    },
+    "cannot_connect": {
+      "message": "Could not connect to AdGuard Home."
+    },
     "config_entry_not_loaded": {
       "message": "Config entry not loaded."
     },

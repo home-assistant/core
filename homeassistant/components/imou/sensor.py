@@ -3,7 +3,12 @@
 from dataclasses import dataclass
 from typing import override
 
-from pyimouapi.const import PARAM_STATE_VARIANT, STATE_VARIANT_NUMERIC
+from pyimouapi.const import (
+    PARAM_STATE,
+    PARAM_STATE_VARIANT,
+    PARAM_STATUS,
+    STATE_VARIANT_NUMERIC,
+)
 from pyimouapi.ha_device import ImouHaDevice
 
 from homeassistant.components.sensor import (
@@ -26,7 +31,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import PARAM_STATE, PARAM_STATUS, imou_device_identifier
+from .const import imou_device_identifier
 from .coordinator import ImouConfigEntry, ImouDataUpdateCoordinator
 from .entity import ImouEntity
 

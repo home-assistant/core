@@ -104,6 +104,7 @@ def mock_nobo_class(
                 "week_profile_id": "0",
                 "temp_comfort_c": "21",
                 "temp_eco_c": "17",
+                "override_allowed": "1",
             },
         }
         model = pynobo_nobo.Model(

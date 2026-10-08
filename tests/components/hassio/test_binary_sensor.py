@@ -1,5 +1,6 @@
 """The tests for the hassio binary sensors."""
 
+import asyncio
 from dataclasses import replace
 from datetime import timedelta
 import os
@@ -18,7 +19,8 @@ from aiohasupervisor.models.mounts import (
 )
 import pytest
 
-from homeassistant.components.hassio import DOMAIN
+from homeassistant.components.hassio import DOMAIN, get_addons_info
+from homeassistant.components.hassio.const import ADDONS_COORDINATOR
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -126,6 +128,239 @@ async def test_binary_sensor(
     # Verify that the entity have the expected state.
     state = hass.states.get(entity_id)
     assert state.state == expected
+
+
+async def test_addon_state_from_supervisor_event(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    hass_supervisor_ws_client: WebSocketGenerator,
+) -> None:
+    """Test addon running binary sensor updates from Supervisor state events."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
+    config_entry.add_to_hass(hass)
+
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        assert await async_setup_component(hass, DOMAIN, {"hassio": {}})
+    await hass.async_block_till_done()
+
+    # Enable the entity.
+    entity_id = "binary_sensor.test2_running"
+    entity_registry.async_update_entity(entity_id, disabled_by=None)
+    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "off"
+
+    client = await hass_supervisor_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "supervisor/event",
+            "data": {"event": "addon", "slug": "test2", "state": "started"},
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "on"
+    assert get_addons_info(hass)["test2"]["state"] == "started"
+
+    await client.send_json(
+        {
+            "id": 2,
+            "type": "supervisor/event",
+            "data": {"event": "addon", "slug": "test2", "state": "stopped"},
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "off"
+    assert get_addons_info(hass)["test2"]["state"] == "stopped"
+
+
+async def test_addon_state_event_during_poll(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    hass_supervisor_ws_client: WebSocketGenerator,
+    addon_installed: AsyncMock,
+) -> None:
+    """Test a state event during an in-flight poll is not reverted by the poll."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
+    config_entry.add_to_hass(hass)
+
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        assert await async_setup_component(hass, DOMAIN, {"hassio": {}})
+    await hass.async_block_till_done()
+
+    # Enable the entity.
+    entity_id = "binary_sensor.test2_running"
+    entity_registry.async_update_entity(entity_id, disabled_by=None)
+    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Let the config entry reload scheduled by the entity registry update
+    # run before blocking add-on info requests
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=40))
+    await hass.async_block_till_done()
+
+    # Block the add-on info requests so the poll stays in flight
+    unblock_info = asyncio.Event()
+    info_side_effect = addon_installed.side_effect
+
+    async def blocked_addon_info(slug: str) -> Mock:
+        await unblock_info.wait()
+        return info_side_effect(slug)
+
+    addon_installed.reset_mock()
+    addon_installed.side_effect = blocked_addon_info
+
+    # Start a scheduled poll; its add-on list still reports test2 as stopped
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=16))
+    for _ in range(10):
+        await asyncio.sleep(0)
+    assert addon_installed.call_count > 0
+
+    # The add-on state changes while the poll is in flight
+    client = await hass_supervisor_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "supervisor/event",
+            "data": {"event": "addon", "slug": "test2", "state": "started"},
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "on"
+
+    # Finishing the poll must not revert to the state of its older add-on list
+    unblock_info.set()
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "on"
+
+
+async def test_addon_state_event_during_forced_refresh(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    hass_supervisor_ws_client: WebSocketGenerator,
+    addon_installed: AsyncMock,
+) -> None:
+    """Test a state event during a forced info refresh is not reverted by it."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
+    config_entry.add_to_hass(hass)
+
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        assert await async_setup_component(hass, DOMAIN, {"hassio": {}})
+    await hass.async_block_till_done()
+
+    # Enable the entity.
+    entity_id = "binary_sensor.test2_running"
+    entity_registry.async_update_entity(entity_id, disabled_by=None)
+    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Block the add-on info request so the forced refresh stays in flight
+    unblock_info = asyncio.Event()
+    info_side_effect = addon_installed.side_effect
+
+    async def blocked_addon_info(slug: str) -> Mock:
+        await unblock_info.wait()
+        return info_side_effect(slug)
+
+    addon_installed.side_effect = blocked_addon_info
+
+    # Start a forced refresh; its info response still reports test2 as stopped
+    coordinator = hass.data[ADDONS_COORDINATOR]
+    refresh_task = hass.async_create_task(
+        coordinator.force_addon_info_data_refresh("test2")
+    )
+    for _ in range(5):
+        await asyncio.sleep(0)
+
+    # The add-on state changes while the forced refresh is in flight
+    client = await hass_supervisor_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "supervisor/event",
+            "data": {"event": "addon", "slug": "test2", "state": "started"},
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "on"
+
+    # Finishing the forced refresh must not revert to its older info response
+    unblock_info.set()
+    await refresh_task
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "on"
+
+
+@pytest.mark.parametrize(
+    "event_data",
+    [
+        pytest.param(
+            {"event": "addon", "slug": "not_installed", "state": "started"},
+            id="unknown_addon",
+        ),
+        pytest.param(
+            {"event": "addon", "slug": "test2", "state": "not_a_state"},
+            id="unknown_state",
+        ),
+        pytest.param({"event": "addon"}, id="missing_fields"),
+    ],
+)
+async def test_addon_state_event_ignored(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    hass_supervisor_ws_client: WebSocketGenerator,
+    event_data: dict[str, str],
+) -> None:
+    """Test invalid Supervisor addon state events are ignored."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
+    config_entry.add_to_hass(hass)
+
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        assert await async_setup_component(hass, DOMAIN, {"hassio": {}})
+    await hass.async_block_till_done()
+
+    # Enable the entity.
+    entity_id = "binary_sensor.test2_running"
+    entity_registry.async_update_entity(entity_id, disabled_by=None)
+    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    client = await hass_supervisor_ws_client()
+    await client.send_json({"id": 1, "type": "supervisor/event", "data": event_data})
+    msg = await client.receive_json()
+    assert msg["success"]
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "off"
 
 
 async def test_mount_binary_sensor(

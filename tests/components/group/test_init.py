@@ -16,6 +16,7 @@ from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     ATTR_ICON,
     EVENT_HOMEASSISTANT_START,
+    EVENT_STATE_CHANGED,
     SERVICE_RELOAD,
     STATE_CLOSED,
     STATE_HOME,
@@ -24,7 +25,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNKNOWN,
 )
-from homeassistant.core import CoreState, HomeAssistant
+from homeassistant.core import Context, CoreState, HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
@@ -35,6 +36,7 @@ from tests.common import (
     MockModule,
     MockPlatform,
     assert_setup_component,
+    async_capture_events,
     mock_integration,
     mock_platform,
 )
@@ -159,6 +161,7 @@ async def test_setup_group_with_mixed_groupable_states(hass: HomeAssistant) -> N
         mode=None,
         object_id=None,
         order=None,
+        context=None,
     )
 
     await hass.async_block_till_done()
@@ -181,6 +184,7 @@ async def test_setup_group_with_a_non_existing_state(hass: HomeAssistant) -> Non
         mode=None,
         object_id=None,
         order=None,
+        context=None,
     )
 
     assert grp.state == STATE_ON
@@ -202,6 +206,7 @@ async def test_setup_group_with_non_groupable_states(hass: HomeAssistant) -> Non
         mode=None,
         object_id=None,
         order=None,
+        context=None,
     )
 
     assert grp.state is None
@@ -218,6 +223,7 @@ async def test_setup_empty_group(hass: HomeAssistant) -> None:
         mode=None,
         object_id=None,
         order=None,
+        context=None,
     )
 
     assert grp.state is None
@@ -239,6 +245,7 @@ async def test_monitor_group(hass: HomeAssistant) -> None:
         mode=None,
         object_id=None,
         order=None,
+        context=None,
     )
 
     # Test if group setup in our init mode is ok
@@ -265,6 +272,7 @@ async def test_group_turns_off_if_all_off(hass: HomeAssistant) -> None:
         mode=None,
         object_id=None,
         order=None,
+        context=None,
     )
 
     await hass.async_block_till_done()
@@ -291,6 +299,7 @@ async def test_group_turns_on_if_all_are_off_and_one_turns_on(
         mode=None,
         object_id=None,
         order=None,
+        context=None,
     )
 
     # Turn one on
@@ -319,6 +328,7 @@ async def test_allgroup_stays_off_if_all_are_off_and_one_turns_on(
         mode=True,
         object_id=None,
         order=None,
+        context=None,
     )
 
     # Turn one on
@@ -345,6 +355,7 @@ async def test_allgroup_turn_on_if_last_turns_on(hass: HomeAssistant) -> None:
         mode=True,
         object_id=None,
         order=None,
+        context=None,
     )
 
     # Turn one on
@@ -371,6 +382,7 @@ async def test_expand_entity_ids(hass: HomeAssistant) -> None:
         mode=None,
         object_id=None,
         order=None,
+        context=None,
     )
 
     assert sorted(["light.ceiling", "light.bowl"]) == sorted(
@@ -396,6 +408,7 @@ async def test_expand_entity_ids_does_not_return_duplicates(
         mode=None,
         object_id=None,
         order=None,
+        context=None,
     )
 
     assert sorted(
@@ -423,6 +436,7 @@ async def test_expand_entity_ids_recursive(hass: HomeAssistant) -> None:
         mode=None,
         object_id=None,
         order=None,
+        context=None,
     )
 
     assert sorted(["light.ceiling", "light.bowl"]) == sorted(
@@ -451,6 +465,7 @@ async def test_get_entity_ids(hass: HomeAssistant) -> None:
         mode=None,
         object_id=None,
         order=None,
+        context=None,
     )
 
     assert sorted(group.get_entity_ids(hass, test_group.entity_id)) == [
@@ -474,6 +489,7 @@ async def test_get_entity_ids_with_domain_filter(hass: HomeAssistant) -> None:
         mode=None,
         object_id=None,
         order=None,
+        context=None,
     )
 
     assert group.get_entity_ids(
@@ -511,6 +527,7 @@ async def test_group_being_init_before_first_tracked_state_is_set_to_on(
         mode=None,
         object_id=None,
         order=None,
+        context=None,
     )
 
     hass.states.async_set("light.not_there_1", STATE_ON)
@@ -539,6 +556,7 @@ async def test_group_being_init_before_first_tracked_state_is_set_to_off(
         mode=None,
         object_id=None,
         order=None,
+        context=None,
     )
 
     hass.states.async_set("light.not_there_1", STATE_OFF)
@@ -563,6 +581,7 @@ async def test_groups_get_unique_names(hass: HomeAssistant) -> None:
         mode=None,
         object_id=None,
         order=None,
+        context=None,
     )
     grp2 = await group.Group.async_create_group(
         hass,
@@ -573,6 +592,7 @@ async def test_groups_get_unique_names(hass: HomeAssistant) -> None:
         mode=None,
         object_id=None,
         order=None,
+        context=None,
     )
 
     assert grp1.entity_id != grp2.entity_id
@@ -592,6 +612,7 @@ async def test_expand_entity_ids_expands_nested_groups(hass: HomeAssistant) -> N
         mode=None,
         object_id=None,
         order=None,
+        context=None,
     )
     await group.Group.async_create_group(
         hass,
@@ -602,6 +623,7 @@ async def test_expand_entity_ids_expands_nested_groups(hass: HomeAssistant) -> N
         mode=None,
         object_id=None,
         order=None,
+        context=None,
     )
     await group.Group.async_create_group(
         hass,
@@ -612,6 +634,7 @@ async def test_expand_entity_ids_expands_nested_groups(hass: HomeAssistant) -> N
         mode=None,
         object_id=None,
         order=None,
+        context=None,
     )
 
     assert sorted(group.expand_entity_ids(hass, ["group.group_of_groups"])) == [
@@ -638,6 +661,7 @@ async def test_set_assumed_state_based_on_tracked(hass: HomeAssistant) -> None:
         mode=None,
         object_id=None,
         order=None,
+        context=None,
     )
 
     state = hass.states.get(test_group.entity_id)
@@ -677,6 +701,7 @@ async def test_group_updated_after_device_tracker_zone_change(
         mode=None,
         object_id=None,
         order=None,
+        context=None,
     )
 
     hass.states.async_set("device_tracker.Adam", "cool_state_not_home")
@@ -703,6 +728,7 @@ async def test_is_on(hass: HomeAssistant) -> None:
         mode=None,
         object_id=None,
         order=None,
+        context=None,
     )
     await hass.async_block_till_done()
 
@@ -840,6 +866,7 @@ async def test_is_on_and_state_mixed_domains(
         mode=None,
         object_id=None,
         order=None,
+        context=None,
     )
     await hass.async_block_till_done()
 
@@ -883,6 +910,7 @@ async def test_reloading_groups(hass: HomeAssistant) -> None:
         mode=None,
         object_id=None,
         order=None,
+        context=None,
     )
 
     await hass.async_block_till_done()
@@ -960,6 +988,7 @@ async def test_setup(hass: HomeAssistant) -> None:
         mode=None,
         object_id=None,
         order=None,
+        context=None,
     )
     await group.Group.async_create_group(
         hass,
@@ -970,6 +999,7 @@ async def test_setup(hass: HomeAssistant) -> None:
         mode=None,
         object_id=None,
         order=None,
+        context=None,
     )
     await hass.async_block_till_done()
 
@@ -1013,6 +1043,8 @@ async def test_service_group_services_add_remove_entities(hass: HomeAssistant) -
 
     assert hass.services.has_service("group", group.SERVICE_SET)
 
+    create_context = Context()
+    created_events = async_capture_events(hass, EVENT_STATE_CHANGED)
     await hass.services.async_call(
         group.DOMAIN,
         group.SERVICE_SET,
@@ -1021,6 +1053,7 @@ async def test_service_group_services_add_remove_entities(hass: HomeAssistant) -
             "name": "New Group",
             "entities": ["person.one", "person.two"],
         },
+        context=create_context,
     )
     await hass.async_block_till_done()
 
@@ -1029,6 +1062,17 @@ async def test_service_group_services_add_remove_entities(hass: HomeAssistant) -
     assert group_state.attributes["friendly_name"] == "New Group"
     assert list(group_state.attributes["entity_id"]) == ["person.one", "person.two"]
 
+    # The group recomputes from its members right after, so assert on the state
+    # written when the entity was added rather than on the current state
+    created_event = next(
+        event
+        for event in created_events
+        if event.data["entity_id"] == "group.new_group"
+        and event.data["old_state"] is None
+    )
+    assert created_event.context is create_context
+
+    context = Context()
     await hass.services.async_call(
         group.DOMAIN,
         group.SERVICE_SET,
@@ -1036,11 +1080,13 @@ async def test_service_group_services_add_remove_entities(hass: HomeAssistant) -
             "object_id": "new_group",
             "add_entities": "person.three",
         },
+        context=context,
     )
     await hass.async_block_till_done()
     group_state = hass.states.get("group.new_group")
     assert group_state.state == "home"
     assert "person.three" in list(group_state.attributes["entity_id"])
+    assert group_state.context is context
 
     await hass.services.async_call(
         group.DOMAIN,
@@ -1096,11 +1142,22 @@ async def test_service_group_set_group_remove_group(hass: HomeAssistant) -> None
         ["test.entity_bla1", "test.entity_id2"]
     )
 
-    common.async_remove(hass, "user_test_group")
+    removed_events = async_capture_events(hass, EVENT_STATE_CHANGED)
+    context = Context()
+    await hass.services.async_call(
+        group.DOMAIN,
+        group.SERVICE_REMOVE,
+        {"object_id": "user_test_group"},
+        blocking=True,
+        context=context,
+    )
     await hass.async_block_till_done()
 
     group_state = hass.states.get("group.user_test_group")
     assert group_state is None
+    assert removed_events[-1].data["entity_id"] == "group.user_test_group"
+    assert removed_events[-1].data["new_state"] is None
+    assert removed_events[-1].context is context
 
 
 async def test_group_order(hass: HomeAssistant) -> None:

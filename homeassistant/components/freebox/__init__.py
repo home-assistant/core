@@ -1,8 +1,9 @@
 """Support for Freebox devices (Freebox v6 and Freebox mini 4K)."""
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 
+from aiohttp import ClientError
 from freebox_api.exceptions import HttpRequestError
 
 from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP, Platform
@@ -81,17 +82,35 @@ async def async_migrate_entry(hass: HomeAssistant, entry: FreeboxConfigEntry) ->
 async def async_setup_entry(hass: HomeAssistant, entry: FreeboxConfigEntry) -> bool:
     """Set up Freebox entry."""
     api = await get_api(hass, entry.data[CONF_HOST])
+    # The library raises its own error only for a request the router refused,
+    # and leaves everything the transport can throw to aiohttp
     try:
         await api.open(entry.data[CONF_HOST], entry.data[CONF_PORT])
-    except HttpRequestError as err:
+        freebox_config = await api.system.get_config()
+        router = FreeboxRouter(hass, entry, api, freebox_config)
+        await router.update_all()
+    except (HttpRequestError, ClientError, TimeoutError) as err:
         raise ConfigEntryNotReady from err
 
-    freebox_config = await api.system.get_config()
+    update_failed = False
 
-    router = FreeboxRouter(hass, entry, api, freebox_config)
-    await router.update_all()
+    async def _async_update_all(now: datetime) -> None:
+        """Update the router, logging a failure once until it recovers."""
+        nonlocal update_failed
+        try:
+            await router.update_all()
+        except (HttpRequestError, ClientError, TimeoutError) as err:
+            if not update_failed:
+                _LOGGER.warning("Error updating the Freebox: %r", err)
+            update_failed = True
+            return
+
+        if update_failed:
+            _LOGGER.info("Updating the Freebox works again")
+            update_failed = False
+
     entry.async_on_unload(
-        async_track_time_interval(hass, router.update_all, SCAN_INTERVAL)
+        async_track_time_interval(hass, _async_update_all, SCAN_INTERVAL)
     )
 
     entry.runtime_data = router

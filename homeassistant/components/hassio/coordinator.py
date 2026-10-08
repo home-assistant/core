@@ -16,6 +16,7 @@ from aiohasupervisor.models import (
     HomeAssistantInfo,
     HomeAssistantStats,
     HostInfo,
+    IngressPanel,
     InstalledAddon,
     InstalledAddonComplete,
     Issue as SupervisorIssue,
@@ -33,14 +34,14 @@ from aiohasupervisor.models import (
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_MANUFACTURER, ATTR_NAME
+from homeassistant.const import ATTR_MANUFACTURER, ATTR_NAME, ATTR_STATE
 from homeassistant.core import (
     CALLBACK_TYPE,
     HomeAssistant,
     callback,
     is_callback_check_partial,
 )
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -48,6 +49,11 @@ from homeassistant.helpers.issue_registry import (
     IssueSeverity,
     async_create_issue,
     async_delete_issue,
+)
+from homeassistant.helpers.translation import (
+    LOCALE_EN,
+    async_get_cached_translations,
+    async_load_integrations,
 )
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -79,10 +85,12 @@ from .const import (
     DATA_SUPERVISOR_INFO,
     DATA_SUPERVISOR_STATS,
     DOMAIN,
+    EVENT_ADDON,
     EVENT_HEALTH_CHANGED,
     EVENT_ISSUE_CHANGED,
     EVENT_ISSUE_REMOVED,
     EVENT_JOB,
+    EVENT_STORE_RELOADED,
     EVENT_SUPERVISOR_EVENT,
     EVENT_SUPERVISOR_UPDATE,
     EVENT_SUPPORTED_CHANGED,
@@ -183,6 +191,46 @@ class SupervisorIssuesData:
     unhealthy_reasons: set[str]
     unsupported_reasons: set[str]
     issues: dict[UUID, Issue]
+
+
+@callback
+def presentable_issue_suggestions(
+    hass: HomeAssistant, issue: Issue
+) -> list[Suggestion]:
+    """Return the issue's suggestions the repair fix flow can present.
+
+    Filters out suggestions this Core version has no fix flow translation
+    for; an empty result means the repair is not fixable here. Filtered
+    suggestions stay applicable via the Supervisor API and CLI.
+    """
+    if not issue.suggestions:
+        return []
+
+    # Key availability is language independent — check against English,
+    # which is always cached, unlike the configured language right after
+    # a language switch
+    translations = async_get_cached_translations(hass, LOCALE_EN, "issues", DOMAIN)
+    prefix = f"component.{DOMAIN}.issues.{issue.key}.fix_flow.step"
+    if not any(key.startswith(prefix) for key in translations):
+        # This version of Core shipped an unfixable repair for this issue
+        # (a repair is either always or never fixable per issue key) —
+        # drop all suggestions, including any would break the repair
+        return []
+
+    presentable = [
+        suggestion
+        for suggestion in issue.suggestions
+        # Either a menu option label or a dedicated step (e.g. the
+        # confirmation of a formerly sole suggestion) proves this Core
+        # knows the suggestion for this issue
+        if f"{prefix}.fix_menu.menu_options.{suggestion.key}" in translations
+        or f"{prefix}.{suggestion.key}.description" in translations
+    ]
+    # If nothing is presentable, keep everything: the fix flow strings for
+    # this issue exist, so the repair must stay fixable — and an unlabeled
+    # menu still beats a dead end. The frontend falls back to the raw
+    # option keys.
+    return presentable or issue.suggestions
 
 
 class SupervisorIssuesCoordinator(DataUpdateCoordinator[SupervisorIssuesData]):
@@ -340,7 +388,12 @@ class SupervisorIssuesCoordinator(DataUpdateCoordinator[SupervisorIssuesData]):
         if issue.key not in ISSUE_KEYS_FOR_REPAIRS:
             return
 
-        if not issue.suggestions and issue.key in EXTRA_PLACEHOLDERS:
+        presentable = presentable_issue_suggestions(self.hass, issue)
+
+        # A non-fixable repair renders the issue description, which may
+        # use the extra placeholders; a fixable one uses the fix flow,
+        # which computes its own placeholders
+        if not presentable and issue.key in EXTRA_PLACEHOLDERS:
             placeholders: dict[str, str] = EXTRA_PLACEHOLDERS[issue.key].copy()
         else:
             placeholders = {}
@@ -382,7 +435,7 @@ class SupervisorIssuesCoordinator(DataUpdateCoordinator[SupervisorIssuesData]):
             self.hass,
             DOMAIN,
             issue.uuid.hex,
-            is_fixable=bool(issue.suggestions),
+            is_fixable=bool(presentable),
             severity=IssueSeverity.WARNING,
             translation_key=issue.key,
             translation_placeholders=placeholders or None,
@@ -399,15 +452,27 @@ class SupervisorIssuesCoordinator(DataUpdateCoordinator[SupervisorIssuesData]):
         current_data: SupervisorIssuesData,
     ) -> None:
         """Create/delete issue repairs and notify subscribers based on issue deltas."""
+        issue_registry = ir.async_get(self.hass)
         for issue in current_data.issues.values():
             previous_issue = previous_data.issues.get(issue.uuid)
-            if previous_issue is not None and self._issue_equal(previous_issue, issue):
-                continue
-
-            self._create_or_update_issue_repair(issue)
-            self._process_issue_change(
-                IssueSubscriptionEvent(event="changed", issue=issue)
+            changed = previous_issue is None or not self._issue_equal(
+                previous_issue, issue
             )
+
+            # Update the repair on changes, and re-create it if the registry
+            # entry went missing: a finished repair flow deletes the entry
+            # even when applying the suggestion failed in Supervisor and the
+            # issue is unchanged.
+            if changed or (
+                issue.key in ISSUE_KEYS_FOR_REPAIRS
+                and not issue_registry.async_get_issue(DOMAIN, issue.uuid.hex)
+            ):
+                self._create_or_update_issue_repair(issue)
+
+            if changed:
+                self._process_issue_change(
+                    IssueSubscriptionEvent(event="changed", issue=issue)
+                )
 
         for issue_uuid, issue in previous_data.issues.items():
             if issue_uuid not in current_data.issues:
@@ -419,6 +484,11 @@ class SupervisorIssuesCoordinator(DataUpdateCoordinator[SupervisorIssuesData]):
     @override
     async def _async_update_data(self) -> SupervisorIssuesData:
         """Update issues data from Supervisor resolution center."""
+        # Translations decide which suggestions a repair can present and
+        # with that its fixable state — make sure they are loaded before
+        # the repairs are created (no-op once cached).
+        await async_load_integrations(self.hass, {DOMAIN})
+
         try:
             data = await self._supervisor_client.resolution.info()
         except SupervisorError as err:
@@ -764,6 +834,7 @@ class HassioMainData:
     host: HostInfo
     mounts: dict[str, CIFSMountResponse | NFSMountResponse]
     os: OSInfo | None
+    panels: dict[str, IngressPanel]
 
     def to_dict(self) -> dict[str, Any]:
         """Return a dictionary representation of the data."""
@@ -773,6 +844,7 @@ class HassioMainData:
             "host": self.host.to_dict(),
             "mounts": {name: mount.to_dict() for name, mount in self.mounts.items()},
             "os": self.os.to_dict() if self.os is not None else None,
+            "panels": {slug: panel.to_dict() for slug, panel in self.panels.items()},
         }
 
 
@@ -933,16 +1005,23 @@ def get_addons_info(hass: HomeAssistant) -> dict[str, dict[str, Any] | None]:
     )
     if addons_info is None:
         raise HassioNotReadyError
+    # The add-on list is kept up to date by state change events, while the
+    # cached add-on info is only refreshed by polling. Overlay the state from
+    # the list so consumers see the current one.
+    states = {
+        addon.slug: addon.state.value for addon in hass.data.get(DATA_ADDONS_LIST) or []
+    }
     # Converting these fields for compatibility as that is what was returned here.
     # We'll leave it this way as long as these component APIs continue to return
     # dictionaries. If/when we switch to using the aiohasupervisor models for everything
     # internally and externally that will be dropped.
     return {
-        slug: dict(
-            hassio_api=info.supervisor_api,
-            hassio_role=info.supervisor_role,
+        slug: {
+            "hassio_api": info.supervisor_api,
+            "hassio_role": info.supervisor_role,
             **info.to_dict(),
-        )
+            ATTR_STATE: states.get(slug, info.state),
+        }
         if info is not None
         else None
         for slug, info in addons_info.items()
@@ -1283,7 +1362,73 @@ class HassioAddOnDataUpdateCoordinator(DataUpdateCoordinator[HassioAddonData]):
         self.entry_id = config_entry.entry_id
         self.dev_reg = dev_reg
         self._addon_info_subscriptions: defaultdict[str, set[str]] = defaultdict(set)
+        # State change events recorded while data fetches are in flight
+        self._event_state_recorders: list[dict[str, AddonState]] = []
         self.supervisor_client = get_supervisor_client(hass)
+        self._dispatcher_disconnect = async_dispatcher_connect(
+            hass, EVENT_SUPERVISOR_EVENT, self._supervisor_event
+        )
+
+    @callback
+    def _supervisor_event(self, event: dict[str, Any]) -> None:
+        """Handle Supervisor store reload and add-on state change events."""
+        ws_event = event.get(ATTR_WS_EVENT)
+        if ws_event == EVENT_ADDON:
+            self._update_addon_state_from_event(event)
+            return
+        if ws_event != EVENT_STORE_RELOADED:
+            return
+        # Without listeners there are no add-on entities to keep in sync.
+        # Scheduled polling is paused in that case as well, so don't let
+        # store reload events trigger refreshes either.
+        if not self._listeners:
+            return
+        self.config_entry.async_create_task(
+            self.hass, self.async_refresh_after_store_reload()
+        )
+
+    @callback
+    def _update_addon_state_from_event(self, event: dict[str, Any]) -> None:
+        """Update cached add-on state from a Supervisor state change event."""
+        if (slug := event.get(ATTR_SLUG)) is None:
+            return
+        try:
+            state = AddonState(event[ATTR_STATE])
+        except KeyError, ValueError:
+            return
+
+        # Record events arriving while a data fetch is in flight so its result
+        # reflects state changes that happened after the fetch started
+        for event_states in self._event_state_recorders:
+            event_states[slug] = state
+
+        if self.data is None or (addon_data := self.data.addons.get(slug)) is None:
+            return
+
+        updated_addon = replace(addon_data.addon, state=state)
+
+        # Keep the addon list used by legacy accessors and the stats coordinator
+        # in sync. Sync even for an unchanged coordinator state, as
+        # force_addon_info_data_refresh updates only the coordinator data.
+        addons_list: list[InstalledAddon] | None = self.hass.data.get(DATA_ADDONS_LIST)
+        if addons_list is not None:
+            self.hass.data[DATA_ADDONS_LIST] = [
+                updated_addon if addon.slug == slug else addon for addon in addons_list
+            ]
+
+        if addon_data.addon.state == state:
+            return
+
+        # Apply directly instead of async_set_updated_data to not reset the
+        # polling interval on every state change event
+        self.data = replace(
+            self.data,
+            addons={
+                **self.data.addons,
+                slug: replace(addon_data, addon=updated_addon),
+            },
+        )
+        self.async_update_listeners()
 
     @override
     async def _async_update_data(self) -> HassioAddonData:
@@ -1291,6 +1436,10 @@ class HassioAddOnDataUpdateCoordinator(DataUpdateCoordinator[HassioAddonData]):
         is_first_update = not self.data
         client = self.supervisor_client
 
+        # Collect state change events arriving while fetching, as the fetched
+        # add-on list may predate them
+        event_states: dict[str, AddonState] = {}
+        self._event_state_recorders.append(event_states)
         try:
             installed_addons: list[InstalledAddon] = await client.addons.list()
             all_addons = {addon.slug for addon in installed_addons}
@@ -1308,6 +1457,16 @@ class HassioAddOnDataUpdateCoordinator(DataUpdateCoordinator[HassioAddonData]):
             )
         except SupervisorError as err:
             raise UpdateFailed(f"Error on Supervisor API: {err}") from err
+        finally:
+            self._event_state_recorders.remove(event_states)
+
+        if event_states:
+            installed_addons = [
+                replace(addon, state=event_states[addon.slug])
+                if addon.slug in event_states
+                else addon
+                for addon in installed_addons
+            ]
 
         # Update hass.data for legacy accessor functions
         self.hass.data[DATA_ADDONS_LIST] = installed_addons
@@ -1347,9 +1506,7 @@ class HassioAddOnDataUpdateCoordinator(DataUpdateCoordinator[HassioAddonData]):
         # Remove add-ons that are no longer installed from device registry
         supervisor_addon_devices = {
             list(device.identifiers)[0][1]
-            for device in self.dev_reg.devices.get_devices_for_config_entry_id(
-                self.entry_id
-            )
+            for device in dr.async_entries_for_config_entry(self.dev_reg, self.entry_id)
             if device.model == SupervisorEntityModel.ADDON
         }
         if stale_addons := supervisor_addon_devices - set(new_data.addons):
@@ -1432,15 +1589,24 @@ class HassioAddOnDataUpdateCoordinator(DataUpdateCoordinator[HassioAddonData]):
 
     async def force_addon_info_data_refresh(self, addon_slug: str) -> None:
         """Force refresh of addon info data for a specific addon."""
+        event_states: dict[str, AddonState] = {}
+        self._event_state_recorders.append(event_states)
         try:
             slug, info = await self._update_addon_info(addon_slug)
         except SupervisorError as err:
             _LOGGER.warning("Could not refresh info for %s: %s", addon_slug, err)
             return
+        finally:
+            self._event_state_recorders.remove(event_states)
 
         if info is not None and self.data and slug in self.data.addons:
+            addon = _installed_addon_from_complete(info)
+            # A state change event received while the info request was in
+            # flight is at least as fresh as the fetched info
+            if (event_state := event_states.get(slug)) is not None:
+                addon = replace(addon, state=event_state)
             updated = AddonData(
-                addon=_installed_addon_from_complete(info),
+                addon=addon,
                 auto_update=info.auto_update,
                 repository=self.data.addons[slug].repository,
             )
@@ -1451,6 +1617,12 @@ class HassioAddOnDataUpdateCoordinator(DataUpdateCoordinator[HassioAddonData]):
             # Update addon info cache in hass.data
             addon_info_cache = self.hass.data.setdefault(DATA_ADDONS_INFO, {})
             addon_info_cache[slug] = info
+
+    @override
+    async def async_shutdown(self) -> None:
+        """Shut down and clean up when config entry unloaded."""
+        await super().async_shutdown()
+        self._dispatcher_disconnect()
 
 
 class HassioMainDataUpdateCoordinator(DataUpdateCoordinator[HassioMainData]):
@@ -1492,6 +1664,25 @@ class HassioMainDataUpdateCoordinator(DataUpdateCoordinator[HassioMainData]):
         ):
             self.config_entry.async_create_task(self.hass, self.async_request_refresh())
 
+    @callback
+    def async_push_panel(self, addon: str, panel: IngressPanel) -> None:
+        """Apply a Supervisor panel push to cached data without touching refresh state."""
+        self.data = replace(self.data, panels={**self.data.panels, addon: panel})
+        self.async_update_listeners()
+
+    @callback
+    def async_push_panel_removal(self, addon: str) -> None:
+        """Apply a Supervisor panel removal push to cached data."""
+        if addon not in self.data.panels:
+            return
+        self.data = replace(
+            self.data,
+            panels={
+                slug: panel for slug, panel in self.data.panels.items() if slug != addon
+            },
+        )
+        self.async_update_listeners()
+
     @override
     async def _async_update_data(self) -> HassioMainData:
         """Update data via library."""
@@ -1501,7 +1692,7 @@ class HassioMainDataUpdateCoordinator(DataUpdateCoordinator[HassioMainData]):
         try:
             # Cast is required here because asyncio.gather only has overloads to
             # maintain typing for 6 arguments. It falls back to list[<common parent>]
-            # after that which is what mypy sees here since we have 7 API calls.
+            # after that which is what mypy sees here since we have 8 API calls.
             (
                 info,
                 core_info,
@@ -1510,6 +1701,7 @@ class HassioMainDataUpdateCoordinator(DataUpdateCoordinator[HassioMainData]):
                 host_info,
                 store_info,
                 network_info,
+                panels_info,
             ) = cast(
                 tuple[
                     RootInfo,
@@ -1519,6 +1711,7 @@ class HassioMainDataUpdateCoordinator(DataUpdateCoordinator[HassioMainData]):
                     HostInfo,
                     StoreInfo,
                     NetworkInfo,
+                    dict[str, IngressPanel],
                 ],
                 await asyncio.gather(
                     client.info(),
@@ -1528,6 +1721,7 @@ class HassioMainDataUpdateCoordinator(DataUpdateCoordinator[HassioMainData]):
                     client.host.info(),
                     client.store.info(),
                     client.network.info(),
+                    client.ingress.panels(),
                 ),
             )
             mounts_info = await client.mounts.info()
@@ -1542,6 +1736,7 @@ class HassioMainDataUpdateCoordinator(DataUpdateCoordinator[HassioMainData]):
             host=host_info,
             mounts={mount.name: mount for mount in mounts_info.mounts},
             os=os_info if self.is_hass_os else None,
+            panels=panels_info,
         )
 
         # Update hass.data for legacy accessor functions
@@ -1569,9 +1764,7 @@ class HassioMainDataUpdateCoordinator(DataUpdateCoordinator[HassioMainData]):
         # Remove mounts that no longer exists from device registry
         supervisor_mount_devices = {
             device.name
-            for device in self.dev_reg.devices.get_devices_for_config_entry_id(
-                self.entry_id
-            )
+            for device in dr.async_entries_for_config_entry(self.dev_reg, self.entry_id)
             if device.model == SupervisorEntityModel.MOUNT
         }
         if stale_mounts := supervisor_mount_devices - set(new_data.mounts):

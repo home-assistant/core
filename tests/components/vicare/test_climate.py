@@ -55,6 +55,9 @@ async def test_all_entities(
         ("cooling", True, HVACAction.COOLING),
         ("off", False, HVACAction.IDLE),
         ("ready", False, HVACAction.IDLE),
+        # Heat pumps that phrase their phase differently ("ready" while the
+        # compressor runs) are heating, not idle.
+        ("ready", True, HVACAction.HEATING),
         # Active compressor without a recognisable phase falls back to
         # HEATING (matches the pre-cooling-support behaviour for hybrid
         # devices that may not expose the phase property).

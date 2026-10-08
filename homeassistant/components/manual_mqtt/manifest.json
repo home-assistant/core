@@ -1,6 +1,6 @@
 {
   "domain": "manual_mqtt",
-  "name": "Manual MQTT Alarm Control Panel",
+  "name": "Manual MQTT alarm control panel",
   "codeowners": [],
   "dependencies": ["mqtt"],
   "documentation": "https://www.home-assistant.io/integrations/manual_mqtt",

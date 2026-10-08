@@ -1,0 +1,64 @@
+{
+  "resources": {
+    "core": {
+      "limit": 5000,
+      "used": 1,
+      "remaining": 4999,
+      "reset": 1691591363
+    },
+    "search": {
+      "limit": 30,
+      "used": 12,
+      "remaining": 18,
+      "reset": 1691591091
+    },
+    "graphql": {
+      "limit": 5000,
+      "used": 7,
+      "remaining": 4993,
+      "reset": 1691593228
+    },
+    "integration_manifest": {
+      "limit": 5000,
+      "used": 1,
+      "remaining": 4999,
+      "reset": 1691594631
+    },
+    "source_import": {
+      "limit": 100,
+      "used": 1,
+      "remaining": 99,
+      "reset": 1691591091
+    },
+    "code_scanning_upload": {
+      "limit": 500,
+      "used": 1,
+      "remaining": 499,
+      "reset": 1691594631
+    },
+    "actions_runner_registration": {
+      "limit": 10000,
+      "used": 0,
+      "remaining": 10000,
+      "reset": 1691594631
+    },
+    "scim": {
+      "limit": 15000,
+      "used": 0,
+      "remaining": 15000,
+      "reset": 1691594631
+    },
+    "code_search": {
+      "limit": 10,
+      "used": 0,
+      "remaining": 10,
+      "reset": 1691591091
+    }
+  },
+  "rate": {
+    "limit": 5000,
+    "used": 1,
+    "remaining": 4999,
+    "reset": 1372700873
+  }
+}

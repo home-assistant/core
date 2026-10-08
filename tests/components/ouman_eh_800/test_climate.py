@@ -8,6 +8,7 @@ from ouman_eh_800_api import (
     OperationMode,
     OumanClientAuthenticationError,
     OumanClientCommunicationError,
+    OumanClientError,
 )
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -308,6 +309,11 @@ async def test_async_set_temperature_out_of_range(
             OumanClientCommunicationError("Network error: Connection refused"),
             "Error communicating with API",
             id="communication_failure",
+        ),
+        pytest.param(
+            OumanClientError("Endpoint ID missing from response"),
+            "Unexpected response from device",
+            id="unexpected_response",
         ),
     ],
 )

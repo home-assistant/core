@@ -160,9 +160,12 @@ async def async_setup_device(
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
+    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.AnyDeviceEntry
 ) -> bool:
     """Remove Tasmota config entry from a device."""
+    if not isinstance(device_entry, dr.DeviceEntry):
+        # This integration does not create child devices.
+        return False
 
     connections = device_entry.connections
     macs = [c[1] for c in connections if c[0] == CONNECTION_NETWORK_MAC]

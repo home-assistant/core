@@ -1,12 +1,13 @@
 """Support for Victron GX number entities."""
 
-from typing import TYPE_CHECKING, Any, override
+from typing import TYPE_CHECKING, override
 
 from victron_mqtt import (
     Device as VictronVenusDevice,
     Metric as VictronVenusMetric,
     MetricKind,
     MetricType,
+    MetricValue,
     WritableMetric as VictronVenusWritableMetric,
 )
 
@@ -77,7 +78,10 @@ class VictronNumber(VictronBaseEntity, NumberEntity):
         """Initialize the number entity."""
         super().__init__(device, metric, device_info, installation_id)
         self._attr_device_class = METRIC_TYPE_TO_DEVICE_CLASS.get(metric.metric_type)
-        self._attr_native_value = metric.value
+        value = metric.value
+        if TYPE_CHECKING:
+            assert value is None or isinstance(value, int | float)
+        self._attr_native_value = value
         if metric.min_value is not None:
             self._attr_native_min_value = metric.min_value
         if metric.max_value is not None:
@@ -93,7 +97,9 @@ class VictronNumber(VictronBaseEntity, NumberEntity):
 
     @callback
     @override
-    def _on_update_cb(self, value: Any) -> None:
+    def _on_update_cb(self, value: MetricValue) -> None:
+        if TYPE_CHECKING:
+            assert value is None or isinstance(value, int | float)
         self._attr_native_value = value
         self.async_write_ha_state()
 

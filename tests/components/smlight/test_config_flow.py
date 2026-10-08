@@ -61,19 +61,19 @@ async def test_user_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> No
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
             CONF_HOST: MOCK_HOSTNAME,
         },
     )
 
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "SLZB-06p7"
-    assert result2["data"] == {
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "SLZB-06p7"
+    assert result["data"] == {
         CONF_HOST: MOCK_HOSTNAME,
     }
-    assert result2["context"]["unique_id"] == "aa:bb:cc:dd:ee:ff"
+    assert result["context"]["unique_id"] == "aa:bb:cc:dd:ee:ff"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -90,30 +90,30 @@ async def test_user_flow_auth(
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
             CONF_HOST: MOCK_HOSTNAME,
         },
     )
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["step_id"] == "auth"
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "auth"
 
-    result3 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
             CONF_USERNAME: MOCK_USERNAME,
             CONF_PASSWORD: MOCK_PASSWORD,
         },
     )
-    assert result3["type"] is FlowResultType.CREATE_ENTRY
-    assert result3["title"] == "SLZB-06p7"
-    assert result3["data"] == {
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "SLZB-06p7"
+    assert result["data"] == {
         CONF_USERNAME: MOCK_USERNAME,
         CONF_PASSWORD: MOCK_PASSWORD,
         CONF_HOST: MOCK_HOSTNAME,
     }
-    assert result3["context"]["unique_id"] == "aa:bb:cc:dd:ee:ff"
+    assert result["context"]["unique_id"] == "aa:bb:cc:dd:ee:ff"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -141,15 +141,15 @@ async def test_zeroconf_flow(
     assert progress[0]["flow_id"] == result["flow_id"]
     assert progress[0]["context"]["confirm_only"] is True
 
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={}
     )
 
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["context"]["source"] == "zeroconf"
-    assert result2["context"]["unique_id"] == "aa:bb:cc:dd:ee:ff"
-    assert result2["title"] == "slzb-06"
-    assert result2["data"] == {
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["context"]["source"] == "zeroconf"
+    assert result["context"]["unique_id"] == "aa:bb:cc:dd:ee:ff"
+    assert result["title"] == "slzb-06"
+    assert result["data"] == {
         CONF_HOST: MOCK_HOST,
     }
 
@@ -182,12 +182,12 @@ async def test_zeroconf_flow_auth(
     assert progress[0]["flow_id"] == result["flow_id"]
     assert progress[0]["context"]["confirm_only"] is True
 
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={}
     )
 
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["step_id"] == "auth"
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "auth"
 
     progress2 = [
         flow
@@ -197,7 +197,7 @@ async def test_zeroconf_flow_auth(
     assert len(progress2) == 1
     assert progress2[0]["flow_id"] == result["flow_id"]
 
-    result3 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
             CONF_USERNAME: MOCK_USERNAME,
@@ -205,11 +205,11 @@ async def test_zeroconf_flow_auth(
         },
     )
 
-    assert result3["type"] is FlowResultType.CREATE_ENTRY
-    assert result3["context"]["source"] == "zeroconf"
-    assert result3["context"]["unique_id"] == "aa:bb:cc:dd:ee:ff"
-    assert result3["title"] == "SLZB-06p7"
-    assert result3["data"] == {
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["context"]["source"] == "zeroconf"
+    assert result["context"]["unique_id"] == "aa:bb:cc:dd:ee:ff"
+    assert result["title"] == "SLZB-06p7"
+    assert result["data"] == {
         CONF_USERNAME: MOCK_USERNAME,
         CONF_PASSWORD: MOCK_PASSWORD,
         CONF_HOST: MOCK_HOST,
@@ -236,12 +236,12 @@ async def test_zeroconf_unsupported_abort(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "confirm_discovery"
 
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={}
     )
 
-    assert result2["type"] is FlowResultType.ABORT
-    assert result2["reason"] == "unsupported_device"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unsupported_device"
 
 
 async def test_user_unsupported_abort(
@@ -260,15 +260,15 @@ async def test_user_unsupported_abort(
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
             CONF_HOST: MOCK_HOST,
         },
     )
 
-    assert result2["type"] is FlowResultType.ABORT
-    assert result2["reason"] == "unsupported_device"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unsupported_device"
 
 
 async def test_user_unsupported_device_abort_auth(
@@ -282,7 +282,15 @@ async def test_user_unsupported_device_abort_auth(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
-        data={
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
             CONF_HOST: MOCK_HOST,
         },
     )
@@ -293,7 +301,7 @@ async def test_user_unsupported_device_abort_auth(
     mock_smlight_client.get_info.side_effect = None
     mock_smlight_client.get_info.return_value = Info(model="SLZB-X")
 
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
             CONF_USERNAME: MOCK_USERNAME,
@@ -301,8 +309,8 @@ async def test_user_unsupported_device_abort_auth(
         },
     )
 
-    assert result2["type"] is FlowResultType.ABORT
-    assert result2["reason"] == "unsupported_device"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unsupported_device"
 
 
 @pytest.mark.usefixtures("mock_smlight_client")
@@ -316,9 +324,15 @@ async def test_user_device_exists_abort(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
-        data={
-            CONF_HOST: MOCK_HOST,
-        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: MOCK_HOST},
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -347,19 +361,19 @@ async def test_user_flow_can_override_discovery(
     assert result["step_id"] == SOURCE_USER
     assert result["errors"] == {}
 
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
             CONF_HOST: MOCK_HOST,
         },
     )
 
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["context"]["source"] == SOURCE_USER
-    assert result2["data"] == {
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["context"]["source"] == SOURCE_USER
+    assert result["data"] == {
         CONF_HOST: MOCK_HOST,
     }
-    assert result2["context"]["unique_id"] == "aa:bb:cc:dd:ee:ff"
+    assert result["context"]["unique_id"] == "aa:bb:cc:dd:ee:ff"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -390,7 +404,15 @@ async def test_user_invalid_auth(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
-        data={
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
             CONF_HOST: MOCK_HOST,
         },
     )
@@ -398,7 +420,7 @@ async def test_user_invalid_auth(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "auth"
 
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
             CONF_USERNAME: "test",
@@ -406,13 +428,13 @@ async def test_user_invalid_auth(
         },
     )
 
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": "invalid_auth"}
-    assert result2["step_id"] == "auth"
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_auth"}
+    assert result["step_id"] == "auth"
 
     mock_smlight_client.authenticate.side_effect = None
 
-    result3 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
             CONF_USERNAME: "test",
@@ -420,9 +442,9 @@ async def test_user_invalid_auth(
         },
     )
 
-    assert result3["type"] is FlowResultType.CREATE_ENTRY
-    assert result3["title"] == "SLZB-06p7"
-    assert result3["data"] == {
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "SLZB-06p7"
+    assert result["data"] == {
         CONF_HOST: MOCK_HOST,
         CONF_USERNAME: "test",
         CONF_PASSWORD: "good",
@@ -455,15 +477,15 @@ async def test_user_cannot_connect(
 
     mock_smlight_client.check_auth_needed.side_effect = None
 
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
             CONF_HOST: MOCK_HOST,
         },
     )
 
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "SLZB-06p7"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "SLZB-06p7"
 
     assert len(mock_setup_entry.mock_calls) == 1
     assert len(mock_smlight_client.get_info.mock_calls) == 2
@@ -491,7 +513,7 @@ async def test_auth_cannot_connect(
 
     mock_smlight_client.check_auth_needed.side_effect = SmlightConnectionError
 
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
             CONF_USERNAME: MOCK_USERNAME,
@@ -499,8 +521,8 @@ async def test_auth_cannot_connect(
         },
     )
 
-    assert result2["type"] is FlowResultType.ABORT
-    assert result2["reason"] == "cannot_connect"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
 
 
 async def test_zeroconf_cannot_connect(
@@ -517,13 +539,13 @@ async def test_zeroconf_cannot_connect(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "confirm_discovery"
 
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {},
     )
 
-    assert result2["type"] is FlowResultType.ABORT
-    assert result2["reason"] == "cannot_connect"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
 
 
 async def test_zeroconf_legacy_cannot_connect(
@@ -555,15 +577,15 @@ async def test_zeroconf_legacy_mac(
 
     assert result["description_placeholders"] == {"host": MOCK_DEVICE_NAME}
 
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={}
     )
 
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["context"]["source"] == "zeroconf"
-    assert result2["context"]["unique_id"] == "aa:bb:cc:dd:ee:ff"
-    assert result2["title"] == "slzb-06"
-    assert result2["data"] == {
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["context"]["source"] == "zeroconf"
+    assert result["context"]["unique_id"] == "aa:bb:cc:dd:ee:ff"
+    assert result["title"] == "slzb-06"
+    assert result["data"] == {
         CONF_HOST: MOCK_HOST,
     }
 
@@ -650,7 +672,7 @@ async def test_reauth_flow(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
             CONF_USERNAME: MOCK_USERNAME,
@@ -658,8 +680,8 @@ async def test_reauth_flow(
         },
     )
 
-    assert result2["type"] is FlowResultType.ABORT
-    assert result2["reason"] == "reauth_successful"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
     assert mock_config_entry.data == {
         CONF_USERNAME: MOCK_USERNAME,
         CONF_PASSWORD: MOCK_PASSWORD,
@@ -686,7 +708,7 @@ async def test_reauth_auth_error(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
             CONF_USERNAME: MOCK_USERNAME,
@@ -694,11 +716,11 @@ async def test_reauth_auth_error(
         },
     )
 
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["step_id"] == "reauth_confirm"
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
 
     mock_smlight_client.authenticate.side_effect = None
-    result3 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
             CONF_USERNAME: MOCK_USERNAME,
@@ -706,8 +728,8 @@ async def test_reauth_auth_error(
         },
     )
 
-    assert result3["type"] is FlowResultType.ABORT
-    assert result3["reason"] == "reauth_successful"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
 
     assert mock_config_entry.data == {
         CONF_USERNAME: MOCK_USERNAME,
@@ -735,7 +757,7 @@ async def test_reauth_connect_error(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
             CONF_USERNAME: MOCK_USERNAME,
@@ -743,8 +765,8 @@ async def test_reauth_connect_error(
         },
     )
 
-    assert result2["type"] is FlowResultType.ABORT
-    assert result2["reason"] == "cannot_connect"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
     assert len(mock_smlight_client.authenticate.mock_calls) == 1
 
 

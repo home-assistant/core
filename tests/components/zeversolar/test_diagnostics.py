@@ -37,8 +37,8 @@ async def test_device_diagnostics(
     init_integration: MockConfigEntry,
 ) -> None:
     """Test device diagnostics."""
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, MOCK_SERIAL_NUMBER)}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_SERIAL_NUMBER), init_integration.entry_id
     )
 
     assert (

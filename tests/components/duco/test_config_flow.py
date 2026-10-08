@@ -1,5 +1,6 @@
 """Tests for the Duco config flow."""
 
+from dataclasses import replace
 from ipaddress import IPv4Address
 from unittest.mock import ANY, AsyncMock, patch
 
@@ -44,6 +45,43 @@ DHCP_DISCOVERY = DhcpServiceInfo(
     hostname="duco_ddeeff",
     macaddress="aabbccddeeff",
 )
+
+_DISCOVERY_CASES = [
+    pytest.param(SOURCE_DHCP, DHCP_DISCOVERY, id="dhcp"),
+    pytest.param(SOURCE_ZEROCONF, ZEROCONF_DISCOVERY, id="zeroconf"),
+]
+
+_NEW_HOST = "192.168.1.200"
+_UPDATED_DISCOVERY_CASES = [
+    pytest.param(
+        SOURCE_DHCP,
+        replace(DHCP_DISCOVERY, ip=_NEW_HOST),
+        id="dhcp",
+    ),
+    pytest.param(
+        SOURCE_ZEROCONF,
+        replace(
+            ZEROCONF_DISCOVERY,
+            ip_address=IPv4Address(_NEW_HOST),
+            ip_addresses=[IPv4Address(_NEW_HOST)],
+        ),
+        id="zeroconf",
+    ),
+]
+
+_DISCOVERY_ERRORS = [
+    pytest.param(
+        DucoConnectionError("Connection refused"),
+        "cannot_connect",
+        id="connection_error",
+    ),
+    pytest.param(DucoError("Unexpected error"), "unknown", id="duco_error"),
+    pytest.param(
+        DucoResponseError(404, "/info"),
+        "unsupported_board",
+        id="unsupported_board",
+    ),
+]
 
 _SUPPORTED_BOARD_INFOS = [
     pytest.param(
@@ -112,7 +150,7 @@ async def _start_reconfigure_flow(
 
 
 def _set_board_info_value(mock_duco_client: AsyncMock, board_info: BoardInfo) -> None:
-    """Set the board info returned by the next config flow step."""
+    """Set board info without a prior side effect taking precedence."""
     mock_duco_client.async_get_board_info.side_effect = None
     mock_duco_client.async_get_board_info.return_value = board_info
 
@@ -178,7 +216,6 @@ async def test_user_flow_duplicate(
     """Test that a duplicate config entry is aborted."""
     mock_config_entry.add_to_hass(hass)
 
-    # Second attempt for the same device
     result = await _start_user_flow(hass)
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], USER_INPUT
@@ -188,19 +225,24 @@ async def test_user_flow_duplicate(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.parametrize(("source", "discovery"), _DISCOVERY_CASES)
 @pytest.mark.usefixtures("mock_setup_entry")
-async def test_zeroconf_discovery_new_device(
-    hass: HomeAssistant, mock_duco_client: AsyncMock
+async def test_discovery_new_device(
+    hass: HomeAssistant,
+    mock_duco_client: AsyncMock,
+    source: str,
+    discovery: DhcpServiceInfo | ZeroconfServiceInfo,
 ) -> None:
-    """Test zeroconf discovery shows confirmation form and creates entry."""
+    """Test discovery shows a confirmation form and creates an entry."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": SOURCE_ZEROCONF},
-        data=ZEROCONF_DISCOVERY,
+        context={"source": source},
+        data=discovery,
     )
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "discovery_confirm"
+    assert result["description_placeholders"] == {"name": "SILENT_CONNECT"}
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={}
@@ -212,75 +254,66 @@ async def test_zeroconf_discovery_new_device(
     assert result["result"].unique_id == TEST_MAC
 
 
-async def test_zeroconf_discovery_updates_host(
+@pytest.mark.parametrize(("source", "discovery"), _UPDATED_DISCOVERY_CASES)
+async def test_discovery_updates_host(
     hass: HomeAssistant,
     mock_duco_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    source: str,
+    discovery: DhcpServiceInfo | ZeroconfServiceInfo,
 ) -> None:
-    """Test zeroconf discovery updates the host of an existing entry."""
+    """Test discovery updates the host of an existing entry."""
     mock_config_entry.add_to_hass(hass)
-
-    new_ip = "192.168.1.200"
-    discovery = ZeroconfServiceInfo(
-        ip_address=IPv4Address(new_ip),
-        ip_addresses=[IPv4Address(new_ip)],
-        port=80,
-        hostname="duco_061293.local.",
-        type="_http._tcp.local.",
-        name="DUCO [a0dd6c061293]._http._tcp.local.",
-        properties={},
-    )
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": SOURCE_ZEROCONF},
+        context={"source": source},
         data=discovery,
     )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    assert mock_config_entry.data[CONF_HOST] == new_ip
+    assert mock_config_entry.data[CONF_HOST] == _NEW_HOST
 
 
-async def test_zeroconf_discovery_already_configured_same_ip(
+@pytest.mark.parametrize(("source", "discovery"), _DISCOVERY_CASES)
+async def test_discovery_already_configured_same_ip(
     hass: HomeAssistant,
     mock_duco_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    source: str,
+    discovery: DhcpServiceInfo | ZeroconfServiceInfo,
 ) -> None:
-    """Test zeroconf discovery with unchanged IP aborts as already_configured."""
+    """Test discovery with an unchanged IP aborts as already configured."""
     mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": SOURCE_ZEROCONF},
-        data=ZEROCONF_DISCOVERY,
+        context={"source": source},
+        data=discovery,
     )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
-@pytest.mark.parametrize(
-    ("exception", "expected_reason"),
-    [
-        (DucoConnectionError("Connection refused"), "cannot_connect"),
-        (DucoError("Unexpected error"), "unknown"),
-        (DucoResponseError(404, "/info"), "unsupported_board"),
-    ],
-)
-async def test_zeroconf_discovery_exceptions(
+@pytest.mark.parametrize(("source", "discovery"), _DISCOVERY_CASES)
+@pytest.mark.parametrize(("exception", "expected_reason"), _DISCOVERY_ERRORS)
+async def test_discovery_exceptions(
     hass: HomeAssistant,
     mock_duco_client: AsyncMock,
+    source: str,
+    discovery: DhcpServiceInfo | ZeroconfServiceInfo,
     exception: Exception,
     expected_reason: str,
 ) -> None:
-    """Test zeroconf discovery aborts on connection and unknown errors."""
+    """Test discovery aborts with the expected reason on client errors."""
     mock_duco_client.async_get_board_info.side_effect = exception
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": SOURCE_ZEROCONF},
-        data=ZEROCONF_DISCOVERY,
+        context={"source": source},
+        data=discovery,
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -327,7 +360,6 @@ async def test_reconfigure_flow_wrong_device(
     """Test reconfigure flow aborts when pointing to a different device."""
     result = await _start_reconfigure_flow(hass, mock_config_entry)
 
-    # Simulate a different MAC returned by the new host
     different_mac = "11:22:33:44:55:66"
     mock_duco_client.async_get_lan_info.return_value = LanInfo(
         mode="WIFI_CLIENT",
@@ -410,102 +442,6 @@ async def test_reconfigure_flow_without_info_endpoint(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
-
-
-@pytest.mark.usefixtures("mock_setup_entry")
-async def test_dhcp_discovery_new_device(
-    hass: HomeAssistant, mock_duco_client: AsyncMock
-) -> None:
-    """Test DHCP discovery of a new device shows confirmation form and creates entry."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_DHCP},
-        data=DHCP_DISCOVERY,
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "discovery_confirm"
-    assert result["description_placeholders"] == {"name": "SILENT_CONNECT"}
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={}
-    )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "SILENT_CONNECT"
-    assert result["data"] == USER_INPUT
-    assert result["result"].unique_id == TEST_MAC
-
-
-async def test_dhcp_discovery_updates_host(
-    hass: HomeAssistant,
-    mock_duco_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test DHCP discovery updates the host of an existing entry."""
-    mock_config_entry.add_to_hass(hass)
-
-    new_ip = "192.168.1.200"
-    discovery = DhcpServiceInfo(
-        ip=new_ip,
-        hostname="duco_ddeeff",
-        macaddress="aabbccddeeff",
-    )
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_DHCP},
-        data=discovery,
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
-    assert mock_config_entry.data[CONF_HOST] == new_ip
-
-
-async def test_dhcp_discovery_already_configured_same_ip(
-    hass: HomeAssistant,
-    mock_duco_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test DHCP discovery with unchanged IP aborts as already_configured."""
-    mock_config_entry.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_DHCP},
-        data=DHCP_DISCOVERY,
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
-
-
-@pytest.mark.parametrize(
-    ("exception", "expected_reason"),
-    [
-        (DucoConnectionError("Connection refused"), "cannot_connect"),
-        (DucoError("Unexpected error"), "unknown"),
-        (DucoResponseError(404, "/info"), "unsupported_board"),
-    ],
-)
-async def test_dhcp_discovery_exceptions(
-    hass: HomeAssistant,
-    mock_duco_client: AsyncMock,
-    exception: Exception,
-    expected_reason: str,
-) -> None:
-    """Test DHCP discovery aborts on connection and unknown errors."""
-    mock_duco_client.async_get_board_info.side_effect = exception
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_DHCP},
-        data=DHCP_DISCOVERY,
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == expected_reason
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -623,19 +559,22 @@ async def test_reconfigure_flow_unsupported_board_from_board_info(
     assert result["reason"] == "reconfigure_successful"
 
 
+@pytest.mark.parametrize(("source", "discovery"), _DISCOVERY_CASES)
 @pytest.mark.parametrize("supported_board_info", _SUPPORTED_BOARD_INFOS)
-async def test_zeroconf_discovery_allows_api_compatible_board_info(
+async def test_discovery_allows_api_compatible_board_info(
     hass: HomeAssistant,
     mock_duco_client: AsyncMock,
+    source: str,
+    discovery: DhcpServiceInfo | ZeroconfServiceInfo,
     supported_board_info: BoardInfo,
 ) -> None:
-    """Test zeroconf discovery allows boards that expose a compatible API version."""
+    """Test discovery allows boards that expose a compatible API version."""
     _set_board_info_value(mock_duco_client, supported_board_info)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": SOURCE_ZEROCONF},
-        data=ZEROCONF_DISCOVERY,
+        context={"source": source},
+        data=discovery,
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -645,60 +584,22 @@ async def test_zeroconf_discovery_allows_api_compatible_board_info(
     }
 
 
+@pytest.mark.parametrize(("source", "discovery"), _DISCOVERY_CASES)
 @pytest.mark.parametrize("unsupported_board_info", UNSUPPORTED_BOARD_INFOS)
-async def test_zeroconf_discovery_unsupported_board_from_board_info(
+async def test_discovery_unsupported_board_from_board_info(
     hass: HomeAssistant,
     mock_duco_client: AsyncMock,
+    source: str,
+    discovery: DhcpServiceInfo | ZeroconfServiceInfo,
     unsupported_board_info: BoardInfo,
 ) -> None:
-    """Test zeroconf discovery aborts with unsupported_board when board validation fails."""
+    """Test discovery aborts when board validation fails."""
     _set_board_info_value(mock_duco_client, unsupported_board_info)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": SOURCE_ZEROCONF},
-        data=ZEROCONF_DISCOVERY,
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "unsupported_board"
-
-
-@pytest.mark.parametrize("supported_board_info", _SUPPORTED_BOARD_INFOS)
-async def test_dhcp_discovery_allows_api_compatible_board_info(
-    hass: HomeAssistant,
-    mock_duco_client: AsyncMock,
-    supported_board_info: BoardInfo,
-) -> None:
-    """Test DHCP discovery allows boards that expose a compatible API version."""
-    _set_board_info_value(mock_duco_client, supported_board_info)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_DHCP},
-        data=DHCP_DISCOVERY,
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "discovery_confirm"
-    assert result["description_placeholders"] == {
-        "name": str(supported_board_info.box_name)
-    }
-
-
-@pytest.mark.parametrize("unsupported_board_info", UNSUPPORTED_BOARD_INFOS)
-async def test_dhcp_discovery_unsupported_board_from_board_info(
-    hass: HomeAssistant,
-    mock_duco_client: AsyncMock,
-    unsupported_board_info: BoardInfo,
-) -> None:
-    """Test DHCP discovery aborts with unsupported_board when board validation fails."""
-    _set_board_info_value(mock_duco_client, unsupported_board_info)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_DHCP},
-        data=DHCP_DISCOVERY,
+        context={"source": source},
+        data=discovery,
     )
 
     assert result["type"] is FlowResultType.ABORT

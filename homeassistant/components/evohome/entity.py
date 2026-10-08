@@ -14,7 +14,7 @@ from evohomeasync2.const import (
     ZoneModelType as EvoZoneModelType,
     ZoneType as EvoZoneType,
 )
-from evohomeasync2.typedefs import EvoDayOfWeekDhwT
+from evohomeasync2.typedefs import EvoDhwScheduleDayOfWeekT, EvoZonScheduleDayOfWeekT
 
 from homeassistant.core import callback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -118,11 +118,13 @@ class EvoChild(EvoEntity):
         self._evo_id = evo_device.id
         self._evo_tcs = evo_device.tcs
 
-        self._schedule: list[EvoDayOfWeekDhwT] | None = None
+        self._schedule: (
+            list[EvoDhwScheduleDayOfWeekT] | list[EvoZonScheduleDayOfWeekT] | None
+        ) = None
         self._setpoints: dict[str, Any] = {}
 
     @property
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature of a Zone."""
 
         assert isinstance(self._evo_device, evo.HotWater | evo.Zone)  # mypy check
