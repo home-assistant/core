@@ -432,6 +432,7 @@ def _serial_entry() -> MockConfigEntry:
             ConfigEntryState.LOADED,
             id="asleep",
         ),
+        pytest.param(ValueError("bug"), ConfigEntryState.SETUP_RETRY, id="setup_retry"),
     ],
 )
 @pytest.mark.usefixtures("mock_get_unit")
