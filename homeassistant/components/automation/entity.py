@@ -193,14 +193,17 @@ class UnavailableAutomationEntity(BaseAutomationEntity):
         """Return a set of referenced entities."""
         return set()
 
-    @override
-    async def async_added_to_hass(self) -> None:
+    def _issue_id(self, entity_id: str) -> str:
+        """Return the repair issue id for the entity_id."""
+        return f"{entity_id}_validation_{self._validation_status}"
+
+    @callback
+    def _async_create_issue(self) -> None:
         """Create a repair issue to notify the user the automation has errors."""
-        await super().async_added_to_hass()
         async_create_issue(
             self.hass,
             DOMAIN,
-            f"{self.entity_id}_validation_{self._validation_status}",
+            self._issue_id(self.entity_id),
             is_fixable=False,
             severity=IssueSeverity.ERROR,
             translation_key=f"validation_{self._validation_status}",
@@ -213,12 +216,24 @@ class UnavailableAutomationEntity(BaseAutomationEntity):
         )
 
     @override
+    async def async_added_to_hass(self) -> None:
+        """Create a repair issue to notify the user the automation has errors."""
+        await super().async_added_to_hass()
+        self._async_create_issue()
+
+    @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Move the repair issue, its id and placeholders use the entity_id."""
+        super().async_entity_id_changed(old_entity_id)
+        async_delete_issue(self.hass, DOMAIN, self._issue_id(old_entity_id))
+        self._async_create_issue()
+
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
         await super().async_will_remove_from_hass()
-        async_delete_issue(
-            self.hass, DOMAIN, f"{self.entity_id}_validation_{self._validation_status}"
-        )
+        async_delete_issue(self.hass, DOMAIN, self._issue_id(self.entity_id))
 
     @override
     async def async_trigger(
@@ -377,10 +392,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
         """Startup with initial state or previous state."""
         await super().async_added_to_hass()
 
-        self._logger = logging.getLogger(
-            f"{LOGGER.name}.{split_entity_id(self.entity_id)[1]}"
-        )
-        self.action_script.update_logger(self._logger)
+        self._async_update_logger()
 
         if state := await self.async_get_last_state():
             enable_automation = state.state == STATE_ON
@@ -577,15 +589,63 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
     async def async_will_remove_from_hass(self) -> None:
         """Remove listeners when removing automation from Home Assistant."""
         await super().async_will_remove_from_hass()
-        if self.registry_entry and self.registry_entry.entity_id != self.entity_id:
-            # Entity ID change, do not unload the script or conditions as they will
-            # be reused.
-            await self._async_disable()
-            return
         await self._async_disable(stop_actions=False)
         await self.action_script.async_unload()
         if self._condition is not None:
             self._condition.async_unload()
+
+    @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Update the logger, which is named after the entity_id."""
+        super().async_entity_id_changed(old_entity_id)
+        self._async_update_logger()
+
+    @callback
+    @override
+    def async_entity_id_change_finished(self, old_entity_id: str) -> None:
+        """Re-attach the triggers, their variables captured `this`.
+
+        Running actions continue.
+        """
+        super().async_entity_id_change_finished(old_entity_id)
+        if (detach_triggers := self._async_detach_triggers) is None:
+            # Not attached, or another entity_id change is re-attaching them
+            return
+        self._async_detach_triggers = None
+        detach_triggers()
+        self.hass.async_create_task(
+            self._async_reattach_triggers(), f"automation {self.entity_id} reattach"
+        )
+
+    async def _async_reattach_triggers(self) -> None:
+        """Attach the triggers again after an entity_id change.
+
+        Not cancelled on removal, the checks after each attach detach what is no
+        longer wanted.
+        """
+        while True:
+            entity_id = self.entity_id
+            detach = await self._async_attach_triggers()
+            # Disabled, removed or attached by enabling again while attaching
+            if not self._is_enabled or self._async_detach_triggers is not None:
+                if detach is not None:
+                    detach()
+                return
+            if self.entity_id == entity_id:
+                self._async_detach_triggers = detach
+                return
+            # Changed again while attaching, `this` is stale
+            if detach is not None:
+                detach()
+
+    @callback
+    def _async_update_logger(self) -> None:
+        """Set the logger, which is named after the entity_id."""
+        self._logger = logging.getLogger(
+            f"{LOGGER.name}.{split_entity_id(self.entity_id)[1]}"
+        )
+        self.action_script.update_logger(self._logger)
 
     async def _async_enable_automation(self) -> None:
         """Arm the automation's triggers on startup."""
