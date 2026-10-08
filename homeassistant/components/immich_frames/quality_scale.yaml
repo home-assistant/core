@@ -1,0 +1,94 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: This integration does not provide custom actions.
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: This integration does not provide custom actions.
+  docs-conditions:
+    status: exempt
+    comment: This integration does not provide conditions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: This integration does not provide triggers.
+  entity-event-setup:
+    status: exempt
+    comment: The image entity is refreshed by DataUpdateCoordinator polling.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: This integration does not provide custom actions.
+  config-entry-unloading: done
+  docs-configuration-parameters: done
+  docs-installation-parameters: done
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates: done
+  reauthentication-flow:
+    status: exempt
+    comment: Authentication is owned by the parent Immich integration.
+  test-coverage: done
+
+  # Gold
+  devices: done
+  diagnostics: done
+  discovery-update-info:
+    status: exempt
+    comment: The frame links to an existing Immich config entry and has no independent discovery data.
+  discovery:
+    status: exempt
+    comment: The frame is configured against an existing Immich config entry.
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: done
+  dynamic-devices:
+    status: exempt
+    comment: Each config entry represents one logical photo frame.
+  entity-category:
+    status: exempt
+    comment: The integration exposes only its primary image entity and no diagnostic or configuration entities.
+  entity-device-class:
+    status: exempt
+    comment: Home Assistant image entities do not have an applicable device class.
+  entity-disabled-by-default:
+    status: exempt
+    comment: The single image entity is the integration's primary user-facing feature.
+  entity-translations: done
+  exception-translations: done
+  icon-translations:
+    status: exempt
+    comment: The initial image-only integration uses standard entity icons and has no custom icon translations.
+  reconfiguration-flow: done
+  repair-issues:
+    status: exempt
+    comment: Authentication recovery is owned by the parent Immich integration; this integration has no additional repair flow.
+  stale-devices:
+    status: exempt
+    comment: Each config entry represents one logical photo frame.
+
+  # Platinum
+  async-dependency: done
+  inject-websession: done
+  strict-typing: done
