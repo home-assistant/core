@@ -64,16 +64,28 @@ _SINGLE_ENTITY_EVENT_TRIGGER_SCHEMA = probatio.Schema(
     },
 )
 
+
+def _apply_offset_type(options: dict[str, Any]) -> dict[str, Any]:
+    if options.pop(CONF_OFFSET_TYPE, None) == OFFSET_TYPE_BEFORE:
+        options[CONF_OFFSET] = -options[CONF_OFFSET]
+    return options
+
+
 _EVENT_TRIGGER_SCHEMA = probatio.Schema(
     {
-        probatio.Required(CONF_OPTIONS, default={}): {
-            probatio.Required(
-                CONF_OFFSET, default=datetime.timedelta(0)
-            ): cv.time_period,
-            probatio.Required(
-                CONF_OFFSET_TYPE, default=OFFSET_TYPE_BEFORE
-            ): probatio.In({OFFSET_TYPE_BEFORE, OFFSET_TYPE_AFTER}),
-        },
+        probatio.Required(CONF_OPTIONS, default={}): probatio.All(
+            {
+                probatio.Required(
+                    CONF_OFFSET, default=datetime.timedelta(0)
+                ): cv.time_period,
+                # Older configs set a positive offset with an offset type,
+                # which is folded into the sign of the offset.
+                probatio.Optional(CONF_OFFSET_TYPE): probatio.In(
+                    {OFFSET_TYPE_BEFORE, OFFSET_TYPE_AFTER}
+                ),
+            },
+            _apply_offset_type,
+        ),
         probatio.Required(CONF_TARGET): cv.TARGET_FIELDS,
     }
 )
@@ -470,11 +482,6 @@ class EventTrigger(Trigger):
         """Attach a trigger."""
 
         offset = self._options[CONF_OFFSET]
-        offset_type = self._options[CONF_OFFSET_TYPE]
-
-        if offset_type == OFFSET_TYPE_BEFORE:
-            offset = -offset
-
         target_selection = TargetSelection(self._target)
         if not target_selection.has_any_target:
             raise HomeAssistantError(f"No target defined in {self._target}")
