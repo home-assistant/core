@@ -514,6 +514,7 @@ async def websocket_reconfigure_node(
         remove_dispatcher_function()
 
     connection.subscriptions[msg["id"]] = async_cleanup
+    connection.send_result(msg[ID])
 
     _LOGGER.debug("Re-interview node with ieee_address: %s", ieee)
     hass.async_create_task(zha_gateway.async_reinterview_device(ieee))

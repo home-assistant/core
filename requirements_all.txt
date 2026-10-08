@@ -3557,7 +3557,7 @@ zinvolt==1.0.1
 zm-py==0.5.4
 
 # homeassistant.components.zwave_js
-zwave-js-server-python==0.73.1
+zwave-js-server-python==0.74.0
 
 # homeassistant.components.zwave_me
 zwave-me-ws==0.4.3
