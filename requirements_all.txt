@@ -3266,6 +3266,9 @@ tilt-ble==1.0.1
 # homeassistant.components.tilt_pi
 tilt-pi==0.2.1
 
+# homeassistant.components.tis_control
+tis-smartbus==0.1.3
+
 # homeassistant.components.tmb
 tmb==0.0.4
 
