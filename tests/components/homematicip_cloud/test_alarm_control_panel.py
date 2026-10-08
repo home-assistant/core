@@ -8,9 +8,7 @@ import pytest
 
 from homeassistant.components.alarm_control_panel import AlarmControlPanelState
 from homeassistant.components.homematicip_cloud import DOMAIN
-from homeassistant.components.homematicip_cloud.alarm_control_panel import (
-    SERVICE_ARM_ANYWAY,
-)
+from homeassistant.components.homematicip_cloud.services import SERVICE_ARM_ANYWAY
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError

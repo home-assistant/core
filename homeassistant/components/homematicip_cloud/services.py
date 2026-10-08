@@ -9,17 +9,26 @@ from homematicip.device import Device, SwitchMeasuring
 from homematicip.group import HeatingGroup
 import probatio
 
-from homeassistant.const import ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_TEMPERATURE
+from homeassistant.components.alarm_control_panel import (
+    DOMAIN as ALARM_CONTROL_PANEL_DOMAIN,
+)
+from homeassistant.const import (
+    ATTR_DEVICE_ID,
+    ATTR_ENTITY_ID,
+    ATTR_MODE,
+    ATTR_TEMPERATURE,
+)
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.config_validation import comp_entity_ids
 from homeassistant.helpers.service import (
     async_register_admin_service,
+    async_register_platform_entity_service,
     verify_domain_control,
 )
 
-from .const import DOMAIN
+from .const import DOMAIN, MODE_AWAY, MODE_HOME
 from .hap import HomematicIPConfigEntry
 from .helpers import get_door_opener_authorization_channel, is_error_response
 
@@ -40,6 +49,7 @@ DEFAULT_CONFIG_FILE_PREFIX = "hmip-config"
 SERVICE_ACTIVATE_ECO_MODE_WITH_DURATION = "activate_eco_mode_with_duration"
 SERVICE_ACTIVATE_ECO_MODE_WITH_PERIOD = "activate_eco_mode_with_period"
 SERVICE_ACTIVATE_VACATION = "activate_vacation"
+SERVICE_ARM_ANYWAY = "arm_anyway"
 SERVICE_DEACTIVATE_ECO_MODE = "deactivate_eco_mode"
 SERVICE_DEACTIVATE_VACATION = "deactivate_vacation"
 SERVICE_DUMP_HAP_CONFIG = "dump_hap_config"
@@ -224,6 +234,15 @@ def async_setup_services(hass: HomeAssistant) -> None:
         service=SERVICE_PULL_LATCH,
         service_func=async_call_hmipc_service,
         schema=SCHEMA_PULL_LATCH,
+    )
+
+    async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        SERVICE_ARM_ANYWAY,
+        entity_domain=ALARM_CONTROL_PANEL_DOMAIN,
+        schema={probatio.Required(ATTR_MODE): probatio.In([MODE_HOME, MODE_AWAY])},
+        func="async_arm_anyway",
     )
 
     async_register_admin_service(

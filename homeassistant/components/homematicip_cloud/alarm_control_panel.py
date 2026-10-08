@@ -5,30 +5,24 @@ from typing import TYPE_CHECKING, override
 
 from homematicip.connection.rest_connection import RestResult
 from homematicip.functionalHomes import SecurityAndAlarmHome
-import probatio
 
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
     AlarmControlPanelState,
 )
-from homeassistant.const import ATTR_MODE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr, entity_platform
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
+from .const import DOMAIN, MODE_AWAY
 from .hap import AsyncHome, HomematicIPConfigEntry, HomematicipHAP
 
 _LOGGER = logging.getLogger(__name__)
 
 CONST_ALARM_CONTROL_PANEL_NAME = "HmIP Alarm Control Panel"
-
-MODE_AWAY = "away"
-MODE_HOME = "home"
-SERVICE_ARM_ANYWAY = "arm_anyway"
 
 
 async def async_setup_entry(
@@ -39,12 +33,6 @@ async def async_setup_entry(
     """Set up the HomematicIP alrm control panel from a config entry."""
     hap = config_entry.runtime_data
     async_add_entities([HomematicipAlarmControlPanelEntity(hap)])
-
-    entity_platform.async_get_current_platform().async_register_entity_service(
-        SERVICE_ARM_ANYWAY,
-        {probatio.Required(ATTR_MODE): probatio.In([MODE_HOME, MODE_AWAY])},
-        "async_arm_anyway",
-    )
 
 
 class HomematicipAlarmControlPanelEntity(AlarmControlPanelEntity):
