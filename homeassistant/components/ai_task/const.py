@@ -20,8 +20,12 @@ DATA_MEDIA_SOURCE: HassKey[local_source.LocalSource] = HassKey(f"{DOMAIN}_media_
 IMAGE_DIR: Final = "image"
 IMAGE_EXPIRY_TIME = 60 * 60  # 1 hour
 
+SERVICE_EVALUATE = "evaluate"
+
 SERVICE_GENERATE_DATA = "generate_data"
 SERVICE_GENERATE_IMAGE = "generate_image"
+
+ATTR_QUESTIONS: Final = "questions"
 
 ATTR_INSTRUCTIONS: Final = "instructions"
 ATTR_TASK_NAME: Final = "task_name"
@@ -45,3 +49,9 @@ class AITaskEntityFeature(IntFlag):
 
     GENERATE_IMAGE = 4
     """Generate images based on instructions."""
+
+    EVALUATE = 8
+    """Evaluate typed questions."""
+
+    EVALUATE_ATTACHMENTS = 16
+    """Support attachments when evaluating questions."""

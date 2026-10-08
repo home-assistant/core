@@ -11,6 +11,18 @@ from homeassistant.helpers.typing import UNDEFINED, ConfigType, UndefinedType
 
 from .const import DATA_COMPONENT, DATA_PREFERENCES, DOMAIN, AITaskEntityFeature
 from .entity import AITaskEntity
+from .evaluation import (
+    ChoiceAnswer,
+    ChoiceQuestion,
+    EvaluationAnswer,
+    EvaluationQuestion,
+    EvaluationTask,
+    EvaluationTaskResult,
+    NoulAnswer,
+    NoulQuestion,
+    ScoreAnswer,
+    ScoreQuestion,
+)
 from .http import async_setup as async_setup_http
 from .media_source import async_get_media_source
 from .services import async_setup_services
@@ -19,6 +31,7 @@ from .task import (
     GenDataTaskResult,
     GenImageTask,
     GenImageTaskResult,
+    async_evaluate,
     async_generate_data,
     async_generate_image,
 )
@@ -27,10 +40,21 @@ __all__ = [
     "DOMAIN",
     "AITaskEntity",
     "AITaskEntityFeature",
+    "ChoiceAnswer",
+    "ChoiceQuestion",
+    "EvaluationAnswer",
+    "EvaluationQuestion",
+    "EvaluationTask",
+    "EvaluationTaskResult",
     "GenDataTask",
     "GenDataTaskResult",
     "GenImageTask",
     "GenImageTaskResult",
+    "NoulAnswer",
+    "NoulQuestion",
+    "ScoreAnswer",
+    "ScoreQuestion",
+    "async_evaluate",
     "async_generate_data",
     "async_generate_image",
 ]
@@ -67,14 +91,21 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class AITaskPreferences:
     """AI Task preferences."""
 
-    KEYS = ("gen_data_entity_id", "gen_image_entity_id")
+    KEYS = (
+        "gen_data_entity_id",
+        "gen_image_entity_id",
+        "evaluate_entity_id",
+        "allow_automatic_evaluation",
+    )
 
+    allow_automatic_evaluation: bool = False
+    evaluate_entity_id: str | None = None
     gen_data_entity_id: str | None = None
     gen_image_entity_id: str | None = None
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the preferences."""
-        self._store: storage.Store[dict[str, str | None]] = storage.Store(
+        self._store: storage.Store[dict[str, str | bool | None]] = storage.Store(
             hass, 1, DOMAIN
         )
 
@@ -84,18 +115,22 @@ class AITaskPreferences:
         if data is None:
             return
         for key in self.KEYS:
-            setattr(self, key, data.get(key))
+            setattr(self, key, data.get(key, getattr(self, key)))
 
     @callback
     def async_set_preferences(
         self,
         *,
+        allow_automatic_evaluation: bool | UndefinedType = UNDEFINED,
+        evaluate_entity_id: str | UndefinedType | None = UNDEFINED,
         gen_data_entity_id: str | UndefinedType | None = UNDEFINED,
         gen_image_entity_id: str | UndefinedType | None = UNDEFINED,
     ) -> None:
         """Set the preferences."""
         changed = False
         for key, value in (
+            ("allow_automatic_evaluation", allow_automatic_evaluation),
+            ("evaluate_entity_id", evaluate_entity_id),
             ("gen_data_entity_id", gen_data_entity_id),
             ("gen_image_entity_id", gen_image_entity_id),
         ):
@@ -110,6 +145,6 @@ class AITaskPreferences:
         self._store.async_delay_save(self.as_dict, 10)
 
     @callback
-    def as_dict(self) -> dict[str, str | None]:
+    def as_dict(self) -> dict[str, str | bool | None]:
         """Get the current preferences."""
         return {key: getattr(self, key) for key in self.KEYS}

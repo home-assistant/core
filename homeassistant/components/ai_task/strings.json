@@ -1,5 +1,31 @@
 {
   "services": {
+    "evaluate": {
+      "description": "Evaluates questions against supplied state and attachments.",
+      "fields": {
+        "attachments": {
+          "description": "Files to evaluate together with the state. Supported types depend on the selected entity.",
+          "name": "Attachments"
+        },
+        "entity_id": {
+          "description": "Entity to run the task on. If omitted, uses the preferred evaluation entity.",
+          "name": "Entity ID"
+        },
+        "questions": {
+          "description": "Named questions with a type (noul, choice, or score), instructions, and criteria for choice and score questions.",
+          "name": "Questions"
+        },
+        "state": {
+          "description": "Text or JSON data to evaluate. Optional when attachments are supplied.",
+          "name": "State"
+        },
+        "task_name": {
+          "description": "Name of the task.",
+          "name": "Task name"
+        }
+      },
+      "name": "Evaluate"
+    },
     "generate_data": {
       "description": "Uses AI to run a task that generates data.",
       "fields": {

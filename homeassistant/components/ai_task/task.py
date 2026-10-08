@@ -17,6 +17,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import llm
 from homeassistant.helpers.chat_session import ChatSession, async_get_chat_session
 from homeassistant.util import RE_SANITIZE_FILENAME, dt as dt_util, slugify
+from homeassistant.util.json import JsonValueType
 
 from .const import (
     DATA_COMPONENT,
@@ -26,6 +27,13 @@ from .const import (
     IMAGE_DIR,
     IMAGE_EXPIRY_TIME,
     AITaskEntityFeature,
+)
+from .evaluation import (
+    QUESTIONS_SCHEMA,
+    EvaluationQuestion,
+    EvaluationTask,
+    EvaluationTaskResult,
+    validate_state,
 )
 
 
@@ -351,3 +359,49 @@ class ImageData:
     filename: str
     file: io.IOBase
     content_type: str
+
+
+async def async_evaluate(
+    hass: HomeAssistant,
+    *,
+    task_name: str,
+    questions: dict[str, EvaluationQuestion],
+    state: JsonValueType = None,
+    entity_id: str | None = None,
+    attachments: list[dict] | None = None,
+    context: Context | None = None,
+) -> EvaluationTaskResult:
+    """Evaluate questions using the selected AI task entity."""
+    questions = QUESTIONS_SCHEMA(questions)
+    validate_state(state)
+    if state is None and not attachments:
+        raise HomeAssistantError("Evaluation requires state or attachments")
+    if entity_id is None:
+        entity_id = hass.data[DATA_PREFERENCES].evaluate_entity_id
+    if entity_id is None:
+        raise HomeAssistantError("No entity_id provided and no preferred entity set")
+    entity = hass.data[DATA_COMPONENT].get_entity(entity_id)
+    if entity is None:
+        raise HomeAssistantError(f"AI Task entity {entity_id} not found")
+    if AITaskEntityFeature.EVALUATE not in entity.supported_features:
+        raise HomeAssistantError(
+            f"AI Task entity {entity_id} does not support evaluation"
+        )
+    if (
+        attachments
+        and AITaskEntityFeature.EVALUATE_ATTACHMENTS not in entity.supported_features
+    ):
+        raise HomeAssistantError(
+            f"AI Task entity {entity_id} does not support evaluation attachments"
+        )
+    with async_get_chat_session(hass) as session:
+        resolved_attachments = await _resolve_attachments(hass, session, attachments)
+        return await entity.internal_async_evaluate(
+            EvaluationTask(
+                name=task_name,
+                questions=questions,
+                state=state,
+                attachments=resolved_attachments or None,
+            ),
+            context,
+        )
