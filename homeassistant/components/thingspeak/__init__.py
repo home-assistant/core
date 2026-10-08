@@ -13,8 +13,9 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, event, state as state_helper
+from homeassistant.core import Event, EventStateChangedData, HomeAssistant
+from homeassistant.helpers import config_validation as cv, state as state_helper
+from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
@@ -54,8 +55,9 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         )
         return False
 
-    def thingspeak_listener(entity_id, old_state, new_state):
+    def thingspeak_listener(event: Event[EventStateChangedData]):
         """Listen for new events and send them to Thingspeak."""
+        new_state = event.data["new_state"]
         if new_state is None or new_state.state in (
             STATE_UNKNOWN,
             "",
@@ -73,6 +75,6 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         except RequestException:
             _LOGGER.error("Error while sending value '%s' to Thingspeak", _state)
 
-    event.track_state_change(hass, entity, thingspeak_listener)
+    async_track_state_change_event(hass, entity, thingspeak_listener)
 
     return True
