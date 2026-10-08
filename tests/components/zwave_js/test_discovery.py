@@ -83,7 +83,7 @@ async def test_touchwand_glass9(
 
     assert not hass.states.async_entity_ids_count("light")
     assert hass.states.async_entity_ids_count("cover") == 3
-    state = hass.states.get("cover.gp9")
+    state = hass.states.get("cover.gp9_endpoint_8")
     assert state
 
 
@@ -132,10 +132,10 @@ async def test_inovelli_lzw36(
     node = inovelli_lzw36
     assert node.device_class.specific.label == "Unused"
 
-    state = hass.states.get("light.family_room_combo")
+    state = hass.states.get("light.family_room_combo_endpoint_1")
     assert state.state == "off"
 
-    state = hass.states.get("fan.family_room_combo_2")
+    state = hass.states.get("fan.family_room_combo_endpoint_2")
     assert state
 
 
@@ -155,8 +155,8 @@ async def test_vision_security_zl7432(
 ) -> None:
     """Test Vision Security ZL7432 is caught by the device specific discovery."""
     for entity_id in (
-        "switch.in_wall_dual_relay_switch",
-        "switch.in_wall_dual_relay_switch_2",
+        "switch.in_wall_dual_relay_switch_endpoint_1",
+        "switch.in_wall_dual_relay_switch_endpoint_2",
     ):
         state = hass.states.get(entity_id)
         assert state
@@ -223,37 +223,30 @@ async def test_merten_507801(
     state = hass.states.get("light.connect_roller_shutter")
     assert not state
 
-    state = hass.states.get("cover.connect_roller_shutter")
+    state = hass.states.get("cover.connect_roller_shutter_endpoint_1")
     assert state
 
 
-async def test_shelly_001p10_disabled_entities(
+async def test_shelly_001p10_suppressed_endpoint(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     client,
     shelly_qnsh_001P10_shutter,
     integration,
 ) -> None:
-    """Test that Shelly 001P10 entity created by endpoint 2 is disabled."""
-    entity_ids = [
-        "cover.wave_shutter_2",
-    ]
-    for entity_id in entity_ids:
-        state = hass.states.get(entity_id)
-        assert state is None
-        entry = entity_registry.async_get(entity_id)
-        assert entry
-        assert entry.disabled
-        assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+    """Test that Shelly 001P10 endpoint 2 is suppressed (no entity created at all).
 
-        # Test enabling entity
-        updated_entry = entity_registry.async_update_entity(
-            entry.entity_id, disabled_by=None
-        )
-        assert updated_entry != entry
-        assert updated_entry.disabled is False
+    Endpoint 2 covers the same shutter as endpoint 1 and has no practical function.
+    The discovery schema suppresses it completely so it doesn't produce even a
+    disabled entity, and endpoint 1 therefore has no collision partner, so the
+    shutter cover stays on the main node device rather than on a child device.
+    """
+    # Endpoint 2 must not exist in the entity registry at all — not even disabled.
+    assert entity_registry.async_get("cover.endpoint_2") is None
+    assert hass.states.get("cover.endpoint_2") is None
 
-    # Test if the main entity from endpoint 1 was created.
+    # The shutter cover must be on the main node device, not on an endpoint child.
+    assert entity_registry.async_get("cover.endpoint_1") is None
     state = hass.states.get("cover.wave_shutter")
     assert state
 
@@ -267,9 +260,9 @@ async def test_merten_507801_disabled_enitites(
 ) -> None:
     """Test that Merten 507801 entities created by endpoint 2 are disabled."""
     entity_ids = [
-        "cover.connect_roller_shutter_2",
-        "select.connect_roller_shutter_local_protection_state_2",
-        "select.connect_roller_shutter_rf_protection_state_2",
+        "cover.connect_roller_shutter_endpoint_2",
+        "select.connect_roller_shutter_endpoint_2_local_protection_state",
+        "select.connect_roller_shutter_endpoint_2_rf_protection_state",
     ]
     for entity_id in entity_ids:
         state = hass.states.get(entity_id)

@@ -124,6 +124,7 @@ from .helpers import (
     async_disable_server_logging_if_needed,
     async_enable_server_logging_if_needed,
     async_enable_statistics,
+    endpoint_device_value_ids,
     format_home_id_for_display,
     get_device_id,
     get_device_id_ext,
@@ -499,7 +500,7 @@ class ControllerEvents:
         self.node_events = NodeEvents(hass, self)
 
     @callback
-    def remove_device(self, device: dr.DeviceEntry) -> None:
+    def remove_device(self, device: dr.AnyDeviceEntry) -> None:
         """Remove device from registry."""
         # note: removal of entity registry entry is handled by core
         self.dev_reg.async_remove_device(device.id)
@@ -796,6 +797,9 @@ class NodeEvents:
         self.value_updates_disc_info: dict[
             int, dict[str, PlatformZwaveDiscoveryInfo]
         ] = {}
+        # per-node cache of primary value IDs that require an endpoint child device,
+        # keyed by node_id; used by the late-value path to resolve child-device placement
+        self.endpoint_device_value_ids_by_node: dict[int, set[str]] = {}
 
     async def async_on_node_ready(self, node: ZwaveNode) -> None:
         """Handle node ready event."""
@@ -811,10 +815,55 @@ class NodeEvents:
         self.value_updates_disc_info[node.node_id] = value_updates_disc_info
 
         # run discovery on all node values and create/update entities
-        for disc_info in async_discover_node_values(
-            node, device, self.controller_events.discovered_value_ids
-        ):
+        driver = self.controller_events.driver_events.driver
+        endpoint_device_ids: set[tuple[str, str]] = set()
+        rediscovered_on_parent: set[str] = set()
+
+        # Pass 1: collect all disc_infos and compute endpoint-device placement based on
+        # discovered (non-suppressed) entities. Suppressed disc_infos must not count
+        # toward the collision check — they produce no entity and must not force a split.
+        all_disc_infos = list(
+            async_discover_node_values(
+                node, device, self.controller_events.discovered_value_ids
+            )
+        )
+        real_disc_infos = [i for i in all_disc_infos if not i.discovery_suppressed]
+        value_ids_needing_endpoint_device = endpoint_device_value_ids(real_disc_infos)
+        self.endpoint_device_value_ids_by_node[node.node_id] = (
+            value_ids_needing_endpoint_device
+        )
+
+        # Pass 2: set the resolved placement flag on each disc_info and dispatch.
+        for disc_info in real_disc_infos:
+            primary_value = disc_info.primary_value
+            disc_info.requires_endpoint_device = (
+                primary_value.value_id in value_ids_needing_endpoint_device
+            )
+            if disc_info.requires_endpoint_device:
+                endpoint_device_ids.add(
+                    get_device_id(driver, node, primary_value.endpoint)
+                )
+            else:
+                rediscovered_on_parent.add(
+                    get_unique_id(driver, primary_value.value_id)
+                )
             self.async_handle_discovery_info(device, disc_info, value_updates_disc_info)
+
+        # Prune endpoint child devices that no longer have any entities, e.g. after a
+        # re-interview removed an endpoint or its colliding values.
+        for child_device in dr.async_entries_for_parent_device(self.dev_reg, device.id):
+            if not child_device.identifiers & endpoint_device_ids:
+                # Before removing the child device, reassociate entity entries that will
+                # be rediscovered on the parent node device. This preserves user
+                # customizations when an endpoint stops colliding after re-interview.
+                for entity_entry in er.async_entries_for_device(
+                    self.ent_reg, child_device.id
+                ):
+                    if entity_entry.unique_id in rediscovered_on_parent:
+                        self.ent_reg.async_update_entity(
+                            entity_entry.entity_id, device_id=device.id
+                        )
+                self.controller_events.remove_device(child_device)
 
         # add listeners to handle new values that get added later
         for event in (EVENT_VALUE_ADDED, EVENT_VALUE_UPDATED, EVENT_METADATA_UPDATED):
@@ -898,6 +947,8 @@ class NodeEvents:
         value_updates_disc_info: dict[str, PlatformZwaveDiscoveryInfo],
     ) -> None:
         """Handle discovery info and all dependent tasks."""
+        if disc_info.discovery_suppressed:
+            return
         platform = disc_info.platform
         # This migration logic was added in 2021.3 to handle a breaking change to
         # the value_id format. Some time in the future, this call (as well as the
@@ -962,9 +1013,15 @@ class NodeEvents:
             return
 
         LOGGER.debug("Processing node %s added value %s", value.node, value)
+        cached_endpoint_device_value_ids = self.endpoint_device_value_ids_by_node.get(
+            value.node.node_id, set()
+        )
         for disc_info in async_discover_single_value(
             value, device, self.controller_events.discovered_value_ids
         ):
+            disc_info.requires_endpoint_device = (
+                disc_info.primary_value.value_id in cached_endpoint_device_value_ids
+            )
             self.async_handle_discovery_info(device, disc_info, value_updates_disc_info)
 
     @callback
@@ -1098,15 +1155,13 @@ class NodeEvents:
         driver = self.controller_events.driver_events.driver
         disc_info = value_updates_disc_info[value.value_id]
 
-        device = self.dev_reg.async_get_device_by_identifier(
-            get_device_id(driver, value.node), self.config_entry.entry_id
-        )
-        # We assert because we know the device exists
-        assert device
-
         unique_id = get_unique_id(driver, disc_info.primary_value.value_id)
         entity_id = self.ent_reg.async_get_entity_id(
             disc_info.platform, DOMAIN, unique_id
+        )
+
+        device = self.dev_reg.async_get_device_by_identifier(
+            get_device_id(driver, value.node), self.config_entry.entry_id
         )
 
         raw_value = value_ = value.value
@@ -1119,7 +1174,7 @@ class NodeEvents:
                 ATTR_NODE_ID: value.node.node_id,
                 ATTR_HOME_ID: driver.controller.home_id,
                 ATTR_HOME_ID_HEX: format_home_id_for_display(driver.controller.home_id),
-                ATTR_DEVICE_ID: device.id,
+                ATTR_DEVICE_ID: device.id if device else None,
                 ATTR_ENTITY_ID: entity_id,
                 ATTR_COMMAND_CLASS: value.command_class,
                 ATTR_COMMAND_CLASS_NAME: value.command_class_name,

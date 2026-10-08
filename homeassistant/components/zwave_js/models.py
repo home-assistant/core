@@ -102,6 +102,12 @@ class PlatformZwaveDiscoveryInfo:
     platform: Platform
     # additional values that need to be watched by entity
     additional_value_ids_to_watch: set[str]
+    # whether this discovery info was matched only to suppress the value (no entity
+    # created, but the value is consumed so it won't fall through to a generic schema)
+    discovery_suppressed: bool = False
+    # whether the primary value's entity should live on its own endpoint child device;
+    # resolved by the node-ready handler based on discovered (non-suppressed) values
+    requires_endpoint_device: bool = False
 
 
 @dataclass
