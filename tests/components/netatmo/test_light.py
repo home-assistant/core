@@ -59,7 +59,8 @@ async def test_camera_light_setup_and_services(
     await hass.async_block_till_done()
 
     light_entity = "light.front"
-    assert hass.states.get(light_entity).state == "unavailable"
+    # With alim_status-based availability, light is available (off) without needing webhook.
+    assert hass.states.get(light_entity).state == "off"
 
     # Trigger light mode change
     response = {
@@ -252,3 +253,25 @@ async def test_dimmable_light_turn_on_updates_brightness_optimistically(
     state = hass.states.get(light_entity)
     assert state.state == "on"
     assert state.attributes["brightness"] == 128
+
+
+async def test_camera_light_availability_based_on_alim_status(
+    hass: HomeAssistant, config_entry: MockConfigEntry, netatmo_auth: AsyncMock
+) -> None:
+    """Test camera light availability is based on alim_status, not webhook status.
+
+    The upstream implementation gates availability on webhook registration, but
+    since the pyatmo 7.0.1 refactor async_update_callback reads device.floodlight
+    from the polled homestatus API. Our fix uses alim_status instead, so the
+    entity is available as soon as the camera is powered regardless of webhook.
+    """
+    with selected_platforms(["light"]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    # Without webhook activation, camera light should be available because
+    # alim_status is populated from the initial homestatus poll (fixture value = 2).
+    light_entity = "light.front"
+    state = hass.states.get(light_entity)
+    assert state is not None
+    assert state.state != "unavailable"

@@ -76,7 +76,6 @@ class NetatmoCameraLight(NetatmoModuleEntity, LightEntity):
     def __init__(self, netatmo_device: NetatmoDevice) -> None:
         """Initialize a Netatmo Presence camera light."""
         super().__init__(netatmo_device)
-        # Legacy format, kept as migrating existing unique IDs is not worth the risk
         self._attr_unique_id = f"{self.device.entity_id}-light"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
 
         self._signal_name = f"{HOME}-{self.home.entity_id}"
@@ -124,8 +123,15 @@ class NetatmoCameraLight(NetatmoModuleEntity, LightEntity):
     @property
     @override
     def available(self) -> bool:
-        """If the webhook is not established, mark as unavailable."""
-        return super().available and bool(self.data_handler.webhook)
+        """Return True if the camera is powered (alim_status known).
+
+        Note: the original implementation used `data_handler.webhook` which was
+        intentional when async_update_callback relied on webhook-only data. Since
+        the pyatmo 7.0.1 refactor, async_update_callback reads `device.floodlight`
+        from the polled homestatus API ΓÇö making the webhook flag incorrect as an
+        availability proxy. Fixed to match camera.py and siren.py.
+        """
+        return super().available and self.device.alim_status is not None
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
@@ -144,6 +150,7 @@ class NetatmoCameraLight(NetatmoModuleEntity, LightEntity):
     def async_update_callback(self) -> None:
         """Update the entity's state."""
         self._attr_is_on = bool(self.device.floodlight == "on")
+        self._attr_available = self.device.alim_status is not None
         self.async_write_ha_state()
 
 
@@ -158,7 +165,6 @@ class NetatmoLight(NetatmoReachabilityEntity, LightEntity):
     def __init__(self, netatmo_device: NetatmoDevice) -> None:
         """Initialize a Netatmo light."""
         super().__init__(netatmo_device)
-        # Legacy format, kept as migrating existing unique IDs is not worth the risk
         self._attr_unique_id = f"{self.device.entity_id}-light"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
 
         if self.device.brightness is not None:
