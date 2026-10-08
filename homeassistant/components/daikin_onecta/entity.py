@@ -80,8 +80,12 @@ class DaikinEntity(DaikinOnectaEntity):
     @property
     @override
     def available(self) -> bool:
-        """Return whether the coordinator and Daikin device are available."""
-        return super().available and self._device.available
+        """Return whether the coordinator, device, and point are available."""
+        if not super().available or not self._device.available:
+            return False
+        return (embedded_id := getattr(self, "_embedded_id", None)) is None or (
+            self._device.management_point(embedded_id) is not None
+        )
 
     async def _async_execute_command(
         self,

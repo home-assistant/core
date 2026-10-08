@@ -3,7 +3,10 @@
 import logging
 from typing import TYPE_CHECKING, override
 
-from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    BinarySensorEntity,
+    BinarySensorEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -70,7 +73,9 @@ class DaikinBinarySensor(DaikinEntity, BinarySensorEntity):
             f"{self._device.id}_{self._embedded_id}_None_{self._value}"
         )
         self._attr_has_entity_name = True
-        self.entity_description = BINARY_SENSOR_DESCRIPTIONS[value]
+        self.entity_description = BINARY_SENSOR_DESCRIPTIONS.get(
+            value, BinarySensorEntityDescription(key=value)
+        )
         self.update_state()
         _LOGGER.info(
             "Device '%s:%s' supports binary sensor '%s'",

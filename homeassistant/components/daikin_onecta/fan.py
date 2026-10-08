@@ -138,12 +138,11 @@ class DaikinAirPurifier(DaikinManagementPointEntity, FanEntity):
             return
         power = purification.power
         self._attr_is_on = power is not None and power.value == "on"
-        self._attr_preset_mode = (
-            purification.mode.value if purification.mode is not None else None
-        )
-        self._attr_preset_modes = purification.modes
+        mode = purification.mode
+        self._attr_preset_mode = mode.value if mode is not None else None
+        self._attr_preset_modes = purification.modes if mode and mode.settable else []
         features = FanEntityFeature.TURN_ON | FanEntityFeature.TURN_OFF
-        if purification.modes:
+        if self._attr_preset_modes:
             features |= FanEntityFeature.PRESET_MODE
         if (speed_range := self._fixed_speed_range()) is not None:
             features |= FanEntityFeature.SET_SPEED
@@ -204,7 +203,12 @@ class DaikinAirPurifier(DaikinManagementPointEntity, FanEntity):
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set a native Daikin air-purification mode."""
         purification = self._air_purification()
-        if purification is None or preset_mode not in purification.modes:
+        if (
+            purification is None
+            or purification.mode is None
+            or not purification.mode.settable
+            or preset_mode not in purification.modes
+        ):
             self._raise_command_failed("air_purifier_set_mode_failed")
         if preset_mode == self.preset_mode:
             return

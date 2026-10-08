@@ -220,7 +220,9 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
                 lambda hot_water: hot_water.set_temperature(int_value),
                 "water_heater_set_temperature_failed",
             )
-            self._attr_native_target_temperature = int_value
+            if dht is not None:
+                dht.value = int_value
+            self.update_state()
             self.async_write_ha_state()
 
     @override
@@ -292,6 +294,8 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
             hwtd = self.hot_water_management_point
             if hwtd is not None and hwtd.on_off_mode is not None:
                 hwtd.on_off_mode.value = on_off_mode
+            self.update_state()
+            self.async_write_ha_state()
 
         # Only set powerfulMode when it is set and supported by the device
         if powerful_mode != "" and STATE_PERFORMANCE in (self.operation_list or []):
@@ -304,11 +308,8 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
             pwf = hot_water.powerful_mode if hot_water is not None else None
             if pwf is not None and pwf.settable:
                 pwf.value = powerful_mode
-
-        # Update local cached version
-        self._attr_current_operation = operation_mode
-        self._attr_operation_list = self.get_operation_list()
-        self.async_write_ha_state()
+            self.update_state()
+            self.async_write_ha_state()
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
