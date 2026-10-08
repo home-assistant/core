@@ -105,10 +105,10 @@ class SamsungIrClimate(
 
     _attr_name = None
     _attr_assumed_state = True
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_fan_modes = [FAN_AUTO, FAN_LOW, FAN_MEDIUM, FAN_HIGH]
     _attr_hvac_mode = HVACMode.OFF
-    _attr_target_temperature = 24.0
+    _attr_native_target_temperature = 24.0
     _attr_min_temp = 16.0
     _attr_max_temp = 30.0
     _attr_target_temperature_step = 1.0
@@ -155,7 +155,7 @@ class SamsungIrClimate(
         if (fan_mode := last_state.attributes.get(ATTR_FAN_MODE)) in HA_TO_LIB_FAN:
             self._attr_fan_mode = fan_mode
         if (temperature := last_state.attributes.get(ATTR_TEMPERATURE)) is not None:
-            self._attr_target_temperature = float(temperature)
+            self._attr_native_target_temperature = float(temperature)
 
         if self._attr_hvac_mode != HVACMode.OFF:
             self._last_on_hvac_mode = self._attr_hvac_mode
@@ -184,7 +184,7 @@ class SamsungIrClimate(
             fan_mode = HA_TO_LIB_FAN.get(self._attr_fan_mode, SamsungACFanMode.AUTO)
             command = SamsungAC0292Command(
                 hvac_mode=hvac_mode,
-                target_temperature=int(self._attr_target_temperature),
+                target_temperature=int(self._attr_native_target_temperature),
                 fan_mode=fan_mode,
                 swing_mode=SamsungACSwingMode.OFF,
             )
@@ -224,7 +224,7 @@ class SamsungIrClimate(
                 self._attr_fan_mode = FAN_AUTO
 
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is not None:
-            self._attr_target_temperature = round(temperature)
+            self._attr_native_target_temperature = round(temperature)
 
         if ATTR_HVAC_MODE in kwargs or ATTR_TEMPERATURE in kwargs:
             await self._async_send_command()
