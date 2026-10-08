@@ -393,10 +393,12 @@ async def test_get_forecast_tool_not_offered_without_exposed_forecast(
 ) -> None:
     """Test the tool is hidden without an exposed forecast-capable entity."""
     entity = await _create_weather_entity(hass, WeatherEntityFeature.FORECAST_DAILY)
-    async_expose_entity(hass, "conversation", entity.entity_id, False)
 
-    assert weather_llm.async_get_tools(hass, _llm_context(), "assist") is None
+    # Non-Assist API IDs are rejected even while the entity is still exposed.
     assert weather_llm.async_get_tools(hass, _llm_context(), "other") is None
+
+    async_expose_entity(hass, "conversation", entity.entity_id, False)
+    assert weather_llm.async_get_tools(hass, _llm_context(), "assist") is None
 
 
 async def test_get_forecast_tool_not_found_after_unexposing(
