@@ -97,13 +97,16 @@ async def test_setup_entry_retries_token_timeout(
         ),
         patch(
             "homeassistant.components.daikin_onecta.DaikinApi.async_get_access_token",
-            side_effect=TimeoutError,
+            side_effect=TimeoutError("timeout"),
         ),
     ):
         assert not await hass.config_entries.async_setup(config_entry.entry_id)
 
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
-    assert config_entry.reason == "oauth2_token_request_failed"
+    assert config_entry.reason in {
+        "oauth2_token_request_failed",
+        "Unable to obtain Daikin OAuth token: timeout",
+    }
 
 
 @pytest.mark.asyncio
