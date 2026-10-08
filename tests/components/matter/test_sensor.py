@@ -346,6 +346,7 @@ async def test_air_quality_out_of_range(
 
 
 @pytest.mark.parametrize("node_fixture", ["air_quality_sensor"])
+@pytest.mark.parametrize("attributes", [{"1/1070/8": 1}])
 async def test_air_quality_sensor(
     hass: HomeAssistant,
     matter_client: MagicMock,

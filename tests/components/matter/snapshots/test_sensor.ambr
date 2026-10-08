@@ -598,7 +598,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '00000000000004D2-0000000000000001-MatterNodeDevice-1-TotalVolatileOrganicCompoundsSensor-1070-0',
-    'unit_of_measurement': <UnitOfRatio.PARTS_PER_BILLION: 'ppb'>,
+    'unit_of_measurement': <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
   })
 # ---
 # name: test_sensors[air_quality_sensor][sensor.lightfi_aq1_air_quality_sensor_volatile_organic_compounds_parts-state]
@@ -607,7 +607,7 @@
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'volatile_organic_compounds_parts',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'lightfi-aq1-air-quality-sensor Volatile organic compounds parts',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PARTS_PER_BILLION: 'ppb'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.lightfi_aq1_air_quality_sensor_volatile_organic_compounds_parts',
