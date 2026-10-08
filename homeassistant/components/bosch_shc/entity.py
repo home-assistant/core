@@ -52,6 +52,8 @@ class SHCBaseEntity(Entity):
         await super().async_added_to_hass()
 
         def on_state_changed() -> None:
+            if self.hass is None:
+                return
             if self._device.deleted:
                 self.hass.add_job(async_remove_devices(self.hass, self, self._entry_id))
             else:
@@ -114,6 +116,8 @@ class SHCEntity(SHCBaseEntity):
         await super().async_added_to_hass()
 
         def on_state_changed() -> None:
+            if self.hass is None:
+                return
             self.schedule_update_ha_state()
 
         for service in self._device.device_services:

@@ -121,3 +121,28 @@ async def test_callbacks_after_entity_id_change(
     motion_device.subscribe_callback.assert_called_once()
     motion_device.unsubscribe_callback.assert_called_once_with(key)
     service.unsubscribe_callback.assert_called_once_with(key)
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
+    [{"motion_detectors": [battery_only_device()]}],
+    indirect=True,
+)
+async def test_callbacks_ignored_after_failed_entity_add(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    motion_device: MagicMock,
+) -> None:
+    """Callbacks of an entity that failed to be added do not raise."""
+    callbacks = []
+    motion_device.subscribe_callback.side_effect = lambda _key, cb: callbacks.append(cb)
+
+    await setup_integration(hass, mock_config_entry)
+    assert callbacks
+
+    # HA clears the hass reference when adding an entity fails.
+    for entity in hass.data["entity_components"]["binary_sensor"].entities:
+        entity.hass = None
+
+    for callback in callbacks:
+        callback()
