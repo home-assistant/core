@@ -64,14 +64,10 @@ rules:
   entity-device-class: done
   entity-disabled-by-default:
     status: exempt
-    comment: only 2 main entities
-  entity-translations:
-    status: exempt
-    comment: using only device name
+    comment: only main entities
+  entity-translations: done
   exception-translations: done
-  icon-translations:
-    status: done
-    comment: no custom icons, only default icons
+  icon-translations: done
   reconfiguration-flow: done
   repair-issues:
     status: exempt

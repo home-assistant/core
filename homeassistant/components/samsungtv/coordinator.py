@@ -38,6 +38,7 @@ class SamsungTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
 
         self.bridge = bridge
         self.is_on: bool | None = None
+        self.art_mode: bool | None = None
         self.async_extra_update: Callable[[], Coroutine[Any, Any, None]] | None = None
 
     @override
@@ -56,6 +57,11 @@ class SamsungTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
                 self.bridge.host,
                 old_state,
                 self.is_on,
+            )
+
+        if self.bridge.supports_art_mode:
+            self.art_mode = (
+                await self.bridge.async_get_art_mode() if self.is_on else False
             )
 
         if self.async_extra_update:
