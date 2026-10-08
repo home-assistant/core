@@ -1,6 +1,7 @@
 """Data update coordinators for AdGuard Home."""
 
 from abc import abstractmethod
+import asyncio
 from dataclasses import dataclass
 from datetime import timedelta
 from typing import override
@@ -114,13 +115,29 @@ class AdGuardHomeStateCoordinator(AdGuardHomeCoordinator[AdGuardHomeState]):
     @override
     async def _async_fetch(self) -> AdGuardHomeState:
         """Fetch the status and settings of AdGuard Home."""
+        (
+            status,
+            filtering,
+            parental,
+            query_log,
+            safe_browsing,
+            safe_search,
+        ) = await asyncio.gather(
+            self.client.status(),
+            self.client.filtering.config(),
+            self.client.parental.enabled(),
+            self.client.querylog.config(),
+            self.client.safebrowsing.enabled(),
+            self.client.safesearch.config(),
+        )
+
         return AdGuardHomeState(
-            status=await self.client.status(),
-            filtering=await self.client.filtering.config(),
-            parental=await self.client.parental.enabled(),
-            query_log=await self.client.querylog.config(),
-            safe_browsing=await self.client.safebrowsing.enabled(),
-            safe_search=await self.client.safesearch.config(),
+            status=status,
+            filtering=filtering,
+            parental=parental,
+            query_log=query_log,
+            safe_browsing=safe_browsing,
+            safe_search=safe_search,
         )
 
 
@@ -136,10 +153,12 @@ class AdGuardHomeStatisticsCoordinator(AdGuardHomeCoordinator[AdGuardHomeStatist
     @override
     async def _async_fetch(self) -> AdGuardHomeStatistics:
         """Fetch the statistics and blocklists of AdGuard Home."""
-        return AdGuardHomeStatistics(
-            stats=await self.client.stats.get(),
-            blocklists=await self.client.filtering.blocklists.list(),
+        stats, blocklists = await asyncio.gather(
+            self.client.stats.get(),
+            self.client.filtering.blocklists.list(),
         )
+
+        return AdGuardHomeStatistics(stats=stats, blocklists=blocklists)
 
 
 class AdGuardHomeUpdateCoordinator(AdGuardHomeCoordinator[AvailableUpdate]):

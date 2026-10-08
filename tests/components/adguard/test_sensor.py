@@ -52,7 +52,7 @@ async def test_sensors_share_one_request(
 
     freezer.tick(STATISTICS_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert mock_adguard.stats.get.call_count == 1
     assert mock_adguard.filtering.blocklists.list.call_count == 1
@@ -77,7 +77,7 @@ async def test_sensors_unavailable(
 
     freezer.tick(STATISTICS_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("sensor.adguard_home_dns_queries")
     assert state
@@ -87,7 +87,7 @@ async def test_sensors_unavailable(
 
     freezer.tick(STATISTICS_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("sensor.adguard_home_dns_queries")
     assert state
@@ -105,7 +105,7 @@ async def test_sensors_authentication_failed(
 
     freezer.tick(STATISTICS_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("sensor.adguard_home_dns_queries")
     assert state
