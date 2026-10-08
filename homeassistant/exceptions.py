@@ -3,7 +3,7 @@
 from collections.abc import Callable, Generator, Sequence
 from typing import TYPE_CHECKING, Any, override
 
-from aiohttp import ClientResponse, ClientResponseError, RequestInfo
+from aiohttp import ClientError, ClientResponse, ClientResponseError, RequestInfo
 from multidict import MultiMapping
 
 from .util.event_type import EventType
@@ -253,8 +253,20 @@ class ConfigEntryAuthFailed(IntegrationError):
     """Error to indicate that config entry could not authenticate."""
 
 
-class OAuth2TokenRequestError(ClientResponseError, HomeAssistantError):
-    """Error to indicate that the OAuth 2.0 flow could not refresh token."""
+class OAuth2TokenRequestBaseError(ConfigEntryNotReady):
+    """Base class for the errors a failed OAuth 2.0 token request raises.
+
+    Catch this to handle every token request failure; the subclasses differ in
+    whether a status was received and what should happen to the config entry.
+    """
+
+
+class OAuth2TokenRequestError(ClientResponseError, OAuth2TokenRequestBaseError):
+    """Error to indicate that the OAuth 2.0 flow could not refresh token.
+
+    Inherits ConfigEntryNotReady so setup retries without the integration having to
+    map it. Catch it explicitly to handle it differently.
+    """
 
     def __init__(
         self,
@@ -275,7 +287,7 @@ class OAuth2TokenRequestError(ClientResponseError, HomeAssistantError):
             message=message,
             headers=headers,
         )
-        HomeAssistantError.__init__(self)
+        OAuth2TokenRequestBaseError.__init__(self)
         self.domain = domain
         self.translation_domain = "homeassistant"
         self.translation_key = "oauth2_helper_refresh_failed"
@@ -283,8 +295,29 @@ class OAuth2TokenRequestError(ClientResponseError, HomeAssistantError):
         self.generate_message = True
 
 
+class OAuth2TokenRequestConnectionError(ClientError, OAuth2TokenRequestBaseError):
+    """Recoverable error to indicate the token request yielded no usable token.
+
+    Covers a request that never got a response and one whose response could not
+    be used, neither of which has a status to tell the causes apart.
+    """
+
+    def __init__(self, *, domain: str) -> None:
+        """Initialize OAuth2TokenRequestConnectionError."""
+        OAuth2TokenRequestBaseError.__init__(self)
+        self.domain = domain
+        self.translation_domain = "homeassistant"
+        self.translation_key = "oauth2_helper_refresh_transient"
+        self.translation_placeholders = {"domain": domain}
+        self.generate_message = True
+
+
 class OAuth2TokenRequestTransientError(OAuth2TokenRequestError):
-    """Recoverable error to indicate flow could not refresh token."""
+    """Recoverable error to indicate flow could not refresh token.
+
+    Inherits ConfigEntryNotReady so setup retries without the integration having to
+    map it. Catch it explicitly to handle it differently.
+    """
 
     def __init__(self, *, domain: str, **kwargs: Any) -> None:
         """Initialize OAuth2RefreshTokenTransientError."""
@@ -295,10 +328,11 @@ class OAuth2TokenRequestTransientError(OAuth2TokenRequestError):
         self.generate_message = True
 
 
-class OAuth2TokenRequestReauthError(OAuth2TokenRequestError):
+class OAuth2TokenRequestReauthError(OAuth2TokenRequestError, ConfigEntryAuthFailed):
     """Non recoverable error to indicate the flow could not refresh token.
 
-    Re-authentication is required.
+    Inherits ConfigEntryAuthFailed so setup starts reauth without the integration
+    having to map it. Catch it explicitly to handle it differently.
     """
 
     def __init__(self, *, domain: str, **kwargs: Any) -> None:
@@ -308,6 +342,38 @@ class OAuth2TokenRequestReauthError(OAuth2TokenRequestError):
         self.translation_key = "oauth2_helper_reauth_required"
         self.translation_placeholders = {"domain": domain}
         self.generate_message = True
+
+
+class ImplementationUnavailableError(ConfigEntryNotReady):
+    """Raised when an underlying OAuth 2.0 implementation is unavailable.
+
+    Inherits ConfigEntryNotReady so setup retries without the integration having to
+    map it. Catch it explicitly to handle it differently.
+    """
+
+    def __init__(self, *args: object) -> None:
+        """Initialize the error."""
+        super().__init__(
+            *args,
+            translation_domain="homeassistant",
+            translation_key="oauth2_implementation_unavailable",
+        )
+
+
+class UnknownImplementationError(ConfigEntryAuthFailed, ValueError):
+    """Raised when a config entry references an implementation that is not registered.
+
+    Also a ValueError so callers catching that keep working. Inherits
+    ConfigEntryAuthFailed because the user has to link the account again.
+    """
+
+    def __init__(self, *args: object) -> None:
+        """Initialize the error."""
+        super().__init__(
+            *args,
+            translation_domain="homeassistant",
+            translation_key="oauth2_unknown_implementation",
+        )
 
 
 class InvalidStateError(HomeAssistantError):

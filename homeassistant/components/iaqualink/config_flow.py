@@ -3,13 +3,13 @@
 from collections.abc import Mapping
 from typing import Any, override
 
-import httpx
+import httpx2
 from iaqualink.client import AqualinkClient
 from iaqualink.exception import (
     AqualinkServiceException,
     AqualinkServiceUnauthorizedException,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
@@ -22,10 +22,10 @@ from homeassistant.util.ssl import SSL_ALPN_HTTP11_HTTP2
 
 from .const import DOMAIN
 
-CREDENTIALS_DATA_SCHEMA = vol.Schema(
+CREDENTIALS_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_USERNAME): str,
-        vol.Required(CONF_PASSWORD): str,
+        probatio.Required(CONF_USERNAME): str,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
     }
 )
 
@@ -50,7 +50,7 @@ class AqualinkFlowHandler(ConfigFlow, domain=DOMAIN):
                 pass
         except AqualinkServiceUnauthorizedException:
             return {"base": "invalid_auth"}
-        except AqualinkServiceException, TimeoutError, httpx.HTTPError:
+        except AqualinkServiceException, TimeoutError, httpx2.HTTPError:
             return {"base": "cannot_connect"}
 
         return {}

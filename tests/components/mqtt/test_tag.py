@@ -54,7 +54,9 @@ def _get_device_for_config_entry(
     connections: set[tuple[str, str]] | None = None,
 ) -> dr.DeviceEntry | None:
     """Return the device for a config entry matching identifiers or connections."""
-    for device in device_registry.devices.get_entries(identifiers, connections):
+    for device in device_registry.async_get_devices(
+        identifiers=identifiers, connections=connections
+    ):
         if device.config_entry_id == config_entry_id:
             return device
     return None
@@ -648,14 +650,14 @@ async def test_cleanup_tag(
         identifiers={("mqtt", "helloworld")},
     )
     assert device_entry1 is not None
-    assert device_entry1.config_entries == {config_entry.entry_id}
+    assert device_entry1.config_entry_id == config_entry.entry_id
     mqtt_device_entry1 = _get_device_for_config_entry(
         device_registry,
         mqtt_entry.entry_id,
         identifiers={("mqtt", "helloworld")},
     )
     assert mqtt_device_entry1 is not None
-    assert mqtt_device_entry1.config_entries == {mqtt_entry.entry_id}
+    assert mqtt_device_entry1.config_entry_id == mqtt_entry.entry_id
     device_entry2 = device_registry.async_get_device_by_identifier(
         ("mqtt", "hejhopp"), mqtt_entry.entry_id
     )
@@ -678,7 +680,7 @@ async def test_cleanup_tag(
         identifiers={("mqtt", "helloworld")},
     )
     assert mqtt_device_entry1 is not None
-    assert mqtt_device_entry1.config_entries == {mqtt_entry.entry_id}
+    assert mqtt_device_entry1.config_entry_id == mqtt_entry.entry_id
     device_entry2 = device_registry.async_get_device_by_identifier(
         ("mqtt", "hejhopp"), mqtt_entry.entry_id
     )
@@ -983,7 +985,7 @@ async def test_update_with_bad_config_not_breaks_discovery(
     # Update with bad identifier
     async_fire_mqtt_message(hass, "homeassistant/tag/bla1/config", data2)
     await hass.async_block_till_done()
-    assert "extra keys not allowed @ data['device']['bad_key']" in caplog.text
+    assert "not a valid option at 'device.bad_key'" in caplog.text
 
     # Topic update
     async_fire_mqtt_message(hass, "homeassistant/tag/bla1/config", data3)

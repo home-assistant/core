@@ -3,8 +3,8 @@
 from unittest.mock import patch
 
 from peco import HttpError, IncompatibleMeterError, UnresponsiveMeterError
+from probatio.error import Invalid
 import pytest
-from voluptuous.error import Invalid
 
 from homeassistant import config_entries
 from homeassistant.components.peco.const import DOMAIN

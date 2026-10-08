@@ -4,14 +4,7 @@
   },
   "config": {
     "abort": {
-      "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
-      "missing_credentials": "[%key:common::config_flow::abort::oauth2_missing_credentials%]",
-      "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
-      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
-      "oauth_implementation_unavailable": "[%key:common::config_flow::abort::oauth2_implementation_unavailable%]",
-      "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
-      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     },
     "create_entry": {
@@ -37,6 +30,11 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "device_pairing_enabled": {
+        "name": "Device pairing enabled"
+      }
+    },
     "select": {
       "room_priority": {
         "name": "Room priority",
@@ -61,6 +59,16 @@
       "outdoor_temperature": {
         "name": "Outdoor temperature"
       },
+      "priority_status": {
+        "name": "Priority status",
+        "state": {
+          "hold_until": "Hold until",
+          "no_hold": "No hold",
+          "permanent_hold": "Permanent hold",
+          "temporary_hold": "Temporary hold",
+          "vacation_hold": "Vacation hold"
+        }
+      },
       "room_average_temperature": {
         "name": "Room average temperature"
       },
@@ -69,6 +77,9 @@
       },
       "room_temperature": {
         "name": "Room temperature"
+      },
+      "schedule_status": {
+        "name": "Schedule status"
       },
       "setpoint_status": {
         "name": "Setpoint status"
@@ -93,9 +104,6 @@
     },
     "invalid_fan_mode": {
       "message": "The fan mode {fan_mode} is not supported by this device"
-    },
-    "oauth2_implementation_unavailable": {
-      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
     }
   },
   "services": {

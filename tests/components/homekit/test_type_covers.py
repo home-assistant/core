@@ -228,7 +228,8 @@ async def test_windowcovering_set_cover_position(
     )
     await hass.async_block_till_done()
     assert acc.char_current_position.value == 60
-    assert acc.char_target_position.value == 0
+    # Aimed at the end of travel, not left behind at the starting position.
+    assert acc.char_target_position.value == 100
     assert acc.char_position_state.value == 1
 
     hass.states.async_set(
@@ -241,7 +242,7 @@ async def test_windowcovering_set_cover_position(
     )
     await hass.async_block_till_done()
     assert acc.char_current_position.value == 70
-    assert acc.char_target_position.value == 0
+    assert acc.char_target_position.value == 100
     assert acc.char_position_state.value == 1
 
     hass.states.async_set(
@@ -294,6 +295,109 @@ async def test_windowcovering_set_cover_position(
     assert acc.char_target_position.value == 75
     assert len(events) == 2
     assert events[-1].data[ATTR_VALUE] == 75
+
+
+async def test_windowcovering_target_position_while_moving(
+    hass: HomeAssistant, hk_driver
+) -> None:
+    """Test the target position while the cover is moving.
+
+    The Home app derives the direction of travel from the target position
+    relative to the current one, so a target left behind the cover makes it
+    report the opposite of what the cover is doing.
+    """
+    entity_id = "cover.window"
+    features = CoverEntityFeature.SET_POSITION
+
+    hass.states.async_set(
+        entity_id, CoverState.CLOSED, {ATTR_SUPPORTED_FEATURES: features}
+    )
+    await hass.async_block_till_done()
+    acc = WindowCovering(hass, hk_driver, "Cover", entity_id, 2, None)
+    acc.run()
+    await hass.async_block_till_done()
+
+    # Opened from outside HomeKit: the target still points at the start.
+    hass.states.async_set(
+        entity_id,
+        CoverState.OPENING,
+        {ATTR_SUPPORTED_FEATURES: features, ATTR_CURRENT_POSITION: 20},
+    )
+    await hass.async_block_till_done()
+    assert acc.char_target_position.value == 100
+
+    # Coming to rest hands the target back to the real position.
+    hass.states.async_set(
+        entity_id,
+        CoverState.OPEN,
+        {ATTR_SUPPORTED_FEATURES: features, ATTR_CURRENT_POSITION: 40},
+    )
+    await hass.async_block_till_done()
+    assert acc.char_target_position.value == 40
+
+    # Closed from outside HomeKit.
+    hass.states.async_set(
+        entity_id,
+        CoverState.CLOSING,
+        {ATTR_SUPPORTED_FEATURES: features, ATTR_CURRENT_POSITION: 30},
+    )
+    await hass.async_block_till_done()
+    assert acc.char_target_position.value == 0
+
+    # A partial move asked for from HomeKit must survive.
+    async_mock_service(hass, COVER_DOMAIN, "set_cover_position")
+    hass.states.async_set(
+        entity_id,
+        CoverState.CLOSED,
+        {ATTR_SUPPORTED_FEATURES: features, ATTR_CURRENT_POSITION: 0},
+    )
+    await hass.async_block_till_done()
+    acc.char_target_position.client_update_value(60)
+    await hass.async_block_till_done()
+    assert acc.char_target_position.value == 60
+
+    hass.states.async_set(
+        entity_id,
+        CoverState.OPENING,
+        {ATTR_SUPPORTED_FEATURES: features, ATTR_CURRENT_POSITION: 30},
+    )
+    await hass.async_block_till_done()
+    assert acc.char_target_position.value == 60
+
+    # Still reported as opening on arrival at the requested position: the
+    # target must not jump to the end of travel in that last moment.
+    hass.states.async_set(
+        entity_id,
+        CoverState.OPENING,
+        {ATTR_SUPPORTED_FEATURES: features, ATTR_CURRENT_POSITION: 60},
+    )
+    await hass.async_block_till_done()
+    assert acc.char_target_position.value == 60
+
+
+async def test_windowcovering_tilt_only_target_position_stays_closed(
+    hass: HomeAssistant, hk_driver
+) -> None:
+    """Test that a tilt-only cover keeps its target position locked at closed."""
+    entity_id = "cover.window"
+    features = CoverEntityFeature.OPEN_TILT | CoverEntityFeature.SET_TILT_POSITION
+
+    hass.states.async_set(
+        entity_id, CoverState.CLOSED, {ATTR_SUPPORTED_FEATURES: features}
+    )
+    await hass.async_block_till_done()
+    acc = WindowCovering(hass, hk_driver, "Cover", entity_id, 2, None)
+    acc.run()
+    await hass.async_block_till_done()
+
+    hass.states.async_set(
+        entity_id,
+        CoverState.OPENING,
+        {ATTR_SUPPORTED_FEATURES: features, ATTR_CURRENT_POSITION: 20},
+    )
+    await hass.async_block_till_done()
+    # Capped at 0 for tilt-only covers, so 100 would be out of range.
+    assert acc.char_target_position.value == 0
 
 
 async def test_window_instantiate_set_position(hass: HomeAssistant, hk_driver) -> None:

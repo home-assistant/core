@@ -27,24 +27,59 @@ from homeassistant.components import (
     water_heater,
 )
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
-from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
-from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
-from homeassistant.components.fan import DOMAIN as FAN_DOMAIN
+from homeassistant.components.climate import (
+    DOMAIN as CLIMATE_DOMAIN,
+    ClimateEntityCapabilityAttribute,
+    ClimateEntityStateAttribute,
+)
+from homeassistant.components.cover import (
+    DOMAIN as COVER_DOMAIN,
+    CoverEntityStateAttribute,
+)
+from homeassistant.components.fan import (
+    DOMAIN as FAN_DOMAIN,
+    FanEntityCapabilityAttribute,
+    FanEntityStateAttribute,
+)
 from homeassistant.components.group import DOMAIN as GROUP_DOMAIN
-from homeassistant.components.humidifier import DOMAIN as HUMIDIFIER_DOMAIN
+from homeassistant.components.humidifier import (
+    DOMAIN as HUMIDIFIER_DOMAIN,
+    HumidifierEntityCapabilityAttribute,
+    HumidifierEntityStateAttribute,
+)
 from homeassistant.components.input_button import DOMAIN as INPUT_BUTTON_DOMAIN
 from homeassistant.components.input_number import DOMAIN as INPUT_NUMBER_DOMAIN
-from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
-from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
-from homeassistant.components.remote import DOMAIN as REMOTE_DOMAIN
+from homeassistant.components.light import (
+    LightEntityCapabilityAttribute,
+    LightEntityStateAttribute,
+)
+from homeassistant.components.media_player import (
+    DOMAIN as MEDIA_PLAYER_DOMAIN,
+    MediaPlayerEntityCapabilityAttribute,
+    MediaPlayerEntityStateAttribute,
+)
+from homeassistant.components.number import (
+    DOMAIN as NUMBER_DOMAIN,
+    NumberEntityCapabilityAttribute,
+)
+from homeassistant.components.remote import (
+    DOMAIN as REMOTE_DOMAIN,
+    RemoteEntityStateAttribute,
+)
 from homeassistant.components.timer import DOMAIN as TIMER_DOMAIN
-from homeassistant.components.vacuum import DOMAIN as VACUUM_DOMAIN
+from homeassistant.components.vacuum import (
+    DOMAIN as VACUUM_DOMAIN,
+    VacuumEntityCapabilityAttribute,
+    VacuumEntityStateAttribute,
+)
 from homeassistant.components.valve import DOMAIN as VALVE_DOMAIN
-from homeassistant.components.water_heater import DOMAIN as WATER_HEATER_DOMAIN
+from homeassistant.components.water_heater import (
+    DOMAIN as WATER_HEATER_DOMAIN,
+    WaterHeaterCapabilityAttribute,
+)
 from homeassistant.const import (
+    ATTR_CODE,
     ATTR_ENTITY_ID,
-    ATTR_ENTITY_PICTURE,
-    ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
     SERVICE_ALARM_ARM_AWAY,
     SERVICE_ALARM_ARM_HOME,
@@ -65,9 +100,11 @@ from homeassistant.const import (
     SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_SET,
     SERVICE_VOLUME_UP,
+    EntityStateAttribute,
     UnitOfTemperature,
 )
 from homeassistant.helpers import network
+from homeassistant.helpers.redact import async_redact_data
 from homeassistant.util import color as color_util, dt as dt_util
 from homeassistant.util.decorator import Registry
 from homeassistant.util.unit_conversion import (
@@ -100,6 +137,7 @@ from .state_report import AlexaDirective, AlexaResponse, async_enable_proactive_
 
 _LOGGER = logging.getLogger(__name__)
 DIRECTIVE_NOT_SUPPORTED = "Entity does not support directive"
+TO_REDACT_SERVICE_DATA = {ATTR_CODE}
 
 MIN_MAX_TEMP = {
     CLIMATE_DOMAIN: {
@@ -124,6 +162,30 @@ HANDLERS: Registry[
         Coroutine[Any, Any, AlexaResponse],
     ],
 ] = Registry()
+
+
+async def _async_call_service(
+    hass: ha.HomeAssistant,
+    directive: AlexaDirective,
+    domain: str,
+    service: str,
+    service_data: dict[str, Any],
+    *,
+    blocking: bool,
+    context: ha.Context,
+) -> None:
+    """Call an action and log it with the Alexa directive that triggered it."""
+    _LOGGER.debug(
+        "Calling action %s.%s for Alexa directive %s.%s with data: %s",
+        domain,
+        service,
+        directive.namespace,
+        directive.name,
+        async_redact_data(service_data, TO_REDACT_SERVICE_DATA),
+    )
+    await hass.services.async_call(
+        domain, service, service_data, blocking=blocking, context=context
+    )
 
 
 @HANDLERS.register(("Alexa.Discovery", "Discover"))
@@ -205,7 +267,7 @@ async def async_api_turn_on(
     elif domain == REMOTE_DOMAIN:
         service = remote.SERVICE_TURN_ON
     elif domain == VACUUM_DOMAIN:
-        supported = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        supported = entity.attributes.get(EntityStateAttribute.SUPPORTED_FEATURES, 0)
         if (
             not supported & vacuum.VacuumEntityFeature.TURN_ON
             and supported & vacuum.VacuumEntityFeature.START
@@ -214,7 +276,7 @@ async def async_api_turn_on(
     elif domain == TIMER_DOMAIN:
         service = timer.SERVICE_START
     elif domain == MEDIA_PLAYER_DOMAIN:
-        supported = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        supported = entity.attributes.get(EntityStateAttribute.SUPPORTED_FEATURES, 0)
         power_features = (
             media_player.MediaPlayerEntityFeature.TURN_ON
             | media_player.MediaPlayerEntityFeature.TURN_OFF
@@ -222,7 +284,9 @@ async def async_api_turn_on(
         if not supported & power_features:
             service = media_player.SERVICE_MEDIA_PLAY
 
-    await hass.services.async_call(
+    await _async_call_service(
+        hass,
+        directive,
         domain,
         service,
         {ATTR_ENTITY_ID: entity.entity_id},
@@ -258,7 +322,7 @@ async def async_api_turn_off(
     elif domain == HUMIDIFIER_DOMAIN:
         service = humidifier.SERVICE_TURN_OFF
     elif domain == VACUUM_DOMAIN:
-        supported = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        supported = entity.attributes.get(EntityStateAttribute.SUPPORTED_FEATURES, 0)
         if (
             not supported & vacuum.VacuumEntityFeature.TURN_OFF
             and supported & vacuum.VacuumEntityFeature.RETURN_HOME
@@ -267,7 +331,7 @@ async def async_api_turn_off(
     elif domain == TIMER_DOMAIN:
         service = timer.SERVICE_CANCEL
     elif domain == MEDIA_PLAYER_DOMAIN:
-        supported = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        supported = entity.attributes.get(EntityStateAttribute.SUPPORTED_FEATURES, 0)
         power_features = (
             media_player.MediaPlayerEntityFeature.TURN_ON
             | media_player.MediaPlayerEntityFeature.TURN_OFF
@@ -275,7 +339,9 @@ async def async_api_turn_off(
         if not supported & power_features:
             service = media_player.SERVICE_MEDIA_STOP
 
-    await hass.services.async_call(
+    await _async_call_service(
+        hass,
+        directive,
         domain,
         service,
         {ATTR_ENTITY_ID: entity.entity_id},
@@ -297,7 +363,9 @@ async def async_api_set_brightness(
     entity = directive.entity
     brightness = int(directive.payload["brightness"])
 
-    await hass.services.async_call(
+    await _async_call_service(
+        hass,
+        directive,
         entity.domain,
         SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: entity.entity_id, light.ATTR_BRIGHTNESS_PCT: brightness},
@@ -320,7 +388,9 @@ async def async_api_adjust_brightness(
     brightness_delta = int(directive.payload["brightnessDelta"])
 
     # set brightness
-    await hass.services.async_call(
+    await _async_call_service(
+        hass,
+        directive,
         entity.domain,
         SERVICE_TURN_ON,
         {
@@ -349,7 +419,9 @@ async def async_api_set_color(
         float(directive.payload["color"]["brightness"]),
     )
 
-    await hass.services.async_call(
+    await _async_call_service(
+        hass,
+        directive,
         entity.domain,
         SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: entity.entity_id, light.ATTR_RGB_COLOR: rgb},
@@ -371,7 +443,9 @@ async def async_api_set_color_temperature(
     entity = directive.entity
     kelvin = int(directive.payload["colorTemperatureInKelvin"])
 
-    await hass.services.async_call(
+    await _async_call_service(
+        hass,
+        directive,
         entity.domain,
         SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: entity.entity_id, light.ATTR_COLOR_TEMP_KELVIN: kelvin},
@@ -391,11 +465,15 @@ async def async_api_decrease_color_temp(
 ) -> AlexaResponse:
     """Process a decrease color temperature request."""
     entity = directive.entity
-    current = int(entity.attributes[light.ATTR_COLOR_TEMP_KELVIN])
-    min_kelvin = int(entity.attributes[light.ATTR_MIN_COLOR_TEMP_KELVIN])
+    current = int(entity.attributes[LightEntityStateAttribute.COLOR_TEMP_KELVIN])
+    min_kelvin = int(
+        entity.attributes[LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN]
+    )
 
     value = max(min_kelvin, current - 500)
-    await hass.services.async_call(
+    await _async_call_service(
+        hass,
+        directive,
         entity.domain,
         SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: entity.entity_id, light.ATTR_COLOR_TEMP_KELVIN: value},
@@ -415,11 +493,15 @@ async def async_api_increase_color_temp(
 ) -> AlexaResponse:
     """Process an increase color temperature request."""
     entity = directive.entity
-    current = int(entity.attributes[light.ATTR_COLOR_TEMP_KELVIN])
-    max_kelvin = int(entity.attributes[light.ATTR_MAX_COLOR_TEMP_KELVIN])
+    current = int(entity.attributes[LightEntityStateAttribute.COLOR_TEMP_KELVIN])
+    max_kelvin = int(
+        entity.attributes[LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN]
+    )
 
     value = min(max_kelvin, current + 500)
-    await hass.services.async_call(
+    await _async_call_service(
+        hass,
+        directive,
         entity.domain,
         SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: entity.entity_id, light.ATTR_COLOR_TEMP_KELVIN: value},
@@ -447,7 +529,9 @@ async def async_api_activate(
     elif domain == INPUT_BUTTON_DOMAIN:
         service = input_button.SERVICE_PRESS
 
-    await hass.services.async_call(
+    await _async_call_service(
+        hass,
+        directive,
         domain,
         service,
         {ATTR_ENTITY_ID: entity.entity_id},
@@ -476,7 +560,9 @@ async def async_api_deactivate(
     entity = directive.entity
     domain = entity.domain
 
-    await hass.services.async_call(
+    await _async_call_service(
+        hass,
+        directive,
         domain,
         SERVICE_TURN_OFF,
         {ATTR_ENTITY_ID: entity.entity_id},
@@ -503,7 +589,9 @@ async def async_api_lock(
 ) -> AlexaResponse:
     """Process a lock request."""
     entity = directive.entity
-    await hass.services.async_call(
+    await _async_call_service(
+        hass,
+        directive,
         entity.domain,
         SERVICE_LOCK,
         {ATTR_ENTITY_ID: entity.entity_id},
@@ -552,7 +640,9 @@ async def async_api_unlock(
         raise AlexaInvalidDirectiveError(msg)
 
     entity = directive.entity
-    await hass.services.async_call(
+    await _async_call_service(
+        hass,
+        directive,
         entity.domain,
         SERVICE_UNLOCK,
         {ATTR_ENTITY_ID: entity.entity_id},
@@ -584,8 +674,14 @@ async def async_api_set_volume(
         media_player.ATTR_MEDIA_VOLUME_LEVEL: volume,
     }
 
-    await hass.services.async_call(
-        entity.domain, SERVICE_VOLUME_SET, data, blocking=False, context=context
+    await _async_call_service(
+        hass,
+        directive,
+        entity.domain,
+        SERVICE_VOLUME_SET,
+        data,
+        blocking=False,
+        context=context,
     )
 
     return directive.response()
@@ -604,7 +700,10 @@ async def async_api_select_input(
 
     # Attempt to map the ALL UPPERCASE payload name to a source.
     # Strips trailing 1 to match single input devices.
-    source_list = entity.attributes.get(media_player.ATTR_INPUT_SOURCE_LIST) or []
+    source_list = (
+        entity.attributes.get(MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST)
+        or []
+    )
     for source in source_list:
         formatted_source = (
             source.lower().replace("-", "").replace("_", "").replace(" ", "")
@@ -629,7 +728,9 @@ async def async_api_select_input(
         media_player.ATTR_INPUT_SOURCE: media_input,
     }
 
-    await hass.services.async_call(
+    await _async_call_service(
+        hass,
+        directive,
         entity.domain,
         media_player.SERVICE_SELECT_SOURCE,
         data,
@@ -651,7 +752,9 @@ async def async_api_adjust_volume(
     volume_delta = int(directive.payload["volume"])
 
     entity = directive.entity
-    current_level = entity.attributes[media_player.ATTR_MEDIA_VOLUME_LEVEL]
+    current_level = entity.attributes[
+        MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL
+    ]
 
     # read current state
     try:
@@ -666,8 +769,14 @@ async def async_api_adjust_volume(
         media_player.ATTR_MEDIA_VOLUME_LEVEL: volume,
     }
 
-    await hass.services.async_call(
-        entity.domain, SERVICE_VOLUME_SET, data, blocking=False, context=context
+    await _async_call_service(
+        hass,
+        directive,
+        entity.domain,
+        SERVICE_VOLUME_SET,
+        data,
+        blocking=False,
+        context=context,
     )
 
     return directive.response()
@@ -704,8 +813,14 @@ async def async_api_adjust_volume_step(
     data: dict[str, Any] = {ATTR_ENTITY_ID: entity.entity_id}
 
     for _ in range(abs(volume_int)):
-        await hass.services.async_call(
-            entity.domain, service_volume, data, blocking=False, context=context
+        await _async_call_service(
+            hass,
+            directive,
+            entity.domain,
+            service_volume,
+            data,
+            blocking=False,
+            context=context,
         )
 
     return directive.response()
@@ -727,8 +842,14 @@ async def async_api_set_mute(
         media_player.ATTR_MEDIA_VOLUME_MUTED: mute,
     }
 
-    await hass.services.async_call(
-        entity.domain, SERVICE_VOLUME_MUTE, data, blocking=False, context=context
+    await _async_call_service(
+        hass,
+        directive,
+        entity.domain,
+        SERVICE_VOLUME_MUTE,
+        data,
+        blocking=False,
+        context=context,
     )
 
     return directive.response()
@@ -745,8 +866,14 @@ async def async_api_play(
     entity = directive.entity
     data: dict[str, Any] = {ATTR_ENTITY_ID: entity.entity_id}
 
-    await hass.services.async_call(
-        entity.domain, SERVICE_MEDIA_PLAY, data, blocking=False, context=context
+    await _async_call_service(
+        hass,
+        directive,
+        entity.domain,
+        SERVICE_MEDIA_PLAY,
+        data,
+        blocking=False,
+        context=context,
     )
 
     return directive.response()
@@ -763,8 +890,14 @@ async def async_api_pause(
     entity = directive.entity
     data: dict[str, Any] = {ATTR_ENTITY_ID: entity.entity_id}
 
-    await hass.services.async_call(
-        entity.domain, SERVICE_MEDIA_PAUSE, data, blocking=False, context=context
+    await _async_call_service(
+        hass,
+        directive,
+        entity.domain,
+        SERVICE_MEDIA_PAUSE,
+        data,
+        blocking=False,
+        context=context,
     )
 
     return directive.response()
@@ -782,23 +915,37 @@ async def async_api_stop(
     data: dict[str, Any] = {ATTR_ENTITY_ID: entity.entity_id}
 
     if entity.domain == COVER_DOMAIN:
-        supported: int = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        supported: int = entity.attributes.get(
+            EntityStateAttribute.SUPPORTED_FEATURES, 0
+        )
         feature_services: dict[int, str] = {
             cover.CoverEntityFeature.STOP.value: cover.SERVICE_STOP_COVER,
             cover.CoverEntityFeature.STOP_TILT.value: cover.SERVICE_STOP_COVER_TILT,
         }
         await asyncio.gather(
             *(
-                hass.services.async_call(
-                    entity.domain, service, data, blocking=False, context=context
+                _async_call_service(
+                    hass,
+                    directive,
+                    entity.domain,
+                    service,
+                    data,
+                    blocking=False,
+                    context=context,
                 )
                 for feature, service in feature_services.items()
                 if feature & supported
             )
         )
     else:
-        await hass.services.async_call(
-            entity.domain, SERVICE_MEDIA_STOP, data, blocking=False, context=context
+        await _async_call_service(
+            hass,
+            directive,
+            entity.domain,
+            SERVICE_MEDIA_STOP,
+            data,
+            blocking=False,
+            context=context,
         )
 
     return directive.response()
@@ -815,8 +962,14 @@ async def async_api_next(
     entity = directive.entity
     data: dict[str, Any] = {ATTR_ENTITY_ID: entity.entity_id}
 
-    await hass.services.async_call(
-        entity.domain, SERVICE_MEDIA_NEXT_TRACK, data, blocking=False, context=context
+    await _async_call_service(
+        hass,
+        directive,
+        entity.domain,
+        SERVICE_MEDIA_NEXT_TRACK,
+        data,
+        blocking=False,
+        context=context,
     )
 
     return directive.response()
@@ -833,7 +986,9 @@ async def async_api_previous(
     entity = directive.entity
     data: dict[str, Any] = {ATTR_ENTITY_ID: entity.entity_id}
 
-    await hass.services.async_call(
+    await _async_call_service(
+        hass,
+        directive,
         entity.domain,
         SERVICE_MEDIA_PREVIOUS_TRACK,
         data,
@@ -875,7 +1030,7 @@ async def async_api_set_target_temp(
     domain = entity.domain
 
     min_temp = entity.attributes[MIN_MAX_TEMP[domain]["min_temp"]]
-    max_temp = entity.attributes["max_temp"]
+    max_temp = entity.attributes[ClimateEntityCapabilityAttribute.MAX_TEMP]
     unit = hass.config.units.temperature_unit
 
     data: dict[str, Any] = {ATTR_ENTITY_ID: entity.entity_id}
@@ -921,7 +1076,9 @@ async def async_api_set_target_temp(
 
     service = SERVICE_SET_TEMPERATURE[domain]
 
-    await hass.services.async_call(
+    await _async_call_service(
+        hass,
+        directive,
         entity.domain,
         service,
         data,
@@ -953,8 +1110,12 @@ async def async_api_adjust_target_temp(
 
     response = directive.response()
 
-    current_target_temp_high = entity.attributes.get(climate.ATTR_TARGET_TEMP_HIGH)
-    current_target_temp_low = entity.attributes.get(climate.ATTR_TARGET_TEMP_LOW)
+    current_target_temp_high = entity.attributes.get(
+        ClimateEntityStateAttribute.TARGET_TEMP_HIGH
+    )
+    current_target_temp_low = entity.attributes.get(
+        ClimateEntityStateAttribute.TARGET_TEMP_LOW
+    )
     if current_target_temp_high is not None and current_target_temp_low is not None:
         target_temp_high = float(current_target_temp_high) + temp_delta
         if target_temp_high < min_temp or target_temp_high > max_temp:
@@ -985,7 +1146,9 @@ async def async_api_adjust_target_temp(
             }
         )
     else:
-        current_target_temp: str | None = entity.attributes.get(ATTR_TEMPERATURE)
+        current_target_temp: str | None = entity.attributes.get(
+            ClimateEntityStateAttribute.TARGET_TEMPERATURE
+        )
         if current_target_temp is None:
             raise AlexaUnsupportedThermostatTargetStateError(
                 "The current target temperature is not set, "
@@ -1007,7 +1170,9 @@ async def async_api_adjust_target_temp(
 
     service = SERVICE_SET_TEMPERATURE[domain]
 
-    await hass.services.async_call(
+    await _async_call_service(
+        hass,
+        directive,
         entity.domain,
         service,
         data,
@@ -1037,7 +1202,9 @@ async def async_api_set_thermostat_mode(
     ha_preset = next((k for k, v in API_THERMOSTAT_PRESETS.items() if v == mode), None)
 
     if ha_preset:
-        presets = entity.attributes.get(climate.ATTR_PRESET_MODES) or []
+        presets = (
+            entity.attributes.get(ClimateEntityCapabilityAttribute.PRESET_MODES) or []
+        )
 
         if ha_preset not in presets:
             msg = f"The requested thermostat mode {ha_preset} is not supported"
@@ -1047,7 +1214,9 @@ async def async_api_set_thermostat_mode(
         data[climate.ATTR_PRESET_MODE] = ha_preset
 
     elif mode == "CUSTOM":
-        operation_list = entity.attributes.get(climate.ATTR_HVAC_MODES) or []
+        operation_list = (
+            entity.attributes.get(ClimateEntityCapabilityAttribute.HVAC_MODES) or []
+        )
         custom_mode = directive.payload["thermostatMode"]["customName"]
         custom_mode = next(
             (k for k, v in API_THERMOSTAT_MODES_CUSTOM.items() if v == custom_mode),
@@ -1063,7 +1232,9 @@ async def async_api_set_thermostat_mode(
         data[climate.ATTR_HVAC_MODE] = custom_mode
 
     else:
-        operation_list = entity.attributes.get(climate.ATTR_HVAC_MODES) or []
+        operation_list = (
+            entity.attributes.get(ClimateEntityCapabilityAttribute.HVAC_MODES) or []
+        )
         ha_modes: dict[str, str] = {
             k: v for k, v in API_THERMOSTAT_MODES.items() if v == mode
         }
@@ -1078,8 +1249,8 @@ async def async_api_set_thermostat_mode(
         data[climate.ATTR_HVAC_MODE] = ha_mode
 
     response = directive.response()
-    await hass.services.async_call(
-        CLIMATE_DOMAIN, service, data, blocking=False, context=context
+    await _async_call_service(
+        hass, directive, CLIMATE_DOMAIN, service, data, blocking=False, context=context
     )
     response.add_context_property(
         {
@@ -1135,8 +1306,8 @@ async def async_api_arm(
     else:
         raise AlexaInvalidDirectiveError(DIRECTIVE_NOT_SUPPORTED)
 
-    await hass.services.async_call(
-        entity.domain, service, data, blocking=False, context=context
+    await _async_call_service(
+        hass, directive, entity.domain, service, data, blocking=False, context=context
     )
 
     # return 0 until alarm integration supports an exit delay
@@ -1179,10 +1350,16 @@ async def async_api_disarm(
     if "authorization" in payload:
         value = payload["authorization"]["value"]
         if payload["authorization"]["type"] == "FOUR_DIGIT_PIN":
-            data["code"] = value
+            data[ATTR_CODE] = value
 
-    await hass.services.async_call(
-        entity.domain, SERVICE_ALARM_DISARM, data, blocking=True, context=context
+    await _async_call_service(
+        hass,
+        directive,
+        entity.domain,
+        SERVICE_ALARM_DISARM,
+        data,
+        blocking=True,
+        context=context,
     )
 
     response.add_context_property(
@@ -1221,7 +1398,9 @@ async def async_api_set_mode(
     # Fan preset_mode
     elif instance == f"{FAN_DOMAIN}.{fan.ATTR_PRESET_MODE}":
         preset_mode = mode.split(".")[1]
-        preset_modes: list[str] | None = entity.attributes.get(fan.ATTR_PRESET_MODES)
+        preset_modes: list[str] | None = entity.attributes.get(
+            FanEntityCapabilityAttribute.PRESET_MODES
+        )
         if (
             preset_mode != PRESET_MODE_NA
             and preset_modes
@@ -1236,7 +1415,9 @@ async def async_api_set_mode(
     # Humidifier mode
     elif instance == f"{HUMIDIFIER_DOMAIN}.{humidifier.ATTR_MODE}":
         mode = mode.split(".")[1]
-        modes: list[str] | None = entity.attributes.get(humidifier.ATTR_AVAILABLE_MODES)
+        modes: list[str] | None = entity.attributes.get(
+            HumidifierEntityCapabilityAttribute.AVAILABLE_MODES
+        )
         if mode != PRESET_MODE_NA and modes and mode in modes:
             service = humidifier.SERVICE_SET_MODE
             data[humidifier.ATTR_MODE] = mode
@@ -1247,7 +1428,9 @@ async def async_api_set_mode(
     # Remote Activity
     elif instance == f"{REMOTE_DOMAIN}.{remote.ATTR_ACTIVITY}":
         activity = mode.split(".")[1]
-        activities: list[str] | None = entity.attributes.get(remote.ATTR_ACTIVITY_LIST)
+        activities: list[str] | None = entity.attributes.get(
+            RemoteEntityStateAttribute.ACTIVITY_LIST
+        )
         if activity != PRESET_MODE_NA and activities and activity in activities:
             service = remote.SERVICE_TURN_ON
             data[remote.ATTR_ACTIVITY] = activity
@@ -1259,7 +1442,7 @@ async def async_api_set_mode(
     elif instance == f"{WATER_HEATER_DOMAIN}.{water_heater.ATTR_OPERATION_MODE}":
         operation_mode = mode.split(".")[1]
         operation_modes: list[str] | None = entity.attributes.get(
-            water_heater.ATTR_OPERATION_LIST
+            WaterHeaterCapabilityAttribute.OPERATION_LIST
         )
         if (
             operation_mode != PRESET_MODE_NA
@@ -1298,8 +1481,8 @@ async def async_api_set_mode(
     if not service:
         raise AlexaInvalidDirectiveError(DIRECTIVE_NOT_SUPPORTED)
 
-    await hass.services.async_call(
-        domain, service, data, blocking=False, context=context
+    await _async_call_service(
+        hass, directive, domain, service, data, blocking=False, context=context
     )
 
     response = directive.response()
@@ -1362,8 +1545,8 @@ async def async_api_toggle_on(
     else:
         raise AlexaInvalidDirectiveError(DIRECTIVE_NOT_SUPPORTED)
 
-    await hass.services.async_call(
-        domain, service, data, blocking=False, context=context
+    await _async_call_service(
+        hass, directive, domain, service, data, blocking=False, context=context
     )
 
     response = directive.response()
@@ -1401,8 +1584,8 @@ async def async_api_toggle_off(
         fan.ATTR_OSCILLATING: False,
     }
 
-    await hass.services.async_call(
-        domain, service, data, blocking=False, context=context
+    await _async_call_service(
+        hass, directive, domain, service, data, blocking=False, context=context
     )
 
     response = directive.response()
@@ -1432,7 +1615,7 @@ async def async_api_set_range(
     service = None
     data: dict[str, Any] = {ATTR_ENTITY_ID: entity.entity_id}
     range_value = directive.payload["rangeValue"]
-    supported = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+    supported = entity.attributes.get(EntityStateAttribute.SUPPORTED_FEATURES, 0)
 
     # Cover Position
     if instance == f"{COVER_DOMAIN}.{cover.ATTR_POSITION}":
@@ -1485,14 +1668,14 @@ async def async_api_set_range(
     elif instance == f"{NUMBER_DOMAIN}.{number.ATTR_VALUE}":
         range_value = float(range_value)
         service = number.SERVICE_SET_VALUE
-        min_value = float(entity.attributes[number.ATTR_MIN])
-        max_value = float(entity.attributes[number.ATTR_MAX])
+        min_value = float(entity.attributes[NumberEntityCapabilityAttribute.MIN])
+        max_value = float(entity.attributes[NumberEntityCapabilityAttribute.MAX])
         data[number.ATTR_VALUE] = min(max_value, max(min_value, range_value))
 
     # Vacuum Fan Speed
     elif instance == f"{VACUUM_DOMAIN}.{vacuum.ATTR_FAN_SPEED}":
         service = vacuum.SERVICE_SET_FAN_SPEED
-        speed_list = entity.attributes[vacuum.ATTR_FAN_SPEED_LIST]
+        speed_list = entity.attributes[VacuumEntityCapabilityAttribute.FAN_SPEED_LIST]
         speed = next(
             (v for i, v in enumerate(speed_list) if i == int(range_value)), None
         )
@@ -1517,8 +1700,8 @@ async def async_api_set_range(
     else:
         raise AlexaInvalidDirectiveError(DIRECTIVE_NOT_SUPPORTED)
 
-    await hass.services.async_call(
-        domain, service, data, blocking=False, context=context
+    await _async_call_service(
+        hass, directive, domain, service, data, blocking=False, context=context
     )
 
     response = directive.response()
@@ -1555,7 +1738,9 @@ async def async_api_adjust_range(
     if instance == f"{COVER_DOMAIN}.{cover.ATTR_POSITION}":
         range_delta = int(range_delta * 20) if range_delta_default else int(range_delta)
         service = SERVICE_SET_COVER_POSITION
-        if not (current := entity.attributes.get(cover.ATTR_CURRENT_POSITION)):
+        if (
+            current := entity.attributes.get(CoverEntityStateAttribute.CURRENT_POSITION)
+        ) is None:
             msg = f"Unable to determine {entity.entity_id} current position"
             raise AlexaInvalidValueError(msg)
         position = response_value = min(100, max(0, range_delta + current))
@@ -1571,7 +1756,7 @@ async def async_api_adjust_range(
         range_delta = int(range_delta * 20) if range_delta_default else int(range_delta)
         service = SERVICE_SET_COVER_TILT_POSITION
         current = entity.attributes.get(cover.ATTR_TILT_POSITION)
-        if not current:
+        if current is None:
             msg = f"Unable to determine {entity.entity_id} current tilt position"
             raise AlexaInvalidValueError(msg)
         tilt_position = response_value = min(100, max(0, range_delta + current))
@@ -1584,14 +1769,16 @@ async def async_api_adjust_range(
 
     # Fan speed percentage
     elif instance == f"{FAN_DOMAIN}.{fan.ATTR_PERCENTAGE}":
-        percentage_step = entity.attributes.get(fan.ATTR_PERCENTAGE_STEP) or 20
+        percentage_step = (
+            entity.attributes.get(FanEntityStateAttribute.PERCENTAGE_STEP) or 20
+        )
         range_delta = (
             int(range_delta * percentage_step)
             if range_delta_default
             else int(range_delta)
         )
         service = fan.SERVICE_SET_PERCENTAGE
-        if not (current := entity.attributes.get(fan.ATTR_PERCENTAGE)):
+        if not (current := entity.attributes.get(FanEntityStateAttribute.PERCENTAGE)):
             msg = f"Unable to determine {entity.entity_id} current fan speed"
             raise AlexaInvalidValueError(msg)
         percentage = response_value = min(100, max(0, range_delta + current))
@@ -1609,11 +1796,17 @@ async def async_api_adjust_range(
             else int(range_delta)
         )
         service = humidifier.SERVICE_SET_HUMIDITY
-        if not (current := entity.attributes.get(humidifier.ATTR_HUMIDITY)):
+        if not (
+            current := entity.attributes.get(HumidifierEntityStateAttribute.HUMIDITY)
+        ):
             msg = f"Unable to determine {entity.entity_id} current target humidity"
             raise AlexaInvalidValueError(msg)
-        min_value = entity.attributes.get(humidifier.ATTR_MIN_HUMIDITY, 10)
-        max_value = entity.attributes.get(humidifier.ATTR_MAX_HUMIDITY, 90)
+        min_value = entity.attributes.get(
+            HumidifierEntityCapabilityAttribute.MIN_HUMIDITY, 10
+        )
+        max_value = entity.attributes.get(
+            HumidifierEntityCapabilityAttribute.MAX_HUMIDITY, 90
+        )
         percentage = response_value = min(
             max_value, max(min_value, range_delta + current)
         )
@@ -1635,8 +1828,8 @@ async def async_api_adjust_range(
     elif instance == f"{NUMBER_DOMAIN}.{number.ATTR_VALUE}":
         range_delta = float(range_delta)
         service = number.SERVICE_SET_VALUE
-        min_value = float(entity.attributes[number.ATTR_MIN])
-        max_value = float(entity.attributes[number.ATTR_MAX])
+        min_value = float(entity.attributes[NumberEntityCapabilityAttribute.MIN])
+        max_value = float(entity.attributes[NumberEntityCapabilityAttribute.MAX])
         current = float(entity.state)
         data[number.ATTR_VALUE] = response_value = min(
             max_value, max(min_value, range_delta + current)
@@ -1646,8 +1839,8 @@ async def async_api_adjust_range(
     elif instance == f"{VACUUM_DOMAIN}.{vacuum.ATTR_FAN_SPEED}":
         range_delta = int(range_delta)
         service = vacuum.SERVICE_SET_FAN_SPEED
-        speed_list = entity.attributes[vacuum.ATTR_FAN_SPEED_LIST]
-        current_speed = entity.attributes[vacuum.ATTR_FAN_SPEED]
+        speed_list = entity.attributes[VacuumEntityCapabilityAttribute.FAN_SPEED_LIST]
+        current_speed = entity.attributes[VacuumEntityStateAttribute.FAN_SPEED]
         current_speed_index = next(
             (i for i, v in enumerate(speed_list) if v == current_speed), 0
         )
@@ -1663,7 +1856,7 @@ async def async_api_adjust_range(
     elif instance == f"{VALVE_DOMAIN}.{valve.ATTR_POSITION}":
         range_delta = int(range_delta * 20) if range_delta_default else int(range_delta)
         service = valve.SERVICE_SET_VALVE_POSITION
-        if not (current := entity.attributes.get(valve.ATTR_POSITION)):
+        if (current := entity.attributes.get(valve.ATTR_POSITION)) is None:
             msg = f"Unable to determine {entity.entity_id} current position"
             raise AlexaInvalidValueError(msg)
         position = response_value = min(100, max(0, range_delta + current))
@@ -1677,8 +1870,8 @@ async def async_api_adjust_range(
     else:
         raise AlexaInvalidDirectiveError(DIRECTIVE_NOT_SUPPORTED)
 
-    await hass.services.async_call(
-        domain, service, data, blocking=False, context=context
+    await _async_call_service(
+        hass, directive, domain, service, data, blocking=False, context=context
     )
 
     response = directive.response()
@@ -1730,7 +1923,9 @@ async def async_api_changechannel(
         media_player.ATTR_MEDIA_CONTENT_TYPE: (media_player.MediaType.CHANNEL),
     }
 
-    await hass.services.async_call(
+    await _async_call_service(
+        hass,
+        directive,
         entity.domain,
         media_player.SERVICE_PLAY_MEDIA,
         data,
@@ -1770,8 +1965,14 @@ async def async_api_skipchannel(
         service_media = SERVICE_MEDIA_NEXT_TRACK
 
     for _ in range(abs(channel)):
-        await hass.services.async_call(
-            entity.domain, service_media, data, blocking=False, context=context
+        await _async_call_service(
+            hass,
+            directive,
+            entity.domain,
+            service_media,
+            data,
+            blocking=False,
+            context=context,
         )
 
     response = directive.response()
@@ -1798,14 +1999,18 @@ async def async_api_seek(
     entity = directive.entity
     position_delta = int(directive.payload["deltaPositionMilliseconds"])
 
-    current_position = entity.attributes.get(media_player.ATTR_MEDIA_POSITION)
+    current_position = entity.attributes.get(
+        MediaPlayerEntityStateAttribute.MEDIA_POSITION
+    )
     if not current_position:
         msg = f"{entity} did not return the current media position."
         raise AlexaVideoActionNotPermittedForContentError(msg)
 
     seek_position = max(int(current_position) + int(position_delta / 1000), 0)
 
-    media_duration = entity.attributes.get(media_player.ATTR_MEDIA_DURATION)
+    media_duration = entity.attributes.get(
+        MediaPlayerEntityStateAttribute.MEDIA_DURATION
+    )
     if media_duration and 0 < int(media_duration) < seek_position:
         seek_position = media_duration
 
@@ -1814,7 +2019,9 @@ async def async_api_seek(
         media_player.ATTR_MEDIA_SEEK_POSITION: seek_position,
     }
 
-    await hass.services.async_call(
+    await _async_call_service(
+        hass,
+        directive,
         MEDIA_PLAYER_DOMAIN,
         media_player.SERVICE_MEDIA_SEEK,
         data,
@@ -1845,14 +2052,18 @@ async def async_api_set_eq_mode(
     entity = directive.entity
     data: dict[str, Any] = {ATTR_ENTITY_ID: entity.entity_id}
 
-    sound_mode_list = entity.attributes.get(media_player.ATTR_SOUND_MODE_LIST)
+    sound_mode_list = entity.attributes.get(
+        MediaPlayerEntityCapabilityAttribute.SOUND_MODE_LIST
+    )
     if sound_mode_list and mode.lower() in sound_mode_list:
         data[media_player.ATTR_SOUND_MODE] = mode.lower()
     else:
         msg = f"failed to map sound mode {mode} to a mode on {entity.entity_id}"
         raise AlexaInvalidValueError(msg)
 
-    await hass.services.async_call(
+    await _async_call_service(
+        hass,
+        directive,
         entity.domain,
         media_player.SERVICE_SELECT_SOUND_MODE,
         data,
@@ -1900,8 +2111,8 @@ async def async_api_hold(
     else:
         raise AlexaInvalidDirectiveError(DIRECTIVE_NOT_SUPPORTED)
 
-    await hass.services.async_call(
-        entity.domain, service, data, blocking=False, context=context
+    await _async_call_service(
+        hass, directive, entity.domain, service, data, blocking=False, context=context
     )
 
     return directive.response()
@@ -1927,8 +2138,8 @@ async def async_api_resume(
     else:
         raise AlexaInvalidDirectiveError(DIRECTIVE_NOT_SUPPORTED)
 
-    await hass.services.async_call(
-        entity.domain, service, data, blocking=False, context=context
+    await _async_call_service(
+        hass, directive, entity.domain, service, data, blocking=False, context=context
     )
 
     return directive.response()
@@ -1946,7 +2157,7 @@ async def async_api_initialize_camera_stream(
     stream_source = await camera.async_request_stream(hass, entity.entity_id, fmt="hls")
     state = hass.states.get(entity.entity_id)
     assert state
-    camera_image = state.attributes[ATTR_ENTITY_PICTURE]
+    camera_image = state.attributes[EntityStateAttribute.ENTITY_PICTURE]
 
     try:
         external_url = network.get_url(

@@ -254,7 +254,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ImageEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '1',
-      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/image_proxy/image.mock_title_contour_4?token=1',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Contour 4',
     }),
     'context': <ANY>,
@@ -306,7 +305,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ImageEntityStateAttribute.ACCESS_TOKEN: 'access_token'>: '1',
-      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/image_proxy/image.mock_title_contour_5?token=1',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Contour 5',
     }),
     'context': <ANY>,

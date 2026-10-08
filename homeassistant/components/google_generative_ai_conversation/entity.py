@@ -32,8 +32,7 @@ from google.genai.types import (
     Tool,
     ToolListUnion,
 )
-import voluptuous as vol
-from voluptuous_openapi import convert
+import probatio
 
 from homeassistant.components import conversation
 from homeassistant.config_entries import ConfigSubentry
@@ -111,6 +110,12 @@ def _is_gemini_3_model(model: str) -> bool:
     return name.startswith("gemini-3")
 
 
+def _is_gemma_4_model(model: str) -> bool:
+    """Check if the model is a Gemma 4 series model."""
+    name = model.removeprefix("models/")
+    return name.startswith("gemma-4")
+
+
 def _create_thinking_config(
     model: str,
     thinking_budget: int,
@@ -124,10 +129,21 @@ def _create_thinking_config(
             -1 = automatic (default behavior),
             0 = disable thinking,
             >0 = custom token budget (Gemini 2.5 only).
-        thinking_level: The user-configured thinking level for Gemini 3 models:
-            "auto" = automatic (default), "minimal", "low", "medium", "high".
+        thinking_level: The user-configured thinking level for Gemini 3 and
+            Gemma 4 models: "auto" = automatic (default), "minimal", "low",
+            "medium", "high".
 
     """
+    if _is_gemma_4_model(model):
+        # Gemma 4 only supports the minimal and high thinking levels
+        gemma_level_map: dict[str, ThinkingLevel] = {
+            "minimal": ThinkingLevel.MINIMAL,
+            "high": ThinkingLevel.HIGH,
+        }
+        if thinking_level and thinking_level in gemma_level_map:
+            return ThinkingConfig(thinking_level=gemma_level_map[thinking_level])
+        return None
+
     if not _is_thinking_model(model):
         return None
 
@@ -206,8 +222,8 @@ def _format_schema(schema: dict[str, Any]) -> Schema:
 
     if result.get("enum") and result.get("type") != "STRING":
         # enum is only allowed for STRING type. This is safe as long as the schema
-        # contains vol.Coerce for the respective type, for example:
-        # vol.All(vol.Coerce(int), vol.In([1, 2, 3]))
+        # contains probatio.Coerce for the respective type, for example:
+        # probatio.All(probatio.Coerce(int), probatio.In([1, 2, 3]))
         result["type"] = "STRING"
         result["enum"] = [str(item) for item in result["enum"]]
 
@@ -227,7 +243,7 @@ def _format_tool(
 
     if tool.parameters.schema:
         parameters = _format_schema(
-            convert(tool.parameters, custom_serializer=custom_serializer)
+            probatio.to_openapi(tool.parameters, custom_serializer=custom_serializer)
         )
     else:
         parameters = None
@@ -272,7 +288,12 @@ def _create_google_tool_response_parts(
     return [
         Part.from_function_response(
             name=tool_result.tool_name,
-            response=_validate_tool_results(tool_result.tool_result),
+            response=_validate_tool_results(
+                {
+                    "data": tool_result.result.data,
+                    "error": tool_result.result.error,
+                }
+            ),
         )
         for tool_result in parts
     ]
@@ -573,7 +594,7 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
     async def _async_handle_chat_log(
         self,
         chat_log: conversation.ChatLog,
-        structure: vol.Schema | None = None,
+        structure: probatio.Schema | None = None,
         default_max_tokens: int | None = None,
         max_iterations: int = MAX_TOOL_ITERATIONS,
     ) -> None:
@@ -665,7 +686,7 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
         if structure:
             generate_content_config.response_mime_type = "application/json"
             generate_content_config.response_schema = _format_schema(
-                convert(
+                probatio.to_openapi(
                     structure,
                     custom_serializer=(
                         chat_log.llm_api.custom_serializer

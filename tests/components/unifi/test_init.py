@@ -12,6 +12,7 @@ from homeassistant.components.unifi.const import (
     CONF_ALLOW_UPTIME_SENSORS,
     CONF_TRACK_CLIENTS,
     CONF_TRACK_DEVICES,
+    DOMAIN,
 )
 from homeassistant.components.unifi.errors import AuthenticationRequired, CannotConnect
 from homeassistant.config_entries import ConfigEntryState
@@ -211,3 +212,32 @@ async def test_remove_config_entry_device(
     assert not device_registry.async_get_device_by_connection(
         (dr.CONNECTION_NETWORK_MAC, client_payload[1]["mac"]), config_entry.entry_id
     )
+
+
+async def test_remove_config_entry_device_rejects_child_device(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    config_entry_factory: ConfigEntryFactoryType,
+) -> None:
+    """Test removing an unexpected child device is rejected."""
+    config_entry = await config_entry_factory()
+    assert await async_setup_component(hass, "config", {})
+    parent_device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, "test_parent_device")},
+    )
+    child_device = device_registry.async_get_or_create_child(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, "test_child_device")},
+        parent_device_id=parent_device.id,
+    )
+
+    client = await hass_ws_client(hass)
+    response = await client.remove_device(child_device.id)
+    assert not response["success"]
+    assert (
+        response["error"]["message"]
+        == "Failed to remove device entry, rejected by integration"
+    )
+    assert device_registry.async_get(child_device.id)

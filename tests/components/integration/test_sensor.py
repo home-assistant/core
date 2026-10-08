@@ -892,7 +892,7 @@ async def test_device_id(
         device_id=source_device_entry.id,
     )
     await hass.async_block_till_done()
-    assert entity_registry.async_get("sensor.test_source") is not None
+    assert entity_registry.async_get("sensor.mock_title") is not None
 
     integration_config_entry = MockConfigEntry(
         data={},
@@ -901,7 +901,7 @@ async def test_device_id(
             "method": "trapezoidal",
             "name": "integration",
             "round": 1.0,
-            "source": "sensor.test_source",
+            "source": "sensor.mock_title",
             "unit_prefix": "k",
             "unit_time": "min",
         },
@@ -913,7 +913,7 @@ async def test_device_id(
     assert await hass.config_entries.async_setup(integration_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    integration_entity = entity_registry.async_get("sensor.integration")
+    integration_entity = entity_registry.async_get("sensor.mock_title_integration")
     assert integration_entity is not None
     assert integration_entity.device_id == source_entity.device_id
 

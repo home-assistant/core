@@ -6,7 +6,12 @@ import pytest
 
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.components.yamaha import media_player as yamaha
-from homeassistant.components.yamaha.const import DOMAIN
+from homeassistant.components.yamaha.const import (
+    DOMAIN,
+    SERVICE_ENABLE_OUTPUT,
+    SERVICE_MENU_CURSOR,
+    SERVICE_SELECT_SCENE,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.setup import async_setup_component
@@ -173,7 +178,7 @@ async def test_enable_output(hass: HomeAssistant, device, main_zone) -> None:
         "enabled": enabled,
     }
 
-    await hass.services.async_call(DOMAIN, yamaha.SERVICE_ENABLE_OUTPUT, data, True)
+    await hass.services.async_call(DOMAIN, SERVICE_ENABLE_OUTPUT, data, True)
 
     assert main_zone.enable_output.call_count == 1
     assert main_zone.enable_output.call_args == call(port, enabled)
@@ -200,7 +205,7 @@ async def test_menu_cursor(hass: HomeAssistant, main_zone, cursor, method) -> No
         "entity_id": "media_player.yamaha_receiver_main_zone",
         "cursor": cursor,
     }
-    await hass.services.async_call(DOMAIN, yamaha.SERVICE_MENU_CURSOR, data, True)
+    await hass.services.async_call(DOMAIN, SERVICE_MENU_CURSOR, data, True)
 
     getattr(main_zone, method).assert_called_once_with()
 
@@ -221,7 +226,7 @@ async def test_select_scene(
         "scene": scene,
     }
 
-    await hass.services.async_call(DOMAIN, yamaha.SERVICE_SELECT_SCENE, data, True)
+    await hass.services.async_call(DOMAIN, SERVICE_SELECT_SCENE, data, True)
 
     assert scene_prop.call_count == 1
     assert scene_prop.call_args == call(scene)
@@ -229,7 +234,7 @@ async def test_select_scene(
     scene = "BD/DVD Movie Viewing"
     data["scene"] = scene
 
-    await hass.services.async_call(DOMAIN, yamaha.SERVICE_SELECT_SCENE, data, True)
+    await hass.services.async_call(DOMAIN, SERVICE_SELECT_SCENE, data, True)
 
     assert scene_prop.call_count == 2
     assert scene_prop.call_args == call(scene)
@@ -239,6 +244,6 @@ async def test_select_scene(
     missing_scene = "Missing scene"
     data["scene"] = missing_scene
 
-    await hass.services.async_call(DOMAIN, yamaha.SERVICE_SELECT_SCENE, data, True)
+    await hass.services.async_call(DOMAIN, SERVICE_SELECT_SCENE, data, True)
 
     assert f"Scene '{missing_scene}' does not exist!" in caplog.text

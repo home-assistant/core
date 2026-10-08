@@ -29,6 +29,7 @@ class CastRuntimeData:
     """Runtime data for the Cast integration."""
 
     cast_platforms: LazyIntegrationPlatforms[CastProtocol]
+    refresh_token: str
     unknown_models: dict[str | None, tuple[str | None, str | None]] = field(
         default_factory=dict
     )
@@ -53,10 +54,11 @@ def _process_cast_platform(
 
 async def async_setup_entry(hass: HomeAssistant, entry: CastConfigEntry) -> bool:
     """Set up Cast from a config entry."""
+    refresh_token = await home_assistant_cast.async_setup_ha_cast(hass, entry)
     entry.runtime_data = CastRuntimeData(
-        cast_platforms=LazyIntegrationPlatforms(hass, DOMAIN, _process_cast_platform)
+        cast_platforms=LazyIntegrationPlatforms(hass, DOMAIN, _process_cast_platform),
+        refresh_token=refresh_token,
     )
-    await home_assistant_cast.async_setup_ha_cast(hass, entry)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
@@ -102,7 +104,7 @@ async def async_remove_entry(hass: HomeAssistant, entry: CastConfigEntry) -> Non
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, config_entry: CastConfigEntry, device_entry: dr.DeviceEntry
+    hass: HomeAssistant, config_entry: CastConfigEntry, device_entry: dr.AnyDeviceEntry
 ) -> bool:
     """Remove cast config entry from a device.
 

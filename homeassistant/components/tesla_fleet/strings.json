@@ -2,17 +2,8 @@
   "config": {
     "abort": {
       "already_configured": "Configuration updated for profile.",
-      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
-      "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
-      "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
-      "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
-      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
-      "oauth_implementation_unavailable": "[%key:common::config_flow::abort::oauth2_implementation_unavailable%]",
-      "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
-      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
-      "reauth_account_mismatch": "The reauthentication account does not match the original account",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "reauth_account_mismatch": "The reauthentication account does not match the original account"
     },
     "create_entry": {
       "default": "Successfully authenticated with Tesla."
@@ -643,8 +634,8 @@
     "no_cable": {
       "message": "Charge cable will lock automatically when connected"
     },
-    "oauth2_implementation_unavailable": {
-      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
+    "no_vehicle_data_for_device": {
+      "message": "No vehicle data for device ID: {device_id}"
     },
     "update_failed": {
       "message": "{endpoint} data request failed: {message}"
@@ -662,6 +653,36 @@
         "eu": "Europe, Middle East & Africa",
         "na": "North America & Asia-Pacific"
       }
+    }
+  },
+  "services": {
+    "navigate_to_coordinates": {
+      "description": "Sets vehicle navigation to the provided latitude/longitude coordinates.",
+      "fields": {
+        "device_id": {
+          "description": "Vehicle to send the destination to.",
+          "name": "Vehicle"
+        },
+        "gps": {
+          "description": "Location to navigate to.",
+          "name": "Location"
+        }
+      },
+      "name": "Navigate to coordinates"
+    },
+    "navigate_to_destination": {
+      "description": "Sets vehicle navigation to the provided destination, which can be an address, a place name or a map link.",
+      "fields": {
+        "destination": {
+          "description": "Address, place name or map link to navigate to.",
+          "name": "Destination"
+        },
+        "device_id": {
+          "description": "Vehicle to send the destination to.",
+          "name": "Vehicle"
+        }
+      },
+      "name": "Navigate to destination"
     }
   }
 }

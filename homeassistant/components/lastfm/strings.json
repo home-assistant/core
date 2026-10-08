@@ -1,6 +1,7 @@
 {
   "config": {
     "error": {
+      "hidden_recent_tracks": "User has hidden their recent listening information. Disable \"Hide recent listening information\" at {privacy_settings_url}",
       "invalid_account": "Invalid username",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
@@ -23,6 +24,7 @@
   },
   "options": {
     "error": {
+      "hidden_recent_tracks": "[%key:component::lastfm::config::error::hidden_recent_tracks%]",
       "invalid_account": "[%key:component::lastfm::config::error::invalid_account%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"

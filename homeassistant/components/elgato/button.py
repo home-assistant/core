@@ -17,7 +17,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import ElgatoConfigEntry, ElgatoDataUpdateCoordinator
 from .entity import ElgatoEntity
-from .helpers import elgato_exception_handler
+from .helpers import elgato_device_action
 
 PARALLEL_UPDATES = 1
 
@@ -78,7 +78,7 @@ class ElgatoButtonEntity(ElgatoEntity, ButtonEntity):
             f"{coordinator.data.info.serial_number}_{description.key}"
         )
 
-    @elgato_exception_handler
+    @elgato_device_action
     @override
     async def async_press(self) -> None:
         """Trigger button press on the Elgato device."""

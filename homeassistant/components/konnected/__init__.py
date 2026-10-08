@@ -1,6 +1,6 @@
 """The Konnected.io integration."""
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -9,7 +9,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
 
-CONFIG_SCHEMA = vol.Schema({DOMAIN: cv.match_all}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = probatio.Schema({DOMAIN: cv.match_all}, extra=probatio.ALLOW_EXTRA)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

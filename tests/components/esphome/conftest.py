@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Any, Protocol
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from aioesphomeapi import (
+    ZERO_NOISE_PSK,
     APIClient,
     APIVersion,
     BluetoothProxyFeature,
@@ -16,6 +17,7 @@ from aioesphomeapi import (
     EntityState,
     HomeassistantServiceCall,
     LogLevel,
+    OutgoingConnectionServer,
     ReconnectLogic,
     UserService,
     VoiceAssistantAnnounceFinished,
@@ -92,6 +94,21 @@ _ONE_SECOND = 16000 * 2  # 16Khz 16-bit
 @pytest.fixture(autouse=True)
 def mock_bluetooth(enable_bluetooth: None) -> None:
     """Auto mock bluetooth."""
+
+
+@pytest.fixture(autouse=True)
+def mock_outgoing_connection_server() -> Generator[MagicMock]:
+    """Patch the shared dial-in listener so tests never bind a real socket."""
+    server = MagicMock(spec=OutgoingConnectionServer)
+    # A real unregister callback returns None
+    server.register.return_value.return_value = None
+    with patch(
+        "homeassistant.components.esphome.outgoing_connection.OutgoingConnectionServer",
+        return_value=server,
+    ) as server_class:
+        # Tests assert the singleton builds exactly one server
+        server.constructor = server_class
+        yield server
 
 
 @pytest.fixture(autouse=True)
@@ -186,6 +203,7 @@ def mock_client(mock_device_info) -> Generator[APIClient]:
         noise_psk: str | None = None,
         expected_name: str | None = None,
         timezone: str | None = None,
+        outgoing_connection_target: bool = False,
     ) -> None:
         """Fake the client constructor."""
         mock_client.host = address
@@ -194,6 +212,12 @@ def mock_client(mock_device_info) -> Generator[APIClient]:
         mock_client.zeroconf_instance = zeroconf_instance
         mock_client.noise_psk = noise_psk
         mock_client.timezone = timezone
+        # Mirror the real constructor's gate on a real key
+        mock_client.outgoing_connection_target = (
+            outgoing_connection_target
+            and bool(noise_psk)
+            and noise_psk != ZERO_NOISE_PSK
+        )
         return mock_client
 
     mock_client.side_effect = mock_constructor
@@ -234,11 +258,16 @@ class MockESPHomeDevice:
     """Mock an esphome device."""
 
     def __init__(
-        self, entry: MockConfigEntry, client: APIClient, device_info: DeviceInfo
+        self,
+        entry: MockConfigEntry,
+        client: APIClient,
+        device_info: DeviceInfo,
+        states: list[EntityState],
     ) -> None:
         """Init the mock."""
         self.entry = entry
         self.client = client
+        self.states = states
         self.state_callback: Callable[[EntityState], None]
         self.service_call_callback: Callable[[HomeassistantServiceCall], None]
         self.on_disconnect: Callable[[bool], None]
@@ -449,13 +478,7 @@ async def _mock_generic_device_entry(
             },
         }
 
-    mock_device = MockESPHomeDevice(entry, mock_client, device_info)
-
-    def _subscribe_states(callback: Callable[[EntityState], None]) -> None:
-        """Subscribe to state."""
-        mock_device.set_state_callback(callback)
-        for state in states:
-            callback(state)
+    mock_device = MockESPHomeDevice(entry, mock_client, device_info, states)
 
     def _subscribe_service_calls(
         callback: Callable[[HomeassistantServiceCall], None],
@@ -535,7 +558,7 @@ async def _mock_generic_device_entry(
             on_state_sub, on_state_request
         )
         # Set the initial states
-        for state in states:
+        for state in mock_device.states:
             on_state(state)
 
     mock_client.subscribe_home_assistant_states_and_services = (
@@ -754,3 +777,22 @@ async def mock_esphome_device(
         )
 
     return _mock_device
+
+
+async def reconnect_with_updated_entity_info(
+    hass: HomeAssistant,
+    device: MockESPHomeDevice,
+    entity_info: list[EntityInfo],
+    states: list[EntityState] | None = None,
+) -> None:
+    """Reconnect the mock device with updated entity info."""
+    mock_client = device.client
+    mock_client.list_entities_services = AsyncMock(return_value=(entity_info, []))
+    mock_client.device_info_and_list_entities = AsyncMock(
+        return_value=(device.device_info, entity_info, [])
+    )
+    if states is not None:
+        device.states = states
+    await device.mock_disconnect(expected_disconnect=False)
+    await device.mock_connect()
+    await hass.async_block_till_done()

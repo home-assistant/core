@@ -473,9 +473,7 @@ async def test_old_device_removal_only_removes_own_device(
         return next(
             (
                 device
-                for device in device_registry.devices.get_entries(
-                    identifiers=identifiers
-                )
+                for device in device_registry.async_get_devices(identifiers=identifiers)
                 if device.config_entry_id == entry.entry_id
             ),
             None,

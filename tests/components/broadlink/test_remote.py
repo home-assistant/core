@@ -29,7 +29,7 @@ from . import get_device
 
 from tests.common import async_fire_time_changed
 
-REMOTE_DEVICES = ["Entrance", "Living Room", "Office", "Garage"]
+REMOTE_DEVICES = ["Entrance", "Living Room", "Office", "Garage", "Study"]
 
 IR_PACKET = (
     "JgBGAJKVETkRORA6ERQRFBEUERQRFBE5ETkQOhAVEBUQFREUEBUQ"

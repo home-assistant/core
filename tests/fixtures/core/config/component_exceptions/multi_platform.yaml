@@ -1,0 +1,3 @@
+test_domain:
+  - platform: test_platform1
+  - platform: test_platform2

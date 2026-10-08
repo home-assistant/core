@@ -1,15 +1,15 @@
 """Test AI Task structured data generation."""
 
+from collections.abc import AsyncGenerator
 from pathlib import Path
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
-from openai.types import CompletionUsage
-from openai.types.chat import ChatCompletion, ChatCompletionMessage
-from openai.types.chat.chat_completion import Choice
+from openai.types.chat import ChatCompletionChunk
+from openai.types.chat.chat_completion_chunk import Choice as ChunkChoice, ChoiceDelta
+import probatio
 import pytest
 from syrupy.assertion import SnapshotAssertion
-import voluptuous as vol
 
 from homeassistant.components import ai_task, media_source
 from homeassistant.const import Platform
@@ -18,34 +18,36 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er, selector
 
 from . import setup_integration
+from .conftest import get_generator_from_data
 
 from tests.common import MockConfigEntry, snapshot_platform
 
 
 def _image_completion(
     images: list[dict[str, Any]] | None, content: str | None = None
-) -> ChatCompletion:
-    """Build a chat completion carrying generated images."""
-    return ChatCompletion(
-        id="chatcmpl-1234567890ABCDEFGHIJKLMNOPQRS",
-        choices=[
-            Choice(
-                finish_reason="stop",
-                index=0,
-                message=ChatCompletionMessage(
-                    content=content,
-                    role="assistant",
-                    function_call=None,
-                    tool_calls=None,
-                    images=images,
-                ),
+) -> AsyncGenerator[ChatCompletionChunk]:
+    """Build a streamed chat completion carrying generated images."""
+    return get_generator_from_data(
+        [
+            ChatCompletionChunk.model_construct(
+                id="chatcmpl-1234567890ABCDEFGHIJKLMNOPQRS",
+                choices=[
+                    ChunkChoice.model_construct(
+                        finish_reason="stop",
+                        index=0,
+                        delta=ChoiceDelta(
+                            content=content,
+                            role="assistant",
+                            images=images,
+                        ),
+                    )
+                ],
+                created=1700000000,
+                model="google/gemini-2.5-flash-image",
+                object="chat.completion.chunk",
+                system_fingerprint=None,
             )
-        ],
-        created=1700000000,
-        model="google/gemini-2.5-flash-image",
-        object="chat.completion",
-        system_fingerprint=None,
-        usage=CompletionUsage(completion_tokens=9, prompt_tokens=8, total_tokens=17),
+        ]
     )
 
 
@@ -77,27 +79,26 @@ async def test_generate_data(
     entity_id = "ai_task.gemini_2_5_flash_image"
 
     mock_openai_client.chat.completions.create = AsyncMock(
-        return_value=ChatCompletion(
-            id="chatcmpl-1234567890ABCDEFGHIJKLMNOPQRS",
-            choices=[
-                Choice(
-                    finish_reason="stop",
-                    index=0,
-                    message=ChatCompletionMessage(
-                        content="The test data",
-                        role="assistant",
-                        function_call=None,
-                        tool_calls=None,
-                    ),
+        return_value=get_generator_from_data(
+            [
+                ChatCompletionChunk.model_construct(
+                    id="chatcmpl-1234567890ABCDEFGHIJKLMNOPQRS",
+                    choices=[
+                        ChunkChoice.model_construct(
+                            finish_reason="stop",
+                            index=0,
+                            delta=ChoiceDelta(
+                                content="The test data",
+                                role="assistant",
+                            ),
+                        )
+                    ],
+                    created=1700000000,
+                    model="x-ai/grok-3",
+                    object="chat.completion.chunk",
+                    system_fingerprint=None,
                 )
-            ],
-            created=1700000000,
-            model="x-ai/grok-3",
-            object="chat.completion",
-            system_fingerprint=None,
-            usage=CompletionUsage(
-                completion_tokens=9, prompt_tokens=8, total_tokens=17
-            ),
+            ]
         )
     )
 
@@ -120,27 +121,26 @@ async def test_generate_structured_data(
     await setup_integration(hass, mock_config_entry)
 
     mock_openai_client.chat.completions.create = AsyncMock(
-        return_value=ChatCompletion(
-            id="chatcmpl-1234567890ABCDEFGHIJKLMNOPQRS",
-            choices=[
-                Choice(
-                    finish_reason="stop",
-                    index=0,
-                    message=ChatCompletionMessage(
-                        content='{"characters": ["Mario", "Luigi"]}',
-                        role="assistant",
-                        function_call=None,
-                        tool_calls=None,
-                    ),
+        return_value=get_generator_from_data(
+            [
+                ChatCompletionChunk.model_construct(
+                    id="chatcmpl-1234567890ABCDEFGHIJKLMNOPQRS",
+                    choices=[
+                        ChunkChoice.model_construct(
+                            finish_reason="stop",
+                            index=0,
+                            delta=ChoiceDelta(
+                                content='{"characters": ["Mario", "Luigi"]}',
+                                role="assistant",
+                            ),
+                        )
+                    ],
+                    created=1700000000,
+                    model="x-ai/grok-3",
+                    object="chat.completion.chunk",
+                    system_fingerprint=None,
                 )
-            ],
-            created=1700000000,
-            model="x-ai/grok-3",
-            object="chat.completion",
-            system_fingerprint=None,
-            usage=CompletionUsage(
-                completion_tokens=9, prompt_tokens=8, total_tokens=17
-            ),
+            ]
         )
     )
 
@@ -149,9 +149,9 @@ async def test_generate_structured_data(
         task_name="Test Task",
         entity_id="ai_task.gemini_2_5_flash_image",
         instructions="Generate test data",
-        structure=vol.Schema(
+        structure=probatio.Schema(
             {
-                vol.Required("characters"): selector.selector(
+                probatio.Required("characters"): selector.selector(
                     {
                         "text": {
                             "multiple": True,
@@ -163,11 +163,14 @@ async def test_generate_structured_data(
     )
 
     assert result.data == {"characters": ["Mario", "Luigi"]}
+    assert mock_openai_client.chat.completions.create.call_args.kwargs[
+        "extra_body"
+    ] == {"provider": {"require_parameters": True}}
     assert mock_openai_client.chat.completions.create.call_args_list[0][1][
         "response_format"
     ] == {
         "json_schema": {
-            "name": "Test Task",
+            "name": "test_task",
             "schema": {
                 "properties": {
                     "characters": {
@@ -177,6 +180,7 @@ async def test_generate_structured_data(
                 },
                 "required": ["characters"],
                 "type": "object",
+                "additionalProperties": False,
             },
             "strict": True,
         },
@@ -193,27 +197,26 @@ async def test_generate_invalid_structured_data(
     await setup_integration(hass, mock_config_entry)
 
     mock_openai_client.chat.completions.create = AsyncMock(
-        return_value=ChatCompletion(
-            id="chatcmpl-1234567890ABCDEFGHIJKLMNOPQRS",
-            choices=[
-                Choice(
-                    finish_reason="stop",
-                    index=0,
-                    message=ChatCompletionMessage(
-                        content="INVALID JSON RESPONSE",
-                        role="assistant",
-                        function_call=None,
-                        tool_calls=None,
-                    ),
+        return_value=get_generator_from_data(
+            [
+                ChatCompletionChunk.model_construct(
+                    id="chatcmpl-1234567890ABCDEFGHIJKLMNOPQRS",
+                    choices=[
+                        ChunkChoice.model_construct(
+                            finish_reason="stop",
+                            index=0,
+                            delta=ChoiceDelta(
+                                content="INVALID JSON RESPONSE",
+                                role="assistant",
+                            ),
+                        )
+                    ],
+                    created=1700000000,
+                    model="x-ai/grok-3",
+                    object="chat.completion.chunk",
+                    system_fingerprint=None,
                 )
-            ],
-            created=1700000000,
-            model="x-ai/grok-3",
-            object="chat.completion",
-            system_fingerprint=None,
-            usage=CompletionUsage(
-                completion_tokens=9, prompt_tokens=8, total_tokens=17
-            ),
+            ]
         )
     )
 
@@ -225,9 +228,9 @@ async def test_generate_invalid_structured_data(
             task_name="Test Task",
             entity_id="ai_task.gemini_2_5_flash_image",
             instructions="Generate test data",
-            structure=vol.Schema(
+            structure=probatio.Schema(
                 {
-                    vol.Required("characters"): selector.selector(
+                    probatio.Required("characters"): selector.selector(
                         {
                             "text": {
                                 "multiple": True,
@@ -248,14 +251,17 @@ async def test_generate_data_empty_response(
     await setup_integration(hass, mock_config_entry)
 
     mock_openai_client.chat.completions.create = AsyncMock(
-        return_value=ChatCompletion(
-            id="chatcmpl-1234567890ABCDEFGHIJKLMNOPQRS",
-            choices=[],
-            created=1700000000,
-            model="x-ai/grok-3",
-            object="chat.completion",
-            system_fingerprint=None,
-            usage=CompletionUsage(completion_tokens=0, prompt_tokens=8, total_tokens=8),
+        return_value=get_generator_from_data(
+            [
+                ChatCompletionChunk.model_construct(
+                    id="chatcmpl-1234567890ABCDEFGHIJKLMNOPQRS",
+                    choices=[],
+                    created=1700000000,
+                    model="x-ai/grok-3",
+                    object="chat.completion.chunk",
+                    system_fingerprint=None,
+                )
+            ]
         )
     )
 
@@ -279,27 +285,26 @@ async def test_generate_data_with_attachments(
     entity_id = "ai_task.gemini_2_5_flash_image"
 
     mock_openai_client.chat.completions.create = AsyncMock(
-        return_value=ChatCompletion(
-            id="chatcmpl-1234567890ABCDEFGHIJKLMNOPQRS",
-            choices=[
-                Choice(
-                    finish_reason="stop",
-                    index=0,
-                    message=ChatCompletionMessage(
-                        content="Hi there!",
-                        role="assistant",
-                        function_call=None,
-                        tool_calls=None,
-                    ),
+        return_value=get_generator_from_data(
+            [
+                ChatCompletionChunk.model_construct(
+                    id="chatcmpl-1234567890ABCDEFGHIJKLMNOPQRS",
+                    choices=[
+                        ChunkChoice.model_construct(
+                            finish_reason="stop",
+                            index=0,
+                            delta=ChoiceDelta(
+                                content="Hi there!",
+                                role="assistant",
+                            ),
+                        )
+                    ],
+                    created=1700000000,
+                    model="x-ai/grok-3",
+                    object="chat.completion.chunk",
+                    system_fingerprint=None,
                 )
-            ],
-            created=1700000000,
-            model="x-ai/grok-3",
-            object="chat.completion",
-            system_fingerprint=None,
-            usage=CompletionUsage(
-                completion_tokens=9, prompt_tokens=8, total_tokens=17
-            ),
+            ]
         )
     )
 
