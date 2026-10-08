@@ -23,7 +23,6 @@ from .coordinator import (
 )
 from .entity import AdGuardHomeEntity
 
-# The coordinator does the updating.
 PARALLEL_UPDATES = 0
 
 
