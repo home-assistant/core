@@ -52,6 +52,11 @@ FORECAST_FEATURES = (
     | WeatherEntityFeature.FORECAST_TWICE_DAILY
 )
 
+# Factor applied to a cadence's expected duration to distinguish a
+# DST-shifted entry (whose elapsed length varies by up to an hour) from a
+# provider having skipped an entry outright (whose gap is much larger).
+_MAX_EXPECTED_GAP_FACTOR = 1.5
+
 # How long a single forecast entry of each cadence covers, used to determine
 # whether it overlaps the requested window rather than requiring its start
 # timestamp to fall inside that window (a daily entry starts at midnight, so
@@ -277,7 +282,10 @@ class GetForecastTool(Tool):
                     # fall back to the cadence-derived end if the gap is
                     # much larger than expected, which signals the provider
                     # skipped an entry rather than a DST-shifted period.
-                    if next_start_utc - entry_start_utc > duration * 1.5:
+                    if (
+                        next_start_utc - entry_start_utc
+                        > duration * _MAX_EXPECTED_GAP_FACTOR
+                    ):
                         entry_end_utc = cadence_end
                     else:
                         entry_end_utc = next_start_utc
