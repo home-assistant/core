@@ -76,6 +76,7 @@ async def test_sensor_update(
 
     mock_flow_it.return_value.state.data.mode.iaq = 250
     coordinator: FlowItCoordinator = mock_config_entry.runtime_data.coordinator
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
     await coordinator.async_refresh()
     await hass.async_block_till_done()
 

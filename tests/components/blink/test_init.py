@@ -93,6 +93,7 @@ async def test_scheduled_refresh_is_not_forced(
 
     mock_blink_api.refresh.reset_mock()
     coordinator = mock_config_entry.runtime_data
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
     await coordinator.async_refresh()
     await hass.async_block_till_done()
 

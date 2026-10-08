@@ -757,6 +757,7 @@ async def test_q7_state_changing_commands(
     # Force coordinator refresh to get updated state
     coordinator = setup_entry.runtime_data.b01_q7[0]
 
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
     await coordinator.async_refresh()
     await hass.async_block_till_done()
     vacuum = hass.states.get(Q7_ENTITY_ID)
@@ -882,6 +883,7 @@ async def test_q7_activity_none_status(
 
     # Force coordinator refresh to get updated state
     coordinator = setup_entry.runtime_data.b01_q7[0]
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
     await coordinator.async_refresh()
     await hass.async_block_till_done()
 
@@ -903,6 +905,7 @@ async def test_q7_working_sleep_is_paused(
     )
 
     coordinator = setup_entry.runtime_data.b01_q7[0]
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
     await coordinator.async_refresh()
     await hass.async_block_till_done()
 

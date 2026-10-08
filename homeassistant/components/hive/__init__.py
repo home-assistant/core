@@ -10,18 +10,32 @@ from apyhiveapi import Auth, Hive
 from apyhiveapi.helper.hive_exceptions import HiveReauthRequired
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import aiohttp_client, device_registry as dr
+from homeassistant.helpers import (
+    aiohttp_client,
+    config_validation as cv,
+    device_registry as dr,
+)
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, PLATFORMS
 from .entity import HiveEntity
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
 type HiveConfigEntry = ConfigEntry[Hive]
+
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Hive integration."""
+    async_setup_services(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: HiveConfigEntry) -> bool:
@@ -30,10 +44,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: HiveConfigEntry) -> bool
     hive_config = dict(entry.data)
     hive = Hive(web_session)
 
-    hive_config["options"] = {}
-    hive_config["options"].update(
-        {CONF_SCAN_INTERVAL: dict(entry.options).get(CONF_SCAN_INTERVAL, 120)}
-    )
     entry.runtime_data = hive
 
     try:

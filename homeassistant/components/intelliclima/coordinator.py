@@ -4,8 +4,12 @@ import asyncio
 from dataclasses import dataclass
 from typing import override
 
-from pyintelliclima import IntelliClimaAPI, IntelliClimaAPIError, IntelliClimaDevices
-from pyintelliclima.intelliclima_types import IntelliClimaFilterStatus
+from pyintelliclima import (
+    IntelliClimaAPI,
+    IntelliClimaAPIError,
+    IntelliClimaDevices,
+    IntelliClimaFilterStatus,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -79,7 +83,10 @@ class IntelliClimaFilterCoordinator(
     async def _async_update_data(self) -> dict[str, IntelliClimaFilterStatus]:
         """Fetch filter status for all devices, isolating per-device failures."""
         results = await asyncio.gather(
-            *(self.api.get_filter_status(serial) for serial in self._device_serials),
+            *(
+                self.api.ecocomfort2.get_filter_status(serial)
+                for serial in self._device_serials
+            ),
             return_exceptions=True,
         )
 

@@ -46,6 +46,11 @@
       }
     }
   },
+  "exceptions": {
+    "invalid_calendar_config": {
+      "message": "Configuration error in {file}: {error}"
+    }
+  },
   "options": {
     "step": {
       "init": {

@@ -103,6 +103,9 @@
       "pump": {
         "default": "mdi:water-pump"
       },
+      "running": {
+        "default": "mdi:play"
+      },
       "screen_display": {
         "default": "mdi:monitor"
       },

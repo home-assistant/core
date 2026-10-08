@@ -4,7 +4,7 @@ import datetime
 from unittest.mock import AsyncMock, patch
 
 from freezegun import freeze_time
-import httpx
+import httpx2
 import openai
 from openai.types import CompletionUsage
 from openai.types.chat import (
@@ -148,7 +148,7 @@ async def test_connection_error_availability(
 
     mock_openai_client.chat.completions.create = AsyncMock(
         side_effect=openai.APIConnectionError(
-            request=httpx.Request("POST", "http://localhost")
+            request=httpx2.Request("POST", "http://localhost")
         )
     )
     result = await conversation.async_converse(
@@ -164,6 +164,7 @@ async def test_connection_error_availability(
     assert hass.states.get(AGENT_ID).state == STATE_UNAVAILABLE
 
     # A successful availability ping restores the entity.
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
     await mock_config_entry.runtime_data.async_request_refresh()
     await hass.async_block_till_done()
     assert hass.states.get(AGENT_ID).state != STATE_UNAVAILABLE

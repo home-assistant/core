@@ -161,6 +161,7 @@ async def test_if_fires_on_state_change(
     mock_bridge_v1.mock_sensor_responses.append(new_sensor_response)
 
     # Force updates to run again
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
     await mock_bridge_v1.sensor_manager.coordinator.async_refresh()
     await hass.async_block_till_done()
 
@@ -178,6 +179,7 @@ async def test_if_fires_on_state_change(
     mock_bridge_v1.mock_sensor_responses.append(new_sensor_response)
 
     # Force updates to run again
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
     await mock_bridge_v1.sensor_manager.coordinator.async_refresh()
     await hass.async_block_till_done()
     assert len(mock_bridge_v1.mock_requests) == 3

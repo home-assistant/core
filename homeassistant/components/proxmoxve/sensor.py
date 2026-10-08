@@ -18,7 +18,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from .const import ProxmoxPermission
+from .const import NODE_ONLINE, ProxmoxPermission
 from .coordinator import ProxmoxConfigEntry, ProxmoxNodeData
 from .entity import (
     ProxmoxContainerEntity,
@@ -38,6 +38,7 @@ class ProxmoxNodeSensorEntityDescription(SensorEntityDescription):
     value_fn: Callable[[ProxmoxNodeData], StateType | datetime]
     permission: ProxmoxPermission = ProxmoxPermission.SYSAUDIT
     permission_target: str = "nodes"
+    requires_online_node: bool = True
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -153,9 +154,10 @@ NODE_SENSORS: tuple[ProxmoxNodeSensorEntityDescription, ...] = (
         translation_key="node_status",
         value_fn=lambda data: data.node["status"],
         device_class=SensorDeviceClass.ENUM,
-        options=["online", "offline"],
+        options=["online", "offline", "unknown"],
         permission=ProxmoxPermission.VMAUDIT,
         permission_target="vms",
+        requires_online_node=False,
     ),
     ProxmoxNodeSensorEntityDescription(
         key="node_backup_last_backup",
@@ -577,6 +579,19 @@ class ProxmoxNodeSensor(ProxmoxNodeEntity, SensorEntity):
     def native_value(self) -> StateType | datetime:
         """Return the native value of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data[self.device_name])
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return if the sensor is available."""
+        if not self.entity_description.requires_online_node:
+            return super().available
+
+        return (
+            super().available
+            and self.coordinator.data[self.device_name].node.get("status")
+            == NODE_ONLINE
+        )
 
 
 class ProxmoxVMSensor(ProxmoxVMEntity, SensorEntity):

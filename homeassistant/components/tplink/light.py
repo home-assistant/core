@@ -8,7 +8,6 @@ from typing import Any, override
 from kasa import Device, DeviceType, KasaException, LightState, Module
 from kasa.interfaces import LightEffect
 from kasa.iot import IotDevice
-import probatio
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -26,9 +25,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.typing import VolDictType
 
 from . import TPLinkConfigEntry, legacy_device_id
 from .const import DOMAIN
@@ -44,82 +41,6 @@ from .entity import (
 PARALLEL_UPDATES = 0
 
 _LOGGER = logging.getLogger(__name__)
-
-SERVICE_RANDOM_EFFECT = "random_effect"
-SERVICE_SEQUENCE_EFFECT = "sequence_effect"
-
-HUE = probatio.Range(min=0, max=360)
-SAT = probatio.Range(min=0, max=100)
-VAL = probatio.Range(min=0, max=100)
-TRANSITION = probatio.Range(min=0, max=6000)
-HSV_SEQUENCE = probatio.ExactSequence((HUE, SAT, VAL))
-
-BASE_EFFECT_DICT: VolDictType = {
-    probatio.Optional("brightness", default=100): probatio.All(
-        probatio.Coerce(int), probatio.Percentage()
-    ),
-    probatio.Optional("duration", default=0): probatio.All(
-        probatio.Coerce(int), probatio.Range(min=0, max=5000)
-    ),
-    probatio.Optional("transition", default=0): probatio.All(
-        probatio.Coerce(int), TRANSITION
-    ),
-    probatio.Optional("segments", default=[0]): probatio.All(
-        cv.ensure_list_csv,
-        probatio.Length(min=1, max=80),
-        [probatio.All(probatio.Coerce(int), probatio.Range(min=0, max=80))],
-    ),
-}
-
-SEQUENCE_EFFECT_DICT: VolDictType = {
-    **BASE_EFFECT_DICT,
-    probatio.Required("sequence"): probatio.All(
-        probatio.EnsureList(),
-        probatio.Length(min=1, max=16),
-        [probatio.All(probatio.Coerce(tuple), HSV_SEQUENCE)],
-    ),
-    probatio.Optional("repeat_times", default=0): probatio.All(
-        probatio.Coerce(int), probatio.Range(min=0, max=10)
-    ),
-    probatio.Optional("spread", default=1): probatio.All(
-        probatio.Coerce(int), probatio.Range(min=1, max=16)
-    ),
-    probatio.Optional("direction", default=4): probatio.All(
-        probatio.Coerce(int), probatio.Range(min=1, max=4)
-    ),
-}
-
-RANDOM_EFFECT_DICT: VolDictType = {
-    **BASE_EFFECT_DICT,
-    probatio.Optional("fadeoff", default=0): probatio.All(
-        probatio.Coerce(int), probatio.Range(min=0, max=3000)
-    ),
-    probatio.Optional("hue_range"): probatio.All(
-        cv.ensure_list_csv, [probatio.Coerce(int)], probatio.ExactSequence((HUE, HUE))
-    ),
-    probatio.Optional("saturation_range"): probatio.All(
-        cv.ensure_list_csv, [probatio.Coerce(int)], probatio.ExactSequence((SAT, SAT))
-    ),
-    probatio.Optional("brightness_range"): probatio.All(
-        cv.ensure_list_csv, [probatio.Coerce(int)], probatio.ExactSequence((VAL, VAL))
-    ),
-    probatio.Optional("transition_range"): probatio.All(
-        cv.ensure_list_csv,
-        [probatio.Coerce(int)],
-        probatio.ExactSequence((TRANSITION, TRANSITION)),
-    ),
-    probatio.Required("init_states"): probatio.All(
-        cv.ensure_list_csv, [probatio.Coerce(int)], HSV_SEQUENCE
-    ),
-    probatio.Optional("random_seed", default=100): probatio.All(
-        probatio.Coerce(int), probatio.Range(min=1, max=600)
-    ),
-    probatio.Optional("backgrounds"): probatio.All(
-        probatio.EnsureList(),
-        probatio.Length(min=1, max=16),
-        [probatio.All(probatio.Coerce(tuple), HSV_SEQUENCE)],
-    ),
-}
 
 
 @callback
@@ -408,26 +329,6 @@ class TPLinkLightEffectEntity(TPLinkLightEntity):
         super().__init__(device, coordinator, description, parent=parent)
 
         self._effect_module = device.modules[Module.LightEffect]
-
-    @override
-    async def async_added_to_hass(self) -> None:
-        """Call update attributes after the device is added to the platform."""
-        await super().async_added_to_hass()
-
-        self._register_effects_services()
-
-    def _register_effects_services(self) -> None:
-        if self._effect_module.has_custom_effects:
-            self.platform.async_register_entity_service(
-                SERVICE_RANDOM_EFFECT,
-                RANDOM_EFFECT_DICT,
-                "async_set_random_effect",
-            )
-            self.platform.async_register_entity_service(
-                SERVICE_SEQUENCE_EFFECT,
-                SEQUENCE_EFFECT_DICT,
-                "async_set_sequence_effect",
-            )
 
     @callback
     @override

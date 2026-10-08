@@ -78,6 +78,7 @@ async def test_shutdown_during_refresh(
         return await response
 
     mock_client.get_status.side_effect = get_status
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
     refresh = hass.async_create_task(coordinator.async_refresh())
     await started.wait()
     await coordinator.async_shutdown()

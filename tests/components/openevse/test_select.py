@@ -245,6 +245,7 @@ async def test_select_coordinator_update_failure_marks_unavailable(
 
     mock_charger.get_override_state.side_effect = TimeoutError
     coordinator = mock_config_entry.runtime_data
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
     await coordinator.async_refresh()
     await hass.async_block_till_done()
 

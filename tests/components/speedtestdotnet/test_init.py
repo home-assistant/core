@@ -103,6 +103,7 @@ async def test_get_best_server_error(hass: HomeAssistant, mock_api: MagicMock) -
             "Unable to connect to servers to test latency."
         )
     )
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
     await entry.runtime_data.async_refresh()
     await hass.async_block_till_done()
     state = hass.states.get("sensor.speedtest_ping")

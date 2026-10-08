@@ -257,6 +257,7 @@ async def test_external_firmware_update_detected(
     reolink_host.firmware_update_available.return_value = False
 
     # Trigger device coordinator update (simulates regular polling)
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
     await config_entry.runtime_data.device_coordinator.async_refresh()
     await hass.async_block_till_done()
 
