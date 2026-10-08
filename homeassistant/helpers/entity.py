@@ -5,6 +5,7 @@ from annotationlib import Format, get_annotations
 import asyncio
 from collections import deque
 from collections.abc import Callable, Coroutine, Iterable, Mapping
+from contextvars import ContextVar
 import dataclasses
 from enum import Enum, auto
 import functools as ft
@@ -76,6 +77,20 @@ if TYPE_CHECKING:
 _LOGGER = logging.getLogger(__name__)
 SLOW_UPDATE_WARNING = 10
 DATA_ENTITY_SOURCE = "entity_info"
+
+# Carries (id(entity), expected platform generation) for the duration of a
+# single `async_update_ha_state_for_poll` call. Task-local (each polling
+# task gets its own copied context) rather than stashed on the entity
+# instance, so a concurrent non-poll update of the same entity - started
+# in its own task while the poll is suspended inside an overridden
+# `async_update_ha_state`/`async_device_update` - cannot inherit a pending
+# poll's staleness guard. The entity identity is also carried (and checked
+# against `self` at the read site) as a defensive check in case this
+# context is ever propagated into a nested call for a different entity
+# within the same task.
+_entity_poll_generation: ContextVar[tuple[int, int] | None] = ContextVar(
+    "entity_poll_generation", default=None
+)
 
 # Used when converting float states to string: limit precision according to machine
 # epsilon to make the string representation readable
@@ -601,13 +616,6 @@ class Entity(
     # attachment can detect it is stale once its permit is finally granted.
     _platform_generation = 0
 
-    # Set (only around a polling call) by `async_update_ha_state_for_poll`.
-    # Stashed on the instance rather than threaded through as a parameter
-    # so the staleness check is still honored even when an entity's
-    # `async_update_ha_state`/`async_device_update` override delegates to
-    # `super()`, without widening either overridable method's signature.
-    _expected_platform_generation_for_poll: int | None = None
-
     # Attributes to exclude from recording, only set by base components, e.g. light
     _entity_component_unrecorded_attributes: frozenset[str] = frozenset()
     # Additional integration specific attributes to exclude from recording, set by
@@ -1100,20 +1108,25 @@ class Entity(
         """Update Home Assistant with current state of entity for a poll cycle.
 
         Called only by `EntityPlatform`'s polling, not meant for general
-        use. The expected generation is stashed on the instance rather
-        than passed as a parameter to `async_update_ha_state`/
+        use. The expected generation is carried in a task-local context
+        var rather than passed as a parameter to `async_update_ha_state`/
         `async_device_update`, so the staleness check further down is
         still honored even when an entity overrides either of those
         methods and delegates to `super()`, without widening either
         overridable method's signature (which would otherwise raise
         `TypeError`, or silently drop the keyword, for existing
-        overrides using the previous signature).
+        overrides using the previous signature). Being task-local (this
+        coroutine always runs as its own task) rather than stashed on the
+        instance also means a concurrent non-poll update of this same
+        entity, running in its own task while this poll is suspended
+        inside an overridden `async_update_ha_state`/`async_device_update`,
+        cannot inherit this poll's staleness guard.
         """
-        self._expected_platform_generation_for_poll = _expected_platform_generation
+        token = _entity_poll_generation.set((id(self), _expected_platform_generation))
         try:
             await self.async_update_ha_state(True)
         finally:
-            self._expected_platform_generation_for_poll = None
+            _entity_poll_generation.reset(token)
 
     @callback
     def _async_verify_state_writable(self) -> None:
@@ -1509,9 +1522,17 @@ class Entity(
                 # resources its update() depends on, so skip running it now
                 # that a permit is finally available.
                 return
-            if (
-                expected := self._expected_platform_generation_for_poll
-            ) is not None and expected != self._platform_generation:
+            # Only trust the task-local poll context if it was set for
+            # *this* entity: it is task-local precisely so a concurrent
+            # non-poll update of this same entity (running in its own
+            # task) cannot inherit another task's pending poll guard.
+            poll_context = _entity_poll_generation.get()
+            expected = (
+                poll_context[1]
+                if poll_context is not None and poll_context[0] == id(self)
+                else None
+            )
+            if expected is not None and expected != self._platform_generation:
                 # This is a polling task queued for an earlier attachment of
                 # this entity instance (e.g. it was removed and re-added for
                 # an entity-id rename while the task waited for its permit).

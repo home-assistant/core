@@ -792,6 +792,75 @@ async def test_removed_entity_queued_for_permit_is_cancelled_not_leaked(
     entity_b.async_update.assert_not_called()
 
 
+async def test_concurrent_update_not_skipped_by_suspended_poll_of_same_entity(
+    hass: HomeAssistant,
+) -> None:
+    """Test a concurrent non-poll update isn't skipped by a suspended poll.
+
+    Regression contract: the expected-generation guard must be task-local,
+    not stashed on the entity instance. A polling task can suspend inside
+    an overridden `async_update_ha_state` before it ever reaches
+    `async_device_update`. If, while it is suspended there, the entity is
+    removed and re-added (bumping its generation) and a *separate*,
+    non-poll update of the same entity instance runs concurrently (e.g. a
+    manual "update entity" service call, in its own task), that unrelated
+    call must not inherit the suspended poll's now-stale expected
+    generation and be incorrectly skipped.
+    """
+    component = EntityComponent(_LOGGER, DOMAIN, hass, timedelta(seconds=1))
+    await component.async_setup({})
+
+    pause_in_override = asyncio.Event()
+    slow_override = False
+
+    class _OverridingEntity(MockEntity):
+        """An entity whose `async_update_ha_state` override can suspend."""
+
+        async def async_update_ha_state(self, force_refresh: bool = False) -> None:
+            if slow_override:
+                await pause_in_override.wait()
+            await super().async_update_ha_state(force_refresh)
+
+    entity = _OverridingEntity(should_poll=True)
+    entity.async_update = AsyncMock()
+
+    await component.async_add_entities([entity])
+    expected_generation = entity.platform_generation
+
+    # Simulate a polling task directly (rather than via the platform's
+    # timer) so it suspends inside the override, holding the task-local
+    # context var, before it can ever reach `async_device_update`.
+    slow_override = True
+    poll_task = hass.async_create_task(
+        entity.async_update_ha_state_for_poll(
+            _expected_platform_generation=expected_generation
+        ),
+        eager_start=True,
+    )
+    await asyncio.sleep(0)
+    entity.async_update.assert_not_called()
+
+    # entity_id rename while the poll is still suspended: removed and
+    # re-added as the same instance, bumping its generation so the
+    # suspended poll's stashed expectation is now stale.
+    await entity.async_remove()
+    entity._platform_state = EntityPlatformState.NOT_ADDED
+    await component.async_add_entities([entity])
+    assert entity.platform_generation != expected_generation
+
+    # A separate, non-poll update of the same entity instance, running in
+    # its own task concurrently with the still-suspended poll above, must
+    # run normally rather than inherit the suspended poll's stale
+    # expected-generation guard.
+    slow_override = False
+    await entity.async_update_ha_state(True)
+    entity.async_update.assert_called_once()
+
+    # Let the suspended poll finish and clean up.
+    pause_in_override.set()
+    await poll_task
+
+
 async def test_stale_poll_skips_update_for_entity_readded_while_queued_on_permit(
     hass: HomeAssistant,
 ) -> None:
