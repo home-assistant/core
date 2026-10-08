@@ -36,6 +36,7 @@ async def test_auth_failure(
     await setup_integration(hass, config_entry, aioclient_mock, auth_fail=True)
 
     assert config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert config_entry.reason == "Username or password was not accepted"
 
 
 async def test_api_timeout(
