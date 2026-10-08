@@ -1440,7 +1440,7 @@ async def test_inherit_source_unique_id(
 
 
 async def test_cost_sensor_rename(
-    setup_integration,
+    setup_integration: Callable[[HomeAssistant], Coroutine[Any, Any, None]],
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     hass_storage: dict[str, Any],
