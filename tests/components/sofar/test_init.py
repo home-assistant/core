@@ -398,6 +398,7 @@ async def test_setup_while_asleep_reloads_once_the_inverter_answers(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     caplog: pytest.LogCaptureFixture,
+    device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     mock_connection: MockModbusConnection,
     mock_config_entry: MockConfigEntry,
@@ -422,6 +423,12 @@ async def test_setup_while_asleep_reloads_once_the_inverter_answers(
     )
     assert entity_id is not None
     assert hass.states.get(entity_id).state == "2.5"
+    # Only a full setup reads the identity.
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_SERIAL), mock_config_entry.entry_id
+    )
+    assert device is not None
+    assert device.sw_version == MOCK_SW_VERSION
 
 
 @pytest.mark.usefixtures("mock_get_unit")
