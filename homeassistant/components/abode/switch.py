@@ -1,11 +1,12 @@
 """Support for Abode Security System switches."""
 
+from collections.abc import Callable
 from typing import Any, cast, override
 
 from jaraco.abode.devices.switch import Switch
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -64,14 +65,33 @@ class AbodeAutomationSwitch(AbodeAutomation, SwitchEntity):
     """A switch implementation for Abode automations."""
 
     _attr_translation_key = "automation"
+    _unsub_trigger_signal: Callable[[], None]
 
     @override
     async def async_added_to_hass(self) -> None:
         """Set up trigger automation service."""
         await super().async_added_to_hass()
 
-        signal = f"abode_trigger_automation_{self.entity_id}"
-        self.async_on_remove(async_dispatcher_connect(self.hass, signal, self.trigger))
+        self._async_connect_trigger_signal()
+        # The lambda is needed because _unsub_capture_signal is reassigned
+        # on entity id change.
+        # pylint: disable-next=unnecessary-lambda
+        self.async_on_remove(lambda: self._unsub_trigger_signal())
+
+    @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Reconnect the trigger signal, which is keyed on the entity_id."""
+        super().async_entity_id_changed(old_entity_id)
+        self._unsub_trigger_signal()
+        self._async_connect_trigger_signal()
+
+    @callback
+    def _async_connect_trigger_signal(self) -> None:
+        """Connect the trigger signal for the current entity_id."""
+        self._unsub_trigger_signal = async_dispatcher_connect(
+            self.hass, f"abode_trigger_automation_{self.entity_id}", self.trigger
+        )
 
     @override
     def turn_on(self, **kwargs: Any) -> None:
