@@ -6,7 +6,7 @@ from typing import Any, override
 from hass_nabucasa import Cloud
 from hass_nabucasa.voice import MAP_VOICE, AudioOutput, Gender, VoiceError
 from hass_nabucasa.voice_data import TTS_VOICES
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.tts import (
     ATTR_AUDIO_OUTPUT,
@@ -266,17 +266,19 @@ def validate_lang(value: dict[str, Any]) -> dict[str, Any]:
         )
 
     if (lang, gender) not in MAP_VOICE:
-        raise vol.Invalid("Unsupported language and gender specified.")
+        raise probatio.Invalid("Unsupported language and gender specified.")
 
     return value
 
 
-PLATFORM_SCHEMA = vol.All(
+PLATFORM_SCHEMA = probatio.All(
     TTS_PLATFORM_SCHEMA.extend(
         {
-            vol.Required(CONF_PLATFORM): vol.All(cv.string, _deprecated_platform),
-            vol.Optional(CONF_LANG): str,
-            vol.Optional(ATTR_GENDER): str,
+            probatio.Required(CONF_PLATFORM): probatio.All(
+                cv.string, _deprecated_platform
+            ),
+            probatio.Optional(CONF_LANG): str,
+            probatio.Optional(ATTR_GENDER): str,
         }
     ),
     validate_lang,

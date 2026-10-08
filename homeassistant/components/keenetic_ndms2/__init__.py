@@ -2,7 +2,7 @@
 
 import logging
 
-from homeassistant.const import CONF_SCAN_INTERVAL, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -14,7 +14,6 @@ from .const import (
     CONF_TRY_HOTSPOT,
     DEFAULT_CONSIDER_HOME,
     DEFAULT_INTERFACE,
-    DEFAULT_SCAN_INTERVAL,
 )
 from .router import KeeneticConfigEntry, KeeneticRouter
 
@@ -70,11 +69,15 @@ async def async_unload_entry(
                     _LOGGER.debug("Removing entity %s", entity_entry.entity_id)
 
                     ent_reg.async_remove(entity_entry.entity_id)
-                    if entity_entry.device_id:
-                        dev_reg.async_update_device(
-                            entity_entry.device_id,
-                            remove_config_entry_id=config_entry.entry_id,
-                        )
+                    # The tracker attaches to a device found by MAC, which may be
+                    # owned by another integration; only remove it if we own it.
+                    if (
+                        entity_entry.device_id
+                        and (device := dev_reg.async_get(entity_entry.device_id))
+                        is not None
+                        and device.config_entry_id == config_entry.entry_id
+                    ):
+                        dev_reg.async_remove_device(device.id)
 
         _LOGGER.debug("Finished cleaning device_tracker entities")
 
@@ -84,7 +87,6 @@ async def async_unload_entry(
 def async_add_defaults(hass: HomeAssistant, entry: KeeneticConfigEntry) -> None:
     """Populate default options."""
     options = {
-        CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL,
         CONF_CONSIDER_HOME: DEFAULT_CONSIDER_HOME,
         CONF_INTERFACES: [DEFAULT_INTERFACE],
         CONF_TRY_HOTSPOT: True,

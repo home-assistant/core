@@ -2,11 +2,10 @@
 
 import asyncio
 from collections.abc import Callable
-from datetime import datetime
 import logging
 from typing import Any, cast
 
-import voluptuous as vol
+import probatio
 
 from homeassistant import config as conf_util
 from homeassistant.components import websocket_api
@@ -18,26 +17,18 @@ from homeassistant.const import (
     CONF_PROTOCOL,
     SERVICE_RELOAD,
 )
-from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import (
-    ConfigValidationError,
-    ServiceValidationError,
-    Unauthorized,
-)
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import Unauthorized
 from homeassistant.helpers import (
     config_validation as cv,
     entity_registry as er,
-    event as ev,
     issue_registry as ir,
 )
-from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.helpers.device_registry import AnyDeviceEntry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import async_get_platforms
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
-from homeassistant.helpers.reload import async_integration_yaml_config
-from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import async_get_integration, async_get_loaded_integration
+from homeassistant.loader import async_get_loaded_integration
 from homeassistant.setup import SetupPhases, async_pause_setup
 from homeassistant.util.async_ import create_eager_task
 
@@ -56,7 +47,6 @@ from .client import (
 from .config import MQTT_BASE_SCHEMA, MQTT_RO_SCHEMA, MQTT_RW_SCHEMA
 from .config_integration import CONFIG_SCHEMA_BASE
 from .const import (
-    ATTR_MESSAGE_EXPIRY_INTERVAL,
     ATTR_PAYLOAD,
     ATTR_QOS,
     ATTR_RETAIN,
@@ -90,6 +80,7 @@ from .const import (
     MQTT_CONNECTION_STATE,
     PROTOCOL_5,
     PROTOCOL_311,
+    SERVICE_PUBLISH,
     TEMPLATE_ERRORS,
     Platform,
 )
@@ -104,6 +95,7 @@ from .models import (
     ReceiveMessage,
     convert_outgoing_mqtt_payload,
 )
+from .services import async_setup_services
 from .subscription import (
     EntitySubscription,
     async_prepare_subscribe_topics,
@@ -111,8 +103,10 @@ from .subscription import (
     async_unsubscribe_topics,
 )
 from .util import (
+    async_check_config_schema,
     async_create_certificate_temp_files,
     async_forward_entry_setup_and_setup_discovery,
+    async_remove_mqtt_issues,
     async_wait_for_mqtt_client,
     mqtt_config_entry_enabled,
     platforms_from_config,
@@ -158,6 +152,7 @@ __all__ = [
     "MQTT_CONNECTION_STATE",
     "MQTT_RO_SCHEMA",
     "MQTT_RW_SCHEMA",
+    "SERVICE_PUBLISH",
     "SERVICE_RELOAD",
     "TEMPLATE_ERRORS",
     "EntitySubscription",
@@ -197,11 +192,6 @@ __all__ = [
 
 _LOGGER = logging.getLogger(__name__)
 
-SERVICE_PUBLISH = "publish"
-SERVICE_DUMP = "dump"
-
-ATTR_EVALUATE_PAYLOAD = "evaluate_payload"
-
 MAX_RECONNECT_WAIT = 300  # seconds
 
 CONNECTION_SUCCESS = "connection_success"
@@ -229,28 +219,15 @@ CONNECTION_FAILED_RECOVERABLE = "connection_failed_recoverable"
 #       ...
 #     - name: ""
 #       ...
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.All(
-            cv.ensure_list,
+        DOMAIN: probatio.All(
+            probatio.EnsureList(),
             cv.remove_falsy,
             [CONFIG_SCHEMA_BASE],
         )
     },
-    extra=vol.ALLOW_EXTRA,
-)
-
-# Publish action call validation schema
-MQTT_PUBLISH_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_TOPIC): valid_publish_topic,
-        vol.Required(ATTR_PAYLOAD, default=None): vol.Any(cv.string, None),
-        vol.Optional(ATTR_EVALUATE_PAYLOAD): cv.boolean,
-        vol.Optional(ATTR_QOS, default=DEFAULT_QOS): valid_qos_schema,
-        vol.Optional(ATTR_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
-        vol.Optional(ATTR_MESSAGE_EXPIRY_INTERVAL): cv.positive_time_period_dict,
-    },
-    required=True,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 
@@ -260,46 +237,6 @@ async def _async_config_entry_updated(hass: HomeAssistant, entry: ConfigEntry) -
     Causes for this is config entry options changing.
     """
     hass.config_entries.async_schedule_reload(entry.entry_id)
-
-
-@callback
-def _async_remove_mqtt_issues(hass: HomeAssistant, mqtt_data: MqttData) -> None:
-    """Unregister open config issues."""
-    issue_registry = ir.async_get(hass)
-    open_issues = [
-        issue_id
-        for (domain, issue_id), issue_entry in issue_registry.issues.items()
-        if domain == DOMAIN and issue_entry.translation_key == "invalid_platform_config"
-    ]
-    for issue in open_issues:
-        ir.async_delete_issue(hass, DOMAIN, issue)
-
-
-async def async_check_config_schema(
-    hass: HomeAssistant, config_yaml: ConfigType
-) -> None:
-    """Validate manually configured MQTT items."""
-    mqtt_data = hass.data[DATA_MQTT]
-    mqtt_config: list[dict[str, list[ConfigType]]] = config_yaml.get(DOMAIN, {})
-    for mqtt_config_item in mqtt_config:
-        for domain, config_items in mqtt_config_item.items():
-            schema = mqtt_data.reload_schema[domain]
-            for config in config_items:
-                try:
-                    schema(config)
-                except vol.Invalid as exc:
-                    integration = await async_get_integration(hass, DOMAIN)
-                    message = conf_util.format_schema_error(
-                        hass, exc, domain, config, integration.documentation
-                    )
-                    raise ServiceValidationError(
-                        translation_domain=DOMAIN,
-                        translation_key="invalid_platform_config_message",
-                        translation_placeholders={
-                            "domain": domain,
-                            "message": message,
-                        },
-                    ) from exc
 
 
 def _platforms_in_use(hass: HomeAssistant, entry: ConfigEntry) -> set[str | Platform]:
@@ -336,131 +273,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     websocket_api.async_register_command(hass, websocket_subscribe)
     websocket_api.async_register_command(hass, websocket_mqtt_info)
 
-    async def async_publish_service(call: ServiceCall) -> None:
-        """Handle MQTT publish service calls."""
-        msg_topic: str = call.data[ATTR_TOPIC]
-
-        if not mqtt_config_entry_enabled(hass):
-            raise ServiceValidationError(
-                translation_key="mqtt_not_setup_cannot_publish",
-                translation_domain=DOMAIN,
-                translation_placeholders={"topic": msg_topic},
-            )
-
-        mqtt_data = hass.data[DATA_MQTT]
-        payload: PublishPayloadType = call.data[ATTR_PAYLOAD]
-        evaluate_payload: bool = call.data.get(ATTR_EVALUATE_PAYLOAD, False)
-        qos: int = call.data[ATTR_QOS]
-        retain: bool = call.data[ATTR_RETAIN]
-        message_expiry_interval: int | None = (
-            int(call.data[ATTR_MESSAGE_EXPIRY_INTERVAL].total_seconds())
-            if ATTR_MESSAGE_EXPIRY_INTERVAL in call.data
-            else None
-        )
-
-        if evaluate_payload:
-            # Convert quoted binary literal to raw data
-            payload = convert_outgoing_mqtt_payload(payload)
-
-        await mqtt_data.client.async_publish(
-            msg_topic,
-            payload,
-            qos,
-            retain,
-            message_expiry_interval=message_expiry_interval,
-        )
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_PUBLISH, async_publish_service, schema=MQTT_PUBLISH_SCHEMA
-    )
-
-    async def async_dump_service(call: ServiceCall) -> None:
-        """Handle MQTT dump service calls."""
-        messages: list[tuple[str, str]] = []
-
-        @callback
-        def collect_msg(msg: ReceiveMessage) -> None:
-            messages.append((msg.topic, str(msg.payload).replace("\n", "")))
-
-        unsub = async_subscribe_internal(hass, call.data["topic"], collect_msg)
-
-        def write_dump() -> None:
-            with open(hass.config.path("mqtt_dump.txt"), "w", encoding="utf8") as fp:
-                fp.writelines([",".join(msg) + "\n" for msg in messages])
-
-        async def finish_dump(_: datetime) -> None:
-            """Write dump to file."""
-            unsub()
-            await hass.async_add_executor_job(write_dump)
-
-        ev.async_call_later(hass, call.data["duration"], finish_dump)
-
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_DUMP,
-        async_dump_service,
-        schema=vol.Schema(
-            {
-                vol.Required("topic"): valid_subscribe_topic,
-                vol.Optional("duration", default=5): int,
-            }
-        ),
-    )
-
-    async def _reload_config(call: ServiceCall) -> None:
-        """Reload the platforms."""
-        if not mqtt_config_entry_enabled(hass):
-            _LOGGER.debug(
-                "Skipped reloading MQTT integration, "
-                "the MQTT config entry is not enabled"
-            )
-            return
-        entry: ConfigEntry = next(iter(hass.config_entries.async_entries(DOMAIN)))
-        mqtt_data = hass.data[DATA_MQTT]
-
-        # Fetch updated manually configured items and validate
-        try:
-            config_yaml = await async_integration_yaml_config(
-                hass, DOMAIN, raise_on_failure=True
-            )
-        except ConfigValidationError as ex:
-            raise ServiceValidationError(
-                translation_domain=ex.translation_domain,
-                translation_key=ex.translation_key,
-                translation_placeholders=ex.translation_placeholders,
-            ) from ex
-
-        new_config: list[ConfigType] = config_yaml.get(DOMAIN, [])
-        platforms_used = platforms_from_config(new_config)
-        new_platforms = platforms_used - mqtt_data.platforms_loaded
-        await async_forward_entry_setup_and_setup_discovery(hass, entry, new_platforms)
-        # Check the schema before continuing reload
-        await async_check_config_schema(hass, config_yaml)
-
-        # Remove repair issues
-        _async_remove_mqtt_issues(hass, mqtt_data)
-
-        mqtt_data.config = new_config
-
-        # Reload the modern yaml platforms
-        mqtt_platforms = async_get_platforms(hass, DOMAIN)
-        tasks = [
-            create_eager_task(entity.async_remove())
-            for mqtt_platform in mqtt_platforms
-            for entity in list(mqtt_platform.entities.values())
-            if getattr(entity, "_discovery_data", None) is None
-            and mqtt_platform.config_entry
-            and mqtt_platform.domain in ENTITY_PLATFORMS
-        ]
-        await asyncio.gather(*tasks)
-
-        for component in mqtt_data.reload_handlers.values():
-            component()
-
-        # Fire event
-        hass.bus.async_fire(f"event_{DOMAIN}_reloaded", context=call.context)
-
-    async_register_admin_service(hass, DOMAIN, SERVICE_RELOAD, _reload_config)
+    async_setup_services(hass)
 
     return True
 
@@ -609,7 +422,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 @websocket_api.websocket_command(
-    {vol.Required("type"): "mqtt/device/debug_info", vol.Required("device_id"): str}
+    {
+        probatio.Required("type"): "mqtt/device/debug_info",
+        probatio.Required("device_id"): str,
+    }
 )
 @callback
 def websocket_mqtt_info(
@@ -624,9 +440,9 @@ def websocket_mqtt_info(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "mqtt/subscribe",
-        vol.Required("topic"): valid_subscribe_topic,
-        vol.Optional("qos"): valid_qos_schema,
+        probatio.Required("type"): "mqtt/subscribe",
+        probatio.Required("topic"): valid_subscribe_topic,
+        probatio.Optional("qos"): valid_qos_schema,
     }
 )
 @websocket_api.async_response
@@ -689,7 +505,7 @@ def is_connected(hass: HomeAssistant) -> bool:
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: DeviceEntry
+    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: AnyDeviceEntry
 ) -> bool:
     """Remove MQTT config entry from a device."""
     from . import device_automation  # noqa: PLC0415
@@ -730,6 +546,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         mqtt_data.subscriptions_to_restore = subscriptions
 
     # Remove repair issues
-    _async_remove_mqtt_issues(hass, mqtt_data)
+    async_remove_mqtt_issues(hass, mqtt_data)
 
     return True

@@ -46,8 +46,8 @@
       <EntityStateAttribute.ICON: 'icon'>: 'mdi:car',
       <DeviceTrackerEntityStateAttribute.IN_ZONES: 'in_zones'>: list([
       ]),
-      <TrackerEntityStateAttribute.LATITUDE: 'latitude'>: 50.1109221,
-      <TrackerEntityStateAttribute.LONGITUDE: 'longitude'>: 8.6821267,
+      <EntityStateAttribute.LATITUDE: 'latitude'>: 50.1109221,
+      <EntityStateAttribute.LONGITUDE: 'longitude'>: 8.6821267,
       <DeviceTrackerEntityStateAttribute.SOURCE_TYPE: 'source_type'>: <SourceType.GPS: 'gps'>,
       <DeviceTrackerEntityCapabilityAttribute.TRACKING_TYPE: 'tracking_type'>: <TrackingType.POSITION: 'position'>,
     }),

@@ -2,7 +2,7 @@
 
 from typing import cast
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.device_automation import InvalidDeviceAutomationConfig
 from homeassistant.config_entries import ConfigEntryState
@@ -18,7 +18,7 @@ ACTION_TYPES = {cmd.replace(".", "_") for cmd in INTEGRATION_SUPPORTED_COMMANDS}
 
 ACTION_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_TYPE): vol.In(ACTION_TYPES),
+        probatio.Required(CONF_TYPE): probatio.In(ACTION_TYPES),
     }
 )
 
@@ -70,7 +70,9 @@ def _get_runtime_data_from_device_id(
 ) -> NutRuntimeData | None:
     """Find the runtime data for device ID and return None on error."""
     device_registry = dr.async_get(hass)
-    if (device := device_registry.async_get(device_id)) is None:
+    if (
+        device := device_registry.async_get(device_id, include_child_devices=False)
+    ) is None:
         return None
     return _get_runtime_data_for_device(hass, device)
 
@@ -79,15 +81,15 @@ def _get_runtime_data_for_device(
     hass: HomeAssistant, device: dr.DeviceEntry
 ) -> NutRuntimeData | None:
     """Find the runtime data for device and return None on error."""
-    for config_entry_id in device.config_entries:
-        entry = hass.config_entries.async_get_entry(config_entry_id)
-        if (
-            entry
-            and entry.domain == DOMAIN
-            and entry.state is ConfigEntryState.LOADED
-            and hasattr(entry, "runtime_data")
-        ):
-            return cast(NutConfigEntry, entry).runtime_data
+    _, config_entry = dr.async_get_device_and_config_entry_for_domain(
+        hass, device.id, domain=DOMAIN
+    )
+    if (
+        config_entry
+        and config_entry.state is ConfigEntryState.LOADED
+        and hasattr(config_entry, "runtime_data")
+    ):
+        return cast(NutConfigEntry, config_entry).runtime_data
 
     return None
 
@@ -98,7 +100,9 @@ def _get_runtime_data_from_device_id_exception_on_failure(
 ) -> NutRuntimeData | None:
     """Find the runtime data for device ID and raise exception on error."""
     device_registry = dr.async_get(hass)
-    if (device := device_registry.async_get(device_id)) is None:
+    if (
+        device := device_registry.async_get(device_id, include_child_devices=False)
+    ) is None:
         raise InvalidDeviceAutomationConfig(
             translation_domain=DOMAIN,
             translation_key="device_not_found",

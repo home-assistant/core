@@ -12,3 +12,8 @@ PATH_HASPH = f"{PATH_PREFIX}hasPH"
 PATH_HASRX = f"{PATH_PREFIX}hasRX"
 PATH_HASUV = f"{PATH_PREFIX}hasUV"
 PATH_HASHIDRO = f"{PATH_PREFIX}hasHidro"
+
+SIGNAL_NEW_POOL = f"{DOMAIN}_new_pool"
+
+# Chlorine production rate of the cell; Home Assistant has no mass-flow unit yet.
+GRAMS_PER_HOUR = "g/h"

@@ -1,18 +1,23 @@
 """Support for Hydrawise cloud."""
 
-from pydrawise import auth, hybrid
+from collections.abc import Iterable
+
+from pydrawise import Controller, auth, hybrid
 
 from homeassistant.const import CONF_API_KEY, CONF_PASSWORD, CONF_USERNAME, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers.typing import ConfigType
 
-from .const import APP_ID
+from .const import APP_ID, DOMAIN, MANUFACTURER
 from .coordinator import (
     HydrawiseConfigEntry,
     HydrawiseMainDataUpdateCoordinator,
     HydrawiseUpdateCoordinators,
     HydrawiseWaterUseDataUpdateCoordinator,
 )
+from .services import async_setup_services
 
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
@@ -22,6 +27,15 @@ PLATFORMS: list[Platform] = [
 ]
 
 _REQUIRED_AUTH_KEYS = (CONF_USERNAME, CONF_PASSWORD, CONF_API_KEY)
+
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Hunter Hydrawise integration."""
+    async_setup_services(hass)
+    return True
 
 
 async def async_setup_entry(
@@ -46,6 +60,36 @@ async def async_setup_entry(
     water_use_coordinator = HydrawiseWaterUseDataUpdateCoordinator(
         hass, config_entry, hydrawise, main_coordinator
     )
+
+    device_registry = dr.async_get(hass)
+
+    @callback
+    def _async_register_controller_devices(controllers: Iterable[Controller]) -> None:
+        """Register controller devices so children can resolve via_device_id.
+
+        Runs as the first new-controller callback so via_device parents are
+        registered before the new-zone callbacks construct zone entities that
+        resolve their via_device_id. Registration must not run before
+        _add_remove_zones computes the previous controllers, or newly discovered
+        controllers would be treated as already-known and their controller-level
+        entities would never be added.
+        """
+        for controller in controllers:
+            device_registry.async_get_or_create(
+                config_entry_id=config_entry.entry_id,
+                identifiers={(DOMAIN, str(controller.id))},
+                manufacturer=MANUFACTURER,
+                model=controller.hardware.model.description,
+                name=controller.name,
+            )
+
+    # Register the controllers known at setup before the platforms construct
+    # their entities.
+    _async_register_controller_devices(main_coordinator.data.controllers.values())
+    main_coordinator.new_controllers_callbacks.append(
+        _async_register_controller_devices
+    )
+
     # async_track_zones is registered first on water_use_coordinator,
     # so the water-use coordinator's data is in sync before
     # callbacks below construct entities for newly added zones.

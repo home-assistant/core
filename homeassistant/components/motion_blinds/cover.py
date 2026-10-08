@@ -4,7 +4,6 @@ import logging
 from typing import Any, override
 
 from motionblinds import BlindType
-import voluptuous as vol
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
@@ -14,16 +13,13 @@ from homeassistant.components.cover import (
     CoverEntityFeature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.typing import VolDictType
 
 from .const import (
     ATTR_ABSOLUTE_POSITION,
     ATTR_AVAILABLE,
     ATTR_WIDTH,
     KEY_GATEWAY,
-    SERVICE_SET_ABSOLUTE_POSITION,
     UPDATE_DELAY_STOP,
 )
 from .coordinator import MotionBlindsConfigEntry
@@ -68,13 +64,6 @@ TILT_ONLY_DEVICE_MAP = {
 TDBU_DEVICE_MAP = {
     BlindType.TopDownBottomUp: CoverDeviceClass.SHADE,
     BlindType.TriangleBlind: CoverDeviceClass.BLIND,
-}
-
-
-SET_ABSOLUTE_POSITION_SCHEMA: VolDictType = {
-    vol.Required(ATTR_ABSOLUTE_POSITION): vol.All(cv.positive_int, vol.Range(max=100)),
-    vol.Optional(ATTR_TILT_POSITION): vol.All(cv.positive_int, vol.Range(max=100)),
-    vol.Optional(ATTR_WIDTH): vol.All(cv.positive_int, vol.Range(max=100)),
 }
 
 
@@ -156,13 +145,6 @@ async def async_setup_entry(
             )
 
     async_add_entities(entities)
-
-    platform = entity_platform.async_get_current_platform()
-    platform.async_register_entity_service(
-        SERVICE_SET_ABSOLUTE_POSITION,
-        SET_ABSOLUTE_POSITION_SCHEMA,
-        "async_set_absolute_position",
-    )
 
 
 class MotionBaseDevice(MotionCoordinatorEntity, CoverEntity):

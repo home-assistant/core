@@ -3,6 +3,8 @@
 import copy
 from unittest.mock import AsyncMock
 
+import aiohttp
+from freezegun.api import FrozenDateTimeFactory
 from lunatone_rest_api_client.models import LineStatus
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -23,6 +25,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
@@ -35,6 +38,7 @@ async def test_setup(
     mock_lunatone_info: AsyncMock,
     mock_lunatone_devices: AsyncMock,
     mock_lunatone_sensors: AsyncMock,
+    mock_lunatone_scan: AsyncMock,
     mock_config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
@@ -56,6 +60,7 @@ async def test_turn_on_off(
     mock_lunatone_info: AsyncMock,
     mock_lunatone_devices: AsyncMock,
     mock_lunatone_sensors: AsyncMock,
+    mock_lunatone_scan: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test the light can be turned on and off."""
@@ -93,11 +98,54 @@ async def test_turn_on_off(
     assert state.state == STATE_OFF
 
 
+async def test_turn_on_off_with_connection_error(
+    hass: HomeAssistant,
+    mock_lunatone_info: AsyncMock,
+    mock_lunatone_devices: AsyncMock,
+    mock_lunatone_sensors: AsyncMock,
+    mock_lunatone_scan: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a connection error is raised while turning on and off the light."""
+    device_id = 1
+    entity_id = f"light.device_{device_id}"
+
+    await setup_integration(hass, mock_config_entry)
+
+    device = mock_config_entry.runtime_data.coordinator_devices.data[0][device_id]
+    device.switch_on.side_effect = aiohttp.ClientConnectionError()
+
+    with pytest.raises(
+        HomeAssistantError,
+        match=f"Unable to connect to the device and turn on {entity_id}",
+    ):
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 128},
+            blocking=True,
+        )
+
+    device.switch_off.side_effect = aiohttp.ClientConnectionError()
+
+    with pytest.raises(
+        HomeAssistantError,
+        match=f"Unable to connect to the device and turn off {entity_id}",
+    ):
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+
+
 async def test_turn_on_off_with_brightness(
     hass: HomeAssistant,
     mock_lunatone_info: AsyncMock,
     mock_lunatone_devices: AsyncMock,
     mock_lunatone_sensors: AsyncMock,
+    mock_lunatone_scan: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test the light can be turned on with brightness."""
@@ -158,13 +206,25 @@ async def test_turn_on_off_broadcast(
     mock_lunatone_info: AsyncMock,
     mock_lunatone_devices: AsyncMock,
     mock_lunatone_sensors: AsyncMock,
+    mock_lunatone_scan: AsyncMock,
     mock_lunatone_dali_broadcast: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test the broadcast light can be turned on and off."""
-    entity_id = f"light.dali_line_{mock_lunatone_dali_broadcast.line}"
+    line_id = mock_lunatone_dali_broadcast.line
+    entity_id = f"light.dali_line_{line_id}"
+    light_status = iter((True, True, False))
 
     await setup_integration(hass, mock_config_entry)
+
+    async def fake_update():
+        status = next(light_status)
+        for device in mock_lunatone_devices.data.devices:
+            device.features.switchable.status = (
+                status if device.line == line_id else True
+            )
+
+    mock_lunatone_devices.async_update.side_effect = fake_update
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -175,6 +235,10 @@ async def test_turn_on_off_broadcast(
 
     assert mock_lunatone_dali_broadcast.fade_to_brightness.await_count == 1
     mock_lunatone_dali_broadcast.fade_to_brightness.assert_awaited()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "on"
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -196,23 +260,76 @@ async def test_turn_on_off_broadcast(
     assert mock_lunatone_dali_broadcast.fade_to_brightness.await_count == 3
     mock_lunatone_dali_broadcast.fade_to_brightness.assert_awaited()
 
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "off"
+
+
+async def test_turn_on_off_broadcast_with_connection_error(
+    hass: HomeAssistant,
+    mock_lunatone_info: AsyncMock,
+    mock_lunatone_devices: AsyncMock,
+    mock_lunatone_sensors: AsyncMock,
+    mock_lunatone_scan: AsyncMock,
+    mock_lunatone_dali_broadcast: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a connection error is raised while turning on and off the broadcast light."""
+    line_id = mock_lunatone_dali_broadcast.line
+    entity_id = f"light.dali_line_{line_id}"
+
+    await setup_integration(hass, mock_config_entry)
+
+    mock_lunatone_dali_broadcast.fade_to_brightness.side_effect = (
+        aiohttp.ClientConnectionError()
+    )
+
+    with pytest.raises(
+        HomeAssistantError,
+        match=f"Unable to connect to the device and turn on {entity_id}",
+    ):
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 128},
+            blocking=True,
+        )
+
+    mock_lunatone_dali_broadcast.fade_to_brightness.side_effect = (
+        aiohttp.ClientConnectionError()
+    )
+
+    with pytest.raises(
+        HomeAssistantError,
+        match=f"Unable to connect to the device and turn off {entity_id}",
+    ):
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+
 
 async def test_line_broadcast_available_status(
     hass: HomeAssistant,
     mock_lunatone_info: AsyncMock,
     mock_lunatone_devices: AsyncMock,
     mock_lunatone_sensors: AsyncMock,
+    mock_lunatone_scan: AsyncMock,
     mock_lunatone_dali_broadcast: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test if the broadcast light is available."""
-    entity_id = f"light.dali_line_{mock_lunatone_dali_broadcast.line}"
+    line_id = str(mock_lunatone_dali_broadcast.line)
+    entity_id = f"light.dali_line_{line_id}"
 
     await setup_integration(hass, mock_config_entry)
 
     async def fake_update():
         info_data = copy.deepcopy(mock_lunatone_info.data)
-        info_data.lines["0"].line_status = LineStatus.NOT_REACHABLE
+        info_data.lines[line_id].line_status = LineStatus.NOT_REACHABLE
         mock_lunatone_info.data = info_data
 
     mock_lunatone_info.async_update.side_effect = fake_update
@@ -229,22 +346,6 @@ async def test_line_broadcast_available_status(
     assert state.state == "unavailable"
 
 
-async def test_line_broadcast_line_present(
-    hass: HomeAssistant,
-    mock_lunatone_info: AsyncMock,
-    mock_lunatone_devices: AsyncMock,
-    mock_lunatone_sensors: AsyncMock,
-    mock_lunatone_dali_broadcast: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test if the broadcast light line is present."""
-    mock_lunatone_dali_broadcast.line = None
-
-    await setup_integration(hass, mock_config_entry)
-
-    assert not hass.states.async_entity_ids("light")
-
-
 @pytest.mark.parametrize(
     "color_temp_kelvin",
     [10000, 5000, 1000],
@@ -254,6 +355,7 @@ async def test_turn_on_with_color_temperature(
     mock_lunatone_info: AsyncMock,
     mock_lunatone_devices: AsyncMock,
     mock_lunatone_sensors: AsyncMock,
+    mock_lunatone_scan: AsyncMock,
     mock_config_entry: MockConfigEntry,
     color_temp_kelvin: int,
 ) -> None:
@@ -294,6 +396,7 @@ async def test_turn_on_with_rgb_color(
     mock_lunatone_info: AsyncMock,
     mock_lunatone_devices: AsyncMock,
     mock_lunatone_sensors: AsyncMock,
+    mock_lunatone_scan: AsyncMock,
     mock_config_entry: MockConfigEntry,
     rgb_color: tuple[int, int, int],
 ) -> None:
@@ -336,6 +439,7 @@ async def test_turn_on_with_rgbw_color(
     mock_lunatone_info: AsyncMock,
     mock_lunatone_devices: AsyncMock,
     mock_lunatone_sensors: AsyncMock,
+    mock_lunatone_scan: AsyncMock,
     mock_config_entry: MockConfigEntry,
     rgbw_color: tuple[int, int, int, int],
 ) -> None:

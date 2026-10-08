@@ -1,6 +1,6 @@
 """Test media source helpers."""
 
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -11,7 +11,7 @@ from homeassistant.components.media_player import (
     SearchMediaQuery,
 )
 from homeassistant.components.media_source import const, models
-from homeassistant.components.media_source.const import MEDIA_SOURCE_DATA
+from homeassistant.components.media_source.const import DATA_MEDIA_SOURCE_PLATFORMS
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -25,7 +25,7 @@ async def test_async_browse_media(hass: HomeAssistant) -> None:
     media = await media_source.async_browse_media(hass, "")
     assert isinstance(media, media_source.models.BrowseMediaSource)
     assert media.title == "media"
-    assert len(media.children) == 2
+    assert len(media.children) == 3
 
     # Test content filter
     media = await media_source.async_browse_media(
@@ -37,7 +37,7 @@ async def test_async_browse_media(hass: HomeAssistant) -> None:
     assert media.title == "media"
     assert len(media.children) == 1, media.children
     media.children[0].title = "Epic Sax Guy 10 Hours"
-    assert media.not_shown == 1
+    assert media.not_shown == 2
 
     # Test content filter adds to original not_shown
     orig_browse = models.MediaSourceItem.async_browse
@@ -61,7 +61,7 @@ async def test_async_browse_media(hass: HomeAssistant) -> None:
     assert media.title == "media"
     assert len(media.children) == 1, media.children
     media.children[0].title = "Epic Sax Guy 10 Hours"
-    assert media.not_shown == 11
+    assert media.not_shown == 12
 
     # Test invalid media content
     with pytest.raises(BrowseError):
@@ -125,18 +125,18 @@ async def test_async_unresolve_media(hass: HomeAssistant) -> None:
         )
 
 
-async def test_browse_resolve_without_setup() -> None:
+async def test_browse_resolve_without_setup(hass: HomeAssistant) -> None:
     """Test browse and resolve work without being setup."""
     with pytest.raises(BrowseError):
-        await media_source.async_browse_media(Mock(data={}), None)
+        await media_source.async_browse_media(hass, None)
 
     with pytest.raises(BrowseError):
         await media_source.async_search_media(
-            Mock(data={}), None, SearchMediaQuery(search_query="test")
+            hass, None, SearchMediaQuery(search_query="test")
         )
 
     with pytest.raises(media_source.Unresolvable):
-        await media_source.async_resolve_media(Mock(data={}), None, None)
+        await media_source.async_resolve_media(hass, None, None)
 
 
 async def test_async_search_media(hass: HomeAssistant) -> None:
@@ -166,7 +166,11 @@ async def test_async_search_media(hass: HomeAssistant) -> None:
 
 async def test_async_search_media_not_supported(hass: HomeAssistant) -> None:
     """Test searching a source without search support raises a BrowseError."""
-    hass.data[MEDIA_SOURCE_DATA] = {"plain": models.MediaSource("plain")}
+    assert await async_setup_component(hass, media_source.DOMAIN, {})
+    await hass.async_block_till_done()
+    hass.data[DATA_MEDIA_SOURCE_PLATFORMS].async_get_platform = AsyncMock(
+        return_value=models.MediaSource("plain")
+    )
 
     with pytest.raises(BrowseError):
         await media_source.async_search_media(
@@ -178,10 +182,11 @@ async def test_async_search_media_not_supported(hass: HomeAssistant) -> None:
 
 async def test_async_search_media_root_not_supported(hass: HomeAssistant) -> None:
     """Test searching the aggregate root of multiple sources is not supported."""
-    hass.data[MEDIA_SOURCE_DATA] = {
-        "source_a": models.MediaSource("source_a"),
-        "source_b": models.MediaSource("source_b"),
-    }
+    assert await async_setup_component(hass, media_source.DOMAIN, {})
+    await hass.async_block_till_done()
+    hass.data[DATA_MEDIA_SOURCE_PLATFORMS].async_get_platforms = AsyncMock(
+        return_value={"source_a": models.MediaSource("source_a")}
+    )
 
     with pytest.raises(BrowseError):
         await media_source.async_search_media(

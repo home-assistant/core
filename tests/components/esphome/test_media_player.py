@@ -5,12 +5,14 @@ from unittest.mock import AsyncMock, Mock, call, patch
 from aioesphomeapi import (
     APIClient,
     MediaPlayerCommand,
+    MediaPlayerEntityFeature as EspMediaPlayerEntityFeature,
     MediaPlayerEntityState,
     MediaPlayerFormatPurpose,
     MediaPlayerInfo,
     MediaPlayerState,
     MediaPlayerSupportedFormat,
     UserService,
+    build_device_unique_id,
 )
 import pytest
 
@@ -19,32 +21,52 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_ANNOUNCE,
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
+    ATTR_MEDIA_ENQUEUE,
     ATTR_MEDIA_EXTRA,
+    ATTR_MEDIA_REPEAT,
+    ATTR_MEDIA_SEARCH_QUERY,
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
+    SERVICE_CLEAR_PLAYLIST,
     SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_PLAY,
     SERVICE_MEDIA_STOP,
     SERVICE_PLAY_MEDIA,
+    SERVICE_REPEAT_SET,
+    SERVICE_SEARCH_MEDIA,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    SERVICE_VOLUME_DOWN,
     SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_SET,
+    SERVICE_VOLUME_UP,
     STATE_PLAYING,
     BrowseMedia,
     MediaClass,
+    MediaPlayerEnqueue,
+    MediaPlayerEntityFeature,
     MediaType,
+    RepeatMode,
 )
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.exceptions import ServiceNotSupported, ServiceValidationError
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from .conftest import MockESPHomeDeviceType, MockGenericDeviceEntryType
+from .conftest import (
+    MockESPHomeDeviceType,
+    MockGenericDeviceEntryType,
+    reconnect_with_updated_entity_info,
+)
 
 from tests.common import mock_platform
 from tests.typing import WebSocketGenerator
+
+# PLAY_MEDIA,BROWSE_MEDIA,STOP,VOLUME_SET,
+# VOLUME_MUTE,MEDIA_ANNOUNCE,PAUSE,PLAY
+PROXY_FEATURE_FLAGS = 1200653
 
 
 async def test_media_player_entity(
@@ -270,6 +292,368 @@ async def test_media_player_entity_with_undefined_flags(
     )
 
 
+async def test_media_player_entity_ignores_search_media_flag(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
+) -> None:
+    """Test that the SEARCH_MEDIA flag from the device is not exposed."""
+    entity_info = [
+        MediaPlayerInfo(
+            object_id="mymedia_player",
+            key=1,
+            name="my media_player",
+            supports_pause=True,
+            # PAUSE,PLAY,SEARCH_MEDIA
+            feature_flags=4210689,
+        )
+    ]
+    states = [
+        MediaPlayerEntityState(
+            key=1, volume=50, muted=False, state=MediaPlayerState.PLAYING
+        )
+    ]
+    await mock_generic_device_entry(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        states=states,
+    )
+    state = hass.states.get("media_player.test_my_media_player")
+    assert state is not None
+    assert state.attributes["supported_features"] == (
+        MediaPlayerEntityFeature.PAUSE | MediaPlayerEntityFeature.PLAY
+    )
+
+    with pytest.raises(ServiceNotSupported):
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_SEARCH_MEDIA,
+            {
+                ATTR_ENTITY_ID: "media_player.test_my_media_player",
+                ATTR_MEDIA_SEARCH_QUERY: "music",
+            },
+            blocking=True,
+            return_response=True,
+        )
+
+
+async def test_media_player_entity_ignores_flags_without_command(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
+) -> None:
+    """Test that device flags without a native API command are not exposed."""
+    entity_info = [
+        MediaPlayerInfo(
+            object_id="mymedia_player",
+            key=1,
+            name="my media_player",
+            feature_flags=(
+                EspMediaPlayerEntityFeature.PAUSE
+                | EspMediaPlayerEntityFeature.PLAY
+                | EspMediaPlayerEntityFeature.VOLUME_STEP
+                | EspMediaPlayerEntityFeature.CLEAR_PLAYLIST
+                | EspMediaPlayerEntityFeature.REPEAT_SET
+                | EspMediaPlayerEntityFeature.MEDIA_ENQUEUE
+                | EspMediaPlayerEntityFeature.SEEK
+                | EspMediaPlayerEntityFeature.PREVIOUS_TRACK
+                | EspMediaPlayerEntityFeature.NEXT_TRACK
+                | EspMediaPlayerEntityFeature.SELECT_SOURCE
+                | EspMediaPlayerEntityFeature.SELECT_SOUND_MODE
+                | EspMediaPlayerEntityFeature.SHUFFLE_SET
+                | EspMediaPlayerEntityFeature.GROUPING
+            ),
+        )
+    ]
+    states = [
+        MediaPlayerEntityState(
+            key=1, volume=50, muted=False, state=MediaPlayerState.PLAYING
+        )
+    ]
+    await mock_generic_device_entry(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        states=states,
+    )
+    state = hass.states.get("media_player.test_my_media_player")
+    assert state is not None
+    assert state.attributes["supported_features"] == (
+        MediaPlayerEntityFeature.PAUSE
+        | MediaPlayerEntityFeature.PLAY
+        | MediaPlayerEntityFeature.VOLUME_STEP
+        | MediaPlayerEntityFeature.CLEAR_PLAYLIST
+        | MediaPlayerEntityFeature.REPEAT_SET
+        | MediaPlayerEntityFeature.MEDIA_ENQUEUE
+    )
+
+
+@pytest.mark.parametrize(
+    ("service", "service_data", "command"),
+    [
+        pytest.param(
+            SERVICE_CLEAR_PLAYLIST,
+            {},
+            MediaPlayerCommand.CLEAR_PLAYLIST,
+            id="clear_playlist",
+        ),
+        pytest.param(
+            SERVICE_REPEAT_SET,
+            {ATTR_MEDIA_REPEAT: RepeatMode.ONE},
+            MediaPlayerCommand.REPEAT_ONE,
+            id="repeat_one",
+        ),
+        pytest.param(
+            SERVICE_REPEAT_SET,
+            {ATTR_MEDIA_REPEAT: RepeatMode.OFF},
+            MediaPlayerCommand.REPEAT_OFF,
+            id="repeat_off",
+        ),
+        pytest.param(
+            SERVICE_VOLUME_UP,
+            {},
+            MediaPlayerCommand.VOLUME_UP,
+            id="volume_up",
+        ),
+        pytest.param(
+            SERVICE_VOLUME_DOWN,
+            {},
+            MediaPlayerCommand.VOLUME_DOWN,
+            id="volume_down",
+        ),
+    ],
+)
+async def test_media_player_playlist_commands(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
+    service: str,
+    service_data: dict[str, str],
+    command: MediaPlayerCommand,
+) -> None:
+    """Test the clear playlist, repeat and volume step commands."""
+    entity_info = [
+        MediaPlayerInfo(
+            object_id="mymedia_player",
+            key=1,
+            name="my media_player",
+            feature_flags=(
+                EspMediaPlayerEntityFeature.CLEAR_PLAYLIST
+                | EspMediaPlayerEntityFeature.REPEAT_SET
+                | EspMediaPlayerEntityFeature.VOLUME_STEP
+            ),
+        )
+    ]
+    states = [
+        MediaPlayerEntityState(
+            key=1, volume=50, muted=False, state=MediaPlayerState.PLAYING
+        )
+    ]
+    await mock_generic_device_entry(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        states=states,
+    )
+
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        service,
+        {ATTR_ENTITY_ID: "media_player.test_my_media_player", **service_data},
+        blocking=True,
+    )
+    mock_client.media_player_command.assert_called_once_with(
+        1, command=command, device_id=0
+    )
+
+
+@pytest.mark.parametrize("repeat", [RepeatMode.ONE, RepeatMode.OFF])
+async def test_media_player_repeat_state(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
+    repeat: RepeatMode,
+) -> None:
+    """Test that the repeat mode is kept after it is set."""
+    entity_info = [
+        MediaPlayerInfo(
+            object_id="mymedia_player",
+            key=1,
+            name="my media_player",
+            feature_flags=EspMediaPlayerEntityFeature.REPEAT_SET,
+        )
+    ]
+    states = [
+        MediaPlayerEntityState(
+            key=1, volume=50, muted=False, state=MediaPlayerState.PLAYING
+        )
+    ]
+    await mock_generic_device_entry(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        states=states,
+    )
+
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_REPEAT_SET,
+        {
+            ATTR_ENTITY_ID: "media_player.test_my_media_player",
+            ATTR_MEDIA_REPEAT: repeat,
+        },
+        blocking=True,
+    )
+    state = hass.states.get("media_player.test_my_media_player")
+    assert state is not None
+    assert state.attributes[ATTR_MEDIA_REPEAT] == repeat
+
+
+async def test_media_player_repeat_all_not_supported(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
+) -> None:
+    """Test that repeat mode all raises an error."""
+    entity_info = [
+        MediaPlayerInfo(
+            object_id="mymedia_player",
+            key=1,
+            name="my media_player",
+            feature_flags=EspMediaPlayerEntityFeature.REPEAT_SET,
+        )
+    ]
+    states = [
+        MediaPlayerEntityState(
+            key=1, volume=50, muted=False, state=MediaPlayerState.PLAYING
+        )
+    ]
+    await mock_generic_device_entry(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        states=states,
+    )
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_REPEAT_SET,
+            {
+                ATTR_ENTITY_ID: "media_player.test_my_media_player",
+                ATTR_MEDIA_REPEAT: RepeatMode.ALL,
+            },
+            blocking=True,
+        )
+    assert exc_info.value.translation_key == "repeat_mode_not_supported"
+    mock_client.media_player_command.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    ("enqueue", "command"),
+    [
+        pytest.param(MediaPlayerEnqueue.ADD, MediaPlayerCommand.ENQUEUE, id="add"),
+        pytest.param(MediaPlayerEnqueue.REPLACE, None, id="replace"),
+    ],
+)
+async def test_media_player_play_media_enqueue(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
+    enqueue: MediaPlayerEnqueue,
+    command: MediaPlayerCommand | None,
+) -> None:
+    """Test that only the add enqueue mode sends the enqueue command."""
+    entity_info = [
+        MediaPlayerInfo(
+            object_id="mymedia_player",
+            key=1,
+            name="my media_player",
+            feature_flags=(
+                EspMediaPlayerEntityFeature.PLAY_MEDIA
+                | EspMediaPlayerEntityFeature.MEDIA_ENQUEUE
+            ),
+        )
+    ]
+    states = [
+        MediaPlayerEntityState(
+            key=1, volume=50, muted=False, state=MediaPlayerState.PLAYING
+        )
+    ]
+    await mock_generic_device_entry(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        states=states,
+    )
+
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_PLAY_MEDIA,
+        {
+            ATTR_ENTITY_ID: "media_player.test_my_media_player",
+            ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
+            ATTR_MEDIA_CONTENT_ID: "http://www.example.com/xy.mp3",
+            ATTR_MEDIA_ENQUEUE: enqueue,
+        },
+        blocking=True,
+    )
+    mock_client.media_player_command.assert_called_once_with(
+        1,
+        command=command,
+        media_url="http://www.example.com/xy.mp3",
+        announcement=None,
+        device_id=0,
+    )
+
+
+@pytest.mark.parametrize(
+    "enqueue",
+    [
+        pytest.param(MediaPlayerEnqueue.NEXT, id="next"),
+        pytest.param(MediaPlayerEnqueue.PLAY, id="play"),
+    ],
+)
+async def test_media_player_play_media_enqueue_not_supported(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
+    enqueue: MediaPlayerEnqueue,
+) -> None:
+    """Test that enqueue modes the device cannot follow raise an error."""
+    entity_info = [
+        MediaPlayerInfo(
+            object_id="mymedia_player",
+            key=1,
+            name="my media_player",
+            feature_flags=(
+                EspMediaPlayerEntityFeature.PLAY_MEDIA
+                | EspMediaPlayerEntityFeature.MEDIA_ENQUEUE
+            ),
+        )
+    ]
+    states = [
+        MediaPlayerEntityState(
+            key=1, volume=50, muted=False, state=MediaPlayerState.PLAYING
+        )
+    ]
+    await mock_generic_device_entry(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        states=states,
+    )
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: "media_player.test_my_media_player",
+                ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
+                ATTR_MEDIA_CONTENT_ID: "http://www.example.com/xy.mp3",
+                ATTR_MEDIA_ENQUEUE: enqueue,
+            },
+            blocking=True,
+        )
+    assert exc_info.value.translation_key == "enqueue_mode_not_supported"
+    mock_client.media_player_command.assert_not_called()
+
+
 async def test_media_player_entity_with_source(
     hass: HomeAssistant,
     mock_client: APIClient,
@@ -316,9 +700,7 @@ async def test_media_player_entity_with_source(
             key=1,
             name="my media_player",
             supports_pause=True,
-            # PLAY_MEDIA,BROWSE_MEDIA,STOP,VOLUME_SET,
-            # VOLUME_MUTE,MEDIA_ANNOUNCE,PAUSE,PLAY
-            feature_flags=1200653,
+            feature_flags=PROXY_FEATURE_FLAGS,
         )
     ]
     states = [
@@ -377,6 +759,7 @@ async def test_media_player_entity_with_source(
         [
             call(
                 1,
+                command=None,
                 media_url="http://www.example.com/xy.mp3",
                 announcement=None,
                 device_id=0,
@@ -411,6 +794,7 @@ async def test_media_player_entity_with_source(
         [
             call(
                 1,
+                command=None,
                 media_url="media-source://tts?message=hello",
                 announcement=True,
                 device_id=0,
@@ -434,9 +818,7 @@ async def test_media_player_proxy(
                 key=1,
                 name="my media_player",
                 supports_pause=True,
-                # PLAY_MEDIA,BROWSE_MEDIA,STOP,VOLUME_SET,
-                # VOLUME_MUTE,MEDIA_ANNOUNCE,PAUSE,PLAY
-                feature_flags=1200653,
+                feature_flags=PROXY_FEATURE_FLAGS,
                 supported_formats=[
                     MediaPlayerSupportedFormat(
                         format="flac",
@@ -468,8 +850,9 @@ async def test_media_player_proxy(
         ],
     )
     await hass.async_block_till_done()
-    dev = device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, mock_device.entry.unique_id)}
+    dev = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, mock_device.entry.unique_id),
+        mock_device.entry.entry_id,
     )
     assert dev is not None
     state = hass.states.get("media_player.test_my_media_player")
@@ -595,9 +978,7 @@ async def test_media_player_formats_reload_preserves_data(
                 key=1,
                 name="Test Media Player",
                 supports_pause=True,
-                # PLAY_MEDIA,BROWSE_MEDIA,STOP,VOLUME_SET,
-                # VOLUME_MUTE,MEDIA_ANNOUNCE,PAUSE,PLAY
-                feature_flags=1200653,
+                feature_flags=PROXY_FEATURE_FLAGS,
                 supported_formats=supported_formats,
             )
         ],
@@ -666,3 +1047,227 @@ async def test_media_player_formats_reload_preserves_data(
         ".wav" in call_args.kwargs["media_url"]
     )  # Should use wav format for announcement
     assert call_args.kwargs["announcement"] is True
+
+
+async def test_media_player_formats_survive_rekey_onto_removed_entity_key(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test formats survive an entity taking over a removed entity's key.
+
+    The removed media player briefly receives the surviving entity's
+    info through the shared key before its teardown runs, so its
+    cleanup must not delete the surviving entity's formats.
+    """
+    formats_one = [
+        MediaPlayerSupportedFormat(
+            format="mp3",
+            sample_rate=48000,
+            num_channels=2,
+            purpose=MediaPlayerFormatPurpose.DEFAULT,
+        ),
+    ]
+    formats_two = [
+        MediaPlayerSupportedFormat(
+            format="wav",
+            sample_rate=16000,
+            num_channels=1,
+            purpose=MediaPlayerFormatPurpose.ANNOUNCEMENT,
+            sample_bytes=2,
+        ),
+    ]
+    entity_info = [
+        MediaPlayerInfo(
+            object_id="player_one",
+            key=1,
+            name="Player One",
+            supports_pause=True,
+            feature_flags=PROXY_FEATURE_FLAGS,
+            supported_formats=formats_one,
+        ),
+        MediaPlayerInfo(
+            object_id="player_two",
+            key=2,
+            name="Player Two",
+            supports_pause=True,
+            supported_formats=formats_two,
+        ),
+    ]
+    states = [
+        MediaPlayerEntityState(
+            key=1, volume=50, muted=False, state=MediaPlayerState.IDLE
+        ),
+        MediaPlayerEntityState(
+            key=2, volume=50, muted=False, state=MediaPlayerState.IDLE
+        ),
+    ]
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        states=states,
+    )
+    await hass.async_block_till_done()
+
+    mac = device.device_info.mac_address
+    unique_id_one = build_device_unique_id(mac, entity_info[0])
+    unique_id_two = build_device_unique_id(mac, entity_info[1])
+
+    # Player One takes over Player Two's key, Player Two is removed
+    updated_entity_info = [
+        MediaPlayerInfo(
+            object_id="player_one",
+            key=2,
+            name="Player One",
+            supports_pause=True,
+            feature_flags=PROXY_FEATURE_FLAGS,
+            supported_formats=formats_one,
+        ),
+    ]
+    await reconnect_with_updated_entity_info(
+        hass,
+        device,
+        updated_entity_info,
+        states=[
+            MediaPlayerEntityState(
+                key=2, volume=50, muted=False, state=MediaPlayerState.IDLE
+            )
+        ],
+    )
+
+    assert (
+        entity_registry.async_get_entity_id(
+            MEDIA_PLAYER_DOMAIN, "esphome", unique_id_one
+        )
+        is not None
+    )
+    assert (
+        entity_registry.async_get_entity_id(
+            MEDIA_PLAYER_DOMAIN, "esphome", unique_id_two
+        )
+        is None
+    )
+
+    # The surviving entity's formats must not have been removed by the
+    # removed entity's cleanup: playing media must still use the proxy
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_PLAY_MEDIA,
+        {
+            ATTR_ENTITY_ID: "media_player.test_player_one",
+            ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
+            ATTR_MEDIA_CONTENT_ID: "http://127.0.0.1/test.mp3",
+        },
+        blocking=True,
+    )
+    mock_client.media_player_command.assert_called_once()
+    call_args = mock_client.media_player_command.call_args
+    assert "/api/esphome/ffmpeg_proxy/" in call_args.kwargs["media_url"]
+
+
+async def test_media_player_formats_not_shared_with_sibling_taking_old_name(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test formats are not shared with a player adopting this one's old name.
+
+    After a stable key rename the old name based unique_id is free; a
+    new player claiming it must keep its own formats entry, or its
+    formats would replace the renamed player's.
+    """
+    default_formats = [
+        MediaPlayerSupportedFormat(
+            format="mp3",
+            sample_rate=48000,
+            num_channels=2,
+            purpose=MediaPlayerFormatPurpose.DEFAULT,
+        ),
+    ]
+    announcement_formats = [
+        MediaPlayerSupportedFormat(
+            format="wav",
+            sample_rate=16000,
+            num_channels=1,
+            purpose=MediaPlayerFormatPurpose.ANNOUNCEMENT,
+            sample_bytes=2,
+        ),
+    ]
+    entity_info = [
+        MediaPlayerInfo(
+            object_id="p_one",
+            key=1,
+            name="Alpha",
+            supports_pause=True,
+            feature_flags=PROXY_FEATURE_FLAGS,
+            supported_formats=default_formats,
+        ),
+    ]
+    states = [
+        MediaPlayerEntityState(
+            key=1, volume=50, muted=False, state=MediaPlayerState.IDLE
+        ),
+    ]
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        states=states,
+    )
+    assert hass.states.get("media_player.test_alpha") is not None
+
+    # Rename with a stable key, then a new player with announcement
+    # only formats claims the old name
+    renamed = MediaPlayerInfo(
+        object_id="p_one",
+        key=1,
+        name="Beta",
+        supports_pause=True,
+        feature_flags=PROXY_FEATURE_FLAGS,
+        supported_formats=default_formats,
+    )
+    new_player = MediaPlayerInfo(
+        object_id="alpha",
+        key=2,
+        name="Alpha",
+        supports_pause=True,
+        feature_flags=PROXY_FEATURE_FLAGS,
+        supported_formats=announcement_formats,
+    )
+    await reconnect_with_updated_entity_info(hass, device, [renamed])
+    await reconnect_with_updated_entity_info(hass, device, [renamed, new_player])
+    assert hass.states.get("media_player.test_alpha_2") is not None
+
+    # The renamed player must still use its own default format proxy,
+    # not the new player's announcement only formats
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_PLAY_MEDIA,
+        {
+            ATTR_ENTITY_ID: "media_player.test_alpha",
+            ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
+            ATTR_MEDIA_CONTENT_ID: "http://127.0.0.1/test.mp3",
+        },
+        blocking=True,
+    )
+    mock_client.media_player_command.assert_called_once()
+    call_args = mock_client.media_player_command.call_args
+    assert "/api/esphome/ffmpeg_proxy/" in call_args.kwargs["media_url"]
+    assert ".mp3" in call_args.kwargs["media_url"]
+    mock_client.media_player_command.reset_mock()
+
+    # The new player has no default format, so it must not proxy; a
+    # shared formats entry would hand it the renamed player's mp3
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_PLAY_MEDIA,
+        {
+            ATTR_ENTITY_ID: "media_player.test_alpha_2",
+            ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
+            ATTR_MEDIA_CONTENT_ID: "http://127.0.0.1/test.mp3",
+        },
+        blocking=True,
+    )
+    mock_client.media_player_command.assert_called_once()
+    call_args = mock_client.media_player_command.call_args
+    assert call_args.kwargs["media_url"] == "http://127.0.0.1/test.mp3"

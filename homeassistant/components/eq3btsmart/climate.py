@@ -25,7 +25,6 @@ from homeassistant.const import ATTR_TEMPERATURE, PRECISION_HALVES, UnitOfTemper
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 import homeassistant.util.dt as dt_util
 
@@ -65,7 +64,7 @@ class Eq3Climate(Eq3Entity, ClimateEntity):
         | ClimateEntityFeature.TURN_OFF
         | ClimateEntityFeature.TURN_ON
     )
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_min_temp = EQ3_OFF_TEMP
     _attr_max_temp = EQ3_MAX_TEMP
     _attr_precision = PRECISION_HALVES
@@ -85,8 +84,8 @@ class Eq3Climate(Eq3Entity, ClimateEntity):
 
         self._target_temperature = self._thermostat.status.target_temperature
         self._attr_hvac_mode = EQ_TO_HA_HVAC[self._thermostat.status.operation_mode]
-        self._attr_current_temperature = self._get_current_temperature()
-        self._attr_target_temperature = self._get_target_temperature()
+        self._attr_native_current_temperature = self._get_current_temperature()
+        self._attr_native_target_temperature = self._get_target_temperature()
         self._attr_preset_mode = self._get_current_preset_mode()
         self._attr_hvac_action = self._get_current_hvac_action()
         super()._async_on_status_updated(data)
@@ -96,12 +95,9 @@ class Eq3Climate(Eq3Entity, ClimateEntity):
     def _async_on_device_updated(self, data: Any) -> None:
         """Handle updated device data from the thermostat."""
 
-        device_registry = dr.async_get(self.hass)
-        if device := device_registry.async_get_device(
-            connections={(CONNECTION_BLUETOOTH, self._eq3_config.mac_address)},
-        ):
-            device_registry.async_update_device(
-                device.id,
+        if self.device_entry:
+            dr.async_get(self.hass).async_update_device(
+                self.device_entry.id,
                 sw_version=str(self._thermostat.device_data.firmware_version),
                 serial_number=self._thermostat.device_data.device_serial,
             )

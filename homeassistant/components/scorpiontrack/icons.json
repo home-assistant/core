@@ -1,0 +1,14 @@
+{
+  "entity": {
+    "device_tracker": {
+      "vehicle_location": {
+        "default": "mdi:car"
+      }
+    },
+    "sensor": {
+      "heading": {
+        "default": "mdi:compass"
+      }
+    }
+  }
+}

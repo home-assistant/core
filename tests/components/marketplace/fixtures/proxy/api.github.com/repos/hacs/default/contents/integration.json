@@ -1,0 +1,18 @@
+{
+  "type": "file",
+  "encoding": "base64",
+  "size": 5362,
+  "name": "integration",
+  "path": "integration",
+  "content": "WyJoYWNzLXRlc3Qtb3JnL2ludGVncmF0aW9uLWJhc2ljIiwgImhhY3MtdGVzdC1vcmcvcmVtb3ZlZC1yZXBvc2l0b3J5IiwgImhhY3MtdGVzdC1vcmcvaW50ZWdyYXRpb24tYmFzaWMtY3VzdG9tIl0=",
+  "sha": "3d21ec53a331a6f037a91c368710b99387d012c1",
+  "url": "https://api.github.com/repos/hacs/default/contents/integration",
+  "git_url": "https://api.github.com/repos/hacs/default/git/blobs/3d21ec53a331a6f037a91c368710b99387d012c1",
+  "html_url": "https://github.com/hacs/default/blob/main/integration",
+  "download_url": "https://raw.githubusercontent.com/hacs/default/main/integration",
+  "_links": {
+    "git": "https://api.github.com/repos/hacs/default/git/blobs/3d21ec53a331a6f037a91c368710b99387d012c1",
+    "self": "https://api.github.com/repos/hacs/default/contents/integration",
+    "html": "https://github.com/hacs/default/blob/main/integration"
+  }
+}

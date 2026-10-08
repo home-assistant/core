@@ -3,7 +3,7 @@
 import logging
 from typing import Any, override
 
-from pymodbus.exceptions import ModbusException
+from modbus_connection import ModbusError
 from pystiebeleltron.lwz import OperatingMode
 
 from homeassistant.components.climate import (
@@ -96,7 +96,7 @@ class StiebelEltron(StiebelEltronEntity, ClimateEntity):
         | ClimateEntityFeature.TURN_OFF
         | ClimateEntityFeature.TURN_ON
     )
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_target_temperature_step = PRECISION_TENTHS
     _attr_min_temp = 10.0
     _attr_max_temp = 30.0
@@ -118,8 +118,8 @@ class StiebelEltron(StiebelEltronEntity, ClimateEntity):
     def _set_attr(self) -> None:
         lwz_api_client = self.coordinator.api_client
 
-        self._attr_target_temperature = lwz_api_client.get_target_temp()
-        self._attr_current_temperature = lwz_api_client.get_current_temp()
+        self._attr_native_target_temperature = lwz_api_client.get_target_temp()
+        self._attr_native_current_temperature = lwz_api_client.get_current_temp()
         self._attr_current_humidity = lwz_api_client.get_current_humidity()
         operation = lwz_api_client.get_operation()
         self._attr_hvac_mode = LWZ_TO_HA_HVAC.get(operation)
@@ -131,13 +131,11 @@ class StiebelEltron(StiebelEltronEntity, ClimateEntity):
     @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new operation mode."""
-        if self.preset_mode:
-            return
         new_mode = HA_TO_LWZ_HVAC[hvac_mode]
         _LOGGER.debug("async_set_hvac_mode: %s -> %s", self._attr_hvac_mode, new_mode)
         try:
             await self.coordinator.api_client.set_operation(new_mode)
-        except ModbusException as e:
+        except ModbusError as e:
             _LOGGER.error("Error setting HVAC mode: %s", e)
             raise HomeAssistantError("Failed to set HVAC mode") from e
         await self.coordinator.async_request_refresh()
@@ -145,12 +143,11 @@ class StiebelEltron(StiebelEltronEntity, ClimateEntity):
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        if (target_temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
-            raise HomeAssistantError("target temperature must be provided")
+        target_temperature = kwargs[ATTR_TEMPERATURE]
         _LOGGER.debug("async_set_temperature: %s", target_temperature)
         try:
             await self.coordinator.api_client.set_target_temp(target_temperature)
-        except ModbusException as e:
+        except ModbusError as e:
             _LOGGER.error("Error setting target temperature: %s", e)
             raise HomeAssistantError("Failed to set target temperature") from e
         await self.coordinator.async_request_refresh()
@@ -164,7 +161,7 @@ class StiebelEltron(StiebelEltronEntity, ClimateEntity):
         )
         try:
             await self.coordinator.api_client.set_operation(new_preset)
-        except ModbusException as e:
+        except ModbusError as e:
             _LOGGER.error("Error setting preset mode: %s", e)
             raise HomeAssistantError("Failed to set preset mode") from e
         await self.coordinator.async_request_refresh()

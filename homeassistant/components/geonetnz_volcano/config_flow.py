@@ -2,7 +2,7 @@
 
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
@@ -39,8 +39,8 @@ class GeonetnzVolcanoFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def _show_form(self, errors=None):
         """Show the form to the user."""
-        data_schema = vol.Schema(
-            {vol.Optional(CONF_RADIUS, default=DEFAULT_RADIUS): cv.positive_int}
+        data_schema = probatio.Schema(
+            {probatio.Optional(CONF_RADIUS, default=DEFAULT_RADIUS): cv.positive_int}
         )
 
         return self.async_show_form(

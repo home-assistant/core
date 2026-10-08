@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import override
 
-from pvo import Status, System
+from pvo import Status
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -83,6 +83,7 @@ SENSORS: tuple[PVOutputSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
         value_fn=lambda status: status.temperature,
     ),
     PVOutputSensorEntityDescription(
@@ -90,6 +91,7 @@ SENSORS: tuple[PVOutputSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
         value_fn=lambda status: status.voltage,
     ),
 )
@@ -102,14 +104,12 @@ async def async_setup_entry(
 ) -> None:
     """Set up a PVOutput sensors based on a config entry."""
     coordinator = entry.runtime_data
-    system = await coordinator.pvoutput.system()
 
     async_add_entities(
         PVOutputSensorEntity(
             coordinator=coordinator,
             description=description,
             system_id=entry.data[CONF_SYSTEM_ID],
-            system=system,
         )
         for description in SENSORS
     )
@@ -128,8 +128,7 @@ class PVOutputSensorEntity(
         *,
         coordinator: PVOutputDataUpdateCoordinator,
         description: PVOutputSensorEntityDescription,
-        system_id: str,
-        system: System,
+        system_id: int,
     ) -> None:
         """Initialize a PVOutput sensor."""
         super().__init__(coordinator=coordinator)
@@ -139,8 +138,8 @@ class PVOutputSensorEntity(
             configuration_url=f"https://pvoutput.org/list.jsp?sid={system_id}",
             identifiers={(DOMAIN, str(system_id))},
             manufacturer="PVOutput",
-            model=system.inverter_brand,
-            name=system.system_name,
+            model=coordinator.system.inverter_brand,
+            name=coordinator.system.system_name,
         )
 
     @property

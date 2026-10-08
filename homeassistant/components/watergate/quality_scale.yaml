@@ -35,10 +35,7 @@ rules:
   config-entry-unloading: done
   log-when-unavailable: done
   entity-unavailable: done
-  action-exceptions:
-    status: exempt
-    comment: |
-      This integration does not provide additional actions.
+  action-exceptions: done
   reauthentication-flow:
     status: exempt
     comment: |

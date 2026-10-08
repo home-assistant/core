@@ -26,6 +26,7 @@ from homeassistant.const import (
     UnitOfElectricPotential,
     UnitOfEnergy,
     UnitOfFrequency,
+    UnitOfInformation,
     UnitOfPower,
     UnitOfPressure,
     UnitOfRatio,
@@ -55,11 +56,11 @@ from .entity import (
     async_setup_entry_block,
     async_setup_entry_rest,
     async_setup_entry_rpc,
+    get_entity_blu_trv_device_info,
     get_entity_rpc_device_info,
 )
 from .utils import (
     async_remove_orphaned_entities,
-    get_blu_trv_device_info,
     get_device_entry_gen,
     get_shelly_air_lamp_life,
     get_virtual_component_unit,
@@ -192,11 +193,7 @@ class RpcBluTrvSensor(RpcSensor):
         """Initialize."""
 
         super().__init__(coordinator, key, attribute, description)
-        ble_addr: str = coordinator.device.config[key]["addr"]
-        fw_ver = coordinator.device.status[key].get("fw_ver")
-        self._attr_device_info = get_blu_trv_device_info(
-            coordinator.device.config[key], ble_addr, coordinator.mac, fw_ver
-        )
+        self._attr_device_info = get_entity_blu_trv_device_info(coordinator, key)
 
 
 BLOCK_SENSORS: dict[tuple[str, str], BlockSensorDescription] = {
@@ -1228,7 +1225,7 @@ RPC_SENSORS: Final = {
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         removal_condition=lambda _, status, key: (
-            DRIVER_MISSING_ERROR in status[key].get("errors", [])
+            DRIVER_MISSING_ERROR in (status[key].get("errors") or [])
         ),
     ),
     "rssi": RpcSensorDescription(
@@ -1259,7 +1256,7 @@ RPC_SENSORS: Final = {
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
         removal_condition=lambda _, status, key: (
-            DRIVER_MISSING_ERROR in status[key].get("errors", [])
+            DRIVER_MISSING_ERROR in (status[key].get("errors") or [])
         ),
     ),
     "battery": RpcSensorDescription(
@@ -1726,6 +1723,18 @@ RPC_SENSORS: Final = {
             (right := status["right"]) is not None
             and right.get("vial", {}).get("level", -1) != -1
         ),
+    ),
+    "storage_fs_free": RpcSensorDescription(
+        key="storage",
+        sub_key="fs_free",
+        translation_key="storage_free_space",
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.DATA_SIZE,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        suggested_unit_of_measurement=UnitOfInformation.GIGABYTES,
+        suggested_display_precision=1,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        removal_condition=lambda _, status, key: not status[key]["present"],
     ),
 }
 

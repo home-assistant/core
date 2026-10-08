@@ -44,8 +44,16 @@ class HitachiAirToWaterHeatingZone(OverkizEntity, ClimateEntity):
     _attr_max_temp = 35.0
     _attr_precision = 0.1
     _attr_target_temperature_step = 0.5
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_translation_key = DOMAIN
+
+    # Each zone is its own device; zone 1 is the default, zone 2 overrides below.
+    _auto_manu_mode_state = OverkizState.MODBUS_AUTO_MANU_MODE_ZONE_1
+    _room_temperature_state = OverkizState.MODBUS_ROOM_AMBIENT_TEMPERATURE_STATUS_ZONE_1
+    _thermostat_setting_state = OverkizState.MODBUS_THERMOSTAT_SETTING_CONTROL_ZONE_1
+    _set_thermostat_setting_command = (
+        OverkizCommand.SET_THERMOSTAT_SETTING_CONTROL_ZONE_1
+    )
 
     def __init__(
         self, device_url: str, coordinator: OverkizDataUpdateCoordinator
@@ -56,12 +64,24 @@ class HitachiAirToWaterHeatingZone(OverkizEntity, ClimateEntity):
         if self._attr_device_info:
             self._attr_device_info["manufacturer"] = "Hitachi"
 
+        if "Zone2" in self.device.controllable_name:
+            self._auto_manu_mode_state = OverkizState.MODBUS_AUTO_MANU_MODE_ZONE2
+            self._room_temperature_state = (
+                OverkizState.MODBUS_ROOM_AMBIENT_TEMPERATURE_STATUS_ZONE2
+            )
+            self._thermostat_setting_state = (
+                OverkizState.MODBUS_THERMOSTAT_SETTING_CONTROL_ZONE2
+            )
+            self._set_thermostat_setting_command = (
+                OverkizCommand.SET_THERMOSTAT_SETTING_CONTROL_ZONE_2
+            )
+
     @property
     @override
     def hvac_mode(self) -> HVACMode:
         """Return hvac operation ie. heat, cool mode."""
         if (
-            state := self.device.states.get(OverkizState.MODBUS_AUTO_MANU_MODE_ZONE_1)
+            state := self.device.states.get(self._auto_manu_mode_state)
         ) and state.value_as_str:
             return OVERKIZ_TO_HVAC_MODE[state.value_as_str]
 
@@ -94,11 +114,9 @@ class HitachiAirToWaterHeatingZone(OverkizEntity, ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
-        current_temperature = self.device.states.get(
-            OverkizState.MODBUS_ROOM_AMBIENT_TEMPERATURE_STATUS_ZONE_1
-        )
+        current_temperature = self.device.states.get(self._room_temperature_state)
 
         if current_temperature:
             return current_temperature.value_as_float
@@ -107,11 +125,9 @@ class HitachiAirToWaterHeatingZone(OverkizEntity, ClimateEntity):
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
-        target_temperature = self.device.states.get(
-            OverkizState.MODBUS_THERMOSTAT_SETTING_CONTROL_ZONE_1
-        )
+        target_temperature = self.device.states.get(self._thermostat_setting_state)
 
         if target_temperature:
             return target_temperature.value_as_float
@@ -124,5 +140,5 @@ class HitachiAirToWaterHeatingZone(OverkizEntity, ClimateEntity):
         temperature = cast(float, kwargs.get(ATTR_TEMPERATURE))
 
         await self.executor.async_execute_command(
-            OverkizCommand.SET_THERMOSTAT_SETTING_CONTROL_ZONE_1, float(temperature)
+            self._set_thermostat_setting_command, float(temperature)
         )

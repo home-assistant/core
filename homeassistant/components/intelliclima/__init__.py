@@ -7,9 +7,14 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import LOGGER
-from .coordinator import IntelliClimaConfigEntry, IntelliClimaCoordinator
+from .coordinator import (
+    IntelliClimaConfigEntry,
+    IntelliClimaCoordinator,
+    IntelliClimaData,
+    IntelliClimaFilterCoordinator,
+)
 
-PLATFORMS = [Platform.FAN, Platform.SELECT, Platform.SENSOR]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.FAN, Platform.SELECT, Platform.SENSOR]
 
 
 async def async_setup_entry(
@@ -25,18 +30,24 @@ async def async_setup_entry(
     )
 
     # Create coordinator
-    coordinator = IntelliClimaCoordinator(hass, entry, api)
+    devices_coordinator = IntelliClimaCoordinator(hass, entry, api)
 
     # Fetch initial data
-    await coordinator.async_config_entry_first_refresh()
+    await devices_coordinator.async_config_entry_first_refresh()
 
     LOGGER.debug(
         "Discovered %d IntelliClima VMC device(s)",
-        len(coordinator.data.ecocomfort2_devices),
+        len(devices_coordinator.data.ecocomfort2_devices),
     )
 
-    # Store coordinator
-    entry.runtime_data = coordinator
+    device_serials = [
+        device.crono_sn
+        for device in devices_coordinator.data.ecocomfort2_devices.values()
+    ]
+    filter_coordinator = IntelliClimaFilterCoordinator(hass, entry, api, device_serials)
+    await filter_coordinator.async_refresh()
+
+    entry.runtime_data = IntelliClimaData(devices_coordinator, filter_coordinator)
 
     # Set up platforms
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

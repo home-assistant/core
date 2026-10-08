@@ -218,6 +218,345 @@
     'state': '6000.0',
   })
 # ---
+# name: test_all_entities[sensor.food_dining_groceries_budget_actual-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.food_dining_groceries_budget_actual',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Budget actual',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
+    'original_icon': None,
+    'original_name': 'Budget actual',
+    'platform': 'monarch_money',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'budget_actual',
+    'unique_id': '222260252323873333_budget_category-food_actual',
+    'unit_of_measurement': '$',
+  })
+# ---
+# name: test_all_entities[sensor.food_dining_groceries_budget_actual-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'category_group': 'Food & Dining',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'monetary',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Food & Dining - Groceries Budget actual',
+      <SensorEntityStateAttribute.LAST_RESET: 'last_reset'>: '2026-09-01T00:00:00+00:00',
+      'month': '2026-09-01',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '$',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.food_dining_groceries_budget_actual',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '-150.0',
+  })
+# ---
+# name: test_all_entities[sensor.food_dining_groceries_budget_planned-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.food_dining_groceries_budget_planned',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Budget planned',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
+    'original_icon': None,
+    'original_name': 'Budget planned',
+    'platform': 'monarch_money',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'budget_planned',
+    'unique_id': '222260252323873333_budget_category-food_planned',
+    'unit_of_measurement': '$',
+  })
+# ---
+# name: test_all_entities[sensor.food_dining_groceries_budget_planned-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'category_group': 'Food & Dining',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'monetary',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Food & Dining - Groceries Budget planned',
+      <SensorEntityStateAttribute.LAST_RESET: 'last_reset'>: '2026-09-01T00:00:00+00:00',
+      'month': '2026-09-01',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '$',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.food_dining_groceries_budget_planned',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '-500.0',
+  })
+# ---
+# name: test_all_entities[sensor.food_dining_groceries_budget_remaining-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.food_dining_groceries_budget_remaining',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Budget remaining',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
+    'original_icon': None,
+    'original_name': 'Budget remaining',
+    'platform': 'monarch_money',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'budget_remaining',
+    'unique_id': '222260252323873333_budget_category-food_remaining',
+    'unit_of_measurement': '$',
+  })
+# ---
+# name: test_all_entities[sensor.food_dining_groceries_budget_remaining-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'category_group': 'Food & Dining',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'monetary',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Food & Dining - Groceries Budget remaining',
+      <SensorEntityStateAttribute.LAST_RESET: 'last_reset'>: '2026-09-01T00:00:00+00:00',
+      'month': '2026-09-01',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '$',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.food_dining_groceries_budget_remaining',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '625.0',
+  })
+# ---
+# name: test_all_entities[sensor.housing_rent_budget_actual-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.housing_rent_budget_actual',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Budget actual',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
+    'original_icon': None,
+    'original_name': 'Budget actual',
+    'platform': 'monarch_money',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'budget_actual',
+    'unique_id': '222260252323873333_budget_category-housing_actual',
+    'unit_of_measurement': '$',
+  })
+# ---
+# name: test_all_entities[sensor.housing_rent_budget_actual-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'monetary',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Housing - Rent Budget actual',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '$',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.housing_rent_budget_actual',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[sensor.housing_rent_budget_planned-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.housing_rent_budget_planned',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Budget planned',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
+    'original_icon': None,
+    'original_name': 'Budget planned',
+    'platform': 'monarch_money',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'budget_planned',
+    'unique_id': '222260252323873333_budget_category-housing_planned',
+    'unit_of_measurement': '$',
+  })
+# ---
+# name: test_all_entities[sensor.housing_rent_budget_planned-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'monetary',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Housing - Rent Budget planned',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '$',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.housing_rent_budget_planned',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_all_entities[sensor.housing_rent_budget_remaining-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.housing_rent_budget_remaining',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Budget remaining',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
+    'original_icon': None,
+    'original_name': 'Budget remaining',
+    'platform': 'monarch_money',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'budget_remaining',
+    'unique_id': '222260252323873333_budget_category-housing_remaining',
+    'unit_of_measurement': '$',
+  })
+# ---
+# name: test_all_entities[sensor.housing_rent_budget_remaining-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'monetary',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Housing - Rent Budget remaining',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '$',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.housing_rent_budget_remaining',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
 # name: test_all_entities[sensor.manual_entry_wallet_balance-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -324,6 +663,57 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2024-08-16T14:22:10+00:00',
+  })
+# ---
+# name: test_all_entities[sensor.manual_entry_wallet_owner-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.manual_entry_wallet_owner',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Owner',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Owner',
+    'platform': 'monarch_money',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'owner',
+    'unique_id': '222260252323873333_186321412999033223_owner',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.manual_entry_wallet_owner-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Monarch Money API via Manual entry',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Manual entry Wallet Owner',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.manual_entry_wallet_owner',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
   })
 # ---
 # name: test_all_entities[sensor.rando_bank_checking_balance-entry]
@@ -435,6 +825,57 @@
     'state': '2024-02-17T11:21:05+00:00',
   })
 # ---
+# name: test_all_entities[sensor.rando_bank_checking_owner-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.rando_bank_checking_owner',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Owner',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Owner',
+    'platform': 'monarch_money',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'owner',
+    'unique_id': '222260252323873333_900000002_owner',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.rando_bank_checking_owner-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Monarch Money API via PLAID',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Rando Bank Checking Owner',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.rando_bank_checking_owner',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_all_entities[sensor.rando_brokerage_brokerage_balance-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -542,6 +983,57 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2022-05-26T00:56:41+00:00',
+  })
+# ---
+# name: test_all_entities[sensor.rando_brokerage_brokerage_owner-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.rando_brokerage_brokerage_owner',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Owner',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Owner',
+    'platform': 'monarch_money',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'owner',
+    'unique_id': '222260252323873333_900000000_owner',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.rando_brokerage_brokerage_owner-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Monarch Money API via PLAID',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Rando Brokerage Brokerage Owner',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.rando_brokerage_brokerage_owner',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
   })
 # ---
 # name: test_all_entities[sensor.rando_credit_credit_card_balance-entry]
@@ -653,6 +1145,57 @@
     'state': '2022-12-10T18:17:06+00:00',
   })
 # ---
+# name: test_all_entities[sensor.rando_credit_credit_card_owner-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.rando_credit_credit_card_owner',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Owner',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Owner',
+    'platform': 'monarch_money',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'owner',
+    'unique_id': '222260252323873333_9000000007_owner',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.rando_credit_credit_card_owner-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Monarch Money API via FINICITY',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Rando Credit Credit Card Owner',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.rando_credit_credit_card_owner',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_all_entities[sensor.rando_employer_investments_401_k_balance-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -760,6 +1303,57 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2024-02-17T08:13:10+00:00',
+  })
+# ---
+# name: test_all_entities[sensor.rando_employer_investments_401_k_owner-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.rando_employer_investments_401_k_owner',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Owner',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Owner',
+    'platform': 'monarch_money',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'owner',
+    'unique_id': '222260252323873333_90000000022_owner',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.rando_employer_investments_401_k_owner-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Monarch Money API via FINICITY',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Rando Employer Investments 401.k Owner',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.rando_employer_investments_401_k_owner',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
   })
 # ---
 # name: test_all_entities[sensor.rando_investments_roth_ira_balance-entry]
@@ -871,6 +1465,57 @@
     'state': '2024-02-17T13:32:21+00:00',
   })
 # ---
+# name: test_all_entities[sensor.rando_investments_roth_ira_owner-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.rando_investments_roth_ira_owner',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Owner',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Owner',
+    'platform': 'monarch_money',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'owner',
+    'unique_id': '222260252323873333_900000000012_owner',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.rando_investments_roth_ira_owner-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Monarch Money API via PLAID',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Rando Investments Roth IRA Owner',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.rando_investments_roth_ira_owner',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_all_entities[sensor.rando_mortgage_mortgage_balance-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -980,6 +1625,231 @@
     'state': '2023-08-16T01:41:36+00:00',
   })
 # ---
+# name: test_all_entities[sensor.rando_mortgage_mortgage_owner-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.rando_mortgage_mortgage_owner',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Owner',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Owner',
+    'platform': 'monarch_money',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'owner',
+    'unique_id': '222260252323873333_90000000030_owner',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.rando_mortgage_mortgage_owner-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Monarch Money API via PLAID',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Rando Mortgage Mortgage Owner',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.rando_mortgage_mortgage_owner',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[sensor.travel_vacation_budget_actual-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.travel_vacation_budget_actual',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Budget actual',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
+    'original_icon': None,
+    'original_name': 'Budget actual',
+    'platform': 'monarch_money',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'budget_actual',
+    'unique_id': '222260252323873333_budget_category-vacation_actual',
+    'unit_of_measurement': '$',
+  })
+# ---
+# name: test_all_entities[sensor.travel_vacation_budget_actual-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'category_group': 'Travel',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'monetary',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Travel - Vacation Budget actual',
+      <SensorEntityStateAttribute.LAST_RESET: 'last_reset'>: '2026-09-01T00:00:00+00:00',
+      'month': '2026-09-01',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '$',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.travel_vacation_budget_actual',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[sensor.travel_vacation_budget_planned-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.travel_vacation_budget_planned',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Budget planned',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
+    'original_icon': None,
+    'original_name': 'Budget planned',
+    'platform': 'monarch_money',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'budget_planned',
+    'unique_id': '222260252323873333_budget_category-vacation_planned',
+    'unit_of_measurement': '$',
+  })
+# ---
+# name: test_all_entities[sensor.travel_vacation_budget_planned-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'category_group': 'Travel',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'monetary',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Travel - Vacation Budget planned',
+      <SensorEntityStateAttribute.LAST_RESET: 'last_reset'>: '2026-09-01T00:00:00+00:00',
+      'month': '2026-09-01',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '$',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.travel_vacation_budget_planned',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[sensor.travel_vacation_budget_remaining-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.travel_vacation_budget_remaining',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Budget remaining',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.MONETARY: 'monetary'>,
+    'original_icon': None,
+    'original_name': 'Budget remaining',
+    'platform': 'monarch_money',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'budget_remaining',
+    'unique_id': '222260252323873333_budget_category-vacation_remaining',
+    'unit_of_measurement': '$',
+  })
+# ---
+# name: test_all_entities[sensor.travel_vacation_budget_remaining-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'category_group': 'Travel',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'monetary',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Travel - Vacation Budget remaining',
+      <SensorEntityStateAttribute.LAST_RESET: 'last_reset'>: '2026-09-01T00:00:00+00:00',
+      'month': '2026-09-01',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '$',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.travel_vacation_budget_remaining',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_all_entities[sensor.vinaudit_2050_toyota_rav8_data_age-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -1020,7 +1890,7 @@
 # name: test_all_entities[sensor.vinaudit_2050_toyota_rav8_data_age-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Monarch Money API via Manual entry',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Monarch Money API via vin_audit',
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'VinAudit 2050 Toyota RAV8 Data age',
     }),
@@ -1030,6 +1900,57 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2024-08-16T17:37:21+00:00',
+  })
+# ---
+# name: test_all_entities[sensor.vinaudit_2050_toyota_rav8_owner-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.vinaudit_2050_toyota_rav8_owner',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Owner',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Owner',
+    'platform': 'monarch_money',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'owner',
+    'unique_id': '222260252323873333_121212192626186051_owner',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.vinaudit_2050_toyota_rav8_owner-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Monarch Money API via vin_audit',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'VinAudit 2050 Toyota RAV8 Owner',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.vinaudit_2050_toyota_rav8_owner',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
   })
 # ---
 # name: test_all_entities[sensor.vinaudit_2050_toyota_rav8_value-entry]
@@ -1074,7 +1995,7 @@
 # name: test_all_entities[sensor.vinaudit_2050_toyota_rav8_value-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Monarch Money API via Manual entry',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Monarch Money API via vin_audit',
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'monetary',
       <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://api.monarchmoney.com/cdn-cgi/image/width=128/images/institution/159427559853802644',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'VinAudit 2050 Toyota RAV8 Value',
@@ -1131,7 +2052,7 @@
 # name: test_all_entities[sensor.zillow_house_balance-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Monarch Money API via Manual entry',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Monarch Money API via zillow',
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'monetary',
       <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'data:image/png;base64,base64Nonce',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Zillow House Balance',
@@ -1186,7 +2107,7 @@
 # name: test_all_entities[sensor.zillow_house_data_age-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Monarch Money API via Manual entry',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Monarch Money API via zillow',
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Zillow House Data age',
     }),
@@ -1196,5 +2117,56 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2024-02-12T09:00:25+00:00',
+  })
+# ---
+# name: test_all_entities[sensor.zillow_house_owner-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.zillow_house_owner',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Owner',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Owner',
+    'platform': 'monarch_money',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'owner',
+    'unique_id': '222260252323873333_90000000020_owner',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.zillow_house_owner-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Monarch Money API via zillow',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Zillow House Owner',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.zillow_house_owner',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
   })
 # ---

@@ -59,6 +59,19 @@
             }
           }
         }
+      },
+      "standing_fan": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "baby": "mdi:baby-face-outline",
+              "custom_natural": "mdi:leaf-circle-outline",
+              "natural": "mdi:leaf",
+              "normal": "mdi:fan",
+              "sleep": "mdi:power-sleep"
+            }
+          }
+        }
       }
     },
     "humidifier": {
@@ -131,6 +144,27 @@
         }
       }
     },
+    "number": {
+      "horizontal_oscillation_angle": {
+        "default": "mdi:pan-horizontal"
+      },
+      "vertical_oscillation_angle": {
+        "default": "mdi:pan-vertical"
+      }
+    },
+    "select": {
+      "night_light": {
+        "default": "mdi:lightbulb",
+        "state": {
+          "bright": "mdi:lightbulb-on-70",
+          "off": "mdi:lightbulb-off",
+          "soft": "mdi:lightbulb-on-30"
+        }
+      },
+      "time_format": {
+        "default": "mdi:clock-outline"
+      }
+    },
     "sensor": {
       "aqi_quality_level": {
         "default": "mdi:air-filter",
@@ -181,6 +215,12 @@
           "off": "mdi:lock-open",
           "on": "mdi:lock"
         }
+      },
+      "horizontal_oscillation": {
+        "default": "mdi:arrow-left-right"
+      },
+      "vertical_oscillation": {
+        "default": "mdi:arrow-up-down"
       },
       "wireless_charging": {
         "state": {

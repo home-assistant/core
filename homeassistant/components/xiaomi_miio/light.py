@@ -1,6 +1,5 @@
 """Support for Xiaomi Philips Lights."""
 
-import asyncio
 import datetime
 from datetime import timedelta
 from functools import partial
@@ -23,7 +22,6 @@ from miio.gateway.gateway import (
     GATEWAY_MODEL_AC_V3,
     GatewayException,
 )
-import voluptuous as vol
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -32,20 +30,14 @@ from homeassistant.components.light import (
     ColorMode,
     LightEntity,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    CONF_DEVICE,
-    CONF_HOST,
-    CONF_MODEL,
-    CONF_TOKEN,
-)
-from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.helpers import config_validation as cv
+from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_MODEL, CONF_TOKEN
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import color as color_util, dt as dt_util
 
 from .const import (
+    ATTR_SCENE,
     CONF_FLOW_TYPE,
     CONF_GATEWAY,
     DOMAIN,
@@ -54,22 +46,13 @@ from .const import (
     MODELS_LIGHT_EYECARE,
     MODELS_LIGHT_MONO,
     MODELS_LIGHT_MOON,
-    SERVICE_EYECARE_MODE_OFF,
-    SERVICE_EYECARE_MODE_ON,
-    SERVICE_NIGHT_LIGHT_MODE_OFF,
-    SERVICE_NIGHT_LIGHT_MODE_ON,
-    SERVICE_REMINDER_OFF,
-    SERVICE_REMINDER_ON,
-    SERVICE_SET_DELAYED_TURN_OFF,
-    SERVICE_SET_SCENE,
 )
 from .entity import XiaomiGatewayDevice, XiaomiMiioEntity
-from .typing import ServiceMethodDetails, XiaomiMiioConfigEntry
+from .typing import XiaomiMiioConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "Xiaomi Philips Light"
-DATA_KEY = "light.xiaomi_miio"
 
 # The light does not accept cct values < 1
 CCT_MIN = 1
@@ -79,9 +62,7 @@ DELAYED_TURN_OFF_MAX_DEVIATION_SECONDS = 4
 DELAYED_TURN_OFF_MAX_DEVIATION_MINUTES = 1
 
 SUCCESS = ["ok"]
-ATTR_SCENE = "scene"
 ATTR_DELAYED_TURN_OFF = "delayed_turn_off"
-ATTR_TIME_PERIOD = "time_period"
 ATTR_NIGHT_LIGHT_MODE = "night_light_mode"
 ATTR_AUTOMATIC_COLOR_TEMPERATURE = "automatic_color_temperature"
 ATTR_REMINDER = "reminder"
@@ -93,37 +74,6 @@ ATTR_SLEEP_OFF_TIME = "sleep_off_time"
 ATTR_TOTAL_ASSISTANT_SLEEP_TIME = "total_assistant_sleep_time"
 ATTR_BAND_SLEEP = "band_sleep"
 ATTR_BAND = "band"
-
-XIAOMI_MIIO_SERVICE_SCHEMA = vol.Schema({vol.Optional(ATTR_ENTITY_ID): cv.entity_ids})
-
-SERVICE_SCHEMA_SET_SCENE = XIAOMI_MIIO_SERVICE_SCHEMA.extend(
-    {vol.Required(ATTR_SCENE): vol.All(vol.Coerce(int), vol.Clamp(min=1, max=6))}
-)
-
-SERVICE_SCHEMA_SET_DELAYED_TURN_OFF = XIAOMI_MIIO_SERVICE_SCHEMA.extend(
-    {vol.Required(ATTR_TIME_PERIOD): cv.positive_time_period}
-)
-
-SERVICE_TO_METHOD = {
-    SERVICE_SET_DELAYED_TURN_OFF: ServiceMethodDetails(
-        method="async_set_delayed_turn_off",
-        schema=SERVICE_SCHEMA_SET_DELAYED_TURN_OFF,
-    ),
-    SERVICE_SET_SCENE: ServiceMethodDetails(
-        method="async_set_scene",
-        schema=SERVICE_SCHEMA_SET_SCENE,
-    ),
-    SERVICE_REMINDER_ON: ServiceMethodDetails(method="async_reminder_on"),
-    SERVICE_REMINDER_OFF: ServiceMethodDetails(method="async_reminder_off"),
-    SERVICE_NIGHT_LIGHT_MODE_ON: ServiceMethodDetails(
-        method="async_night_light_mode_on"
-    ),
-    SERVICE_NIGHT_LIGHT_MODE_OFF: ServiceMethodDetails(
-        method="async_night_light_mode_off"
-    ),
-    SERVICE_EYECARE_MODE_ON: ServiceMethodDetails(method="async_eyecare_mode_on"),
-    SERVICE_EYECARE_MODE_OFF: ServiceMethodDetails(method="async_eyecare_mode_off"),
-}
 
 
 async def async_setup_entry(
@@ -157,9 +107,6 @@ async def async_setup_entry(
         )
 
     if config_entry.data[CONF_FLOW_TYPE] == CONF_DEVICE:
-        if DATA_KEY not in hass.data:
-            hass.data[DATA_KEY] = {}
-
         host = config_entry.data[CONF_HOST]
         token = config_entry.data[CONF_TOKEN]
         name = config_entry.title
@@ -172,35 +119,28 @@ async def async_setup_entry(
             light = PhilipsEyecare(host, token)
             entity = XiaomiPhilipsEyecareLamp(name, light, config_entry, unique_id)
             entities.append(entity)
-            hass.data[DATA_KEY][host] = entity
 
             entities.append(
                 XiaomiPhilipsEyecareLampAmbientLight(
                     name, light, config_entry, unique_id
                 )
             )
-            # The ambient light doesn't expose additional services.
-            # A hass.data[DATA_KEY] entry isn't needed.
         elif model in MODELS_LIGHT_CEILING:
             light = Ceil(host, token)
             entity = XiaomiPhilipsCeilingLamp(name, light, config_entry, unique_id)
             entities.append(entity)
-            hass.data[DATA_KEY][host] = entity
         elif model in MODELS_LIGHT_MOON:
             light = PhilipsMoonlight(host, token)
             entity = XiaomiPhilipsMoonlightLamp(name, light, config_entry, unique_id)
             entities.append(entity)
-            hass.data[DATA_KEY][host] = entity
         elif model in MODELS_LIGHT_BULB:
             light = PhilipsBulb(host, token)
             entity = XiaomiPhilipsBulb(name, light, config_entry, unique_id)
             entities.append(entity)
-            hass.data[DATA_KEY][host] = entity
         elif model in MODELS_LIGHT_MONO:
             light = PhilipsBulb(host, token)
             entity = XiaomiPhilipsGenericLight(name, light, config_entry, unique_id)
             entities.append(entity)
-            hass.data[DATA_KEY][host] = entity
         else:
             _LOGGER.error(
                 (
@@ -211,42 +151,6 @@ async def async_setup_entry(
                 model,
             )
             return
-
-        async def async_service_handler(service: ServiceCall) -> None:
-            """Map services to methods on Xiaomi Philips Lights."""
-            method = SERVICE_TO_METHOD[service.service]
-            params = {
-                key: value
-                for key, value in service.data.items()
-                if key != ATTR_ENTITY_ID
-            }
-            if entity_ids := service.data.get(ATTR_ENTITY_ID):
-                target_devices = [
-                    dev
-                    for dev in hass.data[DATA_KEY].values()
-                    if dev.entity_id in entity_ids
-                ]
-            else:
-                target_devices = hass.data[DATA_KEY].values()
-
-            update_tasks = []
-            for target_device in target_devices:
-                if not hasattr(target_device, method.method):
-                    continue
-                await getattr(target_device, method.method)(**params)
-                update_tasks.append(
-                    asyncio.create_task(target_device.async_update_ha_state(True))
-                )
-
-            if update_tasks:
-                await asyncio.wait(update_tasks)
-
-        for xiaomi_miio_service, method in SERVICE_TO_METHOD.items():
-            schema = method.schema or XIAOMI_MIIO_SERVICE_SCHEMA
-            # pylint: disable-next=home-assistant-service-registered-in-setup-entry
-            hass.services.async_register(
-                DOMAIN, xiaomi_miio_service, async_service_handler, schema=schema
-            )
 
     async_add_entities(entities, update_before_add=True)
 

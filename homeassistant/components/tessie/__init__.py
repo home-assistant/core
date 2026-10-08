@@ -26,6 +26,7 @@ from homeassistant.exceptions import (
     ConfigEntryError,
     ConfigEntryNotReady,
 )
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceInfo
 
@@ -50,6 +51,7 @@ PLATFORMS = [
     Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
+    Platform.TEXT,
     Platform.UPDATE,
 ]
 
@@ -211,6 +213,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: TessieConfigEntry) -> bo
         )
 
     entry.runtime_data = TessieData(vehicles, energysites)
+
+    # Register energy site devices before forwarding to platforms so wall
+    # connector entities can resolve their via_device parent at construction.
+    device_registry = dr.async_get(hass)
+    for energysite in energysites:
+        device_registry.async_get_or_create(
+            config_entry_id=entry.entry_id, **energysite.device
+        )
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True

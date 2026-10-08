@@ -46,6 +46,18 @@ AQUA_CONTOUR_SERVICE_INFO = BluetoothServiceInfo(
     source="local",
 )
 
+PRESSURE_TANK_SERVICE_INFO = BluetoothServiceInfo(
+    name="GARDENA PTU",
+    address="00000000-0000-0000-0000-000000000004",
+    rssi=-63,
+    service_data={},
+    manufacturer_data={
+        1062: b"\x05\x04\x80\x20\x00\x00\x02\x05\x01\x04\x06\x11\x02\x01"
+    },
+    service_uuids=["98bd0001-0b0e-421a-84e5-ddbf75dc6de4"],
+    source="local",
+)
+
 MISSING_PRODUCT_SERVICE_INFO = BluetoothServiceInfo(
     name="Missing Product Info",
     address="00000000-0000-0000-0000-000000000000",

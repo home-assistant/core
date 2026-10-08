@@ -23,7 +23,7 @@ async def async_setup_entry(
         NZBGetDownloadSwitch(
             coordinator,
             entry.entry_id,
-            entry.data[CONF_NAME],
+            entry.data.get(CONF_NAME, entry.title),
         ),
     ]
 

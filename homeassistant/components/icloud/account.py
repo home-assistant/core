@@ -16,7 +16,7 @@ from pyicloud.services.findmyiphone import AppleDevice
 
 from homeassistant.components.zone import async_active_zone
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_USERNAME
+from homeassistant.const import CONF_USERNAME, EntityStateAttribute
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import dispatcher_send
@@ -56,6 +56,7 @@ from .const import (
 )
 
 if TYPE_CHECKING:
+    from .coordinator import IcloudCalendarCoordinator, IcloudRemindersCoordinator
     from .media_source import PhotoCache
 
 _LOGGER = logging.getLogger(__name__)
@@ -97,6 +98,10 @@ class IcloudAccount:
 
         self._unsub_fetch: CALLBACK_TYPE | None = None
         self.listeners: list[CALLBACK_TYPE] = []
+
+        # Built in async_setup_entry, before the platforms are forwarded.
+        self.calendar_coordinator: IcloudCalendarCoordinator | None = None
+        self.reminders_coordinator: IcloudRemindersCoordinator | None = None
 
         self.photo_cache: PhotoCache | None = None
 
@@ -170,6 +175,11 @@ class IcloudAccount:
         api_devices = {}
         try:
             api_devices = self.api.devices
+            # Since pyicloud 2.3.0 device reads are cache-only and the library
+            # requests an active locate from Apple only at service creation, so
+            # explicitly refresh with locate=True to get a fresh GPS fix on
+            # every poll instead of Apple's cached location.
+            api_devices.refresh(locate=True)
         except Exception as err:  # noqa: BLE001
             _LOGGER.error("Unknown iCloud error: %s", err)
             self._fetch_interval = 2
@@ -256,8 +266,8 @@ class IcloudAccount:
             for zone_state in zones:
                 if zone_state is None:
                     continue
-                zone_state_lat = zone_state.attributes[DEVICE_LOCATION_LATITUDE]
-                zone_state_long = zone_state.attributes[DEVICE_LOCATION_LONGITUDE]
+                zone_state_lat = zone_state.attributes[EntityStateAttribute.LATITUDE]
+                zone_state_long = zone_state.attributes[EntityStateAttribute.LONGITUDE]
                 zone_distance = distance(
                     device.location[DEVICE_LOCATION_LATITUDE],
                     device.location[DEVICE_LOCATION_LONGITUDE],

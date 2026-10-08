@@ -6,32 +6,34 @@ from aqualogic.core import States
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.aqualogic import DOMAIN, AquaLogicProcessor
+from homeassistant.components.aqualogic.const import UPDATE_TOPIC
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    STATE_OFF,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 
 @pytest.fixture
-async def init_switches(
-    hass: HomeAssistant, init_integration: AquaLogicProcessor
-) -> None:
-    """Set up the AquaLogic switch platform."""
-    assert await async_setup_component(
-        hass,
-        "switch",
-        {"switch": {"platform": DOMAIN}},
-    )
-    await hass.async_block_till_done()
+def platforms() -> list[Platform]:
+    """Fixture to specify platforms to test."""
+    return [Platform.SWITCH]
 
 
-@pytest.mark.usefixtures("init_switches")
+@pytest.mark.usefixtures("init_integration")
 async def test_switches(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test all switch entities are created and report correct state."""
+    """Test switch entities are created and report correct state."""
+    async_dispatcher_send(hass, UPDATE_TOPIC)
+    await hass.async_block_till_done()
+
     states = {
         state.entity_id: state
         for state in sorted(hass.states.async_all("switch"), key=lambda s: s.entity_id)
@@ -39,7 +41,7 @@ async def test_switches(
     assert states == snapshot
 
 
-@pytest.mark.usefixtures("init_switches")
+@pytest.mark.usefixtures("init_integration")
 @pytest.mark.parametrize(
     ("service", "expected_state"),
     [
@@ -61,3 +63,41 @@ async def test_turn(
         blocking=True,
     )
     mock_panel.set_state.assert_called_once_with(States.LIGHTS, expected_state)
+
+
+@pytest.mark.usefixtures("init_integration")
+@pytest.mark.parametrize(
+    "service",
+    [
+        pytest.param(SERVICE_TURN_ON, id="turn_on"),
+        pytest.param(SERVICE_TURN_OFF, id="turn_off"),
+    ],
+)
+async def test_turn_no_panel(
+    hass: HomeAssistant,
+    mock_processor: MagicMock,
+    service: str,
+) -> None:
+    """Test that turning a switch does nothing when the panel is unavailable."""
+    panel = mock_processor.panel
+    mock_processor.panel = None
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        service,
+        {ATTR_ENTITY_ID: "switch.aqualogic_lights"},
+        blocking=True,
+    )
+    panel.set_state.assert_not_called()
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_is_on_no_panel(
+    hass: HomeAssistant,
+    mock_processor: MagicMock,
+) -> None:
+    """Test switch reports off when panel is unavailable."""
+    mock_processor.panel = None
+    async_dispatcher_send(hass, UPDATE_TOPIC)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("switch.aqualogic_lights").state == STATE_OFF

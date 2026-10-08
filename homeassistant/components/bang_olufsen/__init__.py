@@ -76,7 +76,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: BeoConfigEntry) -> bool:
     # Create device now as BeoWebsocket needs a device for
     # debug logging, firing events etc.
     device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create(
+    device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, entry.unique_id)},
         model=entry.data[CONF_MODEL],
@@ -92,7 +92,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: BeoConfigEntry) -> bool:
             serial_number=remote.serial_number,
             sw_version=remote.app_version,
             manufacturer=MANUFACTURER,
-            via_device=(DOMAIN, entry.unique_id),
+            via_device_id=device.id,
         )
 
     websocket = BeoWebsocket(hass, entry, client)

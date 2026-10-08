@@ -59,9 +59,7 @@ rules:
   exception-translations: done
   icon-translations: done
   reconfiguration-flow: done
-  repair-issues:
-    status: exempt
-    comment: No issues to repair
+  repair-issues: done
   stale-devices: done
   # Platinum
   async-dependency: done

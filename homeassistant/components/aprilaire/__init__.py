@@ -27,7 +27,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AprilaireConfigEntry) ->
     host = entry.data[CONF_HOST]
     port = entry.data[CONF_PORT]
 
-    coordinator = AprilaireCoordinator(hass, entry.unique_id, host, port)
+    coordinator = AprilaireCoordinator(hass, entry, host, port)
     await coordinator.start_listen()
 
     async def ready_callback(ready: bool) -> None:

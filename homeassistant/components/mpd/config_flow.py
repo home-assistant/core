@@ -7,18 +7,18 @@ from typing import Any, override
 
 import mpd
 from mpd.asyncio import MPDClient
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 
 from .const import DOMAIN, LOGGER
 
-SCHEMA = vol.Schema(
+SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): str,
-        vol.Optional(CONF_PASSWORD): str,
-        vol.Optional(CONF_PORT, default=6600): int,
+        probatio.Required(CONF_HOST): str,
+        probatio.Optional(probatio.Secret(CONF_PASSWORD)): str,
+        probatio.Optional(CONF_PORT, default=6600): int,
     }
 )
 
@@ -44,8 +44,6 @@ class MPDConfigFlow(ConfigFlow, domain=DOMAIN):
                     await client.connect(user_input[CONF_HOST], user_input[CONF_PORT])
                     if CONF_PASSWORD in user_input:
                         await client.password(user_input[CONF_PASSWORD])
-                    with suppress(mpd.ConnectionError):
-                        client.disconnect()
             except (
                 TimeoutError,
                 gaierror,
@@ -61,6 +59,9 @@ class MPDConfigFlow(ConfigFlow, domain=DOMAIN):
                     title="Music Player Daemon",
                     data=user_input,
                 )
+            finally:
+                with suppress(mpd.ConnectionError):
+                    client.disconnect()
 
         return self.async_show_form(
             step_id="user",

@@ -9,6 +9,7 @@ from pyblu import Input, Player, Preset, Status, SyncStatus
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
+    DOMAIN as MEDIA_PLAYER_DOMAIN,
     BrowseMedia,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
@@ -19,7 +20,7 @@ from homeassistant.components.media_player import (
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import entity_registry as er, issue_registry as ir
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
     DeviceInfo,
@@ -31,22 +32,11 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.util import dt as dt_util, slugify
+from homeassistant.util import dt as dt_util
 
-from .const import (
-    ATTR_BLUESOUND_GROUP,
-    ATTR_MASTER,
-    DOMAIN,
-    SERVICE_JOIN,
-    SERVICE_UNJOIN,
-)
+from .const import ATTR_BLUESOUND_GROUP, ATTR_MASTER, DOMAIN
 from .coordinator import BluesoundCoordinator
-from .utils import (
-    dispatcher_join_signal,
-    dispatcher_unjoin_signal,
-    format_unique_id,
-    id_to_paired_player,
-)
+from .utils import dispatcher_unjoin_signal, format_unique_id, id_to_paired_player
 
 if TYPE_CHECKING:
     from . import BluesoundConfigEntry
@@ -131,8 +121,13 @@ class BluesoundPlayer(CoordinatorEntity[BluesoundCoordinator], MediaPlayerEntity
                 manufacturer=sync_status.brand,
                 model=sync_status.model_name,
                 model_id=sync_status.model,
-                via_device=(DOMAIN, format_mac(sync_status.mac)),
             )
+            # The leader (default-port) device is a separate config entry that may
+            # not be loaded yet; link to it only if it already exists.
+            if leader_devices := dr.async_get(coordinator.hass).async_get_devices(
+                identifiers={(DOMAIN, format_mac(sync_status.mac))}
+            ):
+                self._attr_device_info["via_device_id"] = leader_devices[0].id
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -143,17 +138,17 @@ class BluesoundPlayer(CoordinatorEntity[BluesoundCoordinator], MediaPlayerEntity
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                dispatcher_join_signal(self.entity_id),
-                self.async_add_follower,
-            )
-        )
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
                 dispatcher_unjoin_signal(self._sync_status.id),
                 self.async_remove_follower,
             )
         )
+
+    @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Rebuild the group members, which contain the entity_id."""
+        super().async_entity_id_changed(old_entity_id)
+        self._group_members = self.rebuild_group_members()
 
     @override
     async def async_will_remove_from_hass(self) -> None:
@@ -469,48 +464,6 @@ class BluesoundPlayer(CoordinatorEntity[BluesoundCoordinator], MediaPlayerEntity
         if self._sync_status.followers is not None:
             await self._player.remove_follower(self.host, self.port)
 
-    async def async_bluesound_join(self, master: str) -> None:
-        """Join the player to a group."""
-        ir.async_create_issue(
-            self.hass,
-            DOMAIN,
-            f"deprecated_service_{SERVICE_JOIN}",
-            is_fixable=False,
-            breaks_in_ha_version="2026.7.0",
-            issue_domain=DOMAIN,
-            severity=ir.IssueSeverity.WARNING,
-            translation_key="deprecated_service_join",
-            translation_placeholders={
-                "name": slugify(self.sync_status.name),
-            },
-        )
-
-        if master == self.entity_id:
-            raise ServiceValidationError("Cannot join player to itself")
-
-        _LOGGER.debug("Trying to join player: %s", self.id)
-        async_dispatcher_send(
-            self.hass, dispatcher_join_signal(master), self.host, self.port
-        )
-
-    async def async_bluesound_unjoin(self) -> None:
-        """Unjoin the player from a group."""
-        ir.async_create_issue(
-            self.hass,
-            DOMAIN,
-            f"deprecated_service_{SERVICE_UNJOIN}",
-            is_fixable=False,
-            breaks_in_ha_version="2026.7.0",
-            issue_domain=DOMAIN,
-            severity=ir.IssueSeverity.WARNING,
-            translation_key="deprecated_service_unjoin",
-            translation_placeholders={
-                "name": slugify(self.sync_status.name),
-            },
-        )
-
-        await self.async_unjoin_player()
-
     @property
     @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
@@ -528,8 +481,9 @@ class BluesoundPlayer(CoordinatorEntity[BluesoundCoordinator], MediaPlayerEntity
         if self.sync_status.leader is None and self.sync_status.followers is None:
             return []
 
+        # An entry that is not loaded has no runtime data to read a status from
         config_entries: list[BluesoundConfigEntry] = (
-            self.hass.config_entries.async_entries(DOMAIN)
+            self.hass.config_entries.async_loaded_entries(DOMAIN)
         )
         sync_status_list = [
             x.runtime_data.coordinator.data.sync_status for x in config_entries
@@ -599,24 +553,21 @@ class BluesoundPlayer(CoordinatorEntity[BluesoundCoordinator], MediaPlayerEntity
 
         entity_registry = er.async_get(self.hass)
 
+        # An entry that is not loaded has no runtime data to read a status from
         config_entries: list[BluesoundConfigEntry] = (
-            self.hass.config_entries.async_entries(DOMAIN)
+            self.hass.config_entries.async_loaded_entries(DOMAIN)
         )
         for config_entry in config_entries:
             entity_entries = er.async_entries_for_config_entry(
                 entity_registry, config_entry.entry_id
             )
             for entity_entry in entity_entries:
-                if entity_entry.domain == "media_player":
+                if entity_entry.domain == MEDIA_PLAYER_DOMAIN:
                     result[entity_entry.entity_id] = (
                         config_entry.runtime_data.coordinator.data.sync_status
                     )
 
         return result
-
-    async def async_add_follower(self, host: str, port: int) -> None:
-        """Add follower to leader."""
-        await self._player.add_follower(host, port)
 
     async def async_remove_follower(self, host: str, port: int) -> None:
         """Remove follower to leader."""

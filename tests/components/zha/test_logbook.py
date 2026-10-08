@@ -98,7 +98,9 @@ async def test_zha_logbook_event_device_with_triggers(
 
     ieee_address = str(zha_device.device.ieee)
 
-    reg_device = device_registry.async_get_device(identifiers={("zha", ieee_address)})
+    reg_device = device_registry.async_get_device_by_identifier(
+        ("zha", ieee_address), hass.config_entries.async_entries("zha")[0].entry_id
+    )
 
     hass.config.components.add("recorder")
     assert await async_setup_component(hass, "logbook", {})
@@ -174,7 +176,9 @@ async def test_zha_logbook_event_device_no_triggers(
 
     _zigpy_device, zha_device = mock_devices
     ieee_address = str(zha_device.device.ieee)
-    reg_device = device_registry.async_get_device(identifiers={("zha", ieee_address)})
+    reg_device = device_registry.async_get_device_by_identifier(
+        ("zha", ieee_address), hass.config_entries.async_entries("zha")[0].entry_id
+    )
 
     hass.config.components.add("recorder")
     assert await async_setup_component(hass, "logbook", {})

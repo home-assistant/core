@@ -135,6 +135,65 @@ async def test_scan_serial_ports_happy_path(
 
 
 @pytest.mark.usefixtures("mock_zeroconf")
+async def test_scan_serial_ports_uses_project_info(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Project information takes precedence over manufacturer and model."""
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info={
+            "mac_address": "AA:BB:CC:DD:EE:FF",
+            "manufacturer": "Espressif",
+            "model": "ESP32",
+            "project_name": "vendor.gadget",
+            "serial_proxies": [
+                SerialProxyInfo(name="uart0", port_type=SerialProxyPortType.TTL)
+            ],
+        },
+    )
+
+    assert _async_scan_serial_ports(hass) == [
+        SerialDevice(
+            device=str(serial_proxy.build_url(device.entry.entry_id, "uart0")),
+            serial_number="AABBCCDDEEFF-uart0",
+            manufacturer="vendor",
+            description="gadget (uart0)",
+        )
+    ]
+
+
+@pytest.mark.usefixtures("mock_zeroconf")
+async def test_scan_serial_ports_defaults_manufacturer(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """A device without a manufacturer falls back to espressif."""
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info={
+            "mac_address": "AA:BB:CC:DD:EE:FF",
+            "manufacturer": "",
+            "model": "ESP32",
+            "serial_proxies": [
+                SerialProxyInfo(name="uart0", port_type=SerialProxyPortType.TTL)
+            ],
+        },
+    )
+
+    assert _async_scan_serial_ports(hass) == [
+        SerialDevice(
+            device=str(serial_proxy.build_url(device.entry.entry_id, "uart0")),
+            serial_number="AABBCCDDEEFF-uart0",
+            manufacturer="espressif",
+            description="ESP32 (uart0)",
+        )
+    ]
+
+
+@pytest.mark.usefixtures("mock_zeroconf")
 async def test_scan_serial_ports_skips_unavailable(
     hass: HomeAssistant,
     mock_client: APIClient,

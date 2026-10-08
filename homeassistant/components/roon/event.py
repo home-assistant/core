@@ -5,6 +5,7 @@ from typing import cast, override
 
 from homeassistant.components.event import EventDeviceClass, EventEntity
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -70,7 +71,11 @@ class RoonEventEntity(EventEntity):
             name=cast(str | None, self.name),
             manufacturer="RoonLabs",
             model=dev_model,
-            via_device=(DOMAIN, self._entry_id),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                self._server.hass,
+                (DOMAIN, self._entry_id),
+                config_entry_id=self._entry_id,
+            ),
         )
 
     def _roonapi_volume_callback(
@@ -91,6 +96,17 @@ class RoonEventEntity(EventEntity):
 
         self._trigger_event(event)
         self.schedule_update_ha_state()
+
+    @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Opt in to in-place entity_id changes.
+
+        Can be removed when backwards compatibility is disabled for core
+        integrations, i.e. once all core integrations have been migrated
+        to in-place entity ID change.
+        """
+        super().async_entity_id_changed(old_entity_id)
 
     @override
     async def async_added_to_hass(self) -> None:

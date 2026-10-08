@@ -1,6 +1,6 @@
 """Provides device actions for Mobile App."""
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import notify
 from homeassistant.components.device_automation import InvalidDeviceAutomationConfig
@@ -15,10 +15,10 @@ from .util import get_notify_service, supports_push, webhook_id_from_device_id
 
 ACTION_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
     {
-        vol.Required(CONF_TYPE): "notify",
-        vol.Required(notify.ATTR_MESSAGE): cv.template,
-        vol.Optional(notify.ATTR_TITLE): cv.template,
-        vol.Optional(notify.ATTR_DATA): cv.template_complex,
+        probatio.Required(CONF_TYPE): "notify",
+        probatio.Required(notify.ATTR_MESSAGE): cv.template,
+        probatio.Optional(notify.ATTR_TITLE): cv.template,
+        probatio.Optional(notify.ATTR_DATA): cv.template_complex,
     }
 )
 
@@ -77,16 +77,16 @@ async def async_call_action_from_config(
 
 async def async_get_action_capabilities(
     hass: HomeAssistant, config: ConfigType
-) -> dict[str, vol.Schema]:
+) -> dict[str, probatio.Schema]:
     """List action capabilities."""
     if config[CONF_TYPE] != "notify":
         return {}
 
     return {
-        "extra_fields": vol.Schema(
+        "extra_fields": probatio.Schema(
             {
-                vol.Required(notify.ATTR_MESSAGE): str,
-                vol.Optional(notify.ATTR_TITLE): str,
+                probatio.Required(notify.ATTR_MESSAGE): str,
+                probatio.Optional(notify.ATTR_TITLE): str,
             }
         )
     }

@@ -11,8 +11,8 @@ from uuid import uuid4
 
 from aiohasupervisor import SupervisorError
 from aiohasupervisor.models import Discovery
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import mqtt
@@ -37,7 +37,12 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+    selector,
+)
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 
 from .common import (
@@ -60,12 +65,14 @@ from .common import (
     MOCK_NOTIFY_SUBENTRY_DATA,
     MOCK_NOTIFY_SUBENTRY_DATA_MULTI,
     MOCK_NOTIFY_SUBENTRY_DATA_NO_NAME,
+    MOCK_NUMBER_SUBENTRY_DATA_AQI_UNIT_NONE,
     MOCK_NUMBER_SUBENTRY_DATA_CUSTOM_UNIT,
     MOCK_NUMBER_SUBENTRY_DATA_DEVICE_CLASS_UNIT,
     MOCK_NUMBER_SUBENTRY_DATA_NO_UNIT,
     MOCK_NUMBER_SUBENTRY_DATA_NONE_UNIT,
     MOCK_SELECT_SUBENTRY_DATA,
     MOCK_SENSOR_SUBENTRY_DATA,
+    MOCK_SENSOR_SUBENTRY_DATA_AQI_UNIT_NONE,
     MOCK_SENSOR_SUBENTRY_DATA_LAST_RESET_TEMPLATE,
     MOCK_SENSOR_SUBENTRY_DATA_STATE_CLASS,
     MOCK_SENSOR_SUBENTRY_DATA_UOM_NONE,
@@ -1294,7 +1301,7 @@ async def test_keepalive_validation(
     assert result["step_id"] == "broker"
 
     if error:
-        with pytest.raises(vol.Invalid):
+        with pytest.raises(probatio.Invalid):
             result = await hass.config_entries.flow.async_configure(
                 result["flow_id"],
                 user_input=test_input,
@@ -1429,11 +1436,11 @@ async def test_invalid_discovery_prefix(
     assert mock_reload_after_entry_update.call_count == 0
 
 
-def get_default(schema: vol.Schema, key: str) -> Any | None:
-    """Get default value for key in voluptuous schema."""
+def get_default(schema: probatio.Schema, key: str) -> Any | None:
+    """Get default value for key in probatio schema."""
     for schema_key in schema:  # type:ignore[attr-defined]
         if schema_key == key:
-            if schema_key.default == vol.UNDEFINED:
+            if schema_key.default == probatio.UNDEFINED:
                 return None
             return schema_key.default()
     return None
@@ -3565,6 +3572,27 @@ async def test_migrate_config_entry(
             id="number_None_unit",
         ),
         pytest.param(
+            MOCK_NUMBER_SUBENTRY_DATA_AQI_UNIT_NONE,
+            {"name": "Milk notifier", "mqtt_settings": {"qos": 0}},
+            {"name": "Purifier"},
+            {"device_class": "aqi", "unit_of_measurement": None},
+            (),
+            {
+                "command_topic": "test-topic",
+                "command_template": "{{ value }}",
+                "state_topic": "test-topic",
+                "min": 0,
+                "max": 10,
+                "step": 2,
+                "mode": "auto",
+                "value_template": "{{ value_json.value }}",
+                "retain": False,
+            },
+            (),
+            "Milk notifier Purifier",
+            id="number_aqi_unit_none",
+        ),
+        pytest.param(
             MOCK_SELECT_SUBENTRY_DATA,
             {"name": "Milk notifier", "mqtt_settings": {"qos": 0}},
             {"name": "Mode"},
@@ -3655,6 +3683,23 @@ async def test_migrate_config_entry(
             (),
             "Milk notifier Air quality",
             id="sensor_aqi",
+        ),
+        pytest.param(
+            MOCK_SENSOR_SUBENTRY_DATA_AQI_UNIT_NONE,
+            {"name": "Milk notifier", "mqtt_settings": {"qos": 0}},
+            {"name": "Air quality"},
+            {
+                "state_class": "measurement",
+                "device_class": "aqi",
+                "unit_of_measurement": None,
+            },
+            (),
+            {
+                "state_topic": "test-topic",
+            },
+            (),
+            "Milk notifier Air quality",
+            id="sensor_aqi_unit_none",
         ),
         pytest.param(
             MOCK_SENSOR_SUBENTRY_DATA_STATE_CLASS,
@@ -4134,6 +4179,70 @@ async def test_subentry_configflow(
 
 
 @pytest.mark.parametrize(
+    ("platform", "expected_context"),
+    [
+        pytest.param(
+            "number",
+            {"filter_device_class": "device_class"},
+            id="number",
+        ),
+        pytest.param(
+            "sensor",
+            {
+                "filter_device_class": "device_class",
+                "filter_state_class": "state_class",
+            },
+            id="sensor",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_reload_after_entry_update")
+async def test_subentry_configflow_unit_of_measurement_context(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    platform: str,
+    expected_context: dict[str, str],
+) -> None:
+    """Test the unit of measurement field context refers to fields in the form."""
+    await mqtt_mock_entry()
+    config_entry = hass.config_entries.async_entries(DOMAIN)[0]
+
+    result = await hass.config_entries.subentries.async_init(
+        (config_entry.entry_id, "device"),
+        context={"source": config_entries.SOURCE_USER},
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={"name": "Milk notifier", "mqtt_settings": {"qos": 0}},
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={"platform": platform, "name": "Milk"},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "entity_platform_config"
+
+    # Serialize the form the way it is sent to the frontend
+    fields = {
+        field["name"]: field
+        for field in probatio.to_field_list(
+            result["data_schema"], custom_serializer=cv.custom_serializer
+        )
+    }
+    assert (
+        fields["unit_of_measurement"]["selector"]["unit_of_measurement"]["context"]
+        == expected_context
+    )
+    # The frontend reads the context values from sibling fields in the same form
+    allowed_context_keys = selector.UnitOfMeasurementSelector().allowed_context_keys
+    for context_key, field_name in expected_context.items():
+        assert (
+            next(iter(fields[field_name]["selector"]))
+            in allowed_context_keys[context_key]
+        )
+
+
+@pytest.mark.parametrize(
     "mqtt_config_subentries_data",
     [
         (
@@ -4163,7 +4272,9 @@ async def test_subentry_reconfigure_remove_entity(
     assert result["step_id"] == "summary_menu"
 
     # assert we have a device for the subentry
-    device = device_registry.async_get_device(identifiers={(DOMAIN, subentry_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, subentry_id), config_entry.entry_id
+    )
     assert device is not None
 
     # assert we have an entity for all subentry components
@@ -4288,7 +4399,9 @@ async def test_subentry_reconfigure_edit_entity_multi_entitites(
     assert result["step_id"] == "summary_menu"
 
     # assert we have a device for the subentry
-    device = device_registry.async_get_device(identifiers={(DOMAIN, subentry_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, subentry_id), config_entry.entry_id
+    )
     assert device is not None
 
     # assert we have an entity for all subentry components
@@ -4729,7 +4842,9 @@ async def test_subentry_reconfigure_edit_entity_single_entity(
     assert result["step_id"] == "summary_menu"
 
     # assert we have a device for the subentry
-    device = device_registry.async_get_device(identifiers={(DOMAIN, subentry_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, subentry_id), config_entry.entry_id
+    )
     assert device is not None
 
     # assert we have an entity for the subentry component
@@ -4868,7 +4983,9 @@ async def test_subentry_reconfigure_edit_entity_reset_fields(
     assert result["step_id"] == "summary_menu"
 
     # assert we have a device for the subentry
-    device = device_registry.async_get_device(identifiers={(DOMAIN, subentry_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, subentry_id), config_entry.entry_id
+    )
     assert device is not None
 
     # assert we have an entity for the subentry component
@@ -5003,7 +5120,9 @@ async def test_subentry_reconfigure_add_entity(
     assert result["step_id"] == "summary_menu"
 
     # assert we have a device for the subentry
-    device = device_registry.async_get_device(identifiers={(DOMAIN, subentry_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, subentry_id), config_entry.entry_id
+    )
     assert device is not None
 
     # assert we have an entity for the subentry component
@@ -5109,7 +5228,9 @@ async def test_subentry_reconfigure_update_device_properties(
     assert result["step_id"] == "summary_menu"
 
     # assert we have a device for the subentry
-    device = device_registry.async_get_device(identifiers={(DOMAIN, subentry_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, subentry_id), config_entry.entry_id
+    )
     assert device is not None
 
     # assert we have an entity for all subentry components
@@ -5390,7 +5511,9 @@ async def test_subentry_reconfigure_export_settings(
     assert result["step_id"] == "summary_menu"
 
     # assert we have a device for the subentry
-    device = device_registry.async_get_device(identifiers={(DOMAIN, subentry_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, subentry_id), config_entry.entry_id
+    )
     assert device is not None
 
     # assert we entity for all subentry components

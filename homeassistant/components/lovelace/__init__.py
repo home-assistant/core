@@ -6,7 +6,7 @@ import logging
 import os
 from typing import Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import frontend, onboarding, websocket_api
 from homeassistant.config import (
@@ -61,46 +61,46 @@ _LOGGER = logging.getLogger(__name__)
 def _validate_url_slug(value: Any) -> str:
     """Validate value is a valid url slug."""
     if value is None:
-        raise vol.Invalid("Slug should not be None")
+        raise probatio.Invalid("Slug should not be None")
     if value != "lovelace" and "-" not in value:
-        raise vol.Invalid("Url path needs to contain a hyphen (-)")
+        raise probatio.Invalid("Url path needs to contain a hyphen (-)")
     str_value = str(value)
     slg = slugify(str_value, separator="-")
     if str_value == slg:
         return str_value
-    raise vol.Invalid(f"invalid slug {value} (try {slg})")
+    raise probatio.Invalid(f"invalid slug {value} (try {slg})")
 
 
 CONF_DASHBOARDS = "dashboards"
 
-YAML_DASHBOARD_SCHEMA = vol.Schema(
+YAML_DASHBOARD_SCHEMA = probatio.Schema(
     {
         **DASHBOARD_BASE_CREATE_FIELDS,
-        vol.Required(CONF_MODE): MODE_YAML,
-        vol.Required(CONF_FILENAME): cv.path,
+        probatio.Required(CONF_MODE): MODE_YAML,
+        probatio.Required(CONF_FILENAME): cv.path,
     }
 )
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        vol.Optional(DOMAIN, default={}): vol.Schema(
+        probatio.Optional(DOMAIN, default={}): probatio.Schema(
             {
                 # Deprecated - Remove in 2026.8
-                vol.Optional(CONF_MODE, default=MODE_STORAGE): vol.All(
-                    vol.Lower, vol.In([MODE_YAML, MODE_STORAGE])
+                probatio.Optional(CONF_MODE, default=MODE_STORAGE): probatio.All(
+                    probatio.Lower, probatio.In([MODE_YAML, MODE_STORAGE])
                 ),
-                vol.Optional(CONF_RESOURCE_MODE): vol.All(
-                    vol.Lower, vol.In([MODE_YAML, MODE_STORAGE])
+                probatio.Optional(CONF_RESOURCE_MODE): probatio.All(
+                    probatio.Lower, probatio.In([MODE_YAML, MODE_STORAGE])
                 ),
-                vol.Optional(CONF_DASHBOARDS): cv.schema_with_slug_keys(
+                probatio.Optional(CONF_DASHBOARDS): cv.schema_with_slug_keys(
                     YAML_DASHBOARD_SCHEMA,
                     slug_validator=_validate_url_slug,
                 ),
-                vol.Optional(CONF_RESOURCES): [RESOURCE_SCHEMA],
+                probatio.Optional(CONF_RESOURCES): [RESOURCE_SCHEMA],
             }
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 
@@ -142,7 +142,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         if config is None:
             raise HomeAssistantError("Config validation failed")
 
-        resource_collection = await create_yaml_resource_col(
+        resource_collection = await resources.create_yaml_resource_col(
             hass, config[DOMAIN].get(CONF_RESOURCES)
         )
         hass.data[LOVELACE_DATA].resources = resource_collection
@@ -154,7 +154,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     # Load resources based on resource_mode
     if resource_mode == MODE_YAML:
-        resource_collection = await create_yaml_resource_col(hass, yaml_resources)
+        resource_collection = await resources.create_yaml_resource_col(
+            hass, yaml_resources
+        )
 
         async_register_admin_service(
             hass,
@@ -316,27 +318,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def create_yaml_resource_col(
-    hass: HomeAssistant, yaml_resources: list[ConfigType] | None
-) -> resources.ResourceYAMLCollection:
-    """Create yaml resources collection."""
-    if yaml_resources is None:
-        default_config = dashboard.LovelaceYAML(hass, None, None)
-        try:
-            ll_conf = await default_config.async_load(False)
-        except HomeAssistantError:
-            pass
-        else:
-            if CONF_RESOURCES in ll_conf:
-                _LOGGER.warning(
-                    "Resources need to be specified in your configuration.yaml. Please"
-                    " see the docs"
-                )
-                yaml_resources = ll_conf[CONF_RESOURCES]
-
-    return resources.ResourceYAMLCollection(yaml_resources or [])
-
-
 @callback
 def _async_ensure_default_panel(hass: HomeAssistant) -> None:
     """Ensure a default lovelace panel is registered for backward compatibility."""
@@ -431,7 +412,7 @@ async def _async_migrate_default_config(
                 CONF_URL_PATH: DOMAIN,
             }
         )
-    except HomeAssistantError, vol.Invalid:
+    except HomeAssistantError, probatio.Invalid:
         _LOGGER.exception("Failed to create dashboard entry during migration")
         return
 

@@ -6,8 +6,8 @@ import logging
 from typing import Any
 from unittest.mock import ANY, Mock, patch
 
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.components import automation, input_boolean, script
 from homeassistant.components.automation import (
@@ -15,9 +15,9 @@ from homeassistant.components.automation import (
     DOMAIN,
     EVENT_AUTOMATION_RELOADED,
     EVENT_AUTOMATION_TRIGGERED,
-    SERVICE_TRIGGER,
     AutomationEntity,
 )
+from homeassistant.components.automation.const import CONF_STOP_ACTIONS, SERVICE_TRIGGER
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -440,30 +440,28 @@ async def test_shared_context(hass: HomeAssistant, calls: list[ServiceCall]) -> 
     )
 
     context = Context()
-    first_automation_listener = Mock()
-    event_mock = Mock()
-
-    hass.bus.async_listen("test_event2", first_automation_listener)
-    hass.bus.async_listen(EVENT_AUTOMATION_TRIGGERED, event_mock)
+    first_automation_events = async_capture_events(hass, "test_event2")
+    triggered_events = async_capture_events(hass, EVENT_AUTOMATION_TRIGGERED)
     hass.bus.async_fire("test_event", context=context)
+    await hass.async_block_till_done()
+    # Event triggers schedule their action with call_soon, so wait for 'bye' as well
     await hass.async_block_till_done()
 
     # Ensure events was fired
-    assert first_automation_listener.call_count == 1
-    assert event_mock.call_count == 2
+    assert len(first_automation_events) == 1
+    assert len(triggered_events) == 2
 
     # Verify automation triggered evenet for 'hello' automation
-    args, _ = event_mock.call_args_list[0]
-    first_trigger_context = args[0].context
+    event = triggered_events[0]
+    first_trigger_context = event.context
     assert first_trigger_context.parent_id == context.id
     # Ensure event data has all attributes set
-    assert args[0].data.get(ATTR_NAME) is not None
-    assert args[0].data.get(ATTR_ENTITY_ID) is not None
-    assert args[0].data.get(ATTR_SOURCE) is not None
+    assert event.data.get(ATTR_NAME) is not None
+    assert event.data.get(ATTR_ENTITY_ID) is not None
+    assert event.data.get(ATTR_SOURCE) is not None
 
     # Ensure context set correctly for event fired by 'hello' automation
-    args, _ = first_automation_listener.call_args
-    assert args[0].context is first_trigger_context
+    assert first_automation_events[0].context is first_trigger_context
 
     # Ensure the 'hello' automation state has the right context
     state = hass.states.get("automation.hello")
@@ -471,13 +469,13 @@ async def test_shared_context(hass: HomeAssistant, calls: list[ServiceCall]) -> 
     assert state.context is first_trigger_context
 
     # Verify automation triggered evenet for 'bye' automation
-    args, _ = event_mock.call_args_list[1]
-    second_trigger_context = args[0].context
+    event = triggered_events[1]
+    second_trigger_context = event.context
     assert second_trigger_context.parent_id == first_trigger_context.id
     # Ensure event data has all attributes set
-    assert args[0].data.get(ATTR_NAME) is not None
-    assert args[0].data.get(ATTR_ENTITY_ID) is not None
-    assert args[0].data.get(ATTR_SOURCE) is not None
+    assert event.data.get(ATTR_NAME) is not None
+    assert event.data.get(ATTR_ENTITY_ID) is not None
+    assert event.data.get(ATTR_SOURCE) is not None
 
     # Ensure the service call from the second automation
     # shares the same context
@@ -811,7 +809,7 @@ async def test_automation_stops(
         await hass.services.async_call(
             automation.DOMAIN,
             SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: entity_id, automation.CONF_STOP_ACTIONS: False},
+            {ATTR_ENTITY_ID: entity_id, CONF_STOP_ACTIONS: False},
             blocking=True,
         )
     elif service == "reload":
@@ -1701,7 +1699,7 @@ async def test_automation_not_trigger_on_bootstrap(hass: HomeAssistant) -> None:
         (
             {},
             "could not be validated",
-            "required key not provided @ data['actions']",
+            "required key not provided at 'actions'",
             "validation_failed_schema",
         ),
         (
@@ -1711,8 +1709,7 @@ async def test_automation_not_trigger_on_bootstrap(hass: HomeAssistant) -> None:
             },
             "failed to setup triggers",
             "Integration 'automation' does not provide trigger support"
-            ". Got {'alias': 'bad_automation', "
-            "'triggers': [{'platform': 'automation'}], 'actions': []",
+            ". Got {'alias': 'bad_automation',",
             "validation_failed_triggers",
         ),
         (
@@ -1941,7 +1938,7 @@ async def test_automation_with_error_in_script_2(
             False,
         ),
         (
-            vol.Invalid("not valid"),
+            probatio.Invalid("not valid"),
             "Error while executing automation automation.hello: not valid",
             False,
         ),
@@ -1951,7 +1948,7 @@ async def test_automation_with_error_in_script_2(
             True,
         ),
     ],
-    ids=["home_assistant_error", "voluptuous_invalid", "unexpected_exception"],
+    ids=["home_assistant_error", "probatio_invalid", "unexpected_exception"],
 )
 async def test_automation_with_error_in_action_script(
     hass: HomeAssistant,
@@ -1985,7 +1982,7 @@ async def test_automation_with_error_in_action_script(
 
     assert len(calls) == 0
     assert expected_error in caplog.text
-    # A HomeAssistantError/voluptuous error is logged without a traceback, an
+    # A HomeAssistantError/probatio error is logged without a traceback, an
     # unexpected error is logged with a traceback.
     assert ("Traceback" in caplog.text) is expect_traceback
 
@@ -2010,7 +2007,7 @@ async def test_automation_with_error_in_action_script(
             False,
         ),
         (
-            vol.Invalid("not valid"),
+            probatio.Invalid("not valid"),
             "Error while checking conditions of automation automation.hello: not valid",
             False,
         ),
@@ -2020,7 +2017,7 @@ async def test_automation_with_error_in_action_script(
             True,
         ),
     ],
-    ids=["home_assistant_error", "voluptuous_invalid", "unexpected_exception"],
+    ids=["home_assistant_error", "probatio_invalid", "unexpected_exception"],
 )
 async def test_automation_with_error_in_condition(
     hass: HomeAssistant,
@@ -2060,7 +2057,7 @@ async def test_automation_with_error_in_condition(
     # The action must not run when the condition check raises.
     assert len(calls) == 0
     assert expected_error in caplog.text
-    # A HomeAssistantError/voluptuous error is logged without a traceback, an
+    # A HomeAssistantError/probatio error is logged without a traceback, an
     # unexpected error is logged with a traceback.
     assert ("Traceback" in caplog.text) is expect_traceback
 
@@ -2481,6 +2478,7 @@ async def test_extraction_functions(
         "sensor.trigger_state",
         "sensor.trigger_numeric_state",
         "sensor.trigger_event",
+        "light.bla",
         "light.condition_state",
         "light.in_both",
         "light.in_first",
@@ -3302,10 +3300,7 @@ async def test_blueprint_automation_override(
                 "a_number": 5,
             },
             "Blueprint 'Call service based on event' generated invalid automation",
-            (
-                "value should be a string for dictionary value @"
-                " data['actions'][0]['action']"
-            ),
+            "value should be a string at 'actions[0].action'",
         ),
     ],
 )

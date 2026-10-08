@@ -1,0 +1,22 @@
+{
+  "dataPoints": [
+    {
+      "name": "users/me/dataTypes/sleep/dataPoints/session-12345",
+      "sleep": {
+        "interval": {
+          "startTime": "2026-06-29T22:00:00Z",
+          "endTime": "2026-06-30T06:00:00Z",
+          "startUtcOffset": "-07:00",
+          "endUtcOffset": "-07:00"
+        },
+        "summary": {
+          "minutesToFallAsleep": 15,
+          "minutesAfterWakeUp": 10,
+          "minutesAsleep": 420,
+          "minutesInSleepPeriod": 480,
+          "minutesAwake": 60
+        }
+      }
+    }
+  ]
+}

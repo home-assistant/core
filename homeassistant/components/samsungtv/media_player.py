@@ -17,7 +17,7 @@ from async_upnp_client.exceptions import (
 )
 from async_upnp_client.profiles.dlna import DmrDevice
 from async_upnp_client.utils import async_get_local_ip
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
@@ -94,10 +94,6 @@ class SamsungTVDevice(SamsungTVEntity, MediaPlayerEntity):
         self._app_list_event: asyncio.Event = asyncio.Event()
 
         self._attr_supported_features = SUPPORT_SAMSUNGTV
-        if self._mac:
-            # Deprecated: Implicit Wake-On-LAN, will be removed in 2026.8.0
-            # Triggers have not yet been registered so this is adjusted in the property
-            self._attr_supported_features |= MediaPlayerEntityFeature.TURN_ON
         if self._ssdp_rendering_control_location:
             self._attr_supported_features |= MediaPlayerEntityFeature.VOLUME_SET
 
@@ -380,7 +376,7 @@ class SamsungTVDevice(SamsungTVEntity, MediaPlayerEntity):
         # media_id should only be a channel number
         try:
             cv.positive_int(media_id)
-        except vol.Invalid as err:
+        except probatio.Invalid as err:
             LOGGER.error("Media ID must be positive integer")
             raise HomeAssistantError(
                 translation_domain=DOMAIN,

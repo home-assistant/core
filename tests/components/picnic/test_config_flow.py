@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 import pytest
+from python_picnic_api2.models import User
 from python_picnic_api2.session import (
     Picnic2FAError,
     Picnic2FARequired,
@@ -36,7 +37,7 @@ def picnic_api():
     ) as picnic_mock:
         instance = picnic_mock.return_value
         instance.session.auth_token = auth_token
-        instance.get_user.return_value = auth_data
+        instance.get_user.return_value = User.from_api(auth_data)
         instance.login.return_value = None  # no 2FA by default
         instance.generate_2fa_code.return_value = None
         instance.verify_2fa_code.return_value = None
@@ -389,7 +390,7 @@ async def test_form_already_configured(hass: HomeAssistant, picnic_api) -> None:
     # user_id as set for the picnic_api mock response.
     MockConfigEntry(
         domain=DOMAIN,
-        unique_id=picnic_api().get_user()["user_id"],
+        unique_id=picnic_api().get_user().user_id,
         data={CONF_ACCESS_TOKEN: "a3p98fsen.a39p3fap", CONF_COUNTRY_CODE: "NL"},
     ).add_to_hass(hass)
 
@@ -418,7 +419,7 @@ async def test_step_reauth(hass: HomeAssistant, picnic_api) -> None:
 
     entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id=picnic_api().get_user()["user_id"],
+        unique_id=picnic_api().get_user().user_id,
         data=conf,
     )
     entry.add_to_hass(hass)

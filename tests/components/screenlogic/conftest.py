@@ -6,7 +6,7 @@ from unittest.mock import Mock, patch
 import pytest
 
 from homeassistant.components.screenlogic import DOMAIN
-from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT, CONF_SCAN_INTERVAL
+from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT
 
 from . import (
     MOCK_ADAPTER_IP,
@@ -19,6 +19,11 @@ from . import (
 from tests.common import MockConfigEntry
 
 
+def pytest_configure(config: pytest.Config) -> None:
+    """Register the mark used to select the dataset."""
+    config.addinivalue_line("markers", "dataset: mark test with the dataset to load")
+
+
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
     """Return a mocked config entry."""
@@ -28,9 +33,6 @@ def mock_config_entry() -> MockConfigEntry:
         data={
             CONF_IP_ADDRESS: MOCK_ADAPTER_IP,
             CONF_PORT: MOCK_ADAPTER_PORT,
-        },
-        options={
-            CONF_SCAN_INTERVAL: 30,
         },
         unique_id=MOCK_ADAPTER_MAC,
         entry_id=MOCK_CONFIG_ENTRY_ID,
