@@ -38,6 +38,12 @@ async def test_unload_entry(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test successful unload of entry."""
+    listener = hass.loop.create_future()
+
+    async def listen() -> None:
+        await listener
+
+    mock_tractive_client.listen.side_effect = listen
     await init_integration(hass, mock_config_entry)
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
@@ -47,6 +53,7 @@ async def test_unload_entry(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+    assert listener.cancelled()
 
 
 @pytest.mark.parametrize(
