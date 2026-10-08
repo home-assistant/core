@@ -751,6 +751,7 @@ async def test_removing_entity_with_update_override_pending_does_not_cancel_task
             await super().async_update_ha_state(force_refresh)
 
     entity = _OverridingEntity(should_poll=True)
+    # pylint: disable-next=attribute-defined-outside-init
     entity.async_update = AsyncMock()
 
     await component.async_add_entities([entity])
@@ -889,6 +890,7 @@ async def test_concurrent_update_not_skipped_by_suspended_poll_of_same_entity(
             await super().async_update_ha_state(force_refresh)
 
     entity = _OverridingEntity(should_poll=True)
+    # pylint: disable-next=attribute-defined-outside-init
     entity.async_update = AsyncMock()
 
     await component.async_add_entities([entity])
