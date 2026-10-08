@@ -648,7 +648,7 @@ async def test_group_members_after_entity_id_change(
             ],
         )
     ]
-    # Called during _initialize only, the rename does not query the device
+    # The rename does not query the device
     assert mock_mozart_client.get_beolink_listeners.call_count == 2
 
 
