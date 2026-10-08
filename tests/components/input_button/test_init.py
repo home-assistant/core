@@ -16,7 +16,14 @@ from homeassistant.const import (
     SERVICE_RELOAD,
     STATE_UNKNOWN,
 )
-from homeassistant.core import Context, CoreState, HomeAssistant, State
+from homeassistant.core import (
+    Context,
+    CoreState,
+    Event,
+    EventStateChangedData,
+    HomeAssistant,
+    State,
+)
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.setup import async_setup_component
@@ -212,8 +219,8 @@ async def test_reload_not_changing_state(hass: HomeAssistant, storage_setup) -> 
     assert await storage_setup()
     state_changes = []
 
-    def state_changed_listener(event):
-        state_changes.append(event.data.get("new_state"))
+    def state_changed_listener(event: Event[EventStateChangedData]):
+        state_changes.append(event.data["new_state"].state)
 
     state = hass.states.get(f"{DOMAIN}.from_storage")
     assert state is not None
