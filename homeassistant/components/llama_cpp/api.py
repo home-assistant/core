@@ -62,8 +62,7 @@ async def async_create_client(
     client = openai.AsyncOpenAI(
         api_key=api_key,
         base_url=config_entry_data[CONF_BASE_URL],
-        # Legacy HTTPX clients are supported at runtime only.
-        http_client=cast(Any, get_async_client(hass)),
+        http_client=get_async_client(hass),
     )
     # Cache current platform data which gets added to each request
     # (caching done by library)
