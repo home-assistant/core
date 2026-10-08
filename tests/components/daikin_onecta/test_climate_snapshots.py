@@ -132,6 +132,30 @@ async def test_climate_entities(
     )
 
 
+@pytest.mark.parametrize("fixture", FIXTURES)
+async def test_all_platform_entities(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+    fixture: str,
+) -> None:
+    """Snapshot all entities from each archived Daikin cloud response."""
+    await _async_setup_fixture(hass, config_entry, fixture)
+
+    entities = {}
+    for entry in er.async_entries_for_config_entry(
+        entity_registry, config_entry.entry_id
+    ):
+        state = hass.states.get(entry.entity_id)
+        assert state is not None
+        entities[entry.entity_id] = {"entry": entry, "state": state}
+
+    assert entities == snapshot(
+        name=fixture, extension_class=SingleFileHomeAssistantSnapshotExtension
+    )
+
+
 async def test_fan_mode_changes_with_hvac_mode(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
