@@ -73,7 +73,6 @@ class PowerviewShadeUpdateCoordinator(DataUpdateCoordinator[PowerviewShadeData])
         # Clean up stale devices
         current_shade_ids = set(shade_entries.processed.keys())
         
-        # Pull all currently tracked HA devices for this integration to check against
         device_registry = dr.async_get(self.hass)
         devices = dr.async_entries_for_config_entry(
             device_registry, self.config_entry.entry_id
@@ -85,7 +84,6 @@ class PowerviewShadeUpdateCoordinator(DataUpdateCoordinator[PowerviewShadeData])
             if device.via_device_id is not None:
                 for identifier in device.identifiers:
                     if identifier[0] == DOMAIN and identifier[1] not in current_shade_ids:
-                        # Remove the stale shade and write the removal to the log
                         _LOGGER.info(
                             "Removing device for shade %s that no longer exists on hub",
                             identifier[1]
