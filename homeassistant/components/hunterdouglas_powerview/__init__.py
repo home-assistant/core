@@ -215,7 +215,7 @@ async def async_remove_config_entry_device(
     if (
         shade_id is not None 
         and coordinator.data 
-        and shade_id in coordinator.data.shades
+        and shade_id in coordinator.data.get_all_raw_data()
     ):
         _LOGGER.warning(
             "Cannot remove active shade device %s (ID: %s) because it is still present on the PowerView Hub.",
