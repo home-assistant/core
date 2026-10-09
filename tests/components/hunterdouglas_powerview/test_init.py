@@ -123,7 +123,7 @@ async def test_remove_shade_device_via_websocket_blocked_when_online(
 
     # The deletion must fail because the device is still physically active on the network
     assert msg["success"] is False
-    assert msg["error"]["code"] in ("unknown_error", "cannot_remove")
+    assert msg["error"]["code"] == "home_assistant_error"
     assert device_registry.async_get(shade_device.id) is not None
 
 
