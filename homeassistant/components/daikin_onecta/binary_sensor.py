@@ -12,7 +12,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import DaikinOnectaConfigEntry
 from .device import DaikinOnectaDevice
-from .entity import DaikinEntity
+from .entity import DaikinManagementPointEntity
 from .entity_descriptions import BINARY_SENSOR_DESCRIPTIONS
 
 PARALLEL_UPDATES = 1
@@ -45,7 +45,6 @@ async def async_setup_entry(
                             device,
                             coordinator,
                             management_point.embedded_id,
-                            management_point.management_point_type,
                             value,
                         )
                     )
@@ -53,7 +52,7 @@ async def async_setup_entry(
     async_add_entities(sensors)
 
 
-class DaikinBinarySensor(DaikinEntity, BinarySensorEntity):
+class DaikinBinarySensor(DaikinManagementPointEntity, BinarySensorEntity):
     """Represent a boolean Daikin characteristic."""
 
     def __init__(
@@ -61,18 +60,17 @@ class DaikinBinarySensor(DaikinEntity, BinarySensorEntity):
         device: DaikinOnectaDevice,
         coordinator: OnectaDataUpdateCoordinator,
         embedded_id: str,
-        management_point_type: str,
         value: str,
     ) -> None:
         """Initialize the binary sensor from a device characteristic."""
-        _LOGGER.info("DaikinBinarySensor '%s' '%s'", management_point_type, value)
-        super().__init__(device, coordinator, embedded_id, management_point_type)
-        self._management_point_type = management_point_type
+        _LOGGER.info("DaikinBinarySensor '%s'", value)
+        super().__init__(device, coordinator, embedded_id)
         self._value = value
+        # Preserve the custom integration's ID shape for migration compatibility.
+        # ``None`` identifies a scalar characteristic rather than sensory data.
         self._attr_unique_id = (
             f"{self._device.id}_{self._embedded_id}_None_{self._value}"
         )
-        self._attr_has_entity_name = True
         self.entity_description = BINARY_SENSOR_DESCRIPTIONS.get(
             value, BinarySensorEntityDescription(key=value)
         )
@@ -96,7 +94,7 @@ class DaikinBinarySensor(DaikinEntity, BinarySensorEntity):
 
     def sensor_value(self) -> bool | None:
         """Return the binary characteristic value."""
-        point = self._device.management_point(self._embedded_id or "")
+        point = self._device.management_point(self._embedded_id)
         characteristic = (
             point.scalar_characteristic(self._value) if point is not None else None
         )

@@ -48,7 +48,6 @@ async def async_setup_entry(
                 DaikinWaterTank(
                     device,
                     coordinator,
-                    management_point_type,
                     management_point.embedded_id,
                 )
                 for management_point in device.device.management_points_by_type(
@@ -61,21 +60,17 @@ async def async_setup_entry(
 class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
     """Representation of a Daikin Water Tank."""
 
-    _attr_has_entity_name = True
-
     def __init__(
         self,
         device: DaikinOnectaDevice,
         coordinator: OnectaDataUpdateCoordinator,
-        management_point_type: str,
         embedded_id: str,
     ) -> None:
         """Initialize the Water device."""
         _LOGGER.info("Initializing Daiking Altherma HotWaterTank")
-        super().__init__(device, coordinator, embedded_id, management_point_type)
+        super().__init__(device, coordinator, embedded_id)
         self._attr_native_temperature_unit = UnitOfTemperature.CELSIUS
         self._attr_unique_id = f"{self._device.id}_{self._embedded_id}"
-        self._management_point_type = management_point_type
         self.update_state()
         if self.supported_features & WaterHeaterEntityFeature.TARGET_TEMPERATURE:
             _LOGGER.debug("Device '%s' tank temperature is settable", device.name)

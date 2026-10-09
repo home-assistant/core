@@ -21,7 +21,7 @@ from .const import (
 )
 from .coordinator import DaikinOnectaConfigEntry
 from .device import DaikinOnectaDevice
-from .entity import DaikinEntity
+from .entity import DaikinEntity, DaikinManagementPointEntity
 from .entity_descriptions import SENSOR_DESCRIPTIONS
 
 PARALLEL_UPDATES = 1
@@ -37,7 +37,6 @@ class EnergySensorDetails:
     """Parameters that identify an energy sensor."""
 
     embedded_id: str
-    management_point_type: str
     sensor_type: str
     operation_mode: str
     period: str
@@ -49,7 +48,6 @@ class ValueSensorDetails:
     """Parameters that identify a value sensor."""
 
     embedded_id: str
-    management_point_type: str
     sub_type: str | None
     value: str
 
@@ -82,7 +80,6 @@ def add_energy_sensors(
     ):
         details = EnergySensorDetails(
             management_point.embedded_id,
-            management_point.management_point_type,
             aggregate.source,
             aggregate.operation_mode,
             periods[aggregate.period],
@@ -136,7 +133,6 @@ def add_simple_sensors(
                     coordinator,
                     ValueSensorDetails(
                         management_point.embedded_id,
-                        management_point.management_point_type,
                         None,
                         value,
                     ),
@@ -157,7 +153,6 @@ def add_sensory_sensors(
             coordinator,
             ValueSensorDetails(
                 management_point.embedded_id,
-                management_point.management_point_type,
                 "sensoryData",
                 sensor,
             ),
@@ -213,7 +208,7 @@ async def async_setup_entry(
     async_add_entities(sensors)
 
 
-class DaikinEnergySensor(DaikinEntity, SensorEntity):
+class DaikinEnergySensor(DaikinManagementPointEntity, SensorEntity):
     """Representation of a power/energy sensor."""
 
     def __init__(
@@ -223,12 +218,8 @@ class DaikinEnergySensor(DaikinEntity, SensorEntity):
         details: EnergySensorDetails,
     ) -> None:
         """Initialize an energy sensor for a management point."""
-        super().__init__(
-            device, coordinator, details.embedded_id, details.management_point_type
-        )
-        self._management_point_type = details.management_point_type
+        super().__init__(device, coordinator, details.embedded_id)
         self._operation_mode = details.operation_mode
-        self._attr_has_entity_name = True
         self._period = details.period
         self._datatype = details.datatype
         buildname = _energy_sensor_description_key(details)
@@ -267,7 +258,7 @@ class DaikinEnergySensor(DaikinEntity, SensorEntity):
         that a time slot is not available yet and contributes no consumption
         until a later update supplies its value.
         """
-        point = self._device.management_point(self._embedded_id or "")
+        point = self._device.management_point(self._embedded_id)
         if point is None:
             return None
         period = {
@@ -294,7 +285,7 @@ class DaikinEnergySensor(DaikinEntity, SensorEntity):
         )
 
 
-class DaikinValueSensor(DaikinEntity, SensorEntity):
+class DaikinValueSensor(DaikinManagementPointEntity, SensorEntity):
     """Represent a Daikin characteristic or sensory-data value."""
 
     def __init__(
@@ -304,20 +295,13 @@ class DaikinValueSensor(DaikinEntity, SensorEntity):
         details: ValueSensorDetails,
     ) -> None:
         """Initialize the sensor from a device value."""
-        _LOGGER.info(
-            "DaikinValueSensor '%s' '%s' '%s'",
-            details.management_point_type,
-            details.sub_type,
-            details.value,
-        )
-        super().__init__(
-            device, coordinator, details.embedded_id, details.management_point_type
-        )
-        self._management_point_type = details.management_point_type
+        _LOGGER.info("DaikinValueSensor '%s' '%s'", details.sub_type, details.value)
+        super().__init__(device, coordinator, details.embedded_id)
         self._sub_type = details.sub_type
         self._value = details.value
-        self._attr_has_entity_name = True
         self.entity_description = SENSOR_DESCRIPTIONS[details.value]
+        # Preserve the custom integration's ID shape for migration compatibility.
+        # The subtype also prevents scalar and sensory-data IDs from colliding.
         self._attr_unique_id = (
             f"{self._device.id}_{details.embedded_id}_{self._sub_type}_{self._value}"
         )
@@ -341,7 +325,7 @@ class DaikinValueSensor(DaikinEntity, SensorEntity):
 
     def sensor_value(self) -> str | int | float | None:
         """Return a typed characteristic or sensory value."""
-        point = self._device.management_point(self._embedded_id or "")
+        point = self._device.management_point(self._embedded_id)
         if point is None:
             return None
         if self._sub_type == "sensoryData":
@@ -366,11 +350,8 @@ class DaikinLimitSensor(DaikinEntity, SensorEntity):
     ) -> None:
         """Initialize a rate-limit sensor."""
         _LOGGER.info("Device '%s' LimitSensor '%s'", device.name, limit_key)
-        super().__init__(
-            device, coordinator, device.gateway_embedded_id or "gateway", "Gateway"
-        )
+        super().__init__(device, coordinator, device.gateway_embedded_id or "gateway")
         self._limit_key = limit_key
-        self._attr_has_entity_name = True
         self._attr_unique_id = f"{self._device.id}_limitsensor_{self._limit_key}"
         self.entity_description = SENSOR_DESCRIPTIONS["RatelimitRemainingDay"]
         self.update_state()

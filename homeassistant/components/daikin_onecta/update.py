@@ -34,7 +34,6 @@ async def async_setup_entry(
             coordinator,
             device,
             management_point,
-            management_point.management_point_type,
         )
         for device in (coordinator.data or {}).values()
         for management_point in device.device.management_points
@@ -53,15 +52,10 @@ class DaikinFirmwareUpdateEntity(DaikinManagementPointEntity, UpdateEntity):
         coordinator: OnectaDataUpdateCoordinator,
         device: DaikinOnectaDevice,
         gateway_mp: ManagementPoint,
-        management_point_type: str,
     ) -> None:
         """Initialise the update entity."""
-        super().__init__(
-            device, coordinator, gateway_mp.embedded_id, management_point_type
-        )
+        super().__init__(device, coordinator, gateway_mp.embedded_id)
         self._coordinator = coordinator
-        self._management_point_type = management_point_type
-        self._attr_has_entity_name = True
         self.entity_description = UPDATE_DESCRIPTIONS["FirmwareUpdate"]
 
         self._attr_unique_id = f"{device.id}_{self._embedded_id}_firmware"

@@ -371,9 +371,7 @@ def test_water_heater_features_follow_power_capability(power_settable: bool) -> 
     device = DaikinOnectaDevice(_load_gateway_devices("holidaymode")[0])
     point = device.device.management_points_by_type("domesticHotWaterFlowThrough")[0]
     point.on_off_mode.settable = power_settable
-    entity = DaikinWaterTank(
-        device, MagicMock(), point.management_point_type, point.embedded_id
-    )
+    entity = DaikinWaterTank(device, MagicMock(), point.embedded_id)
 
     expected = (
         WaterHeaterEntityFeature.ON_OFF | WaterHeaterEntityFeature.OPERATION_MODE
@@ -392,9 +390,7 @@ async def test_water_heater_rejects_read_only_power(method: str) -> None:
     device = DaikinOnectaDevice(_load_gateway_devices("holidaymode")[0])
     point = device.device.management_points_by_type("domesticHotWaterFlowThrough")[0]
     point.on_off_mode.value = "off" if method == "async_turn_on" else "on"
-    entity = DaikinWaterTank(
-        device, MagicMock(), point.management_point_type, point.embedded_id
-    )
+    entity = DaikinWaterTank(device, MagicMock(), point.embedded_id)
     entity._async_execute_hot_water_command = AsyncMock()
 
     with pytest.raises(HomeAssistantError):
@@ -412,9 +408,7 @@ def test_water_heater_read_only_power_keeps_writable_boost(power: str) -> None:
     point = device.device.management_points_by_type("domesticHotWaterTank")[0]
     point.on_off_mode.settable = False
     point.on_off_mode.value = power
-    entity = DaikinWaterTank(
-        device, MagicMock(), point.management_point_type, point.embedded_id
-    )
+    entity = DaikinWaterTank(device, MagicMock(), point.embedded_id)
 
     assert not entity.supported_features & WaterHeaterEntityFeature.ON_OFF
     assert bool(
@@ -435,9 +429,7 @@ def test_water_heater_handles_missing_temperature_values() -> None:
     point.domestic_hot_water.temperature.min_value = None
     point.domestic_hot_water.temperature.max_value = None
 
-    entity = DaikinWaterTank(
-        device, MagicMock(), point.management_point_type, point.embedded_id
-    )
+    entity = DaikinWaterTank(device, MagicMock(), point.embedded_id)
 
     assert entity.target_temperature is None
     assert entity.min_temp == super(DaikinWaterTank, entity).min_temp
@@ -475,9 +467,7 @@ async def test_water_heater_rejects_unavailable_temperature_control(
         assert point.domestic_hot_water is not None
         assert point.domestic_hot_water.temperature is not None
         point.domestic_hot_water.temperature.settable = temperature_settable
-        entity = DaikinWaterTank(
-            device, MagicMock(), point.management_point_type, point.embedded_id
-        )
+        entity = DaikinWaterTank(device, MagicMock(), point.embedded_id)
     entity._attr_current_operation = operation
     entity._async_execute_hot_water_command = AsyncMock()
 
@@ -885,9 +875,7 @@ def test_unknown_binary_sensor_uses_generic_description() -> None:
         scalar_characteristic=MagicMock(return_value=SimpleNamespace(value=True))
     )
 
-    entity = DaikinBinarySensor(
-        device, MagicMock(), "point", "climateControl", "futureBoolean"
-    )
+    entity = DaikinBinarySensor(device, MagicMock(), "point", "futureBoolean")
 
     assert entity.entity_description.key == "futureBoolean"
     assert entity.is_on is True

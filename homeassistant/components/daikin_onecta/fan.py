@@ -49,8 +49,6 @@ async def async_setup_entry(
 class DaikinAirPurifier(DaikinManagementPointEntity, FanEntity):
     """Representation of a Daikin air purifier."""
 
-    _attr_has_entity_name = True
-
     def __init__(
         self,
         device: DaikinOnectaDevice,
@@ -58,7 +56,7 @@ class DaikinAirPurifier(DaikinManagementPointEntity, FanEntity):
         coordinator: OnectaDataUpdateCoordinator,
     ) -> None:
         """Initialize the air purifier."""
-        super().__init__(device, coordinator, embedded_id, "climateControl")
+        super().__init__(device, coordinator, embedded_id)
         self._attr_unique_id = f"{device.id}_{embedded_id}_air_purifier"
         self._update_state()
 

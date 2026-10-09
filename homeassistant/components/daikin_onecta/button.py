@@ -46,7 +46,6 @@ class DaikinRefreshButton(DaikinEntity, ButtonEntity):
         """Initialize a refresh button for a device."""
         super().__init__(device, coordinator)
         self._attr_unique_id = f"{self._device.id}_refresh"
-        self._attr_has_entity_name = True
         self.entity_description = BUTTON_DESCRIPTIONS["refresh"]
         self._config_entry = config_entry
 

@@ -40,7 +40,6 @@ async def async_setup_entry(
                         device,
                         coordinator,
                         management_point.embedded_id,
-                        management_point.management_point_type,
                         "schedule",
                     )
                 )
@@ -56,15 +55,12 @@ class DaikinScheduleSelect(DaikinManagementPointEntity, SelectEntity):
         device: DaikinOnectaDevice,
         coordinator: OnectaDataUpdateCoordinator,
         embedded_id: str,
-        management_point_type: str,
         value: str,
     ) -> None:
         """Initialize a schedule selection entity."""
-        _LOGGER.info("DaikinScheduleSelect '%s' '%s'", management_point_type, value)
-        super().__init__(device, coordinator, embedded_id, management_point_type)
-        self._management_point_type = management_point_type
+        _LOGGER.info("DaikinScheduleSelect '%s'", value)
+        super().__init__(device, coordinator, embedded_id)
         self._value = value
-        self._attr_has_entity_name = True
         self._attr_unique_id = f"{self._device.id}_{self._embedded_id}_{self._value}"
         self.entity_description = SELECT_DESCRIPTIONS[value]
         self.update_state()

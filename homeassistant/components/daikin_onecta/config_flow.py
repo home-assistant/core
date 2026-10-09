@@ -26,7 +26,6 @@ class FlowHandler(
 
     # See https://developers.home-assistant.io/docs/core/platform/application_credentials/
     VERSION = 1
-    MINOR_VERSION = 2
     DOMAIN = DOMAIN
 
     @property

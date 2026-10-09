@@ -80,14 +80,15 @@ class DaikinOnectaEntity(CoordinatorEntity[OnectaDataUpdateCoordinator]):
 
 
 class DaikinEntity(DaikinOnectaEntity):
-    """Compatibility base for entities backed by a Daikin gateway."""
+    """Base entity backed by a Daikin gateway or management point."""
+
+    _attr_has_entity_name = True
 
     def __init__(
         self,
         device: DaikinOnectaDevice,
         coordinator: OnectaDataUpdateCoordinator,
         embedded_id: str | None = None,
-        management_point_type: str | None = None,
     ) -> None:
         """Initialize shared coordinator and device state."""
         super().__init__(coordinator, device)
@@ -99,8 +100,8 @@ class DaikinEntity(DaikinOnectaEntity):
         """Return whether the coordinator, device, and point are available."""
         if not super().available or not self._device.available:
             return False
-        return (embedded_id := getattr(self, "_embedded_id", None)) is None or (
-            self._device.management_point(embedded_id) is not None
+        return self._embedded_id is None or (
+            self._device.management_point(self._embedded_id) is not None
         )
 
     async def _async_execute_command(
@@ -123,8 +124,6 @@ class DaikinManagementPointEntity(DaikinEntity):
         device: DaikinOnectaDevice,
         coordinator: OnectaDataUpdateCoordinator,
         embedded_id: str,
-        management_point_type: str | None = None,
     ) -> None:
         """Initialize a management-point entity."""
-        super().__init__(device, coordinator, embedded_id, management_point_type)
-        self._embedded_id = embedded_id
+        super().__init__(device, coordinator, embedded_id)

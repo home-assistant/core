@@ -64,7 +64,6 @@ async def async_setup_entry(
                             device,
                             coordinator,
                             management_point.embedded_id,
-                            management_point_type,
                             value,
                         )
                     )
@@ -80,15 +79,12 @@ class DaikinSwitch(DaikinManagementPointEntity, SwitchEntity):
         device: DaikinOnectaDevice,
         coordinator: OnectaDataUpdateCoordinator,
         embedded_id: str,
-        management_point_type: str,
         value: str,
     ) -> None:
         """Initialize the switch from a device characteristic."""
-        _LOGGER.info("DaikinSwitch '%s' '%s'", management_point_type, value)
-        super().__init__(device, coordinator, embedded_id, management_point_type)
-        self._management_point_type = management_point_type
+        _LOGGER.info("DaikinSwitch '%s'", value)
+        super().__init__(device, coordinator, embedded_id)
         self._value = value
-        self._attr_has_entity_name = True
         self.entity_description = SWITCH_DESCRIPTIONS.get(
             value, SwitchEntityDescription(key=value)
         )
