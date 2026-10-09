@@ -35,6 +35,7 @@ class TodoistCoordinator(DataUpdateCoordinator[list[Task]]):
         self,
         hass: HomeAssistant,
         logger: logging.Logger,
+        # pylint: disable-next=home-assistant-coordinator-untyped-config-entry
         entry: ConfigEntry | None,
         update_interval: timedelta,
         api: TodoistAPIAsync,

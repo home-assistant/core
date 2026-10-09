@@ -22,10 +22,16 @@ _LOGGER = logging.getLogger(__name__)
 class PowerviewShadeUpdateCoordinator(DataUpdateCoordinator[PowerviewShadeData]):
     """DataUpdateCoordinator to gather data from a powerview hub."""
 
+    # pylint: disable-next=home-assistant-coordinator-untyped-config-entry
     config_entry: ConfigEntry
 
     def __init__(
-        self, hass: HomeAssistant, config_entry: ConfigEntry, shades: Shades, hub: Hub
+        self,
+        hass: HomeAssistant,
+        # pylint: disable-next=home-assistant-coordinator-untyped-config-entry
+        config_entry: ConfigEntry,
+        shades: Shades,
+        hub: Hub,
     ) -> None:
         """Initialize DataUpdateCoordinator to gather data for specific Hub."""
         self.shades = shades

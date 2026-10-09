@@ -19,7 +19,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, device_registry as dr
 
 from .const import (
@@ -90,14 +90,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: Control4ConfigEntry) -> 
             "Error connecting to Control4 account API to get bearer token"
         ) from exception
     except BadCredentials as exception:
-        _LOGGER.error(
-            (
-                "Error authenticating with Control4 account API, incorrect username or"
-                " password: %s"
-            ),
-            exception,
-        )
-        return False
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="invalid_credentials",
+        ) from exception
 
     controller_unique_id: str = config[CONF_CONTROLLER_UNIQUE_ID]
 

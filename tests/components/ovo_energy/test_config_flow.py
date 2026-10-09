@@ -118,6 +118,7 @@ async def test_full_flow_implementation(hass: HomeAssistant) -> None:
     assert result2["data"][CONF_USERNAME] == FIXTURE_USER_INPUT[CONF_USERNAME]
     assert result2["data"][CONF_PASSWORD] == FIXTURE_USER_INPUT[CONF_PASSWORD]
     assert result2["data"][CONF_ACCOUNT] == FIXTURE_USER_INPUT[CONF_ACCOUNT]
+    assert result2["result"].unique_id == UNIQUE_ID
 
 
 async def test_reauth_authorization_error(hass: HomeAssistant) -> None:

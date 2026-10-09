@@ -102,6 +102,7 @@ async def test_success(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_USERNAME] == FIXTURE_USER_INPUT[CONF_USERNAME]
     assert result["data"][CONF_PASSWORD] == FIXTURE_USER_INPUT[CONF_PASSWORD]
+    assert result["result"].unique_id == FIXTURE_USER_INPUT[CONF_USERNAME]
 
 
 async def test_already_configured(

@@ -14,6 +14,11 @@
       }
     }
   },
+  "exceptions": {
+    "start_server_failed": {
+      "message": "Failed to start the wiffi server on port {port}"
+    }
+  },
   "options": {
     "step": {
       "init": {

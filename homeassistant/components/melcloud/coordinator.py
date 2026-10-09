@@ -45,7 +45,7 @@ class MelCloudDeviceUpdateCoordinator(DataUpdateCoordinator[None]):
         self,
         hass: HomeAssistant,
         device: Device,
-        config_entry: ConfigEntry,
+        config_entry: MelCloudConfigEntry,
     ) -> None:
         """Initialize the per-device coordinator."""
         self.device = device

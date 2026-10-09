@@ -248,6 +248,7 @@ async def test_form_forwards_verify_ssl_to_connection(
         await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["result"].unique_id == MOCK_UUID
     assert mock_connection_cls.call_args.kwargs["verify_ssl"] is verify_ssl
 
 

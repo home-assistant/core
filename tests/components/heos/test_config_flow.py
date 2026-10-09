@@ -122,6 +122,7 @@ async def test_manual_setup_with_discovery_in_progress(
         user_result["flow_id"], user_input={CONF_HOST: "127.0.0.1"}
     )
     assert user_result["type"] is FlowResultType.CREATE_ENTRY
+    assert user_result["result"].unique_id == DOMAIN
 
     # Discovery flow is removed
     assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)

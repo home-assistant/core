@@ -38,6 +38,7 @@ async def test_flow_user(hass: HomeAssistant, requests_mock_fixture) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "pushbullet"
     assert result["data"] == MOCK_CONFIG
+    assert result["result"].unique_id == "ujpah72o0"
 
 
 async def test_flow_user_already_configured(

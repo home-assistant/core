@@ -83,6 +83,7 @@ async def test_full_upb_flow_with_serial_port(hass: HomeAssistant) -> None:
         "device": "/dev/ttyS0",
         "file_path": "upb.upe",
     }
+    assert result["result"].unique_id == "42"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -94,6 +95,7 @@ async def test_form_user_with_tcp_upb(hass: HomeAssistant) -> None:
         "device": "socket://1.2.3.4:2101",
         "file_path": "upb.upe",
     }
+    assert result["result"].unique_id == "42"
     await hass.async_block_till_done()
 
 

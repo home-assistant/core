@@ -59,6 +59,7 @@ async def test_create_entry(recorder_mock: Recorder, hass: HomeAssistant) -> Non
         CONF_PASSWORD: "pswd",
         CONNECTION_TYPE: CLOUD,
     }
+    assert result["result"].unique_id == "user"
 
 
 async def test_flow_entry_already_exists(
@@ -170,6 +171,7 @@ async def test_local_create_entry(recorder_mock: Recorder, hass: HomeAssistant) 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == test_data[CONF_IP_ADDRESS]
     assert result["data"] == test_data
+    assert result["result"].unique_id == "192.168.1.59"
 
 
 async def test_local_flow_entry_already_exists(

@@ -16,10 +16,15 @@ from .const import DOMAIN, LOGGER, MAX_ERRORS
 class RefossDataUpdateCoordinator(DataUpdateCoordinator[None]):
     """Manages polling for state changes from the device."""
 
+    # pylint: disable-next=home-assistant-coordinator-untyped-config-entry
     config_entry: ConfigEntry
 
     def __init__(
-        self, hass: HomeAssistant, config_entry: ConfigEntry, device: BaseDevice
+        self,
+        hass: HomeAssistant,
+        # pylint: disable-next=home-assistant-coordinator-untyped-config-entry
+        config_entry: ConfigEntry,
+        device: BaseDevice,
     ) -> None:
         """Initialize the data update coordinator."""
         super().__init__(
