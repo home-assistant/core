@@ -17,7 +17,9 @@ TO_REDACT = {CONF_HOST}
 def _device_diagnostics(device_details: OWDeviceDescription) -> dict[str, Any]:
     """Return diagnostics for a device description."""
     # asdict recurses into the device info, which holds a field per key it can set
-    return asdict(device_details) | {"device_info": dict(device_details.device_info)}
+    return asdict(device_details) | {
+        "device_info": device_details.device_info.as_dict()
+    }
 
 
 async def async_get_config_entry_diagnostics(
