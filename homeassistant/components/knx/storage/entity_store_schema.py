@@ -517,6 +517,14 @@ class NumberKnxConfig:
             )
         ),
     ] = None
+    device_class: Annotated[
+        str | None,
+        probatio.Maybe(
+            selector.DeviceClassSelector(
+                selector.DeviceClassSelectorConfig(domain=Platform.NUMBER)
+            )
+        ),
+    ] = None
     unit_of_measurement: Annotated[
         str | None,
         probatio.Maybe(
@@ -524,14 +532,6 @@ class NumberKnxConfig:
                 selector.UnitOfMeasurementSelectorConfig(
                     context={"filter_device_class": "device_class"}
                 ),
-            )
-        ),
-    ] = None
-    device_class: Annotated[
-        str | None,
-        probatio.Maybe(
-            selector.DeviceClassSelector(
-                selector.DeviceClassSelectorConfig(domain=Platform.NUMBER)
             )
         ),
     ] = None

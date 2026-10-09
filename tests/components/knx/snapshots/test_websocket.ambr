@@ -1815,6 +1815,19 @@
       }),
       dict({
         'default': None,
+        'name': 'device_class',
+        'optional': True,
+        'required': False,
+        'selector': dict({
+          'device_class': dict({
+            'domain': 'number',
+            'multiple': False,
+          }),
+        }),
+        'type': 'ha_selector',
+      }),
+      dict({
+        'default': None,
         'name': 'unit_of_measurement',
         'optional': True,
         'required': False,
@@ -1823,19 +1836,6 @@
             'context': dict({
               'filter_device_class': 'device_class',
             }),
-          }),
-        }),
-        'type': 'ha_selector',
-      }),
-      dict({
-        'default': None,
-        'name': 'device_class',
-        'optional': True,
-        'required': False,
-        'selector': dict({
-          'device_class': dict({
-            'domain': 'number',
-            'multiple': False,
           }),
         }),
         'type': 'ha_selector',
