@@ -166,6 +166,7 @@ class ComelitVedoSensorEntity(
 
     @property
     @override
+    # pylint: disable-next=home-assistant-coordinator-entity-available
     def available(self) -> bool:
         """Sensor availability."""
         return self._zone_object.human_status is not AlarmZoneState.UNAVAILABLE

@@ -45,6 +45,7 @@ class EzvizEntity(CoordinatorEntity[EzvizDataUpdateCoordinator], Entity):
 
     @property
     @override
+    # pylint: disable-next=home-assistant-coordinator-entity-available
     def available(self) -> bool:
         """Return True if entity is available."""
         return self.data["status"] != 2

@@ -42,6 +42,7 @@ class ArveDeviceEntity(CoordinatorEntity[ArveCoordinator]):
 
     @property
     @override
+    # pylint: disable-next=home-assistant-coordinator-entity-available
     def available(self) -> bool:
         """Check if device is available."""
         return super()._attr_available and (

@@ -50,6 +50,7 @@ class YardianSwitch(YardianZoneEntity, SwitchEntity):
 
     @property
     @override
+    # pylint: disable-next=home-assistant-coordinator-entity-available
     def available(self) -> bool:
         """Return the switch is available or not."""
         return self.coordinator.data.zones[self._zone_id].is_enabled
