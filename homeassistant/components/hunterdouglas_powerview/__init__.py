@@ -214,7 +214,7 @@ async def async_remove_config_entry_device(
             # The second value in the tuple is the raw shade ID from the hub
             try:
                 shade_id = int(identifier[1])
-            except (ValueError, TypeError):
+            except ValueError, TypeError:
                 continue
             break
 
