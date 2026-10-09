@@ -84,8 +84,10 @@ class RitualsHubsCoordinator(DataUpdateCoordinator[dict[str, RitualsGenieHub]]):
             hubs = await self.client.hubs()
         except RitualsGenieError as err:
             raise _update_failed(err) from err
-
-        self._async_store_token()
+        finally:
+            # A login can succeed while the request after it fails. Keep that
+            # token too, or every setup retry would log in again.
+            self._async_store_token()
 
         return {hub.hublot: hub for hub in hubs}
 
