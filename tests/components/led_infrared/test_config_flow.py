@@ -311,11 +311,13 @@ async def test_form_10_key_test_device(
         assert result["type"] is FlowResultType.MENU
         assert result["step_id"] == "test_device"
 
-    # The last test toggled the light on and then off again
-    sent = mock_infrared_emitter_entity.send_command_calls[-2:]
+    # The last test turned the light off, on and off again
+    codes = CODES[expected_device_type]
+    sent = mock_infrared_emitter_entity.send_command_calls[-3:]
     assert [(command.address, command.command) for command in sent] == [
-        (expected_address, CODES[expected_device_type].ON.value),
-        (expected_address, CODES[expected_device_type].OFF.value),
+        (expected_address, codes.OFF.value),
+        (expected_address, codes.ON.value),
+        (expected_address, codes.OFF.value),
     ]
 
     result = await hass.config_entries.flow.async_configure(

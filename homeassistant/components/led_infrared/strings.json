@@ -20,9 +20,9 @@
         "title": "Reconfigure LED Infrared device"
       },
       "test_device": {
-        "description": "Home Assistant turned the light on and then off again using code set {variant} of {variant_count}. Did the light react?",
+        "description": "Home Assistant sent the on and off commands using code set {variant} of {variant_count}. Did the light turn on and then off again? If it only turned on or only turned off, this is not the right code set.",
         "menu_options": {
-          "finish": "Yes, finish setup",
+          "finish": "Yes, it turned on and off",
           "next_variant": "No, try the next code set"
         },
         "title": "Test the light"

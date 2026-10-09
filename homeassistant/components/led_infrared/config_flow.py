@@ -129,13 +129,16 @@ class LEDIrConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_test_device(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Turn the light on and off with the current code set."""
+        """Turn the light off, on and off again with the current code set."""
         codes = CODES[self._variants[self._variant_index]]
         emitter_id = self._user_input[CONF_INFRARED_ENTITY_ID]
+        # Starting with off makes the correct code set visibly turn the light on
+        # and off regardless of its initial state, while a wrong code set whose
+        # off command is the right one's on leaves the light on.
         try:
-            await async_send_command(self.hass, emitter_id, codes.ON.to_command())
-            await asyncio.sleep(_TOGGLE_GAP)
-            await async_send_command(self.hass, emitter_id, codes.OFF.to_command())
+            for code in (codes.OFF, codes.ON, codes.OFF):
+                await async_send_command(self.hass, emitter_id, code.to_command())
+                await asyncio.sleep(_TOGGLE_GAP)
         except HomeAssistantError:
             return await self.async_step_test_failed()
         return self.async_show_menu(
