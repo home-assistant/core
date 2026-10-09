@@ -1,0 +1,431 @@
+# serializer version: 1
+# name: test_daily_projection[daily-complete]
+  dict({
+    'weather.beijing': dict({
+      'forecast': list([
+        dict({
+          'condition': 'sunny',
+          'datetime': '2026-09-07T16:00:00+00:00',
+          'precipitation_probability': 0,
+          'temperature': 21.0,
+          'templow': 16.0,
+          'wind_bearing': 27.0,
+          'wind_speed': 6.0,
+        }),
+      ]),
+    }),
+  })
+# ---
+# name: test_daily_projection[daily-day-only]
+  dict({
+    'weather.beijing': dict({
+      'forecast': list([
+        dict({
+          'condition': 'sunny',
+          'datetime': '2026-09-07T16:00:00+00:00',
+          'precipitation_probability': 0,
+          'temperature': 0.0,
+          'wind_bearing': 27.0,
+          'wind_speed': 6.0,
+        }),
+      ]),
+    }),
+  })
+# ---
+# name: test_daily_projection[daily-missing-optionals]
+  dict({
+    'weather.beijing': dict({
+      'forecast': list([
+        dict({
+          'condition': 'sunny',
+          'datetime': '2026-09-07T16:00:00+00:00',
+          'temperature': 21.0,
+          'templow': 16.0,
+        }),
+      ]),
+    }),
+  })
+# ---
+# name: test_daily_projection[daily-night-only]
+  dict({
+    'weather.beijing': dict({
+      'forecast': list([
+      ]),
+    }),
+  })
+# ---
+# name: test_daily_projection[daily-probability-is-percent]
+  dict({
+    'weather.beijing': dict({
+      'forecast': list([
+        dict({
+          'condition': 'sunny',
+          'datetime': '2026-09-07T16:00:00+00:00',
+          'precipitation_probability': 0,
+          'temperature': 21.0,
+          'templow': 16.0,
+          'wind_bearing': 27.0,
+          'wind_speed': 6.0,
+        }),
+      ]),
+    }),
+  })
+# ---
+# name: test_daily_projection[daily-sunrise-only]
+  dict({
+    'weather.beijing': dict({
+      'forecast': list([
+        dict({
+          'condition': 'sunny',
+          'datetime': '2026-09-07T16:00:00+00:00',
+          'precipitation_probability': 0,
+          'temperature': 21.0,
+          'templow': 16.0,
+          'wind_bearing': 27.0,
+          'wind_speed': 6.0,
+        }),
+      ]),
+    }),
+  })
+# ---
+# name: test_daily_projection[daily-sunset-only]
+  dict({
+    'weather.beijing': dict({
+      'forecast': list([
+      ]),
+    }),
+  })
+# ---
+# name: test_daily_projection[daily-unknown-condition]
+  dict({
+    'weather.beijing': dict({
+      'forecast': list([
+        dict({
+          'datetime': '2026-09-07T16:00:00+00:00',
+          'precipitation_probability': 0,
+          'temperature': 21.0,
+          'templow': 16.0,
+          'wind_bearing': 27.0,
+          'wind_speed': 6.0,
+        }),
+      ]),
+    }),
+  })
+# ---
+# name: test_daily_projection[daily-unsupported-temperature]
+  dict({
+    'weather.beijing': dict({
+      'forecast': list([
+      ]),
+    }),
+  })
+# ---
+# name: test_daily_projection[daily-unsupported-wind]
+  dict({
+    'weather.beijing': dict({
+      'forecast': list([
+        dict({
+          'condition': 'sunny',
+          'datetime': '2026-09-07T16:00:00+00:00',
+          'precipitation_probability': 0,
+          'temperature': 21.0,
+          'templow': 16.0,
+        }),
+      ]),
+    }),
+  })
+# ---
+# name: test_daily_projection[twice_daily-complete]
+  dict({
+    'weather.beijing': dict({
+      'forecast': list([
+        dict({
+          'condition': 'sunny',
+          'datetime': '2026-09-07T21:48:00+00:00',
+          'is_daytime': True,
+          'temperature': 21.0,
+          'wind_bearing': 27.0,
+          'wind_speed': 6.0,
+        }),
+        dict({
+          'condition': 'clear-night',
+          'datetime': '2026-09-08T10:36:00+00:00',
+          'is_daytime': False,
+          'temperature': 16.0,
+          'wind_bearing': 27.0,
+          'wind_speed': 6.0,
+        }),
+      ]),
+    }),
+  })
+# ---
+# name: test_daily_projection[twice_daily-day-only]
+  dict({
+    'weather.beijing': dict({
+      'forecast': list([
+        dict({
+          'condition': 'sunny',
+          'datetime': '2026-09-07T21:48:00+00:00',
+          'is_daytime': True,
+          'temperature': 0.0,
+          'wind_bearing': 27.0,
+          'wind_speed': 6.0,
+        }),
+      ]),
+    }),
+  })
+# ---
+# name: test_daily_projection[twice_daily-missing-optionals]
+  dict({
+    'weather.beijing': dict({
+      'forecast': list([
+        dict({
+          'condition': 'sunny',
+          'datetime': '2026-09-07T21:48:00+00:00',
+          'is_daytime': True,
+          'temperature': 21.0,
+        }),
+        dict({
+          'condition': 'clear-night',
+          'datetime': '2026-09-08T10:36:00+00:00',
+          'is_daytime': False,
+          'temperature': 16.0,
+        }),
+      ]),
+    }),
+  })
+# ---
+# name: test_daily_projection[twice_daily-night-only]
+  dict({
+    'weather.beijing': dict({
+      'forecast': list([
+        dict({
+          'condition': 'clear-night',
+          'datetime': '2026-09-08T10:36:00+00:00',
+          'is_daytime': False,
+          'temperature': 0.0,
+          'wind_bearing': 27.0,
+          'wind_speed': 6.0,
+        }),
+      ]),
+    }),
+  })
+# ---
+# name: test_daily_projection[twice_daily-probability-is-percent]
+  dict({
+    'weather.beijing': dict({
+      'forecast': list([
+        dict({
+          'condition': 'sunny',
+          'datetime': '2026-09-07T21:48:00+00:00',
+          'is_daytime': True,
+          'temperature': 21.0,
+          'wind_bearing': 27.0,
+          'wind_speed': 6.0,
+        }),
+        dict({
+          'condition': 'clear-night',
+          'datetime': '2026-09-08T10:36:00+00:00',
+          'is_daytime': False,
+          'temperature': 16.0,
+          'wind_bearing': 27.0,
+          'wind_speed': 6.0,
+        }),
+      ]),
+    }),
+  })
+# ---
+# name: test_daily_projection[twice_daily-sunrise-only]
+  dict({
+    'weather.beijing': dict({
+      'forecast': list([
+        dict({
+          'condition': 'sunny',
+          'datetime': '2026-09-07T21:48:00+00:00',
+          'is_daytime': True,
+          'temperature': 21.0,
+          'wind_bearing': 27.0,
+          'wind_speed': 6.0,
+        }),
+      ]),
+    }),
+  })
+# ---
+# name: test_daily_projection[twice_daily-sunset-only]
+  dict({
+    'weather.beijing': dict({
+      'forecast': list([
+        dict({
+          'condition': 'clear-night',
+          'datetime': '2026-09-08T10:36:00+00:00',
+          'is_daytime': False,
+          'temperature': 16.0,
+          'wind_bearing': 27.0,
+          'wind_speed': 6.0,
+        }),
+      ]),
+    }),
+  })
+# ---
+# name: test_daily_projection[twice_daily-unknown-condition]
+  dict({
+    'weather.beijing': dict({
+      'forecast': list([
+        dict({
+          'datetime': '2026-09-07T21:48:00+00:00',
+          'is_daytime': True,
+          'temperature': 21.0,
+          'wind_bearing': 27.0,
+          'wind_speed': 6.0,
+        }),
+        dict({
+          'datetime': '2026-09-08T10:36:00+00:00',
+          'is_daytime': False,
+          'temperature': 16.0,
+          'wind_bearing': 27.0,
+          'wind_speed': 6.0,
+        }),
+      ]),
+    }),
+  })
+# ---
+# name: test_daily_projection[twice_daily-unsupported-temperature]
+  dict({
+    'weather.beijing': dict({
+      'forecast': list([
+      ]),
+    }),
+  })
+# ---
+# name: test_daily_projection[twice_daily-unsupported-wind]
+  dict({
+    'weather.beijing': dict({
+      'forecast': list([
+        dict({
+          'condition': 'sunny',
+          'datetime': '2026-09-07T21:48:00+00:00',
+          'is_daytime': True,
+          'temperature': 21.0,
+        }),
+        dict({
+          'condition': 'clear-night',
+          'datetime': '2026-09-08T10:36:00+00:00',
+          'is_daytime': False,
+          'temperature': 16.0,
+        }),
+      ]),
+    }),
+  })
+# ---
+# name: test_hourly_projection[explicit-wind]
+  dict({
+    'weather.beijing': dict({
+      'forecast': list([
+        dict({
+          'datetime': '2026-09-08T09:00:00+00:00',
+          'temperature': 20.0,
+        }),
+        dict({
+          'condition': 'clear-night',
+          'datetime': '2026-09-08T11:00:00+00:00',
+          'temperature': 0.0,
+          'wind_bearing': 0.0,
+          'wind_speed': 0.0,
+        }),
+      ]),
+    }),
+  })
+# ---
+# name: test_hourly_projection[legacy-wind]
+  dict({
+    'weather.beijing': dict({
+      'forecast': list([
+        dict({
+          'datetime': '2026-09-08T09:00:00+00:00',
+          'temperature': 20.0,
+        }),
+        dict({
+          'condition': 'clear-night',
+          'datetime': '2026-09-08T11:00:00+00:00',
+          'temperature': 0.0,
+          'wind_bearing': 0.0,
+          'wind_speed': 0.0,
+        }),
+      ]),
+    }),
+  })
+# ---
+# name: test_hourly_projection[unsupported-temperature]
+  dict({
+    'weather.beijing': dict({
+      'forecast': list([
+      ]),
+    }),
+  })
+# ---
+# name: test_hourly_projection[unsupported-wind]
+  dict({
+    'weather.beijing': dict({
+      'forecast': list([
+        dict({
+          'datetime': '2026-09-08T09:00:00+00:00',
+          'temperature': 20.0,
+        }),
+        dict({
+          'condition': 'clear-night',
+          'datetime': '2026-09-08T11:00:00+00:00',
+          'temperature': 0.0,
+          'wind_bearing': 0.0,
+        }),
+      ]),
+    }),
+  })
+# ---
+# name: test_measurements[missing-optional-values]
+  ReadOnlyDict({
+    <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Weather data provided by Xiaomi Weather',
+    <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Beijing',
+    <WeatherEntityStateAttribute.PRECIPITATION_UNIT: 'precipitation_unit'>: <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+    <WeatherEntityStateAttribute.PRESSURE_UNIT: 'pressure_unit'>: <UnitOfPressure.HPA: 'hPa'>,
+    <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <WeatherEntityFeature: 7>,
+    <WeatherEntityStateAttribute.TEMPERATURE: 'temperature'>: 20.0,
+    <WeatherEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
+    <WeatherEntityStateAttribute.UV_INDEX: 'uv_index'>: 3.0,
+    <WeatherEntityStateAttribute.VISIBILITY_UNIT: 'visibility_unit'>: <UnitOfLength.KILOMETERS: 'km'>,
+    <WeatherEntityStateAttribute.WIND_SPEED_UNIT: 'wind_speed_unit'>: <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+  })
+# ---
+# name: test_measurements[unsupported-units]
+  ReadOnlyDict({
+    <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Weather data provided by Xiaomi Weather',
+    <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Beijing',
+    <WeatherEntityStateAttribute.PRECIPITATION_UNIT: 'precipitation_unit'>: <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+    <WeatherEntityStateAttribute.PRESSURE_UNIT: 'pressure_unit'>: <UnitOfPressure.HPA: 'hPa'>,
+    <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <WeatherEntityFeature: 7>,
+    <WeatherEntityStateAttribute.TEMPERATURE: 'temperature'>: 20.0,
+    <WeatherEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
+    <WeatherEntityStateAttribute.UV_INDEX: 'uv_index'>: 3.0,
+    <WeatherEntityStateAttribute.VISIBILITY_UNIT: 'visibility_unit'>: <UnitOfLength.KILOMETERS: 'km'>,
+    <WeatherEntityStateAttribute.WIND_SPEED_UNIT: 'wind_speed_unit'>: <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+  })
+# ---
+# name: test_measurements[zero]
+  ReadOnlyDict({
+    <WeatherEntityStateAttribute.APPARENT_TEMPERATURE: 'apparent_temperature'>: 0.0,
+    <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Weather data provided by Xiaomi Weather',
+    <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Beijing',
+    <WeatherEntityStateAttribute.HUMIDITY: 'humidity'>: 0,
+    <WeatherEntityStateAttribute.PRECIPITATION_UNIT: 'precipitation_unit'>: <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+    <WeatherEntityStateAttribute.PRESSURE: 'pressure'>: 0.0,
+    <WeatherEntityStateAttribute.PRESSURE_UNIT: 'pressure_unit'>: <UnitOfPressure.HPA: 'hPa'>,
+    <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <WeatherEntityFeature: 7>,
+    <WeatherEntityStateAttribute.TEMPERATURE: 'temperature'>: 20.0,
+    <WeatherEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
+    <WeatherEntityStateAttribute.UV_INDEX: 'uv_index'>: 3.0,
+    <WeatherEntityStateAttribute.VISIBILITY: 'visibility'>: 0.0,
+    <WeatherEntityStateAttribute.VISIBILITY_UNIT: 'visibility_unit'>: <UnitOfLength.KILOMETERS: 'km'>,
+    <WeatherEntityStateAttribute.WIND_BEARING: 'wind_bearing'>: 0.0,
+    <WeatherEntityStateAttribute.WIND_SPEED: 'wind_speed'>: 0.0,
+    <WeatherEntityStateAttribute.WIND_SPEED_UNIT: 'wind_speed_unit'>: <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+  })
+# ---
