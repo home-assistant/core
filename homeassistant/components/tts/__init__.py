@@ -1219,7 +1219,9 @@ class SpeechManager:
         try:
             tts_file = mutagen.File(data_bytes)
             if tts_file is not None:
-                if not tts_file.tags:
+                # An ID3 tag with no frames is falsy but present, and adding
+                # another one raises.
+                if tts_file.tags is None:
                     tts_file.add_tags()
                 tts_file.tags.add(TPE1(encoding=Encoding.UTF8, text=artist))  # type: ignore[no-untyped-call]
                 tts_file.tags.add(TALB(encoding=Encoding.UTF8, text=album))  # type: ignore[no-untyped-call]
