@@ -20,7 +20,21 @@ ENTITY_ID = "update.pve1_software_update"
 @pytest.mark.parametrize(
     ("updates", "expected_latest_version"),
     [
-        pytest.param(None, "9.1.7-p4-d1", id="all-entities"),
+        pytest.param(
+            [
+                {"Package": "bind9-host", "Version": "1", "Origin": "Debian"},
+                {"Package": "pve-manager", "Version": "9.1.7", "Origin": "Proxmox"},
+                {
+                    "Package": "libpve-common-perl",
+                    "Version": "9.1.9",
+                    "Origin": "Proxmox",
+                },
+                {"Package": "corosync", "Version": "3.1.10", "Origin": "Proxmox"},
+                {"Package": "pve-firmware", "Version": "3.18", "Origin": "Proxmox"},
+            ],
+            "9.1.7-p4-d1",
+            id="all-entities",
+        ),
         pytest.param(
             [{"Package": "ceph-common", "Version": "19.2.6", "Origin": "Proxmox"}],
             "9.1.6-p1-d0",
@@ -53,8 +67,7 @@ async def test_all_entities(
     """Test all entities."""
     # Ensure Sys.Modify permissions to ensure update status can be determined
     mock_proxmox_client.access.permissions.get.return_value = MERGED_PERMISSIONS
-    if updates is not None:
-        mock_proxmox_client.nodes.return_value.apt.update.get.return_value = updates
+    mock_proxmox_client.nodes.return_value.apt.update.get.return_value = updates
 
     with patch(
         "homeassistant.components.proxmoxve.PLATFORMS",
@@ -65,10 +78,7 @@ async def test_all_entities(
     state = hass.states.get(ENTITY_ID)
     assert state.attributes["latest_version"] == expected_latest_version
 
-    if updates is None:
-        await snapshot_platform(
-            hass, entity_registry, snapshot, mock_config_entry.entry_id
-        )
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
 async def test_update_entities_ignored(
