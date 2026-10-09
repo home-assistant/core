@@ -4,13 +4,14 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock
 
 from aiohttp import ClientConnectorError
+from freezegun.api import FrozenDateTimeFactory
 
-from homeassistant.components.london_air.const import DOMAIN
+from homeassistant.components.london_air.const import DOMAIN, SCAN_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_sensor_state(
@@ -44,6 +45,7 @@ async def test_sensor_state(
 
 async def test_sensor_unavailable(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     mock_config_entry: MockConfigEntry,
     mock_session: MagicMock,
     api_payload: dict[str, Any],
@@ -63,7 +65,8 @@ async def test_sensor_unavailable(
             side_effect=ClientConnectorError(Mock(), OSError("test"))
         )
     )
-    await mock_config_entry.runtime_data.async_refresh()
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.merton_air_quality")

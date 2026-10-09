@@ -39,12 +39,17 @@ async def test_user(
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == "London Air"
         assert result["data"] == {CONF_LOCATIONS: ["Merton"]}
+        assert result["result"].unique_id == DOMAIN
         await hass.async_block_till_done()
 
     assert mock_setup_entry.called
 
 
-async def test_user_required(hass: HomeAssistant, mock_session: MagicMock) -> None:
+async def test_user_required(
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    api_payload: dict[str, Any],
+) -> None:
     """Test the user config flow with no locations selected."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -58,9 +63,22 @@ async def test_user_required(hass: HomeAssistant, mock_session: MagicMock) -> No
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {CONF_LOCATIONS: "required"}
 
+    response = MagicMock()
+    response.raise_for_status = MagicMock()
+    response.json = AsyncMock(return_value=api_payload)
+    mock_session.get.return_value = response
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_LOCATIONS: ["Merton"]}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    await hass.async_block_till_done()
+
 
 async def test_user_cannot_connect(
-    hass: HomeAssistant, mock_session: MagicMock
+    hass: HomeAssistant,
+    mock_session: MagicMock,
+    api_payload: dict[str, Any],
 ) -> None:
     """Test the user config flow when the API is unreachable."""
     result = await hass.config_entries.flow.async_init(
@@ -80,6 +98,17 @@ async def test_user_cannot_connect(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
+
+    response = MagicMock()
+    response.raise_for_status = MagicMock()
+    response.json = AsyncMock(return_value=api_payload)
+    mock_session.get.return_value = response
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_LOCATIONS: ["Merton"]}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    await hass.async_block_till_done()
 
 
 async def test_user_already_configured(
@@ -124,6 +153,7 @@ async def test_import(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "London Air"
     assert result["data"] == {CONF_LOCATIONS: ["Merton"]}
+    assert result["result"].unique_id == DOMAIN
 
 
 async def test_import_cannot_connect(
