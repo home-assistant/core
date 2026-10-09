@@ -4,14 +4,14 @@ from unittest.mock import AsyncMock, MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
 from pyimouapi.const import PARAM_STATE, PARAM_STATUS
-from pyimouapi.exceptions import ImouException
+from pyimouapi.exceptions import ImouException, InvalidAppIdOrSecretException
 from pyimouapi.ha_device import DeviceStatus, ImouHaDevice
 import pytest
 
 from homeassistant.components.imou.button import PARAM_MUTE, PARAM_PTZ_UP
 from homeassistant.components.imou.const import DOMAIN
 from homeassistant.components.imou.coordinator import SCAN_INTERVAL
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -42,22 +42,34 @@ async def test_setup_and_unload_entry(
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
+@pytest.mark.parametrize(
+    ("exception", "expected_state"),
+    [
+        (
+            InvalidAppIdOrSecretException("bad credentials"),
+            ConfigEntryState.SETUP_ERROR,
+        ),
+        (ImouException("cloud failure"), ConfigEntryState.SETUP_RETRY),
+        (TimeoutError("timeout"), ConfigEntryState.SETUP_RETRY),
+        (RuntimeError("unexpected"), ConfigEntryState.SETUP_RETRY),
+    ],
+)
 @pytest.mark.usefixtures("mock_imou_openapi_client", "mock_imou_ha_device_manager")
-async def test_setup_entry_failed_on_refresh(
+async def test_setup_entry_exceptions(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_imou_ha_device_manager: AsyncMock,
+    exception: Exception,
+    expected_state: ConfigEntryState,
 ) -> None:
-    """Device fetch failure during coordinator setup surfaces as setup retry."""
-    mock_imou_ha_device_manager.async_get_devices.side_effect = RuntimeError(
-        "Setup failed"
-    )
+    """Test the coordinator errors while listing devices during setup."""
+    mock_imou_ha_device_manager.async_get_devices.side_effect = exception
     mock_config_entry.add_to_hass(hass)
 
     assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.state is expected_state
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -300,11 +312,12 @@ async def test_offline_device_marked_unavailable_after_refresh(
     )
     assert hass.states.get(mute_entry.entity_id).state != STATE_UNAVAILABLE
 
-    async def set_device_offline(device: ImouHaDevice) -> None:
-        device._sensors[PARAM_STATUS] = {PARAM_STATE: DeviceStatus.OFFLINE.value}
+    async def set_devices_offline(devices: list[ImouHaDevice]) -> None:
+        for device in devices:
+            device._sensors[PARAM_STATUS] = {PARAM_STATE: DeviceStatus.OFFLINE.value}
 
-    mock_imou_ha_device_manager.async_update_device_status.side_effect = (
-        set_device_offline
+    mock_imou_ha_device_manager.async_update_devices_status.side_effect = (
+        set_devices_offline
     )
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
@@ -331,7 +344,7 @@ async def test_coordinator_update_fails_when_all_devices_fail(
     )
     assert hass.states.get(mute_entry.entity_id).state != STATE_UNAVAILABLE
 
-    mock_imou_ha_device_manager.async_update_device_status.side_effect = ImouException(
+    mock_imou_ha_device_manager.async_update_devices_status.side_effect = ImouException(
         "cloud failure"
     )
     freezer.tick(SCAN_INTERVAL)
@@ -340,6 +353,25 @@ async def test_coordinator_update_fails_when_all_devices_fail(
 
     assert mock_config_entry.runtime_data.last_update_success is False
     assert hass.states.get(mute_entry.entity_id).state == STATE_UNAVAILABLE
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_coordinator_status_refresh_invalid_auth(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_imou_ha_device_manager: MagicMock,
+) -> None:
+    """Invalid credentials during status refresh start reauthentication."""
+    mock_imou_ha_device_manager.async_update_devices_status.side_effect = (
+        InvalidAppIdOrSecretException("bad credentials")
+    )
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert any(mock_config_entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
 
 
 @pytest.mark.parametrize(

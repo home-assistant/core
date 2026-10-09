@@ -1,15 +1,36 @@
 """Tests for the LibreHardwareMonitor init."""
 
+from dataclasses import replace
+from datetime import timedelta
+from types import MappingProxyType
+from unittest.mock import AsyncMock
+
+from freezegun.api import FrozenDateTimeFactory
+from librehardwaremonitor_api.model import LibreHardwareMonitorSensorData
+from librehardwaremonitor_api.sensor_type import SensorType
 import pytest
 
-from homeassistant.components.libre_hardware_monitor.const import DOMAIN
+from homeassistant.components.libre_hardware_monitor.const import (
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+    LEGACY_THROUGHPUT_UNIT,
+)
+from homeassistant.components.libre_hardware_monitor.recorder import (
+    async_custom_equivalent_units,
+)
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import (
+    ATTR_UNIT_OF_MEASUREMENT,
+    UnitOfDataRate,
+    UnitOfInformation,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import init_integration
 from .conftest import VALID_CONFIG
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.usefixtures("mock_lhm_client")
@@ -93,3 +114,207 @@ async def test_migration_to_unique_ids(
         legacy_config_entry_v1.entry_id
     )
     assert updated_config_entry.version == 2
+    assert updated_config_entry.minor_version == 2
+
+
+@pytest.mark.parametrize(
+    ("version", "minor_version", "unique_id_prefix"),
+    [
+        pytest.param(1, 1, "lhm-", id="from_v1"),
+        pytest.param(2, 1, "test_entry_id_", id="from_v2_minor_1"),
+    ],
+)
+@pytest.mark.usefixtures("mock_lhm_client", "recorder_mock")
+async def test_migration_to_sensor_device_classes(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    version: int,
+    minor_version: int,
+    unique_id_prefix: str,
+) -> None:
+    """Test that throughput sensor units are updated from every legacy version."""
+    legacy_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="192.168.0.20:8085",
+        data=VALID_CONFIG,
+        entry_id="test_entry_id",
+        version=version,
+        minor_version=minor_version,
+    )
+    legacy_config_entry.add_to_hass(hass)
+
+    # Set up throughput sensor with old unit
+    object_id = "nvidia_geforce_rtx_4080_gpu_pcie_tx_throughput"
+    entity_registry.async_get_or_create(
+        "sensor",
+        DOMAIN,
+        f"{unique_id_prefix}gpu-nvidia-0-throughput-1",
+        suggested_object_id=object_id,
+        config_entry=legacy_config_entry,
+        unit_of_measurement=LEGACY_THROUGHPUT_UNIT,
+    )
+
+    await init_integration(hass, legacy_config_entry)
+
+    entity_entry = entity_registry.async_get(f"sensor.{object_id}")
+    assert entity_entry.unit_of_measurement == UnitOfDataRate.KIBIBYTES_PER_SECOND
+
+    # the entity keeps reporting the migrated unit once it is set up
+    state = hass.states.get(f"sensor.{object_id}")
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == (
+        UnitOfDataRate.KIBIBYTES_PER_SECOND
+    )
+
+    custom_equivalent_units = async_custom_equivalent_units(hass)
+    assert custom_equivalent_units == {
+        f"sensor.{object_id}": {
+            LEGACY_THROUGHPUT_UNIT: UnitOfDataRate.KIBIBYTES_PER_SECOND
+        }
+    }
+
+    updated_config_entry = hass.config_entries.async_get_entry(
+        legacy_config_entry.entry_id
+    )
+    assert updated_config_entry.version == 2
+    assert updated_config_entry.minor_version == 2
+
+
+@pytest.mark.parametrize(
+    (
+        "sensor_type",
+        "lhm_value",
+        "lhm_unit",
+        "legacy_unit",
+        "expected_value",
+        "expected_unit",
+    ),
+    [
+        pytest.param(
+            SensorType.SMALL_DATA,
+            "733.0",
+            "MB",
+            "MB",
+            733.0,
+            UnitOfInformation.MEBIBYTES,
+            id="small_data",
+        ),
+        pytest.param(
+            SensorType.DATA,
+            "16.0",
+            "GB",
+            "GB",
+            16.0,
+            UnitOfInformation.GIBIBYTES,
+            id="data",
+        ),
+        pytest.param(
+            SensorType.DATA,
+            "17179869184",
+            "B",
+            "GB",
+            16.0,
+            UnitOfInformation.GIBIBYTES,
+            id="data_reported_in_bytes",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("recorder_mock")
+async def test_migration_to_binary_data_size_units(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_lhm_client: AsyncMock,
+    sensor_type: SensorType,
+    lhm_value: str,
+    lhm_unit: str,
+    legacy_unit: str,
+    expected_value: float,
+    expected_unit: str,
+) -> None:
+    """Test that data sizes LHM labels MB and GB move to MiB and GiB."""
+    legacy_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="192.168.0.20:8085",
+        data=VALID_CONFIG,
+        entry_id="test_entry_id",
+        version=2,
+        minor_version=1,
+    )
+    legacy_config_entry.add_to_hass(hass)
+
+    sensor_id = "gpu-nvidia-0-data-0"
+    mock_lhm_client.get_data.return_value = replace(
+        mock_lhm_client.get_data.return_value,
+        sensor_data=MappingProxyType(
+            {
+                sensor_id: LibreHardwareMonitorSensorData(
+                    name="GPU Memory Total",
+                    value=lhm_value,
+                    type=sensor_type,
+                    min=lhm_value,
+                    max=lhm_value,
+                    unit=lhm_unit,
+                    device_id="gpu-nvidia-0",
+                    device_name="NVIDIA GeForce RTX 4080 SUPER",
+                    device_type="NVIDIA",
+                    sensor_id=sensor_id,
+                )
+            }
+        ),
+    )
+
+    # Set up data size sensor with the unit it had before device classes
+    object_id = "nvidia_geforce_rtx_4080_gpu_memory_total"
+    entity_registry.async_get_or_create(
+        "sensor",
+        DOMAIN,
+        f"{legacy_config_entry.entry_id}_{sensor_id}",
+        suggested_object_id=object_id,
+        config_entry=legacy_config_entry,
+        unit_of_measurement=legacy_unit,
+    )
+
+    await init_integration(hass, legacy_config_entry)
+
+    entity_entry = entity_registry.async_get(f"sensor.{object_id}")
+    assert entity_entry.unit_of_measurement == expected_unit
+
+    # LHM always calculated binary sizes, so the value is relabelled, not converted
+    state = hass.states.get(f"sensor.{object_id}")
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == expected_unit
+    assert float(state.state) == expected_value
+
+
+@pytest.mark.usefixtures("mock_deprecated_lhm_client")
+async def test_deprecated_version_blocks_setup(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test that a deprecated LHM version prevents setup with an error."""
+    await init_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.error_reason_translation_domain == DOMAIN
+    assert mock_config_entry.error_reason_translation_key == "deprecated_version"
+
+
+async def test_downgrade_to_deprecated_version_fails_entry(
+    hass: HomeAssistant,
+    mock_lhm_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that downgrading to a deprecated LHM version while running fails the entry."""
+    await init_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    mock_lhm_client.get_data.return_value = replace(
+        mock_lhm_client.get_data.return_value, is_deprecated_version=True
+    )
+
+    freezer.tick(timedelta(seconds=DEFAULT_SCAN_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.error_reason_translation_domain == DOMAIN
+    assert mock_config_entry.error_reason_translation_key == "deprecated_version"

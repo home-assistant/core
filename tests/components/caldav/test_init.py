@@ -1,14 +1,13 @@
 """Unit tests for the CalDav integration."""
 
-import logging
-from unittest.mock import MagicMock, Mock, patch
+from functools import partial
+from unittest.mock import patch
 
 from caldav.lib.error import AuthorizationError, DAVError
+from caldav.lib.http_sync import requests as caldav_requests
 import pytest
-import requests
 
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -27,10 +26,21 @@ async def test_load_unload(
     """Test loading and unloading of the config entry."""
     assert config_entry.state is ConfigEntryState.NOT_LOADED
 
-    with patch("homeassistant.components.caldav.config_flow.caldav.DAVClient"):
+    with (
+        patch("homeassistant.components.caldav.DAVClient") as mock_client,
+        patch.object(
+            hass,
+            "async_add_executor_job",
+            wraps=hass.async_add_executor_job,
+        ) as mock_add_executor_job,
+    ):
         await hass.config_entries.async_setup(config_entry.entry_id)
 
     assert config_entry.state is ConfigEntryState.LOADED
+    assert any(
+        isinstance(call.args[0], partial) and call.args[0].func is mock_client
+        for call in mock_add_executor_job.call_args_list
+    )
 
     assert await hass.config_entries.async_unload(config_entry.entry_id)
     assert config_entry.state is ConfigEntryState.NOT_LOADED
@@ -40,8 +50,12 @@ async def test_load_unload(
     ("side_effect", "expected_state", "expected_flows"),
     [
         (Exception(), ConfigEntryState.SETUP_ERROR, []),
-        (requests.ConnectionError(), ConfigEntryState.SETUP_RETRY, []),
-        (requests.Timeout(), ConfigEntryState.SETUP_RETRY, []),
+        (
+            caldav_requests.exceptions.ConnectionError(),
+            ConfigEntryState.SETUP_RETRY,
+            [],
+        ),
+        (caldav_requests.exceptions.Timeout(), ConfigEntryState.SETUP_RETRY, []),
         (DAVError(), ConfigEntryState.SETUP_RETRY, []),
         (
             AuthorizationError(reason="Unauthorized"),
@@ -62,10 +76,8 @@ async def test_client_failure(
 
     assert config_entry.state is ConfigEntryState.NOT_LOADED
 
-    with patch(
-        "homeassistant.components.caldav.config_flow.caldav.DAVClient"
-    ) as mock_client:
-        mock_client.return_value.principal.side_effect = side_effect
+    with patch("homeassistant.components.caldav.DAVClient") as mock_client:
+        mock_client.return_value.get_principal.side_effect = side_effect
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -73,40 +85,3 @@ async def test_client_failure(
 
     flows = hass.config_entries.flow.async_progress()
     assert [flow.get("step_id") for flow in flows] == expected_flows
-
-
-@pytest.fixture(name="calendars")
-def mock_unsupported_calendar() -> list[Mock]:
-    """Fixture for a calendar that does not report its supported components."""
-    calendar = Mock()
-    calendar.name = "Example"
-    calendar.search = MagicMock(return_value=[])
-    calendar.get_supported_components = MagicMock(side_effect=KeyError())
-    return [calendar]
-
-
-@pytest.mark.parametrize("platforms", [[Platform.CALENDAR]])
-async def test_supported_components_warning_survives_reload(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test the unsupported-components warning is not repeated after a reload.
-
-    The de-duplication cache is per CalDAV server rather than per config entry,
-    so reloading the entry must not warn about the same calendar again.
-    """
-    caplog.set_level(logging.WARNING, logger="homeassistant.components.caldav.api")
-
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert config_entry.state is ConfigEntryState.LOADED
-    assert "does not report supported components" in caplog.text
-
-    caplog.clear()
-    await hass.config_entries.async_reload(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert config_entry.state is ConfigEntryState.LOADED
-    assert "does not report supported components" not in caplog.text

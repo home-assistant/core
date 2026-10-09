@@ -8,7 +8,6 @@
       "invalid_zeroconf_data": "The coordinator has invalid Zeroconf service info and cannot be identified by ZHA",
       "not_zha_device": "This device is not a ZHA device",
       "reconfigure_successful": "ZHA has successfully migrated from your old adapter to the new one. Give your Zigbee network a few minutes to stabilize.\n\nIf you no longer need the old adapter, you can now unplug it.",
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
       "usb_probe_failed": "Failed to probe the USB device",
       "wrong_firmware_installed": "Your device is running the wrong firmware and cannot be used with ZHA until the correct firmware is installed. [A repair has been created]({repair_url}) with more information and instructions for how to fix this."
     },
@@ -117,7 +116,7 @@
         "title": "Resetting old adapter"
       },
       "plug_in_new_radio": {
-        "description": "Your new adapter at `{device_path}` was not found.\nPlease plug it in and click Submit to continue.",
+        "description": "Your new adapter at `{device_path}` was not found.\nPlease plug it in and select **Submit** to continue.",
         "title": "New adapter not found"
       },
       "plug_in_old_radio": {
@@ -1584,6 +1583,9 @@
           }
         }
       },
+      "alarm_level": {
+        "name": "Alarm level"
+      },
       "alarm_state": {
         "name": "Alarm state"
       },
@@ -1853,6 +1855,9 @@
       "self_test_result": {
         "name": "Self-test result"
       },
+      "sensor_expiration": {
+        "name": "Sensor expiration"
+      },
       "setpoint_change_source": {
         "name": "Setpoint change source"
       },
@@ -2098,6 +2103,9 @@
       "external_window_sensor": {
         "name": "External window sensor"
       },
+      "extra_button_commands": {
+        "name": "Extra button commands"
+      },
       "factory_reset": {
         "name": "Factory reset"
       },
@@ -2290,6 +2298,11 @@
       "window_open": {
         "name": "Window open"
       }
+    }
+  },
+  "exceptions": {
+    "no_gateway": {
+      "message": "ZHA is not loaded, so this action cannot be performed."
     }
   },
   "issues": {

@@ -1,6 +1,6 @@
 {
   "domain": "input_text",
-  "name": "Input Text",
+  "name": "Input text",
   "codeowners": ["@home-assistant/core"],
   "documentation": "https://www.home-assistant.io/integrations/input_text",
   "integration_type": "helper",

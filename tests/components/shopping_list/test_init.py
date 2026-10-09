@@ -51,12 +51,15 @@ async def test_add_item(
     hass: HomeAssistant, sl_setup: None, snapshot: SnapshotAssertion
 ) -> None:
     """Test adding an item intent."""
+    events = async_capture_events(hass, EVENT_SHOPPING_LIST_UPDATED)
 
     response = await intent.async_handle(
         hass, "test", "HassShoppingListAddItem", {"item": {"value": " beer "}}
     )
     assert len(_get_shopping_data(hass).items) == 1
     assert _get_shopping_data(hass).items[0]["name"] == "beer"  # name was trimmed
+    assert len(events) == 1
+    assert events[0].data["action"] == "add"
 
     # Response text is now handled by default conversation agent
     assert response.response_type is intent.IntentResponseType.ACTION_DONE
@@ -795,6 +798,21 @@ async def test_add_item_service(
     assert len(_get_shopping_data(hass).items) == 1
     assert len(events) == 1
     assert_shopping_list_data(hass, snapshot)
+
+
+async def test_add_item_service_allows_duplicates(
+    hass: HomeAssistant, sl_setup: None
+) -> None:
+    """Test adding duplicate items with the shopping list service."""
+    for _ in range(2):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_ADD_ITEM,
+            {ATTR_NAME: "beer"},
+            blocking=True,
+        )
+
+    assert len(_get_shopping_data(hass).items) == 2
 
 
 async def test_remove_item_service(

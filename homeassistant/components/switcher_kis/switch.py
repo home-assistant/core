@@ -10,24 +10,15 @@ from aioswitcher.device import (
     ShutterChildLock,
     SwitcherShutter,
 )
-import voluptuous as vol
 
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.typing import VolDictType
 
 from . import SwitcherConfigEntry
-from .const import (
-    CONF_AUTO_OFF,
-    CONF_TIMER_MINUTES,
-    SERVICE_SET_AUTO_OFF_NAME,
-    SERVICE_TURN_ON_WITH_TIMER_NAME,
-    SIGNAL_DEVICE_ADD,
-)
+from .const import SIGNAL_DEVICE_ADD
 from .coordinator import SwitcherDataUpdateCoordinator
 from .entity import SwitcherEntity
 
@@ -37,16 +28,6 @@ API_CONTROL_DEVICE = "control_device"
 API_SET_AUTO_SHUTDOWN = "set_auto_shutdown"
 API_SET_CHILD_LOCK = "set_shutter_child_lock"
 
-SERVICE_SET_AUTO_OFF_SCHEMA: VolDictType = {
-    vol.Required(CONF_AUTO_OFF): cv.time_period_str,
-}
-
-SERVICE_TURN_ON_WITH_TIMER_SCHEMA: VolDictType = {
-    vol.Required(CONF_TIMER_MINUTES): vol.All(
-        cv.positive_int, vol.Range(min=1, max=150)
-    ),
-}
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -54,21 +35,6 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Switcher switch from config entry."""
-    platform = entity_platform.async_get_current_platform()
-
-    platform.async_register_entity_service(
-        SERVICE_SET_AUTO_OFF_NAME,
-        SERVICE_SET_AUTO_OFF_SCHEMA,
-        "async_set_auto_off_service",
-        entity_device_classes=(SwitchDeviceClass.SWITCH,),
-    )
-
-    platform.async_register_entity_service(
-        SERVICE_TURN_ON_WITH_TIMER_NAME,
-        SERVICE_TURN_ON_WITH_TIMER_SCHEMA,
-        "async_turn_on_with_timer_service",
-        entity_device_classes=(SwitchDeviceClass.SWITCH,),
-    )
 
     @callback
     def async_add_switch(coordinator: SwitcherDataUpdateCoordinator) -> None:

@@ -137,6 +137,7 @@
     'area_id': None,
     'capabilities': dict({
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'custom_solar',
         'default',
         'fast_solar',
         'pure_solar',
@@ -179,6 +180,7 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Peblar EV Charger Smart charging',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'custom_solar',
         'default',
         'fast_solar',
         'pure_solar',

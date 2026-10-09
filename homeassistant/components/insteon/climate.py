@@ -95,8 +95,8 @@ class InsteonClimateEntity(InsteonEntity, ClimateEntity):
 
     @property
     @override
-    def temperature_unit(self) -> str:
-        """Return the unit of measurement."""
+    def native_temperature_unit(self) -> str:
+        """Return the native unit of measurement."""
         if self._insteon_device.configuration[CELSIUS].value:
             return UnitOfTemperature.CELSIUS
         return UnitOfTemperature.FAHRENHEIT
@@ -115,13 +115,13 @@ class InsteonClimateEntity(InsteonEntity, ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self._insteon_device.groups[TEMPERATURE].value
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         if self._insteon_device.groups[SYSTEM_MODE].value == ThermostatMode.HEAT:
             return self._insteon_device.groups[HEAT_SET_POINT].value
@@ -131,7 +131,7 @@ class InsteonClimateEntity(InsteonEntity, ClimateEntity):
 
     @property
     @override
-    def target_temperature_high(self) -> float | None:
+    def native_target_temperature_high(self) -> float | None:
         """Return the highbound target temperature we try to reach."""
         if self._insteon_device.groups[SYSTEM_MODE].value == ThermostatMode.AUTO:
             return self._insteon_device.groups[COOL_SET_POINT].value
@@ -139,7 +139,7 @@ class InsteonClimateEntity(InsteonEntity, ClimateEntity):
 
     @property
     @override
-    def target_temperature_low(self) -> float | None:
+    def native_target_temperature_low(self) -> float | None:
         """Return the lowbound target temperature we try to reach."""
         if self._insteon_device.groups[SYSTEM_MODE].value == ThermostatMode.AUTO:
             return self._insteon_device.groups[HEAT_SET_POINT].value
@@ -223,6 +223,17 @@ class InsteonClimateEntity(InsteonEntity, ClimateEntity):
         low = self._insteon_device.groups[HUMIDITY_LOW].value + change
         await self._insteon_device.async_set_humidity_low_set_point(low)
         await self._insteon_device.async_set_humidity_high_set_point(high)
+
+    @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Opt in to in-place entity_id changes.
+
+        Can be removed when backwards compatibility is disabled for core
+        integrations, i.e. once all core integrations have been migrated
+        to in-place entity ID change.
+        """
+        super().async_entity_id_changed(old_entity_id)
 
     @override
     async def async_added_to_hass(self) -> None:

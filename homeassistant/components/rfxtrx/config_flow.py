@@ -6,8 +6,8 @@ import copy
 import itertools
 from typing import Any, TypedDict, cast, override
 
+import probatio
 import RFXtrx as rfxtrxmod
-import voluptuous as vol
 
 from homeassistant.components import usb
 from homeassistant.config_entries import (
@@ -39,7 +39,7 @@ from homeassistant.helpers.typing import VolDictType
 from . import (
     DOMAIN,
     DeviceTuple,
-    get_device_id,
+    get_device_tuple_from_device,
     get_device_tuple_from_identifiers,
     get_rfx_object,
 )
@@ -153,20 +153,22 @@ class RfxtrxOptionsFlow(OptionsFlow):
         }
 
         options = {
-            vol.Optional(
+            probatio.Optional(
                 CONF_AUTOMATIC_ADD,
                 default=self.config_entry.data[CONF_AUTOMATIC_ADD],
             ): bool,
-            vol.Optional(
+            probatio.Optional(
                 CONF_PROTOCOLS,
                 default=self.config_entry.data.get(CONF_PROTOCOLS) or [],
             ): cv.multi_select(RECV_MODES),
-            vol.Optional(CONF_EVENT_CODE): str,
-            vol.Optional(CONF_DEVICE): vol.In(configure_devices),
+            probatio.Optional(CONF_EVENT_CODE): str,
+            probatio.Optional(CONF_DEVICE): probatio.In(configure_devices),
         }
 
         return self.async_show_form(
-            step_id="prompt_options", data_schema=vol.Schema(options), errors=errors
+            step_id="prompt_options",
+            data_schema=probatio.Schema(options),
+            errors=errors,
         )
 
     async def async_step_set_device_options(
@@ -180,7 +182,7 @@ class RfxtrxOptionsFlow(OptionsFlow):
         if user_input is not None:
             devices: dict[str, dict[str, Any] | None] = {}
             device: dict[str, Any]
-            device_id = get_device_id(
+            device_id = get_device_tuple_from_device(
                 self._selected_device_object.device,
                 data_bits=user_input.get(CONF_DATA_BITS),
             )
@@ -242,14 +244,14 @@ class RfxtrxOptionsFlow(OptionsFlow):
             off_delay_schema: VolDictType
             if device_data.get(CONF_OFF_DELAY):
                 off_delay_schema = {
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_OFF_DELAY,
                         description={"suggested_value": device_data[CONF_OFF_DELAY]},
                     ): int,
                 }
             else:
                 off_delay_schema = {
-                    vol.Optional(CONF_OFF_DELAY): int,
+                    probatio.Optional(CONF_OFF_DELAY): int,
                 }
             data_schema.update(off_delay_schema)
 
@@ -259,14 +261,14 @@ class RfxtrxOptionsFlow(OptionsFlow):
         ):
             data_schema.update(
                 {
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_DATA_BITS, default=device_data.get(CONF_DATA_BITS, 0)
                     ): int,
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_COMMAND_ON,
                         default=hex(device_data.get(CONF_COMMAND_ON, 0)),
                     ): str,
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_COMMAND_OFF,
                         default=hex(device_data.get(CONF_COMMAND_OFF, 0)),
                     ): str,
@@ -276,12 +278,12 @@ class RfxtrxOptionsFlow(OptionsFlow):
         if isinstance(self._selected_device_object.device, rfxtrxmod.RfyDevice):
             data_schema.update(
                 {
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_VENETIAN_BLIND_MODE,
                         default=device_data.get(
                             CONF_VENETIAN_BLIND_MODE, CONST_VENETIAN_BLIND_MODE_DEFAULT
                         ),
-                    ): vol.In(
+                    ): probatio.In(
                         [
                             CONST_VENETIAN_BLIND_MODE_DEFAULT,
                             CONST_VENETIAN_BLIND_MODE_US,
@@ -299,13 +301,15 @@ class RfxtrxOptionsFlow(OptionsFlow):
         if replace_devices:
             data_schema.update(
                 {
-                    vol.Optional(CONF_REPLACE_DEVICE): vol.In(replace_devices),
+                    probatio.Optional(CONF_REPLACE_DEVICE): probatio.In(
+                        replace_devices
+                    ),
                 }
             )
 
         return self.async_show_form(
             step_id="set_device_options",
-            data_schema=vol.Schema(data_schema),
+            data_schema=probatio.Schema(data_schema),
             errors=errors,
         )
 
@@ -325,8 +329,8 @@ class RfxtrxOptionsFlow(OptionsFlow):
         old_device_data = self._get_device_data(old_device)
         new_device_data = self._get_device_data(replace_device)
 
-        old_device_id = "_".join(x for x in old_device_data[CONF_DEVICE_ID])
-        new_device_id = "_".join(x for x in new_device_data[CONF_DEVICE_ID])
+        old_device_id = old_device_data[CONF_DEVICE_ID].unique_id
+        new_device_id = new_device_data[CONF_DEVICE_ID].unique_id
 
         entity_registry = er.async_get(self.hass)
         entity_entries = er.async_entries_for_device(
@@ -414,12 +418,14 @@ class RfxtrxOptionsFlow(OptionsFlow):
 
     def _can_add_device(self, new_rfx_obj: rfxtrxmod.RFXtrxEvent) -> bool:
         """Check if device does not already exist."""
-        new_device_id = get_device_id(new_rfx_obj.device)
+        new_device_id = get_device_tuple_from_device(new_rfx_obj.device)
         for packet_id, entity_info in self.config_entry.data[CONF_DEVICES].items():
             rfx_obj = get_rfx_object(packet_id)
             assert rfx_obj
 
-            device_id = get_device_id(rfx_obj.device, entity_info.get(CONF_DATA_BITS))
+            device_id = get_device_tuple_from_device(
+                rfx_obj.device, entity_info.get(CONF_DATA_BITS)
+            )
             if new_device_id == device_id:
                 return False
 
@@ -493,7 +499,7 @@ class RfxtrxOptionsFlow(OptionsFlow):
 class RfxtrxConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for RFXCOM RFXtrx."""
 
-    VERSION = 1
+    VERSION = 2
 
     @override
     async def async_step_user(
@@ -512,7 +518,9 @@ class RfxtrxConfigFlow(ConfigFlow, domain=DOMAIN):
 
         list_of_types = ["Serial", "Network"]
 
-        schema = vol.Schema({vol.Required(CONF_TYPE): vol.In(list_of_types)})
+        schema = probatio.Schema(
+            {probatio.Required(CONF_TYPE): probatio.In(list_of_types)}
+        )
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
 
     async def async_step_setup_network(
@@ -533,8 +541,8 @@ class RfxtrxConfigFlow(ConfigFlow, domain=DOMAIN):
             if not errors:
                 return self.async_create_entry(title="RFXTRX", data=data)
 
-        schema = vol.Schema(
-            {vol.Required(CONF_HOST): str, vol.Required(CONF_PORT): int}
+        schema = probatio.Schema(
+            {probatio.Required(CONF_HOST): str, probatio.Required(CONF_PORT): int}
         )
         return self.async_show_form(
             step_id="setup_network",
@@ -573,7 +581,9 @@ class RfxtrxConfigFlow(ConfigFlow, domain=DOMAIN):
             )
         list_of_ports[CONF_MANUAL_PATH] = CONF_MANUAL_PATH
 
-        schema = vol.Schema({vol.Required(CONF_DEVICE): vol.In(list_of_ports)})
+        schema = probatio.Schema(
+            {probatio.Required(CONF_DEVICE): probatio.In(list_of_ports)}
+        )
         return self.async_show_form(
             step_id="setup_serial",
             data_schema=schema,
@@ -596,7 +606,7 @@ class RfxtrxConfigFlow(ConfigFlow, domain=DOMAIN):
             if not errors:
                 return self.async_create_entry(title="RFXTRX", data=data)
 
-        schema = vol.Schema({vol.Required(CONF_DEVICE): str})
+        schema = probatio.Schema({probatio.Required(CONF_DEVICE): str})
         return self.async_show_form(
             step_id="setup_serial_manual_path",
             data_schema=schema,

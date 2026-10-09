@@ -4,8 +4,8 @@ from datetime import datetime, timedelta
 from unittest.mock import patch
 
 from freezegun import freeze_time
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant import config as hass_config, core as ha
 from homeassistant.components.history_stats.const import (
@@ -136,7 +136,7 @@ async def test_setup_multiple_states(
 def test_setup_invalid_config(config) -> None:
     """Test the history statistics sensor setup with invalid config."""
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         SENSOR_SCHEMA(config)
 
 

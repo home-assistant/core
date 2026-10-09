@@ -2,6 +2,7 @@
 
 from enum import StrEnum
 import logging
+import probatio
 
 from pynintendoparental.const import DAYS_OF_WEEK
 from pynintendoparental.device import Device
@@ -12,7 +13,6 @@ from pynintendoparental.exceptions import (
     InvalidDeviceStateError,
 )
 from pynintendoparental.player import Player
-import voluptuous as vol
 
 from homeassistant.const import ATTR_DEVICE_ID, ATTR_ENTITY_ID, CONF_PIN
 from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse, callback
@@ -61,10 +61,12 @@ def async_setup_services(
         domain=DOMAIN,
         service=NintendoParentalServices.ADD_BONUS_TIME,
         service_func=async_add_bonus_time,
-        schema=vol.Schema(
+        schema=probatio.Schema(
             {
-                vol.Required(ATTR_DEVICE_ID): cv.string,
-                vol.Required(ATTR_BONUS_TIME): vol.All(int, vol.Range(min=5, max=30)),
+                probatio.Required(ATTR_DEVICE_ID): cv.string,
+                probatio.Required(ATTR_BONUS_TIME): probatio.All(
+                    int, probatio.Range(min=5, max=30)
+                ),
             }
         ),
     )
@@ -73,10 +75,10 @@ def async_setup_services(
         service=NintendoParentalServices.PLAYER_USAGE_REPORT,
         service_func=async_get_player_usage,
         supports_response=SupportsResponse.ONLY,
-        schema=vol.Schema(
+        schema=probatio.Schema(
             {
-                vol.Required(ATTR_DEVICE_ID): cv.string,
-                vol.Required(ATTR_ENTITY_ID): cv.string,
+                probatio.Required(ATTR_DEVICE_ID): cv.string,
+                probatio.Required(ATTR_ENTITY_ID): cv.string,
             }
         ),
     )
@@ -85,9 +87,9 @@ def async_setup_services(
         service=NintendoParentalServices.DEVICE_USAGE_REPORT,
         service_func=async_get_device_usage_report,
         supports_response=SupportsResponse.ONLY,
-        schema=vol.Schema(
+        schema=probatio.Schema(
             {
-                vol.Required(ATTR_DEVICE_ID): cv.string,
+                probatio.Required(ATTR_DEVICE_ID): cv.string,
             }
         ),
     )
@@ -113,10 +115,10 @@ def async_setup_services(
         DOMAIN,
         NintendoParentalServices.UPDATE_PIN_CODE,
         async_update_pin_code,
-        vol.Schema(
+        probatio.Schema(
             {
-                vol.Required(ATTR_DEVICE_ID): cv.string,
-                vol.Required(CONF_PIN): cv.string,
+                probatio.Required(ATTR_DEVICE_ID): cv.string,
+                probatio.Required(probatio.Secret(CONF_PIN)): cv.string,
             }
         ),
     )

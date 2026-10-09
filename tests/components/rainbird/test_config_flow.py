@@ -180,6 +180,7 @@ async def test_multiple_config_entries(
     result = await complete_flow(hass)
     assert result.get("type") is FlowResultType.CREATE_ENTRY
     assert dict(result.get("result").data) == expected_config_entry
+    assert result["result"].unique_id == MAC_ADDRESS_UNIQUE_ID
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 2

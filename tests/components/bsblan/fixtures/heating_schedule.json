@@ -1,0 +1,74 @@
+{
+  "monday": {
+    "name": "Time program 1 Monday",
+    "error": 0,
+    "value": "06:00-08:00 17:00-21:00 ##:##-##:##",
+    "desc": "",
+    "dataType": 9,
+    "readonly": 0,
+    "unit": ""
+  },
+  "tuesday": {
+    "name": "Time program 1 Tuesday",
+    "error": 0,
+    "value": "06:00-08:00 17:00-21:00 ##:##-##:##",
+    "desc": "",
+    "dataType": 9,
+    "readonly": 0,
+    "unit": ""
+  },
+  "wednesday": {
+    "name": "Time program 1 Wednesday",
+    "error": 0,
+    "value": "06:00-08:00 17:00-21:00 ##:##-##:##",
+    "desc": "",
+    "dataType": 9,
+    "readonly": 0,
+    "unit": ""
+  },
+  "thursday": {
+    "name": "Time program 1 Thursday",
+    "error": 0,
+    "value": "06:00-08:00 17:00-21:00 ##:##-##:##",
+    "desc": "",
+    "dataType": 9,
+    "readonly": 0,
+    "unit": ""
+  },
+  "friday": {
+    "name": "Time program 1 Friday",
+    "error": 0,
+    "value": "06:00-08:00 17:00-21:00 ##:##-##:##",
+    "desc": "",
+    "dataType": 9,
+    "readonly": 0,
+    "unit": ""
+  },
+  "saturday": {
+    "name": "Time program 1 Saturday",
+    "error": 0,
+    "value": "07:00-23:00 ##:##-##:## ##:##-##:##",
+    "desc": "",
+    "dataType": 9,
+    "readonly": 0,
+    "unit": ""
+  },
+  "sunday": {
+    "name": "Time program 1 Sunday",
+    "error": 0,
+    "value": "07:00-23:00 ##:##-##:## ##:##-##:##",
+    "desc": "",
+    "dataType": 9,
+    "readonly": 0,
+    "unit": ""
+  },
+  "standard_values": {
+    "name": "Time program 1 standard values",
+    "error": 0,
+    "value": "0",
+    "desc": "No",
+    "dataType": 1,
+    "readonly": 0,
+    "unit": ""
+  }
+}

@@ -4,8 +4,8 @@ from pathlib import Path
 from unittest.mock import AsyncMock, Mock, patch
 
 from google.genai.types import File, FileState, GenerateContentResponse
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.components import ai_task, media_source
 from homeassistant.components.google_generative_ai_conversation.const import (
@@ -174,9 +174,9 @@ async def test_generate_data(
         task_name="Test Task",
         entity_id=entity_id,
         instructions="Give me 2 mario characters",
-        structure=vol.Schema(
+        structure=probatio.Schema(
             {
-                vol.Required("characters"): selector.selector(
+                probatio.Required("characters"): selector.selector(
                     {
                         "text": {
                             "multiple": True,
@@ -217,7 +217,7 @@ async def test_generate_data(
             task_name="Test Task",
             entity_id=entity_id,
             instructions="Test prompt",
-            structure=vol.Schema({vol.Required("bla"): str}),
+            structure=probatio.Schema({probatio.Required("bla"): str}),
         )
 
 

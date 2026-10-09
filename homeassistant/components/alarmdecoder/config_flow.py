@@ -6,7 +6,7 @@ from typing import Any, cast, override
 from adext import AdExt
 from alarmdecoder.devices import Device, SerialDevice, SocketDevice
 from alarmdecoder.util import NoDeviceError
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA as BINARY_SENSOR_DEVICE_CLASSES_SCHEMA,
@@ -83,9 +83,9 @@ class AlarmDecoderFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_PROTOCOL): vol.In(
+                    probatio.Required(CONF_PROTOCOL): probatio.In(
                         [PROTOCOL_SOCKET, PROTOCOL_SERIAL]
                     ),
                 }
@@ -137,19 +137,23 @@ class AlarmDecoderFlowHandler(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception during AlarmDecoder setup")
                 errors["base"] = "unknown"
 
-        schema: vol.Schema
+        schema: probatio.Schema
         if self.protocol == PROTOCOL_SOCKET:
-            schema = vol.Schema(
+            schema = probatio.Schema(
                 {
-                    vol.Required(CONF_HOST, default=DEFAULT_DEVICE_HOST): str,
-                    vol.Required(CONF_PORT, default=DEFAULT_DEVICE_PORT): int,
+                    probatio.Required(CONF_HOST, default=DEFAULT_DEVICE_HOST): str,
+                    probatio.Required(CONF_PORT, default=DEFAULT_DEVICE_PORT): int,
                 }
             )
         if self.protocol == PROTOCOL_SERIAL:
-            schema = vol.Schema(
+            schema = probatio.Schema(
                 {
-                    vol.Required(CONF_DEVICE_PATH, default=DEFAULT_DEVICE_PATH): str,
-                    vol.Required(CONF_DEVICE_BAUD, default=DEFAULT_DEVICE_BAUD): int,
+                    probatio.Required(
+                        CONF_DEVICE_PATH, default=DEFAULT_DEVICE_PATH
+                    ): str,
+                    probatio.Required(
+                        CONF_DEVICE_BAUD, default=DEFAULT_DEVICE_BAUD
+                    ): int,
                 }
             )
 
@@ -184,9 +188,9 @@ class AlarmDecoderOptionsFlowHandler(OptionsFlow):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(EDIT_KEY, default=EDIT_SETTINGS): vol.In(
+                    probatio.Required(EDIT_KEY, default=EDIT_SETTINGS): probatio.In(
                         [EDIT_SETTINGS, EDIT_ZONES]
                     )
                 },
@@ -205,16 +209,16 @@ class AlarmDecoderOptionsFlowHandler(OptionsFlow):
 
         return self.async_show_form(
             step_id="arm_settings",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_ALT_NIGHT_MODE,
                         default=self.arm_options[CONF_ALT_NIGHT_MODE],
                     ): bool,
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_AUTO_BYPASS, default=self.arm_options[CONF_AUTO_BYPASS]
                     ): bool,
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_CODE_ARM_REQUIRED,
                         default=self.arm_options[CONF_CODE_ARM_REQUIRED],
                     ): bool,
@@ -236,7 +240,7 @@ class AlarmDecoderOptionsFlowHandler(OptionsFlow):
 
         return self.async_show_form(
             step_id="zone_select",
-            data_schema=vol.Schema({vol.Required(CONF_ZONE_NUMBER): str}),
+            data_schema=probatio.Schema({probatio.Required(CONF_ZONE_NUMBER): str}),
             errors=errors,
         )
 
@@ -265,9 +269,9 @@ class AlarmDecoderOptionsFlowHandler(OptionsFlow):
         return self.async_show_form(
             step_id="zone_details",
             description_placeholders={CONF_ZONE_NUMBER: self.selected_zone},
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_ZONE_NAME,
                         description={
                             "suggested_value": existing_zone_settings.get(
@@ -275,13 +279,13 @@ class AlarmDecoderOptionsFlowHandler(OptionsFlow):
                             )
                         },
                     ): str,
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_ZONE_TYPE,
                         default=existing_zone_settings.get(
                             CONF_ZONE_TYPE, DEFAULT_ZONE_TYPE
                         ),
                     ): BINARY_SENSOR_DEVICE_CLASSES_SCHEMA,
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_ZONE_RFID,
                         description={
                             "suggested_value": existing_zone_settings.get(
@@ -289,7 +293,7 @@ class AlarmDecoderOptionsFlowHandler(OptionsFlow):
                             )
                         },
                     ): str,
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_ZONE_LOOP,
                         description={
                             "suggested_value": existing_zone_settings.get(
@@ -297,7 +301,7 @@ class AlarmDecoderOptionsFlowHandler(OptionsFlow):
                             )
                         },
                     ): str,
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_RELAY_ADDR,
                         description={
                             "suggested_value": existing_zone_settings.get(
@@ -305,7 +309,7 @@ class AlarmDecoderOptionsFlowHandler(OptionsFlow):
                             )
                         },
                     ): str,
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_RELAY_CHAN,
                         description={
                             "suggested_value": existing_zone_settings.get(
