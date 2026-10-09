@@ -127,10 +127,10 @@ async def test_setup_one_phonebook(hass: HomeAssistant) -> None:
             result["flow_id"], user_input=MOCK_USER_DATA
         )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == MOCK_PHONEBOOK_NAME_1
     assert result["data"] == MOCK_CONFIG_ENTRY
+    assert result["result"].unique_id == MOCK_UNIQUE_ID
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -190,7 +190,6 @@ async def test_setup_multiple_phonebooks(hass: HomeAssistant) -> None:
             {CONF_PHONEBOOK: MOCK_PHONEBOOK_NAME_2},
         )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == MOCK_PHONEBOOK_NAME_2
     assert result["data"] == {
@@ -201,6 +200,7 @@ async def test_setup_multiple_phonebooks(hass: HomeAssistant) -> None:
         CONF_PHONEBOOK: 1,
         SERIAL_NUMBER: MOCK_SERIAL_NUMBER,
     }
+    assert result["result"].unique_id == f"{MOCK_SERIAL_NUMBER}-1"
     assert len(mock_setup_entry.mock_calls) == 1
 
 

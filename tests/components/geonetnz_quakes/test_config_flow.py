@@ -70,7 +70,6 @@ async def test_step_import(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=conf
         )
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "-41.2, 174.7"
     assert result["data"] == {
@@ -82,6 +81,7 @@ async def test_step_import(hass: HomeAssistant) -> None:
         CONF_SCAN_INTERVAL: 240.0,
         CONF_MINIMUM_MAGNITUDE: 2.5,
     }
+    assert result["result"].unique_id == "-41.2, 174.7"
 
 
 async def test_step_user(hass: HomeAssistant) -> None:
@@ -105,7 +105,6 @@ async def test_step_user(hass: HomeAssistant) -> None:
         assert result["type"] is FlowResultType.FORM
 
         result = await hass.config_entries.flow.async_configure(result["flow_id"], conf)
-        # pylint: disable-next=home-assistant-tests-config-flow-unique-id
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == "-41.2, 174.7"
         assert result["data"] == {
@@ -116,3 +115,4 @@ async def test_step_user(hass: HomeAssistant) -> None:
             CONF_SCAN_INTERVAL: 300.0,
             CONF_MINIMUM_MAGNITUDE: 0.0,
         }
+        assert result["result"].unique_id == "-41.2, 174.7"

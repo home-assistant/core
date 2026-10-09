@@ -47,12 +47,12 @@ async def test_form(
         )
         await hass.async_block_till_done()
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Fibonacci256-23D4"
     assert result2["data"] == {
         "host": "1.1.1.1",
     }
+    assert result2["result"].unique_id == "1923d4"
     assert len(mock_setup_entry.mock_calls) == 1
 
 

@@ -120,8 +120,8 @@ async def test_config_flow_already_configured(hass: HomeAssistant) -> None:
         r1["flow_id"],
         user_input={CONF_LOCATION: DEFAULT_LOCATION},
     )
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result1["type"] is FlowResultType.CREATE_ENTRY
+    assert result1["result"].unique_id == DEFAULT_LOCATION
 
     r2 = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}

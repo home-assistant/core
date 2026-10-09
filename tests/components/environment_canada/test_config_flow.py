@@ -101,10 +101,10 @@ async def test_create_entry(hass: HomeAssistant) -> None:
             flow["flow_id"], FAKE_CONFIG
         )
         await hass.async_block_till_done()
-        # pylint: disable-next=home-assistant-tests-config-flow-unique-id
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["data"] == FAKE_CONFIG
         assert result["title"] == FAKE_TITLE
+        assert result["result"].unique_id == "123-english"
 
 
 async def test_create_same_entry_twice(hass: HomeAssistant) -> None:
@@ -192,10 +192,10 @@ async def test_lat_lon_not_specified(hass: HomeAssistant) -> None:
             user_input=fake_config,
         )
         await hass.async_block_till_done()
-        # pylint: disable-next=home-assistant-tests-config-flow-unique-id
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["data"] == FAKE_CONFIG
         assert result["title"] == FAKE_TITLE
+        assert result["result"].unique_id == "123-english"
 
 
 async def test_coordinates_without_station(hass: HomeAssistant) -> None:
@@ -221,10 +221,10 @@ async def test_coordinates_without_station(hass: HomeAssistant) -> None:
             flow["flow_id"], config_no_station
         )
         await hass.async_block_till_done()
-        # pylint: disable-next=home-assistant-tests-config-flow-unique-id
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["data"] == FAKE_CONFIG
         assert result["title"] == FAKE_TITLE
+        assert result["result"].unique_id == "123-english"
 
 
 async def _setup_with_options(
