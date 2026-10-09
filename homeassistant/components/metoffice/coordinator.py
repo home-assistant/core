@@ -38,14 +38,12 @@ class MetOfficeRuntimeData:
 class MetOfficeUpdateCoordinator(TimestampDataUpdateCoordinator[Forecast]):
     """Coordinator for Met Office forecast data."""
 
-    # pylint: disable-next=home-assistant-coordinator-untyped-config-entry
-    config_entry: ConfigEntry
+    config_entry: MetOfficeConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        # pylint: disable-next=home-assistant-coordinator-untyped-config-entry
-        entry: ConfigEntry,
+        entry: MetOfficeConfigEntry,
         name: str,
         connection: Manager,
         latitude: float,
