@@ -51,6 +51,12 @@
       }
     },
     "switch": {
+      "audio_reactive": {
+        "default": "mdi:music-note-off",
+        "state": {
+          "on": "mdi:music-note"
+        }
+      },
       "freeze": {
         "default": "mdi:timer",
         "state": {

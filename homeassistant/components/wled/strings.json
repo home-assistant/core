@@ -113,6 +113,9 @@
       }
     },
     "switch": {
+      "audio_reactive": {
+        "name": "Audio reactive"
+      },
       "freeze": {
         "name": "Freeze"
       },
