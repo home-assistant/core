@@ -108,6 +108,7 @@ async def test_manual_override_switch_uses_current_state(
     mock_charger: MagicMock,
 ) -> None:
     """Test the manual override checks the charger state before toggling."""
+    mock_charger.wifi_firmware = "5.1.5"
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -147,6 +148,7 @@ async def test_manual_override_switch(
     toggled: bool,
 ) -> None:
     """Test the manual override only toggles when not already in that state."""
+    mock_charger.wifi_firmware = "5.1.5"
     mock_charger.manual_override = manual_override
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -160,6 +162,33 @@ async def test_manual_override_switch(
     )
 
     assert mock_charger.toggle_override.called is toggled
+
+
+@pytest.mark.parametrize("service", [SERVICE_TURN_ON, SERVICE_TURN_OFF])
+@pytest.mark.parametrize("wifi_firmware", ["2.9.1", None])
+async def test_manual_override_switch_old_firmware(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_charger: MagicMock,
+    service: str,
+    wifi_firmware: str | None,
+) -> None:
+    """Test the manual override toggles without a state check on old firmware."""
+    mock_charger.wifi_firmware = wifi_firmware
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    mock_charger.update.reset_mock()
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        service,
+        {ATTR_ENTITY_ID: "switch.openevse_mock_config_manual_override"},
+        blocking=True,
+    )
+
+    mock_charger.update.assert_not_called()
+    mock_charger.toggle_override.assert_called_once_with()
 
 
 @pytest.mark.parametrize(
