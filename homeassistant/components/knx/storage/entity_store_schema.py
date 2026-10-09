@@ -21,6 +21,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.components.text import TextMode
 from homeassistant.const import (
+    CONF_DEVICE_CLASS,
     CONF_ENTITY_CATEGORY,
     CONF_ENTITY_ID,
     CONF_PAYLOAD,
@@ -995,16 +996,8 @@ class SensorKnxConfig:
     device_class: Annotated[
         str | None,
         probatio.Maybe(
-            selector.SelectSelector(
-                selector.SelectSelectorConfig(
-                    options=[
-                        cls.value
-                        for cls in SensorDeviceClass
-                        if cls != SensorDeviceClass.ENUM
-                    ],
-                    translation_key="component.knx.selector.sensor_device_class",
-                    sort=True,
-                )
+            selector.DeviceClassSelector(
+                selector.DeviceClassSelectorConfig(domain=Platform.SENSOR)
             )
         ),
     ] = None
@@ -1018,6 +1011,12 @@ class SensorKnxConfig:
 def _sensor_attribute_sub_validator(config: SensorKnxConfig) -> SensorKnxConfig:
     """Validate state_class, device_class and unit compatibility."""
     assert config.ga_sensor.dpt is not None  # required by the selector
+    if config.device_class == SensorDeviceClass.ENUM:
+        # KNX sensors can not be configured with the options an enum sensor needs
+        raise probatio.Invalid(
+            "Device class 'enum' is not supported for KNX sensors",
+            path=[CONF_DEVICE_CLASS],
+        )
     validate_sensor_attributes(
         get_supported_dpts()[config.ga_sensor.dpt],
         state_class=config.state_class,
