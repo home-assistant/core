@@ -10,7 +10,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.calendar import DOMAIN as CALENDAR_DOMAIN
-from homeassistant.components.icloud.coordinator import SCAN_INTERVAL
+from homeassistant.components.icloud.coordinator import CALENDAR_SCAN_INTERVAL
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -123,14 +123,14 @@ async def test_event_in_progress_wins(
         _event(
             "ev1",
             "Now",
-            now.replace(tzinfo=None) - SCAN_INTERVAL,
-            now.replace(tzinfo=None) + SCAN_INTERVAL,
+            now.replace(tzinfo=None) - CALENDAR_SCAN_INTERVAL,
+            now.replace(tzinfo=None) + CALENDAR_SCAN_INTERVAL,
         ),
         _event(
             "ev2",
             "Later",
-            now.replace(tzinfo=None) + SCAN_INTERVAL * 2,
-            now.replace(tzinfo=None) + SCAN_INTERVAL * 3,
+            now.replace(tzinfo=None) + CALENDAR_SCAN_INTERVAL * 2,
+            now.replace(tzinfo=None) + CALENDAR_SCAN_INTERVAL * 3,
         ),
     ]
 
@@ -246,7 +246,7 @@ async def test_new_calendar_added_on_later_poll(
         _calendar("cal1", "Personal"),
         _calendar("cal2", "Work"),
     ]
-    freezer.tick(SCAN_INTERVAL + timedelta(seconds=1))
+    freezer.tick(CALENDAR_SCAN_INTERVAL + timedelta(seconds=1))
     async_fire_time_changed(hass)
     # The scheduled refresh runs as a background task of the config entry.
     await hass.async_block_till_done(wait_background_tasks=True)

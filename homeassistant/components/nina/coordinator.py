@@ -50,12 +50,12 @@ class NINADataUpdateCoordinator(
 ):
     """Class to manage fetching NINA data API."""
 
-    config_entry: ConfigEntry
+    config_entry: NinaConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: NinaConfigEntry,
     ) -> None:
         """Initialize."""
         self._nina: Nina = Nina(async_get_clientsession(hass))

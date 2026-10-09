@@ -16,7 +16,7 @@ from aioesphomeapi import (
     WaterHeaterInfo,
     build_device_unique_id,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import EntityCategory, UnitOfTemperature
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
@@ -456,7 +456,7 @@ def convert_api_error_ha_error[**_P, _R, _EntityT: EsphomeBaseEntity](
     return handler
 
 
-ICON_SCHEMA = vol.Schema(cv.icon)
+ICON_SCHEMA = probatio.Schema(cv.icon)
 
 
 ENTITY_CATEGORIES: EsphomeEnumMapper[EsphomeEntityCategory, EntityCategory | None] = (

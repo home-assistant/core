@@ -3,7 +3,7 @@
 from collections.abc import Mapping
 from typing import Any, cast, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.counter import DOMAIN as COUNTER_DOMAIN
 from homeassistant.components.input_number import DOMAIN as INPUT_NUMBER_DOMAIN
@@ -83,8 +83,8 @@ async def _get_options_dict(handler: SchemaCommonFlowHandler | None) -> dict:
         entity_selector = entity_selector_compatible(handler.parent_handler)
 
     return {
-        vol.Required(CONF_SOURCE): entity_selector,
-        vol.Required(CONF_ROUND_DIGITS, default=2): selector.NumberSelector(
+        probatio.Required(CONF_SOURCE): entity_selector,
+        probatio.Required(CONF_ROUND_DIGITS, default=2): selector.NumberSelector(
             selector.NumberSelectorConfig(
                 min=0,
                 max=6,
@@ -93,30 +93,32 @@ async def _get_options_dict(handler: SchemaCommonFlowHandler | None) -> dict:
                 translation_key="round",
             ),
         ),
-        vol.Required(CONF_TIME_WINDOW): selector.DurationSelector(),
-        vol.Optional(CONF_UNIT_PREFIX): selector.SelectSelector(
+        probatio.Required(CONF_TIME_WINDOW): selector.DurationSelector(),
+        probatio.Optional(CONF_UNIT_PREFIX): selector.SelectSelector(
             selector.SelectSelectorConfig(options=UNIT_PREFIXES),
         ),
-        vol.Required(CONF_UNIT_TIME, default=UnitOfTime.HOURS): selector.SelectSelector(
+        probatio.Required(
+            CONF_UNIT_TIME, default=UnitOfTime.HOURS
+        ): selector.SelectSelector(
             selector.SelectSelectorConfig(
                 options=TIME_UNITS, translation_key="time_unit"
             ),
         ),
-        vol.Optional(CONF_MAX_SUB_INTERVAL): selector.DurationSelector(
+        probatio.Optional(CONF_MAX_SUB_INTERVAL): selector.DurationSelector(
             selector.DurationSelectorConfig(allow_negative=False)
         ),
     }
 
 
-async def _get_options_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
-    return vol.Schema(await _get_options_dict(handler))
+async def _get_options_schema(handler: SchemaCommonFlowHandler) -> probatio.Schema:
+    return probatio.Schema(await _get_options_dict(handler))
 
 
-async def _get_config_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
+async def _get_config_schema(handler: SchemaCommonFlowHandler) -> probatio.Schema:
     options = await _get_options_dict(handler)
-    return vol.Schema(
+    return probatio.Schema(
         {
-            vol.Required(CONF_NAME): selector.TextSelector(),
+            probatio.Required(CONF_NAME): selector.TextSelector(),
             **options,
         }
     )

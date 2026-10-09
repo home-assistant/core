@@ -5,8 +5,8 @@ import logging
 import socket
 from unittest.mock import patch
 
+from probatio import MultipleInvalid
 import pytest
-from voluptuous import MultipleInvalid
 
 from homeassistant.components import pilight
 from homeassistant.core import HomeAssistant

@@ -19,9 +19,10 @@ from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
-from . import setup_platform_integration
+from . import async_fire_coordinator_update, setup_platform_integration
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
@@ -69,6 +70,7 @@ async def test_bypass_supply_temperature_target_numbers_support_all_exposed_zone
 
 async def test_successful_write_does_not_recover_failed_coordinator(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     mock_bypass_supply_temperature_targets: dict[int, BypassSupplyTemperatureTarget],
     mock_config_entry: MockConfigEntry,
     mock_duco_client: AsyncMock,
@@ -104,8 +106,15 @@ async def test_successful_write_does_not_recover_failed_coordinator(
     )
     await write_started.wait()
 
+    state_changed = asyncio.Event()
+    remove_listener = async_track_state_change_event(
+        hass, _ZONE_1_ENTITY_ID, lambda _: state_changed.set()
+    )
     mock_duco_client.async_get_nodes.side_effect = DucoError("Temporary update failure")
-    await mock_config_entry.runtime_data.async_refresh()
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await state_changed.wait()
+    remove_listener()
 
     state = hass.states.get(_ZONE_1_ENTITY_ID)
     assert state is not None
@@ -298,18 +307,14 @@ async def test_bypass_supply_temperature_target_becomes_unavailable_when_missing
     assert state.state == "20.0"
 
     updated_target = replace(mock_bypass_supply_temperature_targets.pop(1), value=20.5)
-    freezer.tick(SCAN_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    await async_fire_coordinator_update(hass, freezer)
 
     state = hass.states.get(_ZONE_1_ENTITY_ID)
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
 
     mock_bypass_supply_temperature_targets[1] = updated_target
-    freezer.tick(SCAN_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    await async_fire_coordinator_update(hass, freezer)
 
     state = hass.states.get(_ZONE_1_ENTITY_ID)
     assert state is not None
@@ -334,17 +339,13 @@ async def test_bypass_supply_temperature_target_recovers_from_refresh_error(
         DucoError("Temporary bypass target failure"),
         mock_bypass_supply_temperature_targets.copy(),
     ]
-    freezer.tick(SCAN_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    await async_fire_coordinator_update(hass, freezer)
 
     state = hass.states.get(_ZONE_1_ENTITY_ID)
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
 
-    freezer.tick(SCAN_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+    await async_fire_coordinator_update(hass, freezer)
 
     state = hass.states.get(_ZONE_1_ENTITY_ID)
     assert state is not None

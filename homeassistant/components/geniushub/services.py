@@ -2,39 +2,51 @@
 
 from datetime import timedelta
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.service import verify_domain_control
+from homeassistant.helpers.service import (
+    async_register_platform_entity_service,
+    verify_domain_control,
+)
+from homeassistant.helpers.typing import VolDictType
 
 from .const import (
     ATTR_DURATION,
     ATTR_ZONE_MODE,
     DOMAIN,
+    SVC_SET_SWITCH_OVERRIDE,
     SVC_SET_ZONE_MODE,
     SVC_SET_ZONE_OVERRIDE,
 )
 
-SET_ZONE_MODE_SCHEMA = vol.Schema(
+SET_SWITCH_OVERRIDE_SCHEMA: VolDictType = {
+    probatio.Optional(ATTR_DURATION): probatio.All(
+        cv.time_period,
+        probatio.Range(min=timedelta(minutes=5), max=timedelta(days=1)),
+    ),
+}
+SET_ZONE_MODE_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_ENTITY_ID): cv.entity_id,
-        vol.Required(ATTR_ZONE_MODE): vol.In(["off", "timer", "footprint"]),
+        probatio.Required(ATTR_ENTITY_ID): cv.entity_id,
+        probatio.Required(ATTR_ZONE_MODE): probatio.In(["off", "timer", "footprint"]),
     }
 )
-SET_ZONE_OVERRIDE_SCHEMA = vol.Schema(
+SET_ZONE_OVERRIDE_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_ENTITY_ID): cv.entity_id,
-        vol.Required(ATTR_TEMPERATURE): vol.All(
-            vol.Coerce(float), vol.Range(min=4, max=28)
+        probatio.Required(ATTR_ENTITY_ID): cv.entity_id,
+        probatio.Required(ATTR_TEMPERATURE): probatio.All(
+            probatio.Coerce(float), probatio.Range(min=4, max=28)
         ),
-        vol.Optional(ATTR_DURATION): vol.All(
+        probatio.Optional(ATTR_DURATION): probatio.All(
             cv.time_period,
-            vol.Range(min=timedelta(minutes=5), max=timedelta(days=1)),
+            probatio.Range(min=timedelta(minutes=5), max=timedelta(days=1)),
         ),
     }
 )
@@ -79,4 +91,12 @@ def async_setup_services(hass: HomeAssistant) -> None:
     )
     hass.services.async_register(
         DOMAIN, SVC_SET_ZONE_OVERRIDE, set_zone_mode, schema=SET_ZONE_OVERRIDE_SCHEMA
+    )
+    async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        SVC_SET_SWITCH_OVERRIDE,
+        entity_domain=SWITCH_DOMAIN,
+        func="async_turn_on",
+        schema=SET_SWITCH_OVERRIDE_SCHEMA,
     )

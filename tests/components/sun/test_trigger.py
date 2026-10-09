@@ -7,8 +7,8 @@ from typing import Any
 import astral
 from astral.sun import elevation as astral_elevation
 from freezegun import freeze_time
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.components import automation, sun
 from homeassistant.components.sun.trigger import _next_polar_transition
@@ -1052,7 +1052,7 @@ async def test_dawn_dusk_twilight_validation(
     if valid:
         await async_validate_trigger_config(hass, [config])
     else:
-        with pytest.raises(vol.Invalid):
+        with pytest.raises(probatio.Invalid):
             await async_validate_trigger_config(hass, [config])
 
 
@@ -1062,11 +1062,11 @@ async def test_dawn_dusk_twilight_validation(
         ("sun.golden_hour_started", "any", nullcontext()),
         ("sun.golden_hour_started", "morning", nullcontext()),
         ("sun.golden_hour_started", "evening", nullcontext()),
-        ("sun.golden_hour_started", "invalid", pytest.raises(vol.Invalid)),
+        ("sun.golden_hour_started", "invalid", pytest.raises(probatio.Invalid)),
         ("sun.blue_hour_ended", "any", nullcontext()),
         ("sun.blue_hour_ended", "morning", nullcontext()),
         ("sun.blue_hour_ended", "evening", nullcontext()),
-        ("sun.blue_hour_ended", "invalid", pytest.raises(vol.Invalid)),
+        ("sun.blue_hour_ended", "invalid", pytest.raises(probatio.Invalid)),
     ],
 )
 async def test_golden_blue_hour_period_validation(

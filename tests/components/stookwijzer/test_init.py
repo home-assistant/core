@@ -88,6 +88,10 @@ async def test_entry_migration_failure(
     await hass.async_block_till_done()
 
     assert mock_v1_config_entry.state is ConfigEntryState.MIGRATION_ERROR
+    assert (
+        mock_v1_config_entry.reason
+        == "Failed to migrate the location to the new format"
+    )
     assert issue_registry.async_get_issue(DOMAIN, "location_migration_failed")
 
     assert len(mock_stookwijzer.async_transform_coordinates.mock_calls) == 1

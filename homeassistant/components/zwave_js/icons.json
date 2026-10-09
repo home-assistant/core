@@ -1,4 +1,15 @@
 {
+  "conditions": {
+    "config_parameter": {
+      "condition": "mdi:cog"
+    },
+    "node_status": {
+      "condition": "mdi:heart-pulse"
+    },
+    "value": {
+      "condition": "mdi:update"
+    }
+  },
   "entity": {
     "button": {
       "ping": {

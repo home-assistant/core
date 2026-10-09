@@ -2,8 +2,8 @@
 
 from unittest.mock import patch
 
+import probatio
 import pytest
-import voluptuous as vol
 
 from homeassistant.components.humidifier import (
     ATTR_ACTION,
@@ -74,7 +74,7 @@ async def test_set_target_humidity_bad_attr(hass: HomeAssistant) -> None:
     state = hass.states.get(ENTITY_DEHUMIDIFIER)
     assert state.attributes.get(ATTR_HUMIDITY) == 54.2
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await hass.services.async_call(
             HUMIDITY_DOMAIN,
             SERVICE_SET_HUMIDITY,

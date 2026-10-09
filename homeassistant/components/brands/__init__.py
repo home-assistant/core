@@ -9,7 +9,7 @@ import time
 from typing import Any, Final
 
 from aiohttp import ClientError, hdrs, web
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import websocket_api
 from homeassistant.components.http import KEY_AUTHENTICATED, HomeAssistantView
@@ -55,13 +55,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
 
     hass.http.register_view(BrandsIntegrationView(hass))
+    hass.http.register_view(BrandsMarketplaceView(hass))
     hass.http.register_view(BrandsHardwareView(hass))
     websocket_api.async_register_command(hass, ws_access_token)
     return True
 
 
 @callback
-@websocket_api.websocket_command({vol.Required("type"): "brands/access_token"})
+@websocket_api.websocket_command({probatio.Required("type"): "brands/access_token"})
 def ws_access_token(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
@@ -155,6 +156,29 @@ class _BrandsBaseView(HomeAssistantView):
 
         return None
 
+    async def _get_image_data(
+        self,
+        cdn_path: str,
+        cache_subpath: str,
+    ) -> bytes | None:
+        """Read image data from the disk cache, fetching from CDN if needed."""
+        cache_path = self._cache_dir / cache_subpath
+
+        result = await self._hass.async_add_executor_job(
+            _read_cached_file_with_marker, cache_path
+        )
+        if result is None:
+            return await self._fetch_and_cache(cdn_path, cache_path)
+
+        data, mtime = result
+        # Schedule background refresh if stale
+        if time.time() - mtime > CACHE_TTL:
+            self._hass.async_create_background_task(
+                self._fetch_and_cache(cdn_path, cache_path),
+                f"brands_refresh_{cache_subpath}",
+            )
+        return data
+
     async def _serve_from_cache_or_cdn(
         self,
         cdn_path: str,
@@ -163,24 +187,7 @@ class _BrandsBaseView(HomeAssistantView):
         fallback_placeholder: bool = True,
     ) -> web.Response:
         """Serve from disk cache, fetching from CDN if needed."""
-        cache_path = self._cache_dir / cache_subpath
-        now = time.time()
-
-        # Try disk cache
-        result = await self._hass.async_add_executor_job(
-            _read_cached_file_with_marker, cache_path
-        )
-        if result is not None:
-            data, mtime = result
-            # Schedule background refresh if stale
-            if now - mtime > CACHE_TTL:
-                self._hass.async_create_background_task(
-                    self._fetch_and_cache(cdn_path, cache_path),
-                    f"brands_refresh_{cache_subpath}",
-                )
-        else:
-            # Cache miss - fetch from CDN
-            data = await self._fetch_and_cache(cdn_path, cache_path)
+        data = await self._get_image_data(cdn_path, cache_subpath)
 
         if data is None:
             if fallback_placeholder:
@@ -260,10 +267,64 @@ class BrandsIntegrationView(_BrandsBaseView):
         ) is not None:
             return response
 
-        # 2. Try cache / CDN (always use direct path for proper 404 caching)
+        # 2. Try the integration image. Direct paths are used instead of the
+        # "_/" namespace so real 404s can be cached as markers.
+        if (
+            data := await self._get_image_data(
+                cdn_path=f"{domain}/{image}",
+                cache_subpath=f"integrations/{domain}/{image}",
+            )
+        ) is not None:
+            return self._build_response(data)
+
+        # 3. Fall back to the brand image, which is cached separately so the
+        # integration 404 marker is preserved.
         return await self._serve_from_cache_or_cdn(
             cdn_path=f"brands/{domain}/{image}",
-            cache_subpath=f"integrations/{domain}/{image}",
+            cache_subpath=f"brands/{domain}/{image}",
+            fallback_placeholder=use_placeholder,
+        )
+
+
+class BrandsMarketplaceView(_BrandsBaseView):
+    """Serve brand images of integrations in the Marketplace."""
+
+    name = "api:brands:marketplace"
+    url = "/api/brands/marketplace/{domain}/{image}"
+
+    async def get(
+        self,
+        request: web.Request,
+        domain: str,
+        image: str,
+    ) -> web.Response:
+        """Handle GET request for a Marketplace integration brand image."""
+        self._authenticate(request)
+
+        if not valid_domain(domain) or image not in ALLOWED_IMAGES:
+            return web.Response(status=HTTPStatus.NOT_FOUND)
+
+        use_placeholder = request.query.get("placeholder") != "no"
+
+        if (
+            response := await self._serve_from_custom_integration(domain, image)
+        ) is not None:
+            return response
+
+        # Images in the brands repository win over the ones an integration
+        # ships itself, like they do on the CDN
+        if (
+            data := await self._get_image_data(
+                cdn_path=f"{domain}/{image}",
+                cache_subpath=f"integrations/{domain}/{image}",
+            )
+        ) is not None:
+            return self._build_response(data)
+
+        # The brand folder of an integration that is not installed yet
+        return await self._serve_from_cache_or_cdn(
+            cdn_path=f"marketplace/{domain}/{image}",
+            cache_subpath=f"marketplace/{domain}/{image}",
             fallback_placeholder=use_placeholder,
         )
 

@@ -2,13 +2,12 @@
 
 from typing import Any, TypedDict
 
-from probatio import to_field_list
+import probatio
 from pyinsteon import async_close, async_connect, devices
 from pyinsteon.address import Address
 from pyinsteon.aldb.aldb_record import ALDBRecord
 from pyinsteon.constants import LinkStatus
 from pyinsteon.managers.link_manager import get_broken_links
-import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.config_entries import ConfigEntry
@@ -175,7 +174,7 @@ async def _async_connect(**kwargs):
     return True
 
 
-@websocket_api.websocket_command({vol.Required(TYPE): "insteon/config/get"})
+@websocket_api.websocket_command({probatio.Required(TYPE): "insteon/config/get"})
 @websocket_api.require_admin
 @websocket_api.async_response
 async def websocket_get_config(
@@ -201,7 +200,7 @@ async def websocket_get_config(
 
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "insteon/config/get_modem_schema",
+        probatio.Required(TYPE): "insteon/config/get_modem_schema",
     }
 )
 @websocket_api.require_admin
@@ -216,17 +215,21 @@ async def websocket_get_modem_schema(
     config_data = config_entry.data
     if device := config_data.get(CONF_DEVICE):
         ports = await async_get_usb_ports(hass=hass)
-        plm_schema = to_field_list(build_plm_schema(ports=ports, device=device))
+        plm_schema = probatio.to_field_list(
+            build_plm_schema(ports=ports, device=device)
+        )
         connection.send_result(msg[ID], plm_schema)
     else:
-        hub_schema = to_field_list(build_hub_schema(**config_data))
+        hub_schema = probatio.to_field_list(build_hub_schema(**config_data))
         connection.send_result(msg[ID], hub_schema)
 
 
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "insteon/config/update_modem_config",
-        vol.Required("config"): vol.Any(PLM_SCHEMA, HUB_V2_SCHEMA, HUB_V1_SCHEMA),
+        probatio.Required(TYPE): "insteon/config/update_modem_config",
+        probatio.Required("config"): probatio.Any(
+            PLM_SCHEMA, HUB_V2_SCHEMA, HUB_V1_SCHEMA
+        ),
     }
 )
 @websocket_api.require_admin
@@ -259,8 +262,8 @@ async def websocket_update_modem_config(
 
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "insteon/config/device_override/add",
-        vol.Required(OVERRIDE): DEVICE_OVERRIDE_SCHEMA,
+        probatio.Required(TYPE): "insteon/config/device_override/add",
+        probatio.Required(OVERRIDE): DEVICE_OVERRIDE_SCHEMA,
     }
 )
 @websocket_api.require_admin
@@ -282,8 +285,8 @@ async def websocket_add_device_override(
 
 @websocket_api.websocket_command(
     {
-        vol.Required(TYPE): "insteon/config/device_override/remove",
-        vol.Required(DEVICE_ADDRESS): str,
+        probatio.Required(TYPE): "insteon/config/device_override/remove",
+        probatio.Required(DEVICE_ADDRESS): str,
     }
 )
 @websocket_api.require_admin
@@ -301,7 +304,7 @@ async def websocket_remove_device_override(
 
 
 @websocket_api.websocket_command(
-    {vol.Required(TYPE): "insteon/config/get_broken_links"}
+    {probatio.Required(TYPE): "insteon/config/get_broken_links"}
 )
 @websocket_api.require_admin
 @websocket_api.async_response
@@ -323,7 +326,7 @@ async def websocket_get_broken_links(
 
 
 @websocket_api.websocket_command(
-    {vol.Required(TYPE): "insteon/config/get_unknown_devices"}
+    {probatio.Required(TYPE): "insteon/config/get_unknown_devices"}
 )
 @websocket_api.require_admin
 @websocket_api.async_response

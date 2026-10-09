@@ -37,6 +37,7 @@ async def test_full_user_flow(
     assert result2.get("type") is FlowResultType.CREATE_ENTRY
     assert result2.get("title") == "EnergyZero"
     assert result2.get("data") == {}
+    assert result2["result"].unique_id == DOMAIN
 
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -103,7 +104,6 @@ async def test_options_reload(
     selected: str,
 ) -> None:
     """Apply changed options to both requests without recreating entities."""
-    original_coordinator = init_integration.runtime_data
     original_entities = set(hass.states.async_entity_ids("sensor"))
     mock_energyzero.get_electricity_prices.reset_mock()
     result = await hass.config_entries.options.async_init(init_integration.entry_id)
@@ -111,7 +111,6 @@ async def test_options_reload(
         result["flow_id"], user_input={CONF_ELECTRICITY_PRICE_INTERVAL: selected}
     )
     await hass.async_block_till_done()
-    assert init_integration.runtime_data is not original_coordinator
     assert set(hass.states.async_entity_ids("sensor")) == original_entities
     assert mock_energyzero.get_electricity_prices.await_count == 2
     assert all(

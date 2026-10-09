@@ -3,9 +3,6 @@
     "binary_sensor": {
       "mount": {
         "name": "Connected"
-      },
-      "state": {
-        "name": "Running"
       }
     },
     "sensor": {
@@ -49,9 +46,6 @@
     },
     "mount_reload_invalid_device": {
       "message": "Device is not a supervisor mount point"
-    },
-    "mount_reload_unknown_device_id": {
-      "message": "Device ID not found"
     },
     "supervisor_not_connected": {
       "message": "Not connected with the supervisor / system too busy"

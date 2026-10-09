@@ -5,8 +5,9 @@ from enum import Enum
 from operator import attrgetter
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
+from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.llm import LLMTools
 from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,
@@ -22,10 +23,17 @@ from homeassistant.helpers import (
     entity_registry as er,
     intent,
 )
-from homeassistant.helpers.llm import LLM_API_ASSIST, LLMContext, Tool, ToolInput
+from homeassistant.helpers.llm import (
+    LLM_API_ASSIST,
+    LLMContext,
+    Tool,
+    ToolAnnotations,
+    ToolInput,
+    ToolResult,
+)
 from homeassistant.util import dt as dt_util, yaml as yaml_util
-from homeassistant.util.json import JsonObjectType
 
+from .const import DOMAIN
 from .exposed_entities import async_should_expose
 
 # Domains bucketed out of the exposed-entity overview.
@@ -40,7 +48,7 @@ NO_ENTITIES_PROMPT = (
 DYNAMIC_CONTEXT_PROMPT = (
     "You ARE equipped to answer questions about the"
     " current state of\n"
-    "the home using the `homeassistant__GetLiveContext` tool."
+    "the home by retrieving live context."
     " This is a primary function."
     " Do not state you lack the\n"
     "functionality if the question requires live data.\n"
@@ -54,7 +62,7 @@ DYNAMIC_CONTEXT_PROMPT = (
     ' "What mode is the thermostat in?",'
     ' "What is the temperature outside?"):\n'
     "    1.  Recognize this requires live data.\n"
-    "    2.  You MUST call `homeassistant__GetLiveContext`."
+    "    2.  You MUST use the provided tool to retrieve live context."
     " This tool will provide the needed real-time"
     " information (like temperature from the local"
     " weather, lock status, etc.).\n"
@@ -167,6 +175,14 @@ def async_get_exposed_entities(
                 if attr_name in interesting_attributes
             }
         ):
+            # Tools take brightness as a 0-100 percentage; the attribute is 0-255.
+            if state.domain == LIGHT_DOMAIN and isinstance(
+                brightness := state.attributes.get("brightness"), int
+            ):
+                pct = round(brightness / 255 * 100)
+                attributes["brightness_pct"] = str(
+                    max(pct, 1) if brightness > 0 else pct
+                )
             info["attributes"] = attributes
 
         entities[state.entity_id] = info
@@ -203,6 +219,7 @@ class GetLiveContextTool(Tool):
     """
 
     name = "homeassistant__GetLiveContext"
+    title = "Get live context"
     description = (
         "Provides real-time information about the"
         " CURRENT state, value, or mode of devices,"
@@ -220,21 +237,23 @@ class GetLiveContextTool(Tool):
         "Prefer filtering by domain when searching"
         " for multiple devices of the same type."
     )
-    parameters = vol.Schema(
+    annotations = ToolAnnotations(read_only=True, open_world=False)
+    integration = DOMAIN
+    parameters = probatio.Schema(
         {
-            vol.Optional(
+            probatio.Optional(
                 "name",
                 description="Filter entities by name or alias (case-insensitive).",
             ): cv.string,
-            vol.Optional(
+            probatio.Optional(
                 "domain",
                 description=(
                     "Filter entities by domain"
                     " (e.g. 'light', 'sensor')."
                     " Accepts a single domain or a list."
                 ),
-            ): vol.Any(cv.string, [cv.string]),
-            vol.Optional(
+            ): probatio.Any(cv.string, [cv.string]),
+            probatio.Optional(
                 "area",
                 description="Filter entities by area name or alias (case-insensitive).",
             ): cv.string,
@@ -247,13 +266,13 @@ class GetLiveContextTool(Tool):
         hass: HomeAssistant,
         tool_input: ToolInput,
         llm_context: LLMContext,
-    ) -> JsonObjectType:
+    ) -> ToolResult:
         """Get the current state of exposed entities."""
         args = self.parameters(tool_input.tool_args)
         exposed_entities = async_get_exposed_entities(hass, llm_context.assistant)
 
         if not exposed_entities:
-            return {"success": False, "error": NO_ENTITIES_PROMPT}
+            return ToolResult(data={"error": NO_ENTITIES_PROMPT}, error=True)
 
         name_filter = args.get("name")
         area_filter = args.get("area")
@@ -290,12 +309,14 @@ class GetLiveContextTool(Tool):
             )
 
             if not match_result.is_match:
-                return {
-                    "success": False,
-                    "error": _live_context_match_error(
-                        match_result, name_filter, area_filter, domain_filter
-                    ),
-                }
+                return ToolResult(
+                    data={
+                        "error": _live_context_match_error(
+                            match_result, name_filter, area_filter, domain_filter
+                        )
+                    },
+                    error=True,
+                )
 
             matched_ids = {state.entity_id for state in match_result.states}
             entities = [
@@ -311,10 +332,7 @@ class GetLiveContextTool(Tool):
             " and the devices in this smart home:",
             yaml_util.dump(entities),
         ]
-        return {
-            "success": True,
-            "result": "\n".join(prompt),
-        }
+        return ToolResult(data={"result": "\n".join(prompt)})
 
 
 @callback

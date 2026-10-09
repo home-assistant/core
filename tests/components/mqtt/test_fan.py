@@ -4,8 +4,8 @@ import copy
 from typing import Any
 from unittest.mock import patch
 
+from probatio.error import MultipleInvalid
 import pytest
-from voluptuous.error import MultipleInvalid
 
 from homeassistant.components import fan
 from homeassistant.components.fan import (
