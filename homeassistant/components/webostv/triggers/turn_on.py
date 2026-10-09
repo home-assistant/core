@@ -203,7 +203,11 @@ class _TurnOnTargetTracker(TargetEntityChangeTracker):
         device_ids: set[str] = set()
         for device_id in self._selection.device_ids:
             if (
-                dev_reg.async_get(device_id, include_composite_devices=False)
+                dev_reg.async_get(
+                    device_id,
+                    include_child_devices=False,
+                    include_composite_devices=False,
+                )
                 is not None
             ):
                 device_ids.add(device_id)

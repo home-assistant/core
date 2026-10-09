@@ -359,6 +359,59 @@ async def test_trigger_unknown_device_id(
 
 
 @pytest.mark.usefixtures("client")
+async def test_trigger_child_device_id(
+    hass: HomeAssistant,
+    service_calls: list[ServiceCall],
+    device_registry: dr.DeviceRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a child device in the target is ignored."""
+    entry = await setup_webostv(hass)
+
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, FAKE_UUID), entry.entry_id
+    )
+    child_device = device_registry.async_get_or_create_child(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, "child")},
+        parent_device_id=device.id,
+        name="Child",
+    )
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        "trigger": TURN_ON_REQUESTED,
+                        "target": {"device_id": [child_device.id, device.id]},
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {"some": "{{ trigger.device_id }}"},
+                    },
+                },
+            ],
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert "ValueError" not in caplog.text
+
+    await hass.services.async_call(
+        "media_player",
+        "turn_on",
+        {"entity_id": ENTITY_ID},
+        blocking=True,
+    )
+
+    assert len(service_calls) == 2
+    assert service_calls[1].data["some"] == device.id
+
+
+@pytest.mark.usefixtures("client")
 async def test_webostv_turn_on_trigger_area_id(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
