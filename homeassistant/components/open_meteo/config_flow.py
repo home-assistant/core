@@ -26,8 +26,7 @@ class OpenMeteoFlowHandler(ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by the user."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            await self.async_set_unique_id(user_input[CONF_ZONE])
-            self._abort_if_unique_id_configured()
+            self._async_abort_entries_match({CONF_ZONE: user_input[CONF_ZONE]})
 
             if (zone := self.hass.states.get(user_input[CONF_ZONE])) is None:
                 errors[CONF_ZONE] = "zone_not_found"

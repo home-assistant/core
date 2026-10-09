@@ -19,7 +19,6 @@ def mock_config_entry() -> MockConfigEntry:
         title="Home",
         domain=DOMAIN,
         data={CONF_ZONE: "zone.home"},
-        unique_id="zone.home",
     )
 
 
