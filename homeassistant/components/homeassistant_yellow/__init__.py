@@ -26,7 +26,11 @@ from homeassistant.components.usb import (
 )
 from homeassistant.config_entries import SOURCE_HARDWARE, ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
+from homeassistant.exceptions import (
+    ConfigEntryError,
+    ConfigEntryNotReady,
+    HomeAssistantError,
+)
 from homeassistant.helpers import discovery_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.hassio import is_hassio
@@ -62,7 +66,10 @@ async def async_setup_entry(
     if not is_hassio(hass):
         # Not running under supervisor, Home Assistant may have been migrated
         hass.async_create_task(hass.config_entries.async_remove(entry.entry_id))
-        return False
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="not_hassio",
+        )
 
     try:
         os_info = get_os_info(hass)
@@ -72,7 +79,11 @@ async def async_setup_entry(
     if os_info.get("board") != "yellow":
         # Not running on a Home Assistant Yellow, Home Assistant may have been migrated
         hass.async_create_task(hass.config_entries.async_remove(entry.entry_id))
-        return False
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="unsupported_board",
+            translation_placeholders={"board": str(os_info.get("board"))},
+        )
 
     firmware = ApplicationType(entry.data[FIRMWARE])
 

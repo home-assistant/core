@@ -58,6 +58,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry) -> None:
     )
     await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Philips TV (1234567890)"
     assert result2["data"] == MOCK_CONFIG

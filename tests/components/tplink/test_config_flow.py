@@ -144,6 +144,7 @@ async def test_discovery(
         )
         await hass.async_block_till_done(wait_background_tasks=True)
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == DEFAULT_ENTRY_TITLE
     assert result3["data"] == expected_entry_data
@@ -956,6 +957,7 @@ async def test_manual_camera_no_live_view(
         },
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert CONF_CAMERA_CREDENTIALS not in result["data"]
     assert result["data"][CONF_LIVE_VIEW] is False
@@ -1077,6 +1079,7 @@ async def test_manual_auth_camera(
         )
         await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_CAMERA_CREDENTIALS] == {
         CONF_USERNAME: "camuser",

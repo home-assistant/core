@@ -53,6 +53,7 @@ async def test_form(
     )
     await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "JELLYFIN-SERVER"
     assert result2["data"] == {
@@ -90,6 +91,7 @@ async def test_form_strips_trailing_slash_from_url(
     )
     await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     # The persisted URL has no trailing slash...
     assert result2["data"][CONF_URL] == TEST_URL

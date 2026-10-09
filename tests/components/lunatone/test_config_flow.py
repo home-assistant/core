@@ -15,15 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from . import (
-    BASE_IP,
-    BASE_URL,
-    INFO_DATA,
-    LEGACY_INFO_DATA,
-    MANUFACTURER,
-    UUID,
-    setup_integration,
-)
+from . import BASE_IP, BASE_URL, MANUFACTURER, UUID, build_info_data, setup_integration
 
 from tests.common import MockConfigEntry
 
@@ -44,13 +36,16 @@ ZEROCONF_DISCOVERY = ZeroconfServiceInfo(
 )
 
 
-@pytest.mark.parametrize(("info_data"), [INFO_DATA, LEGACY_INFO_DATA])
+@pytest.mark.parametrize(
+    ("info_data"),
+    [build_info_data(include_uuid=True), build_info_data(include_uuid=False)],
+)
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_full_flow(
     hass: HomeAssistant, mock_lunatone_info: AsyncMock, info_data: InfoData
 ) -> None:
     """Test full user flow."""
-    mock_lunatone_info.set_data(info_data)
+    mock_lunatone_info.data = info_data
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -63,6 +58,7 @@ async def test_full_flow(
         result["flow_id"],
         {CONF_URL: BASE_URL},
     )
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == BASE_URL
     assert result["data"] == {CONF_URL: BASE_URL}

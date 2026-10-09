@@ -1338,12 +1338,29 @@ async def test_update_api_key_duplicate(
 @pytest.mark.parametrize(
     ("current_llm_apis", "suggested_llm_apis", "expected_options"),
     [
-        pytest.param("assist", ["assist"], ["assist"], id="assist_string"),
-        pytest.param(["assist"], ["assist"], ["assist"], id="assist_list"),
-        pytest.param("non-existent", [], ["assist"], id="unknown_string"),
-        pytest.param(["non-existent"], [], ["assist"], id="unknown_list"),
         pytest.param(
-            ["assist", "non-existent"], ["assist"], ["assist"], id="mixed_list"
+            "assist", ["assist"], ["assist", "homeassistant"], id="assist_string"
+        ),
+        pytest.param(
+            ["assist"], ["assist"], ["assist", "homeassistant"], id="assist_list"
+        ),
+        pytest.param(
+            "non-existent", [], ["assist", "homeassistant"], id="unknown_string"
+        ),
+        pytest.param(
+            ["non-existent"], [], ["assist", "homeassistant"], id="unknown_list"
+        ),
+        pytest.param(
+            ["assist", "non-existent"],
+            ["assist"],
+            ["assist", "homeassistant"],
+            id="mixed_list",
+        ),
+        pytest.param(
+            ["homeassistant"],
+            ["homeassistant"],
+            ["assist", "homeassistant"],
+            id="homeassistant_list",
         ),
     ],
 )

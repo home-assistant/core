@@ -247,6 +247,7 @@ async def test_form_forwards_verify_ssl_to_connection(
         )
         await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert mock_connection_cls.call_args.kwargs["verify_ssl"] is verify_ssl
 

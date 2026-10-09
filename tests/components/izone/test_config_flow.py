@@ -1478,6 +1478,7 @@ async def test_user_manual_host_handoff_by_uid_when_shelf_host_stale(
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {CONF_HOST: "192.0.2.55"}
     assert stale_shelf_flow_id not in hass.config_entries.flow._progress

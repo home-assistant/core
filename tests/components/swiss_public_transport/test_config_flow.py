@@ -141,6 +141,7 @@ async def test_flow_user_init_data_success(
                 user_input=time_mode_input,
             )
 
+        # pylint: disable-next=home-assistant-tests-config-flow-unique-id
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["result"].title == config_title
 

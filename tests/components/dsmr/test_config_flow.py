@@ -60,6 +60,7 @@ async def test_setup_network(
         "protocol": "dsmr_protocol",
     }
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "socket://10.10.0.1:1234"
     assert result["data"] == {**entry_data, **SERIAL_DATA}
@@ -103,6 +104,7 @@ async def test_setup_network_rfxtrx(
         "protocol": "rfxtrx_dsmr_protocol",
     }
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "socket://10.10.0.1:1234"
     assert result["data"] == {**entry_data, **SERIAL_DATA}
@@ -197,6 +199,7 @@ async def test_setup_serial(
         )
         await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == port.device
     assert result["data"] == entry_data
@@ -242,6 +245,7 @@ async def test_setup_serial_encrypted(
         )
         await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == port.device
     assert result["data"] == {
@@ -405,6 +409,7 @@ async def test_setup_serial_rfxtrx(
         "protocol": "rfxtrx_dsmr_protocol",
     }
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == port.device
     assert result["data"] == {**entry_data, **SERIAL_DATA}

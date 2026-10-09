@@ -76,6 +76,7 @@ async def test_bluetooth_discovery(hass: HomeAssistant) -> None:
         )
     await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Bot EEFF"
     assert result["data"] == {
@@ -103,6 +104,7 @@ async def test_bluetooth_discovery_requires_password(hass: HomeAssistant) -> Non
         )
     await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Bot 923B"
     assert result["data"] == {
@@ -206,6 +208,7 @@ async def test_bluetooth_discovery_lock_ultra_max(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_SENSOR_TYPE] == "lock_ultra_max"
     assert len(mock_setup_entry.mock_calls) == 1
@@ -244,6 +247,7 @@ async def test_bluetooth_discovery_key(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Relay Switch 1PM EEFF"
     assert result["data"] == {
@@ -306,6 +310,7 @@ async def test_bluetooth_discovery_encrypted_key_back_navigation(
         )
         await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -359,6 +364,7 @@ async def test_bluetooth_discovery_encrypted_auth_back_navigation(
         )
         await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -426,6 +432,7 @@ async def test_async_step_bluetooth_meter_pro_co2_not_connectable(
         )
     await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Meter Pro CO2 EEFF"
     assert result["data"] == {
@@ -471,6 +478,7 @@ async def test_user_setup_wohand(hass: HomeAssistant) -> None:
         )
     await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Bot EEFF"
     assert result["data"] == {
@@ -546,6 +554,7 @@ async def test_user_setup_wohand_replaces_ignored(hass: HomeAssistant) -> None:
         )
     await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Bot EEFF"
     assert result["data"] == {
@@ -585,6 +594,7 @@ async def test_user_setup_wocurtain(hass: HomeAssistant) -> None:
         )
     await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Curtain EEFF"
     assert result["data"] == {
@@ -629,6 +639,7 @@ async def test_user_setup_wocurtain_or_bot(hass: HomeAssistant) -> None:
         )
     await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Curtain EEFF"
     assert result["data"] == {
@@ -680,6 +691,7 @@ async def test_user_setup_wocurtain_or_bot_with_password(hass: HomeAssistant) ->
         )
         await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == "Bot 923B"
     assert result3["data"] == {
@@ -720,6 +732,7 @@ async def test_user_setup_single_bot_with_password(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Bot 923B"
     assert result2["data"] == {
@@ -1072,6 +1085,7 @@ async def test_user_setup_wolock_or_bot(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Lock EEFF"
     assert result["data"] == {
@@ -1112,6 +1126,7 @@ async def test_user_setup_wosensor(hass: HomeAssistant) -> None:
         )
     await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Meter EEFF"
     assert result["data"] == {
@@ -1168,6 +1183,7 @@ async def test_user_cloud_login(hass: HomeAssistant) -> None:
             {},
         )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Bot EEFF"
     assert result["data"] == {
@@ -1395,6 +1411,7 @@ async def test_user_cloud_login_then_encrypted_device(hass: HomeAssistant) -> No
         )
         await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Lock EEFF"
     assert result["data"] == {
@@ -1464,6 +1481,7 @@ async def test_async_step_user_takes_precedence_over_discovery(
             user_input={},
         )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Curtain EEFF"
     assert result2["data"] == {
@@ -1685,6 +1703,7 @@ async def test_user_setup_worelay_switch_1pm_key(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Relay Switch 1PM EEFF"
     assert result["data"] == {
@@ -1865,6 +1884,7 @@ async def test_user_show_menu_when_passive_scanner_present(hass: HomeAssistant) 
         )
         await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Bot EEFF"
     assert result["data"] == {
@@ -1909,6 +1929,7 @@ async def test_user_show_menu_when_no_scanners(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Bot EEFF"
     assert result["data"] == {

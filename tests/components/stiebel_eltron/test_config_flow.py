@@ -38,6 +38,7 @@ async def test_full_flow(hass: HomeAssistant) -> None:
         USER_INPUT,
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Stiebel Eltron"
     assert result["data"] == USER_INPUT

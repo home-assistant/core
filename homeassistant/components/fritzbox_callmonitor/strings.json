@@ -47,16 +47,36 @@
           "talking": "Talking"
         },
         "state_attributes": {
-          "accepted": { "name": "Accepted" },
-          "closed": { "name": "Closed" },
-          "device": { "name": "[%key:common::config_flow::data::device%]" },
-          "duration": { "name": "Duration" },
-          "from": { "name": "Caller number" },
-          "from_name": { "name": "Caller name" },
-          "initiated": { "name": "Initiated" },
-          "prefixes": { "name": "Prefixes" },
-          "to": { "name": "Number called" },
-          "to_name": { "name": "Called name" },
+          "accepted": {
+            "name": "Accepted"
+          },
+          "closed": {
+            "name": "Closed"
+          },
+          "device": {
+            "name": "[%key:common::config_flow::data::device%]"
+          },
+          "duration": {
+            "name": "Duration"
+          },
+          "from": {
+            "name": "Caller number"
+          },
+          "from_name": {
+            "name": "Caller name"
+          },
+          "initiated": {
+            "name": "Initiated"
+          },
+          "prefixes": {
+            "name": "Prefixes"
+          },
+          "to": {
+            "name": "Number called"
+          },
+          "to_name": {
+            "name": "Called name"
+          },
           "type": {
             "name": "Type",
             "state": {
@@ -64,11 +84,22 @@
               "outgoing": "Outgoing"
             }
           },
-          "vip": { "name": "Important" },
-          "with": { "name": "With number" },
-          "with_name": { "name": "With name" }
+          "vip": {
+            "name": "Important"
+          },
+          "with": {
+            "name": "With number"
+          },
+          "with_name": {
+            "name": "With name"
+          }
         }
       }
+    }
+  },
+  "exceptions": {
+    "insufficient_permissions": {
+      "message": "User has insufficient permissions to access FRITZ!Box settings and its phonebooks"
     }
   },
   "options": {

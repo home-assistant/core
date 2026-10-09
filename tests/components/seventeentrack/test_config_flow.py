@@ -48,6 +48,7 @@ async def test_create_entry(
     )
     await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "someemail@gmail.com"
     assert result2["data"] == {
