@@ -1697,6 +1697,7 @@ async def test_app_onboarding_poll_timeout(
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
     assert result["type"] is FlowResultType.EXTERNAL_STEP_DONE
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 

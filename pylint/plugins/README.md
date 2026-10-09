@@ -538,9 +538,9 @@ Results of options and subentry flows are ignored, as those don't set a
 unique ID; results that can't be traced, such as those returned by a helper,
 are checked. Tests that start an options or subentry flow are skipped, as
 they run the config flow only as setup. Tests that recover from an error are
-skipped too: they make a mock
-raise through `side_effect` or expect non-empty `errors`. Resetting a
-`side_effect` to `None` or replacing a method with a function doesn't count
+skipped too: they make a mock raise an exception through `side_effect` or
+expect non-empty `errors`. Resetting a `side_effect` to `None`, replacing a
+method with a function or a mock, or returning a list of values doesn't count
 as an error.
 
 ## `home_assistant_enforce_utcnow` checker

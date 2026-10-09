@@ -3338,6 +3338,7 @@ async def test_plug_in_old_radio_config_entry_removed(
 
     # Since config entry was removed, flow skipped to maybe_confirm_ezsp_restore
     # and restored backup, creating a new entry in the end
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result_recommended["type"] is FlowResultType.CREATE_ENTRY
     assert result_recommended["title"] == ""
     assert result_recommended["data"] == {

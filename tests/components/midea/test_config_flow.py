@@ -1146,6 +1146,7 @@ async def test_auto_flow_v3_phase2_success_after_phase1_failure(
             user_input={"login_mode": LOGIN_MODE_PRESET},
         )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_DEVICE_ID] == TEST_DEVICE_ID
     assert result["data"][CONF_TOKEN] == TEST_TOKEN

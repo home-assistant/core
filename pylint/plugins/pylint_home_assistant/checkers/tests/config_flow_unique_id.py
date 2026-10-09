@@ -170,21 +170,34 @@ def _expects_error(left: nodes.NodeNG, value: nodes.NodeNG) -> bool:
     )
 
 
+def _is_exception(value: nodes.NodeNG) -> bool:
+    """Return True if *value* is an exception class or instance."""
+    return isinstance(
+        value, (nodes.ClassDef, astroid.Instance)
+    ) and value.is_subtype_of("builtins.BaseException")
+
+
 def _is_injected_error(value: nodes.NodeNG) -> bool:
     """Return True if a ``side_effect`` value can raise an error.
 
-    Resetting it to ``None`` or replacing a method with a function does not.
+    Resetting it to ``None``, replacing a method with a function or mock, or
+    returning a sequence of values does not. Values that can't be inferred,
+    such as a parametrized ``exception``, are assumed to raise.
     """
     match value:
         case nodes.Const(value=None) | nodes.Lambda():
             return False
-        case nodes.Name() | nodes.Attribute():
-            try:
-                inferred = list(value.infer())
-            except astroid.exceptions.AstroidError:
-                return True
-            return not all(isinstance(item, nodes.FunctionDef) for item in inferred)
-    return True
+        case nodes.List(elts=elts) | nodes.Tuple(elts=elts):
+            return any(_is_injected_error(elt) for elt in elts)
+        case nodes.Call(func=func):
+            value = func
+
+    try:
+        inferred = list(value.infer())
+    except astroid.exceptions.AstroidError:
+        return True
+
+    return any(item is astroid.Uninferable or _is_exception(item) for item in inferred)
 
 
 def _recovers_from_error(func: nodes.FunctionDef) -> bool:

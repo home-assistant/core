@@ -141,6 +141,19 @@ async def test_flow_recovers(hass, mock_client):
         ),
         pytest.param(
             """
+class CannotConnect(Exception):
+    pass
+
+async def test_flow_recovers(hass):
+    with patch("homeassistant.components.test_integration.connect", side_effect=CannotConnect()):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+""",
+            id="recovers_from_exception_instance",
+        ),
+        pytest.param(
+            """
 async def test_flow_recovers(hass, mock_client):
     mock_client.connect.side_effect = LibraryConnectionError
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
@@ -437,6 +450,31 @@ async def test_full_flow(hass):
     assert result["type"] is FlowResultType.CREATE_ENTRY
 """,
             id="side_effect_function",
+        ),
+        pytest.param(
+            """
+from unittest.mock import AsyncMock, MagicMock
+
+async def test_full_flow(hass):
+    with patch("homeassistant.components.test_integration.connect", side_effect=MagicMock()):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    with patch(
+        "homeassistant.components.test_integration.info",
+        side_effect=AsyncMock(return_value={"id": "1234"}),
+    ):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+""",
+            id="side_effect_mock",
+        ),
+        pytest.param(
+            """
+async def test_full_flow(hass, mock_client):
+    mock_client.discover.side_effect = [{"id": "1234"}, {"id": "5678"}]
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+""",
+            id="side_effect_return_values",
         ),
         pytest.param(
             """

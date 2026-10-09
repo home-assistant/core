@@ -190,6 +190,7 @@ async def test_setup_multiple_phonebooks(hass: HomeAssistant) -> None:
             {CONF_PHONEBOOK: MOCK_PHONEBOOK_NAME_2},
         )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == MOCK_PHONEBOOK_NAME_2
     assert result["data"] == {
