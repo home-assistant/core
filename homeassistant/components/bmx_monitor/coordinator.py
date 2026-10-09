@@ -1,4 +1,4 @@
-"""Schedule BM2 reads when advertisement callbacks stop changing."""
+"""Schedule an active read or passive fallback, respecting rate limits."""
 
 from datetime import datetime, timedelta
 from typing import override
@@ -8,7 +8,6 @@ from sensor_state_data import SensorUpdate
 
 from homeassistant.components.bluetooth import (
     async_address_present,
-    async_ble_device_from_address,
     async_last_service_info,
 )
 from homeassistant.components.bluetooth.active_update_processor import (
@@ -46,11 +45,7 @@ class BMxBluetoothCoordinator(ActiveBluetoothProcessorCoordinator[SensorUpdate])
         service_info = async_last_service_info(
             self.hass, self.address, connectable=False
         )
-        if (
-            service_info is None
-            or async_ble_device_from_address(self.hass, self.address, connectable=True)
-            is None
-        ):
+        if service_info is None:
             return
         # Cached service-info timestamps may stop advancing after deduplication.
         age = (

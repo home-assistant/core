@@ -23,7 +23,7 @@
           "battery_type": "Battery chemistry"
         },
         "description": "A supported BM2 battery monitor was detected. Do you want to add `{name}` to Home Assistant?\n\nRoutine updates will prefer the active BM2 connection and can fall back to advertisement data where supported.",
-        "title": "BM2 Battery Monitor discovered"
+        "title": "BM2 battery monitor discovered"
       },
       "custom_battery_details": {
         "data": {
@@ -56,19 +56,37 @@
           "address": "Bluetooth device",
           "battery_type": "Battery chemistry"
         },
-        "description": "Select a Bluetooth device to add. Devices with known BM2 advertisements are validated passively.  If the advertisement data is inconclusive, Home Assistant will make a one-off active connection attempt to verify the BM2 protocol before creating the integration.",
-        "title": "BM2 Battery Monitor"
+        "description": "Select a Bluetooth device to add. Devices with known BM2 advertisements are validated passively.  If the advertisement data is inconclusive, Home Assistant will make a one-off active connection attempt to verify the BM2 protocol before creating the integration."
       }
     }
   },
   "entity": {
     "sensor": {
-      "battery_chemistry": { "name": "Battery chemistry" },
-      "battery_percent": { "name": "Percent" },
-      "battery_status": { "name": "Status" },
-      "battery_voltage": { "name": "Voltage" },
-      "bm2_generation": { "name": "BM2 generation" },
-      "signal_strength": { "name": "Signal strength" }
+      "battery_chemistry": {
+        "name": "Battery chemistry"
+      },
+      "battery_percent": {
+        "name": "Percent"
+      },
+      "battery_status": {
+        "name": "Status",
+        "state": {
+          "charging": "Charging",
+          "critical": "Critical",
+          "floating": "Floating",
+          "low": "Low",
+          "normal": "Normal"
+        }
+      },
+      "battery_voltage": {
+        "name": "Voltage"
+      },
+      "bm2_generation": {
+        "name": "BM2 generation"
+      },
+      "signal_strength": {
+        "name": "Signal strength"
+      }
     }
   },
   "options": {
