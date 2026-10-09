@@ -1266,6 +1266,7 @@
         'capabilities': dict({
           <WaterHeaterCapabilityAttribute.MAX_TEMP: 'max_temp'>: 60.0,
           <WaterHeaterCapabilityAttribute.MIN_TEMP: 'min_temp'>: 35.0,
+          <WaterHeaterCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1.0,
         }),
         'config_entry_id': <ANY>,
         'config_subentry_id': <ANY>,
@@ -1305,7 +1306,7 @@
           <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <WaterHeaterEntityFeature: 0>,
           <WaterHeaterStateAttribute.TARGET_TEMP_HIGH: 'target_temp_high'>: None,
           <WaterHeaterStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: None,
-          'target_temp_step': 1.0,
+          <WaterHeaterCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1.0,
           <WaterHeaterStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 49.0,
           <WaterHeaterStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
         }),

@@ -436,6 +436,21 @@ def test_water_heater_handles_missing_temperature_values() -> None:
     assert entity.max_temp == super(DaikinWaterTank, entity).max_temp
 
 
+def test_water_heater_uses_standard_target_temperature_step() -> None:
+    """Expose the Daikin setpoint increment through the standard capability."""
+    device = DaikinOnectaDevice(_load_gateway_devices("altherma_boost")[0])
+    point = device.device.management_points_by_type("domesticHotWaterTank")[0]
+    assert point.domestic_hot_water is not None
+    assert point.domestic_hot_water.temperature is not None
+
+    entity = DaikinWaterTank(device, MagicMock(), point.embedded_id)
+
+    assert entity.target_temperature_step == float(
+        point.domestic_hot_water.temperature.step_value
+    )
+    assert entity.extra_state_attributes is None
+
+
 @pytest.mark.parametrize(
     ("operation", "temperature_settable", "translation_key"),
     [

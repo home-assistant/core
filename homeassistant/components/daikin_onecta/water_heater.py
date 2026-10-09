@@ -82,6 +82,12 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
         self._attr_native_target_temperature = self.get_target_temperature()
         self._attr_min_temp = self.get_min_temp()
         self._attr_max_temp = self.get_max_temp()
+        dht = self.domestic_hotwater_temperature
+        self._attr_target_temperature_step = (
+            float(dht.step_value)
+            if dht is not None and dht.step_value is not None
+            else None
+        )
         self._attr_operation_list = self.get_operation_list()
         self._attr_current_operation = self.get_current_operation()
 
@@ -165,16 +171,6 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
             "Device '%s' hot water tank target_temperature '%s'", self._device.name, ret
         )
         return ret
-
-    @property
-    @override
-    def extra_state_attributes(self) -> dict[str, float]:
-        """Return optional device state attributes."""
-        data = {}
-        dht = self.domestic_hotwater_temperature
-        if dht is not None and dht.step_value is not None:
-            data = {"target_temp_step": float(dht.step_value)}
-        return data
 
     def get_min_temp(self) -> float:
         """Return the supported minimum value target temperature."""
