@@ -1,6 +1,6 @@
 """Tests for the Hunter Douglas PowerView data update coordinator and device cleanup."""
 
-from unittest.mock import ASyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
 from homeassistant.components.hunterdouglas_powerview.const import DOMAIN
 from homeassistant.components.hunterdouglas_powerview.coordinator import (
@@ -56,7 +56,7 @@ async def test_coordinator_automatic_cleanup_stale_shades(
     # Set up the async-safe mock return data payload
     mock_api_payload = MagicMock()
     mock_shades_api.get_shades = AsyncMock(return_value=mock_api_payload)
-    
+
     # Execute the coordinator update sequence pass
     await coordinator._async_update_data()
 
