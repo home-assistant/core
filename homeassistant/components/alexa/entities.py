@@ -1199,7 +1199,11 @@ class CameraCapabilities(AlexaEntity):
         yield Alexa(self.entity)
 
     def _supports_webrtc(self) -> bool:
-        """Check if the camera can negotiate a WebRTC stream."""
+        """Check if the camera can negotiate a WebRTC stream.
+
+        Evaluated at discovery time only. A WebRTC provider such as go2rtc that
+        registers later is not picked up until Alexa discovers devices again.
+        """
         if (
             camera_entity := async_get_camera_entity(self.hass, self.entity_id)
         ) is None:

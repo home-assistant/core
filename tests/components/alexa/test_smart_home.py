@@ -6191,9 +6191,22 @@ async def test_initiate_session_with_offer_candidate_timeout(
 @pytest.mark.parametrize(
     "mock_camera_capabilities", [{camera.StreamType.WEB_RTC}], indirect=True
 )
+@pytest.mark.parametrize(
+    "answer",
+    [
+        pytest.param("a=sendonly", id="without_media"),
+        pytest.param(
+            "v=0\r\ns=-\r\nm=video 9 UDP/TLS/RTP/SAVPF 96\r\na=mid:0\r\n"
+            f"a={WEBRTC_CANDIDATE_IN_ANSWER_IPV6}\r\n",
+            id="ipv6_only",
+        ),
+    ],
+)
 @pytest.mark.usefixtures("mock_camera_capabilities")
-async def test_initiate_session_with_offer_without_media(hass: HomeAssistant) -> None:
-    """Test an answer without media sections is returned unchanged."""
+async def test_initiate_session_with_offer_without_ipv4_candidates(
+    hass: HomeAssistant, answer: str
+) -> None:
+    """Test an answer without IPv4 candidates returns ENDPOINT_UNREACHABLE."""
     request = get_new_request(
         "Alexa.RTCSessionController",
         "InitiateSessionWithOffer",
@@ -6207,20 +6220,31 @@ async def test_initiate_session_with_offer_without_media(hass: HomeAssistant) ->
     async def async_handle_async_webrtc_offer(
         offer_sdp: str, session_id: str, send_message: camera.WebRTCSendMessage
     ) -> None:
-        send_message(camera.WebRTCAnswer("a=sendonly"))
+        send_message(camera.WebRTCAnswer(answer))
+        send_message(camera.WebRTCCandidate(RTCIceCandidateInit(WEBRTC_CANDIDATE_MDNS)))
         send_message(camera.WebRTCCandidate(RTCIceCandidateInit("")))
 
-    with patch(
-        "homeassistant.components.camera.Camera.async_handle_async_webrtc_offer",
-        side_effect=async_handle_async_webrtc_offer,
+    with (
+        patch(
+            "homeassistant.components.camera.Camera.async_handle_async_webrtc_offer",
+            side_effect=async_handle_async_webrtc_offer,
+        ),
+        patch(
+            "homeassistant.components.camera.Camera.close_webrtc_session"
+        ) as mock_close,
     ):
         msg = await smart_home.async_handle_message(
             hass, get_default_config(hass), request
         )
 
     response = msg["event"]
-    assert response["header"]["name"] == "AnswerGeneratedForSession"
-    assert response["payload"]["answer"]["value"] == "a=sendonly"
+    assert response["header"]["name"] == "ErrorResponse"
+    assert response["payload"]["type"] == "ENDPOINT_UNREACHABLE"
+    assert (
+        response["payload"]["message"]
+        == "Failed to negotiate WebRTC session: no IPv4 ICE candidates available"
+    )
+    mock_close.assert_called_once_with(RTC_SESSION_ID)
 
 
 @pytest.mark.parametrize(

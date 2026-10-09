@@ -144,9 +144,10 @@ _LOGGER = logging.getLogger(__name__)
 DIRECTIVE_NOT_SUPPORTED = "Entity does not support directive"
 TO_REDACT_SERVICE_DATA = {ATTR_CODE}
 
-# Alexa expects the SDP answer within 6 seconds and does not support trickle ICE,
-# so candidates are gathered for a short period and embedded in the answer.
-RTC_ANSWER_TIMEOUT = 4
+# Alexa expects the SDP answer within 6 seconds, including the Home Assistant
+# Cloud round trip, and does not support trickle ICE. Negotiation and candidate
+# gathering therefore share one overall deadline.
+RTC_ANSWER_TIMEOUT = 5
 RTC_CANDIDATE_GATHERING_TIMEOUT = 1.5
 
 MIN_MAX_TEMP = {
@@ -2228,12 +2229,17 @@ def _embed_candidates(sdp: str, candidates: list[RTCIceCandidateInit]) -> str:
         if not _is_ipv4_candidate(candidate.candidate):
             _LOGGER.debug("Skipping non-IPv4 candidate %s", candidate.candidate)
             continue
-        section = 0
-        if candidate.sdp_m_line_index is not None:
+        if candidate.sdp_mid is not None and candidate.sdp_mid in mids:
+            section = mids[candidate.sdp_mid]
+        elif (
+            candidate.sdp_m_line_index is not None
+            and candidate.sdp_m_line_index < len(media_starts)
+        ):
             section = candidate.sdp_m_line_index
-        elif candidate.sdp_mid is not None:
-            section = mids.get(candidate.sdp_mid, 0)
-        if section >= len(media_starts):
+        else:
+            _LOGGER.debug(
+                "Adding candidate %s to the first media section", candidate.candidate
+            )
             section = 0
         extra_lines.setdefault(section, []).append(f"a={candidate.candidate}")
 
@@ -2267,7 +2273,11 @@ async def _async_get_webrtc_answer(
 
     @ha.callback
     def send_message(message: camera.WebRTCMessage) -> None:
-        """Collect the answer and candidates from the camera."""
+        """Collect the answer and candidates from the camera.
+
+        Messages arriving after the answer is returned are ignored, since Alexa
+        does not support trickle ICE.
+        """
         nonlocal error
         match message:
             case camera.WebRTCAnswer():
@@ -2286,8 +2296,9 @@ async def _async_get_webrtc_answer(
                 if not answer_future.done():
                     answer_future.set_exception(HomeAssistantError(message.message))
 
+    deadline = hass.loop.time() + RTC_ANSWER_TIMEOUT
     try:
-        async with asyncio.timeout(RTC_ANSWER_TIMEOUT):
+        async with asyncio.timeout_at(deadline):
             await camera_entity.async_handle_async_webrtc_offer(
                 offer, session_id, send_message
             )
@@ -2304,7 +2315,9 @@ async def _async_get_webrtc_answer(
         ) from err
 
     try:
-        async with asyncio.timeout(RTC_CANDIDATE_GATHERING_TIMEOUT):
+        async with asyncio.timeout_at(
+            min(deadline, hass.loop.time() + RTC_CANDIDATE_GATHERING_TIMEOUT)
+        ):
             await gathering_done.wait()
     except TimeoutError:
         _LOGGER.debug(
@@ -2319,16 +2332,21 @@ async def _async_get_webrtc_answer(
         )
 
     answer = _embed_candidates(answer, candidates)
-    if _LOGGER.isEnabledFor(logging.DEBUG):
-        _LOGGER.debug(
-            "WebRTC answer for session %s includes ICE candidates: %s",
-            session_id,
-            [
-                line.removeprefix("a=")
-                for line in answer.split("\r\n")
-                if line.startswith("a=candidate:")
-            ],
+    ipv4_candidates = [
+        line.removeprefix("a=")
+        for line in answer.split("\r\n")
+        if line.startswith("a=candidate:")
+    ]
+    if not ipv4_candidates:
+        camera_entity.close_webrtc_session(session_id)
+        raise AlexaEndpointUnreachableError(
+            "Failed to negotiate WebRTC session: no IPv4 ICE candidates available"
         )
+    _LOGGER.debug(
+        "WebRTC answer for session %s includes ICE candidates: %s",
+        session_id,
+        ipv4_candidates,
+    )
     return answer
 
 
@@ -2402,7 +2420,11 @@ async def async_api_rtc_session_disconnected(
     directive: AlexaDirective,
     context: ha.Context,
 ) -> AlexaResponse:
-    """Process a SessionDisconnected request."""
+    """Process a SessionDisconnected request.
+
+    This is the only cleanup for a negotiated session. If Alexa never sends it,
+    for example when the Echo loses power, the session stays open on the camera.
+    """
     session_id: str = directive.payload["sessionId"]
     _LOGGER.debug(
         "WebRTC session %s disconnected for %s", session_id, directive.entity_id
