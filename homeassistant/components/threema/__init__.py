@@ -12,7 +12,7 @@ from .const import CONF_API_SECRET, CONF_GATEWAY_ID, CONF_PRIVATE_KEY, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS: list[Platform] = [Platform.NOTIFY]
+PLATFORMS: list[Platform] = [Platform.IMAGE, Platform.NOTIFY]
 
 type ThreemaConfigEntry = ConfigEntry[ThreemaAPIClient]
 
