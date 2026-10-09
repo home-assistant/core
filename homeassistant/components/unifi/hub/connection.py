@@ -26,7 +26,12 @@ class BackoffPolicy:
 
     def next_delay(self, attempt: int) -> float:
         """Return the delay in seconds for a zero-based attempt number."""
-        return min(self.base * (self.factor**attempt), self.maximum)
+        delay = self.base
+        for _ in range(attempt):
+            if delay >= self.maximum:
+                return self.maximum
+            delay *= self.factor
+        return min(delay, self.maximum)
 
 
 class UnifiConnectionManager:

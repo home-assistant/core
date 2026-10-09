@@ -14,6 +14,7 @@ def test_default_delay_sequence_grows_and_caps() -> None:
     assert policy.next_delay(4) == 240
     assert policy.next_delay(5) == 300  # capped
     assert policy.next_delay(10) == 300  # stays capped
+    assert policy.next_delay(10_000) == 300  # remains capped without overflow
 
 
 def test_custom_policy_parameters() -> None:
