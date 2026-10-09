@@ -3,14 +3,13 @@
 from datetime import timedelta
 from typing import TYPE_CHECKING, override
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import LOGGER
 
 if TYPE_CHECKING:
-    from . import SimpliSafe
+    from . import SimpliSafe, SimpliSafeConfigEntry
 
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=30)
 
@@ -18,14 +17,12 @@ DEFAULT_SCAN_INTERVAL = timedelta(seconds=30)
 class SimpliSafeDataUpdateCoordinator(DataUpdateCoordinator[None]):
     """Class to manage fetching SimpliSafe data."""
 
-    # pylint: disable-next=home-assistant-coordinator-untyped-config-entry
-    config_entry: ConfigEntry
+    config_entry: SimpliSafeConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        # pylint: disable-next=home-assistant-coordinator-untyped-config-entry
-        config_entry: ConfigEntry,
+        config_entry: SimpliSafeConfigEntry,
         *,
         name: str,
         simplisafe: SimpliSafe,
