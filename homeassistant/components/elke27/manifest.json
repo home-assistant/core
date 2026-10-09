@@ -1,6 +1,6 @@
 {
   "domain": "elke27",
-  "name": "Elk E27 Alarm Engine",
+  "name": "Elk E27 Alarm Engine Integration",
   "codeowners": ["@mitchmitchell"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/elke27",
