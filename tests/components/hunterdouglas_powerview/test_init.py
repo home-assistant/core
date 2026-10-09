@@ -69,7 +69,7 @@ async def test_remove_shade_device_via_websocket_allowed_when_offline(
     client = await hass_ws_client(hass)
 
     # Dispatch device removal request
-    msg = await client.reremove_device(shade_device.id)
+    msg = await client.remove_device(shade_device.id)
 
     # The shade is offline/deleted from the hub, so the UI deletion must be allowed
     assert msg["success"] is True
@@ -108,7 +108,7 @@ async def test_remove_shade_device_via_websocket_blocked_when_online(
     client = await hass_ws_client(hass)
 
     # Dispatch device removal request
-    msg = await client.reremove_device(shade_device.id)
+    msg = await client.remove_device(shade_device.id)
 
     # The deletion must fail because the device is still physically active on the network
     assert msg["success"] is False
@@ -133,7 +133,7 @@ async def test_remove_hub_device_via_websocket_is_blocked(
 
     client = await hass_ws_client(hass)
 
-    msg = await client.reremove_device(shade_device.id)
+    msg = await client.remove_device(shade_device.id)
 
     assert msg["success"] is False
     assert msg["error"]["code"] == "home_assistant_error"
