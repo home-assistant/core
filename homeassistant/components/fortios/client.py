@@ -1,14 +1,21 @@
-"""FortiOS library access shared by setup and polling."""
+"""Asynchronous library access shared by FortiOS setup and polling."""
 
 from dataclasses import dataclass
-from typing import Any, override
+from typing import Any
 
+from aiofortiosapi import (
+    FortiOSAuthenticationError,
+    FortiOSClient as FortiOSAPI,
+    FortiOSResponseError,
+    SystemStatus,
+)
 from awesomeversion import AwesomeVersion
-from fortiosapi import FortiOSAPI, NotLogged
-from requests import Response
-from requests.exceptions import RequestException
+from awesomeversion.exceptions import AwesomeVersionException
+from yarl import URL
 
 from homeassistant.const import CONF_HOST, CONF_TOKEN, CONF_VERIFY_SSL
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import MINIMUM_VERSION
 
@@ -26,78 +33,86 @@ class FortiOSDevice:
     online: bool
 
 
-class FortiOSAPIAdapter(FortiOSAPI):
-    """Validate responses before the library reads their version fields."""
-
-    @override
-    def formatresponse(self, res: Response, vdom: str | None = None) -> dict[str, Any]:
-        """Surface authentication and transport errors consistently."""
-        if res.status_code in (401, 403):
-            raise NotLogged
-        res.raise_for_status()
-        return FortiOSClient.check_response(super().formatresponse(res, vdom))
-
-    def close(self) -> None:
-        """Release the token-authenticated session without a logout request."""
-        # fortiosapi exposes no public method to close a failed login session.
-        self._session.close()  # pylint: disable=protected-access
-
-
 class FortiOSClient:
-    """Use the installed FortiOS library outside the event loop."""
+    """Use the maintained library with Home Assistant's shared session."""
 
-    def __init__(self, config: dict[str, Any]) -> None:
-        """Initialize the library client."""
-        self.api = FortiOSAPIAdapter()
-        self.config = config
-        self.serial: str = ""
-
-    def connect(self) -> str:
-        """Authenticate and validate the supported firmware version."""
-        self.api.tokenlogin(
-            self.config[CONF_HOST],
-            self.config[CONF_TOKEN],
-            self.config[CONF_VERIFY_SSL],
-            None,
-            12,
-            "root",
+    def __init__(self, hass: HomeAssistant, config: dict[str, Any]) -> None:
+        """Initialize without owning or closing the shared HTTP session."""
+        try:
+            url = URL(f"https://{config[CONF_HOST]}")
+            host = url.raw_host
+            port = url.port
+        except ValueError as err:
+            raise FortiOSResponseError("Invalid FortiOS host") from err
+        if (
+            not host
+            or url.user
+            or url.password
+            or url.path != "/"
+            or url.query
+            or url.fragment
+        ):
+            raise FortiOSResponseError("Invalid FortiOS host")
+        self.api = FortiOSAPI(
+            f"[{host}]" if ":" in host else host,
+            config[CONF_TOKEN],
+            session=async_get_clientsession(hass),
+            port=port or 443,
+            verify_ssl=config[CONF_VERIFY_SSL],
+            vdom="root",
+            request_timeout=12,
         )
-        status = self.check_response(self.api.monitor("system/status", ""))
-        if AwesomeVersion(status["version"]) < AwesomeVersion(MINIMUM_VERSION):
+        self.serial = ""
+
+    async def connect(self) -> str:
+        """Authenticate and validate device identity and firmware."""
+        response = self.check_response(
+            await self.api.get("api/v2/monitor/system/status")
+        )
+        status = SystemStatus.from_api(response)
+        if not status.serial or not status.version:
+            raise FortiOSResponseError("Missing FortiOS device identity or version")
+        try:
+            supported = AwesomeVersion(status.version) >= AwesomeVersion(
+                MINIMUM_VERSION
+            )
+        except AwesomeVersionException as err:
+            raise FortiOSResponseError("Invalid FortiOS firmware version") from err
+        if not supported:
             raise UnsupportedVersion
-        self.serial = status["serial"]
+        self.serial = status.serial
         return self.serial
 
-    def update(self) -> dict[str, FortiOSDevice]:
-        """Read all clients with one monitoring request."""
+    async def update(self) -> dict[str, FortiOSDevice]:
+        """Read all clients using the legacy master-MAC query format."""
         response = self.check_response(
-            self.api.monitor(
-                "user/device/query",
-                "",
-                parameters={"filter": "format=master_mac|hostname|is_online"},
+            await self.api.get(
+                "api/v2/monitor/user/device/query",
+                params={"filter": "format=master_mac|hostname|is_online"},
             )
         )
-        return {
-            client["master_mac"].upper(): FortiOSDevice(
-                client["master_mac"].upper(),
-                client.get("hostname"),
+        if not isinstance(clients := response.get("results"), list):
+            raise FortiOSResponseError("Invalid FortiOS device list")
+        devices = {}
+        for client in clients:
+            if not isinstance(client, dict):
+                raise FortiOSResponseError("Invalid FortiOS device")
+            if not isinstance(mac := client.get("master_mac"), str) or not mac:
+                continue
+            mac = mac.upper()
+            hostname = client.get("hostname")
+            devices[mac] = FortiOSDevice(
+                mac,
+                hostname if isinstance(hostname, str) else None,
                 bool(client.get("is_online", False)),
             )
-            for client in response["results"]
-            if "master_mac" in client
-        }
+        return devices
 
     @staticmethod
     def check_response(response: Any) -> dict[str, Any]:
-        """Translate the library's HTTP error payloads."""
-        if not isinstance(response, dict):
-            raise RequestException("Invalid FortiOS response")
-        if response.get("http_status") in (401, 403):
-            raise NotLogged
-        if response.get("status") == "error":
-            raise RequestException("FortiOS request failed")
+        """Reject malformed or failed envelopes before parsing their data."""
+        if isinstance(response, dict) and response.get("http_status") in (401, 403):
+            raise FortiOSAuthenticationError("FortiOS authentication failed")
+        if not isinstance(response, dict) or response.get("status") == "error":
+            raise FortiOSResponseError("Invalid FortiOS response")
         return response
-
-    def close(self) -> None:
-        """Close the library session."""
-        self.api.close()

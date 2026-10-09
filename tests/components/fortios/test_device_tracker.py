@@ -3,9 +3,9 @@
 from datetime import timedelta
 from unittest.mock import MagicMock
 
+from aiofortiosapi import FortiOSConnectionError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from requests.exceptions import RequestException
 
 from homeassistant.components.fortios.client import FortiOSDevice
 from homeassistant.const import STATE_HOME, STATE_NOT_HOME, STATE_UNAVAILABLE
@@ -55,7 +55,6 @@ async def test_discovery_and_grace(
     assert hass.states.get("device_tracker.phone").state == STATE_HOME
     assert len(hass.states.async_all("device_tracker")) == 2
     assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
-    mock_client.close.assert_called_once()
 
 
 async def test_empty_initial_scan(
@@ -80,7 +79,7 @@ async def test_poll_failure(
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
-    mock_client.update.side_effect = RequestException
+    mock_client.update.side_effect = FortiOSConnectionError
     await mock_config_entry.runtime_data.async_refresh()
     assert hass.states.get("device_tracker.phone").state == STATE_UNAVAILABLE
     mock_client.update.side_effect = None
@@ -89,14 +88,13 @@ async def test_poll_failure(
 
 
 @pytest.mark.parametrize("failure_method", ["connect", "update"])
-async def test_setup_failure_cleanup(
+async def test_setup_connection_failure(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_client: MagicMock,
     failure_method: str,
 ) -> None:
-    """A failure in either setup request closes the allocated session."""
-    getattr(mock_client, failure_method).side_effect = RequestException
+    """A failure in either setup request schedules a retry."""
+    getattr(mock_client, failure_method).side_effect = FortiOSConnectionError
     mock_config_entry.add_to_hass(hass)
     assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    mock_client.close.assert_called_once()

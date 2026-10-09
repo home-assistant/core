@@ -272,6 +272,9 @@ aiofiles==25.1.0
 # homeassistant.components.flo
 aioflo==2026.9.4
 
+# homeassistant.components.fortios
+aiofortiosapi==0.1.0
+
 # homeassistant.components.yi
 aioftp==0.21.3
 
@@ -1073,9 +1076,6 @@ foobot_async==1.0.1
 
 # homeassistant.components.forecast_solar
 forecast-solar==5.0.1
-
-# homeassistant.components.fortios
-fortiosapi==1.0.5
 
 # homeassistant.components.freebox
 freebox-api==1.3.1

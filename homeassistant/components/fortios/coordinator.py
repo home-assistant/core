@@ -4,8 +4,7 @@ from datetime import datetime, timedelta
 import logging
 from typing import override
 
-from fortiosapi import NotLogged
-from requests.exceptions import RequestException
+from aiofortiosapi import FortiOSAuthenticationError, FortiOSError
 
 from homeassistant.components.device_tracker import (
     CONF_CONSIDER_HOME,
@@ -51,14 +50,14 @@ class FortiOSCoordinator(DataUpdateCoordinator[dict[str, FortiOSDevice]]):
 
     @override
     async def _async_update_data(self) -> dict[str, FortiOSDevice]:
-        """Read client state in the executor."""
+        """Read client state asynchronously."""
         try:
-            devices = await self.hass.async_add_executor_job(self.client.update)
-        except NotLogged as err:
+            devices = await self.client.update()
+        except FortiOSAuthenticationError as err:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN, translation_key="invalid_auth"
             ) from err
-        except RequestException as err:
+        except FortiOSError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN, translation_key="cannot_connect"
             ) from err

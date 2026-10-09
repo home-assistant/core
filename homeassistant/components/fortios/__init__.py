@@ -4,8 +4,7 @@ from collections.abc import Collection
 from datetime import timedelta
 from functools import partial
 
-from fortiosapi import NotLogged
-from requests.exceptions import RequestException
+from aiofortiosapi import FortiOSAuthenticationError, FortiOSError
 
 from homeassistant.components.device_tracker.legacy import (
     YAML_DEVICES,
@@ -25,25 +24,19 @@ PLATFORMS = [Platform.DEVICE_TRACKER]
 
 async def async_setup_entry(hass: HomeAssistant, entry: FortiOSConfigEntry) -> bool:
     """Set up FortiOS and its shared coordinator."""
-    client = FortiOSClient(dict(entry.data))
     try:
-        await hass.async_add_executor_job(client.connect)
-    except NotLogged as err:
-        await hass.async_add_executor_job(client.close)
+        client = FortiOSClient(hass, dict(entry.data))
+        await client.connect()
+    except FortiOSAuthenticationError as err:
         raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN, translation_key="invalid_auth"
         ) from err
-    except (RequestException, UnsupportedVersion) as err:
-        await hass.async_add_executor_job(client.close)
+    except (FortiOSError, UnsupportedVersion) as err:
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN, translation_key="cannot_connect"
         ) from err
     coordinator = FortiOSCoordinator(hass, entry, client)
-    try:
-        await coordinator.async_config_entry_first_refresh()
-    except ConfigEntryAuthFailed, ConfigEntryNotReady:
-        await hass.async_add_executor_job(client.close)
-        raise
+    await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
     seen_macs = set(coordinator.data)
 
@@ -77,7 +70,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: FortiOSConfigEntry) -> 
     """Unload trackers and close the library session."""
     if not await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         return False
-    await hass.async_add_executor_job(entry.runtime_data.client.close)
     return True
 
 

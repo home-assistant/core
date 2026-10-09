@@ -3,11 +3,11 @@
 from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
-from fortiosapi import NotLogged
+from aiofortiosapi import FortiOSAuthenticationError, FortiOSConnectionError
 import pytest
-from requests.exceptions import RequestException
 
 from homeassistant.components.device_tracker.legacy import Device
+from homeassistant.components.fortios.client import FortiOSDevice
 from homeassistant.components.fortios.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import CONF_PLATFORM
@@ -27,8 +27,8 @@ async def test_auth_failure(
     mock_client: MagicMock,
     failure_method: str,
 ) -> None:
-    """Invalid authentication requests a replacement token and releases the client."""
-    getattr(mock_client, failure_method).side_effect = NotLogged
+    """Invalid authentication requests a replacement token."""
+    getattr(mock_client, failure_method).side_effect = FortiOSAuthenticationError
     mock_config_entry.add_to_hass(hass)
     assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -37,13 +37,15 @@ async def test_auth_failure(
         hass.config_entries.flow.async_progress()[0]["context"]["source"]
         == SOURCE_REAUTH
     )
-    mock_client.close.assert_called_once()
 
 
 @pytest.mark.usefixtures("mock_device_tracker_conf")
 @pytest.mark.parametrize(
     ("exception", "reason"),
-    [(NotLogged(), "invalid_auth"), (RequestException(), "cannot_connect")],
+    [
+        (FortiOSAuthenticationError(), "invalid_auth"),
+        (FortiOSConnectionError(), "cannot_connect"),
+    ],
 )
 async def test_yaml_import_failure(
     hass: HomeAssistant,
@@ -111,5 +113,50 @@ async def test_yaml_import_success(
     assert entry.data["scan_interval"] == 60
     assert (
         issue_registry.async_get_issue("homeassistant", f"deprecated_yaml_{DOMAIN}")
+        is not None
+    )
+
+
+async def test_unload_failure(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_client: MagicMock
+) -> None:
+    """Report failed platform unload without discarding runtime data."""
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    with patch(
+        "homeassistant.config_entries.ConfigEntries.async_unload_platforms",
+        return_value=False,
+    ):
+        assert not await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    assert mock_config_entry.state is ConfigEntryState.FAILED_UNLOAD
+
+
+async def test_late_legacy_conflict(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_client: MagicMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Devices discovered after an empty first scan also receive migration repairs."""
+    legacy = [Device(hass, timedelta(0), True, "late_phone", MAC)]
+    mock_client.update.return_value = {}
+    with patch(
+        "homeassistant.components.fortios.async_load_config", return_value=legacy
+    ):
+        mock_config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        assert (
+            issue_registry.async_get_issue(
+                DOMAIN, f"legacy_known_devices_{mock_config_entry.entry_id}"
+            )
+            is None
+        )
+        mock_client.update.return_value = {MAC: FortiOSDevice(MAC, "phone", True)}
+        await mock_config_entry.runtime_data.async_refresh()
+        await hass.async_block_till_done(wait_background_tasks=True)
+    assert (
+        issue_registry.async_get_issue(
+            DOMAIN, f"legacy_known_devices_{mock_config_entry.entry_id}"
+        )
         is not None
     )
