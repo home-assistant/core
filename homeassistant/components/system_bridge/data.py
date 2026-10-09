@@ -6,6 +6,7 @@ from systembridgeconnector.models.modules import (
     CPU,
     GPU,
     Battery,
+    Discord,
     Disks,
     Display,
     Media,
@@ -21,6 +22,7 @@ class SystemBridgeData:
 
     battery: Battery = field(default_factory=Battery)
     cpu: CPU = field(default_factory=CPU)
+    discord: Discord | None = None
     disks: Disks | None = None
     displays: list[Display] = field(default_factory=list[Display])
     gpus: list[GPU] = field(default_factory=list[GPU])

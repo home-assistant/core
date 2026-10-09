@@ -8,6 +8,7 @@ import pytest
 from systembridgeconnector.const import EventKey, EventType
 from systembridgeconnector.models.fixtures.modules.battery import FIXTURE_BATTERY
 from systembridgeconnector.models.fixtures.modules.cpu import FIXTURE_CPU
+from systembridgeconnector.models.fixtures.modules.discord import FIXTURE_DISCORD
 from systembridgeconnector.models.fixtures.modules.disks import FIXTURE_DISKS
 from systembridgeconnector.models.fixtures.modules.displays import FIXTURE_DISPLAYS
 from systembridgeconnector.models.fixtures.modules.gpus import FIXTURE_GPUS
@@ -110,6 +111,7 @@ def mock_websocket_client(
         websocket_client.get_data.return_value = ModulesData(
             battery=FIXTURE_BATTERY,
             cpu=FIXTURE_CPU,
+            discord=FIXTURE_DISCORD,
             disks=FIXTURE_DISKS,
             displays=FIXTURE_DISPLAYS,
             gpus=FIXTURE_GPUS,
@@ -155,6 +157,12 @@ def mock_websocket_client(
             type=EventType.KEYBOARD_TEXT_SENT,
             message="Keyboard text sent",
             data={"text": "Hello world"},
+        )
+        websocket_client.discord_control.return_value = Response(
+            id=FIXTURE_REQUEST_ID,
+            type=EventType.DISCORD_CONTROLLED,
+            message="Discord controlled",
+            data={},
         )
         # Trigger callback when listener is registered
         websocket_client.listen.side_effect = mock_data_listener

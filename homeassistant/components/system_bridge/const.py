@@ -9,6 +9,7 @@ DOMAIN = "system_bridge"
 MODULES: Final[list[Module]] = [
     Module.BATTERY,
     Module.CPU,
+    Module.DISCORD,
     Module.DISKS,
     Module.DISPLAYS,
     Module.GPUS,

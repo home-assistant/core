@@ -6,11 +6,13 @@ from datetime import timedelta
 import logging
 from typing import Any, override
 
+from systembridgeconnector.const import EventType
 from systembridgeconnector.exceptions import (
     AuthenticationException,
     ConnectionClosedException,
     ConnectionErrorException,
 )
+from systembridgeconnector.models.discord_control import DiscordAction, DiscordControl
 from systembridgeconnector.models.modules import (
     GetData,
     Module,
@@ -27,7 +29,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -142,6 +144,33 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
                 setattr(self.data, module, getattr(modules_data, module))
 
         return modules_data
+
+    async def async_discord_control(
+        self,
+        action: DiscordAction,
+        value: float | None = None,
+    ) -> None:
+        """Send a Discord control command."""
+        try:
+            response = await self.websocket_client.discord_control(
+                DiscordControl(action=action, value=value)
+            )
+        except ConnectionClosedException as exception:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="connection_failed",
+                translation_placeholders={"title": self.title, "host": self._host},
+            ) from exception
+        if response.type == EventType.ERROR:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="discord_control_failed",
+                translation_placeholders={
+                    "title": self.title,
+                    "host": self._host,
+                    "message": str(response.message),
+                },
+            )
 
     async def async_handle_module(
         self,

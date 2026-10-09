@@ -43,6 +43,14 @@
         "name": "Media"
       }
     },
+    "number": {
+      "discord_input_volume": {
+        "name": "Discord input volume"
+      },
+      "discord_output_volume": {
+        "name": "Discord output volume"
+      }
+    },
     "sensor": {
       "amount_memory_used": {
         "name": "Amount of memory used"
@@ -143,6 +151,14 @@
       "version_latest": {
         "name": "Latest version"
       }
+    },
+    "switch": {
+      "discord_deafen": {
+        "name": "Discord deafen"
+      },
+      "discord_mute": {
+        "name": "Discord mute"
+      }
     }
   },
   "exceptions": {
@@ -151,6 +167,9 @@
     },
     "connection_failed": {
       "message": "A connection error occurred for {title} ({host})"
+    },
+    "discord_control_failed": {
+      "message": "Failed to control Discord on {title} ({host}): {message}"
     },
     "no_data_received": {
       "message": "No data received from {host}"

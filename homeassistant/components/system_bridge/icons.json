@@ -13,6 +13,14 @@
         "default": "mdi:volume-high"
       }
     },
+    "number": {
+      "discord_input_volume": {
+        "default": "mdi:microphone"
+      },
+      "discord_output_volume": {
+        "default": "mdi:headphones"
+      }
+    },
     "sensor": {
       "boot_time": {
         "default": "mdi:av-timer"
@@ -97,6 +105,20 @@
       },
       "version_latest": {
         "default": "mdi:counter"
+      }
+    },
+    "switch": {
+      "discord_deafen": {
+        "default": "mdi:headphones",
+        "state": {
+          "on": "mdi:headphones-off"
+        }
+      },
+      "discord_mute": {
+        "default": "mdi:microphone",
+        "state": {
+          "on": "mdi:microphone-off"
+        }
       }
     }
   },

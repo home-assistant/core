@@ -6,6 +6,7 @@ from typing import Any
 
 from systembridgeconnector.models.fixtures.modules.battery import FIXTURE_BATTERY
 from systembridgeconnector.models.fixtures.modules.cpu import FIXTURE_CPU
+from systembridgeconnector.models.fixtures.modules.discord import FIXTURE_DISCORD
 from systembridgeconnector.models.fixtures.modules.disks import FIXTURE_DISKS
 from systembridgeconnector.models.fixtures.modules.displays import FIXTURE_DISPLAYS
 from systembridgeconnector.models.fixtures.modules.gpus import FIXTURE_GPUS
@@ -101,6 +102,7 @@ async def mock_data_listener(
         # Simulate data received from the websocket
         await callback(Module.BATTERY, FIXTURE_BATTERY)
         await callback(Module.CPU, FIXTURE_CPU)
+        await callback(Module.DISCORD, FIXTURE_DISCORD)
         await callback(Module.DISKS, FIXTURE_DISKS)
         await callback(Module.DISPLAYS, FIXTURE_DISPLAYS)
         await callback(Module.GPUS, FIXTURE_GPUS)
