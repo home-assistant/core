@@ -472,8 +472,29 @@ async def test_credential_timeout(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "creds"
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "credential_timeout"}
+
+    with patch("pyps4_2ndscreen.Helper.get_creds", return_value=MOCK_CREDS):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "mode"
+
+    with patch(
+        "pyps4_2ndscreen.Helper.has_devices", return_value=[{"host-ip": MOCK_HOST}]
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=MOCK_AUTO
+        )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "link"
+
+    with patch("pyps4_2ndscreen.Helper.link", return_value=(True, True)):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=MOCK_CONFIG
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_wrong_pin_error(hass: HomeAssistant) -> None:
@@ -505,8 +526,13 @@ async def test_wrong_pin_error(hass: HomeAssistant) -> None:
         )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "link"
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "login_failed"}
+
+    with patch("pyps4_2ndscreen.Helper.link", return_value=(True, True)):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=MOCK_CONFIG
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_device_connection_error(hass: HomeAssistant) -> None:
@@ -538,8 +564,13 @@ async def test_device_connection_error(hass: HomeAssistant) -> None:
         )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "link"
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
+
+    with patch("pyps4_2ndscreen.Helper.link", return_value=(True, True)):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=MOCK_CONFIG
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_manual_mode_no_ip_error(hass: HomeAssistant) -> None:
@@ -564,5 +595,19 @@ async def test_manual_mode_no_ip_error(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "mode"
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {CONF_IP_ADDRESS: "no_ipaddress"}
+
+    with patch(
+        "pyps4_2ndscreen.Helper.has_devices", return_value=[{"host-ip": MOCK_HOST}]
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=MOCK_MANUAL
+        )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "link"
+
+    with patch("pyps4_2ndscreen.Helper.link", return_value=(True, True)):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=MOCK_CONFIG
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
