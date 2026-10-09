@@ -496,6 +496,7 @@ async def test_user_connection_fails(
     )
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"]["base"] == "cannot_connect"
 
     # Check we tried the connection
@@ -666,6 +667,7 @@ async def test_hassio_cannot_connect(
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"]["base"] == "cannot_connect"
     # Check we tried the connection
     assert len(mock_try_connection_time_out.mock_calls)
@@ -1264,6 +1266,7 @@ async def test_bad_certificate_validation(
         result["flow_id"],
         user_input=test_input,
     )
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"]["base"] == test_error
 
 
@@ -1421,6 +1424,7 @@ async def test_invalid_discovery_prefix(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "options"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"]["base"] == "bad_discovery_prefix"
     assert config_entry.data == {
         mqtt.CONF_BROKER: "test-broker",
@@ -1821,6 +1825,7 @@ async def test_reconfigure_user_connection_fails(
     )
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"]["base"] == "cannot_connect"
 
     # Check we tried the connection
@@ -1860,6 +1865,7 @@ async def test_options_bad_birth_message_fails(
         user_input={"birth_topic": "ha_state/online/#"},
     )
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"]["base"] == "bad_birth"
 
     # Check config entry did not update
@@ -1898,6 +1904,7 @@ async def test_options_bad_will_message_fails(
         user_input={"will_topic": "ha_state/offline/#"},
     )
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"]["base"] == "bad_will"
 
     # Check config entry did not update

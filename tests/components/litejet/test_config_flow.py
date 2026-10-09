@@ -80,6 +80,7 @@ async def test_flow_open_failed(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"][CONF_PORT] == "open_failed"
 
 

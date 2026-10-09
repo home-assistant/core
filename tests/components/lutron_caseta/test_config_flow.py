@@ -106,6 +106,7 @@ async def test_bridge_cannot_connect(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == STEP_IMPORT_FAILED
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": ERROR_CANNOT_CONNECT}
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
@@ -129,6 +130,7 @@ async def test_bridge_cannot_connect_unknown_error(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == STEP_IMPORT_FAILED
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": ERROR_CANNOT_CONNECT}
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
@@ -149,6 +151,7 @@ async def test_bridge_invalid_ssl_error(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == STEP_IMPORT_FAILED
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": ERROR_CANNOT_CONNECT}
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
@@ -299,6 +302,7 @@ async def test_form_user_pairing_fails(hass: HomeAssistant, tmp_path: Path) -> N
         await hass.async_block_till_done()
 
     assert result3["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result3["errors"] == {"base": "cannot_connect"}
     assert len(mock_setup.mock_calls) == 0
     assert len(mock_setup_entry.mock_calls) == 0

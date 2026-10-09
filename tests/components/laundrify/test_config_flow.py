@@ -46,6 +46,7 @@ async def test_form_invalid_format(hass: HomeAssistant, laundrify_api_mock) -> N
     )
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {CONF_CODE: "invalid_format"}
 
 
@@ -59,6 +60,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, laundrify_api_mock) -> Non
     )
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {CONF_CODE: "invalid_auth"}
 
 
@@ -74,6 +76,7 @@ async def test_form_cannot_connect(hass: HomeAssistant, laundrify_api_mock) -> N
     )
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -87,6 +90,7 @@ async def test_form_unkown_exception(hass: HomeAssistant, laundrify_api_mock) ->
     )
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "unknown"}
 
 

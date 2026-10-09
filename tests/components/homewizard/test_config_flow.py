@@ -214,6 +214,7 @@ async def test_discovery_disabled_api(
     )
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "api_not_enabled"}
 
 
@@ -529,6 +530,7 @@ async def test_reauth_error(
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "api_not_enabled"}
 
 

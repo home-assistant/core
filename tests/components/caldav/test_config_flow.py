@@ -106,6 +106,7 @@ async def test_caldav_client_error(
     await hass.async_block_till_done()
 
     assert result2.get("type") is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2.get("errors") == {"base": expected_error}
 
 

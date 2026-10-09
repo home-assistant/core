@@ -129,6 +129,7 @@ async def test_cloud_error(hass: HomeAssistant, login_with_error, error) -> None
 
     mock_close.assert_awaited_once()
     assert result3["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result3["errors"] == {"base": error}
 
 
@@ -304,6 +305,7 @@ async def test_local_error(hass: HomeAssistant, connect_with_error, error) -> No
     )
 
     assert result3["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result3["errors"] == {"base": error}
 
 

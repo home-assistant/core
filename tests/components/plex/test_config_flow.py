@@ -75,6 +75,7 @@ async def test_bad_credentials(hass: HomeAssistant) -> None:
 
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "website_auth"
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"][CONF_TOKEN] == "faulty_credentials"
 
 
@@ -108,6 +109,7 @@ async def test_bad_hostname(hass: HomeAssistant, mock_plex_calls) -> None:
 
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "website_auth"
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"][CONF_HOST] == "not_found"
 
 
@@ -171,6 +173,7 @@ async def test_no_servers_found(
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "website_auth"
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"]["base"] == "no_servers"
 
 

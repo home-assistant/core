@@ -42,6 +42,7 @@ async def test_invalid_irk(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={"irk": "irk:000000"}
     )
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert_form_error(result, "irk", "irk_not_valid")
 
 
@@ -56,6 +57,7 @@ async def test_invalid_irk_base64(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={"irk": "Ucredacted4T8n!!ZZZ=="}
     )
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert_form_error(result, "irk", "irk_not_valid")
 
 
@@ -70,6 +72,7 @@ async def test_invalid_irk_hex(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={"irk": "irk:abcdefghi"}
     )
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert_form_error(result, "irk", "irk_not_valid")
 
 
@@ -85,6 +88,7 @@ async def test_irk_not_found(hass: HomeAssistant) -> None:
         result["flow_id"],
         user_input={"irk": "irk:00000000000000000000000000000000"},
     )
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert_form_error(result, "irk", "irk_not_found")
 
 

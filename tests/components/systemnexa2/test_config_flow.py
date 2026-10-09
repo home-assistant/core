@@ -342,6 +342,7 @@ async def test_reconfigure_flow_invalid_host(
         )
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "invalid_host"}
 
 
@@ -375,6 +376,7 @@ async def test_reconfigure_flow_cannot_connect(
     )
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "unknown"}
 
 

@@ -1228,6 +1228,7 @@ async def test_subentry_authorize_failure(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "instructions"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": expected}
     assert not entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)
     # pair() is a single bounded op; it is never re-sent, and its link is dropped
@@ -1544,6 +1545,7 @@ async def test_subentry_scan_device_not_found(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "scan"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "device_not_found"}
     assert not entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)
     assert "No connectable advertisement matched Bluetooth name Sdcdcb1a343110fba" in (
@@ -2399,6 +2401,7 @@ async def test_subentry_credentials_errors(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "credentials"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": expected_error}
     assert not entry.get_subentries_of_type(SUBENTRY_TYPE_ENERGY_SITE)
 
@@ -2937,6 +2940,7 @@ async def test_pair_step_second_lookup_errors(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "pair"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": expected_error}
 
 

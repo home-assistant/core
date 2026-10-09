@@ -199,6 +199,7 @@ async def test_form_cannot_read_device(
     )
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -220,6 +221,7 @@ async def test_form_shared_link_conflict(
     )
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -359,6 +361,7 @@ async def test_reconfigure_loaded_entry_restored_after_error(
         )
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
     assert mock_serial_config_entry.state is ConfigEntryState.LOADED
 
@@ -393,6 +396,7 @@ async def test_reconfigure_stops_when_unload_fails(
         )
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "unknown"}
     check_connection.assert_not_awaited()
 

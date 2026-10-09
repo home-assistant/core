@@ -212,6 +212,7 @@ async def test_user_already_configured(
         )
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"]["base"] == "already_configured"
 
 
@@ -247,6 +248,7 @@ async def test_exception_security(
 
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"]["base"] == ERROR_AUTH_INVALID
 
 
@@ -277,6 +279,7 @@ async def test_exception_connection(
 
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"]["base"] == ERROR_CANNOT_CONNECT
 
 
@@ -304,6 +307,7 @@ async def test_exception_unknown(hass: HomeAssistant, user_input) -> None:
 
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"]["base"] == ERROR_UNKNOWN
 
 
@@ -393,6 +397,7 @@ async def test_reauth_not_successful(
 
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "reauth_confirm"
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"]["base"] == error
 
 

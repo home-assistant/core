@@ -69,6 +69,7 @@ async def test_form_device_info_error(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "cannot_receive_deviceinfo"}
 
 
@@ -93,6 +94,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "cannot_connect"}
 
 

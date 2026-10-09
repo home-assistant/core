@@ -52,6 +52,7 @@ async def test_cannot_connect(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -155,4 +156,5 @@ async def test_async_step_confirm(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "confirm"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}

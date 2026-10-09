@@ -45,8 +45,7 @@ class MelCloudDeviceUpdateCoordinator(DataUpdateCoordinator[None]):
         self,
         hass: HomeAssistant,
         device: Device,
-        # pylint: disable-next=home-assistant-coordinator-untyped-config-entry
-        config_entry: ConfigEntry,
+        config_entry: MelCloudConfigEntry,
     ) -> None:
         """Initialize the per-device coordinator."""
         self.device = device
@@ -140,15 +139,12 @@ class MelCloudDeviceUpdateCoordinator(DataUpdateCoordinator[None]):
             if ex.status in (401, 403):
                 raise ConfigEntryAuthFailed from ex
             if ex.status == 429:
-                _LOGGER.error(
-                    "MELCloud rate limit exceeded for %s. Your account may be "
-                    "temporarily blocked",
-                    self.device.name,
-                )
                 # Rate limit - mark unavailable immediately
                 self.device_available = False
                 raise UpdateFailed(
-                    f"Rate limit exceeded for {self.device.name}"
+                    translation_domain=DOMAIN,
+                    translation_key="device_rate_limit_exceeded",
+                    translation_placeholders={"device": self.device.name},
                 ) from ex
             # Other HTTP errors - use retry logic
             self._handle_failure(f"Error updating {self.device.name}: {ex}", ex)
@@ -177,12 +173,6 @@ class MelCloudDeviceUpdateCoordinator(DataUpdateCoordinator[None]):
             self.update_interval = timedelta(seconds=RETRY_INTERVAL_SECONDS)
         else:
             # Threshold reached - mark unavailable and restore normal interval
-            _LOGGER.warning(
-                "%s (attempt %d/%d, marking unavailable)",
-                message,
-                self._consecutive_failures,
-                MAX_CONSECUTIVE_FAILURES,
-            )
             self.device_available = False
             self.update_interval = timedelta(minutes=DEFAULT_UPDATE_INTERVAL)
             raise UpdateFailed(message) from exception

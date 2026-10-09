@@ -617,6 +617,7 @@ async def test_form_user_no_devices_password_fetch_fails_cannot_connect(
         await hass.async_block_till_done()
 
     assert result4["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result4["errors"] == {"base": "cannot_connect"}
     assert len(mock_setup_entry.mock_calls) == 0
 

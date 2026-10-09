@@ -83,6 +83,7 @@ async def test_user_config_flow_bad_connect_errors(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
 
     # Finish flow with success
@@ -155,6 +156,7 @@ async def test_user_config_flow_bad_host_errors(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "invalid_host"}
 
     # Finish flow with success
@@ -207,6 +209,7 @@ async def test_user_config_flow_bad_auth_errors(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "invalid_auth"}
 
     # Finish flow with success
