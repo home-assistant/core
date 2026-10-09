@@ -202,6 +202,9 @@ class CastStatusListener(
     @override
     def new_connection_status(self, status):
         """Handle reception of a new ConnectionStatus."""
+        if not self._valid:
+            return
+
         try:
             running_loop = asyncio.get_running_loop()
         except RuntimeError:
