@@ -122,6 +122,7 @@ async def test_user_setup_fail(
         user_input={CONF_CODE: MOCK_CODE, CONF_IP_ADDRESS: MOCK_HOST},
     )
     assert result is not None
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result.get("type") is FlowResultType.CREATE_ENTRY
 
 
@@ -300,4 +301,5 @@ async def test_confirm_cannot_connect(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={ATTR_CODE: MOCK_CODE}
     )
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result.get("type") is FlowResultType.CREATE_ENTRY, result

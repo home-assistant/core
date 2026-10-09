@@ -132,5 +132,6 @@ async def test_user_flow_title_from_entity_name(
         },
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == expected_title

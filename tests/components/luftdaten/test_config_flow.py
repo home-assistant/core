@@ -96,6 +96,7 @@ async def test_invalid_sensor(hass: HomeAssistant, mock_luftdaten: MagicMock) ->
         user_input={CONF_SENSOR_ID: 12345},
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result3.get("type") is FlowResultType.CREATE_ENTRY
     assert result3.get("title") == "12345"
     assert result3.get("data") == {
@@ -124,6 +125,7 @@ async def test_step_user(
         },
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2.get("type") is FlowResultType.CREATE_ENTRY
     assert result2.get("title") == "12345"
     assert result2.get("data") == {

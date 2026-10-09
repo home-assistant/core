@@ -39,6 +39,7 @@ async def test_form(
         )
         await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "hello@home-assistant.io"
     assert result2["data"] == {
@@ -286,6 +287,7 @@ async def test_dhcp_discovery(
             result["flow_id"],
             {"username": username, "password": "test-password"},
         )
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "hello@home-assistant.io"
     assert result["data"] == {

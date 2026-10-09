@@ -186,6 +186,7 @@ async def test_create_entry(
         result["flow_id"], user_input=CONFIG
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == DEFAULT_NAME
     assert result["data"][CONF_LATITUDE] == CONFIG[CONF_LATITUDE]
@@ -215,6 +216,7 @@ async def test_create_entry_with_nearest_method(
         result["flow_id"], user_input=CONFIG
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == DEFAULT_NAME
     assert result["data"][CONF_LATITUDE] == CONFIG[CONF_LATITUDE]

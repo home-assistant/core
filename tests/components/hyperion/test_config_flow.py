@@ -252,6 +252,7 @@ async def test_user_noauth_flow_success(hass: HomeAssistant) -> None:
     ):
         result = await _configure_flow(hass, result, user_input=TEST_HOST_PORT)
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["handler"] == DOMAIN
     assert result["title"] == TEST_TITLE
@@ -305,6 +306,7 @@ async def test_auth_static_token_success(hass: HomeAssistant) -> None:
             hass, result, user_input={CONF_CREATE_TOKEN: False, CONF_TOKEN: TEST_TOKEN}
         )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["handler"] == DOMAIN
     assert result["title"] == TEST_TITLE
@@ -561,6 +563,7 @@ async def test_auth_create_token_success(hass: HomeAssistant) -> None:
 
         # The flow will be automatically advanced by the auth token response.
         result = await _configure_flow(hass, result)
+        # pylint: disable-next=home-assistant-tests-config-flow-unique-id
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["handler"] == DOMAIN
         assert result["title"] == TEST_TITLE
@@ -631,6 +634,7 @@ async def test_ssdp_success(hass: HomeAssistant) -> None:
     ):
         result = await _configure_flow(hass, result)
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["handler"] == DOMAIN
     assert result["title"] == TEST_TITLE
@@ -689,6 +693,7 @@ async def test_ssdp_failure_bad_port_json(hass: HomeAssistant) -> None:
         result = await _configure_flow(hass, result)
         await hass.async_block_till_done()
 
+        # pylint: disable-next=home-assistant-tests-config-flow-unique-id
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["data"][CONF_PORT] == const.DEFAULT_PORT_JSON
 

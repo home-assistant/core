@@ -415,6 +415,7 @@ async def test_manual_flow_ignores_pending_discovery_for_same_device(
         result["flow_id"], {CONF_IP_ADDRESS: "2.2.2.2"}
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_IP_ADDRESS] == "2.2.2.2"
 

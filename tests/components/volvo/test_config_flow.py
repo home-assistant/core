@@ -73,6 +73,7 @@ async def test_single_vin_flow(
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert len(mock_setup_entry.mock_calls) == 1
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
@@ -223,6 +224,7 @@ async def test_api_failure_flow(
     result = await _async_run_flow_to_completion(
         hass, result, mock_config_flow_api, configure=False
     )
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 

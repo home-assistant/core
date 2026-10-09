@@ -106,6 +106,7 @@ async def test_user_setup(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["result"].data == {
         CONF_ADDRESS: "aa:bb:cc:dd:ee:ff",

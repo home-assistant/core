@@ -38,6 +38,7 @@ async def test_config_flow(
             },
         )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result.get("type") is FlowResultType.CREATE_ENTRY
     assert result.get("title") == "1.2.3.4"
     assert result.get("data") == {
@@ -70,6 +71,7 @@ async def test_config_flow_from_dhcp(
             },
         )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result.get("type") is FlowResultType.CREATE_ENTRY
     assert result.get("title") == "1.2.3.4"
     assert result.get("data") == {
@@ -246,6 +248,7 @@ async def test_config_flow_ping_failed(
             },
         )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result.get("type") is FlowResultType.CREATE_ENTRY
     assert result.get("title") == "1.2.3.4"
     assert result.get("data") == {
@@ -401,6 +404,7 @@ async def test_config_flow_multiple_entries(
             CONF_HOST: "5.6.7.8",
         },
     )
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result.get("type") is FlowResultType.CREATE_ENTRY
     assert result.get("title") == "5.6.7.8"
     assert result.get("data") == {

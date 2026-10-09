@@ -111,6 +111,7 @@ async def test_user_flow_cannot_connect(
         result["flow_id"], {CONF_IP_ADDRESS: TEST_IP}
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
@@ -180,6 +181,7 @@ async def test_user_flow_no_ip_entered(hass: HomeAssistant) -> None:
         result["flow_id"], {CONF_IP_ADDRESS: TEST_IP}
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
@@ -204,6 +206,7 @@ async def test_user_flow_bad_ip_entered(hass: HomeAssistant) -> None:
         result["flow_id"], {CONF_IP_ADDRESS: TEST_IP}
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 

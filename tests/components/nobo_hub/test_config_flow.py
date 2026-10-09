@@ -138,6 +138,7 @@ async def test_configure_filters_configured_hubs(
             {"serial_suffix": "999"},
         )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
@@ -177,6 +178,7 @@ async def test_configure_skips_user_step_when_all_configured(
             {"serial": "999999999999", "ip_address": "9.9.9.9"},
         )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
 
 

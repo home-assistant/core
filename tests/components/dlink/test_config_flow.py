@@ -35,6 +35,7 @@ async def test_flow_user(hass: HomeAssistant, mocked_plug: MagicMock) -> None:
             result["flow_id"],
             user_input=CONF_DATA,
         )
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == DEFAULT_NAME
     assert result["data"] == CONF_DATA
@@ -87,6 +88,7 @@ async def test_flow_user_cannot_connect(
             result["flow_id"],
             user_input=CONF_DATA,
         )
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == DEFAULT_NAME
     assert result["data"] == CONF_DATA
@@ -135,6 +137,7 @@ async def test_dhcp(hass: HomeAssistant, mocked_plug: MagicMock) -> None:
             result["flow_id"],
             user_input=CONF_DHCP_DATA,
         )
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == DEFAULT_NAME
     assert result["data"] == CONF_DATA
@@ -162,6 +165,7 @@ async def test_dhcp_failed_legacy_auth(
             result["flow_id"],
             user_input=CONF_DHCP_DATA,
         )
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == DEFAULT_NAME
     assert result["data"] == CONF_DATA

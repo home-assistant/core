@@ -754,6 +754,7 @@ async def test_async_step_user_short_payload_then_full(hass: HomeAssistant) -> N
             user_input={"bindkey": "a115210eed7a88e50ad52662e732a9fb"},
         )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == "Temperature/Humidity Sensor 5384 (LYWSD03MMC)"
     assert result3["data"] == {"bindkey": "a115210eed7a88e50ad52662e732a9fb"}

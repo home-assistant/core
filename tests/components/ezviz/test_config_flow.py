@@ -99,6 +99,7 @@ async def test_user_custom_url(
         {CONF_URL: "test-user"},
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         CONF_SESSION_ID: "fake_token",

@@ -143,6 +143,7 @@ Every check has a code following the
 | `W7436` | [`home-assistant-light-missing-color-mode`](#w7436-home-assistant-light-missing-color-mode) | Light entity sets supported color modes but does not report a `color_mode` |
 | `W7437` | [`home-assistant-light-missing-supported-color-modes`](#w7437-home-assistant-light-missing-supported-color-modes) | Light entity reports a `color_mode` but does not set supported color modes |
 | `W7439` | [`home-assistant-tests-coordinator-async-refresh`](#w7439-home-assistant-tests-coordinator-async-refresh) | Tests should advance the time instead of refreshing a coordinator directly |
+| `W7440` | [`home-assistant-tests-config-flow-unique-id`](#w7440-home-assistant-tests-config-flow-unique-id) | Happy path config flow tests should assert the created entry's unique ID |
 
 
 ## `home_assistant_logger` checker
@@ -516,6 +517,31 @@ whose type cannot be inferred. So every use of these methods in
 it, unless the receiver is known to be something other than a coordinator,
 such as a mock.
 
+
+## `home_assistant_tests_config_flow_unique_id` checker
+
+Detects config flow tests that create an entry without checking its unique ID.
+
+### `W7440`: `home-assistant-tests-config-flow-unique-id`
+
+When the integration's config flow calls `async_set_unique_id`, a happy path
+test in `tests/components/<domain>/test_config_flow.py` that asserts a
+`CREATE_ENTRY` result should also assert the unique ID of the new entry:
+
+```python
+assert result["type"] is FlowResultType.CREATE_ENTRY
+assert result["result"].unique_id == "1234"
+```
+
+An assert that references `unique_id` or a `snapshot` counts as a check.
+Results of options and subentry flows are ignored, as those don't set a
+unique ID; results that can't be traced, such as those returned by a helper,
+are checked. Tests that start an options or subentry flow are skipped, as
+they run the config flow only as setup. Tests that recover from an error are
+skipped too: they make a mock
+raise through `side_effect` or expect non-empty `errors`. Resetting a
+`side_effect` to `None` or replacing a method with a function doesn't count
+as an error.
 
 ## `home_assistant_enforce_utcnow` checker
 

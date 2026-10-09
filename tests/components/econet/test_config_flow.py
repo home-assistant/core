@@ -100,6 +100,7 @@ async def test_auth_worked(hass: HomeAssistant) -> None:
             },
         )
 
+        # pylint: disable-next=home-assistant-tests-config-flow-unique-id
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["data"] == {
             CONF_EMAIL: "admin@localhost.com",

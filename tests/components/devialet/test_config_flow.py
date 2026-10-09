@@ -94,6 +94,7 @@ async def test_full_user_flow_implementation(
             user_input=user_input,
         )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == NAME
 
@@ -123,6 +124,7 @@ async def test_zeroconf_devialet(
         )
         await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Livingroom"
     assert result2["data"] == {

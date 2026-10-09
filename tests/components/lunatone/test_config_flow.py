@@ -58,6 +58,7 @@ async def test_full_flow(
         result["flow_id"],
         {CONF_URL: BASE_URL},
     )
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == BASE_URL
     assert result["data"] == {CONF_URL: BASE_URL}

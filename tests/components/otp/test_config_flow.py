@@ -46,6 +46,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
         TEST_DATA,
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "OTP Sensor"
     assert result["data"] == TEST_DATA_RESULT
@@ -124,6 +125,7 @@ async def test_generate_new_token(
         user_input={CONF_CODE: "123456"},
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "OTP Sensor"
     assert result["data"] == TEST_DATA_RESULT

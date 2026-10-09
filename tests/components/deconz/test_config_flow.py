@@ -76,6 +76,7 @@ async def test_flow_discovered_bridges(
         result["flow_id"], user_input={}
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == BRIDGE_ID
     assert result["data"] == {
@@ -130,6 +131,7 @@ async def test_flow_manual_configuration_decision(
         result["flow_id"], user_input={}
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == BRIDGE_ID
     assert result["data"] == {
@@ -181,6 +183,7 @@ async def test_flow_manual_configuration(
         result["flow_id"], user_input={}
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == BRIDGE_ID
     assert result["data"] == {
@@ -467,6 +470,7 @@ async def test_flow_ssdp_discovery(
         result["flow_id"], user_input={}
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == BRIDGE_ID
     assert result["data"] == {
@@ -589,6 +593,7 @@ async def test_flow_hassio_discovery(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].data == {
         CONF_HOST: "mock-deconz",

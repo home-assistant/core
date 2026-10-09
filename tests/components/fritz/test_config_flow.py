@@ -848,6 +848,7 @@ async def test_upnp_not_enabled(hass: HomeAssistant) -> None:
             result["flow_id"], user_input=MOCK_USER_INPUT_SIMPLE
         )
 
+        # pylint: disable-next=home-assistant-tests-config-flow-unique-id
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["data"][CONF_HOST] == "fake_host"
         assert result["data"][CONF_PASSWORD] == "fake_pass"
