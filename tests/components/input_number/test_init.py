@@ -27,8 +27,13 @@ from homeassistant.core import Context, CoreState, HomeAssistant, State
 from homeassistant.exceptions import Unauthorized
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
-from tests.common import MockUser, mock_restore_cache
+from tests.common import (
+    MockUser,
+    mock_restore_cache,
+    mock_restore_cache_with_extra_data,
+)
 from tests.typing import WebSocketGenerator
 
 
@@ -288,6 +293,97 @@ async def test_device_class(hass: HomeAssistant) -> None:
     state = hass.states.get("input_number.without_device_class")
     assert state
     assert ATTR_DEVICE_CLASS not in state.attributes
+
+
+async def test_set_value_unit_conversion(hass: HomeAssistant) -> None:
+    """Test set_value takes the value in the unit of the converted state."""
+    hass.config.units = US_CUSTOMARY_SYSTEM
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: {
+                "temperature": {
+                    "initial": 20,
+                    "min": 0,
+                    "max": 40,
+                    "device_class": "temperature",
+                    "unit_of_measurement": "°C",
+                }
+            }
+        },
+    )
+    entity_id = "input_number.temperature"
+
+    state = hass.states.get(entity_id)
+    assert float(state.state) == 68
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "°F"
+    assert state.attributes["min"] == 32
+    assert state.attributes["max"] == 104
+
+    await set_value(hass, entity_id, "86")
+    state = hass.states.get(entity_id)
+    assert float(state.state) == 86
+
+    # The upper bound in °F must not be rejected by rounding in the conversion
+    await set_value(hass, entity_id, "104")
+    state = hass.states.get(entity_id)
+    assert float(state.state) == 104
+
+    with pytest.raises(probatio.Invalid) as excinfo:
+        await set_value(hass, entity_id, "110")
+    assert "Invalid value for input_number.temperature: 110.0 (range 32.0 - 104.0)" in (
+        str(excinfo.value)
+    )
+
+    await increment(hass, entity_id)
+    state = hass.states.get(entity_id)
+    assert float(state.state) == 104
+
+    await decrement(hass, entity_id)
+    state = hass.states.get(entity_id)
+    assert float(state.state) == 102.2
+
+
+async def test_restore_state_unit_conversion(hass: HomeAssistant) -> None:
+    """Test the native value is restored for a converted state."""
+    hass.config.units = US_CUSTOMARY_SYSTEM
+    mock_restore_cache_with_extra_data(
+        hass,
+        (
+            (
+                State("input_number.with_extra_data", "86.0"),
+                {
+                    "native_max_value": 40.0,
+                    "native_min_value": 0.0,
+                    "native_step": 1.0,
+                    "native_unit_of_measurement": "°C",
+                    "native_value": 30.0,
+                },
+            ),
+            # Stored before unit conversion was possible, so in the native unit
+            (State("input_number.without_extra_data", "25"), {}),
+        ),
+    )
+    hass.set_state(CoreState.starting)
+
+    config = {
+        "min": 0,
+        "max": 40,
+        "device_class": "temperature",
+        "unit_of_measurement": "°C",
+    }
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {DOMAIN: {"with_extra_data": config, "without_extra_data": config}},
+    )
+
+    state = hass.states.get("input_number.with_extra_data")
+    assert float(state.state) == 86
+
+    state = hass.states.get("input_number.without_extra_data")
+    assert float(state.state) == 77
 
 
 async def test_restore_state(hass: HomeAssistant) -> None:
