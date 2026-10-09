@@ -1,9 +1,13 @@
 """Services for the Viessmann ViCare integration."""
 
+from datetime import time
+from typing import Any
+
 import probatio
 
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.components.water_heater import DOMAIN as WATER_HEATER_DOMAIN
+from homeassistant.const import ATTR_MODE
 from homeassistant.core import HomeAssistant, SupportsResponse, callback
 from homeassistant.helpers import config_validation as cv, service
 
@@ -25,19 +29,38 @@ WEEKDAYS = (
     "sunday",
 )
 
-# The time selector sends seconds, ViCare only accepts HH:MM on a 10-minute grid.
-_SLOT_TIME = probatio.All(
-    cv.string,
-    probatio.Match(r"^(?:[01]\d|2[0-3]):[0-5]0(?::00)?$|^24:00$"),
-    lambda value: value[:5],
-)
+ATTR_FROM = "from"
+ATTR_TO = "to"
 
-CIRCULATION_SCHEDULE_SLOT_SCHEMA = probatio.Schema(
-    {
-        probatio.Required("start"): _SLOT_TIME,
-        probatio.Required("end"): _SLOT_TIME,
-        probatio.Required("mode"): cv.string,
-    }
+
+def _slot_time(value: Any) -> time:
+    """Parse a slot time on a 10-minute grid, 24:00 is the end of the day."""
+    if isinstance(value, str) and value in ("24:00", "24:00:00"):
+        return time.max
+    parsed = cv.time(value)
+    if parsed.second or parsed.microsecond or parsed.minute % 10:
+        raise probatio.Invalid(f"Time must be on a 10-minute grid: {value}")
+    return parsed
+
+
+def _validate_slot(slot: dict[str, Any]) -> dict[str, Any]:
+    """Validate that a slot ends after it starts."""
+    if slot[ATTR_TO] <= slot[ATTR_FROM]:
+        raise probatio.Invalid(
+            f"End time {slot[ATTR_TO]} must be after start time {slot[ATTR_FROM]}"
+        )
+    return slot
+
+
+CIRCULATION_SCHEDULE_SLOT_SCHEMA = probatio.All(
+    probatio.Schema(
+        {
+            probatio.Required(ATTR_FROM): _slot_time,
+            probatio.Required(ATTR_TO): _slot_time,
+            probatio.Required(ATTR_MODE): cv.string,
+        }
+    ),
+    _validate_slot,
 )
 
 

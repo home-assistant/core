@@ -107,13 +107,10 @@ async def test_set_circulation_schedule(
     """Test setting the circulation schedule only replaces the passed days."""
     mock_vicare = MockPyViCare(CIRCULATION_SCHEDULE_FIXTURES)
     await _setup_water_heater(hass, mock_config_entry, mock_vicare)
-    current = await hass.services.async_call(
-        DOMAIN,
-        "get_circulation_schedule",
-        {ATTR_ENTITY_ID: ENTITY_WATER_HEATER},
-        blocking=True,
-        return_response=True,
-    )
+    device = mock_vicare.devices[0]
+    current = device.service.getProperty(
+        device.accessor, "heating.dhw.pumps.circulation.schedule"
+    )["properties"]["entries"]["value"]
 
     await hass.services.async_call(
         DOMAIN,
@@ -121,38 +118,75 @@ async def test_set_circulation_schedule(
         {
             ATTR_ENTITY_ID: ENTITY_WATER_HEATER,
             "monday": [
-                {"start": "06:00:00", "end": "08:30:00", "mode": "on"},
-                {"start": "22:00", "end": "00:00", "mode": "on"},
+                {"from": "06:00:00", "to": "08:30", "mode": "on"},
+                {"from": "22:00", "to": "24:00", "mode": "on"},
             ],
             "sunday": [],
         },
         blocking=True,
     )
 
-    expected = {
-        day[:3]: current[ENTITY_WATER_HEATER][day]
-        for day in ("tuesday", "wednesday", "thursday", "friday", "saturday")
-    }
-    expected["mon"] = [
-        {"start": "06:00", "end": "08:30", "mode": "on", "position": 0},
-        {"start": "22:00", "end": "24:00", "mode": "on", "position": 1},
-    ]
-    expected["sun"] = []
-    device = mock_vicare.devices[0]
     device.service.setProperty.assert_called_once_with(
         device.accessor,
         "heating.dhw.pumps.circulation.schedule",
         "setSchedule",
-        {"newSchedule": expected},
+        {
+            "newSchedule": {
+                **current,
+                "mon": [
+                    {"start": "06:00", "end": "08:30", "mode": "on", "position": 0},
+                    {"start": "22:00", "end": "24:00", "mode": "on", "position": 1},
+                ],
+                "sun": [],
+            }
+        },
+    )
+
+
+async def test_circulation_schedule_round_trip(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the schedule returned by get can be passed to set unchanged."""
+    mock_vicare = MockPyViCare(CIRCULATION_SCHEDULE_FIXTURES)
+    await _setup_water_heater(hass, mock_config_entry, mock_vicare)
+    device = mock_vicare.devices[0]
+    current = device.service.getProperty(
+        device.accessor, "heating.dhw.pumps.circulation.schedule"
+    )["properties"]["entries"]["value"]
+
+    response = await hass.services.async_call(
+        DOMAIN,
+        "get_circulation_schedule",
+        {ATTR_ENTITY_ID: ENTITY_WATER_HEATER},
+        blocking=True,
+        return_response=True,
+    )
+    await hass.services.async_call(
+        DOMAIN,
+        "set_circulation_schedule",
+        {ATTR_ENTITY_ID: ENTITY_WATER_HEATER, **response[ENTITY_WATER_HEATER]},
+        blocking=True,
+    )
+
+    device.service.setProperty.assert_called_once_with(
+        device.accessor,
+        "heating.dhw.pumps.circulation.schedule",
+        "setSchedule",
+        {"newSchedule": current},
     )
 
 
 @pytest.mark.parametrize(
     "slot",
     [
-        pytest.param({"start": "06:05", "end": "08:00", "mode": "on"}, id="off_grid"),
-        pytest.param({"start": "25:00", "end": "08:00", "mode": "on"}, id="bad_hour"),
-        pytest.param({"start": "06:00", "end": "08:00"}, id="missing_mode"),
+        pytest.param({"from": "06:05", "to": "08:00", "mode": "on"}, id="off_grid"),
+        pytest.param({"from": "25:00", "to": "08:00", "mode": "on"}, id="bad_hour"),
+        pytest.param(
+            {"from": "08:00", "to": "06:00", "mode": "on"}, id="to_before_from"
+        ),
+        pytest.param({"from": "06:00", "to": "06:00", "mode": "on"}, id="empty_range"),
+        pytest.param({"from": "06:00", "to": "08:00"}, id="missing_mode"),
     ],
 )
 async def test_set_circulation_schedule_invalid_slot(
@@ -191,7 +225,7 @@ async def test_set_circulation_schedule_command_error(
             "set_circulation_schedule",
             {
                 ATTR_ENTITY_ID: ENTITY_WATER_HEATER,
-                "monday": [{"start": "06:00", "end": "08:00", "mode": "foo"}],
+                "monday": [{"from": "06:00", "to": "08:00", "mode": "foo"}],
             },
             blocking=True,
         )
@@ -204,7 +238,7 @@ async def test_set_circulation_schedule_command_error(
         pytest.param("get_circulation_schedule", {}, True, id="get"),
         pytest.param(
             "set_circulation_schedule",
-            {"monday": [{"start": "06:00", "end": "08:00", "mode": "on"}]},
+            {"monday": [{"from": "06:00", "to": "08:00", "mode": "on"}]},
             False,
             id="set",
         ),

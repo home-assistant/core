@@ -2,14 +2,14 @@
   selector:
     object:
       multiple: true
-      label_field: start
-      description_field: end
+      label_field: from
+      description_field: to
       fields:
-        start:
+        from:
           required: true
           selector:
             time:
-        end:
+        to:
           required: true
           selector:
             time:

@@ -1,6 +1,7 @@
 """Viessmann ViCare water_heater device."""
 
 from contextlib import suppress
+from datetime import time
 import logging
 from typing import Any, override
 
@@ -16,14 +17,19 @@ from homeassistant.components.water_heater import (
     WaterHeaterEntity,
     WaterHeaterEntityFeature,
 )
-from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS, UnitOfTemperature
+from homeassistant.const import (
+    ATTR_MODE,
+    ATTR_TEMPERATURE,
+    PRECISION_TENTHS,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant, ServiceResponse
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .entity import ViCareEntity
-from .services import WEEKDAYS
+from .services import ATTR_FROM, ATTR_TO, WEEKDAYS
 from .types import ViCareConfigEntry, ViCareDevice
 from .utils import get_circuits
 
@@ -58,8 +64,12 @@ HA_TO_VICARE_HVAC_DHW = {
     OPERATION_MODE_ON: VICARE_MODE_DHW,
 }
 
-# ViCare marks the end of the day as 24:00, the time selector can only send 00:00.
-CIRCULATION_SCHEDULE_DAY_END = "24:00"
+
+def _to_vicare_time(value: time) -> str:
+    """Format a slot time for ViCare, which marks the end of the day as 24:00."""
+    if value == time.max:
+        return "24:00"
+    return value.strftime("%H:%M")
 
 
 def _build_entities(
@@ -158,24 +168,29 @@ class ViCareWater(ViCareEntity, WaterHeaterEntity):
         """Return the DHW circulation pump schedule."""
         schedule = self._get_circulation_schedule()
         return {
-            "active": schedule["active"],
-            **{day: schedule[day[:3]] for day in WEEKDAYS},
+            day: [
+                {
+                    ATTR_FROM: f"{slot['start']}:00",
+                    ATTR_TO: f"{slot['end']}:00",
+                    ATTR_MODE: slot["mode"],
+                }
+                for slot in sorted(
+                    schedule[day[:3]], key=lambda entry: entry["position"]
+                )
+            ]
+            for day in WEEKDAYS
         }
 
-    def set_circulation_schedule(self, **slots_by_day: list[dict[str, str]]) -> None:
+    def set_circulation_schedule(self, **slots_by_day: list[dict[str, Any]]) -> None:
         """Set the DHW circulation pump schedule, keeping days not passed."""
         schedule = self._get_circulation_schedule()
         new_schedule = {day[:3]: schedule[day[:3]] for day in WEEKDAYS}
         for day, slots in slots_by_day.items():
             new_schedule[day[:3]] = [
                 {
-                    "start": slot["start"],
-                    "end": (
-                        CIRCULATION_SCHEDULE_DAY_END
-                        if slot["end"] == "00:00"
-                        else slot["end"]
-                    ),
-                    "mode": slot["mode"],
+                    "start": _to_vicare_time(slot[ATTR_FROM]),
+                    "end": _to_vicare_time(slot[ATTR_TO]),
+                    "mode": slot[ATTR_MODE],
                     "position": position,
                 }
                 for position, slot in enumerate(slots)
