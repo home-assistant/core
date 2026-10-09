@@ -608,7 +608,8 @@ async def config_entry_disable(
         send_entry_not_found(connection, msg["id"])
         return
 
-    result = {"require_restart": not success}
+    entry = hass.config_entries.async_get_known_entry(msg["entry_id"])
+    result = {"require_restart": not success and not entry.state.recoverable}
 
     connection.send_result(msg["id"], result)
 
