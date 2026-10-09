@@ -109,7 +109,7 @@ class FortiOSTracker(CoordinatorEntity[FortiOSCoordinator], ScannerEntity):
 
     @property
     @override
-    def unique_id(self) -> str:
+    def unique_id(self) -> str | None:
         """Identify this client within its FortiGate device."""
         return self._attr_unique_id
 
