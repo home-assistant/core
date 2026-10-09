@@ -128,11 +128,19 @@ async def test_event_press_and_release_button(
 
     events = async_capture_events(hass, "lutron_event")
 
-    for _ in range(2):
-        for event in (Button.Event.PRESSED, Button.Event.RELEASED):
-            for call in button.subscribe.call_args_list:
-                callback = call[0][0]
-                callback(button, None, event, None)
-    await hass.async_block_till_done()
+    # Fires on the press and skips its release. A release with no press
+    # before it (e.g. a dropped press) still fires.
+    for event, expected in (
+        (Button.Event.PRESSED, 1),
+        (Button.Event.RELEASED, 1),
+        (Button.Event.RELEASED, 2),
+        (Button.Event.PRESSED, 3),
+        (Button.Event.RELEASED, 3),
+    ):
+        for call in button.subscribe.call_args_list:
+            callback = call[0][0]
+            callback(button, None, event, None)
+        await hass.async_block_till_done()
+        assert len(events) == expected
 
-    assert [e.data["action"] for e in events] == ["single", "single"]
+    assert all(e.data["action"] == "single" for e in events)
