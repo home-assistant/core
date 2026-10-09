@@ -55,8 +55,9 @@ SERVICE_FETCH_PART_SCHEMA = _SERVICE_UID_SCHEMA.extend(
 )
 
 
-async def _async_get_imap_client(hass: HomeAssistant, entry_id: str) -> IMAP4_SSL:
-    """Get IMAP client and connect."""
+@asynccontextmanager
+async def async_get_imap_client(hass: HomeAssistant, entry_id: str) -> IMAP4_SSL:
+    """Get IMAP client and connect, as managed context."""
     if (entry := hass.config_entries.async_get_entry(entry_id)) is None or (
         entry.state is not ConfigEntryState.LOADED
     ):
@@ -80,26 +81,15 @@ async def _async_get_imap_client(hass: HomeAssistant, entry_id: str) -> IMAP4_SS
             translation_key="imap_server_fail",
             translation_placeholders={"error": str(exc)},
         ) from exc
-    return client
 
-
-@asynccontextmanager
-async def async_get_imap_client(hass: HomeAssistant, entry_id: str) -> IMAP4_SSL:
-    """Get IMAP client and connect, as managed context."""
-    client = await _async_get_imap_client(hass, entry_id)
     try:
         yield client
     finally:
-        await async_close_imap_client(client)
-
-
-async def async_close_imap_client(client: IMAP4_SSL) -> None:
-    """Close IMAP client."""
-    if client:
-        with suppress(BaseException):
-            await client.close()
-        with suppress(BaseException):
-            client.protocol.transport.close()
+        if client:
+            with suppress(BaseException):
+                await client.close()
+            with suppress(BaseException):
+                client.protocol.transport.close()
 
 
 @callback
