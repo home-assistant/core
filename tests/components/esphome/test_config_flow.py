@@ -293,7 +293,6 @@ async def test_user_sets_unique_id(hass: HomeAssistant) -> None:
         discovery_result["flow_id"],
         {},
     )
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert discovery_result["type"] is FlowResultType.CREATE_ENTRY
     assert discovery_result["data"] == {
         CONF_HOST: "192.168.43.183",
@@ -302,6 +301,7 @@ async def test_user_sets_unique_id(hass: HomeAssistant) -> None:
         CONF_NOISE_PSK: "",
         CONF_DEVICE_NAME: "test",
     }
+    assert discovery_result["result"].unique_id == "11:22:33:44:55:aa"
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -404,7 +404,6 @@ async def test_user_causes_zeroconf_to_abort(hass: HomeAssistant) -> None:
         result["flow_id"],
         {CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
     )
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         CONF_HOST: "127.0.0.1",
@@ -413,6 +412,7 @@ async def test_user_causes_zeroconf_to_abort(hass: HomeAssistant) -> None:
         CONF_NOISE_PSK: "",
         CONF_DEVICE_NAME: "test",
     }
+    assert result["result"].unique_id == "11:22:33:44:55:aa"
 
     assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
 
@@ -3280,7 +3280,6 @@ async def test_user_flow_starts_zwave_discovery(
         )
 
     # Verify the entry was created
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "test-zwave-device"
     assert result["data"] == {
@@ -3290,6 +3289,7 @@ async def test_user_flow_starts_zwave_discovery(
         CONF_NOISE_PSK: "",
         CONF_DEVICE_NAME: "test-zwave-device",
     }
+    assert result["result"].unique_id == "11:22:33:44:55:bb"
 
     # First call is ESPHome flow, second should be Z-Wave flow
     assert len(flow_init_calls) == 2
@@ -3348,7 +3348,6 @@ async def test_user_flow_no_zwave_discovery_without_home_id(
         )
 
     # Verify the ESPHome entry was created
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "test-zwave-device-no-id"
     assert result["data"] == {
@@ -3358,6 +3357,7 @@ async def test_user_flow_no_zwave_discovery_without_home_id(
         CONF_NOISE_PSK: "",
         CONF_DEVICE_NAME: "test-zwave-device-no-id",
     }
+    assert result["result"].unique_id == "11:22:33:44:55:cc"
 
     # Verify only ESPHome flow was initiated, no Z-Wave flow
     assert len(flow_init_calls) == 1
@@ -3399,9 +3399,9 @@ async def test_user_flow_no_zwave_discovery_without_capabilities(
         )
 
     # Verify the entry was created
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "test-regular-device"
+    assert result["result"].unique_id == "11:22:33:44:55:cc"
 
     # Verify Z-Wave discovery flow was NOT started (only ESPHome flow)
     assert len(flow_init_calls) == 1
@@ -3452,7 +3452,6 @@ async def test_user_flow_zwave_discovery_aborts(
         )
 
     # Verify the ESPHome entry was still created despite Z-Wave flow aborting
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "test-zwave-device"
     assert result["data"] == {
@@ -3462,6 +3461,7 @@ async def test_user_flow_zwave_discovery_aborts(
         CONF_NOISE_PSK: "",
         CONF_DEVICE_NAME: "test-zwave-device",
     }
+    assert result["result"].unique_id == "11:22:33:44:55:dd"
 
     # Verify Z-Wave discovery flow was attempted
     assert len(flow_init_calls) == 2
