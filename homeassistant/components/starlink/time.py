@@ -52,10 +52,11 @@ class StarlinkTimeEntity(StarlinkEntity, TimeEntity):
 
     @property
     @override
-    # pylint: disable-next=home-assistant-coordinator-entity-available
     def available(self) -> bool:
         """Return True if entity is available."""
-        return self.entity_description.available_fn(self.coordinator.data)
+        return super().available and self.entity_description.available_fn(
+            self.coordinator.data
+        )
 
     @override
     async def async_set_value(self, value: time) -> None:
