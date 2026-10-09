@@ -113,8 +113,8 @@ async def test_polling_coordinator_refreshes_after_interval(
     assert coordinator.update_interval == IDLE_POLL_INTERVAL
 
     with patch.object(coordinator.handler, "items", return_value=[("id", object())]):
-        # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
-        await coordinator.async_refresh()
+        async_fire_time_changed(hass, dt_util.utcnow() + IDLE_POLL_INTERVAL)
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     assert coordinator.update_interval == POLL_INTERVAL
 
@@ -147,9 +147,8 @@ async def test_endpoint_not_found_disables_object_oriented_network_config_pollin
         "update",
         side_effect=EndpointNotFound("endpoint not found"),
     ) as mock_update:
-        # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
-        await coordinator.async_refresh()
-        await hass.async_block_till_done()
+        async_fire_time_changed(hass, dt_util.utcnow() + IDLE_POLL_INTERVAL)
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         assert coordinator.update_interval is None
         assert coordinator.last_update_success is False
@@ -218,18 +217,16 @@ async def test_entity_unavailable_on_polling_coordinator_failure(
         "update",
         side_effect=RuntimeError("Polling error"),
     ):
-        # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
-        await coordinator.async_refresh()
-        await hass.async_block_till_done()
+        async_fire_time_changed(hass, dt_util.utcnow() + POLL_INTERVAL)
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     assert coordinator.last_update_success is False
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == "unavailable"
 
-    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
-    await coordinator.async_refresh()
-    await hass.async_block_till_done()
+    async_fire_time_changed(hass, dt_util.utcnow() + POLL_INTERVAL)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert coordinator.last_update_success is True
     state = hass.states.get(entity_id)
