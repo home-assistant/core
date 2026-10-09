@@ -37,6 +37,29 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "bypass_on": {
+        "name": "Bypass active"
+      },
+      "condensation": {
+        "name": "Condensation alert"
+      },
+      "ice": {
+        "name": "Ice alert"
+      },
+      "service": {
+        "name": "Service required"
+      },
+      "update_reboot": {
+        "name": "Reboot pending"
+      },
+      "warmup": {
+        "name": "Warmup mode"
+      },
+      "worries": {
+        "name": "General issue"
+      }
+    },
     "sensor": {
       "g4_filter_status": {
         "name": "G4 filter status",

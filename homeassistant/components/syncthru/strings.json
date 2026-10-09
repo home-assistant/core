@@ -67,5 +67,10 @@
         "name": "Multi-purpose tray"
       }
     }
+  },
+  "exceptions": {
+    "api_not_supported": {
+      "message": "The printer does not support the SyncThru JSON API"
+    }
   }
 }

@@ -17,6 +17,10 @@ from .conftest import Fixture, MockPyViCare
 
 from tests.common import MockConfigEntry, snapshot_platform
 
+GET_QUICKMODE = (
+    "PyViCare.PyViCareVentilationDevice.VentilationDevice.getVentilationQuickmode"
+)
+
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_all_entities(
@@ -35,10 +39,7 @@ async def test_all_entities(
         patch(
             "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
         ),
-        patch(
-            f"{MODULE}._setup_vicare_api",
-            return_value=MockPyViCare(fixtures).as_vicare_data(),
-        ),
+        patch(f"{MODULE}.PyViCare", return_value=MockPyViCare(fixtures)),
         patch(f"{MODULE}.PLATFORMS", [Platform.FAN]),
     ):
         await setup_integration(hass, mock_config_entry)
@@ -60,16 +61,14 @@ async def test_standby_quickmode(
     difference here.
     """
     fixtures: list[Fixture] = [Fixture({"type:ventilation"}, "vicare/VitoPure.json")]
-    vicare_data = MockPyViCare(fixtures).as_vicare_data()
-    api = vicare_data.devices[0].api
 
     with (
         patch(
             "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
         ),
-        patch(f"{MODULE}._setup_vicare_api", return_value=vicare_data),
+        patch(f"{MODULE}.PyViCare", return_value=MockPyViCare(fixtures)),
         patch(f"{MODULE}.PLATFORMS", [Platform.FAN]),
-        patch.object(api, "getVentilationQuickmode", return_value=True),
+        patch(GET_QUICKMODE, return_value=True),
     ):
         await setup_integration(hass, mock_config_entry)
 
@@ -82,13 +81,12 @@ async def test_standby_quickmode(
     await async_update_entity(hass, entity_id)
     assert hass.states.get(entity_id).attributes[ATTR_ICON] == "mdi:fan-auto"
 
-    with patch.object(api, "getVentilationQuickmode", return_value=True):
+    with patch(GET_QUICKMODE, return_value=True):
         await async_update_entity(hass, entity_id)
     assert hass.states.get(entity_id).attributes[ATTR_ICON] == "mdi:fan-off"
 
-    with patch.object(
-        api,
-        "getVentilationQuickmode",
+    with patch(
+        GET_QUICKMODE,
         side_effect=PyViCareNotSupportedFeatureError("standby"),
     ):
         await async_update_entity(hass, entity_id)
@@ -105,16 +103,14 @@ async def test_standby_quickmode_with_a_second_fan(
         Fixture({"type:ventilation"}, "vicare/VitoPure.json"),
         Fixture({"type:ventilation"}, "vicare/ViAir300F.json"),
     ]
-    vicare_data = MockPyViCare(fixtures).as_vicare_data()
-    api = vicare_data.devices[0].api
 
     with (
         patch(
             "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
         ),
-        patch(f"{MODULE}._setup_vicare_api", return_value=vicare_data),
+        patch(f"{MODULE}.PyViCare", return_value=MockPyViCare(fixtures)),
         patch(f"{MODULE}.PLATFORMS", [Platform.FAN]),
-        patch.object(api, "getVentilationQuickmode", return_value=True),
+        patch(GET_QUICKMODE, return_value=True),
     ):
         await setup_integration(hass, mock_config_entry)
 

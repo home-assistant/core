@@ -46,11 +46,16 @@ from homeassistant.helpers.selector import (
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from . import create_client_session
-from .const import CONF_INSTALLATION_KEY, CONF_OFFLINE_MODE, CONF_USE_BLUETOOTH, DOMAIN
+from .const import (
+    BT_MODEL_PREFIXES,
+    CONF_INSTALLATION_KEY,
+    CONF_OFFLINE_MODE,
+    CONF_USE_BLUETOOTH,
+    DOMAIN,
+)
 from .coordinator import LaMarzoccoConfigEntry
 
 CONF_MACHINE = "machine"
-BT_MODEL_PREFIXES = ("MICRA", "MINI", "GS3")
 
 _LOGGER = logging.getLogger(__name__)
 

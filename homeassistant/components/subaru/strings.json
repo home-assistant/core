@@ -241,6 +241,11 @@
       }
     }
   },
+  "exceptions": {
+    "invalid_credentials": {
+      "message": "Invalid MySubaru account credentials"
+    }
+  },
   "options": {
     "step": {
       "init": {

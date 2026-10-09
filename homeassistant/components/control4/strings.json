@@ -34,6 +34,11 @@
       }
     }
   },
+  "exceptions": {
+    "invalid_credentials": {
+      "message": "Error authenticating with the Control4 account API, incorrect username or password"
+    }
+  },
   "options": {
     "step": {
       "init": {
