@@ -35,6 +35,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_HOST,
     EVENT_STATE_CHANGED,
+    EVENT_STATE_REPORTED,
     SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_PLAY,
@@ -44,7 +45,7 @@ from homeassistant.const import (
     SERVICE_REPEAT_SET,
     STATE_PLAYING,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, EventStateReportedData, HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
@@ -182,6 +183,19 @@ async def test_group_members_follow_renamed_entity_id(
     """Test group members report the new entity_id after a rename."""
     entity_to_bridge = hass.data[DOMAIN][SHARED_DATA].entity_to_bridge
     state_changes = async_capture_events(hass, EVENT_STATE_CHANGED)
+    state_reports: list[Event[EventStateReportedData]] = []
+
+    @callback
+    def _is_renamed(data: EventStateReportedData) -> bool:
+        return data["entity_id"] == RENAMED_ENTITY_ID
+
+    @callback
+    def _capture_report(event: Event[EventStateReportedData]) -> None:
+        state_reports.append(event)
+
+    hass.bus.async_listen(
+        EVENT_STATE_REPORTED, _capture_report, event_filter=_is_renamed
+    )
 
     entity_registry.async_update_entity(ENTITY_ID, new_entity_id=RENAMED_ENTITY_ID)
     await hass.async_block_till_done()
@@ -192,7 +206,8 @@ async def test_group_members_follow_renamed_entity_id(
         LEADER_ENTITY_ID,
         RENAMED_ENTITY_ID,
     ]
-    # The state is written once under the new entity_id, already re-keyed
+    # The state is written once under the new entity_id, already re-keyed; a
+    # repeated identical write would be a state report
     assert [
         (
             event.data["old_state"],
@@ -201,6 +216,7 @@ async def test_group_members_follow_renamed_entity_id(
         for event in state_changes
         if event.data["entity_id"] == RENAMED_ENTITY_ID
     ] == [(None, [LEADER_ENTITY_ID, RENAMED_ENTITY_ID])]
+    assert not state_reports
 
     assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
     assert set(entity_to_bridge) == {LEADER_ENTITY_ID}
