@@ -35,7 +35,7 @@ ATTR_TO = "to"
 
 def _slot_time(value: Any) -> time:
     """Parse a slot time on a 10-minute grid, 24:00 is the end of the day."""
-    if isinstance(value, str) and value in ("24:00", "24:00:00"):
+    if value in ("24:00", "24:00:00"):
         return time.max
     parsed = cv.time(value)
     if parsed.second or parsed.microsecond or parsed.minute % 10:

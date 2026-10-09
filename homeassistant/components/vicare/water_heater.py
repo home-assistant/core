@@ -10,8 +10,13 @@ from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
 from PyViCare.PyViCareHeatingDevice import HeatingCircuit as PyViCareHeatingCircuit
 from PyViCare.PyViCareUtils import (
     PyViCareCommandError,
+    PyViCareDeviceCommunicationError,
+    PyViCareInternalServerError,
+    PyViCareInvalidDataError,
     PyViCareNotSupportedFeatureError,
+    PyViCareRateLimitError,
 )
+from requests.exceptions import ConnectionError as RequestConnectionError
 
 from homeassistant.components.water_heater import (
     WaterHeaterEntity,
@@ -63,6 +68,15 @@ HA_TO_VICARE_HVAC_DHW = {
     OPERATION_MODE_OFF: VICARE_MODE_OFF,
     OPERATION_MODE_ON: VICARE_MODE_DHW,
 }
+
+
+VICARE_API_ERRORS = (
+    RequestConnectionError,
+    PyViCareDeviceCommunicationError,
+    PyViCareInternalServerError,
+    PyViCareInvalidDataError,
+    PyViCareRateLimitError,
+)
 
 
 def _to_vicare_time(value: time) -> str:
@@ -203,6 +217,11 @@ class ViCareWater(ViCareEntity, WaterHeaterEntity):
                 translation_key="circulation_schedule_not_set",
                 translation_placeholders={"error": str(err)},
             ) from err
+        except VICARE_API_ERRORS as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="api_error",
+            ) from err
 
     def _get_circulation_schedule(self) -> dict[str, Any]:
         """Return the raw circulation schedule or raise if unsupported."""
@@ -212,4 +231,9 @@ class ViCareWater(ViCareEntity, WaterHeaterEntity):
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="circulation_schedule_not_supported",
+            ) from err
+        except VICARE_API_ERRORS as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="api_error",
             ) from err

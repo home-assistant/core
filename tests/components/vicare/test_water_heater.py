@@ -5,7 +5,8 @@ from unittest.mock import patch
 
 import probatio
 import pytest
-from PyViCare.PyViCareUtils import PyViCareCommandError
+from PyViCare.PyViCareUtils import PyViCareCommandError, PyViCareRateLimitError
+from requests.exceptions import ConnectionError as RequestConnectionError
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.vicare.const import DOMAIN
@@ -121,6 +122,7 @@ async def test_set_circulation_schedule(
                 {"from": "06:00:00", "to": "08:30", "mode": "on"},
                 {"from": "22:00", "to": "24:00", "mode": "on"},
             ],
+            "tuesday": [{"from": "23:00:00", "to": "24:00:00", "mode": "on"}],
             "sunday": [],
         },
         blocking=True,
@@ -136,6 +138,9 @@ async def test_set_circulation_schedule(
                 "mon": [
                     {"start": "06:00", "end": "08:30", "mode": "on", "position": 0},
                     {"start": "22:00", "end": "24:00", "mode": "on", "position": 1},
+                ],
+                "tue": [
+                    {"start": "23:00", "end": "24:00", "mode": "on", "position": 0}
                 ],
                 "sun": [],
             }
@@ -181,6 +186,9 @@ async def test_circulation_schedule_round_trip(
     "slot",
     [
         pytest.param({"from": "06:05", "to": "08:00", "mode": "on"}, id="off_grid"),
+        pytest.param(
+            {"from": "06:00:30", "to": "08:00", "mode": "on"}, id="with_seconds"
+        ),
         pytest.param({"from": "25:00", "to": "08:00", "mode": "on"}, id="bad_hour"),
         pytest.param(
             {"from": "08:00", "to": "06:00", "mode": "on"}, id="to_before_from"
@@ -208,16 +216,42 @@ async def test_set_circulation_schedule_invalid_slot(
         )
 
 
-async def test_set_circulation_schedule_command_error(
+@pytest.mark.parametrize(
+    ("side_effect", "translation_key"),
+    [
+        pytest.param(
+            PyViCareCommandError("invalid mode"),
+            "circulation_schedule_not_set",
+            id="command_error",
+        ),
+        pytest.param(
+            RequestConnectionError("unreachable"), "api_error", id="connection_error"
+        ),
+        pytest.param(
+            PyViCareRateLimitError(
+                {
+                    "extendedPayload": {
+                        "name": "rate limit",
+                        "requestCountLimit": 1450,
+                        "limitReset": 1584462010106,
+                    }
+                }
+            ),
+            "api_error",
+            id="rate_limit",
+        ),
+    ],
+)
+async def test_set_circulation_schedule_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    side_effect: Exception,
+    translation_key: str,
 ) -> None:
-    """Test a rejected schedule is reported to the user."""
+    """Test a failing schedule write is reported to the user."""
     mock_vicare = MockPyViCare(CIRCULATION_SCHEDULE_FIXTURES)
     await _setup_water_heater(hass, mock_config_entry, mock_vicare)
-    mock_vicare.devices[0].service.setProperty.side_effect = PyViCareCommandError(
-        "invalid mode"
-    )
+    mock_vicare.devices[0].service.setProperty.side_effect = side_effect
 
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
@@ -225,11 +259,37 @@ async def test_set_circulation_schedule_command_error(
             "set_circulation_schedule",
             {
                 ATTR_ENTITY_ID: ENTITY_WATER_HEATER,
-                "monday": [{"from": "06:00", "to": "08:00", "mode": "foo"}],
+                "monday": [{"from": "06:00", "to": "08:00", "mode": "on"}],
             },
             blocking=True,
         )
-    assert exc_info.value.translation_key == "circulation_schedule_not_set"
+    assert exc_info.value.translation_key == translation_key
+
+
+async def test_get_circulation_schedule_api_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a failing schedule read is reported to the user."""
+    mock_vicare = MockPyViCare(CIRCULATION_SCHEDULE_FIXTURES)
+    await _setup_water_heater(hass, mock_config_entry, mock_vicare)
+
+    with (
+        patch.object(
+            mock_vicare.devices[0].service,
+            "getProperty",
+            side_effect=RequestConnectionError("unreachable"),
+        ),
+        pytest.raises(HomeAssistantError) as exc_info,
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            "get_circulation_schedule",
+            {ATTR_ENTITY_ID: ENTITY_WATER_HEATER},
+            blocking=True,
+            return_response=True,
+        )
+    assert exc_info.value.translation_key == "api_error"
 
 
 @pytest.mark.parametrize(
