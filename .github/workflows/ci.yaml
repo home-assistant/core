@@ -1197,7 +1197,7 @@ jobs:
       - name: Install SQL Python libraries
         run: |
           . venv/bin/activate
-          uv pip install psycopg2 sqlalchemy_utils
+          uv pip install psycopg sqlalchemy_utils
       - name: Compile English translations
         run: |
           . venv/bin/activate
