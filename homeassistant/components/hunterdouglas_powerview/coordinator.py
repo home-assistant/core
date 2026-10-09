@@ -75,19 +75,19 @@ class PowerviewShadeUpdateCoordinator(DataUpdateCoordinator[PowerviewShadeData])
 
         # Clean up stale devices
         current_shade_ids = set(shade_entries.processed.keys())
-    
+
         device_registry = dr.async_get(self.hass)
         devices = dr.async_entries_for_config_entry(
             device_registry, self.config_entry.entry_id
         )
-    
+
         # Audit registry devices to catch phantoms
         for device in devices:
             # Only include shades, don't include the hub device
             if device.via_device_id is not None:
                 for identifier in device.identifiers:
                     if (
-                        identifier[0] == DOMAIN 
+                        identifier[0] == DOMAIN
                         and identifier[1] not in current_shade_ids
                     ):
                         _LOGGER.info(
