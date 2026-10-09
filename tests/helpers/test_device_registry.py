@@ -4643,18 +4643,6 @@ def test_device_info_deprecated_parameters(parameter: str, value: Any) -> None:
     assert dict(device_info) == {parameter: value}
 
 
-def test_device_info_pop_default() -> None:
-    """Test popping an unset field returns the default, even when it is UNDEFINED."""
-    device_info = dr.DeviceInfo(name="name")
-
-    assert device_info.pop("model", UNDEFINED) is UNDEFINED
-    assert device_info.pop("model", None) is None
-    with pytest.raises(KeyError):
-        device_info.pop("model")
-    assert device_info.pop("name") == "name"
-    assert dict(device_info) == {}
-
-
 def test_device_info_rejects_unknown_key() -> None:
     """Test a device info rejects setting a key which is not a field."""
     device_info = dr.DeviceInfo(name="name")

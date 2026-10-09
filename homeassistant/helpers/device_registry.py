@@ -134,9 +134,6 @@ class DeviceEntryDisabler(StrEnum):
 
 type _DeviceInfoLike = _DeviceInfoMapping | Mapping[str, Any]
 
-# Marks a pop without default, as UNDEFINED is a valid default
-_NO_DEFAULT: Any = object()
-
 
 class _DeviceInfoMapping:
     """Dict-style access for the device info dataclasses.
@@ -240,18 +237,6 @@ class _DeviceInfoMapping:
         # Integrations merge fields in with `device_info.update(...)`
         for key, value in other.items():
             self[key] = value
-
-    def pop(self, key: str, default: Any = _NO_DEFAULT) -> Any:
-        """Unset a field and return its value, or default if it is not set."""
-        # Integrations drop fields before passing a device info on
-        try:
-            value = self[key]
-        except KeyError:
-            if default is _NO_DEFAULT:
-                raise
-            return default
-        setattr(self, key, UNDEFINED)
-        return value
 
     def __or__(self, other: _DeviceInfoLike) -> Self:
         """Return a copy updated with the fields of another mapping."""
