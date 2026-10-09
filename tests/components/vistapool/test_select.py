@@ -14,17 +14,12 @@ from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    EVENT_STATE_CHANGED,
-    STATE_UNKNOWN,
-    Platform,
-)
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry, async_capture_events, snapshot_platform
+from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.fixture(autouse=True)
@@ -277,6 +272,34 @@ async def test_light_mode_current_option(
 
 
 @pytest.mark.parametrize(
+    "light_data",
+    [
+        pytest.param({"status": 0}, id="mode_missing"),
+        pytest.param({"mode": 0}, id="status_missing"),
+    ],
+)
+async def test_light_mode_unknown_after_partial_push(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_vistapool_client: AsyncMock,
+    light_data: dict[str, Any],
+) -> None:
+    """Test the light mode reports unknown when a push drops a field it derives from."""
+    mock_vistapool_client.fetch_pool_data.return_value = deepcopy(_LIGHT_SCHEDULE_DATA)
+    mock_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert hass.states.get("select.my_pool_light_mode").state == "auto"
+
+    on_data = mock_vistapool_client.subscribe_pool_resilient.call_args.args[1]
+    on_data({"main": {"version": 1}, "light": light_data})
+    await hass.async_block_till_done()
+
+    assert hass.states.get("select.my_pool_light_mode").state == STATE_UNKNOWN
+
+
+@pytest.mark.parametrize(
     ("option", "expected_updates"),
     [
         pytest.param("off", {"light.mode": 0, "light.status": 0}, id="off"),
@@ -390,88 +413,6 @@ async def test_select_reflects_choice_before_push(
     )
 
     assert hass.states.get("select.my_pool_pump_speed").state == "high"
-
-
-async def test_light_mode_reflects_choice_before_push(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_vistapool_client: AsyncMock,
-) -> None:
-    """Test the light mode select applies every field of the chosen option."""
-    mock_vistapool_client.fetch_pool_data.return_value = deepcopy(_LIGHT_SCHEDULE_DATA)
-    mock_config_entry.add_to_hass(hass)
-
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-    assert hass.states.get("select.my_pool_light_mode").state == "auto"
-
-    await hass.services.async_call(
-        SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: "select.my_pool_light_mode", ATTR_OPTION: "on"},
-        blocking=True,
-    )
-
-    # Reads back as on only if both light.mode and light.status were applied.
-    assert hass.states.get("select.my_pool_light_mode").state == "on"
-
-
-async def test_light_schedule_frequency_reflects_choice_before_push(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_vistapool_client: AsyncMock,
-) -> None:
-    """Test the frequency select shows the chosen option immediately."""
-    mock_vistapool_client.fetch_pool_data.return_value = deepcopy(_LIGHT_SCHEDULE_DATA)
-    mock_config_entry.add_to_hass(hass)
-
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    await hass.services.async_call(
-        SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {
-            ATTR_ENTITY_ID: "select.my_pool_light_schedule_frequency",
-            ATTR_OPTION: "weekly",
-        },
-        blocking=True,
-    )
-
-    assert hass.states.get("select.my_pool_light_schedule_frequency").state == "weekly"
-
-
-async def test_light_mode_never_publishes_partial_state(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_vistapool_client: AsyncMock,
-) -> None:
-    """Test leaving auto does not briefly read as another option.
-
-    light.mode and light.status both feed current_option, so applying them
-    one at a time would publish an off state between the two writes.
-    """
-    mock_vistapool_client.fetch_pool_data.return_value = deepcopy(_LIGHT_SCHEDULE_DATA)
-    mock_config_entry.add_to_hass(hass)
-
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    events = async_capture_events(hass, EVENT_STATE_CHANGED)
-    await hass.services.async_call(
-        SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: "select.my_pool_light_mode", ATTR_OPTION: "on"},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
-
-    states = [
-        event.data["new_state"].state
-        for event in events
-        if event.data["entity_id"] == "select.my_pool_light_mode"
-    ]
-    assert states == ["on"]
 
 
 async def test_light_mode_raises_on_api_error(

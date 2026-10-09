@@ -4,8 +4,8 @@ from contextlib import AbstractContextManager, nullcontext as does_not_raise
 import copy
 from unittest.mock import MagicMock, patch
 
+import probatio
 import pytest
-import voluptuous as vol
 from zwave_js_server.const import CommandClass
 from zwave_js_server.event import Event
 from zwave_js_server.model.node import Node
@@ -1024,7 +1024,7 @@ async def test_zwave_js_event_invalid_config_entry_id(
 
 async def test_invalid_trigger_configs(hass: HomeAssistant) -> None:
     """Test invalid trigger configs."""
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await TRIGGERS["event"].async_validate_complete_config(
             hass,
             {
@@ -1037,7 +1037,7 @@ async def test_invalid_trigger_configs(hass: HomeAssistant) -> None:
             },
         )
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await TRIGGERS["value_updated"].async_validate_complete_config(
             hass,
             {
@@ -1058,21 +1058,21 @@ async def test_invalid_trigger_configs(hass: HomeAssistant) -> None:
             "controller",
             "inclusion started",
             ["config_entry_id", "device_id"],
-            pytest.raises(vol.Invalid, match="must not contain"),
+            pytest.raises(probatio.Invalid, match="must not contain"),
             id="controller_with_device_id",
         ),
         pytest.param(
             "driver",
             "logging",
             ["config_entry_id", "entity_id"],
-            pytest.raises(vol.Invalid, match="must not contain"),
+            pytest.raises(probatio.Invalid, match="must not contain"),
             id="driver_with_entity_id",
         ),
         pytest.param(
             "node",
             "interview stage completed",
             [],
-            pytest.raises(vol.Invalid, match="must contain"),
+            pytest.raises(probatio.Invalid, match="must contain"),
             id="node_without_targets",
         ),
         pytest.param(
@@ -1086,7 +1086,7 @@ async def test_invalid_trigger_configs(hass: HomeAssistant) -> None:
             "controller",
             "inclusion started",
             [],
-            pytest.raises(vol.Invalid, match="must contain config_entry_id"),
+            pytest.raises(probatio.Invalid, match="must contain config_entry_id"),
             id="controller_without_config_entry",
         ),
     ],
@@ -1652,12 +1652,14 @@ async def test_value_updated_command_class_options(hass: HomeAssistant) -> None:
 )
 @pytest.mark.usefixtures("integration")
 async def test_trigger_description_fields_match_schema(
-    hass: HomeAssistant, trigger_type: str, options_schema: dict[vol.Marker, object]
+    hass: HomeAssistant,
+    trigger_type: str,
+    options_schema: dict[probatio.Marker, object],
 ) -> None:
     """Test the described fields match the trigger's options schema."""
     descriptions = await trigger.async_get_all_descriptions(hass)
     fields = descriptions[trigger_type]["fields"]
     assert set(fields) == {str(key) for key in options_schema}
     assert {name for name, field in fields.items() if field["required"]} == {
-        str(key) for key in options_schema if isinstance(key, vol.Required)
+        str(key) for key in options_schema if isinstance(key, probatio.Required)
     }

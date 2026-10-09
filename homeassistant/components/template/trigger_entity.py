@@ -4,7 +4,7 @@ from collections.abc import Callable
 import logging
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import CONF_CONDITIONS, CONF_VARIABLES
 from homeassistant.core import HomeAssistant, callback
@@ -57,6 +57,17 @@ class TriggerEntity(  # pylint: disable=home-assistant-enforce-class-module
         self._skip_rendered_result: list[str] = []
         if self.skip_rendered_result is not None:
             self._skip_rendered_result.extend(self.skip_rendered_result)
+
+    @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Opt in to in-place entity_id changes.
+
+        Can be removed when backwards compatibility is disabled for core
+        integrations, i.e. once all core integrations have been migrated
+        to in-place entity ID change.
+        """
+        super().async_entity_id_changed(old_entity_id)
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -274,7 +285,7 @@ class TriggerEntity(  # pylint: disable=home-assistant-enforce-class-module
             validated = {}
             try:
                 result = template_render_complex(attributes_template, variables)
-                validated = vol.All(
+                validated = probatio.All(
                     dict,
                     validate_attributes(
                         self.entity_id,
@@ -286,7 +297,7 @@ class TriggerEntity(  # pylint: disable=home-assistant-enforce-class-module
                 log_triggered_template_error(
                     self.entity_id, err, attribute=CONF_ATTRIBUTES
                 )
-            except vol.Invalid as err:
+            except probatio.Invalid as err:
                 log_validation_error(
                     result, attributes_template, CONF_ATTRIBUTES, self.entity_id, err
                 )

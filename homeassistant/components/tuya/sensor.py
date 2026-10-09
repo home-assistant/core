@@ -13,10 +13,22 @@ from tuya_device_handlers.device_wrapper.common import (
 )
 from tuya_device_handlers.device_wrapper.sensor import (
     DeltaIntegerWrapper,
+    ElectricityApparentPowerHexStringWrapper,
+    ElectricityApparentPowerJsonWrapper,
+    ElectricityApparentPowerRawWrapper,
+    ElectricityCurrentHexStringWrapper,
     ElectricityCurrentJsonWrapper,
     ElectricityCurrentRawWrapper,
+    ElectricityPowerFactorHexStringWrapper,
+    ElectricityPowerFactorJsonWrapper,
+    ElectricityPowerFactorRawWrapper,
+    ElectricityPowerHexStringWrapper,
     ElectricityPowerJsonWrapper,
     ElectricityPowerRawWrapper,
+    ElectricityReactivePowerHexStringWrapper,
+    ElectricityReactivePowerJsonWrapper,
+    ElectricityReactivePowerRawWrapper,
+    ElectricityVoltageHexStringWrapper,
     ElectricityVoltageJsonWrapper,
     ElectricityVoltageRawWrapper,
     WindDirectionEnumWrapper,
@@ -53,26 +65,151 @@ from .const import (
     DPCode,
 )
 from .coordinator import TuyaConfigEntry
-from .entity import TuyaEntity
+from .entity import TuyaEntity, TuyaEntityDescription
 from .util import get_device_temp_unit_convert
-
-CURRENT_WRAPPER = (ElectricityCurrentRawWrapper, ElectricityCurrentJsonWrapper)
-POWER_WRAPPER = (ElectricityPowerRawWrapper, ElectricityPowerJsonWrapper)
-VOLTAGE_WRAPPER = (ElectricityVoltageRawWrapper, ElectricityVoltageJsonWrapper)
 
 
 @dataclass(frozen=True)
-class TuyaSensorEntityDescription(SensorEntityDescription):
+class TuyaSensorEntityDescription(TuyaEntityDescription, SensorEntityDescription):
     """Describes Tuya sensor entity."""
 
     dpcode: DPCode | None = None
     wrapper_class: tuple[type[DPCodeTypeInformationWrapper], ...] | None = None
 
 
+def _electricity_data(dpcode: DPCode) -> tuple[TuyaSensorEntityDescription, ...]:
+    """Build the sensors extracted from a DPCode holding electricity data.
+
+    The DPCode value doubles as the translation key prefix (e.g. `phase_a`).
+    """
+    return (
+        TuyaSensorEntityDescription(
+            key=f"{dpcode}electriccurrent",
+            dpcode=dpcode,
+            translation_key=f"{dpcode}_current",
+            device_class=SensorDeviceClass.CURRENT,
+            state_class=SensorStateClass.MEASUREMENT,
+            wrapper_class=(ElectricityCurrentRawWrapper, ElectricityCurrentJsonWrapper),
+        ),
+        TuyaSensorEntityDescription(
+            key=f"{dpcode}power",
+            dpcode=dpcode,
+            translation_key=f"{dpcode}_power",
+            device_class=SensorDeviceClass.POWER,
+            state_class=SensorStateClass.MEASUREMENT,
+            wrapper_class=(ElectricityPowerRawWrapper, ElectricityPowerJsonWrapper),
+        ),
+        TuyaSensorEntityDescription(
+            key=f"{dpcode}voltage",
+            dpcode=dpcode,
+            translation_key=f"{dpcode}_voltage",
+            device_class=SensorDeviceClass.VOLTAGE,
+            state_class=SensorStateClass.MEASUREMENT,
+            wrapper_class=(ElectricityVoltageRawWrapper, ElectricityVoltageJsonWrapper),
+        ),
+        TuyaSensorEntityDescription(
+            key=f"{dpcode}reactivepower",
+            dpcode=dpcode,
+            translation_key=f"{dpcode}_reactive_power",
+            device_class=SensorDeviceClass.REACTIVE_POWER,
+            state_class=SensorStateClass.MEASUREMENT,
+            wrapper_class=(
+                ElectricityReactivePowerRawWrapper,
+                ElectricityReactivePowerJsonWrapper,
+            ),
+        ),
+        TuyaSensorEntityDescription(
+            key=f"{dpcode}apparentpower",
+            dpcode=dpcode,
+            translation_key=f"{dpcode}_apparent_power",
+            device_class=SensorDeviceClass.APPARENT_POWER,
+            state_class=SensorStateClass.MEASUREMENT,
+            wrapper_class=(
+                ElectricityApparentPowerRawWrapper,
+                ElectricityApparentPowerJsonWrapper,
+            ),
+        ),
+        TuyaSensorEntityDescription(
+            key=f"{dpcode}powerfactor",
+            dpcode=dpcode,
+            translation_key=f"{dpcode}_power_factor",
+            device_class=SensorDeviceClass.POWER_FACTOR,
+            state_class=SensorStateClass.MEASUREMENT,
+            wrapper_class=(
+                ElectricityPowerFactorRawWrapper,
+                ElectricityPowerFactorJsonWrapper,
+            ),
+        ),
+    )
+
+
+def _indexed_electricity_data(
+    dpcode: DPCode, index: int
+) -> tuple[TuyaSensorEntityDescription, ...]:
+    """Build sensors extracted from an indexed hex-string electricity DPCode."""
+    return (
+        TuyaSensorEntityDescription(
+            key=f"{dpcode}electriccurrent",
+            dpcode=dpcode,
+            translation_key="indexed_current",
+            translation_placeholders={"index": str(index)},
+            device_class=SensorDeviceClass.CURRENT,
+            state_class=SensorStateClass.MEASUREMENT,
+            wrapper_class=(ElectricityCurrentHexStringWrapper,),
+        ),
+        TuyaSensorEntityDescription(
+            key=f"{dpcode}power",
+            dpcode=dpcode,
+            translation_key="indexed_power",
+            translation_placeholders={"index": str(index)},
+            device_class=SensorDeviceClass.POWER,
+            state_class=SensorStateClass.MEASUREMENT,
+            wrapper_class=(ElectricityPowerHexStringWrapper,),
+        ),
+        TuyaSensorEntityDescription(
+            key=f"{dpcode}voltage",
+            dpcode=dpcode,
+            translation_key="indexed_voltage",
+            translation_placeholders={"index": str(index)},
+            device_class=SensorDeviceClass.VOLTAGE,
+            state_class=SensorStateClass.MEASUREMENT,
+            wrapper_class=(ElectricityVoltageHexStringWrapper,),
+        ),
+        TuyaSensorEntityDescription(
+            key=f"{dpcode}reactivepower",
+            dpcode=dpcode,
+            translation_key="indexed_reactive_power",
+            translation_placeholders={"index": str(index)},
+            device_class=SensorDeviceClass.REACTIVE_POWER,
+            state_class=SensorStateClass.MEASUREMENT,
+            wrapper_class=(ElectricityReactivePowerHexStringWrapper,),
+        ),
+        TuyaSensorEntityDescription(
+            key=f"{dpcode}apparentpower",
+            dpcode=dpcode,
+            translation_key="indexed_apparent_power",
+            translation_placeholders={"index": str(index)},
+            device_class=SensorDeviceClass.APPARENT_POWER,
+            state_class=SensorStateClass.MEASUREMENT,
+            wrapper_class=(ElectricityApparentPowerHexStringWrapper,),
+        ),
+        TuyaSensorEntityDescription(
+            key=f"{dpcode}powerfactor",
+            dpcode=dpcode,
+            translation_key="indexed_power_factor",
+            translation_placeholders={"index": str(index)},
+            device_class=SensorDeviceClass.POWER_FACTOR,
+            state_class=SensorStateClass.MEASUREMENT,
+            wrapper_class=(ElectricityPowerFactorHexStringWrapper,),
+        ),
+    )
+
+
 # Commonly used battery sensors, that are reused in the sensors down below.
 BATTERY_SENSORS: tuple[TuyaSensorEntityDescription, ...] = (
     TuyaSensorEntityDescription(
         key=DPCode.BATTERY_PERCENTAGE,
+        # pylint: disable-next=home-assistant-redundant-translation-key
         translation_key="battery",
         native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
@@ -81,6 +218,7 @@ BATTERY_SENSORS: tuple[TuyaSensorEntityDescription, ...] = (
     ),
     TuyaSensorEntityDescription(
         key=DPCode.BATTERY,  # Used by non-standard contact sensor implementations
+        # pylint: disable-next=home-assistant-redundant-translation-key
         translation_key="battery",
         native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
@@ -94,6 +232,7 @@ BATTERY_SENSORS: tuple[TuyaSensorEntityDescription, ...] = (
     ),
     TuyaSensorEntityDescription(
         key=DPCode.BATTERY_VALUE,
+        # pylint: disable-next=home-assistant-redundant-translation-key
         translation_key="battery",
         device_class=SensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -101,6 +240,7 @@ BATTERY_SENSORS: tuple[TuyaSensorEntityDescription, ...] = (
     ),
     TuyaSensorEntityDescription(
         key=DPCode.VA_BATTERY,
+        # pylint: disable-next=home-assistant-redundant-translation-key
         translation_key="battery",
         device_class=SensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -115,6 +255,7 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
     DeviceCategory.AQCZ: (
         TuyaSensorEntityDescription(
             key=DPCode.CUR_CURRENT,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="current",
             device_class=SensorDeviceClass.CURRENT,
             state_class=SensorStateClass.MEASUREMENT,
@@ -123,6 +264,7 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         TuyaSensorEntityDescription(
             key=DPCode.CUR_POWER,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="power",
             device_class=SensorDeviceClass.POWER,
             state_class=SensorStateClass.MEASUREMENT,
@@ -130,6 +272,7 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         TuyaSensorEntityDescription(
             key=DPCode.CUR_VOLTAGE,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="voltage",
             device_class=SensorDeviceClass.VOLTAGE,
             state_class=SensorStateClass.MEASUREMENT,
@@ -165,18 +308,21 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
     DeviceCategory.CO2BJ: (
         TuyaSensorEntityDescription(
             key=DPCode.HUMIDITY_VALUE,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="humidity",
             device_class=SensorDeviceClass.HUMIDITY,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.TEMP_CURRENT,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="temperature",
             device_class=SensorDeviceClass.TEMPERATURE,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.CO2_VALUE,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="carbon_dioxide",
             device_class=SensorDeviceClass.CO2,
             state_class=SensorStateClass.MEASUREMENT,
@@ -189,12 +335,14 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         TuyaSensorEntityDescription(
             key=DPCode.VOC_VALUE,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="voc",
             device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.PM25_VALUE,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="pm25",
             device_class=SensorDeviceClass.PM25,
             state_class=SensorStateClass.MEASUREMENT,
@@ -202,6 +350,7 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         TuyaSensorEntityDescription(
             key=DPCode.PM10,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="pm10",
             device_class=SensorDeviceClass.PM10,
             state_class=SensorStateClass.MEASUREMENT,
@@ -211,6 +360,7 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
     DeviceCategory.COBJ: (
         TuyaSensorEntityDescription(
             key=DPCode.CO_VALUE,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="carbon_monoxide",
             device_class=SensorDeviceClass.CO,
             state_class=SensorStateClass.MEASUREMENT,
@@ -221,12 +371,14 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
     DeviceCategory.CS: (
         TuyaSensorEntityDescription(
             key=DPCode.TEMP_INDOOR,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="temperature",
             device_class=SensorDeviceClass.TEMPERATURE,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.HUMIDITY_INDOOR,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="humidity",
             device_class=SensorDeviceClass.HUMIDITY,
             state_class=SensorStateClass.MEASUREMENT,
@@ -281,6 +433,7 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
     DeviceCategory.CZ: (
         TuyaSensorEntityDescription(
             key=DPCode.CUR_CURRENT,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="current",
             device_class=SensorDeviceClass.CURRENT,
             state_class=SensorStateClass.MEASUREMENT,
@@ -288,12 +441,14 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         TuyaSensorEntityDescription(
             key=DPCode.CUR_POWER,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="power",
             device_class=SensorDeviceClass.POWER,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.CUR_VOLTAGE,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="voltage",
             device_class=SensorDeviceClass.VOLTAGE,
             state_class=SensorStateClass.MEASUREMENT,
@@ -423,12 +578,14 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         TuyaSensorEntityDescription(
             key=DPCode.VOC_VALUE,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="voc",
             device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.PM25_VALUE,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="pm25",
             device_class=SensorDeviceClass.PM25,
             state_class=SensorStateClass.MEASUREMENT,
@@ -436,6 +593,7 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         TuyaSensorEntityDescription(
             key=DPCode.CO_VALUE,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="carbon_monoxide",
             device_class=SensorDeviceClass.CO,
             state_class=SensorStateClass.MEASUREMENT,
@@ -443,6 +601,7 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         TuyaSensorEntityDescription(
             key=DPCode.CO2_VALUE,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="carbon_dioxide",
             device_class=SensorDeviceClass.CO2,
             state_class=SensorStateClass.MEASUREMENT,
@@ -464,18 +623,21 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         TuyaSensorEntityDescription(
             key=DPCode.BRIGHT_VALUE,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="illuminance",
             device_class=SensorDeviceClass.ILLUMINANCE,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.TEMP_CURRENT,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="temperature",
             device_class=SensorDeviceClass.TEMPERATURE,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.HUMIDITY_VALUE,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="humidity",
             device_class=SensorDeviceClass.HUMIDITY,
             state_class=SensorStateClass.MEASUREMENT,
@@ -538,80 +700,12 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             entity_category=EntityCategory.DIAGNOSTIC,
             state_class=SensorStateClass.MEASUREMENT,
         ),
-        TuyaSensorEntityDescription(
-            key=f"{DPCode.PHASE_A}electriccurrent",
-            dpcode=DPCode.PHASE_A,
-            translation_key="phase_a_current",
-            device_class=SensorDeviceClass.CURRENT,
-            state_class=SensorStateClass.MEASUREMENT,
-            wrapper_class=CURRENT_WRAPPER,
-        ),
-        TuyaSensorEntityDescription(
-            key=f"{DPCode.PHASE_A}power",
-            dpcode=DPCode.PHASE_A,
-            translation_key="phase_a_power",
-            device_class=SensorDeviceClass.POWER,
-            state_class=SensorStateClass.MEASUREMENT,
-            wrapper_class=POWER_WRAPPER,
-        ),
-        TuyaSensorEntityDescription(
-            key=f"{DPCode.PHASE_A}voltage",
-            dpcode=DPCode.PHASE_A,
-            translation_key="phase_a_voltage",
-            device_class=SensorDeviceClass.VOLTAGE,
-            state_class=SensorStateClass.MEASUREMENT,
-            wrapper_class=VOLTAGE_WRAPPER,
-        ),
-        TuyaSensorEntityDescription(
-            key=f"{DPCode.PHASE_B}electriccurrent",
-            dpcode=DPCode.PHASE_B,
-            translation_key="phase_b_current",
-            device_class=SensorDeviceClass.CURRENT,
-            state_class=SensorStateClass.MEASUREMENT,
-            wrapper_class=CURRENT_WRAPPER,
-        ),
-        TuyaSensorEntityDescription(
-            key=f"{DPCode.PHASE_B}power",
-            dpcode=DPCode.PHASE_B,
-            translation_key="phase_b_power",
-            device_class=SensorDeviceClass.POWER,
-            state_class=SensorStateClass.MEASUREMENT,
-            wrapper_class=POWER_WRAPPER,
-        ),
-        TuyaSensorEntityDescription(
-            key=f"{DPCode.PHASE_B}voltage",
-            dpcode=DPCode.PHASE_B,
-            translation_key="phase_b_voltage",
-            device_class=SensorDeviceClass.VOLTAGE,
-            state_class=SensorStateClass.MEASUREMENT,
-            wrapper_class=VOLTAGE_WRAPPER,
-        ),
-        TuyaSensorEntityDescription(
-            key=f"{DPCode.PHASE_C}electriccurrent",
-            dpcode=DPCode.PHASE_C,
-            translation_key="phase_c_current",
-            device_class=SensorDeviceClass.CURRENT,
-            state_class=SensorStateClass.MEASUREMENT,
-            wrapper_class=CURRENT_WRAPPER,
-        ),
-        TuyaSensorEntityDescription(
-            key=f"{DPCode.PHASE_C}power",
-            dpcode=DPCode.PHASE_C,
-            translation_key="phase_c_power",
-            device_class=SensorDeviceClass.POWER,
-            state_class=SensorStateClass.MEASUREMENT,
-            wrapper_class=POWER_WRAPPER,
-        ),
-        TuyaSensorEntityDescription(
-            key=f"{DPCode.PHASE_C}voltage",
-            dpcode=DPCode.PHASE_C,
-            translation_key="phase_c_voltage",
-            device_class=SensorDeviceClass.VOLTAGE,
-            state_class=SensorStateClass.MEASUREMENT,
-            wrapper_class=VOLTAGE_WRAPPER,
-        ),
+        *_electricity_data(DPCode.PHASE_A),
+        *_electricity_data(DPCode.PHASE_B),
+        *_electricity_data(DPCode.PHASE_C),
         TuyaSensorEntityDescription(
             key=DPCode.CUR_CURRENT,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="current",
             device_class=SensorDeviceClass.CURRENT,
             state_class=SensorStateClass.MEASUREMENT,
@@ -620,6 +714,7 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         TuyaSensorEntityDescription(
             key=DPCode.CUR_POWER,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="power",
             device_class=SensorDeviceClass.POWER,
             state_class=SensorStateClass.MEASUREMENT,
@@ -627,6 +722,7 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         TuyaSensorEntityDescription(
             key=DPCode.CUR_VOLTAGE,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="voltage",
             device_class=SensorDeviceClass.VOLTAGE,
             state_class=SensorStateClass.MEASUREMENT,
@@ -637,6 +733,7 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
     DeviceCategory.FS: (
         TuyaSensorEntityDescription(
             key=DPCode.TEMP_CURRENT,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="temperature",
             device_class=SensorDeviceClass.TEMPERATURE,
             state_class=SensorStateClass.MEASUREMENT,
@@ -650,18 +747,21 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         TuyaSensorEntityDescription(
             key=DPCode.TEMP_CURRENT,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="temperature",
             device_class=SensorDeviceClass.TEMPERATURE,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.HUMIDITY_VALUE,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="humidity",
             device_class=SensorDeviceClass.HUMIDITY,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.CO2_VALUE,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="carbon_dioxide",
             device_class=SensorDeviceClass.CO2,
             state_class=SensorStateClass.MEASUREMENT,
@@ -674,12 +774,14 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         TuyaSensorEntityDescription(
             key=DPCode.VOC_VALUE,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="voc",
             device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.PM25_VALUE,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="pm25",
             device_class=SensorDeviceClass.PM25,
             state_class=SensorStateClass.MEASUREMENT,
@@ -687,6 +789,7 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         TuyaSensorEntityDescription(
             key=DPCode.PM10,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="pm10",
             device_class=SensorDeviceClass.PM10,
             state_class=SensorStateClass.MEASUREMENT,
@@ -697,6 +800,7 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
     DeviceCategory.JQBJ: (
         TuyaSensorEntityDescription(
             key=DPCode.CO2_VALUE,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="carbon_dioxide",
             device_class=SensorDeviceClass.CO2,
             state_class=SensorStateClass.MEASUREMENT,
@@ -704,12 +808,14 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         TuyaSensorEntityDescription(
             key=DPCode.VOC_VALUE,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="voc",
             device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.PM25_VALUE,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="pm25",
             device_class=SensorDeviceClass.PM25,
             state_class=SensorStateClass.MEASUREMENT,
@@ -717,12 +823,14 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         TuyaSensorEntityDescription(
             key=DPCode.VA_HUMIDITY,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="humidity",
             device_class=SensorDeviceClass.HUMIDITY,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.VA_TEMPERATURE,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="temperature",
             device_class=SensorDeviceClass.TEMPERATURE,
             state_class=SensorStateClass.MEASUREMENT,
@@ -737,18 +845,21 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
     DeviceCategory.JSQ: (
         TuyaSensorEntityDescription(
             key=DPCode.HUMIDITY_CURRENT,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="humidity",
             device_class=SensorDeviceClass.HUMIDITY,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.TEMP_CURRENT,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="temperature",
             device_class=SensorDeviceClass.TEMPERATURE,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.TEMP_CURRENT_F,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="temperature",
             device_class=SensorDeviceClass.TEMPERATURE,
             state_class=SensorStateClass.MEASUREMENT,
@@ -770,6 +881,7 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
     DeviceCategory.KG: (
         TuyaSensorEntityDescription(
             key=DPCode.CUR_CURRENT,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="current",
             device_class=SensorDeviceClass.CURRENT,
             state_class=SensorStateClass.MEASUREMENT,
@@ -777,12 +889,14 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         TuyaSensorEntityDescription(
             key=DPCode.CUR_POWER,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="power",
             device_class=SensorDeviceClass.POWER,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.CUR_VOLTAGE,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="voltage",
             device_class=SensorDeviceClass.VOLTAGE,
             state_class=SensorStateClass.MEASUREMENT,
@@ -811,6 +925,7 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         TuyaSensorEntityDescription(
             key=DPCode.PM25,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="pm25",
             device_class=SensorDeviceClass.PM25,
             state_class=SensorStateClass.MEASUREMENT,
@@ -818,12 +933,14 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         TuyaSensorEntityDescription(
             key=DPCode.TEMP,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="temperature",
             device_class=SensorDeviceClass.TEMPERATURE,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.HUMIDITY,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="humidity",
             device_class=SensorDeviceClass.HUMIDITY,
             state_class=SensorStateClass.MEASUREMENT,
@@ -865,24 +982,28 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         TuyaSensorEntityDescription(
             key=DPCode.BRIGHT_VALUE,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="illuminance",
             device_class=SensorDeviceClass.ILLUMINANCE,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.TEMP_CURRENT,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="temperature",
             device_class=SensorDeviceClass.TEMPERATURE,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.HUMIDITY_VALUE,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="humidity",
             device_class=SensorDeviceClass.HUMIDITY,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.CO2_VALUE,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="carbon_dioxide",
             device_class=SensorDeviceClass.CO2,
             state_class=SensorStateClass.MEASUREMENT,
@@ -935,6 +1056,7 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
     DeviceCategory.PM2_5: (
         TuyaSensorEntityDescription(
             key=DPCode.PM25_VALUE,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="pm25",
             device_class=SensorDeviceClass.PM25,
             state_class=SensorStateClass.MEASUREMENT,
@@ -947,18 +1069,21 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         TuyaSensorEntityDescription(
             key=DPCode.VOC_VALUE,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="voc",
             device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.TEMP_CURRENT,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="temperature",
             device_class=SensorDeviceClass.TEMPERATURE,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.CO2_VALUE,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="carbon_dioxide",
             device_class=SensorDeviceClass.CO2,
             state_class=SensorStateClass.MEASUREMENT,
@@ -966,12 +1091,14 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         TuyaSensorEntityDescription(
             key=DPCode.HUMIDITY_VALUE,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="humidity",
             device_class=SensorDeviceClass.HUMIDITY,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.PM1,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="pm1",
             device_class=SensorDeviceClass.PM1,
             state_class=SensorStateClass.MEASUREMENT,
@@ -979,6 +1106,7 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         TuyaSensorEntityDescription(
             key=DPCode.PM10,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="pm10",
             device_class=SensorDeviceClass.PM10,
             state_class=SensorStateClass.MEASUREMENT,
@@ -1011,6 +1139,7 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         TuyaSensorEntityDescription(
             key=DPCode.TEMP_CURRENT,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="temperature",
             device_class=SensorDeviceClass.TEMPERATURE,
             state_class=SensorStateClass.MEASUREMENT,
@@ -1020,6 +1149,7 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
     DeviceCategory.QN: (
         TuyaSensorEntityDescription(
             key=DPCode.WORK_POWER,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="power",
             device_class=SensorDeviceClass.POWER,
             state_class=SensorStateClass.MEASUREMENT,
@@ -1028,12 +1158,14 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
     DeviceCategory.QXJ: (
         TuyaSensorEntityDescription(
             key=DPCode.VA_TEMPERATURE,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="temperature",
             device_class=SensorDeviceClass.TEMPERATURE,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.TEMP_CURRENT,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="temperature",
             device_class=SensorDeviceClass.TEMPERATURE,
             state_class=SensorStateClass.MEASUREMENT,
@@ -1067,12 +1199,14 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         TuyaSensorEntityDescription(
             key=DPCode.VA_HUMIDITY,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="humidity",
             device_class=SensorDeviceClass.HUMIDITY,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.HUMIDITY_VALUE,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="humidity",
             device_class=SensorDeviceClass.HUMIDITY,
             state_class=SensorStateClass.MEASUREMENT,
@@ -1112,6 +1246,7 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         TuyaSensorEntityDescription(
             key=DPCode.BRIGHT_VALUE,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="illuminance",
             device_class=SensorDeviceClass.ILLUMINANCE,
             state_class=SensorStateClass.MEASUREMENT,
@@ -1129,6 +1264,7 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         TuyaSensorEntityDescription(
             key=DPCode.RAIN_RATE,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="precipitation_intensity",
             device_class=SensorDeviceClass.PRECIPITATION_INTENSITY,
             state_class=SensorStateClass.MEASUREMENT,
@@ -1140,6 +1276,7 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         TuyaSensorEntityDescription(
             key=DPCode.WIND_DIRECT,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="wind_direction",
             device_class=SensorDeviceClass.WIND_DIRECTION,
             state_class=SensorStateClass.MEASUREMENT,
@@ -1228,6 +1365,7 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         TuyaSensorEntityDescription(
             key=DPCode.ELECTRICITY_LEFT,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="battery",
             device_class=SensorDeviceClass.BATTERY,
             entity_category=EntityCategory.DIAGNOSTIC,
@@ -1254,6 +1392,25 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             translation_key="irrigation_status",
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
+        TuyaSensorEntityDescription(
+            key=DPCode.WATER_ONCE,
+            translation_key="water_once",
+            device_class=SensorDeviceClass.WATER,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.WATER_TOTAL,
+            translation_key="water_total",
+            device_class=SensorDeviceClass.WATER,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.SENSOR_TEMPERATURE,
+            # pylint: disable-next=home-assistant-redundant-translation-key
+            translation_key="temperature",
+            device_class=SensorDeviceClass.TEMPERATURE,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
         *BATTERY_SENSORS,
     ),
     DeviceCategory.SGBJ: BATTERY_SENSORS,
@@ -1262,18 +1419,21 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
     DeviceCategory.SP: (
         TuyaSensorEntityDescription(
             key=DPCode.SENSOR_TEMPERATURE,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="temperature",
             device_class=SensorDeviceClass.TEMPERATURE,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.SENSOR_HUMIDITY,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="humidity",
             device_class=SensorDeviceClass.HUMIDITY,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.WIRELESS_ELECTRICITY,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="battery",
             device_class=SensorDeviceClass.BATTERY,
             entity_category=EntityCategory.DIAGNOSTIC,
@@ -1283,6 +1443,7 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
     DeviceCategory.SWTZ: (
         TuyaSensorEntityDescription(
             key=DPCode.TEMP_CURRENT,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="temperature",
             device_class=SensorDeviceClass.TEMPERATURE,
             state_class=SensorStateClass.MEASUREMENT,
@@ -1299,12 +1460,14 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
     DeviceCategory.SZ: (
         TuyaSensorEntityDescription(
             key=DPCode.TEMP_CURRENT,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="temperature",
             device_class=SensorDeviceClass.TEMPERATURE,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.HUMIDITY_CURRENT,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="humidity",
             device_class=SensorDeviceClass.HUMIDITY,
             state_class=SensorStateClass.MEASUREMENT,
@@ -1318,6 +1481,7 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         TuyaSensorEntityDescription(
             key=DPCode.TEMP_CURRENT,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="temperature",
             device_class=SensorDeviceClass.TEMPERATURE,
             state_class=SensorStateClass.MEASUREMENT,
@@ -1328,6 +1492,7 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
     DeviceCategory.TDQ: (
         TuyaSensorEntityDescription(
             key=DPCode.CUR_CURRENT,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="current",
             device_class=SensorDeviceClass.CURRENT,
             state_class=SensorStateClass.MEASUREMENT,
@@ -1335,12 +1500,14 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         TuyaSensorEntityDescription(
             key=DPCode.CUR_POWER,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="power",
             device_class=SensorDeviceClass.POWER,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.CUR_VOLTAGE,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="voltage",
             device_class=SensorDeviceClass.VOLTAGE,
             state_class=SensorStateClass.MEASUREMENT,
@@ -1354,30 +1521,35 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         TuyaSensorEntityDescription(
             key=DPCode.VA_TEMPERATURE,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="temperature",
             device_class=SensorDeviceClass.TEMPERATURE,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.TEMP_CURRENT,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="temperature",
             device_class=SensorDeviceClass.TEMPERATURE,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.VA_HUMIDITY,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="humidity",
             device_class=SensorDeviceClass.HUMIDITY,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.HUMIDITY_VALUE,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="humidity",
             device_class=SensorDeviceClass.HUMIDITY,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.BRIGHT_VALUE,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="illuminance",
             device_class=SensorDeviceClass.ILLUMINANCE,
             state_class=SensorStateClass.MEASUREMENT,
@@ -1388,6 +1560,7 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
     DeviceCategory.VOC: (
         TuyaSensorEntityDescription(
             key=DPCode.CO2_VALUE,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="carbon_dioxide",
             device_class=SensorDeviceClass.CO2,
             state_class=SensorStateClass.MEASUREMENT,
@@ -1395,6 +1568,7 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         TuyaSensorEntityDescription(
             key=DPCode.PM25_VALUE,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="pm25",
             device_class=SensorDeviceClass.PM25,
             state_class=SensorStateClass.MEASUREMENT,
@@ -1407,18 +1581,21 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         TuyaSensorEntityDescription(
             key=DPCode.HUMIDITY_VALUE,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="humidity",
             device_class=SensorDeviceClass.HUMIDITY,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.TEMP_CURRENT,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="temperature",
             device_class=SensorDeviceClass.TEMPERATURE,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.VOC_VALUE,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="voc",
             device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
             state_class=SensorStateClass.MEASUREMENT,
@@ -1430,18 +1607,21 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
     DeviceCategory.WKCZ: (
         TuyaSensorEntityDescription(
             key=DPCode.HUMIDITY_VALUE,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="humidity",
             device_class=SensorDeviceClass.HUMIDITY,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.TEMP_CURRENT,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="temperature",
             device_class=SensorDeviceClass.TEMPERATURE,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.CUR_CURRENT,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="current",
             device_class=SensorDeviceClass.CURRENT,
             state_class=SensorStateClass.MEASUREMENT,
@@ -1450,6 +1630,7 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         TuyaSensorEntityDescription(
             key=DPCode.CUR_POWER,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="power",
             device_class=SensorDeviceClass.POWER,
             state_class=SensorStateClass.MEASUREMENT,
@@ -1457,6 +1638,7 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         TuyaSensorEntityDescription(
             key=DPCode.CUR_VOLTAGE,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="voltage",
             device_class=SensorDeviceClass.VOLTAGE,
             state_class=SensorStateClass.MEASUREMENT,
@@ -1468,18 +1650,21 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
     DeviceCategory.WNYKQ: (
         TuyaSensorEntityDescription(
             key=DPCode.VA_TEMPERATURE,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="temperature",
             device_class=SensorDeviceClass.TEMPERATURE,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.VA_HUMIDITY,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="humidity",
             device_class=SensorDeviceClass.HUMIDITY,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.CUR_CURRENT,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="current",
             device_class=SensorDeviceClass.CURRENT,
             state_class=SensorStateClass.MEASUREMENT,
@@ -1489,6 +1674,7 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         TuyaSensorEntityDescription(
             key=DPCode.CUR_POWER,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="power",
             device_class=SensorDeviceClass.POWER,
             state_class=SensorStateClass.MEASUREMENT,
@@ -1497,6 +1683,7 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         TuyaSensorEntityDescription(
             key=DPCode.CUR_VOLTAGE,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="voltage",
             device_class=SensorDeviceClass.VOLTAGE,
             state_class=SensorStateClass.MEASUREMENT,
@@ -1508,6 +1695,7 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
     DeviceCategory.WSDCG: (
         TuyaSensorEntityDescription(
             key=DPCode.VA_TEMPERATURE,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="temperature",
             device_class=SensorDeviceClass.TEMPERATURE,
             state_class=SensorStateClass.MEASUREMENT,
@@ -1520,24 +1708,28 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         TuyaSensorEntityDescription(
             key=DPCode.TEMP_CURRENT,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="temperature",
             device_class=SensorDeviceClass.TEMPERATURE,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.VA_HUMIDITY,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="humidity",
             device_class=SensorDeviceClass.HUMIDITY,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.HUMIDITY_VALUE,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="humidity",
             device_class=SensorDeviceClass.HUMIDITY,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.BRIGHT_VALUE,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="illuminance",
             device_class=SensorDeviceClass.ILLUMINANCE,
             state_class=SensorStateClass.MEASUREMENT,
@@ -1685,82 +1877,21 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             entity_category=EntityCategory.DIAGNOSTIC,
             state_class=SensorStateClass.MEASUREMENT,
         ),
-        TuyaSensorEntityDescription(
-            key=f"{DPCode.PHASE_A}electriccurrent",
-            dpcode=DPCode.PHASE_A,
-            translation_key="phase_a_current",
-            device_class=SensorDeviceClass.CURRENT,
-            state_class=SensorStateClass.MEASUREMENT,
-            wrapper_class=CURRENT_WRAPPER,
-        ),
-        TuyaSensorEntityDescription(
-            key=f"{DPCode.PHASE_A}power",
-            dpcode=DPCode.PHASE_A,
-            translation_key="phase_a_power",
-            device_class=SensorDeviceClass.POWER,
-            state_class=SensorStateClass.MEASUREMENT,
-            wrapper_class=POWER_WRAPPER,
-        ),
-        TuyaSensorEntityDescription(
-            key=f"{DPCode.PHASE_A}voltage",
-            dpcode=DPCode.PHASE_A,
-            translation_key="phase_a_voltage",
-            device_class=SensorDeviceClass.VOLTAGE,
-            state_class=SensorStateClass.MEASUREMENT,
-            wrapper_class=VOLTAGE_WRAPPER,
-        ),
-        TuyaSensorEntityDescription(
-            key=f"{DPCode.PHASE_B}electriccurrent",
-            dpcode=DPCode.PHASE_B,
-            translation_key="phase_b_current",
-            device_class=SensorDeviceClass.CURRENT,
-            state_class=SensorStateClass.MEASUREMENT,
-            wrapper_class=CURRENT_WRAPPER,
-        ),
-        TuyaSensorEntityDescription(
-            key=f"{DPCode.PHASE_B}power",
-            dpcode=DPCode.PHASE_B,
-            translation_key="phase_b_power",
-            device_class=SensorDeviceClass.POWER,
-            state_class=SensorStateClass.MEASUREMENT,
-            wrapper_class=POWER_WRAPPER,
-        ),
-        TuyaSensorEntityDescription(
-            key=f"{DPCode.PHASE_B}voltage",
-            dpcode=DPCode.PHASE_B,
-            translation_key="phase_b_voltage",
-            device_class=SensorDeviceClass.VOLTAGE,
-            state_class=SensorStateClass.MEASUREMENT,
-            wrapper_class=VOLTAGE_WRAPPER,
-        ),
-        TuyaSensorEntityDescription(
-            key=f"{DPCode.PHASE_C}electriccurrent",
-            dpcode=DPCode.PHASE_C,
-            translation_key="phase_c_current",
-            device_class=SensorDeviceClass.CURRENT,
-            state_class=SensorStateClass.MEASUREMENT,
-            wrapper_class=CURRENT_WRAPPER,
-        ),
-        TuyaSensorEntityDescription(
-            key=f"{DPCode.PHASE_C}power",
-            dpcode=DPCode.PHASE_C,
-            translation_key="phase_c_power",
-            device_class=SensorDeviceClass.POWER,
-            state_class=SensorStateClass.MEASUREMENT,
-            wrapper_class=POWER_WRAPPER,
-        ),
-        TuyaSensorEntityDescription(
-            key=f"{DPCode.PHASE_C}voltage",
-            dpcode=DPCode.PHASE_C,
-            translation_key="phase_c_voltage",
-            device_class=SensorDeviceClass.VOLTAGE,
-            state_class=SensorStateClass.MEASUREMENT,
-            wrapper_class=VOLTAGE_WRAPPER,
+        *_electricity_data(DPCode.PHASE_A),
+        *_electricity_data(DPCode.PHASE_B),
+        *_electricity_data(DPCode.PHASE_C),
+        *(
+            description
+            for index in range(1, 21)
+            for description in _indexed_electricity_data(
+                DPCode(f"phase_s{index}"), index
+            )
         ),
     ),
     DeviceCategory.ZNJDQ: (
         TuyaSensorEntityDescription(
             key=DPCode.CUR_CURRENT,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="current",
             device_class=SensorDeviceClass.CURRENT,
             state_class=SensorStateClass.MEASUREMENT,
@@ -1768,12 +1899,14 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         TuyaSensorEntityDescription(
             key=DPCode.CUR_POWER,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="power",
             device_class=SensorDeviceClass.POWER,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.CUR_VOLTAGE,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="voltage",
             device_class=SensorDeviceClass.VOLTAGE,
             state_class=SensorStateClass.MEASUREMENT,
@@ -1797,6 +1930,7 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         TuyaSensorEntityDescription(
             key=DPCode.POWER_TOTAL,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="power",
             device_class=SensorDeviceClass.POWER,
             state_class=SensorStateClass.MEASUREMENT,
@@ -1806,6 +1940,7 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         TuyaSensorEntityDescription(
             key=DPCode.TEMP_CURRENT,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="temperature",
             device_class=SensorDeviceClass.TEMPERATURE,
             state_class=SensorStateClass.MEASUREMENT,
@@ -1831,6 +1966,7 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         TuyaSensorEntityDescription(
             key=DPCode.TEMP_CURRENT,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="temperature",
             device_class=SensorDeviceClass.TEMPERATURE,
             state_class=SensorStateClass.MEASUREMENT,
@@ -1851,12 +1987,14 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
     DeviceCategory.ZWJCY: (
         TuyaSensorEntityDescription(
             key=DPCode.TEMP_CURRENT,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="temperature",
             device_class=SensorDeviceClass.TEMPERATURE,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.HUMIDITY,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="humidity",
             device_class=SensorDeviceClass.HUMIDITY,
             state_class=SensorStateClass.MEASUREMENT,

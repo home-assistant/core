@@ -462,6 +462,7 @@ DEVICE_CATEGORY_LEGACY_SENSORS: Final[
 ] = {
     NetatmoDeviceCategory.meter: NETATMO_WEATHER_SENSOR_DESCRIPTIONS,
     NetatmoDeviceCategory.switch: NETATMO_WEATHER_SENSOR_DESCRIPTIONS,
+    NetatmoDeviceCategory.dimmer: NETATMO_WEATHER_SENSOR_DESCRIPTIONS,
     NetatmoDeviceCategory.climate: NETATMO_WEATHER_SENSOR_DESCRIPTIONS,
 }
 
@@ -470,6 +471,7 @@ DEVICE_CATEGORY_SENSOR_URLS: Final[dict[NetatmoDeviceCategory, str]] = {
     NetatmoDeviceCategory.meter: CONF_URL_ENERGY,
     NetatmoDeviceCategory.opening: CONF_URL_SECURITY,
     NetatmoDeviceCategory.switch: CONF_URL_CONTROL,
+    NetatmoDeviceCategory.dimmer: CONF_URL_CONTROL,
 }
 
 
@@ -626,8 +628,10 @@ async def async_setup_entry(
 
         async_add_entities(new_entities)
 
-    async_dispatcher_connect(
-        hass, f"signal-{DOMAIN}-public-update-{entry.entry_id}", add_public_entities
+    entry.async_on_unload(
+        async_dispatcher_connect(
+            hass, f"signal-{DOMAIN}-public-update-{entry.entry_id}", add_public_entities
+        )
     )
 
     await add_public_entities(False)

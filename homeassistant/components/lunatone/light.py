@@ -2,6 +2,7 @@
 
 from typing import Any, override
 
+import aiohttp
 from lunatone_rest_api_client import DALIBroadcast
 from lunatone_rest_api_client.models import LineStatus
 
@@ -15,6 +16,7 @@ from homeassistant.components.light import (
     brightness_supported,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -39,7 +41,7 @@ async def async_setup_entry(
     """Set up the Lunatone Light platform."""
     coordinator_info = config_entry.runtime_data.coordinator_info
     coordinator_devices = config_entry.runtime_data.coordinator_devices
-    dali_line_broadcasts = config_entry.runtime_data.dali_line_broadcasts
+    auth_api = coordinator_info.info_api.auth
 
     assert config_entry.unique_id is not None
 
@@ -47,10 +49,10 @@ async def async_setup_entry(
         LunatoneLineBroadcastLight(
             coordinator_devices,
             coordinator_info,
-            dali_line_broadcast,
+            DALIBroadcast(auth_api, int(line_id)),
             config_entry.unique_id,
         )
-        for dali_line_broadcast in dali_line_broadcasts
+        for line_id in coordinator_info.data.lines
     ]
     entities.extend(
         LunatoneLight(coordinator_devices, line_id, device_id, config_entry.unique_id)
@@ -191,38 +193,54 @@ class LunatoneLight(
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
-        if brightness_supported(self.supported_color_modes):
-            if ATTR_COLOR_TEMP_KELVIN in kwargs:
-                await self._device.fade_to_color_temperature(
-                    kwargs[ATTR_COLOR_TEMP_KELVIN]
-                )
-            if ATTR_RGB_COLOR in kwargs:
-                await self._device.fade_to_rgbw_color(
-                    tuple(color / 255 for color in kwargs[ATTR_RGB_COLOR])
-                )
-            if ATTR_RGBW_COLOR in kwargs:
-                rgbw_color = tuple(color / 255 for color in kwargs[ATTR_RGBW_COLOR])
-                await self._device.fade_to_rgbw_color(rgbw_color[:-1], rgbw_color[-1])
-            if ATTR_BRIGHTNESS in kwargs or not self.is_on:
-                await self._device.fade_to_brightness(
-                    brightness_to_value(
-                        self.BRIGHTNESS_SCALE,
-                        kwargs.get(ATTR_BRIGHTNESS, self._last_brightness),
+        try:
+            if brightness_supported(self.supported_color_modes):
+                if ATTR_COLOR_TEMP_KELVIN in kwargs:
+                    await self._device.fade_to_color_temperature(
+                        kwargs[ATTR_COLOR_TEMP_KELVIN]
                     )
-                )
-        else:
-            await self._device.switch_on()
+                if ATTR_RGB_COLOR in kwargs:
+                    await self._device.fade_to_rgbw_color(
+                        tuple(color / 255 for color in kwargs[ATTR_RGB_COLOR])
+                    )
+                if ATTR_RGBW_COLOR in kwargs:
+                    rgbw_color = tuple(color / 255 for color in kwargs[ATTR_RGBW_COLOR])
+                    await self._device.fade_to_rgbw_color(
+                        rgbw_color[:-1], rgbw_color[-1]
+                    )
+                if ATTR_BRIGHTNESS in kwargs or not self.is_on:
+                    await self._device.fade_to_brightness(
+                        brightness_to_value(
+                            self.BRIGHTNESS_SCALE,
+                            kwargs.get(ATTR_BRIGHTNESS, self._last_brightness),
+                        )
+                    )
+            else:
+                await self._device.switch_on()
+        except aiohttp.ClientConnectionError as ex:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="cannot_turn_on_light",
+                translation_placeholders={"entity": self.entity_id},
+            ) from ex
         await self.coordinator.async_refresh()
 
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
-        if brightness_supported(self.supported_color_modes):
-            if self.brightness:
-                self._last_brightness = self.brightness
-            await self._device.fade_to_brightness(0)
-        else:
-            await self._device.switch_off()
+        try:
+            if brightness_supported(self.supported_color_modes):
+                if self.brightness:
+                    self._last_brightness = self.brightness
+                await self._device.fade_to_brightness(0)
+            else:
+                await self._device.switch_off()
+        except aiohttp.ClientConnectionError as ex:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="cannot_turn_off_light",
+                translation_placeholders={"entity": self.entity_id},
+            ) from ex
         await self.coordinator.async_refresh()
 
 
@@ -250,30 +268,9 @@ class LunatoneLineBroadcastLight(
         self._coordinator_info = coordinator_info
         self._broadcast = broadcast
 
-        line = broadcast.line
-
-        self._attr_unique_id = f"{config_entry_unique_id}-line{line}"
-
-        line_device = self._coordinator_info.data.lines[str(line)].device
-        extra_info: dict = {}
-        if line_device.serial != self._coordinator_info.data.device.serial:
-            extra_info.update(
-                serial_number=str(line_device.serial),
-                hw_version=line_device.pcb,
-                model_id=f"{line_device.article_number}{line_device.article_info}",
-            )
-
-        assert self.unique_id
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self.unique_id)},
-            name=f"DALI Line {line}",
-            via_device_id=dr.async_get_device_id_by_identifier(
-                self.coordinator.hass,
-                (DOMAIN, config_entry_unique_id),
-                config_entry_id=self.coordinator.config_entry.entry_id,
-            ),
-            **extra_info,
-        )
+        line_unique_id = f"{config_entry_unique_id}-line{broadcast.line}"
+        self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, line_unique_id)})
+        self._attr_unique_id = line_unique_id
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -315,13 +312,29 @@ class LunatoneLineBroadcastLight(
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the line to turn on."""
-        await self._broadcast.fade_to_brightness(
-            brightness_to_value(self.BRIGHTNESS_SCALE, kwargs.get(ATTR_BRIGHTNESS, 255))
-        )
+        try:
+            await self._broadcast.fade_to_brightness(
+                brightness_to_value(
+                    self.BRIGHTNESS_SCALE, kwargs.get(ATTR_BRIGHTNESS, 255)
+                )
+            )
+        except aiohttp.ClientConnectionError as ex:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="cannot_turn_on_light",
+                translation_placeholders={"entity": self.entity_id},
+            ) from ex
         await self.coordinator.async_refresh()
 
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the line to turn off."""
-        await self._broadcast.fade_to_brightness(0)
+        try:
+            await self._broadcast.fade_to_brightness(0)
+        except aiohttp.ClientConnectionError as ex:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="cannot_turn_off_light",
+                translation_placeholders={"entity": self.entity_id},
+            ) from ex
         await self.coordinator.async_refresh()

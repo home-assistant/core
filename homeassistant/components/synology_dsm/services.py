@@ -3,8 +3,8 @@
 import logging
 from typing import cast
 
+import probatio
 from synology_dsm.exceptions import SynologyDSMException
-import voluptuous as vol
 
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -96,5 +96,5 @@ def async_setup_services(hass: HomeAssistant) -> None:
             DOMAIN,
             service,
             _service_handler,
-            vol.Schema({}, extra=vol.ALLOW_EXTRA),
+            probatio.Schema({}, extra=probatio.ALLOW_EXTRA),
         )

@@ -11,6 +11,7 @@ import pytest
 from homeassistant.components.lovelace import dashboard, resources
 from homeassistant.components.lovelace.const import DOMAIN, LOVELACE_DATA
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.setup import async_setup_component
 
 from tests.typing import WebSocketGenerator
@@ -408,3 +409,31 @@ async def test_storage_resources_safe_mode(
     response = await client.receive_json()
     assert response["success"]
     assert response["result"] == []
+
+
+async def test_reload_resources(hass: HomeAssistant) -> None:
+    """Test reloading YAML resources."""
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {"lovelace": {"resource_mode": "yaml", "resources": RESOURCE_EXAMPLES}},
+    )
+    new_resources = [{"type": "module", "url": "/local/new.js"}]
+
+    with patch(
+        "homeassistant.components.lovelace.services.async_hass_config_yaml",
+        return_value={
+            "lovelace": {"resource_mode": "yaml", "resources": new_resources}
+        },
+    ):
+        await hass.services.async_call(DOMAIN, "reload_resources", blocking=True)
+
+    assert hass.data[LOVELACE_DATA].resources.async_items() == new_resources
+
+
+async def test_reload_resources_storage_mode(hass: HomeAssistant) -> None:
+    """Test reloading resources is rejected in storage mode."""
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(DOMAIN, "reload_resources", blocking=True)

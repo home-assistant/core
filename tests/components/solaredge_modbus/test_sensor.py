@@ -3,7 +3,7 @@
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
-from modbus_connection import ModbusTimeoutError
+from modbus_connection import IllegalDataAddressError, ModbusTimeoutError
 from modbus_connection.mock import MockModbusUnit
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -13,7 +13,12 @@ from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
 
-from .conftest import add_second_meter
+from .conftest import (
+    BATTERY_RATED_ENERGY,
+    STORAGE_CAPACITY_BASE,
+    add_second_meter,
+    add_storage_capacity,
+)
 
 from tests.common import (
     MockConfigEntry,
@@ -23,6 +28,7 @@ from tests.common import (
 )
 
 LIFETIME_ENERGY_ENTITY = "sensor.solaredge_se10000h_energy"
+DER_STORAGE_ENTITY = "sensor.solaredge_se10000h_storage_state_of_charge"
 
 
 async def _setup_sensor_platform(hass: HomeAssistant, entry: MockConfigEntry) -> None:
@@ -313,3 +319,75 @@ async def test_lifetime_energy_restored_after_restart(
     state = hass.states.get(LIFETIME_ENERGY_ENTITY)
     assert state is not None
     assert float(state.state) == 99999.999  # kWh, from the restored maximum
+
+
+async def test_der_storage_state_of_charge(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """An inverter reporting storage as a DER gets a state-of-charge sensor.
+
+    Only where the battery block gave nothing: some inverters expose no battery
+    over Modbus but do serve model 713.
+    """
+    mock_modbus_unit.fail_read(BATTERY_RATED_ENERGY, IllegalDataAddressError())
+    add_storage_capacity(mock_modbus_unit, state_of_charge=5960)
+
+    await _setup_sensor_platform(hass, mock_config_entry)
+
+    state = hass.states.get(DER_STORAGE_ENTITY)
+    assert state is not None
+    assert state.state == "59.6"
+
+
+@pytest.mark.parametrize(
+    ("state_of_charge", "absent_blocks", "reason"),
+    [
+        pytest.param(
+            0, (BATTERY_RATED_ENERGY,), "no storage attached", id="charge-zero"
+        ),
+        pytest.param(5960, (), "the battery block reports it", id="has-batteries"),
+    ],
+)
+async def test_no_der_storage_sensor(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+    state_of_charge: int,
+    absent_blocks: tuple[int, ...],
+    reason: str,
+) -> None:
+    """The block is served in cases that are not worth an entity.
+
+    An inverter on an IEEE 1547-2018 grid profile serves model 713 whether or
+    not a battery is attached, reporting the 0% the spec fixes it at.
+    """
+    for address in absent_blocks:
+        mock_modbus_unit.fail_read(address, IllegalDataAddressError())
+
+    add_storage_capacity(mock_modbus_unit, state_of_charge=state_of_charge)
+
+    await _setup_sensor_platform(hass, mock_config_entry)
+
+    assert hass.states.get(DER_STORAGE_ENTITY) is None, reason
+
+
+async def test_der_storage_unavailable_when_its_block_fails(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """The sensor follows its own sub-system, not the whole poll."""
+    mock_modbus_unit.fail_read(BATTERY_RATED_ENERGY, IllegalDataAddressError())
+    add_storage_capacity(mock_modbus_unit, state_of_charge=5960)
+
+    await _setup_sensor_platform(hass, mock_config_entry)
+    assert hass.states.get(DER_STORAGE_ENTITY).state == "59.6"
+
+    mock_modbus_unit.fail_read(STORAGE_CAPACITY_BASE, ModbusTimeoutError("timed out"))
+    await _tick(hass, freezer)
+
+    assert hass.states.get(DER_STORAGE_ENTITY).state == STATE_UNAVAILABLE
+    assert hass.states.get("sensor.solaredge_se10000h_power").state != STATE_UNAVAILABLE

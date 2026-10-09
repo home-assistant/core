@@ -3,8 +3,8 @@
 import logging
 from typing import Any, override
 
+import probatio
 from rflink.parser import PACKET_FIELDS, UNITS
-import voluptuous as vol
 
 from homeassistant.components.sensor import (
     DOMAIN as PLATFORM_DOMAIN,
@@ -33,7 +33,7 @@ from homeassistant.const import (
     UnitOfTemperature,
     UnitOfVolumetricFlux,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -48,7 +48,6 @@ from .const import (
     EVENT_KEY_SENSOR,
     EVENT_KEY_UNIT,
     SIGNAL_AVAILABILITY,
-    SIGNAL_HANDLE_EVENT,
     TMP_ENTITY,
 )
 from .entity import RflinkDevice
@@ -268,15 +267,15 @@ SENSOR_TYPES = (
 SENSOR_TYPES_DICT = {desc.key: desc for desc in SENSOR_TYPES}
 
 RFLINK_PLATFORM = {
-    vol.Optional(CONF_AUTOMATIC_ADD, default=True): cv.boolean,
-    vol.Optional(CONF_DEVICES, default={}): {
-        cv.string: vol.Schema(
+    probatio.Optional(CONF_AUTOMATIC_ADD, default=True): cv.boolean,
+    probatio.Optional(CONF_DEVICES, default={}): {
+        cv.string: probatio.Schema(
             {
-                vol.Optional(CONF_NAME): cv.string,
-                vol.Required(CONF_SENSOR_TYPE): cv.string,
-                vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
-                vol.Optional(CONF_ALIASES, default=[]): vol.All(
-                    cv.ensure_list, [cv.string]
+                probatio.Optional(CONF_NAME): cv.string,
+                probatio.Required(CONF_SENSOR_TYPE): cv.string,
+                probatio.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+                probatio.Optional(CONF_ALIASES, default=[]): probatio.All(
+                    probatio.EnsureList(), [cv.string]
                 ),
             }
         )
@@ -285,7 +284,7 @@ RFLINK_PLATFORM = {
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     RFLINK_PLATFORM,
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 
@@ -374,6 +373,17 @@ class RflinkSensor(RflinkDevice, SensorEntity):
         """Domain specific event handler."""
         self._state = event["value"]
 
+    @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Opt in to in-place entity_id changes.
+
+        Can be removed when backwards compatibility is disabled for core
+        integrations, i.e. once all core integrations have been migrated
+        to in-place entity ID change.
+        """
+        super().async_entity_id_changed(old_entity_id)
+
     @override
     # pylint: disable-next=home-assistant-missing-super-call
     async def async_added_to_hass(self) -> None:
@@ -389,26 +399,18 @@ class RflinkSensor(RflinkDevice, SensorEntity):
             ].remove(tmp_entity)
 
         # Register id and aliases
-        self.hass.data[DATA_ENTITY_LOOKUP][EVENT_KEY_SENSOR][self._device_id].append(
-            self.entity_id
-        )
+        lookup = self.hass.data[DATA_ENTITY_LOOKUP][EVENT_KEY_SENSOR]
+        self._async_register_lookup(lookup, self._device_id)
         if self._aliases:
             for _id in self._aliases:
-                self.hass.data[DATA_ENTITY_LOOKUP][EVENT_KEY_SENSOR][_id].append(
-                    self.entity_id
-                )
+                self._async_register_lookup(lookup, _id)
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass, SIGNAL_AVAILABILITY, self._availability_callback
             )
         )
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                SIGNAL_HANDLE_EVENT.format(self.entity_id),
-                self.handle_event_callback,
-            )
-        )
+        self._async_subscribe_handle_event()
+        self.async_on_remove(self._async_unsubscribe_handle_event)
 
         # Process the initial event now that the entity is created
         if self._initial_event:

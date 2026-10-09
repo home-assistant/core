@@ -38,6 +38,7 @@ async def test_async_step_bluetooth_h5055(hass: HomeAssistant) -> None:
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["data"] == {CONF_DEVICE_TYPE: "H5055"}
+    assert result2["result"].unique_id == "C0:A3:C7:0A:5C:77"
 
 
 async def test_async_step_bluetooth_valid_device(hass: HomeAssistant) -> None:

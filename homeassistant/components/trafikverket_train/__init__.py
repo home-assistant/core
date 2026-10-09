@@ -2,21 +2,16 @@
 
 import logging
 
-from pytrafikverket import (
-    InvalidAuthentication,
-    NoTrainStationFound,
-    TrafikverketTrain,
-    UnknownError,
-)
+from pytrafikverket import InvalidAuthentication, NoTrainStationFound, TrafikverketTrain
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_FROM, CONF_TO, PLATFORMS
+from .const import CONF_FROM, CONF_TO, DOMAIN, PLATFORMS
 from .coordinator import TVDataUpdateCoordinator
 
 TVTrainConfigEntry = ConfigEntry[TVDataUpdateCoordinator]
@@ -74,23 +69,29 @@ async def async_migrate_entry(hass: HomeAssistant, entry: TVTrainConfigEntry) ->
         except InvalidAuthentication as error:
             raise ConfigEntryAuthFailed from error
         except NoTrainStationFound as error:
-            _LOGGER.error(
-                "Migration failed as no train station found with provided name %s",
-                str(error),
-            )
-            return False
-        except UnknownError as error:
-            _LOGGER.error("Unknown error occurred during validation %s", str(error))
-            return False
-        except Exception as error:  # noqa: BLE001
-            _LOGGER.error("Unknown exception occurred during validation %s", str(error))
-            return False
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="migration_station_not_found",
+                translation_placeholders={
+                    "from_station": entry.data[CONF_FROM],
+                    "to_station": entry.data[CONF_TO],
+                },
+            ) from error
+        except Exception as error:
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="migration_unknown_error",
+            ) from error
 
         if len(from_stations) > 1 or len(to_stations) > 1:
-            _LOGGER.error(
-                "Migration failed as more than one station found with provided name"
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="migration_multiple_stations",
+                translation_placeholders={
+                    "from_station": entry.data[CONF_FROM],
+                    "to_station": entry.data[CONF_TO],
+                },
             )
-            return False
 
         new_data = entry.data.copy()
         new_data[CONF_FROM] = from_stations[0].signature

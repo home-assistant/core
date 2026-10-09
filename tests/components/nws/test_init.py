@@ -1,9 +1,16 @@
 """Tests for init module."""
 
+import logging
+
+from freezegun.api import FrozenDateTimeFactory
 from pynws import NwsNoDataError
 import pytest
 
-from homeassistant.components.nws.const import CONF_LOCATION_ENTITY, DOMAIN
+from homeassistant.components.nws.const import (
+    CONF_LOCATION_ENTITY,
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, CONF_API_KEY
 from homeassistant.core import HomeAssistant
@@ -11,7 +18,7 @@ from homeassistant.helpers import entity_registry as er
 
 from .const import NWS_CONFIG
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.fixture
@@ -195,6 +202,40 @@ async def test_location_change_updates_coordinates(
     assert coordinator.name == f"NWS observation station {new_station}"
 
 
+async def test_location_change_does_not_log_coordinates(
+    hass: HomeAssistant,
+    mock_simple_nws,
+    location_entity_config: dict,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that the tracked location is not written to the log."""
+    caplog.set_level(logging.INFO)
+    entity = location_entity_config["entry"]
+    hass.states.async_set(
+        entity.entity_id,
+        "home",
+        {ATTR_LATITUDE: 40.0, ATTR_LONGITUDE: -80.0},
+    )
+
+    config_entry = MockConfigEntry(domain=DOMAIN, data=location_entity_config["config"])
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    caplog.clear()
+    hass.states.async_set(
+        entity.entity_id,
+        "away",
+        {ATTR_LATITUDE: 41.0, ATTR_LONGITUDE: -81.0},
+    )
+    await hass.async_block_till_done()
+
+    assert "NWS API updated: station" in caplog.text
+    assert "41.0000" not in caplog.text
+    assert "-81.0000" not in caplog.text
+
+
 async def test_location_change_resets_api_success_time(
     hass: HomeAssistant, mock_simple_nws, location_entity_config: dict
 ) -> None:
@@ -241,6 +282,7 @@ async def test_no_update_without_significant_move(
     location_entity_config: dict,
     new_lat: float,
     new_lon: float,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that unchanged or within-threshold coordinate changes do not create a new API."""
     entity = location_entity_config["entry"]
@@ -261,9 +303,13 @@ async def test_no_update_without_significant_move(
         "away",
         {ATTR_LATITUDE: new_lat, ATTR_LONGITUDE: new_lon},
     )
-    await config_entry.runtime_data.coordinator_observation.async_refresh()
-    await hass.async_block_till_done()
+    update_observation = mock_simple_nws.return_value.update_observation
+    observation_calls = update_observation.call_count
+    freezer.tick(DEFAULT_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
+    assert update_observation.call_count > observation_calls
     assert mock_simple_nws.call_count == 1
     assert config_entry.runtime_data.latitude == 40.0
     assert config_entry.runtime_data.longitude == -80.0

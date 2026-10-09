@@ -2,7 +2,7 @@
 
 import functools
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -14,12 +14,12 @@ from .entity import async_setup_non_entity_entry_helper
 
 AUTOMATION_TYPE_TRIGGER = "trigger"
 AUTOMATION_TYPES = [AUTOMATION_TYPE_TRIGGER]
-AUTOMATION_TYPES_SCHEMA = vol.In(AUTOMATION_TYPES)
+AUTOMATION_TYPES_SCHEMA = probatio.In(AUTOMATION_TYPES)
 CONF_AUTOMATION_TYPE = "automation_type"
 
 DISCOVERY_SCHEMA = MQTT_BASE_SCHEMA.extend(
-    {vol.Required(CONF_AUTOMATION_TYPE): AUTOMATION_TYPES_SCHEMA},
-    extra=vol.ALLOW_EXTRA,
+    {probatio.Required(CONF_AUTOMATION_TYPE): AUTOMATION_TYPES_SCHEMA},
+    extra=probatio.ALLOW_EXTRA,
 )
 
 

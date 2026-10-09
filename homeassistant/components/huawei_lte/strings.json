@@ -382,6 +382,12 @@
   "exceptions": {
     "send_message_failed": {
       "message": "Failed to send SMS to {targets}: {error}"
+    },
+    "serial_number_not_found": {
+      "message": "Could not resolve serial number to use as unique ID for router at {url}"
+    },
+    "serial_number_not_found_unauthenticated": {
+      "message": "Could not resolve serial number to use as unique ID for router at {url}. Try setting up credentials for the router for one startup, unauthenticated mode can be enabled after that in integration settings"
     }
   },
   "options": {

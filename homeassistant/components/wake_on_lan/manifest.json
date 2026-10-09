@@ -1,7 +1,7 @@
 {
   "domain": "wake_on_lan",
   "name": "Wake on LAN",
-  "codeowners": ["@ntilley905"],
+  "codeowners": [],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/wake_on_lan",
   "integration_type": "service",

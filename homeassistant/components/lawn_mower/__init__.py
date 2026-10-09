@@ -12,9 +12,9 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util.hass_dict import HassKey
 
-from .const import (
+from .const import (  # noqa: F401
+    DATA_COMPONENT,
     DOMAIN,
     SERVICE_DOCK,
     SERVICE_PAUSE,
@@ -23,10 +23,10 @@ from .const import (
     LawnMowerActivity,
     LawnMowerEntityFeature,
 )
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_COMPONENT: HassKey[EntityComponent[LawnMowerEntity]] = HassKey(DOMAIN)
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
@@ -40,21 +40,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
     await component.async_setup(config)
 
-    component.async_register_entity_service(
-        SERVICE_START_MOWING,
-        None,
-        "async_start_mowing",
-        [LawnMowerEntityFeature.START_MOWING],
-    )
-    component.async_register_entity_service(
-        SERVICE_PAUSE, None, "async_pause", [LawnMowerEntityFeature.PAUSE]
-    )
-    component.async_register_entity_service(
-        SERVICE_DOCK, None, "async_dock", [LawnMowerEntityFeature.DOCK]
-    )
-    component.async_register_entity_service(
-        SERVICE_STOP, None, "async_stop", [LawnMowerEntityFeature.STOP]
-    )
+    async_setup_services(hass)
 
     return True
 

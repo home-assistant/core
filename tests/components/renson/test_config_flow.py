@@ -62,6 +62,26 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
+    with (
+        patch(
+            "homeassistant.components.renson.config_flow.renson",
+            return_value={"title": "Renson"},
+        ),
+        patch(
+            "homeassistant.components.renson.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "host": "1.1.1.1",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_form_unknown(hass: HomeAssistant) -> None:
     """Test we handle unknown error."""
@@ -82,3 +102,23 @@ async def test_form_unknown(hass: HomeAssistant) -> None:
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
+
+    with (
+        patch(
+            "homeassistant.components.renson.config_flow.renson",
+            return_value={"title": "Renson"},
+        ),
+        patch(
+            "homeassistant.components.renson.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "host": "1.1.1.1",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.CREATE_ENTRY

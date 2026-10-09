@@ -70,7 +70,7 @@ def panel_model(model: str) -> PanelModel | None:
     return {
         "solution_3000": PanelModel("Solution 3000", PANEL_FAMILY.SOLUTION),
         "amax_3000": PanelModel("AMAX 3000", PANEL_FAMILY.AMAX),
-        "b5512": PanelModel("B5512 (US1B)", PANEL_FAMILY.BG_SERIES),
+        "b5512": PanelModel("B5512 (US1B)", PANEL_FAMILY.B_SERIES),
     }.get(model)
 
 
