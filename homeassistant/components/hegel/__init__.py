@@ -31,10 +31,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: HegelConfigEntry) -> boo
         await client.ensure_connected(timeout=10.0)
         _LOGGER.debug("Successfully connected to Hegel at %s:%s", host, DEFAULT_PORT)
     except (HegelConnectionError, TimeoutError, OSError) as err:
-        # pylint: disable-next=home-assistant-log-and-raise
-        _LOGGER.error(
-            "Failed to connect to Hegel at %s:%s: %s", host, DEFAULT_PORT, err
-        )
         await client.stop()  # Clean up
         raise ConfigEntryNotReady(
             f"Unable to connect to Hegel amplifier at {host}:{DEFAULT_PORT}"
