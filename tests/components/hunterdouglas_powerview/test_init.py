@@ -44,7 +44,7 @@ async def test_remove_shade_device_via_websocket(
     assert msg["success"] is True
     assert device_registry.async_get(shade_device.id) is None
     
-    async def test_remove_hub_device_via_websocket_is_blocked(
+async def test_remove_hub_device_via_websocket_is_blocked(
     hass: HomeAssistant, 
     device_registry: dr.DeviceRegistry, 
     hass_ws_client: WebSocketGenerator
