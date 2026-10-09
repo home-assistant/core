@@ -36,9 +36,9 @@ from .entity_store_validation import (
 from .expose_controller import KNXExposeStoreConfigModel, KNXExposeStoreModel
 from .knx_selector import (
     GroupAddressSelector,
+    GroupSelect,
     KnxPayloadSelector,
     KnxSelectOptionsSelector,
-    TypedGroupSelect,
     knx_selector_in,
 )
 from .time_server import KNXTimeServerStoreModel
@@ -112,7 +112,7 @@ def _storage_encoders(config_type: type) -> _StorageEncoders:
             (GroupAddressSelector, KnxPayloadSelector, KnxSelectOptionsSelector),
         ):
             encode = field_selector.to_storage
-        elif isinstance(field_selector, TypedGroupSelect):
+        elif isinstance(field_selector, GroupSelect):
             encode = _group_select_to_storage
         else:
             encode = _unchanged

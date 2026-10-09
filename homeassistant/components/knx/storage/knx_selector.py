@@ -158,7 +158,11 @@ class GroupSelectSchema:
 
 
 class GroupSelect(KNXSelectorBase):
-    """Selector for group select options."""
+    """Selector for group select options.
+
+    Yields the value of the matching option - an instance of its dataclass for
+    options built by `group_select`.
+    """
 
     selector_type = "knx_group_select"
     serialize_subschema = True
@@ -171,6 +175,13 @@ class GroupSelect(KNXSelectorBase):
         """Initialize the group select selector."""
         self.collapsible = collapsible
         self.schema = GroupSelectSchema(*options)
+
+    @override
+    def __call__(self, data: Any) -> Any:
+        """Validate the passed data."""
+        if data is None:  # `Optional(key, default=None)` passes its default through
+            return None
+        return self.schema(data)
 
     @override
     def serialize(self) -> dict[str, Any]:
@@ -335,21 +346,6 @@ def write_address(config: GroupAddressConfig | None) -> DeviceAddressableType | 
     return config.write if config is not None else None
 
 
-class TypedGroupSelect(GroupSelect):
-    """`GroupSelect` whose options are dataclass schemas.
-
-    Yields an instance of the matching option's dataclass. Temporary: fold into
-    `GroupSelect` once all platforms use typed configs.
-    """
-
-    @override
-    def __call__(self, data: Any) -> Any:
-        """Validate the passed data."""
-        if data is None:  # `Optional(key, default=None)` passes its default through
-            return None
-        return self.schema(data)
-
-
 def group_select(
     *options: tuple[str, type], collapsible: bool = True
 ) -> probatio.Coerce:
@@ -358,7 +354,7 @@ def group_select(
     `Coerce` makes probatio run the selector before the field type check, like `ga`.
     """
     return probatio.Coerce(
-        TypedGroupSelect(
+        GroupSelect(
             *(
                 GroupSelectOption(
                     probatio.DataclassSchema(config_type),
@@ -372,10 +368,7 @@ def group_select(
 
 
 class GroupAddressSelector(GASelector):
-    """`GASelector` yielding a `GroupAddressConfig` instead of a dict.
-
-    Temporary: fold into `GASelector` once all platforms use typed configs.
-    """
+    """`GASelector` yielding a `GroupAddressConfig` instead of a dict."""
 
     @override
     def __call__(self, data: Any) -> GroupAddressConfig | None:
