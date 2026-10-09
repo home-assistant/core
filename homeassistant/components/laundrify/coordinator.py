@@ -23,11 +23,13 @@ type LaundrifyConfigEntry = ConfigEntry[LaundrifyUpdateCoordinator]
 class LaundrifyUpdateCoordinator(DataUpdateCoordinator[dict[str, LaundrifyDevice]]):
     """Class to manage fetching laundrify API data."""
 
+    # pylint: disable-next=home-assistant-coordinator-untyped-config-entry
     config_entry: ConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
+        # pylint: disable-next=home-assistant-coordinator-untyped-config-entry
         config_entry: ConfigEntry,
         laundrify_api: LaundrifyAPI,
     ) -> None:

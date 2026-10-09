@@ -59,6 +59,7 @@ class OndiloIcoPoolsCoordinator(DataUpdateCoordinator[dict[str, OndiloIcoPoolDat
             update_interval=timedelta(minutes=20),
         )
         self.api = api
+        # pylint: disable-next=home-assistant-coordinator-redundant-config-entry
         self.config_entry = config_entry
         self._device_registry = dr.async_get(self.hass)
 
@@ -147,6 +148,7 @@ class OndiloIcoMeasuresCoordinator(DataUpdateCoordinator[OndiloIcoMeasurementDat
     def __init__(
         self,
         hass: HomeAssistant,
+        # pylint: disable-next=home-assistant-coordinator-untyped-config-entry
         config_entry: ConfigEntry,
         api: OndiloClient,
         pool_id: str,

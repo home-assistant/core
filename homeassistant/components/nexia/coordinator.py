@@ -18,11 +18,13 @@ DEFAULT_UPDATE_RATE = 120
 class NexiaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """DataUpdateCoordinator for nexia homes."""
 
+    # pylint: disable-next=home-assistant-coordinator-untyped-config-entry
     config_entry: ConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
+        # pylint: disable-next=home-assistant-coordinator-untyped-config-entry
         config_entry: ConfigEntry,
         nexia_home: NexiaHome,
     ) -> None:

@@ -222,11 +222,13 @@ class ModelContextProtocolTool(llm.Tool):
 class ModelContextProtocolCoordinator(DataUpdateCoordinator[list[llm.Tool]]):
     """Define an object to hold MCP data."""
 
+    # pylint: disable-next=home-assistant-coordinator-untyped-config-entry
     config_entry: ConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
+        # pylint: disable-next=home-assistant-coordinator-untyped-config-entry
         config_entry: ConfigEntry,
         token_manager: TokenManager | None = None,
     ) -> None:

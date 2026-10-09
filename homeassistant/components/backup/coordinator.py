@@ -34,11 +34,13 @@ class BackupCoordinatorData:
 class BackupDataUpdateCoordinator(DataUpdateCoordinator[BackupCoordinatorData]):
     """Class to retrieve backup status."""
 
+    # pylint: disable-next=home-assistant-coordinator-untyped-config-entry
     config_entry: ConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
+        # pylint: disable-next=home-assistant-coordinator-untyped-config-entry
         config_entry: ConfigEntry,
         backup_manager: BackupManager,
     ) -> None:

@@ -29,11 +29,13 @@ DEVICE_UPDATE_INTERVAL_PER_CAM = timedelta(seconds=10)
 class ReolinkCoordinator(DataUpdateCoordinator[None]):
     """Coordinator for Reolink."""
 
+    # pylint: disable-next=home-assistant-coordinator-untyped-config-entry
     config_entry: ConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
+        # pylint: disable-next=home-assistant-coordinator-untyped-config-entry
         config_entry: ConfigEntry,
         host: ReolinkHost,
         name: str,
@@ -59,6 +61,7 @@ class ReolinkDeviceCoordinator(ReolinkCoordinator):
     def __init__(
         self,
         hass: HomeAssistant,
+        # pylint: disable-next=home-assistant-coordinator-untyped-config-entry
         config_entry: ConfigEntry,
         host: ReolinkHost,
         *,
@@ -143,6 +146,7 @@ class ReolinkFirmwareCoordinator(ReolinkCoordinator):
     def __init__(
         self,
         hass: HomeAssistant,
+        # pylint: disable-next=home-assistant-coordinator-untyped-config-entry
         config_entry: ConfigEntry,
         host: ReolinkHost,
         *,
