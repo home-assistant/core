@@ -8,6 +8,7 @@ import probatio
 from homeassistant.components.media_player import (
     ATTR_MEDIA_ENQUEUE,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
+    MediaPlayerDeviceClass,
 )
 from homeassistant.components.tts import DOMAIN as TTS_DOMAIN
 from homeassistant.const import ATTR_CONFIG_ENTRY_ID
@@ -50,6 +51,7 @@ from .const import (
     ATTR_SEARCH_ARTIST,
     ATTR_SEARCH_NAME,
     ATTR_SOURCE_PLAYER,
+    ATTR_START_ITEM,
     ATTR_TRACKS,
     ATTR_TTS_ENTITY_ID,
     ATTR_URL,
@@ -85,6 +87,9 @@ SERVICE_GET_QUEUE = "get_queue"
 DEFAULT_OFFSET = 0
 DEFAULT_LIMIT = 25
 DEFAULT_SORT_ORDER = "name"
+
+# player-only entity services; dashboard display entities don't implement them
+PLAYER_ENTITY_DEVICE_CLASSES = [MediaPlayerDeviceClass.SPEAKER]
 
 
 @callback
@@ -137,6 +142,7 @@ def register_actions(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_PLAY_MEDIA_ADVANCED,
         entity_domain=MEDIA_PLAYER_DOMAIN,
+        entity_device_classes=PLAYER_ENTITY_DEVICE_CLASSES,
         schema={
             probatio.Required(ATTR_MEDIA_ID): probatio.All(
                 probatio.EnsureList(), [cv.string]
@@ -146,6 +152,7 @@ def register_actions(hass: HomeAssistant) -> None:
             probatio.Optional(ATTR_ARTIST): cv.string,
             probatio.Optional(ATTR_ALBUM): cv.string,
             probatio.Optional(ATTR_RADIO_MODE): probatio.Coerce(bool),
+            probatio.Optional(ATTR_START_ITEM): cv.string,
             probatio.Optional(ATTR_USERNAME): cv.string,
         },
         func="_async_handle_play_media",
@@ -155,6 +162,7 @@ def register_actions(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_PLAY_ANNOUNCEMENT,
         entity_domain=MEDIA_PLAYER_DOMAIN,
+        entity_device_classes=PLAYER_ENTITY_DEVICE_CLASSES,
         schema=probatio.All(
             cv.make_entity_service_schema(
                 {
@@ -178,6 +186,7 @@ def register_actions(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_TRANSFER_QUEUE,
         entity_domain=MEDIA_PLAYER_DOMAIN,
+        entity_device_classes=PLAYER_ENTITY_DEVICE_CLASSES,
         schema={
             probatio.Optional(ATTR_SOURCE_PLAYER): cv.entity_id,
             probatio.Optional(ATTR_AUTO_PLAY): probatio.Coerce(bool),
@@ -189,6 +198,7 @@ def register_actions(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_GET_QUEUE,
         entity_domain=MEDIA_PLAYER_DOMAIN,
+        entity_device_classes=PLAYER_ENTITY_DEVICE_CLASSES,
         schema=None,
         func="_async_handle_get_queue",
         supports_response=SupportsResponse.ONLY,

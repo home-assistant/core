@@ -85,6 +85,12 @@
     "number": {
       "charge_current_limit": {
         "name": "Charge limit"
+      },
+      "solar_charging_custom_power_target": {
+        "name": "Custom solar grid target"
+      },
+      "solar_charging_custom_power_threshold": {
+        "name": "Custom solar start threshold"
       }
     },
     "select": {
@@ -202,6 +208,9 @@
       },
       "socket_lock": {
         "name": "Keep socket locked"
+      },
+      "solar_charging_custom_always_charge": {
+        "name": "Custom solar always charge"
       }
     },
     "update": {

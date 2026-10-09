@@ -246,6 +246,7 @@ async def test_device_naming(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == f"{expected_name} {serial}"
+    assert result["result"].unique_id == serial
 
 
 async def test_broadcast_message_published(
@@ -331,6 +332,7 @@ async def test_mqtt_discovery_other_device(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == f"{GREENCELL_OTHER_DEVICE} {OTHER_DEVICE_SERIAL}"
+    assert result["result"].unique_id == OTHER_DEVICE_SERIAL
 
 
 async def test_mqtt_discovery_duplicate_aborts(

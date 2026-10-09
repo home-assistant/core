@@ -58,6 +58,7 @@ class LibreHardwareMonitorConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for LibreHardwareMonitor."""
 
     VERSION = 2
+    MINOR_VERSION = 2
 
     def __init__(self) -> None:
         """Init config flow."""

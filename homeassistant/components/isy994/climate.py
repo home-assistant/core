@@ -96,8 +96,8 @@ class ISYThermostatEntity(ISYNodeEntity, ClimateEntity):
 
     @property
     @override
-    def temperature_unit(self) -> str:
-        """Return the unit of measurement."""
+    def native_temperature_unit(self) -> str:
+        """Return the unit of measurement the device reports in."""
         if not (uom := self._node.aux_properties.get(PROP_UOM)):
             return self.hass.config.units.temperature_unit
         if uom.value == UOM_ISY_CELSIUS:
@@ -150,7 +150,7 @@ class ISYThermostatEntity(ISYNodeEntity, ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         return convert_isy_value_to_hass(
             self._node.status, self._uom, self._node.prec, 1
@@ -158,17 +158,17 @@ class ISYThermostatEntity(ISYNodeEntity, ClimateEntity):
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         if self.hvac_mode == HVACMode.COOL:
-            return self.target_temperature_high
+            return self.native_target_temperature_high
         if self.hvac_mode == HVACMode.HEAT:
-            return self.target_temperature_low
+            return self.native_target_temperature_low
         return None
 
     @property
     @override
-    def target_temperature_high(self) -> float | None:
+    def native_target_temperature_high(self) -> float | None:
         """Return the highbound target temperature we try to reach."""
         target = self._node.aux_properties.get(PROP_SETPOINT_COOL)
         if not target:
@@ -177,7 +177,7 @@ class ISYThermostatEntity(ISYNodeEntity, ClimateEntity):
 
     @property
     @override
-    def target_temperature_low(self) -> float | None:
+    def native_target_temperature_low(self) -> float | None:
         """Return the lowbound target temperature we try to reach."""
         target = self._node.aux_properties.get(PROP_SETPOINT_HEAT)
         if not target:

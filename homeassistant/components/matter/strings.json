@@ -175,7 +175,6 @@
     },
     "event": {
       "button": {
-        "name": "Button",
         "state_attributes": {
           "event_type": {
             "state": {
@@ -671,14 +670,8 @@
           "medium": "[%key:common::state::medium%]"
         }
       },
-      "uptime": {
-        "name": "Uptime"
-      },
       "valve_position": {
         "name": "Valve position"
-      },
-      "voltage": {
-        "name": "Voltage"
       },
       "wifi_rssi": {
         "name": "Wi-Fi RSSI"

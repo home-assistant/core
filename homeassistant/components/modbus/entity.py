@@ -168,8 +168,7 @@ class ModbusBaseEntity(Entity):
 
     async def async_base_added_to_hass(self) -> None:
         """Handle entity which will be added."""
-        # also runs when the add is aborted after the first update is scheduled,
-        # and a rename removes and re-adds the entity, so it must not stop it
+        # also runs when the add is aborted after the first update is scheduled
         self.async_on_remove(self._async_cancel_updates)
         self._cancel_call = self._async_call_later(
             self._hub.config_delay + 0.1, self.async_await_connection
@@ -344,6 +343,17 @@ class ModbusToggleEntity(ModbusBaseEntity, ToggleEntity, RestoreEntity):
             )
         else:
             self._verify_active = False
+
+    @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Opt in to in-place entity_id changes.
+
+        Can be removed when backwards compatibility is disabled for core
+        integrations, i.e. once all core integrations have been migrated
+        to in-place entity ID change.
+        """
+        super().async_entity_id_changed(old_entity_id)
 
     @override
     async def async_added_to_hass(self) -> None:

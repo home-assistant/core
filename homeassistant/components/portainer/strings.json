@@ -244,12 +244,18 @@
     "update": {
       "container_image_update": {
         "name": "Image update available"
+      },
+      "server_update": {
+        "name": "Update"
       }
     }
   },
   "exceptions": {
     "cannot_connect": {
       "message": "An error occurred while trying to connect to the Portainer instance."
+    },
+    "instance_id_failed": {
+      "message": "Failed to fetch the Portainer instance ID."
     },
     "invalid_auth": {
       "message": "An error occurred while trying to authenticate."

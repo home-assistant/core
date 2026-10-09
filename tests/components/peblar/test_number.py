@@ -8,6 +8,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.number import (
     ATTR_MAX,
+    ATTR_MIN,
     ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
     SERVICE_SET_VALUE,
@@ -318,3 +319,84 @@ async def test_charge_limit_can_be_raised_again(
     )
 
     mocked_method.assert_any_call(charge_current_limit=16000)
+
+
+@pytest.mark.parametrize("init_integration", [Platform.NUMBER], indirect=True)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
+@pytest.mark.parametrize(
+    ("entity_id", "value", "expected"),
+    [
+        (
+            "number.peblar_ev_charger_custom_solar_start_threshold",
+            -600,
+            {"solar_charging_custom_power_threshold": -600},
+        ),
+        (
+            "number.peblar_ev_charger_custom_solar_grid_target",
+            1500,
+            {"solar_charging_custom_power_target": 1500},
+        ),
+    ],
+)
+async def test_custom_solar_settings(
+    hass: HomeAssistant,
+    mock_peblar: MagicMock,
+    entity_id: str,
+    value: int,
+    expected: dict[str, int],
+) -> None:
+    """Test the custom solar settings reach the charger.
+
+    One setting at a time: the charger keeps whatever is left out, so
+    sending the pair would overwrite the other one with what Home Assistant
+    happened to be holding.
+    """
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: value},
+        blocking=True,
+    )
+
+    mock_peblar.update_user_configuration.assert_called_once()
+    written = mock_peblar.update_user_configuration.call_args.args[0]
+    assert {
+        field: getattr(written, field)
+        for field in vars(written)
+        if getattr(written, field) is not None
+    } == expected
+
+
+@pytest.mark.parametrize("init_integration", [Platform.NUMBER], indirect=True)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
+async def test_custom_solar_settings_take_a_negative_threshold(
+    hass: HomeAssistant,
+) -> None:
+    """Test the threshold reaches below zero, which is where it lives.
+
+    It is the power going out to the grid at which charging starts, so the
+    charger's own default sits at -1300 W. A range that stopped at zero
+    would put the setting out of reach.
+    """
+    state = hass.states.get("number.peblar_ev_charger_custom_solar_start_threshold")
+    assert state
+    assert float(state.attributes[ATTR_MIN]) < 0
+
+
+@pytest.mark.parametrize("init_integration", [Platform.NUMBER], indirect=True)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
+@pytest.mark.parametrize(
+    "mock_peblar",
+    [
+        {"SolarChargingCustomPowerTarget": None},
+        {"SolarChargingAllowed": False},
+    ],
+    ids=["firmware without custom solar", "no power meter configured"],
+    indirect=True,
+)
+async def test_custom_solar_settings_absent(hass: HomeAssistant) -> None:
+    """Test a charger that cannot do custom solar is not offered its settings."""
+    assert (
+        hass.states.get("number.peblar_ev_charger_custom_solar_start_threshold") is None
+    )
+    assert hass.states.get("number.peblar_ev_charger_custom_solar_grid_target") is None

@@ -7,7 +7,7 @@ import os
 import re
 import secrets
 import socket
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import probatio
 from pyhap.accessory import Accessory
@@ -36,6 +36,7 @@ from homeassistant.components.remote import DOMAIN as REMOTE_DOMAIN, RemoteEntit
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.valve import DOMAIN as VALVE_DOMAIN
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     ATTR_CODE,
     CONF_NAME,
@@ -54,14 +55,17 @@ from homeassistant.core import (
 )
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.storage import STORAGE_DIR
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .const import (
     AUDIO_CODEC_COPY,
     AUDIO_CODEC_OPUS,
+    BRIDGE_NAME,
     CONF_AUDIO_CODEC,
     CONF_AUDIO_MAP,
     CONF_AUDIO_PACKET_SIZE,
+    CONF_ENTRY_INDEX,
     CONF_FEATURE,
     CONF_FEATURE_LIST,
     CONF_LINKED_BATTERY_CHARGING_SENSOR,
@@ -90,6 +94,7 @@ from .const import (
     CONF_VIDEO_MAP,
     CONF_VIDEO_PACKET_SIZE,
     CONF_VIDEO_PROFILE_NAMES,
+    CONFIG_OPTIONS,
     DEFAULT_AUDIO_CODEC,
     DEFAULT_AUDIO_MAP,
     DEFAULT_AUDIO_PACKET_SIZE,
@@ -97,6 +102,7 @@ from .const import (
     DEFAULT_MAX_FPS,
     DEFAULT_MAX_HEIGHT,
     DEFAULT_MAX_WIDTH,
+    DEFAULT_PORT,
     DEFAULT_STREAM_COUNT,
     DEFAULT_SUPPORT_AUDIO,
     DEFAULT_VIDEO_CODEC,
@@ -125,7 +131,10 @@ from .const import (
     VIDEO_CODEC_H264_V4L2M2M,
     VIDEO_CODEC_LIBX264,
 )
-from .models import HomeKitConfigEntry
+from .models import HomeKitConfigEntry, HomeKitEntryData
+
+if TYPE_CHECKING:
+    from . import HomeKit
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -770,3 +779,92 @@ def get_min_max(value1: float, value2: float) -> tuple[float, float]:
     bridge to go unavailable.
     """
     return min(value1, value2), max(value1, value2)
+
+
+@callback
+def async_update_entries_from_yaml(
+    hass: HomeAssistant, config: ConfigType, start_import_flow: bool
+) -> None:
+    """Update the config entries from YAML, optionally importing new ones."""
+    current_entries = hass.config_entries.async_entries(DOMAIN)
+    entries_by_name, entries_by_port = _async_get_imported_entries_indices(
+        current_entries
+    )
+    hk_config: list[dict[str, Any]] = config[DOMAIN]
+
+    for index, conf in enumerate(hk_config):
+        if _async_update_config_entry_from_yaml(
+            hass, entries_by_name, entries_by_port, conf
+        ):
+            continue
+
+        if start_import_flow:
+            conf[CONF_ENTRY_INDEX] = index
+            hass.async_create_task(
+                hass.config_entries.flow.async_init(
+                    DOMAIN,
+                    context={"source": SOURCE_IMPORT},
+                    data=conf,
+                ),
+                eager_start=True,
+            )
+
+
+def async_all_homekit_instances(hass: HomeAssistant) -> list[HomeKit]:
+    """All active HomeKit instances."""
+    hk_data: HomeKitEntryData | None
+    return [
+        hk_data.homekit
+        for entry in hass.config_entries.async_entries(DOMAIN)
+        if (hk_data := getattr(entry, "runtime_data", None))
+    ]
+
+
+def _async_get_imported_entries_indices(
+    current_entries: list[ConfigEntry],
+) -> tuple[dict[str, ConfigEntry], dict[int, ConfigEntry]]:
+    """Return a dicts of the entries by name and port."""
+
+    # For backwards compat, its possible the first bridge is using the default
+    # name.
+    entries_by_name: dict[str, ConfigEntry] = {}
+    entries_by_port: dict[int, ConfigEntry] = {}
+    for entry in current_entries:
+        if entry.source != SOURCE_IMPORT:
+            continue
+        entries_by_name[entry.data.get(CONF_NAME, BRIDGE_NAME)] = entry
+        entries_by_port[entry.data.get(CONF_PORT, DEFAULT_PORT)] = entry
+    return entries_by_name, entries_by_port
+
+
+@callback
+def _async_update_config_entry_from_yaml(
+    hass: HomeAssistant,
+    entries_by_name: dict[str, ConfigEntry],
+    entries_by_port: dict[int, ConfigEntry],
+    conf: ConfigType,
+) -> bool:
+    """Update a config entry with the latest yaml.
+
+    Returns True if a matching config entry was found
+
+    Returns False if there is no matching config entry
+    """
+    if not (
+        matching_entry := entries_by_name.get(conf.get(CONF_NAME, BRIDGE_NAME))
+        or entries_by_port.get(conf.get(CONF_PORT, DEFAULT_PORT))
+    ):
+        return False
+
+    # If they alter the yaml config we import the changes
+    # since there currently is no practical way to support
+    # all the options in the UI at this time.
+    data = conf.copy()
+    options = {}
+    for key in CONFIG_OPTIONS:
+        if key in data:
+            options[key] = data[key]
+            del data[key]
+
+    hass.config_entries.async_update_entry(matching_entry, data=data, options=options)
+    return True
