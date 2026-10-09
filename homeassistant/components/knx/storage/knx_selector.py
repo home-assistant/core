@@ -1,12 +1,15 @@
 """Selectors for KNX."""
 
 from collections.abc import Iterable
+from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, override
 
 import probatio
+from xknx.telegram.address import DeviceAddressableType
 
 from homeassistant.const import CONF_PAYLOAD
+from homeassistant.helpers import selector
 
 from ..const import CONF_PAYLOAD_LENGTH, CONF_VALUE, SelectConf
 from ..dpt import HaDptClass, get_supported_dpts
@@ -100,7 +103,10 @@ class GroupSelectOption(KNXSelectorBase):
     def __init__(self, schema: probatio.Schemable, translation_key: str) -> None:
         """Initialize the group select option schema."""
         self.translation_key = translation_key
-        self.schema = probatio.Schema(schema)
+        # a `DataclassSchema` stays unwrapped so it serializes as its fields
+        self.schema = (
+            schema if isinstance(schema, probatio.Schema) else probatio.Schema(schema)
+        )
 
     @override
     def serialize(self) -> dict[str, Any]:
@@ -298,6 +304,146 @@ class GASelector(KNXSelectorBase):
                 )
         else:
             schema[probatio.Remove(CONF_DPT)] = object
+
+
+@dataclass(kw_only=True, slots=True)
+class GroupAddressConfig:
+    """Validated group address configuration of a `GASelector`."""
+
+    write: str | int | None = None
+    state: str | int | None = None
+    passive: list[str | int] = field(default_factory=list)
+    dpt: str | None = None
+
+
+def write_and_passive(
+    config: GroupAddressConfig | None,
+) -> list[DeviceAddressableType | None] | None:
+    """Return the write address followed by the passive addresses."""
+    return [config.write, *config.passive] if config is not None else None
+
+
+def state_and_passive(
+    config: GroupAddressConfig | None,
+) -> list[DeviceAddressableType | None] | None:
+    """Return the state address followed by the passive addresses."""
+    return [config.state, *config.passive] if config is not None else None
+
+
+def write_address(config: GroupAddressConfig | None) -> DeviceAddressableType | None:
+    """Return the write address of an optional group address."""
+    return config.write if config is not None else None
+
+
+class TypedGroupSelect(GroupSelect):
+    """`GroupSelect` whose options are dataclass schemas.
+
+    Yields an instance of the matching option's dataclass. Temporary: fold into
+    `GroupSelect` once all platforms use typed configs.
+    """
+
+    @override
+    def __call__(self, data: Any) -> Any:
+        """Validate the passed data."""
+        if data is None:  # `Optional(key, default=None)` passes its default through
+            return None
+        return self.schema(data)
+
+
+def group_select(
+    *options: tuple[str, type], collapsible: bool = True
+) -> probatio.Coerce:
+    """Annotate a dataclass field with a group select of `(translation_key, type)`.
+
+    `Coerce` makes probatio run the selector before the field type check, like `ga`.
+    """
+    return probatio.Coerce(
+        TypedGroupSelect(
+            *(
+                GroupSelectOption(
+                    probatio.DataclassSchema(config_type),
+                    translation_key=translation_key,
+                )
+                for translation_key, config_type in options
+            ),
+            collapsible=collapsible,
+        )
+    )
+
+
+class GroupAddressSelector(GASelector):
+    """`GASelector` yielding a `GroupAddressConfig` instead of a dict.
+
+    Temporary: fold into `GASelector` once all platforms use typed configs.
+    """
+
+    @override
+    def __call__(self, data: Any) -> GroupAddressConfig | None:
+        """Validate the passed data."""
+        if data is None:  # `Optional(key, default=None)` passes its default through
+            return None
+        return GroupAddressConfig(**self.schema(data))
+
+    def to_storage(self, value: GroupAddressConfig | None) -> dict[str, Any] | None:
+        """Render a validated value to exactly the keys its schema emits."""
+        if value is None:
+            return None
+        data: dict[str, Any] = {}
+        if self.write:
+            data[CONF_GA_WRITE] = value.write
+        if self.state:
+            data[CONF_GA_STATE] = value.state
+        if self.passive:
+            data[CONF_GA_PASSIVE] = value.passive
+        if value.dpt is not None:
+            data[CONF_DPT] = value.dpt
+        return data
+
+
+def ga(
+    write: bool = True,
+    state: bool = True,
+    passive: bool = True,
+    write_required: bool = False,
+    state_required: bool = False,
+    dpt: type[Enum] | list[HaDptClass] | None = None,
+    dpt_required: bool = True,
+    valid_dpt: str | Iterable[str] | None = None,
+) -> probatio.Coerce:
+    """Annotate a dataclass field with a group address selector.
+
+    `Coerce` makes probatio run the selector before the field type check, so
+    the selector receives the raw mapping instead of a constructed instance.
+    """
+    return probatio.Coerce(
+        GroupAddressSelector(
+            write=write,
+            state=state,
+            passive=passive,
+            write_required=write_required,
+            state_required=state_required,
+            dpt=dpt,
+            dpt_required=dpt_required,
+            valid_dpt=valid_dpt,
+        )
+    )
+
+
+def knx_selector_in(
+    nodes: Iterable[Any],
+) -> KNXSelectorBase | selector.Selector | None:
+    """Return the first KNX or HA selector in `nodes`.
+
+    Looks into `Coerce` and `Maybe`, the wrappers used in field annotations.
+    """
+    for node in nodes:
+        if isinstance(node, probatio.Coerce):
+            node = node.type
+        elif isinstance(node, probatio.Maybe):
+            node = node.validator
+        if isinstance(node, (KNXSelectorBase, selector.Selector)):
+            return node
+    return None
 
 
 class SyncStateSelector(KNXSelectorBase):

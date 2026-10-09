@@ -10,13 +10,12 @@ from homeassistant.helpers import config_validation as cv, intent
 
 from . import (
     ATTR_HUMIDITY,
-    DOMAIN,
     SERVICE_SET_HUMIDITY,
     SERVICE_SET_MODE,
     SERVICE_TURN_ON,
     HumidifierEntityFeature,
 )
-from .const import HumidifierEntityCapabilityAttribute
+from .const import DOMAIN, HumidifierEntityCapabilityAttribute
 
 INTENT_HUMIDITY = "HassHumidifierSetpoint"
 INTENT_MODE = "HassHumidifierMode"

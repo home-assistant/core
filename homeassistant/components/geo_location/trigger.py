@@ -22,8 +22,7 @@ from homeassistant.helpers.event import TrackStates, async_track_state_change_fi
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
-from . import DOMAIN
-from .const import GeolocationEntityStateAttribute
+from .const import DOMAIN, GeolocationEntityStateAttribute
 
 _LOGGER = logging.getLogger(__name__)
 

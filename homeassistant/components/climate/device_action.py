@@ -19,7 +19,8 @@ from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity import get_capability, get_supported_features
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
-from . import DOMAIN, const
+from . import const
+from .const import DOMAIN
 
 ACTION_TYPES = {"set_hvac_mode", "set_preset_mode"}
 

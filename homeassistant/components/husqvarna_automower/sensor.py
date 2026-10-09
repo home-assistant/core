@@ -16,6 +16,7 @@ from aioautomower.model import (
     WorkArea,
     WorkAreaType,
 )
+from aioautomower.model.model_mower import UNKNOWN_ERROR
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -23,7 +24,13 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfLength, UnitOfTime
+from homeassistant.const import (
+    PERCENTAGE,
+    STATE_UNKNOWN,
+    EntityCategory,
+    UnitOfLength,
+    UnitOfTime,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -44,7 +51,9 @@ PARALLEL_UPDATES = 0
 ATTR_WORK_AREA_ID_ASSIGNMENT = "work_area_id_assignment"
 
 ERROR_KEY_LIST = sorted(
-    set(ERROR_KEYS) | {state.lower() for state in ERROR_STATES} | {"no_error"}
+    set(ERROR_KEYS)
+    | {state.lower() for state in ERROR_STATES}
+    | {"no_error", STATE_UNKNOWN}
 )
 
 INACTIVE_REASONS: list = [
@@ -135,6 +144,8 @@ def _get_current_work_area_dict(data: MowerAttributes) -> Mapping[str, Any]:
 @callback
 def _get_error_string(data: MowerAttributes) -> str:
     """Return the error key, if not provided the mower state or `no error`."""
+    if data.mower.error_key == UNKNOWN_ERROR:
+        return STATE_UNKNOWN
     if data.mower.error_key is not None:
         return data.mower.error_key
     if data.mower.state in ERROR_STATES:

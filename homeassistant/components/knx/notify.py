@@ -14,7 +14,7 @@ from homeassistant.helpers.entity_platform import (
 )
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, KNX_ADDRESS, KNX_MODULE_KEY
+from .const import KNX_ADDRESS, KNX_MODULE_KEY
 from .entity import (
     KnxUiEntity,
     KnxUiEntityPlatformController,
@@ -22,8 +22,7 @@ from .entity import (
     build_yaml_unique_id,
 )
 from .knx_module import KNXModule
-from .storage.const import CONF_ENTITY, CONF_GA_SEND
-from .storage.util import ConfigExtractor
+from .storage.entity_store_schema import KnxEntityData, NotifyKnxConfig
 
 
 async def async_setup_entry(
@@ -49,7 +48,9 @@ async def async_setup_entry(
             KnxYamlNotify(knx_module, entity_config)
             for entity_config in yaml_platform_config
         )
-    if ui_config := knx_module.config_store.get_entity_configs(Platform.NOTIFY):
+    if ui_config := knx_module.config_store.get_entity_configs(
+        Platform.NOTIFY, NotifyKnxConfig
+    ):
         entities.extend(
             KnxUiNotify(knx_module, unique_id, config)
             for unique_id, config in ui_config.items()
@@ -95,18 +96,21 @@ class KnxUiNotify(_KnxNotify, KnxUiEntity):
     _device: XknxNotification
 
     def __init__(
-        self, knx_module: KNXModule, unique_id: str, config: ConfigType
+        self,
+        knx_module: KNXModule,
+        unique_id: str,
+        config: KnxEntityData[NotifyKnxConfig],
     ) -> None:
         """Initialize a KNX notification."""
         super().__init__(
             knx_module=knx_module,
             unique_id=unique_id,
-            entity_config=config[CONF_ENTITY],
+            entity_config=config.entity,
         )
-        knx_conf = ConfigExtractor(config[DOMAIN])
+        knx_conf = config.knx
         self._device = XknxNotification(
             knx_module.xknx,
-            name=config[CONF_ENTITY][CONF_NAME],
-            group_address=knx_conf.get_write(CONF_GA_SEND),
-            value_type=knx_conf.get_dpt(CONF_GA_SEND),
+            name=config.entity.xknx_name,
+            group_address=knx_conf.ga_send.write,
+            value_type=knx_conf.ga_send.dpt,
         )

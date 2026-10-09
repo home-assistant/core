@@ -562,7 +562,7 @@ class HomematicipFullFlushLockControllerGlassBreak(
 ):
     """Representation of the HomematicIP full flush lock controller glass state."""
 
-    _attr_device_class = BinarySensorDeviceClass.PROBLEM
+    _attr_device_class = BinarySensorDeviceClass.GLASS_BREAK
 
     def __init__(self, hap: HomematicipHAP, device) -> None:
         """Initialize the full flush lock controller glass break sensor."""

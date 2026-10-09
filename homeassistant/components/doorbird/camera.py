@@ -7,7 +7,7 @@ from typing import override
 import aiohttp
 
 from homeassistant.components.camera import Camera, CameraEntityFeature
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
@@ -115,14 +115,24 @@ class DoorBirdCamera(DoorBirdEntity, Camera):
         """Subscribe to events."""
         await super().async_added_to_hass()
         event_to_entity_id = self._door_bird_data.event_entity_ids
-        for event in self._door_station.events:
+        for event in self._door_station.door_station_events:
             event_to_entity_id[event] = self.entity_id
+
+    @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Update the entity_id reported in events owned by this camera."""
+        super().async_entity_id_changed(old_entity_id)
+        event_to_entity_id = self._door_bird_data.event_entity_ids
+        for event in self._door_station.door_station_events:
+            if event_to_entity_id.get(event) == old_entity_id:
+                event_to_entity_id[event] = self.entity_id
 
     @override
     async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe from events."""
         event_to_entity_id = self._door_bird_data.event_entity_ids
-        for event in self._door_station.events:
+        for event in self._door_station.door_station_events:
             # If the clear api was called, the events may not be in the dict
             event_to_entity_id.pop(event, None)
         await super().async_will_remove_from_hass()

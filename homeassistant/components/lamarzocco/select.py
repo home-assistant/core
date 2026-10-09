@@ -13,7 +13,7 @@ from pylamarzocco.const import (
     WidgetType,
 )
 from pylamarzocco.devices import LaMarzoccoMachine
-from pylamarzocco.exceptions import RequestNotSuccessful
+from pylamarzocco.exceptions import LaMarzoccoError
 from pylamarzocco.models import BrewByWeightDoses, PreBrewing, SteamBoilerLevel
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
@@ -198,7 +198,7 @@ class LaMarzoccoSelectEntity(LaMarzoccoEntity, SelectEntity):
                 await self.entity_description.select_option_fn(
                     self.coordinator.device, option
                 )
-            except RequestNotSuccessful as exc:
+            except (LaMarzoccoError, TimeoutError) as exc:
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
                     translation_key="select_option_error",

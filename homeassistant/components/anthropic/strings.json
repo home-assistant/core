@@ -19,6 +19,15 @@
         },
         "description": "Reauthentication required. Please enter your updated API key."
       },
+      "reconfigure": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "[%key:component::anthropic::config::step::user::data_description::api_key%]"
+        },
+        "description": "Enter your updated Anthropic API key."
+      },
       "user": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]"
@@ -181,14 +190,29 @@
     "json_parse_error": {
       "message": "Error with Claude structured response."
     },
+    "response_context_window_exceeded": {
+      "message": "Claude reached the context window limit before completing the response."
+    },
+    "response_incomplete": {
+      "message": "Claude could not complete the response within the allowed number of requests."
+    },
+    "response_max_tokens": {
+      "message": "Claude reached the output token limit before completing the response."
+    },
     "response_not_found": {
       "message": "Last content in chat log is not an AssistantContent."
+    },
+    "response_stop_sequence": {
+      "message": "Claude stopped after encountering a stop sequence."
     },
     "subentry_not_found": {
       "message": "Subentry not found."
     },
     "system_message_not_found": {
       "message": "First message must be a system message."
+    },
+    "tool_args_parse_error": {
+      "message": "Claude returned invalid tool arguments."
     },
     "unexpected_chat_log_content": {
       "message": "Unexpected content type in chat log: {type}."
@@ -212,6 +236,9 @@
   "issues": {
     "model_deprecated": {
       "fix_flow": {
+        "error": {
+          "api_error": "[%key:component::anthropic::config_subentries::conversation::error::api_error%]"
+        },
         "step": {
           "init": {
             "data": {

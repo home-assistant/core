@@ -163,7 +163,7 @@ class MideaClimate(MideaEntity, ClimateEntity):
     )
     _attr_max_temp = TEMPERATURE_MAX
     _attr_min_temp = TEMPERATURE_MIN
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
 
     _zone: int | None = None
 
@@ -211,13 +211,13 @@ class MideaClimate(MideaEntity, ClimateEntity):
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Midea Climate target temperature."""
         return self._float_attribute("target_temperature")
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Midea Climate current temperature."""
         return self._float_attribute("indoor_temperature")
 
@@ -409,9 +409,7 @@ class MideaACClimate(MideaClimate):
     def current_humidity(self) -> float | None:
         """Return the current indoor humidity, or None if unavailable."""
         raw = self._device.get_attribute(ACAttributes.indoor_humidity)
-        # Some devices report invalid values (0 or 0xFF) for this sensor
-        # so filter those out and return None instead.
-        if isinstance(raw, (int, float)) and raw not in {0, 0xFF}:
+        if isinstance(raw, (int, float)):
             return float(raw)
         return None
 
@@ -536,7 +534,7 @@ class MideaCFClimate(MideaClimate):
         else:
             with midea_api_call():
                 self._device.set_raw_target_temperature(
-                    target_temperature=self.target_temperature or self.min_temp,
+                    target_temperature=self.native_target_temperature or self.min_temp,
                     hvac_mode=hvac_mode,
                 )
 
@@ -560,7 +558,7 @@ class MideaCFClimate(MideaClimate):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Midea CF Climate current temperature."""
         return self._float_attribute(CFAttributes.current_temperature)
 
@@ -669,7 +667,7 @@ class MideaC3Climate(MideaClimate):
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Midea C3 Climate target temperature."""
         target_temperature = self._device.get_attribute(C3Attributes.target_temperature)
         if (
@@ -681,7 +679,7 @@ class MideaC3Climate(MideaClimate):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Midea C3 Climate current temperature."""
         return self._float_attribute(C3Attributes.temp_tw_out)
 
@@ -740,7 +738,7 @@ class MideaFBClimate(MideaClimate):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Midea FB Climate current temperature."""
         return self._float_attribute(FBAttributes.current_temperature)
 

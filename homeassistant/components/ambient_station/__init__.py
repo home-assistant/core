@@ -69,7 +69,6 @@ async def async_setup_entry(
     try:
         await ambient.ws_connect()
     except WebsocketError as err:
-        LOGGER.error("Config entry failed: %s", err)
         raise ConfigEntryNotReady from err
 
     entry.runtime_data = ambient
