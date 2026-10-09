@@ -26,6 +26,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 FAKE_PNG = b"\x89PNG\r\n\x1a\nfakeimagedata"
+BRAND_PNG = b"\x89PNG\r\n\x1a\nfakebranddata"
 
 
 @pytest.fixture(autouse=True)

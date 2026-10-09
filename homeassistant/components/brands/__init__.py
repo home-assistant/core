@@ -156,6 +156,29 @@ class _BrandsBaseView(HomeAssistantView):
 
         return None
 
+    async def _get_image_data(
+        self,
+        cdn_path: str,
+        cache_subpath: str,
+    ) -> bytes | None:
+        """Read image data from the disk cache, fetching from CDN if needed."""
+        cache_path = self._cache_dir / cache_subpath
+
+        result = await self._hass.async_add_executor_job(
+            _read_cached_file_with_marker, cache_path
+        )
+        if result is None:
+            return await self._fetch_and_cache(cdn_path, cache_path)
+
+        data, mtime = result
+        # Schedule background refresh if stale
+        if time.time() - mtime > CACHE_TTL:
+            self._hass.async_create_background_task(
+                self._fetch_and_cache(cdn_path, cache_path),
+                f"brands_refresh_{cache_subpath}",
+            )
+        return data
+
     async def _serve_from_cache_or_cdn(
         self,
         cdn_path: str,
@@ -164,24 +187,7 @@ class _BrandsBaseView(HomeAssistantView):
         fallback_placeholder: bool = True,
     ) -> web.Response:
         """Serve from disk cache, fetching from CDN if needed."""
-        cache_path = self._cache_dir / cache_subpath
-        now = time.time()
-
-        # Try disk cache
-        result = await self._hass.async_add_executor_job(
-            _read_cached_file_with_marker, cache_path
-        )
-        if result is not None:
-            data, mtime = result
-            # Schedule background refresh if stale
-            if now - mtime > CACHE_TTL:
-                self._hass.async_create_background_task(
-                    self._fetch_and_cache(cdn_path, cache_path),
-                    f"brands_refresh_{cache_subpath}",
-                )
-        else:
-            # Cache miss - fetch from CDN
-            data = await self._fetch_and_cache(cdn_path, cache_path)
+        data = await self._get_image_data(cdn_path, cache_subpath)
 
         if data is None:
             if fallback_placeholder:
