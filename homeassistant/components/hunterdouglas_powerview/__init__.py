@@ -9,9 +9,9 @@ from aiopvapi.rooms import Rooms
 from aiopvapi.scenes import Scenes
 from aiopvapi.shades import Shades
 
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_API_VERSION, CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import AnyDeviceEntry
