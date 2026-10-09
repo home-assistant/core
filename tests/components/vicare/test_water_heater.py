@@ -25,48 +25,6 @@ ENTITY_WATER_HEATER = "water_heater.model0_domestic_hot_water"
 CIRCULATION_SCHEDULE_FIXTURES = [Fixture({"type:heatpump"}, "vicare/Vitocal250A.json")]
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_all_entities(
-    hass: HomeAssistant,
-    snapshot: SnapshotAssertion,
-    mock_config_entry: MockConfigEntry,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test all entities."""
-    fixtures: list[Fixture] = [Fixture({"type:boiler"}, "vicare/Vitodens300W.json")]
-    with (
-        patch(
-            "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
-        ),
-        patch(f"{MODULE}.PyViCare", return_value=MockPyViCare(fixtures)),
-        patch(f"{MODULE}.PLATFORMS", [Platform.WATER_HEATER]),
-    ):
-        await setup_integration(hass, mock_config_entry)
-
-    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
-
-
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_dhw_active_state(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test water heater uses direct DHW status for on/off state."""
-    fixtures: list[Fixture] = [Fixture({"type:boiler"}, "vicare/Vitodens300W.json")]
-    with (
-        patch(
-            "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
-        ),
-        patch(f"{MODULE}.PyViCare", return_value=MockPyViCare(fixtures)),
-        patch(f"{MODULE}.PLATFORMS", [Platform.WATER_HEATER]),
-    ):
-        await setup_integration(hass, mock_config_entry)
-        await async_update_entity(hass, ENTITY_WATER_HEATER)
-
-    state = hass.states.get(ENTITY_WATER_HEATER)
-    assert state.state == "on"
-
-
 async def _setup_water_heater(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_vicare: MockPyViCare
 ) -> None:
@@ -78,6 +36,40 @@ async def _setup_water_heater(
         patch(f"{MODULE}.PLATFORMS", [Platform.WATER_HEATER]),
     ):
         await setup_integration(hass, mock_config_entry)
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_all_entities(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test all entities."""
+    await _setup_water_heater(
+        hass,
+        mock_config_entry,
+        MockPyViCare([Fixture({"type:boiler"}, "vicare/Vitodens300W.json")]),
+    )
+
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_dhw_active_state(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test water heater uses direct DHW status for on/off state."""
+    await _setup_water_heater(
+        hass,
+        mock_config_entry,
+        MockPyViCare([Fixture({"type:boiler"}, "vicare/Vitodens300W.json")]),
+    )
+    await async_update_entity(hass, ENTITY_WATER_HEATER)
+
+    state = hass.states.get(ENTITY_WATER_HEATER)
+    assert state.state == "on"
 
 
 async def test_get_circulation_schedule(
