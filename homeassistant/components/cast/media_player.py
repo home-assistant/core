@@ -464,6 +464,8 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
             self._cast_info.friendly_name,
             connection_status.status,
         )
+        if self._chromecast is None:
+            return
         if connection_status.status == CONNECTION_STATUS_DISCONNECTED:
             self._attr_available = False
             self._invalidate()
@@ -913,7 +915,10 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
     def media_content_type(self) -> MediaType | None:
         """Content type of current playing media."""
         # The lovelace app loops media to prevent timing out, don't show that
-        if self.app_id == CAST_APP_ID_HOMEASSISTANT_LOVELACE:
+        if (
+            self._chromecast is None
+            or self.app_id == CAST_APP_ID_HOMEASSISTANT_LOVELACE
+        ):
             return None
         if (media_status := self._media_status()[0]) is None:
             return None

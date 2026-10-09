@@ -759,6 +759,36 @@ async def test_update_cast_chromecasts(hass: HomeAssistant) -> None:
     assert add_dev1.call_count == 1
 
 
+async def test_connection_status_after_invalidation(hass: HomeAssistant) -> None:
+    """Test a late connection callback after the Cast device was invalidated."""
+    entry = MockConfigEntry(domain=DOMAIN)
+    info = get_fake_chromecast_info()
+    entity = cast_media_player.CastMediaPlayerEntity(hass, entry, info)
+
+    entity.entity_id = "media_player.speaker"
+
+    connection_status = MagicMock(status="CONNECTED")
+
+    entity.new_connection_status(connection_status)
+
+    assert not entity.available
+
+
+async def test_media_content_type_without_chromecast(hass: HomeAssistant) -> None:
+    """Test media content type when the Chromecast is unavailable."""
+    entry = MockConfigEntry(domain=DOMAIN)
+    info = get_fake_chromecast_info()
+    entity = cast_media_player.CastMediaPlayerEntity(hass, entry, info)
+
+    entity.media_status = MagicMock(
+        media_is_tvshow=False,
+        media_is_movie=False,
+        media_is_musictrack=False,
+    )
+
+    assert entity.media_content_type is None
+
+
 async def test_entity_availability(hass: HomeAssistant) -> None:
     """Test handling of connection status."""
     entity_id = "media_player.speaker"
