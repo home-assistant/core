@@ -636,7 +636,7 @@ async def test_service_with_non_min_growatt_device(
     assert excinfo.value.translation_domain == DOMAIN
     assert excinfo.value.translation_key == "device_not_configured"
     assert excinfo.value.translation_placeholders == {
-        "device_type": "MIN",
+        "supported_devices": "MIN (token)",
         "serial_number": "TLX789012",
     }
 
@@ -1204,6 +1204,9 @@ async def test_no_sph_devices_fails_gracefully(
         )
     assert excinfo.value.translation_domain == DOMAIN
     assert excinfo.value.translation_key == "no_devices_configured"
+    assert excinfo.value.translation_placeholders == {
+        "supported_devices": "MIX (username/password), SPH (token)"
+    }
 
 
 async def test_sph_service_with_non_sph_growatt_device(
@@ -1237,7 +1240,7 @@ async def test_sph_service_with_non_sph_growatt_device(
     assert excinfo.value.translation_domain == DOMAIN
     assert excinfo.value.translation_key == "device_not_configured"
     assert excinfo.value.translation_placeholders == {
-        "device_type": "MIX/SPH",
+        "supported_devices": "MIX (username/password), SPH (token)",
         "serial_number": "MIN999999",
     }
 
@@ -1837,19 +1840,70 @@ async def test_write_ac_charge_times_classic_auth_incomplete_settings(
 
 
 @pytest.mark.parametrize(
-    ("key", "value"),
+    ("service", "key", "value"),
     [
-        pytest.param("forcedChargeTimeStart1", "not-a-time", id="unparsable"),
-        pytest.param("forcedChargeTimeStart1", "25:00", id="hour_out_of_range"),
-        pytest.param("forcedChargeTimeStart1", "01:70", id="minute_out_of_range"),
-        pytest.param("forcedChargeStopSwitch1", "yes", id="switch_not_an_int"),
+        pytest.param(
+            "write_ac_charge_times",
+            "forcedChargeTimeStart1",
+            "not-a-time",
+            id="unparsable",
+        ),
+        pytest.param(
+            "write_ac_charge_times",
+            "forcedChargeTimeStart1",
+            "25:00",
+            id="hour_out_of_range",
+        ),
+        pytest.param(
+            "write_ac_charge_times",
+            "forcedChargeTimeStart1",
+            "01:70",
+            id="minute_out_of_range",
+        ),
+        pytest.param(
+            "write_ac_charge_times",
+            "forcedChargeStopSwitch1",
+            "yes",
+            id="switch_not_an_int",
+        ),
+        pytest.param(
+            "write_ac_charge_times",
+            "chargePowerCommand",
+            "abc",
+            id="charge_power_not_an_int",
+        ),
+        pytest.param(
+            "write_ac_charge_times",
+            "wchargeSOCLowLimit2",
+            "abc",
+            id="charge_stop_soc_not_an_int",
+        ),
+        pytest.param(
+            "write_ac_charge_times",
+            "acChargeEnable",
+            "abc",
+            id="mains_enabled_not_an_int",
+        ),
+        pytest.param(
+            "write_ac_discharge_times",
+            "disChargePowerCommand",
+            "abc",
+            id="discharge_power_not_an_int",
+        ),
+        pytest.param(
+            "write_ac_discharge_times",
+            "wdisChargeSOCLowLimit2",
+            "abc",
+            id="discharge_stop_soc_not_an_int",
+        ),
     ],
 )
-async def test_write_ac_charge_times_classic_auth_invalid_settings(
+async def test_write_ac_times_classic_auth_invalid_settings(
     hass: HomeAssistant,
     mock_config_entry_classic: MockConfigEntry,
     mock_growatt_classic_api: MagicMock,
     device_registry: dr.DeviceRegistry,
+    service: str,
     key: str,
     value: str,
 ) -> None:
@@ -1874,7 +1928,7 @@ async def test_write_ac_charge_times_classic_auth_invalid_settings(
     with pytest.raises(HomeAssistantError) as excinfo:
         await hass.services.async_call(
             DOMAIN,
-            "write_ac_charge_times",
+            service,
             {"device_id": device_entry.id, "period_2_start": "02:00"},
             blocking=True,
         )
