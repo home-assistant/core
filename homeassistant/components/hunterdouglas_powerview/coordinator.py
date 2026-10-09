@@ -14,7 +14,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import HUB_EXCEPTIONS, DOMAIN
+from .const import DOMAIN, HUB_EXCEPTIONS
 
 if TYPE_CHECKING:
     from .model import PowerviewConfigEntry
@@ -35,7 +35,7 @@ class PowerviewShadeUpdateCoordinator(DataUpdateCoordinator[PowerviewShadeData])
         hass: HomeAssistant, 
         config_entry: PowerviewConfigEntry, 
         shades: Shades, 
-        hub: Hub
+        hub: Hub,
     ) -> None:
         """Initialize DataUpdateCoordinator to gather data for specific Hub."""
         self.shades = shades
@@ -75,21 +75,24 @@ class PowerviewShadeUpdateCoordinator(DataUpdateCoordinator[PowerviewShadeData])
 
         # Clean up stale devices
         current_shade_ids = set(shade_entries.processed.keys())
-        
+    
         device_registry = dr.async_get(self.hass)
         devices = dr.async_entries_for_config_entry(
             device_registry, self.config_entry.entry_id
         )
-        
+    
         # Audit registry devices to catch phantoms
         for device in devices:
             # Only include shades, don't include the hub device
             if device.via_device_id is not None:
                 for identifier in device.identifiers:
-                    if identifier[0] == DOMAIN and identifier[1] not in current_shade_ids:
+                    if (
+                        identifier[0] == DOMAIN 
+                        and identifier[1] not in current_shade_ids
+                    ):
                         _LOGGER.info(
                             "Removing device for shade %s that no longer exists on hub",
-                            identifier[1]
+                            identifier[1],
                         )
                         device_registry.async_remove_device(device.id)
 
