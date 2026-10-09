@@ -1,6 +1,5 @@
 """Switch platform for Hass.io addons."""
 
-import logging
 from typing import Any, override
 
 from aiohasupervisor import SupervisorError
@@ -15,9 +14,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .const import ADDONS_COORDINATOR
 from .entity import HassioAddonEntity
 from .handler import get_supervisor_client
-
-_LOGGER = logging.getLogger(__name__)
-
 
 ENTITY_DESCRIPTION = SwitchEntityDescription(
     key="state",
@@ -85,8 +81,6 @@ class HassioAddonSwitch(HassioAddonEntity, SwitchEntity):
         try:
             await supervisor_client.addons.stop_addon(self._addon_slug)
         except SupervisorError as err:
-            # pylint: disable-next=home-assistant-log-and-raise
-            _LOGGER.error("Failed to stop addon %s: %s", self._addon_slug, err)
             raise HomeAssistantError(err) from err
 
         await self.coordinator.force_addon_info_data_refresh(self._addon_slug)

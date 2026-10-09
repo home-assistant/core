@@ -87,7 +87,6 @@ class GoogleWeatherBaseCoordinator(TimestampDataUpdateCoordinator[T]):
             update_interval=update_interval,
         )
         self.subentry = subentry
-        self._data_type_name = data_type_name
         self._api_method = api_method
 
     @override
@@ -107,13 +106,6 @@ class GoogleWeatherBaseCoordinator(TimestampDataUpdateCoordinator[T]):
                 },
             ) from err
         except GoogleWeatherApiError as err:
-            # pylint: disable-next=home-assistant-log-and-raise
-            _LOGGER.error(
-                "Error fetching %s for %s: %s",
-                self._data_type_name,
-                self.subentry.title,
-                err,
-            )
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_error",

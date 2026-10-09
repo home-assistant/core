@@ -149,8 +149,6 @@ class GoogleGenerativeAITaskEntity(
                 ),
             )
         except (APIError, ValueError) as err:
-            # pylint: disable-next=home-assistant-log-and-raise
-            LOGGER.error("Error generating image: %s", err)
             raise HomeAssistantError(f"Error generating image: {err}") from err
 
         if response.prompt_feedback:
