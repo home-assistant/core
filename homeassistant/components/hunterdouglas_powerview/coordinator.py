@@ -31,10 +31,10 @@ class PowerviewShadeUpdateCoordinator(DataUpdateCoordinator[PowerviewShadeData])
     config_entry: PowerviewConfigEntry
 
     def __init__(
-        self, 
-        hass: HomeAssistant, 
-        config_entry: PowerviewConfigEntry, 
-        shades: Shades, 
+        self,
+        hass: HomeAssistant,
+        config_entry: PowerviewConfigEntry,
+        shades: Shades,
         hub: Hub,
     ) -> None:
         """Initialize DataUpdateCoordinator to gather data for specific Hub."""
