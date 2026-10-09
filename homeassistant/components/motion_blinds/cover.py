@@ -15,13 +15,7 @@ from homeassistant.components.cover import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import (
-    ATTR_ABSOLUTE_POSITION,
-    ATTR_AVAILABLE,
-    ATTR_WIDTH,
-    KEY_GATEWAY,
-    UPDATE_DELAY_STOP,
-)
+from .const import ATTR_ABSOLUTE_POSITION, ATTR_WIDTH, UPDATE_DELAY_STOP
 from .coordinator import MotionBlindsConfigEntry
 from .entity import MotionCoordinatorEntity
 
@@ -158,19 +152,6 @@ class MotionBaseDevice(MotionCoordinatorEntity, CoverEntity):
 
         self._attr_device_class = device_class
         self._attr_unique_id = blind.mac
-
-    @property
-    @override
-    # pylint: disable-next=home-assistant-coordinator-entity-available
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        if self.coordinator.data is None:
-            return False
-
-        if not self.coordinator.data[KEY_GATEWAY][ATTR_AVAILABLE]:
-            return False
-
-        return self.coordinator.data[self._blind.mac][ATTR_AVAILABLE]
 
     @property
     @override
