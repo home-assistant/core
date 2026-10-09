@@ -608,7 +608,8 @@ when, after an error assertion, it never asserts that a result has type
 `CREATE_ENTRY` or aborted with a `*_successful` reason (as reauth and
 reconfigure flows do); every error needs its own. A finishing assertion in a
 branch that cannot run after the error, such as the `else` of the `if` that
-shows the error, does not count.
+shows the error, does not count, and neither does one after a new flow is
+started with `async_init`: that flow is not the one that showed the error.
 
 Helper functions from the integration's own tests are followed, both for
 showing the error (such as `assert_form_error(result, "cannot_connect")`) and

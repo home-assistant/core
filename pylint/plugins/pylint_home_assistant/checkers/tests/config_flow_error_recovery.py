@@ -13,7 +13,8 @@ error assertion, it never asserts that a result has type ``CREATE_ENTRY`` or
 aborted with a ``*_successful`` reason (as reauth and reconfigure flows do).
 Every error assertion needs its own finishing assertion after it. A
 finishing assertion in a branch that cannot run after the error, such as the
-``else`` of the ``if`` that shows the error, does not count. Helper functions
+``else`` of the ``if`` that shows the error, does not count, and neither
+does one after a new flow is started with ``async_init``. Helper functions
 from the integration's own tests, such as ``assert_form_error(result)`` or
 ``_assert_create_entry(result)``, are followed when astroid can infer them.
 """
@@ -238,6 +239,14 @@ def _finishes_flow(
     return False
 
 
+def _starts_flow(node: nodes.Call) -> bool:
+    """Return True for ``hass.config_entries.flow.async_init(...)`` and the like."""
+    match node.func:
+        case nodes.Attribute(attrname="async_init"):
+            return True
+    return False
+
+
 def _own_helpers(node: nodes.Call, package: str) -> list[nodes.FunctionDef]:
     """Return the functions from the tests in *package* that *node* calls."""
     try:
@@ -366,11 +375,17 @@ def _unrecovered_error(
         for child in scope.nodes_of_class((nodes.Compare, nodes.Call))
         if _finishes_flow(child, package, arguments=arguments)
     ]
+    # A flow started after the error is not the flow that showed it
+    flow_starts = [
+        call.lineno for call in scope.nodes_of_class(nodes.Call) if _starts_flow(call)
+    ]
     unrecovered = [
         error
         for error in errors
         if not any(
-            finish.lineno > error.lineno and not _in_exclusive_branches(error, finish)
+            finish.lineno > error.lineno
+            and not _in_exclusive_branches(error, finish)
+            and not any(error.lineno < start < finish.lineno for start in flow_starts)
             for finish in finishes
         )
     ]
