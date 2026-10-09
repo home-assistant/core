@@ -11,7 +11,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.typing import UNDEFINED
 from homeassistant.helpers.update_coordinator import BaseDataUpdateCoordinatorProtocol
 
 from .const import DOMAIN
@@ -102,14 +101,13 @@ class AprilaireCoordinator(BaseDataUpdateCoordinatorProtocol):
             )
 
             if device is not None:
-                device_registry.async_update_device(
-                    device_id=device.id,
-                    name=new_device_info["name"],
-                    manufacturer=new_device_info["manufacturer"],
-                    hw_version=new_device_info["hw_version"],
-                    model=new_device_info.get("model", UNDEFINED),
-                    sw_version=new_device_info.get("sw_version", UNDEFINED),
-                )
+                # The device is found by its identifiers and connections
+                fields: dict[str, Any] = {
+                    key: value
+                    for key, value in new_device_info.items()
+                    if key not in ("identifiers", "connections")
+                }
+                device_registry.async_update_device(device_id=device.id, **fields)
 
     async def start_listen(self):
         """Start listening for data."""
