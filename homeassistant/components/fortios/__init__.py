@@ -67,7 +67,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: FortiOSConfigEntry) -> b
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: FortiOSConfigEntry) -> bool:
-    """Unload trackers and close the library session."""
+    """Unload the tracker platform."""
     if not await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         return False
     return True
