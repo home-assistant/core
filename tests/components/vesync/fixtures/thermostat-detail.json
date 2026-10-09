@@ -1,0 +1,33 @@
+{
+  "code": 0,
+  "msg": "request success",
+  "traceId": "1234",
+  "result": {
+    "result": {
+      "supportMode": [0, 1, 2, 3, 4, 5],
+      "workMode": 1,
+      "workStatus": 1,
+      "fanMode": 1,
+      "fanStatus": 1,
+      "tempUnit": "F",
+      "temperature": 66.5,
+      "humidity": 42,
+      "heatToTemp": 68,
+      "coolToTemp": 76,
+      "lockStatus": false,
+      "scheduleOrHold": 2,
+      "holdEndTime": 0,
+      "holdOption": 5,
+      "deadband": 3,
+      "ecoType": 3,
+      "alertStatus": 0,
+      "routines": [
+        {
+          "name": "Home",
+          "routineId": 1
+        }
+      ]
+    },
+    "code": 0
+  }
+}
