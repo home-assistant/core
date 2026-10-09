@@ -90,9 +90,6 @@
       "battery_discharge_energy": {
         "name": "Discharge energy today"
       },
-      "battery_power": {
-        "name": "Power"
-      },
       "battery_state_of_charge": {
         "name": "State of charge"
       },
