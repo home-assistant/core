@@ -109,8 +109,12 @@ async def test_flow_invalid_key(hass: HomeAssistant) -> None:
         )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {CONF_API_KEY: "invalid_api_key"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=MOCK_CONFIG
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_flow_conn_error(hass: HomeAssistant) -> None:
@@ -132,5 +136,9 @@ async def test_flow_conn_error(hass: HomeAssistant) -> None:
         )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=MOCK_CONFIG
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
