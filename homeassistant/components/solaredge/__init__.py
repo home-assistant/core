@@ -37,10 +37,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: SolarEdgeConfigEntry) ->
         try:
             response = await api.get_details(site_id)
         except (TimeoutError, ClientError, socket.gaierror) as ex:
+            # pylint: disable-next=home-assistant-log-and-raise
             LOGGER.error("Could not retrieve details from SolarEdge API")
             raise ConfigEntryNotReady from ex
 
         if "details" not in response:
+            # pylint: disable-next=home-assistant-log-and-raise
             LOGGER.error("Missing details data in SolarEdge response")
             raise ConfigEntryNotReady
 

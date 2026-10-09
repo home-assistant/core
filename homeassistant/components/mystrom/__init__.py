@@ -34,6 +34,7 @@ async def _async_get_device_state(
         else:
             await device.get_state()
     except MyStromConnectionError as err:
+        # pylint: disable-next=home-assistant-log-and-raise
         _LOGGER.error("No route to myStrom plug: %s", ip_address)
         raise ConfigEntryNotReady from err
 
@@ -56,6 +57,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: MyStromConfigEntry) -> b
     try:
         info = await pymystrom.get_device_info(host)
     except MyStromConnectionError as err:
+        # pylint: disable-next=home-assistant-log-and-raise
         _LOGGER.error("No route to myStrom plug: %s", host)
         raise ConfigEntryNotReady from err
 

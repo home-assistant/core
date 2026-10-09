@@ -20,6 +20,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: FingConfigEntry) 
     await coordinator.async_config_entry_first_refresh()
 
     if coordinator.data.network_id is None:
+        # pylint: disable-next=home-assistant-log-and-raise
         _LOGGER.warning(
             "Skip setting up Fing integration; Received an empty"
             " NetworkId from the request - Check if the API"

@@ -198,12 +198,14 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
                     RegisterDataListener(modules=MODULES)
                 )
             except AuthenticationException as exception:
+                # pylint: disable-next=home-assistant-log-and-raise
                 self.logger.error(
                     "Authentication failed at setup for %s: %s", self.title, exception
                 )
                 await self.clean_disconnect()
                 raise ConfigEntryAuthFailed from exception
             except (ConnectionClosedException, ConnectionErrorException) as exception:
+                # pylint: disable-next=home-assistant-log-and-raise
                 self.logger.warning(
                     "[register] Connection error occurred for %s: %s",
                     self.title,

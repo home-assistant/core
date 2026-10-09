@@ -38,6 +38,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: EcoforestConfigEntry) ->
             translation_placeholders={"host": host},
         ) from err
     except EcoforestConnectionError as err:
+        # pylint: disable-next=home-assistant-log-and-raise
         _LOGGER.error("Error communicating with device %s", host)
         raise ConfigEntryNotReady from err
 

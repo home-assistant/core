@@ -74,6 +74,7 @@ async def async_setup_entry(
         async with asyncio.timeout(DATA_WAIT_TIMEOUT):
             supported = await version.check_supported()
     except AuthenticationException as exception:
+        # pylint: disable-next=home-assistant-log-and-raise
         _LOGGER.error("Authentication failed for %s: %s", entry.title, exception)
         raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
@@ -132,6 +133,7 @@ async def async_setup_entry(
         async with asyncio.timeout(DATA_WAIT_TIMEOUT):
             await coordinator.async_get_data(MODULES)
     except AuthenticationException as exception:
+        # pylint: disable-next=home-assistant-log-and-raise
         _LOGGER.error("Authentication failed for %s: %s", entry.title, exception)
         raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,

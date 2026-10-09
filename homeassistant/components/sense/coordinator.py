@@ -72,6 +72,7 @@ class SenseTrendCoordinator(SenseCoordinator):
         try:
             await self._gateway.update_trend_data()
         except (SenseAuthenticationException, SenseMFARequiredException) as err:
+            # pylint: disable-next=home-assistant-log-and-raise
             _LOGGER.warning("Sense authentication expired")
             raise ConfigEntryAuthFailed(err) from err
         except SENSE_CONNECT_EXCEPTIONS as err:

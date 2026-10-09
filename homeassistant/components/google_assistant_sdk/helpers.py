@@ -94,6 +94,7 @@ async def async_send_text_commands(
             try:
                 resp = await assistant.assist(command)
             except RpcError as err:
+                # pylint: disable-next=home-assistant-log-and-raise
                 _LOGGER.error(
                     "Failed to send command '%s' to Google Assistant: %s",
                     command,

@@ -222,10 +222,12 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         try:
             devices = await self.hass.async_add_executor_job(self._tado.get_devices)
         except RequestException as err:
+            # pylint: disable-next=home-assistant-log-and-raise
             _LOGGER.error("Error updating Tado devices: %s", err)
             raise UpdateFailed(f"Error updating Tado devices: {err}") from err
 
         if not devices:
+            # pylint: disable-next=home-assistant-log-and-raise
             _LOGGER.error("No linked devices found for home ID %s", self.home_id)
             raise UpdateFailed(f"No linked devices found for home ID {self.home_id}")
 
@@ -270,6 +272,7 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             )
             zone_states = zone_states_call["zoneStates"]
         except RequestException as err:
+            # pylint: disable-next=home-assistant-log-and-raise
             _LOGGER.error("Error updating Tado zones: %s", err)
             raise UpdateFailed(f"Error updating Tado zones: {err}") from err
 
@@ -288,6 +291,7 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 self._tado.get_zone_overlay_default, zone_id
             )
         except RequestException as err:
+            # pylint: disable-next=home-assistant-log-and-raise
             _LOGGER.error("Error updating Tado zone %s: %s", zone_id, err)
             raise UpdateFailed(f"Error updating Tado zone {zone_id}: {err}") from err
 
@@ -303,6 +307,7 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 self._tado.get_zone_state, zone_id
             )
         except RequestException as err:
+            # pylint: disable-next=home-assistant-log-and-raise
             _LOGGER.error("Error updating Tado zone %s: %s", zone_id, err)
             raise UpdateFailed(f"Error updating Tado zone {zone_id}: {err}") from err
 
@@ -319,6 +324,7 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         try:
             weather, geofence = await self.hass.async_add_executor_job(_get_home_data)
         except RequestException as err:
+            # pylint: disable-next=home-assistant-log-and-raise
             _LOGGER.error("Error updating Tado home: %s", err)
             raise UpdateFailed(f"Error updating Tado home: {err}") from err
 

@@ -72,6 +72,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: VeraConfigEntry) -> bool
         )
     except RequestException as exception:
         # There was a network related error connecting to the Vera controller.
+        # pylint: disable-next=home-assistant-log-and-raise
         _LOGGER.exception("Error communicating with Vera API")
         raise ConfigEntryNotReady from exception
 

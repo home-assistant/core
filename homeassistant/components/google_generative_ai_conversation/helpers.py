@@ -48,6 +48,7 @@ def _parse_audio_mime_type(mime_type: str) -> dict[str, int]:
 
     """
     if not mime_type.lower().startswith("audio/l"):
+        # pylint: disable-next=home-assistant-log-and-raise
         LOGGER.warning("Received unexpected MIME type %s", mime_type)
         raise HomeAssistantError(f"Unsupported audio MIME type: {mime_type}")
 
