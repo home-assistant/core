@@ -12,6 +12,7 @@ from .const import MOCK_MAC
 from tests.common import MockConfigEntry
 from tests.typing import WebSocketGenerator
 
+
 async def test_setup_not_primary_hub(hass: HomeAssistant) -> None:
     """Test setup fails when the hub is not the primary hub."""
     entry = MockConfigEntry(domain=DOMAIN, data={"host": "1.2.3.4"}, unique_id=MOCK_MAC)
@@ -32,9 +33,10 @@ async def test_setup_not_primary_hub(hass: HomeAssistant) -> None:
         " Primary Hub can manage shades"
     )
 
+
 async def test_remove_shade_device_via_websocket_allowed_when_offline(
-    hass: HomeAssistant, 
-    device_registry: dr.DeviceRegistry, 
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test removing a shade device is successful if it is missing from the physical hub."""
@@ -80,8 +82,8 @@ async def test_remove_shade_device_via_websocket_allowed_when_offline(
 
 
 async def test_remove_shade_device_via_websocket_blocked_when_online(
-    hass: HomeAssistant, 
-    device_registry: dr.DeviceRegistry, 
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test that removing a shade device fails if it is still reported as online by the hub."""
@@ -103,8 +105,8 @@ async def test_remove_shade_device_via_websocket_blocked_when_online(
     # Mock runtime data structures to show the shade is still ACTIVE on the hub
     mock_coordinator = MagicMock()
     # The shade ID 111 is present in the hub's payload, so it must be protected
-    mock_coordinator.data.shades = {111: {"id": 111}} 
-    
+    mock_coordinator.data.shades = {111: {"id": 111}}
+
     mock_runtime_data = MagicMock(coordinator=mock_coordinator)
     config_entry.runtime_data = mock_runtime_data
 
@@ -126,9 +128,10 @@ async def test_remove_shade_device_via_websocket_blocked_when_online(
     assert msg["error"]["code"] == "home_assistant_error"
     assert device_registry.async_get(shade_device.id) is not None
 
+
 async def test_remove_hub_device_via_websocket_is_blocked(
-    hass: HomeAssistant, 
-    device_registry: dr.DeviceRegistry, 
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test that attempting to remove the root Hub device fails and is explicitly blocked."""
@@ -156,4 +159,3 @@ async def test_remove_hub_device_via_websocket_is_blocked(
     assert msg["success"] is False
     assert msg["error"]["code"] == "home_assistant_error"
     assert device_registry.async_get(hub_device.id) is not None
-    
