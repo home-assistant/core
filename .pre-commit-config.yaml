@@ -23,8 +23,8 @@ repos:
       - id: zizmor
         args:
           - --pedantic
-          - --min-severity=medium
-          - --config=.github/zizmor.yml
+          - --no-online-audits
+        exclude: ^\.github/workflows/.*\.lock\.yml$
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
     hooks:

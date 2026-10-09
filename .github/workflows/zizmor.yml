@@ -1,7 +1,7 @@
 name: Zizmor GitHub Actions security analysis
 
-# Audits GitHub Actions changes on pull requests and publishes accepted-code
-# findings to GitHub Code scanning.
+# Pull requests run the strict offline hook; accepted branches publish online
+# findings to GitHub Code Scanning.
 
 "on":
   push:
@@ -9,93 +9,142 @@ name: Zizmor GitHub Actions security analysis
       - dev
       - rc
       - master
-    paths:
-      - .github/actions/**
-      - .github/dependabot.yaml
-      - .github/dependabot.yml
-      - .github/workflows/**
-      - .github/zizmor.yml
-      - .pre-commit-config.yaml
   pull_request: ~
   schedule:
     # Weekly re-scan (Mondays 05:30 UTC) so the code scanning results stay fresh.
     - cron: "30 5 * * 1"
-  workflow_dispatch:
+  workflow_dispatch: ~
 
 permissions: {}
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: ${{ startsWith(github.ref, 'refs/pull/') }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  zizmor:
-    name: Check GitHub Actions workflows (code scanning)
+  gate:
+    name: Check GitHub Actions workflows
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     permissions:
-      contents: read # To check out the repository
+      contents: read # To check out the pull request merge commit
+      pull-requests: read # To list files changed by the pull request
     steps:
-      - name: Check out code from GitHub
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          fetch-depth: 2
-          persist-credentials: false
-
       - name: Check for relevant changes
         id: changes
-        shell: bash
-        run: |
-          if git diff --quiet HEAD^1 HEAD -- \
-            .github/actions \
-            .github/dependabot.yaml \
-            .github/dependabot.yml \
-            .github/workflows \
-            .github/zizmor.yml \
-            .pre-commit-config.yaml; then
-            echo "relevant=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "relevant=true" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Block medium and high pull request findings
-        if: steps.changes.outputs.relevant == 'true'
-        uses: zizmorcore/zizmor-action@cc914d7f3750a2d13d75c7f184a1060aa0e9d482 # v0.6.4
+        uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
         with:
-          collect: all
-          persona: pedantic
-          advanced-security: false
-          annotations: true
-          config: .github/zizmor.yml
-          min-severity: medium
-          version: 1.30.1
+          filters: |
+            relevant:
+              - '**/.github/{workflows/*,dependabot}.{yml,yaml}'
+              - '**/{action,.pre-commit-{config,hooks}}.{yml,yaml}'
+              - '{.github/,}zizmor.{yml,yaml}'
+
+      - name: Check out code from GitHub
+        if: steps.changes.outputs.relevant == 'true' || github.event.pull_request.changed_files >= 3000
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Run Zizmor
+        if: steps.changes.outputs.relevant == 'true' || github.event.pull_request.changed_files >= 3000
+        uses: j178/prek-action@4e14d07f9231acabce116ccfca13b13dd9755ece # v3.0.0
+        with:
+          extra-args: --all-files zizmor
 
       - name: Skip scan for unrelated pull request
-        if: steps.changes.outputs.relevant == 'false'
+        if: steps.changes.outputs.relevant == 'false' && github.event.pull_request.changed_files < 3000
         run: echo "No GitHub Actions security-related files changed."
 
   report:
-    name: Publish GitHub Actions findings (code scanning)
-    if: github.event_name != 'pull_request'
+    name: Scan accepted ${{ matrix.branch }} GitHub Actions
+    if: >-
+      github.repository_owner == 'home-assistant' &&
+      contains(fromJSON('["refs/heads/dev","refs/heads/rc","refs/heads/master"]'), github.ref)
     runs-on: ubuntu-24.04
     timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        branch: ${{ github.event_name == 'push' && fromJSON(format('["{0}"]', github.ref_name)) || fromJSON('["dev","rc","master"]') }}
     permissions:
-      contents: read # To check out the repository
-      security-events: write # To upload the SARIF results to code scanning
-      actions: read # To read workflow metadata
+      contents: read # To scan the accepted branch commit
     steps:
-      - name: Check out code from GitHub
+      - name: Check out accepted branch commit
+        id: checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          fetch-depth: 2
+          ref: ${{ github.event_name == 'push' && github.sha || matrix.branch }}
           persist-credentials: false
 
-      - name: Publish accepted-code findings
-        uses: zizmorcore/zizmor-action@cc914d7f3750a2d13d75c7f184a1060aa0e9d482 # v0.6.4
+      - name: Set up uv
+        uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
         with:
-          collect: all
-          persona: pedantic
-          advanced-security: true
-          config: .github/zizmor.yml
-          version: 1.30.1
+          version-file: requirements.txt
+
+      - name: Generate accepted-code SARIF
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SCAN_SHA: ${{ steps.checkout.outputs.commit }}
+        run: |
+          expected="zizmor $(grep -oP '^zizmor==\K.*' requirements_test_pre_commit.txt)"
+          actual="$(uvx --constraints requirements_test_pre_commit.txt zizmor --version)"
+          if [[ "${actual}" != "${expected}" ]]; then
+            echo "::error::Expected '${expected}', got '${actual}'."
+            exit 1
+          fi
+          uvx --constraints requirements_test_pre_commit.txt zizmor \
+            --pedantic --collect=all --strict-collection --no-exit-codes \
+            --no-progress --format=sarif . > zizmor.sarif
+          printf '%s\n' "${SCAN_SHA}" > sha.txt
+
+      - name: Upload SARIF artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: zizmor-sarif-${{ matrix.branch }}
+          path: |
+            zizmor.sarif
+            sha.txt
+          if-no-files-found: error
+          overwrite: true
+          retention-days: 1
+
+  upload:
+    name: Upload accepted ${{ matrix.branch }} GitHub Actions findings
+    needs: report
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        branch: ${{ github.event_name == 'push' && fromJSON(format('["{0}"]', github.ref_name)) || fromJSON('["dev","rc","master"]') }}
+    permissions:
+      actions: read # To download the same-run SARIF artifact
+      contents: read # To check out the scanned commit for fingerprinting
+      security-events: write # To upload accepted-code findings
+    steps:
+      - name: Download SARIF artifact
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: zizmor-sarif-${{ matrix.branch }}
+
+      - name: Read scanned commit
+        id: sha
+        run: echo "sha=$(cat sha.txt)" >> "${GITHUB_OUTPUT}"
+
+      - name: Check out scanned commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ steps.sha.outputs.sha }}
+          persist-credentials: false
+          path: src
+
+      - name: Upload accepted-code SARIF
+        uses: github/codeql-action/upload-sarif@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4.38.2
+        with:
+          sarif_file: zizmor.sarif
+          category: zizmor
+          checkout_path: ${{ github.workspace }}/src
+          ref: refs/heads/${{ matrix.branch }}
+          sha: ${{ steps.sha.outputs.sha }}
