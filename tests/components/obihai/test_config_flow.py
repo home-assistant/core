@@ -1,6 +1,7 @@
 """Test the Obihai config flow."""
 
-from collections.abc import Generator
+from collections.abc import Iterator
+from contextlib import contextmanager
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -16,6 +17,16 @@ from . import DHCP_SERVICE_INFO, USER_INPUT, MockPyObihai, get_schema_suggestion
 VALIDATE_AUTH_PATCH = "homeassistant.components.obihai.config_flow.validate_auth"
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
+
+
+@contextmanager
+def _patch_success() -> Iterator[None]:
+    """Patch a successful connection and authentication."""
+    with (
+        patch(VALIDATE_AUTH_PATCH, return_value=MockPyObihai()),
+        patch("homeassistant.components.obihai.config_flow.gethostbyname"),
+    ):
+        yield
 
 
 async def test_user_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
@@ -64,11 +75,20 @@ async def test_auth_failure(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"]["base"] == "invalid_auth"
 
+    with _patch_success():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            USER_INPUT,
+        )
+        await hass.async_block_till_done()
 
-async def test_connect_failure(hass: HomeAssistant, mock_gaierror: Generator) -> None:
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+@pytest.mark.usefixtures("mock_gaierror")
+async def test_connect_failure(hass: HomeAssistant) -> None:
     """Test we get the connection error for user flow."""
 
     result = await hass.config_entries.flow.async_init(
@@ -83,8 +103,16 @@ async def test_connect_failure(hass: HomeAssistant, mock_gaierror: Generator) ->
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"]["base"] == "cannot_connect"
+
+    with _patch_success():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            USER_INPUT,
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_dhcp_flow(hass: HomeAssistant) -> None:
@@ -161,6 +189,14 @@ async def test_dhcp_flow_auth_failure(hass: HomeAssistant) -> None:
             },
         )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"]["base"] == "invalid_auth"
     assert result["step_id"] == "user"
+
+    with _patch_success():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            USER_INPUT,
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY

@@ -1,5 +1,7 @@
 """Test the WS66i 6-Zone Amplifier config flow."""
 
+from collections.abc import Generator
+from contextlib import contextmanager
 from unittest.mock import patch
 
 from homeassistant import config_entries
@@ -23,6 +25,15 @@ from .test_media_player import AttrDict
 from tests.common import MockConfigEntry
 
 CONFIG = {CONF_IP_ADDRESS: "1.1.1.1"}
+
+
+@contextmanager
+def _patch_success() -> Generator[None]:
+    with (
+        patch("homeassistant.components.ws66i.config_flow.get_ws66i"),
+        patch("homeassistant.components.ws66i.async_setup_entry", return_value=True),
+    ):
+        yield
 
 
 async def test_form(hass: HomeAssistant) -> None:
@@ -73,8 +84,15 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
         )
 
     assert result2["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "cannot_connect"}
+
+    with _patch_success():
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], CONFIG
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_wrong_ip(hass: HomeAssistant) -> None:
@@ -91,8 +109,15 @@ async def test_form_wrong_ip(hass: HomeAssistant) -> None:
         )
 
     assert result2["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "cannot_connect"}
+
+    with _patch_success():
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], CONFIG
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_generic_exception(hass: HomeAssistant) -> None:
@@ -109,8 +134,15 @@ async def test_generic_exception(hass: HomeAssistant) -> None:
         )
 
     assert result2["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "unknown"}
+
+    with _patch_success():
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], CONFIG
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_options_flow(hass: HomeAssistant) -> None:

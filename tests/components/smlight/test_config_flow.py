@@ -802,6 +802,7 @@ async def test_reconfigure_flow(
     "mock_method",
     ["check_auth_needed", "get_info"],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure_connect_error(
     hass: HomeAssistant,
     mock_smlight_client: MagicMock,
@@ -809,6 +810,7 @@ async def test_reconfigure_connect_error(
     mock_method: str,
 ) -> None:
     """Test reconfigure flow handles connection errors."""
+    original_side_effect = getattr(mock_smlight_client, mock_method).side_effect
     getattr(mock_smlight_client, mock_method).side_effect = SmlightConnectionError
     mock_config_entry.add_to_hass(hass)
 
@@ -826,8 +828,17 @@ async def test_reconfigure_connect_error(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == SOURCE_RECONFIGURE
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
+
+    getattr(mock_smlight_client, mock_method).side_effect = original_side_effect
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: MOCK_HOST,
+        },
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
 
 
 @pytest.mark.parametrize(
@@ -1035,6 +1046,7 @@ async def test_options_flow_no_ble(
     assert result["data"] == {}
 
 
+@pytest.mark.usefixtures("mock_ultima_client")
 async def test_options_flow_not_loaded(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -1045,8 +1057,18 @@ async def test_options_flow_not_loaded(
     result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            "ble_scanner_mode": "passive",
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_options_flow_auth_error(

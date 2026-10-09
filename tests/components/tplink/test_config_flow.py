@@ -2250,9 +2250,18 @@ async def test_discovery_timeout_try_connect_all_fail(
             },
         )
         await hass.async_block_till_done()
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result3["errors"] == {"base": "cannot_connect"}
     assert mock_connect["connect"].call_count == 1
+
+    result4 = await hass.config_entries.flow.async_configure(
+        result3["flow_id"],
+        user_input={
+            CONF_USERNAME: "fake_username",
+            CONF_PASSWORD: "fake_password",
+        },
+    )
+    await hass.async_block_till_done()
+    assert result4["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_reauth_update_other_flows(

@@ -17,7 +17,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import setup_integration
-from .conftest import EMONCMS_FAILURE, FLOW_RESULT, SENSOR_NAME, UNIQUE_ID
+from .conftest import EMONCMS_FAILURE, FEEDS, FLOW_RESULT, SENSOR_NAME, UNIQUE_ID
 
 from tests.common import MockConfigEntry
 
@@ -90,12 +90,21 @@ async def test_reconfigure_api_error(
     )
     await hass.async_block_till_done()
     assert result["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "api_error"}
     assert result["description_placeholders"]["details"] == "failure"
     assert result["step_id"] == "reconfigure"
 
+    emoncms_client.async_request.return_value = {"success": True, "message": FEEDS}
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        USER_INPUT,
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
 
+
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_failure(
     hass: HomeAssistant, emoncms_client: AsyncMock
 ) -> None:
@@ -109,11 +118,17 @@ async def test_user_flow_failure(
         result["flow_id"],
         USER_INPUT,
     )
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"]["base"] == "api_error"
     assert result["description_placeholders"]["details"] == "failure"
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+
+    emoncms_client.async_request.return_value = {"success": True, "message": FEEDS}
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {**USER_INPUT, SYNC_MODE: SYNC_MODE_AUTO},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -201,11 +216,20 @@ async def test_options_flow_failure(
     emoncms_client.async_request.return_value = EMONCMS_FAILURE
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     await hass.async_block_till_done()
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"]["base"] == "api_error"
     assert result["description_placeholders"]["details"] == "failure"
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
+
+    emoncms_client.async_request.return_value = {"success": True, "message": FEEDS}
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_ONLY_INCLUDE_FEEDID: ["1"],
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert config_entry.options == {CONF_ONLY_INCLUDE_FEEDID: ["1"]}
 
 
 @pytest.mark.usefixtures("mock_setup_entry")

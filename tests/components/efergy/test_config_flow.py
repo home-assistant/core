@@ -46,8 +46,14 @@ async def test_flow_user_cannot_connect(hass: HomeAssistant) -> None:
         )
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
-        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"]["base"] == "cannot_connect"
+
+    with _patch_efergy(), _patch_setup():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=CONF_DATA,
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_flow_user_invalid_auth(hass: HomeAssistant) -> None:
@@ -59,8 +65,14 @@ async def test_flow_user_invalid_auth(hass: HomeAssistant) -> None:
         )
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
-        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"]["base"] == "invalid_auth"
+
+    with _patch_efergy(), _patch_setup():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=CONF_DATA,
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_flow_user_unknown(hass: HomeAssistant) -> None:
@@ -72,8 +84,14 @@ async def test_flow_user_unknown(hass: HomeAssistant) -> None:
         )
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
-        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"]["base"] == "unknown"
+
+    with _patch_efergy(), _patch_setup():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=CONF_DATA,
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_flow_reauth(hass: HomeAssistant) -> None:

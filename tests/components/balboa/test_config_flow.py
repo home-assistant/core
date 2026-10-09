@@ -68,8 +68,25 @@ async def test_form_cannot_connect(hass: HomeAssistant, client: MagicMock) -> No
         )
 
     assert result["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
+
+    with (
+        patch(
+            "homeassistant.components.balboa.config_flow.SpaClient.__aenter__",
+            return_value=client,
+        ),
+        patch(
+            "homeassistant.components.balboa.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            TEST_DATA,
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_spa_not_configured(hass: HomeAssistant, client: MagicMock) -> None:
@@ -88,8 +105,26 @@ async def test_form_spa_not_configured(hass: HomeAssistant, client: MagicMock) -
         )
 
     assert result["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
+
+    client.async_configuration_loaded.return_value = True
+    with (
+        patch(
+            "homeassistant.components.balboa.config_flow.SpaClient.__aenter__",
+            return_value=client,
+        ),
+        patch(
+            "homeassistant.components.balboa.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            TEST_DATA,
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_unknown_error(hass: HomeAssistant, client: MagicMock) -> None:
@@ -109,8 +144,25 @@ async def test_unknown_error(hass: HomeAssistant, client: MagicMock) -> None:
         )
 
     assert result2["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "unknown"}
+
+    with (
+        patch(
+            "homeassistant.components.balboa.config_flow.SpaClient.__aenter__",
+            return_value=client,
+        ),
+        patch(
+            "homeassistant.components.balboa.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            TEST_DATA,
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_already_configured(hass: HomeAssistant, client: MagicMock) -> None:

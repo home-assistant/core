@@ -86,8 +86,28 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
         )
 
     assert result2["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "unknown"}
+
+    with (
+        patch(
+            "homeassistant.components.epic_games_store.config_flow.EpicGamesStoreAPI.get_free_games",
+            return_value=DATA_FREE_GAMES,
+        ),
+        patch(
+            "homeassistant.components.epic_games_store.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_LANGUAGE: MOCK_LANGUAGE,
+                CONF_COUNTRY: MOCK_COUNTRY,
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_cannot_connect_wrong_param(hass: HomeAssistant) -> None:
@@ -109,8 +129,28 @@ async def test_form_cannot_connect_wrong_param(hass: HomeAssistant) -> None:
         )
 
     assert result2["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "unknown"}
+
+    with (
+        patch(
+            "homeassistant.components.epic_games_store.config_flow.EpicGamesStoreAPI.get_free_games",
+            return_value=DATA_FREE_GAMES,
+        ),
+        patch(
+            "homeassistant.components.epic_games_store.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_LANGUAGE: MOCK_LANGUAGE,
+                CONF_COUNTRY: MOCK_COUNTRY,
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_service_error(hass: HomeAssistant) -> None:

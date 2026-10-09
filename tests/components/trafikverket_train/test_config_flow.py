@@ -211,7 +211,10 @@ async def test_form_entry_already_exist(
     ],
 )
 async def test_flow_fails(
-    hass: HomeAssistant, side_effect: Exception, p_error: dict[str, str]
+    hass: HomeAssistant,
+    get_train_stations: list[list[StationInfoModel]],
+    side_effect: Exception,
+    p_error: dict[str, str],
 ) -> None:
     """Test config flow errors."""
     result = await hass.config_entries.flow.async_init(
@@ -236,8 +239,29 @@ async def test_flow_fails(
             },
         )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == p_error
+
+    with (
+        patch(
+            "homeassistant.components.trafikverket_train.config_flow.TrafikverketTrain.async_search_train_stations",
+            side_effect=get_train_stations,
+        ),
+        patch(
+            "homeassistant.components.trafikverket_train.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_API_KEY: "1234567890",
+                CONF_FROM: "Stockholm C",
+                CONF_TO: "Uppsala C",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.parametrize(
@@ -254,7 +278,10 @@ async def test_flow_fails(
     ],
 )
 async def test_flow_fails_departures(
-    hass: HomeAssistant, side_effect: Exception, p_error: dict[str, str]
+    hass: HomeAssistant,
+    get_train_stations: list[list[StationInfoModel]],
+    side_effect: Exception,
+    p_error: dict[str, str],
 ) -> None:
     """Test config flow errors."""
     result = await hass.config_entries.flow.async_init(
@@ -279,8 +306,29 @@ async def test_flow_fails_departures(
             },
         )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == p_error
+
+    with (
+        patch(
+            "homeassistant.components.trafikverket_train.config_flow.TrafikverketTrain.async_search_train_stations",
+            side_effect=get_train_stations,
+        ),
+        patch(
+            "homeassistant.components.trafikverket_train.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_API_KEY: "1234567890",
+                CONF_FROM: "Stockholm C",
+                CONF_TO: "Uppsala C",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_reauth_flow(

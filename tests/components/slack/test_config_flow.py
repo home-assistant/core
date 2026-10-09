@@ -66,8 +66,14 @@ async def test_flow_user_invalid_auth(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "invalid_auth"}
+
+    aioclient_mock.clear_requests()
+    mock_connection(aioclient_mock)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=CONF_INPUT
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_flow_user_cannot_connect(
@@ -87,11 +93,19 @@ async def test_flow_user_cannot_connect(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
 
+    aioclient_mock.clear_requests()
+    mock_connection(aioclient_mock)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=CONF_INPUT
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
-async def test_flow_user_unknown_error(hass: HomeAssistant) -> None:
+
+async def test_flow_user_unknown_error(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Test user initialized flow with unreachable server."""
     with patch(
         "homeassistant.components.slack.config_flow.AsyncWebClient.auth_test"
@@ -109,5 +123,10 @@ async def test_flow_user_unknown_error(hass: HomeAssistant) -> None:
         )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "unknown"}
+
+    mock_connection(aioclient_mock)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=CONF_INPUT
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY

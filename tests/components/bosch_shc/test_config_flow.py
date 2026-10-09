@@ -1,5 +1,7 @@
 """Test the Bosch SHC config flow."""
 
+from collections.abc import Generator
+from contextlib import contextmanager
 from ipaddress import ip_address
 from unittest.mock import PropertyMock, mock_open, patch
 
@@ -34,6 +36,51 @@ DISCOVERY_INFO = ZeroconfServiceInfo(
     properties={},
     type="_http._tcp.local.",
 )
+
+
+@contextmanager
+def _patch_mdns_info() -> Generator[None]:
+    """Patch a successful SHC information lookup."""
+    with (
+        patch(
+            "boschshcpy.session.SHCSession.mdns_info",
+            return_value=SHCInformation,
+        ),
+        patch(
+            "boschshcpy.information.SHCInformation.name",
+            new_callable=PropertyMock,
+            return_value="shc012345",
+        ),
+        patch(
+            "boschshcpy.information.SHCInformation.unique_id",
+            new_callable=PropertyMock,
+            return_value="test-mac",
+        ),
+    ):
+        yield
+
+
+@contextmanager
+def _patch_successful_pairing() -> Generator[None]:
+    """Patch a successful registration, authentication and entry setup."""
+    with (
+        patch(
+            "boschshcpy.register_client.SHCRegisterClient.register",
+            return_value={
+                "token": "abc:123",
+                "cert": b"content_cert",
+                "key": b"content_key",
+            },
+        ),
+        patch("os.mkdir"),
+        patch("homeassistant.components.bosch_shc.config_flow.open"),
+        patch("boschshcpy.session.SHCSession.authenticate"),
+        patch(
+            "homeassistant.components.bosch_shc.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        yield
 
 
 @pytest.mark.usefixtures("mock_zeroconf")
@@ -130,10 +177,28 @@ async def test_form_get_info_connection_error(hass: HomeAssistant) -> None:
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "user"
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "cannot_connect"}
 
+    with _patch_mdns_info():
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"host": "1.1.1.1"},
+        )
 
+    assert result3["type"] is FlowResultType.FORM
+    assert result3["step_id"] == "credentials"
+
+    with _patch_successful_pairing():
+        result4 = await hass.config_entries.flow.async_configure(
+            result3["flow_id"],
+            {"password": "test"},
+        )
+        await hass.async_block_till_done()
+
+    assert result4["type"] is FlowResultType.CREATE_ENTRY
+
+
+@pytest.mark.usefixtures("mock_zeroconf")
 async def test_form_get_info_exception(hass: HomeAssistant) -> None:
     """Test we handle exceptions."""
     result = await hass.config_entries.flow.async_init(
@@ -153,8 +218,25 @@ async def test_form_get_info_exception(hass: HomeAssistant) -> None:
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "user"
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "unknown"}
+
+    with _patch_mdns_info():
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"host": "1.1.1.1"},
+        )
+
+    assert result3["type"] is FlowResultType.FORM
+    assert result3["step_id"] == "credentials"
+
+    with _patch_successful_pairing():
+        result4 = await hass.config_entries.flow.async_configure(
+            result3["flow_id"],
+            {"password": "test"},
+        )
+        await hass.async_block_till_done()
+
+    assert result4["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.usefixtures("mock_zeroconf")
@@ -201,8 +283,16 @@ async def test_form_pairing_error(hass: HomeAssistant) -> None:
 
     assert result3["type"] is FlowResultType.FORM
     assert result3["step_id"] == "credentials"
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result3["errors"] == {"base": "pairing_failed"}
+
+    with _patch_successful_pairing():
+        result4 = await hass.config_entries.flow.async_configure(
+            result3["flow_id"],
+            {"password": "test"},
+        )
+        await hass.async_block_till_done()
+
+    assert result4["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.usefixtures("mock_zeroconf")
@@ -261,8 +351,16 @@ async def test_form_user_invalid_auth(hass: HomeAssistant) -> None:
 
     assert result3["type"] is FlowResultType.FORM
     assert result3["step_id"] == "credentials"
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result3["errors"] == {"base": "invalid_auth"}
+
+    with _patch_successful_pairing():
+        result4 = await hass.config_entries.flow.async_configure(
+            result3["flow_id"],
+            {"password": "test"},
+        )
+        await hass.async_block_till_done()
+
+    assert result4["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.usefixtures("mock_zeroconf")
@@ -321,8 +419,16 @@ async def test_form_validate_connection_error(hass: HomeAssistant) -> None:
 
     assert result3["type"] is FlowResultType.FORM
     assert result3["step_id"] == "credentials"
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result3["errors"] == {"base": "cannot_connect"}
+
+    with _patch_successful_pairing():
+        result4 = await hass.config_entries.flow.async_configure(
+            result3["flow_id"],
+            {"password": "test"},
+        )
+        await hass.async_block_till_done()
+
+    assert result4["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.usefixtures("mock_zeroconf")
@@ -381,8 +487,16 @@ async def test_form_validate_session_error(hass: HomeAssistant) -> None:
 
     assert result3["type"] is FlowResultType.FORM
     assert result3["step_id"] == "credentials"
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result3["errors"] == {"base": "session_error"}
+
+    with _patch_successful_pairing():
+        result4 = await hass.config_entries.flow.async_configure(
+            result3["flow_id"],
+            {"password": "test"},
+        )
+        await hass.async_block_till_done()
+
+    assert result4["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.usefixtures("mock_zeroconf")
@@ -441,8 +555,16 @@ async def test_form_validate_exception(hass: HomeAssistant) -> None:
 
     assert result3["type"] is FlowResultType.FORM
     assert result3["step_id"] == "credentials"
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result3["errors"] == {"base": "unknown"}
+
+    with _patch_successful_pairing():
+        result4 = await hass.config_entries.flow.async_configure(
+            result3["flow_id"],
+            {"password": "test"},
+        )
+        await hass.async_block_till_done()
+
+    assert result4["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.usefixtures("mock_zeroconf")
