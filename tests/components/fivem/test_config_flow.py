@@ -1,5 +1,7 @@
 """Test the FiveM config flow."""
 
+from collections.abc import Generator
+from contextlib import contextmanager
 from unittest.mock import patch
 
 from fivem import FiveMServerOfflineError
@@ -47,6 +49,19 @@ def _mock_fivem_info_invalid_game_name():
     info["vars"]["gamename"] = "redm"
 
     return info
+
+
+@contextmanager
+def _patch_fivem_success() -> Generator[None]:
+    """Patch a reachable FiveM server and the entry setup."""
+    with (
+        patch(
+            "fivem.fivem.FiveM.get_info_raw",
+            return_value=_mock_fivem_info_success(),
+        ),
+        patch("homeassistant.components.fivem.async_setup_entry", return_value=True),
+    ):
+        yield
 
 
 async def test_show_config_form(hass: HomeAssistant) -> None:
@@ -106,8 +121,15 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "cannot_connect"}
+
+    with _patch_fivem_success():
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], USER_INPUT
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_invalid(hass: HomeAssistant) -> None:
@@ -127,8 +149,15 @@ async def test_form_invalid(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "unknown"}
+
+    with _patch_fivem_success():
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], USER_INPUT
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_invalid_game_name(hass: HomeAssistant) -> None:
@@ -148,5 +177,12 @@ async def test_form_invalid_game_name(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "invalid_game_name"}
+
+    with _patch_fivem_success():
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], USER_INPUT
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY

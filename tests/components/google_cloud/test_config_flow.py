@@ -1,6 +1,8 @@
 """Test the Google Cloud config flow."""
 
-from unittest.mock import AsyncMock, MagicMock
+import json
+from pathlib import Path
+from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4
 
 from homeassistant import config_entries
@@ -49,6 +51,7 @@ async def test_user_flow_success(
 
 async def test_user_flow_missing_file(
     hass: HomeAssistant,
+    create_google_credentials_json: str,
     mock_setup_entry: AsyncMock,
 ) -> None:
     """Test user flow when uploaded file is missing."""
@@ -64,9 +67,20 @@ async def test_user_flow_missing_file(
     )
 
     assert result["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "invalid_file"}
     assert len(mock_setup_entry.mock_calls) == 0
+
+    ctx_mock = MagicMock()
+    ctx_mock.__enter__.return_value = Path(create_google_credentials_json)
+    with patch(
+        "homeassistant.components.google_cloud.config_flow.process_uploaded_file",
+        return_value=ctx_mock,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {UPLOADED_KEY_FILE: str(uuid4())},
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_user_flow_invalid_file(
@@ -89,10 +103,19 @@ async def test_user_flow_invalid_file(
     )
 
     assert result["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "invalid_file"}
     mock_process_uploaded_file.assert_called_with(hass, uploaded_file)
     assert len(mock_setup_entry.mock_calls) == 0
+
+    await hass.async_add_executor_job(
+        Path(create_invalid_google_credentials_json).write_text,
+        json.dumps(VALID_SERVICE_ACCOUNT_INFO),
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {UPLOADED_KEY_FILE: uploaded_file},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_import_flow(
