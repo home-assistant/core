@@ -197,13 +197,13 @@ async def async_remove_config_entry_device(
     if device.via_device_id is None:
         # This is the hub device, don't allow removal
         _LOGGER.warning(
-            "Cannot remove PowerView hub device %s. Remove the integration instead.",
+            "Cannot remove PowerView hub device %s. Remove the integration instead",
             device.name
         )
         return False
 
     # Extract the unique shade ID from the device's identifiers
-    shade_id: int | None = None
+    shade_id: str | None = None
     for identifier in device.identifiers:
         if identifier[0] == DOMAIN:
             # The second value in the tuple is the raw shade ID from the hub
@@ -218,15 +218,12 @@ async def async_remove_config_entry_device(
         and shade_id in coordinator.data.get_all_raw_data()
     ):
         _LOGGER.warning(
-            "Cannot remove active shade device %s (ID: %s) because it is still present on the PowerView Hub.",
+            "Cannot remove active shade device %s (ID: %s) because it is still present on the PowerView Hub",
             device.name,
             shade_id,
         )
         return False
 
     # Allow removing shade devices only if they've been removed from the hub
-    _LOGGER.info(
-        "Allowing removal of PowerView shade device %s",
-        device.name
-    )
+    _LOGGER.info("Allowing removal of PowerView shade device %s", device.name)
     return True
