@@ -201,7 +201,6 @@ async def test_single_available_server(
         assert result["type"] is FlowResultType.EXTERNAL_STEP_DONE
 
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
-        # pylint: disable-next=home-assistant-tests-config-flow-unique-id
         assert result["type"] is FlowResultType.CREATE_ENTRY
 
         assert (
@@ -214,6 +213,7 @@ async def test_single_available_server(
             == "https://1-2-3-4.123456789001234567890.plex.direct:32400"
         )
         assert result["data"][PLEX_SERVER_CONFIG][CONF_TOKEN] == MOCK_TOKEN
+        assert result["result"].unique_id == "unique_id_123"
 
     mock_setup_entry.assert_called_once()
 
@@ -260,7 +260,6 @@ async def test_multiple_servers_with_selection(
                 CONF_SERVER_IDENTIFIER: MOCK_SERVERS[0][CONF_SERVER_IDENTIFIER]
             },
         )
-        # pylint: disable-next=home-assistant-tests-config-flow-unique-id
         assert result["type"] is FlowResultType.CREATE_ENTRY
 
         assert (
@@ -273,6 +272,7 @@ async def test_multiple_servers_with_selection(
             == "https://1-2-3-4.123456789001234567890.plex.direct:32400"
         )
         assert result["data"][PLEX_SERVER_CONFIG][CONF_TOKEN] == MOCK_TOKEN
+        assert result["result"].unique_id == "unique_id_123"
 
     mock_setup_entry.assert_called_once()
 
@@ -319,7 +319,6 @@ async def test_adding_last_unconfigured_server(
         assert result["type"] is FlowResultType.EXTERNAL_STEP_DONE
 
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
-        # pylint: disable-next=home-assistant-tests-config-flow-unique-id
         assert result["type"] is FlowResultType.CREATE_ENTRY
 
         assert (
@@ -332,6 +331,7 @@ async def test_adding_last_unconfigured_server(
             == "https://1-2-3-4.123456789001234567890.plex.direct:32400"
         )
         assert result["data"][PLEX_SERVER_CONFIG][CONF_TOKEN] == MOCK_TOKEN
+        assert result["result"].unique_id == "unique_id_123"
 
     assert mock_setup_entry.call_count == 2
 
@@ -692,7 +692,6 @@ async def test_manual_config_with_token(
             result["flow_id"], user_input={CONF_TOKEN: MOCK_TOKEN}
         )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
     mock_url = "https://1-2-3-4.123456789001234567890.plex.direct:32400"
@@ -702,6 +701,7 @@ async def test_manual_config_with_token(
     assert result["data"][CONF_SERVER_IDENTIFIER] == "unique_id_123"
     assert result["data"][PLEX_SERVER_CONFIG][CONF_URL] == mock_url
     assert result["data"][PLEX_SERVER_CONFIG][CONF_TOKEN] == MOCK_TOKEN
+    assert result["result"].unique_id == "unique_id_123"
 
     # Complete Plex integration setup before teardown
     requests_mock.get(f"{mock_url}/library", text=empty_library)

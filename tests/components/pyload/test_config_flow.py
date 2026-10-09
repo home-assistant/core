@@ -341,10 +341,10 @@ async def test_hassio_discovery_confirm_only(
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "p539df76c_pyload-ng"
     assert result["data"] == {**ADDON_DISCOVERY_INFO, CONF_VERIFY_SSL: False}
+    assert result["result"].unique_id == "1234"
     assert len(mock_setup_entry.mock_calls) == 1
 
 

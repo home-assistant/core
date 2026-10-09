@@ -36,13 +36,13 @@ async def test_full_flow(
             CONF_PASSWORD: API_PASSWORD,
         },
     )
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == API_EMAIL
     assert result["data"] == {
         CONF_TOKEN: API_TOKEN,
         CONF_EMAIL: API_EMAIL,
     }
+    assert result["result"].unique_id == "39"
 
     assert len(mock_customer_api_client.mock_calls) == 1
 

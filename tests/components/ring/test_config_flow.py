@@ -39,7 +39,6 @@ async def test_form(
         )
         await hass.async_block_till_done()
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "hello@home-assistant.io"
     assert result2["data"] == {
@@ -47,6 +46,7 @@ async def test_form(
         CONF_USERNAME: "hello@home-assistant.io",
         CONF_TOKEN: {"access_token": "mock-token"},
     }
+    assert result2["result"].unique_id == "hello@home-assistant.io"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -287,7 +287,6 @@ async def test_dhcp_discovery(
             result["flow_id"],
             {"username": username, "password": "test-password"},
         )
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "hello@home-assistant.io"
     assert result["data"] == {
@@ -295,6 +294,7 @@ async def test_dhcp_discovery(
         CONF_USERNAME: username,
         CONF_TOKEN: {"access_token": "mock-token"},
     }
+    assert result["result"].unique_id == username
 
     config_entry = hass.config_entries.async_entry_for_domain_unique_id(
         DOMAIN, username

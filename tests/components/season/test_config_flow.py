@@ -26,10 +26,10 @@ async def test_full_user_flow(hass: HomeAssistant) -> None:
         user_input={CONF_TYPE: TYPE_ASTRONOMICAL},
     )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2.get("type") is FlowResultType.CREATE_ENTRY
     assert result2.get("title") == "Season"
     assert result2.get("data") == {CONF_TYPE: TYPE_ASTRONOMICAL}
+    assert result2["result"].unique_id == TYPE_ASTRONOMICAL
 
 
 async def test_single_instance_allowed(

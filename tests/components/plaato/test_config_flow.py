@@ -217,7 +217,6 @@ async def test_show_config_form_validate_token(hass: HomeAssistant) -> None:
             result["flow_id"], user_input={CONF_TOKEN: "valid_token"}
         )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == PlaatoDeviceType.Keg.name
     assert result["data"] == {
@@ -226,6 +225,7 @@ async def test_show_config_form_validate_token(hass: HomeAssistant) -> None:
         CONF_DEVICE_TYPE: PlaatoDeviceType.Keg,
         CONF_DEVICE_NAME: "device_name",
     }
+    assert result["result"].unique_id == "valid_token"
 
 
 async def test_show_config_form_no_cloud_webhook(

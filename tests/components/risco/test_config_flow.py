@@ -95,10 +95,10 @@ async def test_cloud_form(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == TEST_SITE_NAME
     assert result3["data"] == TEST_CLOUD_DATA
+    assert result3["result"].unique_id == TEST_CLOUD_DATA["username"]
     assert len(mock_setup_entry.mock_calls) == 1
     mock_close.assert_awaited_once()
 
@@ -274,10 +274,10 @@ async def test_local_form(hass: HomeAssistant) -> None:
         "type": "local",
         CONF_COMMUNICATION_DELAY: 0,
     }
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == TEST_SITE_NAME
     assert result3["data"] == expected_data
+    assert result3["result"].unique_id == TEST_SITE_NAME
     assert len(mock_setup_entry.mock_calls) == 1
     mock_close.assert_awaited_once()
 

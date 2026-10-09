@@ -18,6 +18,8 @@ from .const import DEVICE_NAME, DISCOVERY_INFO, METER_LIST
 
 from tests.common import MockConfigEntry
 
+UNIQUE_ID = "04B4:0003_1234_Rainforest Automation, Inc._RFA-Z105-2 HW2.7.3 EMU-2"
+
 
 @pytest.fixture
 def mock_device() -> Generator[AsyncMock]:
@@ -89,8 +91,8 @@ async def test_flow_usb(hass: HomeAssistant) -> None:
         result["flow_id"], user_input={CONF_MAC: [METER_LIST.meter_mac_ids[0].hex()]}
     )
     assert result
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result.get("type") is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == UNIQUE_ID
 
 
 @pytest.mark.usefixtures("mock_comports", "mock_device_no_open")
@@ -155,8 +157,8 @@ async def test_flow_user(hass: HomeAssistant) -> None:
         result["flow_id"], user_input={CONF_MAC: [METER_LIST.meter_mac_ids[0].hex()]}
     )
     assert result
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result.get("type") is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == UNIQUE_ID
 
 
 @pytest.mark.usefixtures("mock_comports")
