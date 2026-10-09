@@ -71,12 +71,12 @@ async def test_config_flow_from_dhcp(
             },
         )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result.get("type") is FlowResultType.CREATE_ENTRY
     assert result.get("title") == "1.2.3.4"
     assert result.get("data") == {
         CONF_HOST: "1.2.3.4",
     }
+    assert result["result"].unique_id == "00:11:22:33:44:55"
     assert len(mock_setup_entry.mock_calls) == 1
 
 

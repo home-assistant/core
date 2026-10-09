@@ -259,10 +259,10 @@ async def test_hassio_flow(hass: HomeAssistant) -> None:
 
         result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-        # pylint: disable-next=home-assistant-tests-config-flow-unique-id
         assert result2["type"] is FlowResultType.CREATE_ENTRY
         assert result2["title"] == test_data.config["name"]
         assert result2["data"] == test_data.config
+        assert result2["result"].unique_id == "hassio"
         assert len(mock_setup_entry.mock_calls) == 1
 
 

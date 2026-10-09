@@ -170,7 +170,6 @@ async def test_config_flow_gateway_success(hass: HomeAssistant) -> None:
         {CONF_HOST: TEST_HOST, CONF_TOKEN: TEST_TOKEN},
     )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TEST_MODEL
     assert result["data"] == {
@@ -183,6 +182,7 @@ async def test_config_flow_gateway_success(hass: HomeAssistant) -> None:
         CONF_MODEL: TEST_MODEL,
         CONF_MAC: TEST_MAC,
     }
+    assert result["result"].unique_id == TEST_MAC
 
 
 async def test_config_flow_gateway_cloud_success(hass: HomeAssistant) -> None:
@@ -204,7 +204,6 @@ async def test_config_flow_gateway_cloud_success(hass: HomeAssistant) -> None:
         },
     )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TEST_NAME
     assert result["data"] == {
@@ -217,6 +216,7 @@ async def test_config_flow_gateway_cloud_success(hass: HomeAssistant) -> None:
         CONF_MODEL: TEST_MODEL,
         CONF_MAC: TEST_MAC,
     }
+    assert result["result"].unique_id == TEST_MAC
 
 
 async def test_config_flow_gateway_cloud_multiple_success(hass: HomeAssistant) -> None:
@@ -251,7 +251,6 @@ async def test_config_flow_gateway_cloud_multiple_success(hass: HomeAssistant) -
         {"select_device": f"{TEST_NAME2} - {TEST_MODEL}"},
     )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TEST_NAME2
     assert result["data"] == {
@@ -264,6 +263,7 @@ async def test_config_flow_gateway_cloud_multiple_success(hass: HomeAssistant) -
         CONF_MODEL: TEST_MODEL,
         CONF_MAC: TEST_MAC2,
     }
+    assert result["result"].unique_id == TEST_MAC2
 
 
 async def test_config_flow_gateway_cloud_incomplete(hass: HomeAssistant) -> None:
@@ -461,7 +461,6 @@ async def test_zeroconf_gateway_success(hass: HomeAssistant) -> None:
         },
     )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TEST_NAME
     assert result["data"] == {
@@ -474,6 +473,7 @@ async def test_zeroconf_gateway_success(hass: HomeAssistant) -> None:
         CONF_MODEL: TEST_MODEL,
         CONF_MAC: TEST_MAC,
     }
+    assert result["result"].unique_id == TEST_MAC
 
 
 async def test_zeroconf_unknown_device(hass: HomeAssistant) -> None:

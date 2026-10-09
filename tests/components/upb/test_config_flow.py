@@ -77,25 +77,25 @@ async def test_full_upb_flow_with_serial_port(hass: HomeAssistant) -> None:
 
     assert flow["type"] is FlowResultType.FORM
     assert flow["errors"] == {}
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "UPB"
     assert result["data"] == {
         "device": "/dev/ttyS0",
         "file_path": "upb.upe",
     }
+    assert result["result"].unique_id == "42"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_form_user_with_tcp_upb(hass: HomeAssistant) -> None:
     """Test we can setup a TCP upb."""
     result = await valid_flow(hass, device="socket://1.2.3.4:2101")
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         "device": "socket://1.2.3.4:2101",
         "file_path": "upb.upe",
     }
+    assert result["result"].unique_id == "42"
     await hass.async_block_till_done()
 
 

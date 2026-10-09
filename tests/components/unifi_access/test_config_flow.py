@@ -600,7 +600,6 @@ async def test_discovery_confirm_success(
         },
     )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "UniFi Access"
     assert result["data"] == {
@@ -608,6 +607,7 @@ async def test_discovery_confirm_success(
         CONF_API_TOKEN: MOCK_API_TOKEN,
         CONF_VERIFY_SSL: False,
     }
+    assert result["result"].unique_id == "AABBCCDDEEFF"
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
