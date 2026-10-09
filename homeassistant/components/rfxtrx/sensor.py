@@ -158,6 +158,7 @@ SENSOR_TYPES = (
     ),
     RfxtrxSensorEntityDescription(
         key="Wind direction",
+        # pylint: disable-next=home-assistant-redundant-translation-key
         translation_key="wind_direction",
         state_class=SensorStateClass.MEASUREMENT_ANGLE,
         device_class=SensorDeviceClass.WIND_DIRECTION,

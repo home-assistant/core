@@ -107,6 +107,7 @@ SENSOR_DESCRIPTIONS = (
     ),
     GreencellSensorDescription(
         key="power",
+        # pylint: disable-next=home-assistant-redundant-translation-key
         translation_key="power",
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,

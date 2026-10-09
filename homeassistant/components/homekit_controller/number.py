@@ -62,6 +62,7 @@ NUMBER_ENTITIES: dict[str, NumberEntityDescription] = {
     CharacteristicsTypes.SET_DURATION: NumberEntityDescription(
         key=CharacteristicsTypes.SET_DURATION,
         device_class=NumberDeviceClass.DURATION,
+        # pylint: disable-next=home-assistant-redundant-translation-key
         translation_key="duration",
         entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=UnitOfTime.SECONDS,

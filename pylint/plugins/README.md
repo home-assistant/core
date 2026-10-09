@@ -144,6 +144,7 @@ Every check has a code following the
 | `W7437` | [`home-assistant-light-missing-supported-color-modes`](#w7437-home-assistant-light-missing-supported-color-modes) | Light entity reports a `color_mode` but does not set supported color modes |
 | `W7439` | [`home-assistant-tests-coordinator-async-refresh`](#w7439-home-assistant-tests-coordinator-async-refresh) | Tests should advance the time instead of refreshing a coordinator directly |
 | `W7440` | [`home-assistant-tests-config-flow-unique-id`](#w7440-home-assistant-tests-config-flow-unique-id) | Happy path config flow tests should assert the created entry's unique ID |
+| `W7442` | [`home-assistant-redundant-translation-key`](#w7442-home-assistant-redundant-translation-key) | `translation_key` only repeats the name the `device_class` already provides |
 
 
 ## `home_assistant_logger` checker
@@ -728,6 +729,46 @@ An EntityDescription field is set equal to a default already declared
 anywhere in the class hierarchy; the assignment can be removed. Only the
 literal defaults `None`, `True`, and `False` are checked; other default
 values are not flagged.
+
+
+## `home_assistant_redundant_translation_key` checker
+
+Detects entity descriptions and entity classes whose `translation_key` only
+repeats the name the `device_class` already provides.
+
+### `W7442`: `home-assistant-redundant-translation-key`
+
+Entities on the `binary_sensor`, `button`, `event`, `number`, `sensor` and
+`update` platforms are named after their device class when they have no
+name of their own. The name comes from `entity_component.<device_class>.name`
+in the platform's `strings.json`. Sensors with the `enum` device class are
+the exception.
+
+An entity description that sets a `device_class` and a `translation_key`
+whose name translates to the same string adds nothing:
+
+```python
+SensorEntityDescription(
+    key="power",
+    translation_key="power",  # "Power", the same as the device class name
+    device_class=SensorDeviceClass.POWER,
+)
+```
+
+The same goes for an entity class that sets `_attr_translation_key` and
+`_attr_device_class` in its body.
+
+When the key is used for nothing else, remove it and its `strings.json`
+entry. When it also holds other translations (such as states, state
+attributes or the unit of measurement) or icons, or the integration's code
+reads it, keep the key and remove only its `name`.
+
+Entities with an explicit `name` (or `_attr_name`) are skipped, as that name
+takes over once the translated name is gone. So are translated names that
+another translation references with `[%key:...%]`.
+
+Other platforms, such as `switch`, don't fall back to the device class name,
+so they are not checked.
 
 
 ## `home_assistant_duplicate_const` checker
