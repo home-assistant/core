@@ -392,6 +392,7 @@ def micromodule_relay_device(
     device_id: str = "hdm:ZigBee:relay1",
     name: str = "Relay",
     child_lock: bool = False,
+    has_child_protection: bool = True,
     supports_switch_configuration: bool = False,
     swap_inputs: bool = False,
     swap_outputs: bool = False,
@@ -410,6 +411,7 @@ def micromodule_relay_device(
     device.deleted = False
     device.status = "AVAILABLE"
     device.child_lock = child_lock
+    device.device_service_ids = {"ChildProtection"} if has_child_protection else set()
     device.supports_switch_configuration = supports_switch_configuration
     device.swap_inputs = swap_inputs
     device.swap_outputs = swap_outputs
@@ -426,6 +428,7 @@ def light_switch_bsm_device(
     device_id: str = "hdm:ZigBee:lightswitch1",
     name: str = "Light switch",
     child_lock: bool = False,
+    has_child_protection: bool = True,
 ) -> SHCLightSwitchBSM:
     """Build a minimal device double for the light_switches_bsm bucket.
 
@@ -444,6 +447,7 @@ def light_switch_bsm_device(
     device.status = "AVAILABLE"
     device.switchstate = PowerSwitchService.State.OFF
     device.child_lock = child_lock
+    device.device_service_ids = {"ChildProtection"} if has_child_protection else set()
     return device
 
 

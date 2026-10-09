@@ -200,6 +200,29 @@ async def test_light_switch_bsm_child_lock_unique_id(
 
 @pytest.mark.parametrize(
     "device_buckets",
+    [
+        {
+            "light_switches_bsm": [
+                light_switch_bsm_device(child_lock=False, has_child_protection=False)
+            ]
+        }
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("mock_session")
+async def test_no_child_lock_without_child_protection_service(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """No child-lock switch is created for a device lacking ChildProtection."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("switch.light_switch") is not None
+    assert hass.states.get("switch.light_switch_child_lock") is None
+
+
+@pytest.mark.parametrize(
+    "device_buckets",
     [{"presence_simulation_system": presence_simulation_system_device(enabled=False)}],
     indirect=True,
 )
