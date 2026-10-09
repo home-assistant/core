@@ -4,7 +4,7 @@ import datetime
 from unittest.mock import AsyncMock, patch
 
 from freezegun import freeze_time
-from google.genai.types import GenerateContentResponse, ThinkingLevel
+from google.genai.types import GenerateContentResponse, ThinkingConfig, ThinkingLevel
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -879,6 +879,37 @@ def test_create_thinking_config_gemini3_auto(
     assert result is not None
     assert result.include_thoughts is True
     assert result.thinking_level is None
+
+
+@pytest.mark.parametrize(
+    ("model", "thinking_level", "expected"),
+    [
+        pytest.param(
+            "models/gemma-4-26b-a4b-it",
+            "minimal",
+            ThinkingConfig(thinking_level=ThinkingLevel.MINIMAL),
+            id="minimal",
+        ),
+        pytest.param(
+            "gemma-4-31b-it",
+            "high",
+            ThinkingConfig(thinking_level=ThinkingLevel.HIGH),
+            id="high",
+        ),
+        # The API rejects any other thinking level for Gemma 4
+        pytest.param("models/gemma-4-31b-it", "low", None, id="low"),
+        pytest.param("models/gemma-4-31b-it", "medium", None, id="medium"),
+        pytest.param("models/gemma-4-31b-it", "auto", None, id="auto"),
+        pytest.param("models/gemma-4-31b-it", None, None, id="unset"),
+    ],
+)
+def test_create_thinking_config_gemma4(
+    model: str,
+    thinking_level: str | None,
+    expected: ThinkingConfig | None,
+) -> None:
+    """Test Gemma 4 models only send the supported thinking levels."""
+    assert _create_thinking_config(model, 0, thinking_level) == expected
 
 
 @pytest.mark.parametrize(

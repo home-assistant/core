@@ -269,7 +269,11 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
 
         if self.fritz_status.has_wan_support:
             self.device_conn_type = self.fritz_status.connection_service
-            self.device_is_router = self.fritz_status.has_wan_enabled
+            try:
+                self.device_is_router = self.fritz_status.has_wan_enabled
+            except FritzActionError:
+                LOGGER.debug("assume that device has no wan enabled", exc_info=True)
+                self.device_is_router = False
 
         self.has_call_deflections = "X_AVM-DE_OnTel1" in self.connection.services
 

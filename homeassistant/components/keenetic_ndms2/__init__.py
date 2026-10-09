@@ -2,7 +2,7 @@
 
 import logging
 
-from homeassistant.const import CONF_SCAN_INTERVAL, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -14,7 +14,6 @@ from .const import (
     CONF_TRY_HOTSPOT,
     DEFAULT_CONSIDER_HOME,
     DEFAULT_INTERFACE,
-    DEFAULT_SCAN_INTERVAL,
 )
 from .router import KeeneticConfigEntry, KeeneticRouter
 
@@ -88,7 +87,6 @@ async def async_unload_entry(
 def async_add_defaults(hass: HomeAssistant, entry: KeeneticConfigEntry) -> None:
     """Populate default options."""
     options = {
-        CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL,
         CONF_CONSIDER_HOME: DEFAULT_CONSIDER_HOME,
         CONF_INTERFACES: [DEFAULT_INTERFACE],
         CONF_TRY_HOTSPOT: True,

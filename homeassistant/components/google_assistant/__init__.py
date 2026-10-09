@@ -78,7 +78,7 @@ GOOGLE_ASSISTANT_SCHEMA = probatio.All(
             ): probatio.EnsureList(),
             probatio.Optional(CONF_ENTITY_CONFIG): {cv.entity_id: ENTITY_SCHEMA},
             # str on purpose, makes sure it is configured correctly.
-            probatio.Optional(CONF_SECURE_DEVICES_PIN): str,
+            probatio.Optional(probatio.Secret(CONF_SECURE_DEVICES_PIN)): str,
             probatio.Optional(CONF_REPORT_STATE, default=False): cv.boolean,
             probatio.Optional(CONF_SERVICE_ACCOUNT): GOOGLE_SERVICE_ACCOUNT,
             # deprecated configuration options

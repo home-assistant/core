@@ -312,13 +312,19 @@ class GroupAddressConfig:
     passive: list[str | int] = field(default_factory=list)
     dpt: str | None = None
 
-    def write_and_passive(self) -> list[DeviceAddressableType | None]:
-        """Return the write address followed by the passive addresses."""
-        return [self.write, *self.passive]
 
-    def state_and_passive(self) -> list[DeviceAddressableType | None]:
-        """Return the state address followed by the passive addresses."""
-        return [self.state, *self.passive]
+def write_and_passive(
+    config: GroupAddressConfig | None,
+) -> list[DeviceAddressableType | None] | None:
+    """Return the write address followed by the passive addresses."""
+    return [config.write, *config.passive] if config is not None else None
+
+
+def state_and_passive(
+    config: GroupAddressConfig | None,
+) -> list[DeviceAddressableType | None] | None:
+    """Return the state address followed by the passive addresses."""
+    return [config.state, *config.passive] if config is not None else None
 
 
 class GroupAddressSelector(GASelector):

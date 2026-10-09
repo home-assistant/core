@@ -741,7 +741,7 @@ DISCOVERY_SCHEMAS = [
             translation_key="air_quality",
             device_class=SensorDeviceClass.ENUM,
             options=[x for x in AIR_QUALITY_MAP.values() if x is not None],
-            device_to_ha=lambda x: AIR_QUALITY_MAP[x],
+            device_to_ha=AIR_QUALITY_MAP.get,
         ),
         entity_class=MatterSensor,
         required_attributes=(clusters.AirQuality.Attributes.AirQuality,),

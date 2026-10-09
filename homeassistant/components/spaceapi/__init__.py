@@ -190,7 +190,7 @@ CONTACT_SCHEMA = probatio.Schema(
         probatio.Optional(CONF_JABBER): cv.string,
         probatio.Optional(CONF_ISSUE_MAIL): cv.string,
         probatio.Optional(CONF_KEYMASTERS): probatio.All(
-            probatio.EnsureList(), [KEYMASTER_SCHEMA], probatio.Length(min=1)
+            probatio.EnsureList(), [KEYMASTER_SCHEMA], probatio.NonEmpty()
         ),
     },
     required=False,
@@ -225,7 +225,7 @@ CONFIG_SCHEMA = probatio.Schema(
                 probatio.Optional(CONF_SENSORS): SENSOR_SCHEMA,
                 probatio.Optional(CONF_SPACEFED): SPACEFED_SCHEMA,
                 probatio.Optional(CONF_CAM): probatio.All(
-                    probatio.EnsureList(), [cv.url], probatio.Length(min=1)
+                    probatio.EnsureList(), [cv.url], probatio.NonEmpty()
                 ),
                 probatio.Optional(CONF_STREAM): STREAM_SCHEMA,
                 probatio.Optional(CONF_FEEDS): FEEDS_SCHEMA,

@@ -96,8 +96,7 @@
         "sections": {
           "more_options": {
             "data": {
-              "concurrency": "Maximum concurrent requests in Risco local",
-              "scan_interval": "How often to poll Risco Cloud (in seconds)"
+              "concurrency": "Maximum concurrent requests in Risco local"
             },
             "name": "More options"
           }

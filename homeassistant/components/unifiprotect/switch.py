@@ -11,7 +11,6 @@ from uiprotect.data import (
     ModelType,
     ProtectAdoptableDeviceModel,
     PublicDeviceModel,
-    PublicHdrMode,
     PublicRelayOutput,
     RecordingMode,
     Relay,
@@ -63,10 +62,6 @@ async def _set_highfps(obj: PublicCamera, value: bool) -> None:
     await obj.set_video_mode(VideoMode.HIGH_FPS if value else VideoMode.DEFAULT)
 
 
-async def _set_hdr(obj: Camera, value: bool) -> None:
-    await obj.set_hdr_mode_public(PublicHdrMode.AUTO if value else PublicHdrMode.OFF)
-
-
 CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
     ProtectSwitchEntityDescription(
         key="ssh",
@@ -84,16 +79,6 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         ufp_required_field="feature_flags.has_led_status",
         ufp_public_value="led_settings.is_enabled",
         ufp_set_method="set_status_light",
-        ufp_perm=PermRequired.WRITE,
-    ),
-    ProtectSwitchEntityDescription[Camera](
-        key="hdr_mode",
-        translation_key="hdr_mode",
-        entity_category=EntityCategory.CONFIG,
-        entity_registry_enabled_default=False,
-        ufp_required_field="feature_flags.has_hdr",
-        ufp_value="hdr_mode",
-        ufp_set_method_fn=_set_hdr,
         ufp_perm=PermRequired.WRITE,
     ),
     ProtectSwitchEntityDescription[Camera](

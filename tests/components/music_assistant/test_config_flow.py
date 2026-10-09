@@ -517,6 +517,48 @@ async def test_hassio_flow_updates_failed_entry_and_reloads(
 
 
 @pytest.mark.parametrize(
+    ("entry_state", "reload_expected"),
+    [
+        (ConfigEntryState.SETUP_RETRY, True),
+        (ConfigEntryState.LOADED, False),
+        (ConfigEntryState.NOT_LOADED, False),
+    ],
+)
+async def test_hassio_flow_unchanged_entry_reloads_only_when_retrying(
+    hass: HomeAssistant,
+    mock_get_server_info: AsyncMock,
+    entry_state: ConfigEntryState,
+    reload_expected: bool,
+) -> None:
+    """Test hassio discovery with unchanged data reloads only a retrying entry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Music Assistant",
+        data={CONF_URL: "http://addon-music-assistant:8094", CONF_TOKEN: "test_token"},
+        unique_id="1234",
+    )
+    entry.add_to_hass(hass)
+    entry.mock_state(hass, entry_state)
+
+    with patch.object(
+        hass.config_entries, "async_schedule_reload"
+    ) as mock_schedule_reload:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_HASSIO},
+            data=HASSIO_DATA,
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    if reload_expected:
+        mock_schedule_reload.assert_called_once_with(entry.entry_id)
+    else:
+        mock_schedule_reload.assert_not_called()
+
+
+@pytest.mark.parametrize(
     ("exception", "error_reason"),
     [
         (InvalidServerVersion("invalid_server_version"), "invalid_server_version"),
@@ -563,6 +605,49 @@ async def test_zeroconf_addon_server_ignored(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_discovered_addon"
+
+
+@pytest.mark.parametrize(
+    ("entry_state", "reload_expected"),
+    [
+        (ConfigEntryState.SETUP_RETRY, True),
+        (ConfigEntryState.LOADED, False),
+    ],
+)
+async def test_zeroconf_addon_server_reloads_retrying_entry(
+    hass: HomeAssistant,
+    mock_get_server_info: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entry_state: ConfigEntryState,
+    reload_expected: bool,
+) -> None:
+    """Test zeroconf discovery of an add-on server reloads a retrying entry."""
+    mock_config_entry.add_to_hass(hass)
+    mock_config_entry.mock_state(hass, entry_state)
+    addon_zeroconf_data = deepcopy(ZEROCONF_DATA)
+    addon_zeroconf_data.properties["homeassistant_addon"] = (
+        "True"  # Zeroconf properties are strings
+    )
+
+    with patch.object(
+        hass.config_entries, "async_schedule_reload"
+    ) as mock_schedule_reload:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_ZEROCONF},
+            data=addon_zeroconf_data,
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    # The add-on entry keeps its own URL, not the zeroconf base_url
+    assert mock_config_entry.data == {CONF_URL: "http://localhost:8095"}
+    mock_get_server_info.assert_not_called()
+    if reload_expected:
+        mock_schedule_reload.assert_called_once_with(mock_config_entry.entry_id)
+    else:
+        mock_schedule_reload.assert_not_called()
 
 
 async def test_zeroconf_old_schema_addon_not_ignored(
