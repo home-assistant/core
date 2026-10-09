@@ -4,6 +4,7 @@ from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
 from aiofortiosapi import FortiOSAuthenticationError, FortiOSConnectionError
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.device_tracker.legacy import Device
@@ -17,7 +18,7 @@ from homeassistant.setup import async_setup_component
 
 from .conftest import MAC, USER_INPUT
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.parametrize("failure_method", ["connect", "update"])
@@ -136,6 +137,7 @@ async def test_late_legacy_conflict(
     mock_config_entry: MockConfigEntry,
     mock_client: MagicMock,
     issue_registry: ir.IssueRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Devices discovered after an empty first scan also receive migration repairs."""
     legacy = [Device(hass, timedelta(0), True, "late_phone", MAC)]
@@ -152,7 +154,8 @@ async def test_late_legacy_conflict(
             is None
         )
         mock_client.update.return_value = {MAC: FortiOSDevice(MAC, "phone", True)}
-        await mock_config_entry.runtime_data.async_refresh()
+        freezer.tick(timedelta(seconds=12))
+        async_fire_time_changed(hass)
         await hass.async_block_till_done(wait_background_tasks=True)
     assert (
         issue_registry.async_get_issue(

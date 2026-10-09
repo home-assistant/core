@@ -297,8 +297,6 @@ FORBIDDEN_PACKAGE_FILES_EXCEPTIONS = {
         "fitbit": {"setuptools"}
     },
     "flume": {"homeassistant": {"pyflume"}},
-    # https://github.com/fortinet-solutions-cse/fortiosapi
-    "fortios": {"homeassistant": {"fortiosapi"}},
     # https://github.com/manzanotti/geniushub-client
     "geniushub": {"homeassistant": {"geniushub-client"}},
     # https://github.com/costastf/locationsharinglib

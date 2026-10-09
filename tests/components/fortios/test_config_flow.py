@@ -40,6 +40,7 @@ async def test_user(hass: HomeAssistant, mock_client: MagicMock) -> None:
         (UnsupportedVersion(), "unsupported_version"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_errors(
     hass: HomeAssistant, mock_client: MagicMock, exception: Exception, error: str
 ) -> None:
@@ -50,6 +51,12 @@ async def test_errors(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error}
+    mock_client.connect.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "FGT123456"
 
 
 @pytest.mark.usefixtures("mock_client")
@@ -75,6 +82,7 @@ async def test_import(hass: HomeAssistant) -> None:
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == data
+    assert result["result"].unique_id == "FGT123456"
 
 
 @pytest.mark.usefixtures("mock_setup_entry")

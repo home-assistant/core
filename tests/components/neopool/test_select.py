@@ -1,14 +1,17 @@
 """Tests for the NeoPool select platform."""
 
+from datetime import timedelta
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 from neopool_modbus import NeoPoolError
 from neopool_modbus.exceptions import InvalidStateReason, NeoPoolInvalidStateError
 from neopool_modbus.registers import ConfigKind, FiltValveMode, RelayKind, RelayMode
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.neopool.const import DEFAULT_SCAN_INTERVAL
 from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
 from homeassistant.const import ATTR_OPTION, SERVICE_SELECT_OPTION, Platform
 from homeassistant.core import HomeAssistant
@@ -18,7 +21,7 @@ from homeassistant.helpers import entity_registry as er
 from . import setup_integration
 from .conftest import MOCK_POOL_DATA
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 def _select_entity_id(
@@ -49,6 +52,13 @@ async def _select_option(hass: HomeAssistant, entity_id: str, option: str) -> No
         {"entity_id": entity_id, ATTR_OPTION: option},
         blocking=True,
     )
+
+
+async def _poll(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
+    """Advance past the scan interval so the coordinator polls the device."""
+    freezer.tick(timedelta(seconds=DEFAULT_SCAN_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
 
 async def test_filt_mode_select_writes_register(
@@ -95,6 +105,7 @@ async def test_filt_mode_leaving_manual_delegates_exit_to_lib(
 
 async def test_filt_mode_backwash_option_is_display_only(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     mock_config_entry_timers: MockConfigEntry,
     mock_neopool_client: MagicMock,
 ) -> None:
@@ -113,8 +124,7 @@ async def test_filt_mode_backwash_option_is_display_only(
         **MOCK_POOL_DATA,
         "MBF_PAR_FILT_MODE": 13,
     }
-    await mock_config_entry_timers.runtime_data.async_refresh()
-    await hass.async_block_till_done()
+    await _poll(hass, freezer)
     state = hass.states.get(entity_id)
     assert state is not None
     assert "backwash" in state.attributes["options"]
@@ -223,6 +233,7 @@ async def test_relay_activation_delay_uses_dedicated_lib_method(
 
 async def test_relay_activation_delay_reads_back_user_facing_value(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     mock_config_entry_timers: MockConfigEntry,
     mock_neopool_client: MagicMock,
 ) -> None:
@@ -240,8 +251,7 @@ async def test_relay_activation_delay_reads_back_user_facing_value(
         **MOCK_POOL_DATA,
         "MBF_PAR_RELAY_ACTIVATION_DELAY": 20,
     }
-    await mock_config_entry_timers.runtime_data.async_refresh()
-    await hass.async_block_till_done()
+    await _poll(hass, freezer)
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == "20"
@@ -249,6 +259,7 @@ async def test_relay_activation_delay_reads_back_user_facing_value(
 
 async def test_filtvalve_interval_current_option_reads_register(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     mock_config_entry_timers: MockConfigEntry,
     mock_neopool_client: MagicMock,
 ) -> None:
@@ -266,8 +277,7 @@ async def test_filtvalve_interval_current_option_reads_register(
         **MOCK_POOL_DATA,
         "MBF_PAR_FILTVALVE_INTERVAL": 200,
     }
-    await mock_config_entry_timers.runtime_data.async_refresh()
-    await hass.async_block_till_done()
+    await _poll(hass, freezer)
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == "200s"
@@ -373,6 +383,7 @@ async def test_filtvalve_mode_disabled_is_read_only(
 )
 async def test_filtvalve_mode_current_option_maps_register(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     mock_config_entry_timers: MockConfigEntry,
     mock_neopool_client: MagicMock,
     raw: int,
@@ -391,8 +402,7 @@ async def test_filtvalve_mode_current_option_maps_register(
         **MOCK_POOL_DATA,
         "MBF_PAR_FILTVALVE_MODE": raw,
     }
-    await mock_config_entry_timers.runtime_data.async_refresh()
-    await hass.async_block_till_done()
+    await _poll(hass, freezer)
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == expected

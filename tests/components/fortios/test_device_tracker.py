@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant
 
 from .conftest import MAC
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 pytestmark = pytest.mark.usefixtures("entity_registry_enabled_by_default")
 
@@ -34,23 +34,30 @@ async def test_discovery_and_grace(
     await hass.async_block_till_done()
     assert hass.states.get("device_tracker.phone").state == STATE_HOME
     assert hass.states.get("device_tracker.laptop") is None
-    coordinator = mock_config_entry.runtime_data
     mock_client.update.return_value = {
         MAC: FortiOSDevice(MAC, "phone", True),
         other_mac: FortiOSDevice(other_mac, "laptop", True),
     }
-    await coordinator.async_refresh()
+    freezer.tick(timedelta(seconds=12))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
     await hass.async_block_till_done()
     assert len(hass.states.async_all("device_tracker")) == 2
     assert mock_client.update.call_count == 2
     mock_client.update.return_value = {}
-    await coordinator.async_refresh()
+    freezer.tick(timedelta(seconds=12))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert hass.states.get("device_tracker.phone").state == STATE_HOME
     freezer.tick(timedelta(seconds=181))
-    await coordinator.async_refresh()
+    freezer.tick(timedelta(seconds=12))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert hass.states.get("device_tracker.phone").state == STATE_NOT_HOME
     mock_client.update.return_value = {MAC: FortiOSDevice(MAC, "phone", True)}
-    await coordinator.async_refresh()
+    freezer.tick(timedelta(seconds=12))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
     await hass.async_block_till_done()
     assert hass.states.get("device_tracker.phone").state == STATE_HOME
     assert len(hass.states.async_all("device_tracker")) == 2
@@ -58,7 +65,10 @@ async def test_discovery_and_grace(
 
 
 async def test_empty_initial_scan(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_client: MagicMock
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Discovery remains active when the first scan is empty."""
     mock_client.update.return_value = {}
@@ -67,23 +77,32 @@ async def test_empty_initial_scan(
     await hass.async_block_till_done()
     assert hass.states.async_all("device_tracker") == []
     mock_client.update.return_value = {MAC: FortiOSDevice(MAC, "phone", True)}
-    await mock_config_entry.runtime_data.async_refresh()
+    freezer.tick(timedelta(seconds=12))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
     await hass.async_block_till_done()
     assert hass.states.get("device_tracker.phone").state == STATE_HOME
 
 
 async def test_poll_failure(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_client: MagicMock
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """A failed scan makes states unavailable and recovers on the next scan."""
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
     mock_client.update.side_effect = FortiOSConnectionError
-    await mock_config_entry.runtime_data.async_refresh()
+    freezer.tick(timedelta(seconds=12))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert hass.states.get("device_tracker.phone").state == STATE_UNAVAILABLE
     mock_client.update.side_effect = None
-    await mock_config_entry.runtime_data.async_refresh()
+    freezer.tick(timedelta(seconds=12))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert hass.states.get("device_tracker.phone").state == STATE_HOME
 
 
