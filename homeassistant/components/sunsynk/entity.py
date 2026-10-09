@@ -8,7 +8,7 @@ from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import SunsynkDataUpdateCoordinator
+from .coordinator import SunsynkDataUpdateCoordinator, SunsynkModbusCoordinator
 
 
 def inverter_device_info(inverter: Inverter) -> DeviceInfo:
@@ -23,6 +23,33 @@ def inverter_device_info(inverter: Inverter) -> DeviceInfo:
         model=inverter.model or None,
         serial_number=inverter.sn,
         sw_version=inverter.version.soft_ver if inverter.version else None,
+    )
+
+
+def modbus_inverter_device_info(serial_number: str) -> DeviceInfo:
+    """Return the device info of an inverter that uses Modbus."""
+    return DeviceInfo(
+        identifiers={(DOMAIN, serial_number)},
+        name=f"Inverter {serial_number}",
+        manufacturer="Sunsynk",
+        serial_number=serial_number,
+    )
+
+
+def battery_device_info(
+    coordinator: SunsynkDataUpdateCoordinator | SunsynkModbusCoordinator,
+    serial_number: str,
+) -> DeviceInfo:
+    """Return the device info of the battery of an inverter."""
+    return DeviceInfo(
+        identifiers={(DOMAIN, f"{serial_number}_battery")},
+        name=f"Battery {serial_number}",
+        manufacturer="Sunsynk",
+        via_device_id=dr.async_get_device_id_by_identifier(
+            coordinator.hass,
+            (DOMAIN, serial_number),
+            config_entry_id=coordinator.config_entry.entry_id,
+        ),
     )
 
 
@@ -58,13 +85,42 @@ class SunsynkBatteryEntity(CoordinatorEntity[SunsynkDataUpdateCoordinator]):
         self.entity_description = description
         serial_number = coordinator.inverter.sn
         self._attr_unique_id = f"{serial_number}_{description.key}"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"{serial_number}_battery")},
-            name=f"Battery {serial_number}",
-            manufacturer="Sunsynk",
-            via_device_id=dr.async_get_device_id_by_identifier(
-                coordinator.hass,
-                (DOMAIN, serial_number),
-                config_entry_id=coordinator.config_entry.entry_id,
-            ),
-        )
+        self._attr_device_info = battery_device_info(coordinator, serial_number)
+
+
+class SunsynkModbusInverterEntity(CoordinatorEntity[SunsynkModbusCoordinator]):
+    """An entity of a Sunsynk inverter that uses Modbus."""
+
+    _attr_has_entity_name = True
+
+    def __init__(
+        self,
+        coordinator: SunsynkModbusCoordinator,
+        description: EntityDescription,
+    ) -> None:
+        """Initialize the entity."""
+        super().__init__(coordinator)
+        self.entity_description = description
+        serial_number = coordinator.serial_number
+        # Use a unique ID that is different from the cloud entities. The same
+        # inverter can also have a cloud entry.
+        self._attr_unique_id = f"{serial_number}_modbus_{description.key}"
+        self._attr_device_info = modbus_inverter_device_info(serial_number)
+
+
+class SunsynkModbusBatteryEntity(CoordinatorEntity[SunsynkModbusCoordinator]):
+    """An entity of the battery of a Sunsynk inverter that uses Modbus."""
+
+    _attr_has_entity_name = True
+
+    def __init__(
+        self,
+        coordinator: SunsynkModbusCoordinator,
+        description: EntityDescription,
+    ) -> None:
+        """Initialize the entity."""
+        super().__init__(coordinator)
+        self.entity_description = description
+        serial_number = coordinator.serial_number
+        self._attr_unique_id = f"{serial_number}_modbus_{description.key}"
+        self._attr_device_info = battery_device_info(coordinator, serial_number)
