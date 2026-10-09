@@ -79,10 +79,10 @@ async def test_async_step_user_macos(hass: HomeAssistant) -> None:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={}
         )
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Apple Unknown MacOS Model (Core Bluetooth)"
     assert result2["data"] == {}
+    assert result2["result"].unique_id == DEFAULT_ADDRESS
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -108,10 +108,10 @@ async def test_async_step_user_linux_one_adapter(hass: HomeAssistant) -> None:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={}
         )
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "ACME Bluetooth Adapter 5.0 (00:00:00:00:00:01)"
     assert result2["data"] == {}
+    assert result2["result"].unique_id == "00:00:00:00:00:01"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -147,10 +147,10 @@ async def test_async_step_user_linux_two_adapters(hass: HomeAssistant) -> None:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_ADAPTER: "hci1"}
         )
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "ACME Bluetooth Adapter 5.0 (00:00:00:00:00:02)"
     assert result2["data"] == {}
+    assert result2["result"].unique_id == "00:00:00:00:00:02"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -197,10 +197,10 @@ async def test_async_step_integration_discovery(hass: HomeAssistant) -> None:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={}
         )
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "ACME Unknown (00:00:00:00:00:01)"
     assert result2["data"] == {}
+    assert result2["result"].unique_id == "00:00:00:00:00:01"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -231,10 +231,10 @@ async def test_async_step_integration_discovery_during_onboarding_one_adapter(
             context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
             data={CONF_ADAPTER: "hci0", CONF_DETAILS: details},
         )
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "ACME Unknown (00:00:00:00:00:01)"
     assert result["data"] == {}
+    assert result["result"].unique_id == "00:00:00:00:00:01"
     assert len(mock_setup_entry.mock_calls) == 1
     assert len(mock_onboarding.mock_calls) == 1
 
@@ -277,10 +277,10 @@ async def test_async_step_integration_discovery_during_onboarding_two_adapters(
             context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
             data={CONF_ADAPTER: "hci1", CONF_DETAILS: details2},
         )
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "ACME Unknown (00:00:00:00:00:01)"
     assert result["data"] == {}
+    assert result["result"].unique_id == "00:00:00:00:00:01"
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "ACME Unknown (00:00:00:00:00:02)"
@@ -317,10 +317,10 @@ async def test_async_step_integration_discovery_during_onboarding(
             context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
             data={CONF_ADAPTER: "Core Bluetooth", CONF_DETAILS: details},
         )
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "ACME Unknown (Core Bluetooth)"
     assert result["data"] == {}
+    assert result["result"].unique_id == DEFAULT_ADDRESS
     assert len(mock_setup_entry.mock_calls) == 1
     assert len(mock_onboarding.mock_calls) == 1
 
@@ -568,10 +568,10 @@ async def test_async_step_user_linux_adapter_replace_ignored(
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={}
         )
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "ACME Bluetooth Adapter 5.0 (00:00:00:00:00:01)"
     assert result2["data"] == {}
+    assert result2["result"].unique_id == "00:00:00:00:00:01"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -608,7 +608,6 @@ async def test_async_step_integration_discovery_remote_adapter(
             CONF_SOURCE_DEVICE_ID: device_entry.id,
         },
     )
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "esp32"
     assert result["data"] == {
@@ -618,6 +617,7 @@ async def test_async_step_integration_discovery_remote_adapter(
         CONF_SOURCE_CONFIG_ENTRY_ID: entry.entry_id,
         CONF_SOURCE_DEVICE_ID: device_entry.id,
     }
+    assert result["result"].unique_id == "esp32"
     await hass.async_block_till_done()
 
     new_entry_id: str = result["result"].entry_id
@@ -684,8 +684,8 @@ async def test_async_step_integration_discovery_remote_adapter_composite_source(
             CONF_SOURCE_DEVICE_ID: composite_device_id,
         },
     )
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "esp32"
     await hass.async_block_till_done()
 
     new_entry = result["result"]
@@ -748,8 +748,8 @@ async def test_async_step_integration_discovery_remote_adapter_child_source(
             CONF_SOURCE_DEVICE_ID: child_device_entry.id,
         },
     )
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "esp32"
     await hass.async_block_till_done()
 
     new_entry_id: str = result["result"].entry_id
