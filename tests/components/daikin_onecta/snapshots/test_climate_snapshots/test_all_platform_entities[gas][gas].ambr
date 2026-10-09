@@ -1996,8 +1996,8 @@
         ]),
         'area_id': None,
         'capabilities': dict({
-          <WaterHeaterCapabilityAttribute.MAX_TEMP: 'max_temp'>: None,
-          <WaterHeaterCapabilityAttribute.MIN_TEMP: 'min_temp'>: None,
+          <WaterHeaterCapabilityAttribute.MAX_TEMP: 'max_temp'>: 60.0,
+          <WaterHeaterCapabilityAttribute.MIN_TEMP: 'min_temp'>: 43.3,
         }),
         'config_entry_id': <ANY>,
         'config_subentry_id': <ANY>,
@@ -2032,8 +2032,8 @@
         'attributes': ReadOnlyDict({
           <WaterHeaterStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 40.0,
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Living Room',
-          <WaterHeaterCapabilityAttribute.MAX_TEMP: 'max_temp'>: None,
-          <WaterHeaterCapabilityAttribute.MIN_TEMP: 'min_temp'>: None,
+          <WaterHeaterCapabilityAttribute.MAX_TEMP: 'max_temp'>: 60.0,
+          <WaterHeaterCapabilityAttribute.MIN_TEMP: 'min_temp'>: 43.3,
           <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <WaterHeaterEntityFeature: 0>,
           <WaterHeaterStateAttribute.TARGET_TEMP_HIGH: 'target_temp_high'>: None,
           <WaterHeaterStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: None,
