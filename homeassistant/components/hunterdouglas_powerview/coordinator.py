@@ -10,12 +10,14 @@ from aiopvapi.hub import Hub
 from aiopvapi.resources.shade_data import PowerviewShadeData
 from aiopvapi.shades import Shades
 
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import HUB_EXCEPTIONS, DOMAIN
+
+if TYPE_CHECKING:
+    from .model import PowerviewConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,10 +25,14 @@ _LOGGER = logging.getLogger(__name__)
 class PowerviewShadeUpdateCoordinator(DataUpdateCoordinator[PowerviewShadeData]):
     """DataUpdateCoordinator to gather data from a powerview hub."""
 
-    config_entry: ConfigEntry
+    config_entry: PowerviewConfigEntry
 
     def __init__(
-        self, hass: HomeAssistant, config_entry: ConfigEntry, shades: Shades, hub: Hub
+        self, 
+        hass: HomeAssistant, 
+        config_entry: PowerviewConfigEntry, 
+        shades: Shades, 
+        hub: Hub
     ) -> None:
         """Initialize DataUpdateCoordinator to gather data for specific Hub."""
         self.shades = shades
