@@ -154,7 +154,7 @@ SERVICE_POST_SCHEMA = probatio.Schema(
         probatio.Optional(ATTR_CONTENT_WARNING): str,
         probatio.Optional(ATTR_LANGUAGE): str,
         probatio.Optional(ATTR_MEDIA): probatio.Any(
-            probatio.All(probatio.EnsureList, probatio.Length(max=4), [SCHEMA_MEDIA]),
+            probatio.All(probatio.EnsureList(), probatio.Length(max=4), [SCHEMA_MEDIA]),
             str,
         ),
         probatio.Optional(ATTR_MEDIA_DESCRIPTION): str,
