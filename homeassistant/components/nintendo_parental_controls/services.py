@@ -98,14 +98,14 @@ def async_setup_services(
         DOMAIN,
         NintendoParentalServices.UPDATE_DAILY_RESTRICTIONS,
         async_set_per_day_controls,
-        vol.Schema(
+        probatio.Schema(
             {
-                vol.Required(ATTR_DEVICE_ID): cv.string,
-                vol.Required(ATTR_DAY_OF_WEEK): vol.In(DAYS_OF_WEEK),
-                vol.Inclusive(ATTR_BEDTIME_START, "bedtime"): cv.time,
-                vol.Inclusive(ATTR_BEDTIME_END, "bedtime"): cv.time,
-                vol.Optional(ATTR_MAX_PLAY_TIME): vol.All(
-                    int, vol.Range(min=0, max=360)
+                probatio.Required(ATTR_DEVICE_ID): cv.string,
+                probatio.Required(ATTR_DAY_OF_WEEK): probatio.In(DAYS_OF_WEEK),
+                probatio.Inclusive(ATTR_BEDTIME_START, "bedtime"): cv.time,
+                probatio.Inclusive(ATTR_BEDTIME_END, "bedtime"): cv.time,
+                probatio.Optional(ATTR_MAX_PLAY_TIME): probatio.All(
+                    int, probatio.Range(min=0, max=360)
                 ),
             }
         ),
