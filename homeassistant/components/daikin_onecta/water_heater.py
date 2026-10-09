@@ -211,18 +211,12 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
         """Set new target temperature."""
         _LOGGER.debug("Device '%s' set tank temperature: %s", self._device.name, value)
         if self.current_operation == STATE_OFF:
-            _LOGGER.debug(
-                "Device '%s' set tank temperature ignored because device is off",
-                self._device.name,
-            )
-            return
+            self._raise_service_validation_error("water_heater_off")
         dht = self.domestic_hotwater_temperature
-        if dht is not None and not dht.settable:
-            _LOGGER.debug(
-                "Device '%s' set tank temperature ignored because tank temperature can't be set",
-                self._device.name,
+        if dht is None or not dht.settable:
+            self._raise_service_validation_error(
+                "water_heater_temperature_not_settable"
             )
-            return
 
         int_value = int(value)
         if int_value != self._attr_native_target_temperature:

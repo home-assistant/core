@@ -45,12 +45,13 @@ from homeassistant.components.water_heater import (
     SERVICE_TURN_OFF as WATER_HEATER_SERVICE_TURN_OFF,
     SERVICE_TURN_ON as WATER_HEATER_SERVICE_TURN_ON,
     STATE_HEAT_PUMP,
+    STATE_OFF,
     STATE_PERFORMANCE,
     WaterHeaterEntityFeature,
 )
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 from .test_climate_snapshots import _async_setup_fixture, _load_gateway_devices
 
@@ -443,6 +444,50 @@ def test_water_heater_handles_missing_temperature_values() -> None:
     assert entity.max_temp == super(DaikinWaterTank, entity).max_temp
 
 
+@pytest.mark.parametrize(
+    ("operation", "temperature_settable", "translation_key"),
+    [
+        (STATE_OFF, True, "water_heater_off"),
+        (STATE_HEAT_PUMP, False, "water_heater_temperature_not_settable"),
+        (STATE_HEAT_PUMP, None, "water_heater_temperature_not_settable"),
+    ],
+)
+async def test_water_heater_rejects_unavailable_temperature_control(
+    operation: str,
+    temperature_settable: bool | None,
+    translation_key: str,
+) -> None:
+    """Reject temperature writes when the tank cannot accept them."""
+    if temperature_settable is None:
+        entity = object.__new__(DaikinWaterTank)
+        entity._device = MagicMock(
+            name="Tank",
+            management_point=MagicMock(
+                return_value=SimpleNamespace(
+                    domestic_hot_water=SimpleNamespace(temperature=None)
+                )
+            ),
+        )
+        entity._embedded_id = "tank"
+    else:
+        device = DaikinOnectaDevice(_load_gateway_devices("altherma_boost")[0])
+        point = device.device.management_points_by_type("domesticHotWaterTank")[0]
+        assert point.domestic_hot_water is not None
+        assert point.domestic_hot_water.temperature is not None
+        point.domestic_hot_water.temperature.settable = temperature_settable
+        entity = DaikinWaterTank(
+            device, MagicMock(), point.management_point_type, point.embedded_id
+        )
+    entity._attr_current_operation = operation
+    entity._async_execute_hot_water_command = AsyncMock()
+
+    with pytest.raises(ServiceValidationError) as err:
+        await entity.async_set_tank_temperature(50)
+
+    assert err.value.translation_key == translation_key
+    entity._async_execute_hot_water_command.assert_not_awaited()
+
+
 async def test_schedule_select_updates_cached_selection(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
@@ -482,6 +527,18 @@ async def test_schedule_select_ignores_current_option(
     )
 
     execute_command.assert_not_awaited()
+
+
+async def test_schedule_select_rejects_missing_selection() -> None:
+    """Reject a selection when Daikin no longer provides schedule data."""
+    entity = object.__new__(DaikinScheduleSelect)
+    object.__setattr__(entity, "_device", MagicMock(name="Device"))
+    entity.selection = MagicMock(return_value=None)
+
+    with pytest.raises(ServiceValidationError) as err:
+        await entity.async_select_option("Schedule")
+
+    assert err.value.translation_key == "schedule_selection_unavailable"
 
 
 async def test_water_heater_turn_off_updates_cached_state(

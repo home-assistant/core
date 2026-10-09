@@ -107,7 +107,7 @@ class DaikinScheduleSelect(DaikinManagementPointEntity, SelectEntity):
         _LOGGER.debug("Device '%s' selecting schedule %s", self._device.name, option)
         selection = self.selection()
         if selection is None:
-            return
+            self._raise_service_validation_error("schedule_selection_unavailable")
         if option == self.get_current_option():
             return
 

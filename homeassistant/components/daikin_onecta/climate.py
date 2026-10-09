@@ -396,22 +396,23 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
             )
             if self._attr_target_temperature != value:
                 operationmode = self._operation_mode()
-                if operationmode is not None:
-                    omv = operationmode.value
-                    res = await self._async_execute_climate_command(
-                        lambda climate: climate.set_temperature(
-                            omv, self._setpoint, value
-                        )
+                if operationmode is None:
+                    self._raise_service_validation_error(
+                        "climate_operation_mode_unavailable"
                     )
-                    # When updating the value to the daikin cloud worked update our local cached version
-                    if res:
-                        setpointdict = self._get_setpoint(omv)
-                        if setpointdict is not None:
-                            setpointdict.value = value
-                            self._attr_target_temperature = value
-                            self.coordinator.async_update_listeners()
-                    else:
-                        self._raise_command_failed("set_temperature_failed")
+                omv = operationmode.value
+                res = await self._async_execute_climate_command(
+                    lambda climate: climate.set_temperature(omv, self._setpoint, value)
+                )
+                # When updating the value to the daikin cloud worked update our local cached version
+                if res:
+                    setpointdict = self._get_setpoint(omv)
+                    if setpointdict is not None:
+                        setpointdict.value = value
+                        self._attr_target_temperature = value
+                        self.coordinator.async_update_listeners()
+                else:
+                    self._raise_command_failed("set_temperature_failed")
 
     def _get_hvac_mode(self) -> HVACMode | None:
         """Return current HVAC mode."""
@@ -578,7 +579,7 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
             or cc is None
             or cc.operation_mode is None
         ):
-            return
+            self._raise_service_validation_error("fan_control_unavailable")
         fan_speed = fan_operation.fan_speed
         operation_mode = cc.operation_mode.value
         fan_mode = self._resolve_homekit_fan_mode_alias(fan_speed, requested_fan_mode)

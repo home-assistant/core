@@ -372,6 +372,21 @@ async def test_set_temperature_updates_cached_setpoint_and_siblings() -> None:
     coordinator.async_update_listeners.assert_called_once_with()
 
 
+async def test_set_temperature_rejects_missing_operation_mode() -> None:
+    """Reject a temperature write when Daikin omits the operation mode."""
+    entity = object.__new__(DaikinClimate)
+    object.__setattr__(entity, "_device", MagicMock(name="Device"))
+    object.__setattr__(entity, "_attr_target_temperature", 20)
+    entity._operation_mode = MagicMock(return_value=None)
+    entity._async_execute_climate_command = AsyncMock()
+
+    with pytest.raises(ServiceValidationError) as err:
+        await entity.async_set_temperature(temperature=21)
+
+    assert err.value.translation_key == "climate_operation_mode_unavailable"
+    entity._async_execute_climate_command.assert_not_awaited()
+
+
 async def test_set_temperature_rejects_unsupported_hvac_mode() -> None:
     """Reject an unsupported HVAC mode before changing the temperature."""
     entity = object.__new__(DaikinClimate)
@@ -832,6 +847,19 @@ async def test_set_fan_mode_publishes_successful_fixed_mode_write() -> None:
     assert fan_speed.current_mode.value == FANMODE_FIXED
     assert fan_speed.modes[FANMODE_FIXED].value == 1
     coordinator.async_update_listeners.assert_called_once_with()
+
+
+async def test_set_fan_mode_rejects_missing_control_data() -> None:
+    """Reject a fan-mode write when Daikin omits the control data."""
+    entity = object.__new__(DaikinClimate)
+    object.__setattr__(entity, "_device", MagicMock(name="Device"))
+    entity._fan_operation = MagicMock(return_value=None)
+    entity._climate_control = MagicMock(return_value=None)
+
+    with pytest.raises(ServiceValidationError) as err:
+        await entity.async_set_fan_mode("quiet")
+
+    assert err.value.translation_key == "fan_control_unavailable"
 
 
 async def test_set_fan_mode_updates_captured_operation_mode() -> None:

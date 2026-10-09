@@ -5,7 +5,7 @@ from typing import Never, override
 
 from daikin_onecta.client import OnectaClient
 
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -61,6 +61,14 @@ class DaikinOnectaEntity(CoordinatorEntity[OnectaDataUpdateCoordinator]):
         ):
             _add_management_point_metadata(info, self._device, embedded_id)
         return info
+
+    def _raise_service_validation_error(self, translation_key: str) -> Never:
+        """Raise a translated validation error for this device."""
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key=translation_key,
+            translation_placeholders={"device": self._device.name},
+        )
 
 
 class DaikinEntity(DaikinOnectaEntity):

@@ -362,8 +362,14 @@
     "api_error": {
       "message": "Daikin API returned HTTP {status}"
     },
+    "climate_operation_mode_unavailable": {
+      "message": "Cannot set the temperature for {device} because its operation mode is unavailable"
+    },
     "connection_failed": {
       "message": "Unable to connect to the Daikin API"
+    },
+    "fan_control_unavailable": {
+      "message": "Cannot set the fan mode for {device} because fan-control data is unavailable"
     },
     "firmware_install_failed": {
       "message": "Failed to install firmware on {device}"
@@ -382,6 +388,9 @@
     },
     "schedule_select_failed": {
       "message": "Failed to select schedule for {device}"
+    },
+    "schedule_selection_unavailable": {
+      "message": "Cannot select a schedule for {device} because schedule data is unavailable"
     },
     "set_fan_mode_failed": {
       "message": "Failed to set the fan mode for {device}"
@@ -410,11 +419,17 @@
     "turn_on_failed": {
       "message": "Failed to turn on {device}"
     },
+    "water_heater_off": {
+      "message": "Cannot set the temperature for {device} while it is off"
+    },
     "water_heater_set_operation_mode_failed": {
       "message": "Failed to set operation mode for {device}"
     },
     "water_heater_set_temperature_failed": {
       "message": "Failed to set temperature for {device}"
+    },
+    "water_heater_temperature_not_settable": {
+      "message": "Cannot set the temperature for {device} because it is not writable"
     },
     "water_heater_turn_off_failed": {
       "message": "Failed to turn off {device}"
