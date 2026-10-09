@@ -66,7 +66,7 @@
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
-        'state': 'off',
+        'state': 'heat_cool',
       }),
     }),
     'climate.altherma_room_temperature': dict({
@@ -137,7 +137,7 @@
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
-        'state': 'off',
+        'state': 'heat_cool',
       }),
     }),
   })

@@ -346,7 +346,7 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
         cc = self._climate_control()
         if cc is not None:
             onoff = cc.on_off_mode
-            if onoff is not None and onoff.value != "off" and operationmode is not None:
+            if operationmode is not None and (onoff is None or onoff.value != "off"):
                 mode = operationmode.value
         return DAIKIN_HVAC_TO_HA.get(mode)
 

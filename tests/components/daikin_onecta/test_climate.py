@@ -745,6 +745,17 @@ async def test_set_hvac_mode_ignores_unknown_native_mode() -> None:
     device.patch.assert_not_awaited()
 
 
+def test_missing_power_characteristic_uses_operation_mode() -> None:
+    """Treat a climate control without on/off state as powered on."""
+    entity = object.__new__(DaikinClimate)
+    operation_mode = SimpleNamespace(value="auto")
+    entity._climate_control = MagicMock(
+        return_value=SimpleNamespace(on_off_mode=None, operation_mode=operation_mode)
+    )
+
+    assert entity._get_hvac_mode() is HVACMode.HEAT_COOL
+
+
 async def test_set_fan_mode_publishes_successful_fixed_mode_write() -> None:
     """Publish fixed mode when the following fan-speed write fails."""
     entity = object.__new__(DaikinClimate)
