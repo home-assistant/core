@@ -12,12 +12,9 @@ def generate_and_validate(integrations: dict[str, Integration]) -> str:
     for domain in sorted(integrations):
         manifest = integrations[domain].manifest
 
-        dependencies = {
-            *manifest.get("dependencies", []),
-            *manifest.get("after_dependencies", []),
-        }
-
-        if "usb" in dependencies:
+        if "usb" in manifest.get("dependencies", []) or "usb" in manifest.get(
+            "after_dependencies", []
+        ):
             dependents.append(domain)
 
         match_types = manifest.get("usb", [])

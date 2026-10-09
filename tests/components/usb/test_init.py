@@ -4,6 +4,7 @@ import asyncio
 from datetime import timedelta
 import logging
 import os
+from pathlib import Path
 from typing import Any
 from unittest.mock import MagicMock, Mock, call, patch, sentinel
 
@@ -19,6 +20,7 @@ from homeassistant.components.usb.utils import usb_device_from_path
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.loader import Integration
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -1805,7 +1807,7 @@ async def test_list_serial_ports(
 @pytest.mark.parametrize(
     "command", ["usb/list_serial_ports", "usb/list_serial_integrations"]
 )
-async def test_list_serial_ports_require_admin(
+async def test_ws_commands_require_admin(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     hass_admin_user: MockUser,
@@ -1888,8 +1890,11 @@ async def test_list_serial_integrations_custom(
     listed: bool,
 ) -> None:
     """Test listing custom integrations configurable with a serial port."""
-    integration = mock_integration(
-        hass, MockModule(domain, partial_manifest=manifest), built_in=False
+    integration = Integration(
+        hass,
+        f"custom_components.{domain}",
+        Path(hass.config.config_dir) / "custom_components" / domain,
+        MockModule(domain, partial_manifest=manifest).mock_manifest(),
     )
 
     with patch(
