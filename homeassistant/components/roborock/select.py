@@ -72,7 +72,7 @@ class RoborockSelectDescription(SelectEntityDescription):
     options_lambda: Callable[[PropertiesApi], list[str] | None]
     """Get all options or return None if not supported."""
 
-    parameter_lambda: Callable[[str, PropertiesApi], list[int]]
+    parameter_lambda: Callable[[str, PropertiesApi], list[int] | dict[str, int]]
     """Function to get the parameters for the api command."""
 
     is_dock_entity: bool = False
@@ -179,9 +179,9 @@ SELECT_DESCRIPTIONS: list[RoborockSelectDescription] = [
             if api.dust_collection_mode is not None
             else None
         ),
-        parameter_lambda=lambda key, _: [
-            RoborockDockDustCollectionModeCode.as_dict()[key]
-        ],
+        parameter_lambda=lambda key, _: {
+            "mode": RoborockDockDustCollectionModeCode.as_dict()[key]
+        },
         is_dock_entity=True,
     ),
 ]

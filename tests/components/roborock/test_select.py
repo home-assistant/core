@@ -19,6 +19,7 @@ from roborock.roborock_message import RoborockZeoProtocol
 from homeassistant.components.roborock import DOMAIN
 from homeassistant.components.roborock.select import (
     A01_SELECT_DESCRIPTIONS,
+    SELECT_DESCRIPTIONS,
     RoborockSelectEntityA01,
 )
 from homeassistant.const import SERVICE_SELECT_OPTION, STATE_UNKNOWN, Platform
@@ -253,6 +254,17 @@ async def test_dust_collection_mode_none(
     select_entity = hass.states.get("select.roborock_s7_maxv_dock_empty_mode")
     assert select_entity
     assert select_entity.state == expected_state
+
+
+def test_dust_collection_mode_command_parameters() -> None:
+    """Test dock dust collection mode command parameters."""
+    description = next(
+        desc for desc in SELECT_DESCRIPTIONS if desc.key == "dust_collection_mode"
+    )
+
+    assert description.parameter_lambda("light", Mock()) == {
+        "mode": RoborockDockDustCollectionModeCode.as_dict()["light"]
+    }
 
 
 @pytest.fixture
