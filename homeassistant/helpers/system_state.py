@@ -7,7 +7,9 @@ The reboot flag is owned by Supervisor, which keeps it across restarts of
 Home Assistant. The hassio integration mirrors it here.
 
 An admin can put off what is pending. That only hides it from the
-interface until something new asks; the restart or reboot stays required.
+interface; the restart or reboot stays required. A put-off restart comes
+back when another integration asks for one. A put-off reboot comes back
+only once the pending reboot is gone and Supervisor raises a new one.
 """
 
 from collections.abc import Callable

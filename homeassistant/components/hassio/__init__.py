@@ -5,7 +5,6 @@ from functools import partial
 import logging
 import os
 import struct
-from uuid import UUID
 
 from aiohasupervisor import SupervisorBadRequestError, SupervisorError
 from aiohasupervisor.models import (
@@ -470,17 +469,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
     )
 
-    # Supervisor can raise more than one reboot issue, one per cause.
-    reboot_issues: set[UUID] = set()
-
     @callback
-    def _mirror_host_reboot_required(event: IssueSubscriptionEvent) -> None:
-        if event.event == "changed":
-            reboot_issues.add(event.issue.uuid)
-        else:
-            reboot_issues.discard(event.issue.uuid)
-
-        system_state.async_set_host_reboot_required(hass, bool(reboot_issues))
+    def _mirror_host_reboot_required(_: IssueSubscriptionEvent) -> None:
+        system_state.async_set_host_reboot_required(
+            hass,
+            any(
+                issue.key == ISSUE_KEY_SYSTEM_REBOOT_REQUIRED
+                for issue in issues_coordinator.issues
+            ),
+        )
 
     entry.async_on_unload(
         issues_coordinator.subscribe(
