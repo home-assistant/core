@@ -118,8 +118,7 @@ class NotifyAuthModule(MultiFactorAuthModule):
             hass, STORAGE_VERSION, STORAGE_KEY, private=True, atomic_writes=True
         )
         self._include = config.get(CONF_INCLUDE, [])
-        # send_message targets notify entities, which are selected separately
-        self._exclude = [*config.get(CONF_EXCLUDE, []), "send_message"]
+        self._exclude = config.get(CONF_EXCLUDE, [])
         self._message_template = config[CONF_MESSAGE]
         self._init_lock = asyncio.Lock()
 
@@ -163,7 +162,8 @@ class NotifyAuthModule(MultiFactorAuthModule):
         unordered_services = set()
 
         for service in self.hass.services.async_services_for_domain("notify"):
-            if service not in self._exclude:
+            # send_message targets notify entities, which are selected separately
+            if service != "send_message" and service not in self._exclude:
                 unordered_services.add(service)
 
         if self._include:

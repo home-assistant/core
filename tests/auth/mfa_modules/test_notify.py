@@ -549,6 +549,18 @@ async def test_include_exclude_notify_entities(hass: HomeAssistant) -> None:
     ]
 
 
+async def test_send_message_only_excluded_as_service(hass: HomeAssistant) -> None:
+    """Test send_message is hidden as a service but not as a notify entity."""
+    async_mock_service(hass, "notify", "send_message")
+    hass.states.async_set("notify.send_message", STATE_UNKNOWN)
+    notify_auth_module = await auth_mfa_module_from_config(hass, {"type": "notify"})
+
+    assert notify_auth_module.aync_get_available_notify_services() == []
+    assert notify_auth_module.async_get_available_notify_entities() == [
+        "notify.send_message"
+    ]
+
+
 async def test_setup_user_only_notify_entities(hass: HomeAssistant) -> None:
     """Test setup flow only shows the entity field without notify services."""
     hass.states.async_set(NOTIFY_ENTITY_ID, STATE_UNKNOWN)
