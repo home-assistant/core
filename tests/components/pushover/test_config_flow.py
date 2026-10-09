@@ -114,6 +114,7 @@ async def test_flow_invalid_user_key(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {CONF_USER_KEY: "invalid_user_key"}
 
 
@@ -136,6 +137,7 @@ async def test_flow_invalid_api_key(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {CONF_API_KEY: "invalid_api_key"}
 
 
@@ -156,6 +158,7 @@ async def test_flow_conn_err(hass: HomeAssistant, mock_pushover: MagicMock) -> N
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -205,6 +208,7 @@ async def test_reauth_failed(hass: HomeAssistant, mock_pushover: MagicMock) -> N
     )
 
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {
         CONF_API_KEY: "invalid_api_key",
     }

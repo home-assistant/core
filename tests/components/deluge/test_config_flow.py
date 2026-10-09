@@ -113,6 +113,7 @@ async def test_flow_user_cannot_connect(hass: HomeAssistant, conn_error) -> None
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -131,6 +132,7 @@ async def test_flow_user_unknown_error(hass: HomeAssistant, unknown_error) -> No
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "unknown"}
 
 

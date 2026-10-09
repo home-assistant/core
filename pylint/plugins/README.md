@@ -143,6 +143,7 @@ Every check has a code following the
 | `W7436` | [`home-assistant-light-missing-color-mode`](#w7436-home-assistant-light-missing-color-mode) | Light entity sets supported color modes but does not report a `color_mode` |
 | `W7437` | [`home-assistant-light-missing-supported-color-modes`](#w7437-home-assistant-light-missing-supported-color-modes) | Light entity reports a `color_mode` but does not set supported color modes |
 | `W7439` | [`home-assistant-tests-coordinator-async-refresh`](#w7439-home-assistant-tests-coordinator-async-refresh) | Tests should advance the time instead of refreshing a coordinator directly |
+| `W7441` | [`home-assistant-tests-config-flow-error-recovery`](#w7441-home-assistant-tests-config-flow-error-recovery) | Config flow tests that show an error should finish the flow afterwards |
 
 
 ## `home_assistant_logger` checker
@@ -515,6 +516,37 @@ whose type cannot be inferred. So every use of these methods in
 `tests/components` is flagged, including passing one around without calling
 it, unless the receiver is known to be something other than a coordinator,
 such as a mock.
+
+
+## `home_assistant_tests_config_flow_error_recovery` checker
+
+Detects config flow tests that show an error but never prove the user can
+recover from it.
+
+### `W7441`: `home-assistant-tests-config-flow-error-recovery`
+
+A config flow test that asserts a step shows an error should then fix the
+cause and finish the flow, so the test proves the flow recovers:
+
+```python
+assert result["errors"] == {"base": "cannot_connect"}
+
+mock_client.connect.side_effect = None
+result = await hass.config_entries.flow.async_configure(
+    result["flow_id"], USER_INPUT
+)
+assert result["type"] is FlowResultType.CREATE_ENTRY
+```
+
+Only `tests/components/<domain>/test_config_flow.py` modules are checked. A
+test is flagged when, after its last assertion of non-empty `errors`, it
+never asserts that a result has type `CREATE_ENTRY` or aborted with a
+`*_successful` reason (as reauth and reconfigure flows do). Helper functions
+from the integration's own tests called after the error are followed, and a
+reason taken from a test argument counts when all its
+`pytest.mark.parametrize` values end with `_successful`.
+
+See the [config-flow-test-coverage quality scale rule](https://developers.home-assistant.io/docs/core/integration-quality-scale/rules/config-flow-test-coverage).
 
 
 ## `home_assistant_enforce_utcnow` checker

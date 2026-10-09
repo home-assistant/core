@@ -52,6 +52,7 @@ async def test_auth_errors(
             result["flow_id"], user_input=config_auth
         )
         assert result["type"] is FlowResultType.FORM
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"] == {"base": error}
 
 
@@ -102,6 +103,7 @@ async def test_coordinate_errors(
         result["flow_id"], user_input=config_coordinates
     )
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == errors
 
 

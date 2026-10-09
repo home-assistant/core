@@ -2247,6 +2247,7 @@ async def test_discovery_timeout_try_connect_all_fail(
             },
         )
         await hass.async_block_till_done()
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result3["errors"] == {"base": "cannot_connect"}
     assert mock_connect["connect"].call_count == 1
 

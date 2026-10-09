@@ -44,6 +44,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, config: dict[str, Any]) ->
     )
     result2 = await hass.config_entries.flow.async_configure(result["flow_id"], config)
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
@@ -58,6 +59,7 @@ async def test_form_invalid_location(
     )
     result2 = await hass.config_entries.flow.async_configure(result["flow_id"], config)
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "invalid_location"}
 
 
@@ -70,6 +72,7 @@ async def test_form_cannot_connect(hass: HomeAssistant, config: dict[str, Any]) 
     )
     result2 = await hass.config_entries.flow.async_configure(result["flow_id"], config)
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
@@ -82,6 +85,7 @@ async def test_form_empty_result(hass: HomeAssistant, config: dict[str, Any]) ->
     )
     result2 = await hass.config_entries.flow.async_configure(result["flow_id"], config)
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "invalid_location"}
 
 
@@ -94,6 +98,7 @@ async def test_form_unexpected(hass: HomeAssistant, config: dict[str, Any]) -> N
     )
     result2 = await hass.config_entries.flow.async_configure(result["flow_id"], config)
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "unknown"}
 
 

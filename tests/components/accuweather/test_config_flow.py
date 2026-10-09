@@ -51,6 +51,7 @@ async def test_invalid_api_key(
         result["flow_id"], user_input=VALID_CONFIG
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {CONF_API_KEY: "invalid_api_key"}
 
 
@@ -73,6 +74,7 @@ async def test_api_error(
         result["flow_id"], user_input=VALID_CONFIG
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -95,6 +97,7 @@ async def test_requests_exceeded_error(
         result["flow_id"], user_input=VALID_CONFIG
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {CONF_API_KEY: "requests_exceeded"}
 
 

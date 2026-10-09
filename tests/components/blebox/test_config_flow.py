@@ -138,6 +138,7 @@ async def test_flow_with_connection_failure(
             result["flow_id"],
             user_input={config_flow.CONF_HOST: "172.2.3.4", config_flow.CONF_PORT: 80},
         )
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -157,6 +158,7 @@ async def test_flow_with_api_failure(hass: HomeAssistant, product_class_mock) ->
             result["flow_id"],
             user_input={config_flow.CONF_HOST: "172.2.3.4", config_flow.CONF_PORT: 80},
         )
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -175,6 +177,7 @@ async def test_flow_with_unknown_failure(
             result["flow_id"],
             user_input={config_flow.CONF_HOST: "172.2.3.4", config_flow.CONF_PORT: 80},
         )
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"] == {"base": "unknown"}
 
 
@@ -196,6 +199,7 @@ async def test_flow_with_unsupported_version(
             result["flow_id"],
             user_input={config_flow.CONF_HOST: "172.2.3.4", config_flow.CONF_PORT: 80},
         )
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"] == {"base": "unsupported_version"}
 
 
@@ -215,6 +219,7 @@ async def test_flow_with_auth_failure(hass: HomeAssistant, product_class_mock) -
             result["flow_id"],
             user_input={config_flow.CONF_HOST: "172.2.3.4", config_flow.CONF_PORT: 80},
         )
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"] == {"base": "invalid_auth"}
 
 

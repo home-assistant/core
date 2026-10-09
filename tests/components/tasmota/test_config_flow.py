@@ -178,6 +178,7 @@ async def test_user_setup_invalid_topic_prefix(
     )
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"]["base"] == "invalid_discovery_topic"
 
 

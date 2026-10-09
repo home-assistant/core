@@ -178,6 +178,7 @@ async def test_error_pwd_required(hass: HomeAssistant, config) -> None:
     )
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {CONF_BASE: "pwd_required"}
 
 
@@ -197,6 +198,7 @@ async def test_error_no_password_ssh(hass: HomeAssistant) -> None:
     )
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {CONF_BASE: "pwd_or_ssh"}
 
 
@@ -216,6 +218,7 @@ async def test_error_password_and_ssh(hass: HomeAssistant) -> None:
     )
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {CONF_BASE: "pwd_and_ssh"}
 
 
@@ -243,6 +246,7 @@ async def test_error_invalid_ssh(hass: HomeAssistant, patch_is_file) -> None:
     )
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {CONF_BASE: "ssh_not_file"}
 
 
@@ -262,6 +266,7 @@ async def test_error_invalid_host(hass: HomeAssistant, patch_get_host) -> None:
     )
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {CONF_BASE: "invalid_host"}
 
 
@@ -363,6 +368,7 @@ async def test_on_connect_legacy_failed(
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {CONF_BASE: error}
 
 
@@ -392,6 +398,7 @@ async def test_on_connect_http_failed(
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {CONF_BASE: error}
 
 

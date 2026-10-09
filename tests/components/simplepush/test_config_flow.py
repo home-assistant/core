@@ -128,4 +128,5 @@ async def test_error_on_connection_failure(hass: HomeAssistant) -> None:
             user_input=MOCK_CONFIG,
         )
         assert result["type"] is FlowResultType.FORM
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"] == {"base": "cannot_connect"}

@@ -376,6 +376,7 @@ async def test_request_device_verification_code_error(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "auth"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == errors
     mock_authenticator.verify_device.assert_not_called()
     mock_mqtt_client.verify_config.assert_not_called()
@@ -415,6 +416,7 @@ async def test_verify_device_error(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "device_verification"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == errors
     mock_mqtt_client.verify_config.assert_not_called()
     mock_setup_entry.assert_not_called()
@@ -509,6 +511,7 @@ async def test_reauth_error(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "invalid_auth"}
     assert mock_config_entry.data == STORED_ENTRY_DATA_CLOUD
     mock_setup_entry.assert_not_called()

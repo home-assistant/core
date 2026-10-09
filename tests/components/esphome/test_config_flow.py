@@ -1640,6 +1640,7 @@ async def test_reauth_offline_device_stops_candidate_probing(
 
     assert result["type"] is FlowResultType.FORM, result
     assert result["step_id"] == "reauth_confirm"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "connection_error"}
     mock_get_encryption_key.assert_not_called()
 
@@ -1682,6 +1683,7 @@ async def test_user_flow_offline_device_stops_candidate_probing(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "connection_error"}
     mock_get_encryption_key.assert_not_called()
 

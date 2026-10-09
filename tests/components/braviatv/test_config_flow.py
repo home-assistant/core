@@ -205,6 +205,7 @@ async def test_user_invalid_host(hass: HomeAssistant) -> None:
         result["flow_id"], user_input={CONF_HOST: "invalid/host"}
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {CONF_HOST: "invalid_host"}
 
 
@@ -241,6 +242,7 @@ async def test_pin_form_error(hass: HomeAssistant, side_effect, error_message) -
             result["flow_id"], user_input={CONF_PIN: "1234"}
         )
 
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"] == {"base": error_message}
 
 
@@ -274,6 +276,7 @@ async def test_psk_form_error(hass: HomeAssistant, side_effect, error_message) -
             result["flow_id"], user_input={CONF_PIN: "mypsk"}
         )
 
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"] == {"base": error_message}
 
 

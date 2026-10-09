@@ -129,6 +129,7 @@ async def test_form_get_info_connection_error(hass: HomeAssistant) -> None:
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
@@ -151,6 +152,7 @@ async def test_form_get_info_exception(hass: HomeAssistant) -> None:
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "unknown"}
 
 
@@ -198,6 +200,7 @@ async def test_form_pairing_error(hass: HomeAssistant) -> None:
 
     assert result3["type"] is FlowResultType.FORM
     assert result3["step_id"] == "credentials"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result3["errors"] == {"base": "pairing_failed"}
 
 
@@ -257,6 +260,7 @@ async def test_form_user_invalid_auth(hass: HomeAssistant) -> None:
 
     assert result3["type"] is FlowResultType.FORM
     assert result3["step_id"] == "credentials"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result3["errors"] == {"base": "invalid_auth"}
 
 
@@ -316,6 +320,7 @@ async def test_form_validate_connection_error(hass: HomeAssistant) -> None:
 
     assert result3["type"] is FlowResultType.FORM
     assert result3["step_id"] == "credentials"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result3["errors"] == {"base": "cannot_connect"}
 
 
@@ -375,6 +380,7 @@ async def test_form_validate_session_error(hass: HomeAssistant) -> None:
 
     assert result3["type"] is FlowResultType.FORM
     assert result3["step_id"] == "credentials"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result3["errors"] == {"base": "session_error"}
 
 
@@ -434,6 +440,7 @@ async def test_form_validate_exception(hass: HomeAssistant) -> None:
 
     assert result3["type"] is FlowResultType.FORM
     assert result3["step_id"] == "credentials"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result3["errors"] == {"base": "unknown"}
 
 

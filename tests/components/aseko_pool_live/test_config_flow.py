@@ -87,6 +87,7 @@ async def test_async_step_user_exception(
         )
 
         assert result2["type"] is FlowResultType.FORM
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result2["errors"] == {"base": reason}
 
 
@@ -120,6 +121,7 @@ async def test_get_account_info_exceptions(
         )
 
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": reason}
 
 
@@ -245,4 +247,5 @@ async def test_async_step_reauth_exception(
         )
 
         assert result2["type"] is FlowResultType.FORM
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result2["errors"] == {"base": reason}

@@ -160,6 +160,7 @@ async def test_connection_error(hass: HomeAssistant) -> None:
             user_input=CONFIG,
         )
 
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"] == {CONF_URL: "cannot_connect"}
 
 
@@ -182,6 +183,7 @@ async def test_login_error(hass: HomeAssistant) -> None:
             user_input=CONFIG,
         )
 
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"] == {CONF_PASSWORD: "invalid_auth"}
 
 
@@ -281,6 +283,7 @@ async def test_dhcp_connection_error(hass: HomeAssistant) -> None:
             },
         )
 
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -312,4 +315,5 @@ async def test_dhcp_login_error(hass: HomeAssistant) -> None:
             },
         )
 
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"] == {CONF_PASSWORD: "invalid_auth"}

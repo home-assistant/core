@@ -259,6 +259,7 @@ async def test_setup_invalid_auth(
         )
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": ConnectResult.INVALID_AUTH}
 
 
@@ -350,6 +351,7 @@ async def test_reauth_not_successful(
         )
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "reauth_confirm"
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"]["base"] == error
 
 
@@ -408,6 +410,7 @@ async def test_options_flow_incorrect_prefixes(hass: HomeAssistant) -> None:
         )
 
         assert result["type"] is FlowResultType.FORM
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"] == {"base": ConnectResult.MALFORMED_PREFIXES}
 
 

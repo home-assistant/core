@@ -69,6 +69,7 @@ async def test_flow_user_bad_key(hass: HomeAssistant, mock_prowlpy: AsyncMock) -
 
     assert mock_prowlpy.verify_key.call_count > 0
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == INVALID_API_KEY_ERROR
 
 
@@ -89,6 +90,7 @@ async def test_flow_user_prowl_timeout(
 
     assert mock_prowlpy.verify_key.call_count > 0
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == TIMEOUT_ERROR
 
 
@@ -107,4 +109,5 @@ async def test_flow_api_failure(hass: HomeAssistant, mock_prowlpy: AsyncMock) ->
 
     assert mock_prowlpy.verify_key.call_count > 0
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == BAD_API_RESPONSE

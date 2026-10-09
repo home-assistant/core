@@ -112,6 +112,7 @@ async def test_config_flow_errors(
     )
 
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == error
     assert len(mock_tedee.get_local_bridge.mock_calls) == 1
 

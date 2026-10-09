@@ -264,6 +264,7 @@ async def test_select_controller_rerender_nudges_manual_host_when_shelf_empty(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "manual_host"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "no_devices_found"}
 
 
@@ -405,6 +406,7 @@ async def test_broadcast_nudges_manual_host_when_all_discovered_are_configured(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "manual_host"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "no_devices_found"}
 
 
@@ -428,6 +430,7 @@ async def test_user_flow_nudges_manual_host_when_all_discovered_are_ignored(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "manual_host"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "no_devices_found"}
 
 
@@ -534,6 +537,7 @@ async def test_user_discover_reshows_progress_while_scan_running(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "manual_host"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "no_devices_found"}
 
 
@@ -923,6 +927,7 @@ async def test_user_search_empty_nudges_manual_host(hass: HomeAssistant) -> None
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "manual_host"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "no_devices_found"}
 
 
@@ -1502,6 +1507,7 @@ async def test_user_manual_host_yaml_excluded_stays_on_form(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "manual_host"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "no_devices_found"}
 
 
@@ -1530,6 +1536,7 @@ async def test_user_manual_host_yaml_excluded_ignored_uid_stays_on_form(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "manual_host"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "no_devices_found"}
 
 
@@ -1593,6 +1600,7 @@ async def test_user_manual_host_empty_rejected_by_schema(hass: HomeAssistant) ->
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "manual_host"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {CONF_HOST: "required"}
 
 
@@ -1612,6 +1620,7 @@ async def test_user_manual_host_unreachable(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "manual_host"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -1638,6 +1647,7 @@ async def test_user_manual_host_already_configured_stays_on_form(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "manual_host"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "already_configured"}
 
 
@@ -1657,6 +1667,7 @@ async def test_user_manual_host_unpaired_stays_on_form(hass: HomeAssistant) -> N
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "manual_host"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "unpaired_bridge"}
 
 
@@ -1676,6 +1687,7 @@ async def test_user_manual_host_claimed_stays_on_form(hass: HomeAssistant) -> No
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "manual_host"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "already_configured"}
 
 
@@ -1760,4 +1772,5 @@ async def test_user_manual_host_shelve_miss_stays_on_form(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "manual_host"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "no_devices_found"}

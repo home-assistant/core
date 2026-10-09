@@ -327,6 +327,7 @@ async def test_config_flow_connection_error(hass: HomeAssistant) -> None:
             },
         )
         assert result2["type"] is FlowResultType.FORM
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result2["errors"]["base"] == "cannot_connect"
 
 
@@ -351,6 +352,7 @@ async def test_config_flow_unexpected_error(hass: HomeAssistant) -> None:
             },
         )
         assert result2["type"] is FlowResultType.FORM
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result2["errors"]["base"] == "unknown_auth_error"
 
 
@@ -536,6 +538,7 @@ async def test_config_flow_client_response_error(
         )
 
         assert result2["type"] is FlowResultType.FORM
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result2["errors"]["base"] == expected_error
 
 
@@ -795,6 +798,7 @@ async def test_reauth_with_error(hass: HomeAssistant) -> None:
             },
         )
         assert result2["type"] is FlowResultType.FORM
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result2["errors"]["base"] == "invalid_auth"
 
 

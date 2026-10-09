@@ -224,6 +224,7 @@ async def test_user_step_empty_account_response_keeps_cached_credentials(
         result["flow_id"],
         {CONF_USERNAME: MOCK_USERNAME, CONF_PASSWORD: MOCK_PASSWORD},
     )
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "no_devices"}
 
     result = await hass.config_entries.flow.async_configure(
@@ -263,6 +264,7 @@ async def test_user_step_username_change_drops_cached_credentials(
         result["flow_id"],
         {CONF_USERNAME: "other@example.com", CONF_PASSWORD: MOCK_PASSWORD},
     )
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "no_usable_devices"}
     assert (
         mock_cloud_account.discover_devices.call_args.kwargs["cached_credentials"] == {}
@@ -337,6 +339,7 @@ async def test_user_step_errors(
         {CONF_USERNAME: MOCK_USERNAME, CONF_PASSWORD: MOCK_PASSWORD},
     )
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": expected_error}
 
 

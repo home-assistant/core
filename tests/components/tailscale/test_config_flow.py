@@ -120,6 +120,7 @@ async def test_connection_error(
     )
 
     assert result.get("type") is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result.get("errors") == {"base": "cannot_connect"}
 
     assert len(mock_tailscale_config_flow.devices.mock_calls) == 1
@@ -225,4 +226,5 @@ async def test_reauth_api_error(
 
     assert result2.get("type") is FlowResultType.FORM
     assert result2.get("step_id") == "reauth_confirm"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2.get("errors") == {"base": "cannot_connect"}

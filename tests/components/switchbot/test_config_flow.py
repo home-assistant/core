@@ -1207,6 +1207,7 @@ async def test_user_cloud_login_auth_failed(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "cloud_login"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "auth_failed"}
     assert "Invalid credentials" in result["description_placeholders"]["error_detail"]
 

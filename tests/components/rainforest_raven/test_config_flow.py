@@ -208,6 +208,7 @@ async def test_flow_user_cannot_connect(hass: HomeAssistant) -> None:
     )
     assert result
     assert result.get("type") is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result.get("errors") == {CONF_DEVICE: "cannot_connect"}
 
 
@@ -223,6 +224,7 @@ async def test_flow_user_timeout_connect(hass: HomeAssistant) -> None:
     )
     assert result
     assert result.get("type") is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result.get("errors") == {CONF_DEVICE: "timeout_connect"}
 
 
@@ -238,4 +240,5 @@ async def test_flow_user_comm_error(hass: HomeAssistant) -> None:
     )
     assert result
     assert result.get("type") is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result.get("errors") == {CONF_DEVICE: "cannot_connect"}

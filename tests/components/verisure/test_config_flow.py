@@ -510,6 +510,7 @@ async def test_reauth_flow_errors(
     )
     assert result5.get("type") is FlowResultType.FORM
     assert result5.get("step_id") == "reauth_mfa"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result5.get("errors") == {"base": error}
 
     mock_verisure_config_flow.validate_mfa.side_effect = None
@@ -658,6 +659,7 @@ async def test_user_flow_mfa_rate_limited(
 
     assert result2.get("type") is FlowResultType.FORM
     assert result2.get("step_id") == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2.get("errors") == {"base": "mfa_rate_limited"}
 
 
@@ -689,6 +691,7 @@ async def test_reauth_flow_mfa_rate_limited(
 
     assert result2.get("type") is FlowResultType.FORM
     assert result2.get("step_id") == "reauth_confirm"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2.get("errors") == {"base": "mfa_rate_limited"}
 
 

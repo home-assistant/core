@@ -90,6 +90,7 @@ async def test_reconfigure_api_error(
     )
     await hass.async_block_till_done()
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "api_error"}
     assert result["description_placeholders"]["details"] == "failure"
     assert result["step_id"] == "reconfigure"
@@ -108,6 +109,7 @@ async def test_user_flow_failure(
         result["flow_id"],
         USER_INPUT,
     )
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"]["base"] == "api_error"
     assert result["description_placeholders"]["details"] == "failure"
     assert result["type"] is FlowResultType.FORM
@@ -197,6 +199,7 @@ async def test_options_flow_failure(
     emoncms_client.async_request.return_value = EMONCMS_FAILURE
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     await hass.async_block_till_done()
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"]["base"] == "api_error"
     assert result["description_placeholders"]["details"] == "failure"
     assert result["type"] is FlowResultType.FORM

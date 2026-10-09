@@ -78,6 +78,7 @@ async def test_flow_zone_not_found(hass: HomeAssistant) -> None:
     )
 
     assert result.get("type") is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result.get("errors") == {CONF_ZONE: "zone_not_found"}
 
 

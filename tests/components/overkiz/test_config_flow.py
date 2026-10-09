@@ -279,6 +279,7 @@ async def test_form_invalid_auth_cloud(
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": error}
 
 
@@ -322,6 +323,7 @@ async def test_form_invalid_hardware_cloud(
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "unsupported_hardware"}
     assert result["description_placeholders"] == {
         "unsupported_device": description_placeholder
@@ -372,6 +374,7 @@ async def test_form_invalid_hardware_cloud_local(
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "unsupported_hardware"}
     assert result["description_placeholders"] == {
         "unsupported_device": description_placeholder
@@ -438,6 +441,7 @@ async def test_form_invalid_auth_local(
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": error}
 
 
@@ -477,6 +481,7 @@ async def test_form_invalid_cozytouch_auth(
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": error}
     assert result["step_id"] == "cloud"
 

@@ -633,6 +633,7 @@ async def test_subentry_flow_chat_error(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"]["base"] == "chat_not_found"
 
     # test: chat id already configured

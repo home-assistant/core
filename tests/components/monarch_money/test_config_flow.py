@@ -276,6 +276,7 @@ async def test_reauth_subscription_auth_failure(
     )
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "invalid_auth"}
     assert CONF_EMAIL in result["data_schema"].schema
     assert CONF_PASSWORD in result["data_schema"].schema

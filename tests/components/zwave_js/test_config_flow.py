@@ -379,6 +379,7 @@ async def test_manual_errors(hass: HomeAssistant, url: str, error: str) -> None:
     )
 
     assert result["step_id"] == "manual"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": error}
 
 
@@ -432,6 +433,7 @@ async def test_reconfigure_manual_errors(
     )
 
     assert result["step_id"] == "manual_reconfigure"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": error}
 
 
@@ -2188,6 +2190,7 @@ async def test_configure_addon_usb_socket_validation(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "configure_addon_user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "usb_and_socket_path"}
 
     # Exactly one provided.

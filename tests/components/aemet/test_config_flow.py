@@ -172,4 +172,5 @@ async def test_form_auth_error(hass: HomeAssistant) -> None:
             user_input=CONFIG,
         )
 
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"] == {"base": "invalid_api_key"}

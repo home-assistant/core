@@ -156,6 +156,7 @@ async def test_config_flow_fail_completion(
     await hass.async_block_till_done()
 
     assert result.get("type") is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result.get("errors") == {"base": expected_error}
 
     assert len(mock_setup.mock_calls) == 0
@@ -455,6 +456,7 @@ async def test_config_flow_connection_errors(
             },
         )
         assert result4["type"] is FlowResultType.FORM
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result4["errors"] == {"base": "api_error"}
 
 
@@ -560,6 +562,7 @@ async def test_reconfiguring_conversation_subentry_validation_error(
             },
         )
         assert result2["type"] is FlowResultType.FORM
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result2["errors"] == {"base": "api_error"}
 
 
@@ -584,4 +587,5 @@ async def test_config_flow_unexpected_exception(
             },
         )
         assert result2["type"] is FlowResultType.FORM
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result2["errors"] == {"base": "unknown"}

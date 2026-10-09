@@ -171,5 +171,6 @@ async def test_form_invalid_com_ports(hass: HomeAssistant) -> None:
             result["flow_id"],
             {CONF_PORT: "/dev/ttyUSB7", CONF_ADDRESS: 7},
         )
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "cannot_connect"}
     assert len(mock_clientclose.mock_calls) == 1

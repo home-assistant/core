@@ -126,6 +126,7 @@ async def test_handle_error_user(hass: HomeAssistant) -> None:
                 "token": "test-token",
             },
         )
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result2["errors"] == {"base": "no_valid_uuid_set"}
 
 

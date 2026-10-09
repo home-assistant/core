@@ -148,6 +148,7 @@ async def test_user_input_device_not_found(
         {"host": "none"},
     )
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
@@ -166,6 +167,7 @@ async def test_user_input_non_yamaha_device_found(
     )
 
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "no_musiccast_device"}
 
 
@@ -208,6 +210,7 @@ async def test_user_input_unknown_error(
     )
 
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "unknown"}
 
 

@@ -104,6 +104,7 @@ async def test_form_cannot_connect(hass: HomeAssistant, mock_tv) -> None:
     )
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -210,6 +211,7 @@ async def test_pair_grant_failed(hass: HomeAssistant, mock_tv_pairable) -> None:
     )
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"pin": "invalid_pin"}
 
     # Test with unexpected failure

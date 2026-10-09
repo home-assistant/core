@@ -297,6 +297,7 @@ async def test_authentication_error(
     )
 
     assert result.get("type") is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result.get("errors") == {"base": "invalid_auth"}
     assert result.get("step_id") == "user"
 

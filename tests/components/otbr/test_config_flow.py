@@ -261,6 +261,7 @@ async def test_user_flow_additional_entry_same_address(
         },
     )
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "already_configured"}
 
 
@@ -352,6 +353,7 @@ async def test_user_flow_get_dataset_404(
         },
     )
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
 
 

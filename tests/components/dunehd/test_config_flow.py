@@ -30,6 +30,7 @@ async def test_user_invalid_host(hass: HomeAssistant) -> None:
         user_input={CONF_HOST: "invalid/host"},
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {CONF_HOST: "invalid_host"}
 
 
@@ -53,6 +54,7 @@ async def test_user_very_long_host(hass: HomeAssistant) -> None:
         user_input={CONF_HOST: long_host},
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {CONF_HOST: "invalid_host"}
 
 
@@ -71,6 +73,7 @@ async def test_user_cannot_connect(hass: HomeAssistant) -> None:
             user_input=CONFIG_IP,
         )
 
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"] == {CONF_HOST: "cannot_connect"}
 
 
@@ -96,6 +99,7 @@ async def test_duplicate_error(hass: HomeAssistant) -> None:
             user_input=CONFIG_HOSTNAME,
         )
 
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"] == {CONF_HOST: "already_configured"}
 
 

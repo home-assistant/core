@@ -563,6 +563,7 @@ async def test_credentials_invalid_private_key_preserves_other_fields(
         },
     )
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {CONF_PRIVATE_KEY: "invalid_key"}
 
     defaults = {

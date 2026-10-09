@@ -84,6 +84,7 @@ async def test_flow_user_cannot_connect(hass: HomeAssistant, skybell_mock) -> No
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -105,6 +106,7 @@ async def test_invalid_credentials(hass: HomeAssistant, skybell_mock) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "invalid_auth"}
 
 
@@ -123,6 +125,7 @@ async def test_flow_user_unknown_error(hass: HomeAssistant, skybell_mock) -> Non
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "unknown"}
 
 

@@ -396,6 +396,7 @@ async def test_link_step_fails(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "link"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": error_string}
 
 

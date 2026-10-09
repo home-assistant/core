@@ -122,6 +122,7 @@ async def test_device_abort(hass: HomeAssistant, mock_daikin, s_effect, reason) 
         user_input={CONF_HOST: HOST},
     )
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": reason}
     assert result["step_id"] == "user"
 
@@ -140,6 +141,7 @@ async def test_api_password_abort(hass: HomeAssistant) -> None:
         user_input={CONF_HOST: HOST, CONF_API_KEY: "aa", CONF_PASSWORD: "aa"},
     )
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "api_password"}
     assert result["step_id"] == "user"
 

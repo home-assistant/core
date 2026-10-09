@@ -75,6 +75,7 @@ async def test_form_duplicate_entries(
         flow3["flow_id"], {CONF_DEVICE: "/dev/ttyUSB0", CONF_ID: "test_entry_2"}
     )
     assert result3["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result3["errors"] == {"base": "already_configured"}
 
     assert mock_pyotgw.return_value.connect.await_count == 1
@@ -98,6 +99,7 @@ async def test_form_connection_timeout(
     )
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "timeout_connect"}
 
     assert mock_pyotgw.return_value.connect.await_count == 1
@@ -119,6 +121,7 @@ async def test_form_connection_error(
     )
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
     assert mock_pyotgw.return_value.connect.await_count == 1
 

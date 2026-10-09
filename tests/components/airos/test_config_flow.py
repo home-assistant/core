@@ -809,6 +809,7 @@ async def test_configure_device_flow_exceptions(
         )
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -968,6 +969,7 @@ async def test_validate_raise_on_attempted_legacy(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "manual"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
     assert mock_async_get_firmware_data.await_count == 2
     mock_client_session.assert_called_once()

@@ -85,6 +85,7 @@ async def test_form_location_cannot_connect(
     )
 
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
@@ -106,6 +107,7 @@ async def test_form_location_unknown_error(
     )
 
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "unknown"}
 
 
@@ -202,6 +204,7 @@ async def test_form_entity_no_coordinates(
     )
 
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "entity_no_coordinates"}
 
 
@@ -230,6 +233,7 @@ async def test_form_entity_non_numeric_coordinates(
     )
 
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "entity_no_coordinates"}
 
 
@@ -248,6 +252,7 @@ async def test_form_entity_not_found(
     )
 
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "entity_not_found"}
 
 
@@ -274,6 +279,7 @@ async def test_form_entity_disabled(
     )
 
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "entity_disabled"}
 
 
@@ -305,6 +311,7 @@ async def test_form_entity_unknown_error(
     )
 
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "unknown"}
 
 
@@ -336,6 +343,7 @@ async def test_form_entity_cannot_connect(
     )
 
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "cannot_connect"}
 
 

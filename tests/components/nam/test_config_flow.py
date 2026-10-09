@@ -195,6 +195,7 @@ async def test_form_with_auth_errors(hass: HomeAssistant, error) -> None:
             VALID_AUTH,
         )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": base_error}
 
 
@@ -224,6 +225,7 @@ async def test_form_errors(hass: HomeAssistant, error) -> None:
             user_input=VALID_CONFIG,
         )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": base_error}
 
 

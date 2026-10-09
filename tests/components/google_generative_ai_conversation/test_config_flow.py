@@ -675,6 +675,7 @@ async def test_subentry_options_switching(
 
     else:
         assert options["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert options.get("errors", None) == errors
 
 
@@ -711,6 +712,7 @@ async def test_form_errors(hass: HomeAssistant, side_effect, error) -> None:
         )
 
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": error}
 
 

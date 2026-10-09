@@ -107,6 +107,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
         result = await valid_flow(hass, sync_complete=False)
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -114,6 +115,7 @@ async def test_form_missing_upb_file(hass: HomeAssistant) -> None:
     """Test we handle cannot connect error."""
     result = await valid_flow(hass, config_ok=False)
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "invalid_upb_file"}
 
 

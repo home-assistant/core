@@ -45,6 +45,7 @@ async def test_flow_wrong_login(hass: HomeAssistant) -> None:
             user_input=CONF_INPUT,
         )
         assert result["type"] is FlowResultType.FORM
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"] == {"base": "invalid_auth"}
 
 
@@ -63,4 +64,5 @@ async def test_flow_unknown_error(hass: HomeAssistant) -> None:
             user_input=CONF_INPUT,
         )
         assert result["type"] is FlowResultType.FORM
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"] == {"base": "unknown"}

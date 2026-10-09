@@ -149,6 +149,7 @@ async def test_user_form_exceptions(
         )
 
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": error_base}
     bulb.async_close.assert_awaited_once()
 

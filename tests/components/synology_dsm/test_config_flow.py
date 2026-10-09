@@ -577,6 +577,7 @@ async def test_login_failed(hass: HomeAssistant, service: MagicMock) -> None:
         user_input={CONF_HOST: HOST, CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
     )
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {CONF_USERNAME: "invalid_auth"}
 
 
@@ -600,6 +601,7 @@ async def test_connection_failed(hass: HomeAssistant, service: MagicMock) -> Non
     )
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {CONF_HOST: "cannot_connect"}
 
 
@@ -621,6 +623,7 @@ async def test_unknown_failed(hass: HomeAssistant, service: MagicMock) -> None:
     )
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "unknown"}
 
 
@@ -649,6 +652,7 @@ async def test_missing_data_after_login(
             },
         )
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "missing_data"}
 
 

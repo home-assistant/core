@@ -81,6 +81,7 @@ async def test_full_flow_fail_because_of_missing_device_infos(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "missing_device_info"}
 
 

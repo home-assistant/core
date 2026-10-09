@@ -143,6 +143,7 @@ async def test_flow_fails_on_api(
             },
         )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": error}
 
 
