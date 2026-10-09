@@ -323,6 +323,23 @@ async def test_connection_failure_reports_are_deduplicated(
     assert caplog.text.count("Connection to UniFi Network restored") == 1
 
 
+async def test_connection_recovery_does_not_restart_running_websocket(
+    hass: HomeAssistant,
+    config_entry_setup: MockConfigEntry,
+) -> None:
+    """Ensure recovery does not replace an active websocket consumer task."""
+    hub = config_entry_setup.runtime_data
+    websocket = hub.websocket
+    active_task = websocket.ws_task
+    assert active_task is not None
+    assert not active_task.done()
+
+    hub._async_connection_recovered()
+    await hass.async_block_till_done()
+
+    assert websocket.ws_task is active_task
+
+
 @pytest.mark.parametrize(
     "exception",
     [aiounifi.ServiceUnavailable, aiounifi.Unauthorized],

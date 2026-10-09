@@ -69,6 +69,8 @@ class UnifiWebsocket:
     @callback
     def start_websocket(self) -> None:
         """Start up connection to websocket."""
+        if self.ws_task is not None and not self.ws_task.done():
+            return
 
         async def _websocket_runner() -> None:
             """Start websocket."""
