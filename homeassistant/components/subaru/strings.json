@@ -86,9 +86,6 @@
       "health_istrouble": {
         "name": "Vehicle health"
       },
-      "is_charging": {
-        "name": "Charging"
-      },
       "lock_status_boot": {
         "name": "Lock status tailgate"
       },
