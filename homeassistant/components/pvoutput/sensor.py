@@ -4,9 +4,10 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import override
 
-from pvo import Status, System
+from pvo import Status
 
 from homeassistant.components.sensor import (
+    DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -18,7 +19,8 @@ from homeassistant.const import (
     UnitOfPower,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -35,10 +37,15 @@ class PVOutputSensorEntityDescription(SensorEntityDescription):
 
     value_fn: Callable[[Status], int | float | None]
 
+    # Not every uploader sends these values, so these sensors are only
+    # created once the system reports a value for them.
+    optional: bool = False
+
 
 SENSORS: tuple[PVOutputSensorEntityDescription, ...] = (
     PVOutputSensorEntityDescription(
         key="energy_consumption",
+        optional=True,
         translation_key="energy_consumption",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
@@ -64,6 +71,7 @@ SENSORS: tuple[PVOutputSensorEntityDescription, ...] = (
     ),
     PVOutputSensorEntityDescription(
         key="power_consumption",
+        optional=True,
         translation_key="power_consumption",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
@@ -80,16 +88,20 @@ SENSORS: tuple[PVOutputSensorEntityDescription, ...] = (
     ),
     PVOutputSensorEntityDescription(
         key="temperature",
+        optional=True,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
         value_fn=lambda status: status.temperature,
     ),
     PVOutputSensorEntityDescription(
         key="voltage",
+        optional=True,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
         value_fn=lambda status: status.voltage,
     ),
 )
@@ -102,17 +114,49 @@ async def async_setup_entry(
 ) -> None:
     """Set up a PVOutput sensors based on a config entry."""
     coordinator = entry.runtime_data
-    system = await coordinator.pvoutput.system()
+    entity_registry = er.async_get(hass)
+    system_id = entry.data[CONF_SYSTEM_ID]
+    added_keys: set[str] = set()
 
-    async_add_entities(
-        PVOutputSensorEntity(
-            coordinator=coordinator,
-            description=description,
-            system_id=entry.data[CONF_SYSTEM_ID],
-            system=system,
+    def _should_add(description: PVOutputSensorEntityDescription) -> bool:
+        """Return if a sensor should be added."""
+        if not description.optional:
+            return True
+
+        if description.value_fn(coordinator.data) is not None:
+            return True
+
+        # Keep sensors that existed before, even if they have no value now
+        return (
+            entity_registry.async_get_entity_id(
+                SENSOR_DOMAIN, DOMAIN, f"{system_id}_{description.key}"
+            )
+            is not None
         )
-        for description in SENSORS
-    )
+
+    @callback
+    def _async_add_new_sensors() -> None:
+        """Add sensors that have not been added yet, if they should be."""
+        new_descriptions = [
+            description
+            for description in SENSORS
+            if description.key not in added_keys and _should_add(description)
+        ]
+        if not new_descriptions:
+            return
+
+        added_keys.update(description.key for description in new_descriptions)
+        async_add_entities(
+            PVOutputSensorEntity(
+                coordinator=coordinator,
+                description=description,
+                system_id=system_id,
+            )
+            for description in new_descriptions
+        )
+
+    _async_add_new_sensors()
+    entry.async_on_unload(coordinator.async_add_listener(_async_add_new_sensors))
 
 
 class PVOutputSensorEntity(
@@ -128,8 +172,7 @@ class PVOutputSensorEntity(
         *,
         coordinator: PVOutputDataUpdateCoordinator,
         description: PVOutputSensorEntityDescription,
-        system_id: str,
-        system: System,
+        system_id: int,
     ) -> None:
         """Initialize a PVOutput sensor."""
         super().__init__(coordinator=coordinator)
@@ -139,8 +182,8 @@ class PVOutputSensorEntity(
             configuration_url=f"https://pvoutput.org/list.jsp?sid={system_id}",
             identifiers={(DOMAIN, str(system_id))},
             manufacturer="PVOutput",
-            model=system.inverter_brand,
-            name=system.system_name,
+            model=coordinator.system.inverter_brand,
+            name=coordinator.system.system_name,
         )
 
     @property

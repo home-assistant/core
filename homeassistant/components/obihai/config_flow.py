@@ -23,7 +23,7 @@ DATA_SCHEMA = probatio.Schema(
             default=DEFAULT_USERNAME,
         ): str,
         probatio.Required(
-            CONF_PASSWORD,
+            probatio.Secret(CONF_PASSWORD),
             default=DEFAULT_PASSWORD,
         ): str,
     }

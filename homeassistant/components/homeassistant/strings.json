@@ -132,7 +132,7 @@
       "title": "[%key:component::homeassistant::issues::config_entry_unique_id_collision::title%]"
     },
     "country_not_configured": {
-      "description": "No country has been configured. Click the \"Learn more\" button below to set your country.",
+      "description": "No country has been configured. Select **Learn more** below to set your country.",
       "title": "The country has not been configured"
     },
     "deprecated_architecture": {
@@ -168,12 +168,16 @@
       "title": "The {integration_title} integration is being removed"
     },
     "deprecated_trigger_behavior": {
-      "description": "An automation, script or template entity uses the trigger behavior option `{deprecated_behavior}`, which has been renamed to `{new_behavior}`. The old value still works for now, but support for it will be removed in a future release.\n\nTo fix this issue, open each affected automation or script in the editor and save it again; Home Assistant will automatically detect and update the deprecated option. Alternatively, edit your configuration files (for example `automations.yaml`) directly and change `behavior: {deprecated_behavior}` to `behavior: {new_behavior}`. Restart Home Assistant afterwards.",
+      "description": "An automation, script or template entity uses the trigger behavior option `{deprecated_behavior}`, which has been renamed to `{new_behavior}`. The old value still works for now, but support for it will be removed in a future release.\n\nTo fix this issue, open each affected automation or script in the editor and save it again; Home Assistant will automatically detect and update the deprecated option. Alternatively, edit your configuration files (for example `automations.yaml`) directly and change `behavior: {deprecated_behavior}` to `behavior: {new_behavior}` in the options of your triggers. Leave the `behavior` option of conditions unchanged, as conditions still use `any` and `all`. Restart Home Assistant afterwards.",
       "title": "Deprecated trigger behavior option in use"
     },
     "deprecated_yaml": {
       "description": "Configuring {integration_title} using YAML is being removed.\n\nYour existing YAML configuration has been imported into the UI automatically.\n\nRemove the `{domain}` configuration from your configuration.yaml file and restart Home Assistant to fix this issue.",
       "title": "The {integration_title} YAML configuration is being removed"
+    },
+    "entity_own_area_without_own_name": {
+      "description": "The entity `{entity_id}` has no name of its own, so it represents its device and is where the device is. An area set on the entity itself contradicts this and is not supported.\n\nTo resolve this, open the [entity settings]({entity_settings_url}) and either remove the entity's area or give the entity a name.",
+      "title": "Entity {entity_id} has an area but no name of its own"
     },
     "historic_currency": {
       "description": "The currency {currency} is no longer in use, please reconfigure the currency configuration.",

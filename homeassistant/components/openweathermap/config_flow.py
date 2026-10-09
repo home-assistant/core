@@ -45,7 +45,7 @@ USER_SCHEMA = probatio.Schema(
         probatio.Optional(CONF_LANGUAGE, default=DEFAULT_LANGUAGE): LanguageSelector(
             LanguageSelectorConfig(languages=LANGUAGES, native_name=True)
         ),
-        probatio.Required(CONF_API_KEY): str,
+        probatio.Required(probatio.Secret(CONF_API_KEY)): str,
         probatio.Optional(CONF_MODE, default=DEFAULT_OWM_MODE): probatio.In(OWM_MODES),
     }
 )

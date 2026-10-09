@@ -92,7 +92,7 @@ class OutputAbs(LcnServiceCall):
                 probatio.Upper, probatio.In(OUTPUT_PORTS)
             ),
             probatio.Required(CONF_BRIGHTNESS): probatio.All(
-                probatio.Coerce(int), probatio.Range(min=0, max=100)
+                probatio.Coerce(int), probatio.Percentage()
             ),
             probatio.Optional(CONF_TRANSITION, default=0): probatio.All(
                 probatio.Coerce(float), probatio.Range(min=0.0, max=486.0)

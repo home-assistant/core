@@ -954,6 +954,9 @@
     "login_error": {
       "message": "Error during login attempt: {err}"
     },
+    "no_access_to_path": {
+      "message": "Cannot write `{filename}`, no access to path; `allowlist_external_dirs` may need to be adjusted in `configuration.yaml`"
+    },
     "no_data": {
       "message": "Device returned no data: {err}"
     },
@@ -983,6 +986,9 @@
     },
     "webhook_no_url": {
       "message": "Error registering URL for webhook {event_id}: Home Assistant URL is not available"
+    },
+    "write_image_error": {
+      "message": "Can't write image to `{filename}`, see the log for details"
     }
   },
   "issues": {
@@ -1063,6 +1069,20 @@
         }
       },
       "name": "PTZ move"
+    },
+    "snapshot_past": {
+      "description": "Takes a snapshot from a past moment in time out of the recordings of a camera and stores it in a file.",
+      "fields": {
+        "filename": {
+          "description": "Full path to filename.",
+          "name": "Filename"
+        },
+        "timestamp": {
+          "description": "Moment in time to take the snapshot from, in the local time of Home Assistant.",
+          "name": "Timestamp"
+        }
+      },
+      "name": "Take camera snapshot from past"
     }
   }
 }

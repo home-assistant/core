@@ -17,7 +17,7 @@ _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = probatio.Schema(
     {
-        probatio.Required(CONF_API_KEY): str,
+        probatio.Required(probatio.Secret(CONF_API_KEY)): str,
         probatio.Required(CONF_DEFAULT_CHANNEL): str,
         probatio.Optional(CONF_ICON): str,
         probatio.Optional(CONF_USERNAME): str,

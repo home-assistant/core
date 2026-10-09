@@ -27,10 +27,12 @@ async def async_setup_entry(
         client = hass.data[DOMAIN]
         async_add_entities([TelldusLiveSwitch(client, device_id)])
 
-    async_dispatcher_connect(
-        hass,
-        TELLDUS_DISCOVERY_NEW.format(switch.DOMAIN, DOMAIN),
-        async_discover_switch,
+    config_entry.async_on_unload(
+        async_dispatcher_connect(
+            hass,
+            TELLDUS_DISCOVERY_NEW.format(switch.DOMAIN, DOMAIN),
+            async_discover_switch,
+        )
     )
 
 

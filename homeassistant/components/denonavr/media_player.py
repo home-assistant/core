@@ -289,8 +289,6 @@ class DenonDevice(MediaPlayerEntity):
     @override
     async def async_will_remove_from_hass(self) -> None:
         """Clean up the entity."""
-        if self._receiver.telnet_connected:
-            await self._receiver.async_telnet_disconnect()
         self._receiver.unregister_callback(ALL_TELNET_EVENTS, self._telnet_callback)
 
     @async_log_errors

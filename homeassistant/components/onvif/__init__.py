@@ -19,17 +19,30 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_ENABLE_WEBHOOKS,
     CONF_SNAPSHOT_AUTH,
     DEFAULT_ARGUMENTS,
     DEFAULT_ENABLE_WEBHOOKS,
+    DOMAIN,
+    SNAPSHOT_TIMEOUT,
 )
 from .device import ONVIFConfigEntry, ONVIFDevice
+from .services import async_setup_services
 
 LOGGER = logging.getLogger(__name__)
+
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the ONVIF integration."""
+    async_setup_services(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ONVIFConfigEntry) -> bool:
@@ -131,7 +144,11 @@ async def _get_snapshot_auth(device: ONVIFDevice) -> str | None:
     for basic_auth in (False, True):
         method = HTTP_BASIC_AUTHENTICATION if basic_auth else HTTP_DIGEST_AUTHENTICATION
         with suppress(ONVIFError):
-            if await device.device.get_snapshot(device.profiles[0].token, basic_auth):
+            if await device.device.get_snapshot(
+                device.profiles[0].token,
+                basic_auth,
+                timeout=SNAPSHOT_TIMEOUT.total_seconds(),
+            ):
                 return method
 
     return None

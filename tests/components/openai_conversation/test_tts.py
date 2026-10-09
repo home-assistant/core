@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Any
 from unittest.mock import MagicMock
 
-import httpx
+import httpx2
 from openai import RateLimitError
 import pytest
 
@@ -203,7 +203,7 @@ async def test_tts_error(
     """Test exception handling during text to speech generation."""
     # Mock the OpenAI response stream
     mock_create_speech.side_effect = RateLimitError(
-        response=httpx.Response(status_code=429, request=""),
+        response=httpx2.Response(status_code=429, request=""),
         body=None,
         message=None,
     )

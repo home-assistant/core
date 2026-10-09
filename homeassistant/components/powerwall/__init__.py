@@ -18,7 +18,11 @@ from homeassistant.components import persistent_notification
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.update_coordinator import UpdateFailed
@@ -189,13 +193,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: PowerwallConfigEntry) ->
             except (TimeoutError, PowerwallUnreachableError) as err:
                 raise ConfigEntryNotReady from err
             except MissingAttributeError as err:
-                # The error might include some important
-                # information about what exactly changed.
-                _LOGGER.error("The powerwall api has changed: %s", str(err))
                 persistent_notification.async_create(
                     hass, API_CHANGED_ERROR_BODY, API_CHANGED_TITLE
                 )
-                return False
+                raise ConfigEntryError(
+                    translation_domain=DOMAIN,
+                    translation_key="api_changed",
+                ) from err
             except AccessDeniedError as err:
                 if use_auth_cookie and tries == 0:
                     _LOGGER.debug(

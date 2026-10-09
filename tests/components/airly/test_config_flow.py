@@ -23,6 +23,11 @@ CONFIG = {
     CONF_LONGITUDE: 45.6,
 }
 
+UPDATE_API_KEY_FLOWS = [
+    ("start_reauth_flow", "reauth_confirm", "reauth_successful"),
+    ("start_reconfigure_flow", "reconfigure", "reconfigure_successful"),
+]
+
 
 @pytest.fixture(autouse=True)
 def mock_setup_entry() -> Generator[AsyncMock]:
@@ -221,7 +226,7 @@ async def test_create_entry_with_nearest_method(
 @pytest.mark.parametrize(
     ("exception", "error"),
     [
-        (TimeoutError(), "cannot_connect"),
+        (TimeoutError, "cannot_connect"),
         (ClientConnectorError(Mock(), OSError("test")), "cannot_connect"),
     ],
 )
@@ -305,3 +310,144 @@ async def test_unknown_error(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+@pytest.mark.parametrize(
+    ("start_flow", "step_id", "abort_reason"), UPDATE_API_KEY_FLOWS
+)
+async def test_update_api_key_successful(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_airly_client: MagicMock,
+    start_flow: str,
+    step_id: str,
+    abort_reason: str,
+) -> None:
+    """Test updating the API key with the reauth and reconfigure flows."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await getattr(mock_config_entry, start_flow)(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == step_id
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_API_KEY: "new_api_key"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == abort_reason
+    assert mock_config_entry.data == {**CONFIG, CONF_API_KEY: "new_api_key"}
+    mock_airly_client.create_measurements_session_point.assert_called_once_with(
+        latitude=12.3, longitude=45.6
+    )
+
+
+@pytest.mark.parametrize(
+    ("start_flow", "step_id", "abort_reason"), UPDATE_API_KEY_FLOWS
+)
+async def test_update_api_key_with_nearest_method(
+    hass: HomeAssistant,
+    mock_airly_client: MagicMock,
+    start_flow: str,
+    step_id: str,
+    abort_reason: str,
+) -> None:
+    """Test that the API key is validated with the nearest method."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Home",
+        unique_id="12.3-45.6",
+        data={**CONFIG, CONF_USE_NEAREST: True},
+    )
+    entry.add_to_hass(hass)
+
+    result = await getattr(entry, start_flow)(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == step_id
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_API_KEY: "new_api_key"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == abort_reason
+    assert entry.data == {
+        **CONFIG,
+        CONF_API_KEY: "new_api_key",
+        CONF_USE_NEAREST: True,
+    }
+    mock_airly_client.create_measurements_session_nearest.assert_called_once_with(
+        latitude=12.3, longitude=45.6, max_distance_km=5
+    )
+    mock_airly_client.create_measurements_session_point.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    ("start_flow", "step_id", "abort_reason"), UPDATE_API_KEY_FLOWS
+)
+@pytest.mark.parametrize(
+    ("exception", "error"),
+    [
+        (
+            AirlyError(
+                HTTPStatus.UNAUTHORIZED,
+                {"message": "Invalid authentication credentials"},
+            ),
+            "invalid_api_key",
+        ),
+        (
+            AirlyError(HTTPStatus.NOT_FOUND, {"message": "Installation was not found"}),
+            "wrong_location",
+        ),
+        (
+            AirlyError(HTTPStatus.INTERNAL_SERVER_ERROR, {"message": "Server error"}),
+            "unknown",
+        ),
+        (TimeoutError, "cannot_connect"),
+        (ClientConnectorError(Mock(), OSError("test")), "cannot_connect"),
+        (Exception("unexpected"), "unknown"),
+    ],
+)
+async def test_update_api_key_errors(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_airly_client: MagicMock,
+    start_flow: str,
+    step_id: str,
+    abort_reason: str,
+    exception: Exception,
+    error: str,
+) -> None:
+    """Test the reauth and reconfigure flows with errors."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await getattr(mock_config_entry, start_flow)(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == step_id
+
+    point_measurements = (
+        mock_airly_client.create_measurements_session_point.return_value
+    )
+    point_measurements.update.side_effect = exception
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_API_KEY: "new_api_key"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == step_id
+    assert result["errors"] == {"base": error}
+    assert mock_config_entry.data == CONFIG
+
+    point_measurements.update.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_API_KEY: "new_api_key"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == abort_reason
+    assert mock_config_entry.data == {**CONFIG, CONF_API_KEY: "new_api_key"}

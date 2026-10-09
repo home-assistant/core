@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Final, override
 
-from aioshelly.const import MODEL_BLU_GATEWAY_G3, RPC_GENERATIONS
+from aioshelly.const import RPC_GENERATIONS
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
 
 from homeassistant.components.button import (
@@ -34,6 +34,7 @@ from .entity import (
     ShellySleepingRpcAttributeEntity,
     async_setup_entry_rpc,
     get_entity_block_device_info,
+    get_entity_blu_trv_device_info,
     get_entity_rpc_device_info,
     rpc_call,
 )
@@ -41,7 +42,6 @@ from .utils import (
     async_remove_orphaned_entities,
     async_remove_shelly_entity,
     format_ble_addr,
-    get_blu_trv_device_info,
     get_device_entry_gen,
     get_rpc_key_id,
     get_virtual_component_ids,
@@ -281,19 +281,10 @@ class ShellyBluTrvButton(ShellyRpcAttributeEntity, ButtonEntity):
         """Initialize button."""
         super().__init__(coordinator, key, attribute, description)
 
-        config = coordinator.device.config[key]
-        ble_addr: str = config["addr"]
-        fw_ver = coordinator.device.status[key].get("fw_ver")
+        ble_addr: str = coordinator.device.config[key]["addr"]
 
         self._attr_unique_id = f"{format_ble_addr(ble_addr)}-{key}-{attribute}"
-        self._attr_device_info = get_blu_trv_device_info(
-            coordinator.hass,
-            coordinator.config_entry.entry_id,
-            config,
-            ble_addr,
-            coordinator.mac,
-            fw_ver,
-        )
+        self._attr_device_info = get_entity_blu_trv_device_info(coordinator, key)
 
     @rpc_call
     @override
@@ -368,7 +359,6 @@ RPC_BUTTONS = {
         translation_key="calibrate",
         entity_category=EntityCategory.CONFIG,
         entity_class=ShellyBluTrvButton,
-        models={MODEL_BLU_GATEWAY_G3},
     ),
     "smoke_mute": RpcButtonDescription(
         key="smoke",

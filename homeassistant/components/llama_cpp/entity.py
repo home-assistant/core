@@ -67,7 +67,9 @@ def _format_structured_output(
 ) -> ResponseFormatJSONSchema:
     """Format structured output specification."""
     schema = probatio.to_openapi(
-        structure, custom_serializer=llm_api.custom_serializer if llm_api else None
+        structure,
+        custom_serializer=llm_api.custom_serializer if llm_api else None,
+        openapi_version="3.1.0",
     )
     return ResponseFormatJSONSchema(
         type="json_schema",
@@ -87,7 +89,9 @@ def _format_tool(
     tool_spec = FunctionDefinition(
         name=tool.name,
         parameters=probatio.to_openapi(
-            tool.parameters, custom_serializer=custom_serializer
+            tool.parameters,
+            custom_serializer=custom_serializer,
+            openapi_version="3.1.0",
         ),
     )
     if tool.description:
@@ -392,15 +396,17 @@ class LlamaCppBaseLLMEntity(Entity):
                     cast(ChatCompletion, result).choices[0].message
                 )
 
-            messages.extend(
-                [
-                    msg
-                    async for content in chat_log.async_add_delta_content_stream(
-                        self.entity_id, async_generator
-                    )
-                    if (msg := convert_message(content))
-                ]
-            )
+            # Streamed responses raise API errors while being consumed
+            with api_error_handler():
+                messages.extend(
+                    [
+                        msg
+                        async for content in chat_log.async_add_delta_content_stream(
+                            self.entity_id, async_generator
+                        )
+                        if (msg := convert_message(content))
+                    ]
+                )
 
             if not chat_log.unresponded_tool_results:
                 break

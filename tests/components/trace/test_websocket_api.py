@@ -1,7 +1,7 @@
 """Test Trace websocket API."""
 
 import asyncio
-from collections import defaultdict, deque
+from collections import defaultdict
 import json
 from typing import Any
 from unittest.mock import patch
@@ -1665,6 +1665,37 @@ async def test_trace_blueprint_automation(
     assert trace.get("trigger", UNDEFINED) == "event 'blueprint_event'"
 
 
+async def test_automation_without_id_does_not_store_trace(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Automations without an id do not create an invalid trace."""
+    await _setup_automation_or_script(
+        hass,
+        "automation",
+        [
+            {
+                "triggers": {
+                    "platform": "event",
+                    "event_type": "test_event",
+                },
+                "actions": {"event": "automation_ran"},
+            }
+        ],
+    )
+
+    hass.bus.async_fire("test_event")
+    await hass.async_block_till_done()
+
+    client = await hass_ws_client()
+    await client.send_json({"id": 1, "type": "trace/list", "domain": "automation"})
+    response = await client.receive_json()
+
+    assert response["success"]
+    assert response["result"] == []
+    assert "automation.None" not in hass.data[DATA_TRACE]
+
+
 class _DiagnosticActionTrace(ActionTrace):
     """Automation-domain trace used to exercise not-triggered serialization."""
 
@@ -1677,7 +1708,7 @@ def _serialize_trace(not_triggered: bool, reason: str) -> dict[str, Any]:
     trace.not_triggered = not_triggered
     element = TraceElement({"trigger": {"idx": "0"}}, "trigger/0")
     element.set_result(reason=reason)
-    trace.set_trace({"trigger/0": deque([element])})
+    trace.set_trace({"trigger/0": [element]})
     trace.finished()
     return json.loads(json.dumps(trace.as_dict(), cls=ExtendedJSONEncoder))
 

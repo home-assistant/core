@@ -2,7 +2,6 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "unique_id_mismatch": "The authenticated Monarch Money account does not match the configured account."
     },
     "error": {
@@ -38,6 +37,9 @@
       },
 
       "balance": { "name": "Balance" },
+      "budget_actual": { "name": "Budget actual" },
+      "budget_planned": { "name": "Budget planned" },
+      "budget_remaining": { "name": "Budget remaining" },
       "owner": {
         "name": "Owner"
       },
