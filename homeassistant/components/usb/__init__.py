@@ -20,6 +20,7 @@ from homeassistant.core import (
     CALLBACK_TYPE,
     Event,
     HomeAssistant,
+    async_noop,
     callback as hass_callback,
 )
 from homeassistant.helpers import config_validation as cv, discovery_flow
@@ -308,7 +309,7 @@ class USBDiscovery:
         """Register an initial scan callback."""
         if self.initial_scan_done:
             callback()
-            return lambda: None
+            return async_noop
 
         self._initial_scan_callbacks.append(callback)
 

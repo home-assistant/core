@@ -1,7 +1,5 @@
 """Test the Met integration init."""
 
-import pytest
-
 from homeassistant.components.met.const import (
     DEFAULT_HOME_LATITUDE,
     DEFAULT_HOME_LONGITUDE,
@@ -28,9 +26,7 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
     assert not hass.data.get(DOMAIN)
 
 
-async def test_fail_default_home_entry(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
+async def test_fail_default_home_entry(hass: HomeAssistant) -> None:
     """Test abort setup of default home location."""
     await async_process_ha_core_config(
         hass,
@@ -45,7 +41,4 @@ async def test_fail_default_home_entry(
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert entry.state is ConfigEntryState.SETUP_ERROR
 
-    assert (
-        "Skip setting up met.no integration; No Home location has been set"
-        in caplog.text
-    )
+    assert entry.reason == "No home location has been set"

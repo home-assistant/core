@@ -131,8 +131,17 @@
     "device_api_error": {
       "message": "Error communicating with the Device Access API, please see logs for details."
     },
+    "legacy_entry": {
+      "message": "This config entry uses the legacy Nest API and will be removed"
+    },
     "reauth_required": {
       "message": "Reauthentication is required, please follow the instructions in the UI to reauthenticate your account."
+    },
+    "subscriber_configuration_error": {
+      "message": "Configuration error in the Nest subscriber"
+    },
+    "subscriber_create_failed": {
+      "message": "Failed to create the Nest subscriber"
     },
     "subscriber_error": {
       "message": "Subscriber failed to connect to Google, please see logs for details."

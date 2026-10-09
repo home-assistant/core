@@ -87,5 +87,10 @@
         "name": "Working state"
       }
     }
+  },
+  "exceptions": {
+    "authentication_failed": {
+      "message": "Authentication on device {host} failed"
+    }
   }
 }
