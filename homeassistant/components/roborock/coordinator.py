@@ -393,6 +393,7 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState | None]):
         try:
             return await self.properties_api.routines.get_routines()
         except RoborockException as err:
+            # pylint: disable-next=home-assistant-log-and-raise
             _LOGGER.error("Failed to get routines %s", err)
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
@@ -407,7 +408,6 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState | None]):
         try:
             await self.properties_api.routines.execute_routine(routine_id)
         except RoborockException as err:
-            _LOGGER.error("Failed to execute routines %s %s", routine_id, err)
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="command_failed",
@@ -709,6 +709,7 @@ class RoborockB01Q7UpdateCoordinator(RoborockDataUpdateCoordinatorB01):
                 translation_domain=DOMAIN,
                 translation_key="update_data_fail",
             )
+        await self.async_refresh_q7_map()
         return data
 
     async def async_refresh_q7_map(self) -> bool:

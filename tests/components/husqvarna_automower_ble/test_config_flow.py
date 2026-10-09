@@ -451,6 +451,15 @@ async def test_user_device_not_found(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "cannot_connect"}
 
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_ADDRESS: "00000000-0000-0000-0000-000000000001",
+            CONF_PIN: "1234",
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_user_unable_to_connect(
     hass: HomeAssistant,
@@ -505,6 +514,16 @@ async def test_failed_reauth(
     assert result["step_id"] == "reauth_confirm"
     assert result["errors"] == {"base": "cannot_connect"}
 
+    mock_automower_client.connect.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_PIN: "1234",
+        },
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+
 
 async def test_duplicate_entry(
     hass: HomeAssistant,
@@ -537,16 +556,26 @@ async def test_duplicate_entry(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.parametrize(
+    "probe_side_effect",
+    [
+        pytest.param(BleakError, id="bleak_error"),
+        # The library returns None for the values it failed to read
+        pytest.param([(None, "Automower", "305")], id="no_manufacturer"),
+        pytest.param([("Husqvarna", None, "305")], id="no_device_type"),
+    ],
+)
 async def test_exception_probe(
     hass: HomeAssistant,
     mock_automower_client: Mock,
+    probe_side_effect: type[Exception] | list[tuple[str | None, str | None, str]],
 ) -> None:
-    """Test we can select a device."""
+    """Test a failing probe shows an error."""
 
     inject_bluetooth_service_info(hass, AUTOMOWER_UNNAMED_SERVICE_INFO)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    mock_automower_client.probe_gatts.side_effect = BleakError
+    mock_automower_client.probe_gatts.side_effect = probe_side_effect
 
     result = hass.config_entries.flow.async_progress_by_handler(DOMAIN)[0]
     assert result["step_id"] == "bluetooth_confirm"
@@ -557,6 +586,13 @@ async def test_exception_probe(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
+
+    mock_automower_client.probe_gatts.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_PIN: "1234"},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_exception_connect(

@@ -35,7 +35,6 @@ async def test_rate_limit(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     tankerkoenig: AsyncMock,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test detection of API rate limit."""
     assert config_entry.state is ConfigEntryState.LOADED
@@ -48,9 +47,6 @@ async def test_rate_limit(
         hass, dt_util.utcnow() + timedelta(minutes=DEFAULT_SCAN_INTERVAL)
     )
     await hass.async_block_till_done()
-    assert (
-        "API rate limit reached, consider to increase polling interval" in caplog.text
-    )
     state = hass.states.get("binary_sensor.station_somewhere_street_1_status")
     assert state
     assert state.state == STATE_UNAVAILABLE
@@ -74,7 +70,7 @@ async def test_rate_limit(
         ),
         (
             TankerkoenigRateLimitError,
-            "API rate limit reached, consider to increase polling interval",
+            "You have reached the rate limit for the Tankerkoenig API",
         ),
         (TankerkoenigConnectionError, "error occur during update of stations"),
         (TankerkoenigError, "error occur during update of stations"),

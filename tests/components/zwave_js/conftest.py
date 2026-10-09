@@ -461,6 +461,12 @@ def aeotec_zw164_siren_state_fixture() -> dict[str, Any]:
     return load_json_object_fixture("aeotec_zw164_siren_state.json", DOMAIN)
 
 
+@pytest.fixture(name="aeotec_zwa046_state", scope="package")
+def aeotec_zwa046_state_fixture() -> dict[str, Any]:
+    """Load the Aeotec ZWA046 Home Energy Meter 8 node state fixture data."""
+    return load_json_object_fixture("aeotec_ltd_zwa046_state.json", DOMAIN)
+
+
 @pytest.fixture(name="lock_popp_electric_strike_lock_control_state", scope="package")
 def lock_popp_electric_strike_lock_control_state_fixture() -> dict[str, Any]:
     """Load the popp electric strike lock control node state fixture data."""
@@ -1323,6 +1329,14 @@ def climate_radio_thermostat_ct100_mode_and_setpoint_on_different_endpoints_fixt
 def vision_security_zl7432_fixture(client, vision_security_zl7432_state) -> Node:
     """Mock a vision security zl7432 node."""
     node = Node(client, copy.deepcopy(vision_security_zl7432_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="aeotec_zwa046")
+def aeotec_zwa046_fixture(client: MagicMock, aeotec_zwa046_state: NodeDataType) -> Node:
+    """Mock an Aeotec ZWA046 Home Energy Meter 8 node."""
+    node = Node(client, copy.deepcopy(aeotec_zwa046_state))
     client.driver.controller.nodes[node.node_id] = node
     return node
 

@@ -80,5 +80,10 @@
       "press": "\"{subtype}\" pressed",
       "release": "\"{subtype}\" released"
     }
+  },
+  "exceptions": {
+    "invalid_certificate": {
+      "message": "Invalid certificate used to connect to bridge at {host}"
+    }
   }
 }
