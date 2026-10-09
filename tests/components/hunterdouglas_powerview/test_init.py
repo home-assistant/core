@@ -2,15 +2,25 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from homeassistant.components.hunterdouglas_powerview import async_remove_config_entry_device
 from homeassistant.components.hunterdouglas_powerview.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
+from homeassistant.setup import async_setup_component
 
-from .const import MOCK_MAC
+from .const import MOCK_MAC, MOCK_SERIAL
 
 from tests.common import MockConfigEntry
 from tests.typing import WebSocketGenerator
+
+
+async def _setup_entry(hass: HomeAssistant) -> MockConfigEntry:
+    entry = MockConfigEntry(domain=DOMAIN, data={"host": "1.2.3.4"}, unique_id=MOCK_MAC)
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    return entry
 
 
 async def test_setup_not_primary_hub(hass: HomeAssistant) -> None:
@@ -34,110 +44,61 @@ async def test_setup_not_primary_hub(hass: HomeAssistant) -> None:
     )
 
 
-async def test_remove_shade_device_via_websocket_allowed_when_offline(
+@pytest.mark.usefixtures("mock_hunterdouglas_hub")
+@pytest.mark.parametrize("api_version", [1, 2, 3])
+async def test_remove_phantom_shade_via_websocket(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
-    """Test removing a shade device is successful if it is missing from the physical hub."""
-    config_entry = MockConfigEntry(domain=DOMAIN, unique_id="hub_123")
-    config_entry.supports_remove_device = True
-    config_entry.runtime_data = MagicMock(
-        coordinator=MagicMock(data=MagicMock(shades={}))
+    """Test a shade the hub no longer reports can be deleted from the UI."""
+    assert await async_setup_component(hass, "config", {})
+    entry = await _setup_entry(hass)
+    phantom = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, "99999")},
+        via_device=(DOMAIN, MOCK_SERIAL),
     )
-    config_entry.add_to_hass(hass)
-
-    hub_device = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        identifiers={(DOMAIN, "hub_123")},
-    )
-
-    shade_device = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        identifiers={(DOMAIN, 999)},
-        via_device_id=hub_device.id,
-    )
-
-    # Mock runtime data structures to show the shade is GONE from the hub
-    mock_coordinator = MagicMock()
-    # Emulate coordinator.data.shades being empty or at least missing ID 999
-    mock_coordinator.data.shades = {}
-
-    mock_runtime_data = MagicMock(coordinator=mock_coordinator)
-    config_entry.runtime_data = mock_runtime_data
-    config_entry.mock_state(hass, ConfigEntryState.LOADED)
 
     client = await hass_ws_client(hass)
+    response = await client.remove_device(phantom.id, entry.entry_id)
 
-    # Dispatch device removal request
-    msg = await client.remove_device(shade_device.id)
-
-    # The shade is offline/deleted from the hub, so the UI deletion must be allowed
-    assert msg["success"] is True
-    assert device_registry.async_get(shade_device.id) is None
+    assert response["success"]
+    assert device_registry.async_get(phantom.id) is None
 
 
-async def test_remove_shade_device_via_websocket_blocked_when_online(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    hass_ws_client: WebSocketGenerator,
+@pytest.mark.usefixtures("mock_hunterdouglas_hub")
+@pytest.mark.parametrize("api_version", [1, 2, 3])
+async def test_remove_active_shade_and_hub_blocked(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ) -> None:
-    """Test that removing a shade device fails if it is still reported as online by the hub."""
-    config_entry = MockConfigEntry(domain=DOMAIN, unique_id="hub_123")
-    config_entry.supports_remove_device = True
-    config_entry.add_to_hass(hass)
-
-    hub_device = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        identifiers={(DOMAIN, "hub_123")},
+    """Test the hub and shades still on the hub cannot be removed."""
+    entry = await _setup_entry(hass)
+    hub = device_registry.async_get_device(identifiers={(DOMAIN, MOCK_SERIAL)})
+    assert hub is not None
+    shade = next(
+        d
+        for d in dr.async_entries_for_config_entry(device_registry, entry.entry_id)
+        if d.via_device_id
     )
 
-    shade_device = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        identifiers={(DOMAIN, 111)},
-        via_device_id=hub_device.id,
-    )
-
-    # Mock runtime data structures to show the shade is still ACTIVE on the hub
-    mock_coordinator = MagicMock()
-    # The shade ID 111 is present in the hub's payload, so it must be protected
-    mock_coordinator.data.get_all_raw_data.return_value = {111: {"id": 111}}
-
-    mock_runtime_data = MagicMock(coordinator=mock_coordinator)
-    config_entry.runtime_data = mock_runtime_data
-    config_entry.mock_state(hass, ConfigEntryState.LOADED)
-
-    client = await hass_ws_client(hass)
-
-    # Dispatch device removal request
-    msg = await client.remove_device(shade_device.id)
-
-    # The deletion must fail because the device is still physically active on the network
-    assert msg["success"] is False
-    assert msg["error"]["code"] == "unknown_error"
-    assert device_registry.async_get(shade_device.id) is not None
+    assert not await async_remove_config_entry_device(hass, entry, hub)
+    assert not await async_remove_config_entry_device(hass, entry, shade)
 
 
-async def test_remove_hub_device_via_websocket_is_blocked(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    hass_ws_client: WebSocketGenerator,
+async def test_remove_device_blocked_when_entry_not_loaded(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ) -> None:
-    """Test that attempting to remove the root Hub device fails and is explicitly blocked."""
-    config_entry = MockConfigEntry(domain=DOMAIN, unique_id="hub_123")
-    config_entry.add_to_hass(hass)
-    config_entry.mock_state(hass, ConfigEntryState.LOADED)
-
-    hub_device = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        identifiers={(DOMAIN, "hub_123")},
-        name="PowerView Hub",
+    """Test removal is refused (not an error) when the entry has no runtime data."""
+    entry = MockConfigEntry(domain=DOMAIN, data={"host": "1.2.3.4"}, unique_id=MOCK_MAC)
+    entry.add_to_hass(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id, identifiers={(DOMAIN, MOCK_SERIAL)}
+    )
+    shade = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, "99999")},
+        via_device=(DOMAIN, MOCK_SERIAL),
     )
 
-    client = await hass_ws_client(hass)
-
-    msg = await client.remove_device(hub_device.id)
-
-    assert msg["success"] is False
-    assert msg["error"]["code"] == "unknown_error"
-    assert device_registry.async_get(hub_device.id) is not None
+    assert not await async_remove_config_entry_device(hass, entry, shade)
