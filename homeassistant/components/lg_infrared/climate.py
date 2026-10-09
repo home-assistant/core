@@ -219,9 +219,10 @@ class LgAcClimateEntity(
                 round(
                     TemperatureConverter.convert(
                         float(temperature),
-                        last_state.attributes[
-                            ClimateEntityStateAttribute.TEMPERATURE_UNIT
-                        ],
+                        last_state.attributes.get(
+                            ClimateEntityStateAttribute.TEMPERATURE_UNIT,
+                            self.hass.config.units.temperature_unit,
+                        ),
                         self.native_temperature_unit,
                     )
                 )

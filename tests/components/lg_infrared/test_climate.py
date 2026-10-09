@@ -614,17 +614,36 @@ async def test_state_restored_on_restart(
 
 
 @pytest.mark.parametrize(
-    ("restored_temperature", "restored_unit"),
+    ("restored_attributes", "unit_system", "expected_temperature"),
     [
-        pytest.param(17, UnitOfTemperature.CELSIUS, id="restored_celsius"),
-        pytest.param(63, UnitOfTemperature.FAHRENHEIT, id="restored_fahrenheit"),
-    ],
-)
-@pytest.mark.parametrize(
-    ("unit_system", "expected_temperature"),
-    [
-        pytest.param(METRIC_SYSTEM, 17, id="current_celsius"),
-        pytest.param(US_CUSTOMARY_SYSTEM, 63, id="current_fahrenheit"),
+        pytest.param(
+            {"temperature": 17, "temperature_unit": UnitOfTemperature.CELSIUS},
+            METRIC_SYSTEM,
+            17,
+            id="celsius_to_celsius",
+        ),
+        pytest.param(
+            {"temperature": 17, "temperature_unit": UnitOfTemperature.CELSIUS},
+            US_CUSTOMARY_SYSTEM,
+            63,
+            id="celsius_to_fahrenheit",
+        ),
+        pytest.param(
+            {"temperature": 63, "temperature_unit": UnitOfTemperature.FAHRENHEIT},
+            METRIC_SYSTEM,
+            17,
+            id="fahrenheit_to_celsius",
+        ),
+        pytest.param(
+            {"temperature": 63, "temperature_unit": UnitOfTemperature.FAHRENHEIT},
+            US_CUSTOMARY_SYSTEM,
+            63,
+            id="fahrenheit_to_fahrenheit",
+        ),
+        pytest.param({"temperature": 17}, METRIC_SYSTEM, 17, id="legacy_celsius"),
+        pytest.param(
+            {"temperature": 63}, US_CUSTOMARY_SYSTEM, 63, id="legacy_fahrenheit"
+        ),
     ],
 )
 async def test_restore_temperature_unit(
@@ -632,12 +651,11 @@ async def test_restore_temperature_unit(
     mock_config_entry: MockConfigEntry,
     mock_infrared_emitter_entity: MockInfraredEmitterEntity,
     platforms: list[Platform],
-    restored_temperature: int,
-    restored_unit: UnitOfTemperature,
+    restored_attributes: dict[str, int | str],
     unit_system: UnitSystem,
     expected_temperature: int,
 ) -> None:
-    """Test restored temperatures use their saved unit and round to Celsius degrees."""
+    """Test restoration uses the saved unit, falling back to the configured unit."""
     hass.config.units = unit_system
     mock_restore_cache(
         hass,
@@ -645,10 +663,7 @@ async def test_restore_temperature_unit(
             State(
                 _CLIMATE_ENTITY_ID,
                 HVACMode.COOL,
-                {
-                    "temperature": restored_temperature,
-                    "temperature_unit": restored_unit,
-                },
+                restored_attributes,
             )
         ],
     )
