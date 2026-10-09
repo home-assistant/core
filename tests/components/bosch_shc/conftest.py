@@ -20,6 +20,7 @@ from boschshcpy import (
     SHCCamera360,
     SHCCameraEyes,
     SHCCameraOutdoorGen2,
+    SHCIntrusionSystem,
     SHCLightSwitchBSM,
     SHCMicromoduleBlinds,
     SHCMicromoduleRelay,
@@ -138,6 +139,7 @@ def mock_session(device_buckets: dict[str, Any]) -> Generator[MagicMock]:
     session.information.updateState.name = "UP_TO_DATE"
     session.information.version = "2.0"
     session.device_helper = SimpleNamespace(**device_buckets)
+    session.intrusion_system = intrusion_system_device()
     with patch("homeassistant.components.bosch_shc.SHCSession", return_value=session):
         yield session
 
@@ -413,6 +415,26 @@ def thermostat_gen2_device(
     device.status = "AVAILABLE"
     device.supports_display_configuration = supports_display_configuration
     device.humidity_warning_enabled = humidity_warning_enabled
+    return device
+
+
+def intrusion_system_device(
+    arming_state: SHCIntrusionSystem.ArmingState = SHCIntrusionSystem.ArmingState.SYSTEM_DISARMED,
+    alarm_state: SHCIntrusionSystem.AlarmState = SHCIntrusionSystem.AlarmState.ALARM_OFF,
+    profile: SHCIntrusionSystem.Profile = SHCIntrusionSystem.Profile.FULL_PROTECTION,
+) -> SHCIntrusionSystem:
+    """Build a minimal double for session.intrusion_system."""
+    device = create_autospec(SHCIntrusionSystem, instance=True, spec_set=True)
+    device.id = "com.bosch.tt.intrusion.system"
+    device.name = "Intrusion Detection System"
+    device.root_device_id = "test-mac"
+    device.manufacturer = "Bosch"
+    device.device_model = "IDS"
+    device.deleted = False
+    device.system_availability = True
+    device.arming_state = arming_state
+    device.alarm_state = alarm_state
+    device.active_configuration_profile = profile
     return device
 
 
