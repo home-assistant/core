@@ -30,7 +30,11 @@ from homeassistant.const import (
     __version__,
 )
 from homeassistant.core import Event, HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
@@ -235,12 +239,11 @@ async def async_migrate_entry(
     """Migrate config entry."""
 
     if entry.version in (1, 2):
-        _LOGGER.error(
-            "Migration from version 1 or 2 is no longer"
-            " supported, please remove and re-add"
-            " the integration"
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="migration_unsupported_version",
+            translation_placeholders={"version": str(entry.version)},
         )
-        return False
 
     if entry.version == 3:
         installation_key = generate_installation_key(str(uuid.uuid4()).lower())
@@ -252,9 +255,14 @@ async def async_migrate_entry(
         )
         try:
             await cloud_client.async_register_client()
-        except (AuthFail, RequestNotSuccessful) as exc:
-            _LOGGER.error("Migration failed with error %s", exc)
-            return False
+        except AuthFail as exc:
+            raise ConfigEntryError(
+                translation_domain=DOMAIN, translation_key="authentication_failed"
+            ) from exc
+        except RequestNotSuccessful as exc:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN, translation_key="api_error"
+            ) from exc
 
         hass.config_entries.async_update_entry(
             entry,

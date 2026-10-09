@@ -65,6 +65,7 @@ async def test_config_flow_invalid_pat(
         user_input={CONF_ACCESS_TOKEN: MOCK_PAT, CONF_COUNTRY: MOCK_COUNTRY},
     )
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"]
     mock_invalid_thinq_api.async_get_device_list.assert_called_once()
 

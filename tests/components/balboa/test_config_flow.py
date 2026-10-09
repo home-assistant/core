@@ -68,6 +68,7 @@ async def test_form_cannot_connect(hass: HomeAssistant, client: MagicMock) -> No
         )
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -87,6 +88,7 @@ async def test_form_spa_not_configured(hass: HomeAssistant, client: MagicMock) -
         )
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -107,6 +109,7 @@ async def test_unknown_error(hass: HomeAssistant, client: MagicMock) -> None:
         )
 
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "unknown"}
 
 

@@ -315,6 +315,7 @@ async def test_reauth_flow_errors(
     )
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {field: error}
 
     mock_transmission_client.side_effect = None

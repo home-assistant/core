@@ -7,7 +7,6 @@ from lojack_api import ApiError, AuthenticationError, LoJackClient
 from lojack_api.device import Vehicle
 from lojack_api.models import Location
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -38,8 +37,7 @@ class LoJackCoordinator(DataUpdateCoordinator[Location]):
         self,
         hass: HomeAssistant,
         client: LoJackClient,
-        # pylint: disable-next=home-assistant-coordinator-untyped-config-entry
-        entry: ConfigEntry,
+        entry: LoJackConfigEntry,
         vehicle: Vehicle,
     ) -> None:
         """Initialize the coordinator."""

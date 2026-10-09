@@ -51,6 +51,7 @@ async def test_invalid_access_token(hass: HomeAssistant) -> None:
             CLOUD_CONFIG,
         )
 
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"] == {CONF_ACCESS_TOKEN: "invalid_access_token"}
 
 

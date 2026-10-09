@@ -219,6 +219,7 @@ async def test_zone_subentry_already_configured(hass: HomeAssistant) -> None:
     )
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {CONF_ZONE_NUMBER: "already_configured"}
 
 

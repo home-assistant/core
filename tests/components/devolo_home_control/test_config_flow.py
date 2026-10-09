@@ -229,4 +229,5 @@ async def test_form_uuid_change_reauth(hass: HomeAssistant) -> None:
         {CONF_USERNAME: "test-username-new", CONF_PASSWORD: "test-password-new"},
     )
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "reauth_failed"}

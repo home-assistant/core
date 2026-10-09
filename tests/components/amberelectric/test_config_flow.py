@@ -228,6 +228,7 @@ async def test_single_closed_site_no_closed_date(
     )
     assert enter_api_key_result.get("type") is FlowResultType.FORM
     assert enter_api_key_result.get("step_id") == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert enter_api_key_result.get("errors") == {"api_token": "no_site"}
 
 
@@ -280,6 +281,7 @@ async def test_no_site(hass: HomeAssistant, no_site_api: Mock) -> None:
     assert result.get("type") is FlowResultType.FORM
     # Goes back to the user step
     assert result.get("step_id") == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result.get("errors") == {"api_token": "no_site"}
 
 
@@ -299,6 +301,7 @@ async def test_invalid_key(hass: HomeAssistant, invalid_key_api: Mock) -> None:
     assert result.get("type") is FlowResultType.FORM
     # Goes back to the user step
     assert result.get("step_id") == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result.get("errors") == {"api_token": "invalid_api_token"}
 
 
@@ -318,6 +321,7 @@ async def test_unknown_error(hass: HomeAssistant, api_error: Mock) -> None:
     assert result.get("type") is FlowResultType.FORM
     # Goes back to the user step
     assert result.get("step_id") == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result.get("errors") == {"api_token": "unknown_error"}
 
 

@@ -96,6 +96,7 @@ async def test_syncthru_not_supported(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {CONF_URL: "syncthru_not_supported"}
 
 

@@ -337,6 +337,7 @@ async def test_discovery_flow_edit_discovered_errors(
     )
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"]["base"] == expected_error
 
 

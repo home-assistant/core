@@ -284,6 +284,7 @@ async def test_config_flow_user_discovery_error(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "discovery_error"}
 
 
@@ -310,6 +311,7 @@ async def test_config_flow_user_invalid_interface(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {const.CONF_INTERFACE: "invalid_interface"}
 
 
@@ -340,6 +342,7 @@ async def test_config_flow_user_invalid_host(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"host": "invalid_host"}
 
 
@@ -370,6 +373,7 @@ async def test_config_flow_user_invalid_mac(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"mac": "invalid_mac"}
 
 
@@ -405,6 +409,7 @@ async def test_config_flow_user_invalid_key(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "settings"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {const.CONF_KEY: "invalid_key"}
 
 

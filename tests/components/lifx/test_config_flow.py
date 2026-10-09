@@ -820,6 +820,7 @@ async def test_manual_serial_that_answers_no_broadcast(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -863,6 +864,7 @@ async def test_manual_setup_rejects_a_malformed_serial(hass: HomeAssistant) -> N
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {CONF_SERIAL: "invalid_serial"}
 
 
@@ -964,6 +966,7 @@ async def test_manual_host_cannot_read_device_state(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
     mock_light.close.assert_awaited_once_with()
 

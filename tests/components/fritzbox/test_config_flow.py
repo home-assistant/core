@@ -157,6 +157,7 @@ async def test_user_auth_failed(hass: HomeAssistant, fritz: Mock) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"]["base"] == "invalid_auth"
 
 
@@ -255,6 +256,7 @@ async def test_reauth_auth_failed(hass: HomeAssistant, fritz: Mock) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"]["base"] == "invalid_auth"
 
 
@@ -445,6 +447,7 @@ async def test_ssdp_auth_failed(hass: HomeAssistant, fritz: Mock) -> None:
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "confirm"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"]["base"] == "invalid_auth"
 
 

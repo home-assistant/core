@@ -238,6 +238,7 @@ async def test_authentication_errors(
     result = await start_config_flow(hass, cloud)
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "account_not_verified"}
     assert crownstone_setup.call_count == 0
 
@@ -253,6 +254,7 @@ async def test_unknown_error(
     result = await start_config_flow(hass, cloud)
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "unknown"}
     assert crownstone_setup.call_count == 0
 

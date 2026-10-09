@@ -147,6 +147,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
             result["flow_id"], user_input=new_options
         )
         assert result2["type"] is FlowResultType.FORM
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result2["errors"] == {"base": "cannot_connect"}
 
     # ValueError Case

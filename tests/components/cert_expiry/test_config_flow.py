@@ -128,6 +128,7 @@ async def test_abort_on_socket_failed(hass: HomeAssistant) -> None:
             result["flow_id"], user_input={CONF_HOST: HOST}
         )
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {CONF_HOST: "connection_reset"}
 
 

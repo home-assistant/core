@@ -2,7 +2,6 @@
 
 from collections.abc import Awaitable, Callable, Coroutine
 from functools import wraps
-import logging
 from typing import Any, Concatenate
 
 from aiohttp.web_exceptions import HTTPException
@@ -23,8 +22,6 @@ from homeassistant.helpers.typing import ConfigType
 from .const import DOMAIN, PLATFORMS
 from .entity import HiveEntity
 from .services import async_setup_services
-
-_LOGGER = logging.getLogger(__name__)
 
 type HiveConfigEntry = ConfigEntry[Hive]
 
@@ -49,8 +46,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: HiveConfigEntry) -> bool
     try:
         devices = await hive.session.startSession(hive_config)
     except HTTPException as error:
-        _LOGGER.error("Could not connect to the internet: %s", error)
-        raise ConfigEntryNotReady from error
+        raise ConfigEntryNotReady(
+            f"Could not connect to the internet: {error}"
+        ) from error
     except HiveReauthRequired as err:
         raise ConfigEntryAuthFailed from err
 

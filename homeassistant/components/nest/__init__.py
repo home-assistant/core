@@ -296,6 +296,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NestConfigEntry) -> bool
             translation_key="subscriber_timeout",
         ) from err
     except SubscriberException as err:
+        # pylint: disable-next=home-assistant-log-and-raise
         _LOGGER.error("Subscriber error: %s", err)
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,

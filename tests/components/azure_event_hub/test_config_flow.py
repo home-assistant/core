@@ -160,6 +160,7 @@ async def test_connection_error_sas(
         SAS_CONFIG.copy(),
     )
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": error_message}
 
 
@@ -196,6 +197,7 @@ async def test_connection_error_cs(
         CS_CONFIG.copy(),
     )
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": error_message}
 
 
