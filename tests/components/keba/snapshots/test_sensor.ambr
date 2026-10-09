@@ -44,24 +44,24 @@
 # name: test_sensors[sensor.keba_p30_charging_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_i1': '15.9',
-      'current_i2': '15.85',
-      'current_i3': '15.8',
+      'current_i1': '0.0',
+      'current_i2': '0.0',
+      'current_i3': '0.0',
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'KEBA P30 Charging Power',
-      'power_factor': 0.998,
+      'power_factor': 0.0,
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.KILO_WATT: 'kW'>,
-      'voltage_u1': '231',
-      'voltage_u2': '230',
-      'voltage_u3': '229',
+      'voltage_u1': '0',
+      'voltage_u2': '0',
+      'voltage_u3': '0',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.keba_p30_charging_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '10.95',
+    'state': '0.0',
   })
 # ---
 # name: test_sensors[sensor.keba_p30_energy_target-entry]
@@ -227,7 +227,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '5.23',
+    'state': '43.59',
   })
 # ---
 # name: test_sensors[sensor.keba_p30_total_energy-entry]
@@ -285,6 +285,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '12345.68',
+    'state': '4855.65',
   })
 # ---

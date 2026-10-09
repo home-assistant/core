@@ -41,15 +41,15 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'KEBA P30 Charging State',
-      'max_charging_rate': '16.0',
-      'status': 'charging',
+      'max_charging_rate': '0.0',
+      'status': 'not ready for charging',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.keba_p30_charging_state',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'on',
+    'state': 'off',
   })
 # ---
 # name: test_binary_sensors[binary_sensor.keba_p30_failsafe_mode-entry]
@@ -147,8 +147,8 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'plug',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'KEBA P30 Plug',
-      'plug_locked': True,
-      'plugged_on_EV': True,
+      'plug_locked': False,
+      'plugged_on_EV': False,
       'plugged_on_wallbox': True,
     }),
     'context': <ANY>,
@@ -156,7 +156,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'on',
+    'state': 'off',
   })
 # ---
 # name: test_binary_sensors[binary_sensor.keba_p30_status-entry]

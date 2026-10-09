@@ -6,8 +6,11 @@ requests with the datagrams from ``fixtures/p30.json``. Assertions are made on
 what Home Assistant exposes and on the exact command strings, so they do not
 depend on how ``keba-kecontact`` is built internally.
 
-The report corpus is synthetic, shaped after the KEBA UDP programmer's guide,
-and not captured from hardware.
+The report corpus holds raw datagrams captured from a KC-P30 (firmware
+P30 v 3.10.53), idle with the cable plugged in at the station. The serial is
+replaced with ``12345678`` and the RFID fields with zeros; everything else,
+whitespace included, is as received. A report a test has not changed is
+answered byte for byte.
 """
 
 import asyncio
@@ -33,9 +36,12 @@ UDP_PORT = 7090
 class FakeKebaStation:
     """A KEBA charging station on the far side of a fake UDP transport."""
 
-    def __init__(self, reports: dict[str, dict[str, Any]]) -> None:
-        """Initialize the station with the reports it answers with."""
-        self.reports = reports
+    def __init__(self, raw_reports: dict[str, str]) -> None:
+        """Initialize the station with the raw datagrams it answers with."""
+        self.raw_reports = raw_reports
+        self.reports: dict[str, dict[str, Any]] = {
+            key: json.loads(raw) for key, raw in raw_reports.items()
+        }
         self.sent: list[str] = []
         self.silent = False
         self.local_addr: tuple[str, int] | None = None
@@ -69,10 +75,15 @@ class FakeKebaStation:
         if self.silent:
             return
         if command.startswith("report "):
-            report = self.reports.get(command.removeprefix("report "))
+            report_id = command.removeprefix("report ")
+            report = self.reports.get(report_id)
             if report is None:
                 return
-            reply = json.dumps(report).encode()
+            raw = self.raw_reports.get(report_id)
+            if raw is not None and json.loads(raw) == report:
+                reply = raw.encode()
+            else:
+                reply = json.dumps(report).encode()
         else:
             reply = b"TCH-OK :done\n"
         asyncio.get_running_loop().call_soon(
@@ -135,17 +146,17 @@ async def _yield(delay: float, result: Any = None) -> Any:
 
 
 @pytest.fixture
-def reports() -> dict[str, dict[str, Any]]:
-    """Return the report corpus the fake station answers with."""
+def raw_reports() -> dict[str, str]:
+    """Return the raw report datagrams the fake station answers with."""
     return load_json_object_fixture("p30.json", DOMAIN)  # type: ignore[return-value]
 
 
 @pytest.fixture
 def station(
-    hass: HomeAssistant, reports: dict[str, dict[str, Any]]
+    hass: HomeAssistant, raw_reports: dict[str, str]
 ) -> Generator[FakeKebaStation]:
     """Return a fake station wired into the event loop and the library."""
-    fake = FakeKebaStation(reports)
+    fake = FakeKebaStation(raw_reports)
     with (
         patch.object(
             hass.loop, "create_datagram_endpoint", fake.create_datagram_endpoint
