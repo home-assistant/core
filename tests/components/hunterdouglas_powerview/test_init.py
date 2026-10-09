@@ -1,10 +1,12 @@
 """Tests for the Hunter Douglas PowerView integration setup and device removal."""
 
-import pytest
-
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from homeassistant.components.hunterdouglas_powerview import async_remove_config_entry_device
+import pytest
+
+from homeassistant.components.hunterdouglas_powerview import (
+    async_remove_config_entry_device,
+)
 from homeassistant.components.hunterdouglas_powerview.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
