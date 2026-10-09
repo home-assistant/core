@@ -90,6 +90,7 @@ async def test_sensor_updates_with_coordinator(
 
     # Trigger coordinator refresh
     coordinator = init_integration.runtime_data
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
     await coordinator.async_refresh()
     await hass.async_block_till_done()
 

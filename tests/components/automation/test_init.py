@@ -3345,6 +3345,11 @@ async def test_blueprint_automation_bad_config(
     }
     assert issues[0]["translation_placeholders"]["error"].startswith(details)
 
+    # The automation is broken, but still listed under its blueprint
+    assert automation.automations_with_blueprint(hass, "test_event_service.yaml") == [
+        "automation.automation_0"
+    ]
+
 
 async def test_blueprint_automation_fails_substitution(
     hass: HomeAssistant,

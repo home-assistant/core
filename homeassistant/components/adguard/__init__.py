@@ -1,11 +1,8 @@
 """Support for AdGuard Home."""
 
-from dataclasses import dataclass
-
-from adguardhome import AdGuardHome, AdGuardHomeAuthenticationError, AdGuardHomeError
+from adguardhome import AdGuardHome
 from yarl import URL
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -16,25 +13,22 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
+from .coordinator import (
+    AdGuardConfigEntry,
+    AdGuardData,
+    AdGuardHomeStateCoordinator,
+    AdGuardHomeStatisticsCoordinator,
+    AdGuardHomeUpdateCoordinator,
+)
 from .services import async_setup_services
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 PLATFORMS = [Platform.SENSOR, Platform.SWITCH, Platform.UPDATE]
-type AdGuardConfigEntry = ConfigEntry[AdGuardData]
-
-
-@dataclass
-class AdGuardData:
-    """Adguard data type."""
-
-    client: AdGuardHome
-    version: str
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -88,20 +82,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: AdGuardConfigEntry) -> b
         session=session,
     )
 
-    try:
-        version = str((await adguard.status()).version)
-    except AdGuardHomeAuthenticationError as exception:
-        raise ConfigEntryAuthFailed(
-            translation_domain=DOMAIN,
-            translation_key="authentication_failed",
-        ) from exception
-    except AdGuardHomeError as exception:
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN,
-            translation_key="cannot_connect",
-        ) from exception
+    state = AdGuardHomeStateCoordinator(hass, entry, adguard)
+    await state.async_config_entry_first_refresh()
 
-    entry.runtime_data = AdGuardData(adguard, version)
+    statistics = AdGuardHomeStatisticsCoordinator(hass, entry, adguard)
+    await statistics.async_config_entry_first_refresh()
+
+    # Checking for updates needs AdGuard Home to reach the internet, which not
+    # every installation can. That should not keep the rest from working.
+    update = AdGuardHomeUpdateCoordinator(hass, entry, adguard)
+    await update.async_refresh()
+
+    entry.runtime_data = AdGuardData(
+        client=adguard, state=state, statistics=statistics, update=update
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

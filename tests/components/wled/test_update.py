@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
-from wled import Device as WLEDDevice, Releases, WLEDError, WLEDUpgradeError
+from wled import Releases, WLEDError, WLEDUpgradeError
 
 from homeassistant.components.homeassistant import (
     DOMAIN as HOME_ASSISTANT_DOMAIN,
@@ -341,10 +341,11 @@ async def test_update_follows_firmware_repository_change(
     assert (state := hass.states.get("update.wled_rgb_light_firmware"))
     assert "github.com/wled/WLED/" in state.attributes[ATTR_RELEASE_URL]
 
-    # A new device object, as the device answers after being flashed.
+    # The library updates the device object in place, like the real one does.
     data = await async_load_json_object_fixture(hass, "rgb.json", DOMAIN)
     data["info"]["repo"] = "MoonModules/WLED-MM"
-    mock_wled.update.return_value = WLEDDevice.from_dict(data)
+    mock_wled.update.return_value.update_from_dict(data)
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
     await mock_config_entry.runtime_data.async_refresh()
     await hass.async_block_till_done()
 
