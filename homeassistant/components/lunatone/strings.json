@@ -63,7 +63,7 @@
   },
   "exceptions": {
     "cannot_retrieve_devices_data": {
-      "message": "Unable to retrieve devices data from Lunatone REST API"
+      "message": "Unable to retrieve device data from Lunatone REST API"
     },
     "cannot_retrieve_info_data": {
       "message": "Unable to retrieve info data from Lunatone REST API"
