@@ -118,7 +118,6 @@ PINECIL_SENSOR_DESCRIPTIONS: tuple[IronOSSensorEntityDescription, ...] = (
     ),
     IronOSSensorEntityDescription(
         key=PinecilSensor.UPTIME,
-        # pylint: disable-next=home-assistant-redundant-translation-key
         translation_key=PinecilSensor.UPTIME,
         device_class=SensorDeviceClass.UPTIME,
         value_fn=(
