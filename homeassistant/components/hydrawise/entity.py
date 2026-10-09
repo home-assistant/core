@@ -1,6 +1,7 @@
 """Base classes for Hydrawise entities."""
 
 from collections.abc import Callable, Coroutine
+from functools import wraps
 from typing import Any, Concatenate, override
 
 from aiohttp import ClientError
@@ -109,6 +110,7 @@ def exception_handler[_EntityT: HydrawiseEntity, **_P](
 ) -> Callable[Concatenate[_EntityT, _P], Coroutine[Any, Any, None]]:
     """Decorate Hydrawise API calls to raise translated errors."""
 
+    @wraps(func)
     async def handler(self: _EntityT, *args: _P.args, **kwargs: _P.kwargs) -> None:
         try:
             await func(self, *args, **kwargs)
