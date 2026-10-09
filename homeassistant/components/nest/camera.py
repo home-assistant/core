@@ -151,6 +151,7 @@ class NestCameraBaseEntity(Camera, ABC):
         self._attr_model = nest_device_info.device_model
         self.stream_options[CONF_EXTRA_PART_WAIT_TIME] = 3
         # The API "name" field is a unique device identifier.
+        # Legacy format, kept as migrating existing unique IDs is not worth the risk
         self._attr_unique_id = f"{self._device.name}-camera"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
 
     @override

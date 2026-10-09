@@ -39,7 +39,7 @@ SPEED_RANGE = (FanMode.Minimum, FanMode.Maximum)  # off is not included
 
 SET_HUMIDITY_SCHEMA: VolDictType = {
     probatio.Required(ATTR_TARGET_HUMIDITY): probatio.All(
-        probatio.Coerce(float), probatio.Range(min=0, max=100)
+        probatio.Coerce(float), probatio.Percentage()
     ),
 }
 

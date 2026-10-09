@@ -379,7 +379,10 @@ async def test_new_endpoint_callback(
     entities = er.async_entries_for_config_entry(
         entity_registry, mock_config_entry.entry_id
     )
-    assert len(entities) == 0
+    # Only the Portainer update exists without endpoints
+    assert [entity.unique_id for entity in entities] == [
+        f"{mock_config_entry.entry_id}_server_update"
+    ]
 
     mock_portainer_client.get_endpoints.return_value = [
         Endpoint.from_dict(endpoint)

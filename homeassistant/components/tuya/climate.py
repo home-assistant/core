@@ -78,6 +78,10 @@ CLIMATE_DESCRIPTIONS: dict[DeviceCategory, TuyaClimateEntityDescription] = {
         key="",
         switch_only_hvac_mode=HVACMode.COOL,
     ),
+    DeviceCategory.MJJ: TuyaClimateEntityDescription(
+        key="",
+        switch_only_hvac_mode=HVACMode.HEAT,
+    ),
     DeviceCategory.QN: TuyaClimateEntityDescription(
         key="",
         switch_only_hvac_mode=HVACMode.HEAT,

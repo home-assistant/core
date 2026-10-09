@@ -124,12 +124,16 @@ async def async_send_notification(
         if (snd := try_parse_enum(AlarmSound, call.data[CONF_SOUND])) is None and (
             snd := try_parse_enum(NotificationSound, call.data[CONF_SOUND])
         ) is None:
-            raise ServiceValidationError("Unknown sound provided")
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="unknown_sound",
+                translation_placeholders={"sound": str(call.data[CONF_SOUND])},
+            )
         sound = Sound(sound=snd, category=None)
 
     notification = Notification(
         icon_type=NotificationIconType(call.data[CONF_ICON_TYPE]),
-        priority=NotificationPriority(call.data.get(CONF_PRIORITY)),
+        priority=NotificationPriority(call.data[CONF_PRIORITY]),
         model=Model(
             frames=frames,
             cycles=call.data[CONF_CYCLES],
@@ -140,4 +144,8 @@ async def async_send_notification(
     try:
         await coordinator.lametric.notify(notification=notification)
     except LaMetricError as ex:
-        raise HomeAssistantError("Could not send LaMetric notification") from ex
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="notification_failed",
+            translation_placeholders={"error": str(ex)},
+        ) from ex

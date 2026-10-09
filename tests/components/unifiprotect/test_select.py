@@ -639,11 +639,17 @@ async def test_select_set_option_camera_ir(
         mock_method.assert_called_once_with(expected)
 
 
+@pytest.mark.parametrize("message", ["Test", "Back at 5:30"])
 async def test_select_set_option_camera_doorbell_custom(
-    hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera
+    hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera, message: str
 ) -> None:
     """Test Doorbell Text select (user defined message)."""
 
+    doorbell_settings = ufp.api.bootstrap.nvr.doorbell_settings
+    doorbell_settings.all_messages = [
+        *doorbell_settings.all_messages,
+        DoorbellMessage(type=DoorbellMessageType.CUSTOM_MESSAGE, text="Back at 5:30"),
+    ]
     await init_entry(hass, ufp, [doorbell])
     assert_entity_counts(hass, Platform.SELECT, 5, 5)
 
@@ -657,14 +663,14 @@ async def test_select_set_option_camera_doorbell_custom(
         await hass.services.async_call(
             "select",
             "select_option",
-            {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "Test"},
+            {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: message},
             blocking=True,
         )
 
         # reset_at=None keeps the message up; omitting it lets the NVR
         # clear it after its own timeout
         mock_method.assert_called_once_with(
-            DoorbellMessageType.CUSTOM_MESSAGE, text="Test", reset_at=None
+            DoorbellMessageType.CUSTOM_MESSAGE, text=message, reset_at=None
         )
 
 

@@ -26,7 +26,7 @@ DOMAIN = "input_button"
 _LOGGER = logging.getLogger(__name__)
 
 STORAGE_FIELDS: VolDictType = {
-    probatio.Required(CONF_NAME): probatio.All(str, probatio.Length(min=1)),
+    probatio.Required(CONF_NAME): probatio.All(str, probatio.NonEmpty()),
     probatio.Optional(CONF_ICON): cv.icon,
 }
 

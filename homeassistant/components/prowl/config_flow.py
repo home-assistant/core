@@ -7,7 +7,7 @@ import probatio
 import prowlpy
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_API_KEY, CONF_NAME
+from homeassistant.const import CONF_API_KEY
 
 from .const import DOMAIN
 from .helpers import async_verify_key
@@ -34,7 +34,7 @@ class ProwlConfigFlow(ConfigFlow, domain=DOMAIN):
             errors = await self._validate_api_key(api_key)
             if not errors:
                 return self.async_create_entry(
-                    title=user_input[CONF_NAME],
+                    title="Prowl",
                     data={
                         CONF_API_KEY: api_key,
                     },
@@ -44,14 +44,9 @@ class ProwlConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(
                 probatio.Schema(
-                    {
-                        probatio.Required(probatio.Secret(CONF_API_KEY)): str,
-                        # Name field is no longer allowed in config flow schemas
-                        # pylint: disable-next=home-assistant-config-flow-name-field
-                        probatio.Required(CONF_NAME): str,
-                    },
+                    {probatio.Required(probatio.Secret(CONF_API_KEY)): str},
                 ),
-                user_input or {CONF_NAME: "Prowl"},
+                user_input,
             ),
             errors=errors,
         )

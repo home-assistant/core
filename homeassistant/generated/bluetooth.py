@@ -787,11 +787,23 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
     },
     {
         "domain": "lamarzocco",
+        "local_name": "LINEA_*",
+    },
+    {
+        "domain": "lamarzocco",
+        "local_name": "LINEAR_*",
+    },
+    {
+        "domain": "lamarzocco",
         "local_name": "GS3_*",
     },
     {
         "domain": "lamarzocco",
         "local_name": "GS3AV_*",
+    },
+    {
+        "domain": "lamarzocco",
+        "local_name": "GS3MP_*",
     },
     {
         "domain": "ld2410_ble",

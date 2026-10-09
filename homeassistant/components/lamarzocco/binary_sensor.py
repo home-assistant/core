@@ -62,8 +62,12 @@ ENTITIES: tuple[LaMarzoccoBinarySensorEntityDescription, ...] = (
                 is MachineState.BREWING
             )
         ),
-        available_fn=lambda coordinator: not coordinator.websocket_terminated,
+        available_fn=lambda coordinator: (
+            not coordinator.websocket_terminated
+            or coordinator.device.bluetooth_shot_counter_active
+        ),
         entity_category=EntityCategory.DIAGNOSTIC,
+        bt_shot_timer=True,
     ),
     LaMarzoccoBinarySensorEntityDescription(
         key="backflush_enabled",

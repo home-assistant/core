@@ -93,7 +93,7 @@ CUSTOM_EFFECT_DICT: VolDictType = {
         ],
     ),
     probatio.Optional(CONF_SPEED_PCT, default=50): probatio.All(
-        probatio.Coerce(int), probatio.Range(min=0, max=100)
+        probatio.Coerce(int), probatio.Percentage()
     ),
     probatio.Optional(CONF_TRANSITION, default=TRANSITION_GRADUAL): probatio.All(
         cv.string, probatio.In([TRANSITION_GRADUAL, TRANSITION_JUMP, TRANSITION_STROBE])
@@ -102,10 +102,10 @@ CUSTOM_EFFECT_DICT: VolDictType = {
 
 SET_MUSIC_MODE_DICT: VolDictType = {
     probatio.Optional(ATTR_SENSITIVITY, default=100): probatio.All(
-        probatio.Coerce(int), probatio.Range(min=0, max=100)
+        probatio.Coerce(int), probatio.Percentage()
     ),
     probatio.Optional(ATTR_BRIGHTNESS, default=100): probatio.All(
-        probatio.Coerce(int), probatio.Range(min=0, max=100)
+        probatio.Coerce(int), probatio.Percentage()
     ),
     probatio.Optional(ATTR_EFFECT, default=1): probatio.All(
         probatio.Coerce(int), probatio.Range(min=0, max=16)
@@ -131,7 +131,7 @@ SET_ZONES_DICT: VolDictType = {
         ],
     ),
     probatio.Optional(CONF_SPEED_PCT, default=50): probatio.All(
-        probatio.Coerce(int), probatio.Range(min=0, max=100)
+        probatio.Coerce(int), probatio.Percentage()
     ),
     probatio.Optional(
         CONF_EFFECT, default=MultiColorEffects.STATIC.name.lower()

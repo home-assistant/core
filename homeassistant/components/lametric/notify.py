@@ -27,7 +27,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.enum import try_parse_enum
 
-from .const import CONF_CYCLES, CONF_ICON_TYPE, CONF_PRIORITY, CONF_SOUND
+from .const import CONF_CYCLES, CONF_ICON_TYPE, CONF_PRIORITY, CONF_SOUND, DOMAIN
 from .coordinator import LaMetricConfigEntry, LaMetricDataUpdateCoordinator
 from .entity import LaMetricEntity
 from .helpers import lametric_exception_handler
@@ -102,7 +102,11 @@ class LaMetricNotificationService(BaseNotificationService):
             if (snd := try_parse_enum(AlarmSound, data[CONF_SOUND])) is None and (
                 snd := try_parse_enum(NotificationSound, data[CONF_SOUND])
             ) is None:
-                raise ServiceValidationError("Unknown sound provided")
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="unknown_sound",
+                    translation_placeholders={"sound": str(data[CONF_SOUND])},
+                )
             sound = Sound(sound=snd, category=None)
 
         notification = Notification(
@@ -123,4 +127,8 @@ class LaMetricNotificationService(BaseNotificationService):
         try:
             await self.lametric.notify(notification=notification)
         except LaMetricError as ex:
-            raise HomeAssistantError("Could not send LaMetric notification") from ex
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="notification_failed",
+                translation_placeholders={"error": str(ex)},
+            ) from ex

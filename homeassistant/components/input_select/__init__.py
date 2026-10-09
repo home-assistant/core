@@ -56,9 +56,9 @@ def _unique(options: Any) -> Any:
 
 
 STORAGE_FIELDS: VolDictType = {
-    probatio.Required(CONF_NAME): probatio.All(str, probatio.Length(min=1)),
+    probatio.Required(CONF_NAME): probatio.All(str, probatio.NonEmpty()),
     probatio.Required(CONF_OPTIONS): probatio.All(
-        probatio.EnsureList(), probatio.Length(min=1), _unique, [cv.string]
+        probatio.EnsureList(), probatio.NonEmpty(), _unique, [cv.string]
     ),
     probatio.Optional(CONF_INITIAL): cv.string,
     probatio.Optional(CONF_ICON): cv.icon,
@@ -101,7 +101,7 @@ CONFIG_SCHEMA = probatio.Schema(
                 {
                     probatio.Optional(CONF_NAME): cv.string,
                     probatio.Required(CONF_OPTIONS): probatio.All(
-                        probatio.EnsureList(), probatio.Length(min=1), [cv.string]
+                        probatio.EnsureList(), probatio.NonEmpty(), [cv.string]
                     ),
                     probatio.Optional(CONF_INITIAL): cv.string,
                     probatio.Optional(CONF_ICON): cv.icon,
@@ -214,7 +214,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         SERVICE_SET_OPTIONS,
         {
             probatio.Required(ATTR_OPTIONS): probatio.All(
-                probatio.EnsureList(), probatio.Length(min=1), [cv.string]
+                probatio.EnsureList(), probatio.NonEmpty(), [cv.string]
             )
         },
         "async_set_options",

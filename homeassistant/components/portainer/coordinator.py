@@ -2,13 +2,13 @@
 
 from abc import abstractmethod
 import asyncio
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 import dataclasses
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
 import time
-from typing import override
+from typing import Any, override
 
 from pyportainer import (
     DockerContainerState,
@@ -32,7 +32,7 @@ from pyportainer.models.docker import (
     PortainerImageUpdateStatus,
 )
 from pyportainer.models.docker_inspect import DockerInfo, DockerInspect, DockerVersion
-from pyportainer.models.portainer import Endpoint
+from pyportainer.models.portainer import Endpoint, PortainerSystemVersion
 from pyportainer.models.stacks import Stack
 from pyportainer.watcher import PortainerImageWatcher
 from yarl import URL
@@ -40,7 +40,7 @@ from yarl import URL
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -55,6 +55,8 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=60)
 DEFAULT_DF_SCAN_INTERVAL = timedelta(minutes=30)
+# Portainer checks GitHub for the latest release on every version request
+DEFAULT_VERSION_SCAN_INTERVAL = timedelta(hours=6)
 
 
 @dataclass
@@ -196,6 +198,27 @@ class PortainerBaseCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
                 translation_key="timeout_connect",
             ) from err
 
+    async def async_call_portainer(self, coroutine: Awaitable[Any]) -> None:
+        """Await a Portainer call, mapping library errors to HomeAssistantError."""
+        try:
+            await coroutine
+        except PortainerAuthenticationError as err:
+            self.config_entry.async_start_reauth(self.hass)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_auth",
+            ) from err
+        except PortainerConnectionError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+            ) from err
+        except PortainerTimeoutError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="timeout_connect",
+            ) from err
+
 
 class PortainerCoordinator(
     PortainerBaseCoordinator[dict[int, PortainerCoordinatorData]]
@@ -204,6 +227,7 @@ class PortainerCoordinator(
 
     config_entry: PortainerConfigEntry
     docker_disk_space: PortainerDockerDiskSpaceCoordinator | None = None
+    system_version: PortainerSystemVersionCoordinator | None = None
     watcher: PortainerImageWatcher | None = None
     _update_interval = DEFAULT_SCAN_INTERVAL
 
@@ -765,3 +789,17 @@ class PortainerDockerDiskSpaceCoordinator(
                 )
                 continue
         return results
+
+
+class PortainerSystemVersionCoordinator(
+    PortainerBaseCoordinator[PortainerSystemVersion]
+):
+    """Data Update Coordinator for the Portainer version."""
+
+    config_entry: PortainerConfigEntry
+    _update_interval = DEFAULT_VERSION_SCAN_INTERVAL
+
+    @override
+    async def update_data(self) -> PortainerSystemVersion:
+        """Fetch the Portainer version and the latest available release."""
+        return await self.portainer.portainer_system_version()

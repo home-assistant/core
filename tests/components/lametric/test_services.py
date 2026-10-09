@@ -103,9 +103,10 @@ async def test_service_chart(
     assert type(frame) is Chart
     assert frame.data == [1, 2, 3, 4, 5, 4, 3, 2, 1]
 
-    mock_lametric.notify.side_effect = LaMetricError
+    mock_lametric.notify.side_effect = LaMetricError("Fail to validate")
     with pytest.raises(
-        HomeAssistantError, match="Could not send LaMetric notification"
+        HomeAssistantError,
+        match="Could not send the notification to the LaMetric device: Fail to validate",
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -193,9 +194,10 @@ async def test_service_message(
     assert frame.icon == "6916"
     assert frame.text == "Meow!"
 
-    mock_lametric.notify.side_effect = LaMetricError
+    mock_lametric.notify.side_effect = LaMetricError("Fail to validate")
     with pytest.raises(
-        HomeAssistantError, match="Could not send LaMetric notification"
+        HomeAssistantError,
+        match="Could not send the notification to the LaMetric device: Fail to validate",
     ):
         await hass.services.async_call(
             DOMAIN,

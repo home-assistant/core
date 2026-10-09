@@ -32,7 +32,7 @@ SCAN_INTERVAL = timedelta(seconds=120)
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         probatio.Required(CONF_JAILS): probatio.All(
-            probatio.EnsureList(), probatio.Length(min=1)
+            probatio.EnsureList(), probatio.NonEmpty()
         ),
         probatio.Optional(CONF_FILE_PATH): cv.isfile,
         probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,

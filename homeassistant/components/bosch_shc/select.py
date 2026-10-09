@@ -4,8 +4,9 @@ from collections.abc import Callable, Coroutine, Sequence
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, override
 
-from boschshcpy import OutdoorSirenService, SHCOutdoorSiren
+from boschshcpy import OutdoorSirenService, SHCMotionDetector2, SHCOutdoorSiren
 from boschshcpy.device import SHCDevice
+from boschshcpy.services_impl import PirSensorConfigurationService
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory
@@ -52,6 +53,23 @@ SIREN_SOUND_LEVEL_DESCRIPTION = SHCSelectEntityDescription[SHCOutdoorSiren](
 )
 
 
+async def _motion_select_option(device: SHCMotionDetector2, option: str) -> None:
+    """Write the Motion Detector II's motion sensitivity."""
+    await device.async_set_motion_sensitivity(
+        PirSensorConfigurationService.MotionSensitivity[option.upper()]
+    )
+
+
+MOTION_SENSITIVITY_DESCRIPTION = SHCSelectEntityDescription[SHCMotionDetector2](
+    key="motion_sensitivity",
+    translation_key="motion_sensitivity",
+    entity_category=EntityCategory.CONFIG,
+    options=["high", "middle", "low"],
+    current_option_fn=lambda device, options: device.motion_sensitivity.name.lower(),
+    select_option_fn=_motion_select_option,
+)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: BoschConfigEntry,
@@ -73,6 +91,25 @@ async def async_setup_entry(
         )
         for siren in session.device_helper.outdoor_sirens
         if siren.siren is not None
+    )
+
+    motion_detectors: list[SHCMotionDetector2] = []
+    for detector in session.device_helper.motion_detectors2:
+        try:
+            _ = detector.motion_sensitivity
+        except AttributeError:
+            continue
+        motion_detectors.append(detector)
+
+    async_add_entities(
+        SHCSelect(
+            hass=hass,
+            device=detector,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            description=MOTION_SENSITIVITY_DESCRIPTION,
+        )
+        for detector in motion_detectors
     )
 
 

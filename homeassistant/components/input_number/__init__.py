@@ -66,7 +66,7 @@ def _cv_input_number(cfg):
 
 
 STORAGE_FIELDS: VolDictType = {
-    probatio.Required(CONF_NAME): probatio.All(str, probatio.Length(min=1)),
+    probatio.Required(CONF_NAME): probatio.All(str, probatio.NonEmpty()),
     probatio.Required(CONF_MIN): probatio.Coerce(float),
     probatio.Required(CONF_MAX): probatio.Coerce(float),
     probatio.Optional(CONF_INITIAL): probatio.Coerce(float),

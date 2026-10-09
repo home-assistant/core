@@ -51,7 +51,7 @@ STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 
 STORAGE_FIELDS: VolDictType = {
-    probatio.Required(CONF_NAME): probatio.All(str, probatio.Length(min=1)),
+    probatio.Required(CONF_NAME): probatio.All(str, probatio.NonEmpty()),
     probatio.Optional(CONF_MIN, default=CONF_MIN_VALUE): probatio.All(
         probatio.Coerce(int), probatio.Range(0, MAX_LENGTH_STATE_STATE)
     ),

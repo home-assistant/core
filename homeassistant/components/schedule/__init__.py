@@ -114,7 +114,7 @@ def serialize_to_time(value: Any) -> Any:
 
 
 BASE_SCHEMA: VolDictType = {
-    probatio.Required(CONF_NAME): probatio.All(str, probatio.Length(min=1)),
+    probatio.Required(CONF_NAME): probatio.All(str, probatio.NonEmpty()),
     probatio.Optional(CONF_ICON): cv.icon,
 }
 

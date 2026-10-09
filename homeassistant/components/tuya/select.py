@@ -197,6 +197,13 @@ SELECTS: dict[DeviceCategory, tuple[TuyaSelectEntityDescription, ...]] = {
             translation_key="countdown",
         ),
     ),
+    DeviceCategory.MJJ: (
+        TuyaSelectEntityDescription(
+            key=DPCode.COUNTDOWN_SET,
+            entity_category=EntityCategory.CONFIG,
+            translation_key="countdown",
+        ),
+    ),
     DeviceCategory.QCCDZ: (
         TuyaSelectEntityDescription(
             key=DPCode.WORK_MODE,

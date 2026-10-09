@@ -297,7 +297,7 @@ class OnvifFlowHandler(ConfigFlow, domain=DOMAIN):
                         CONF_USERNAME, default=conf(CONF_USERNAME, "")
                     ): str,
                     probatio.Optional(
-                        CONF_PASSWORD, default=conf(CONF_PASSWORD, "")
+                        probatio.Secret(CONF_PASSWORD), default=conf(CONF_PASSWORD, "")
                     ): str,
                 }
             ),

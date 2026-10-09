@@ -471,6 +471,8 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
     _attr_target_temperature_low: float | None = None
     _attr_target_temperature_high: float | None = None
     _single_and_range_setpoints: bool
+    _parked_target_temperature: float | None = None
+    _parked_target_temperature_range: tuple[float | None, float | None] = (None, None)
 
     @staticmethod
     @override
@@ -677,9 +679,8 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
         ) is UNDEFINED:
             return
         self._attr_target_temperature = value
-        if value is not None and self._single_and_range_setpoints:
-            self._attr_target_temperature_low = None
-            self._attr_target_temperature_high = None
+        if value is not None:
+            self._park_range_setpoints()
 
     @callback
     def _handle_target_temperature_low_received(self, msg: ReceiveMessage) -> None:
@@ -691,8 +692,8 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
         ) is UNDEFINED:
             return
         self._attr_target_temperature_low = value
-        if value is not None and self._single_and_range_setpoints:
-            self._attr_target_temperature = None
+        if value is not None:
+            self._park_single_setpoint()
 
     @callback
     def _handle_target_temperature_high_received(self, msg: ReceiveMessage) -> None:
@@ -704,8 +705,8 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
         ) is UNDEFINED:
             return
         self._attr_target_temperature_high = value
-        if value is not None and self._single_and_range_setpoints:
-            self._attr_target_temperature = None
+        if value is not None:
+            self._park_single_setpoint()
 
     @callback
     def _handle_current_humidity_received(self, msg: ReceiveMessage) -> None:
@@ -831,9 +832,7 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
                 optimistic_update = True
                 self._attr_target_temperature = temperature
                 # We reset low and high setpoints when a single setpoint is set
-                if self._single_and_range_setpoints:
-                    self._attr_target_temperature_low = None
-                    self._attr_target_temperature_high = None
+                self._park_range_setpoints()
             mqtt_payload = self._command_templates[CONF_TEMP_COMMAND_TEMPLATE](
                 temperature
             )
@@ -845,8 +844,7 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
                 optimistic_update = True
                 self._attr_target_temperature_low = target_temp_low
                 # We reset the single setpoint when a setpoint range is set
-                if self._single_and_range_setpoints:
-                    self._attr_target_temperature = None
+                self._park_single_setpoint()
             mqtt_payload = self._command_templates[CONF_TEMP_LOW_COMMAND_TEMPLATE](
                 target_temp_low
             )
@@ -857,8 +855,7 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
             if self._optimistic or self._topic[CONF_TEMP_HIGH_STATE_TOPIC] is None:
                 optimistic_update = True
                 self._attr_target_temperature_high = target_temp_high
-                if self._single_and_range_setpoints:
-                    self._attr_target_temperature = None
+                self._park_single_setpoint()
             mqtt_payload = self._command_templates[CONF_TEMP_HIGH_COMMAND_TEMPLATE](
                 target_temp_high
             )
@@ -920,7 +917,57 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
 
         if self._optimistic or self._topic[CONF_MODE_STATE_TOPIC] is None:
             self._attr_hvac_mode = hvac_mode
+            self._swap_setpoints(hvac_mode)
             self.async_write_ha_state()
+
+    def _park_single_setpoint(self) -> None:
+        """Park and reset the single setpoint when a setpoint range is active."""
+        if not self._single_and_range_setpoints or self.target_temperature is None:
+            return
+        self._parked_target_temperature = self.target_temperature
+        self._attr_target_temperature = None
+
+    def _park_range_setpoints(self) -> None:
+        """Park and reset the setpoint range when a single setpoint is active."""
+        temp_range = (self.target_temperature_low, self.target_temperature_high)
+        if not self._single_and_range_setpoints or temp_range == (None, None):
+            return
+        self._parked_target_temperature_range = temp_range
+        self._attr_target_temperature_low = None
+        self._attr_target_temperature_high = None
+
+    def _swap_setpoints(self, hvac_mode: HVACMode) -> None:
+        """Swap optimistic single and range setpoints on an HVAC mode change.
+
+        The inactive setpoints are parked, so they can be restored
+        when switching back, as the device is expected to remember them.
+        """
+        if not self._single_and_range_setpoints or hvac_mode not in (
+            HVACMode.COOL,
+            HVACMode.HEAT,
+            HVACMode.HEAT_COOL,
+        ):
+            return
+        uses_range = hvac_mode is HVACMode.HEAT_COOL
+        if self._optimistic or self._topic[CONF_TEMP_STATE_TOPIC] is None:
+            if uses_range:
+                self._park_single_setpoint()
+            elif self.target_temperature is None:
+                self._attr_target_temperature = self._parked_target_temperature
+        if self._optimistic or (
+            self._topic[CONF_TEMP_LOW_STATE_TOPIC] is None
+            and self._topic[CONF_TEMP_HIGH_STATE_TOPIC] is None
+        ):
+            if not uses_range:
+                self._park_range_setpoints()
+            elif (
+                self.target_temperature_low is None
+                and self.target_temperature_high is None
+            ):
+                (
+                    self._attr_target_temperature_low,
+                    self._attr_target_temperature_high,
+                ) = self._parked_target_temperature_range
 
     @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:

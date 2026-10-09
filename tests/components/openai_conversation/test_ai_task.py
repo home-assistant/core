@@ -13,9 +13,11 @@ from homeassistant.components import ai_task, media_source
 from homeassistant.components.openai_conversation import DOMAIN
 from homeassistant.components.openai_conversation.const import (
     CONF_CHAT_MODEL,
+    CONF_CODE_INTERPRETER,
     CONF_IMAGE_MODEL,
     CONF_STORE_RESPONSES,
     CONF_VERBOSITY,
+    CONF_WEB_SEARCH,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -50,7 +52,12 @@ async def test_generate_data(
     hass.config_entries.async_update_subentry(
         mock_config_entry,
         ai_task_entry,
-        data={**ai_task_entry.data, CONF_STORE_RESPONSES: expected_store},
+        data={
+            **ai_task_entry.data,
+            CONF_STORE_RESPONSES: expected_store,
+            CONF_WEB_SEARCH: True,
+            CONF_CODE_INTERPRETER: True,
+        },
     )
     await hass.async_block_till_done()
     assert entity_entry is not None
@@ -72,6 +79,10 @@ async def test_generate_data(
     assert result.data == "The test data"
     assert mock_create_stream.call_args is not None
     assert mock_create_stream.call_args.kwargs["store"] is expected_store
+    assert mock_create_stream.call_args.kwargs["tools"] == [
+        {"type": "web_search", "search_context_size": "medium"},
+        {"type": "code_interpreter", "container": {"type": "auto"}},
+    ]
     assert (
         mock_create_stream.call_args.kwargs["prompt_cache_key"]
         == ai_task_entry.subentry_id
