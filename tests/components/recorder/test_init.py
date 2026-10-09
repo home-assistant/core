@@ -2,9 +2,10 @@
 
 import asyncio
 from collections.abc import Generator
-from datetime import datetime, timedelta
+from datetime import UTC, date, datetime, time, timedelta
 from http import HTTPStatus
 import math
+from pathlib import Path
 import sqlite3
 import sys
 import threading
@@ -40,6 +41,7 @@ from homeassistant.components.recorder.const import (
     KEEPALIVE_TIME,
     SupportedDialect,
 )
+from homeassistant.components.recorder.core import _event_data_filter_matches
 from homeassistant.components.recorder.db_schema import (
     SCHEMA_VERSION,
     EventData,
@@ -829,6 +831,10 @@ async def test_saving_event_exclude_event_data(
     [
         (LockState.LOCKED, "locked", True),
         (HTTPStatus.OK, 200, True),
+        (datetime(2026, 10, 9, 12, 30, tzinfo=UTC), "2026-10-09T12:30:00+00:00", True),
+        (date(2026, 10, 9), "2026-10-09", True),
+        (time(12, 30), "12:30:00", True),
+        (Path("event/data"), "event/data", True),
         (True, True, True),
         (1.5, 1.5, True),
         (True, 1, False),
@@ -842,7 +848,7 @@ async def test_event_data_filter_scalar_types(
     async_setup_recorder_instance: RecorderInstanceGenerator,
     filter_type: str,
     store_matches: bool,
-    event_value: str | bool | float,
+    event_value: str | bool | float | date | time | Path,
     match_value: str | bool | float,
     matches: bool,
 ) -> None:
@@ -881,6 +887,15 @@ async def test_event_data_filter_scalar_types(
 
     assert await instance.async_add_executor_job(_get_event_count, hass) == int(
         matches == store_matches
+    )
+
+
+def test_event_data_filter_unserializable_event() -> None:
+    """Test filter matching tolerates event data that Recorder cannot serialize."""
+    assert not _event_data_filter_matches(
+        Event("test_event", {"value": object()}),
+        {"test_event": ((("value", "match"),),)},
+        SupportedDialect.SQLITE,
     )
 
 

@@ -47,6 +47,7 @@ from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.util import dt as dt_util
 from homeassistant.util.enum import try_parse_enum
 from homeassistant.util.event_type import EventType
+from homeassistant.util.json import JSON_ENCODE_EXCEPTIONS, json_loads
 
 from . import migration, statistics
 from .const import (
@@ -142,26 +143,27 @@ CONNECTIVITY_ERR = "Error in database connectivity during commit"
 # Pool size must accommodate Recorder thread + All db executors
 MAX_DB_EXECUTOR_WORKERS = POOL_SIZE - 1
 
-_MISSING_EVENT_DATA_VALUE = object()
-
 
 def _event_data_filter_matches(
     event: Event,
     filters: dict[str, tuple[tuple[tuple[str, object], ...], ...]],
+    dialect: SupportedDialect | None,
 ) -> bool:
     """Return if an event matches an event data filter."""
-    if not (rules := filters.get(cast(str, event.event_type))) or not isinstance(
-        event.data, Mapping
-    ):
+    if not (rules := filters.get(cast(str, event.event_type))):
+        return False
+    try:
+        data = json_loads(EventData.shared_data_bytes_from_event(event, dialect))
+    except JSON_ENCODE_EXCEPTIONS:
+        return False
+    if not isinstance(data, Mapping):
         return False
 
     return any(
         all(
-            (actual_value := event.data.get(key, _MISSING_EVENT_DATA_VALUE))
-            is not _MISSING_EVENT_DATA_VALUE
-            and isinstance(actual_value, type(expected_value))
-            and (not isinstance(actual_value, bool) or isinstance(expected_value, bool))
-            and actual_value == expected_value
+            key in data
+            and type(data[key]) is type(expected_value)
+            and data[key] == expected_value
             for key, expected_value in rule
         )
         for rule in rules
@@ -327,12 +329,14 @@ class Recorder(threading.Thread):
             if event.event_type in exclude_event_types:
                 return
 
-            if _event_data_filter_matches(event, exclude_event_data):
+            if _event_data_filter_matches(event, exclude_event_data, self.dialect_name):
                 return
 
             if (
                 event.event_type in include_event_data
-                and not _event_data_filter_matches(event, include_event_data)
+                and not _event_data_filter_matches(
+                    event, include_event_data, self.dialect_name
+                )
             ):
                 return
 
