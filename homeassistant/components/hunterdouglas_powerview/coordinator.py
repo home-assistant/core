@@ -77,17 +77,17 @@ class PowerviewShadeUpdateCoordinator(DataUpdateCoordinator[PowerviewShadeData])
         )
         
         # Audit registry devices to catch phantoms
-        for device in devices
+        for device in devices:
             # Only include shades, don't include the hub device
-            if device.via_device_id is not None
-            for identifier in device.identifiers
-                if identifier[0] == DOMAIN and identifier[1] not in current_shade_ids
-                    # Remove the stale shade and write the removal to the log
-                    _LOGGER.info(
-                        "Removing device for shade %s that no longer exists on hub",
-                        identifier[1]
-                    )
-                    device_registry.async_remove_device(device.id)
+            if device.via_device_id is not None:
+                for identifier in device.identifiers:
+                    if identifier[0] == DOMAIN and identifier[1] not in current_shade_ids:
+                        # Remove the stale shade and write the removal to the log
+                        _LOGGER.info(
+                            "Removing device for shade %s that no longer exists on hub",
+                            identifier[1]
+                        )
+                        device_registry.async_remove_device(device.id)
 
         self._previous_shade_ids = current_shade_ids
         return self.data
