@@ -169,15 +169,23 @@ class CoordinatorConfigEntryChecker(BaseChecker):
                     names.add(name)
 
             arguments = init.args
-            for index, argument in enumerate([*arguments.args, *arguments.kwonlyargs]):
-                if argument.name not in names:
-                    continue
-                annotation = (
-                    arguments.annotations[index]
-                    if index < len(arguments.args)
-                    else arguments.kwonlyargs_annotations[index - len(arguments.args)]
+            annotations.extend(
+                annotation
+                for argument, annotation in zip(
+                    [
+                        *(arguments.posonlyargs or []),
+                        *(arguments.args or []),
+                        *arguments.kwonlyargs,
+                    ],
+                    [
+                        *arguments.posonlyargs_annotations,
+                        *arguments.annotations,
+                        *arguments.kwonlyargs_annotations,
+                    ],
+                    strict=True,
                 )
-                annotations.append(annotation)
+                if argument.name in names
+            )
 
         for annotation in annotations:
             if _is_plain_config_entry(annotation):
@@ -193,6 +201,13 @@ class CoordinatorConfigEntryChecker(BaseChecker):
             return
 
         for assign in init.nodes_of_class(nodes.AssignAttr):
+            # self.config_entry: MyConfigEntry only narrows the type
+            if (
+                isinstance(assign.parent, nodes.AnnAssign)
+                and assign.parent.value is None
+            ):
+                continue
+
             match assign:
                 case nodes.AssignAttr(
                     attrname="config_entry", expr=nodes.Name(name="self")

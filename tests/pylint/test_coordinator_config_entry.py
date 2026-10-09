@@ -104,6 +104,18 @@ class MyCoordinator(DataUpdateCoordinator[dict]):
             _TYPED_ALIAS,
             id="config_entry_not_passed_to_super",
         ),
+        pytest.param(
+            """
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+
+class MyCoordinator(DataUpdateCoordinator[dict]):
+    def __init__(self, hass, config_entry: MyConfigEntry) -> None:
+        super().__init__(hass, LOGGER, config_entry=config_entry, name="test")
+        self.config_entry: MyConfigEntry
+""",
+            _TYPED_ALIAS,
+            id="annotation_only",
+        ),
     ],
 )
 def test_no_warning(
@@ -161,6 +173,19 @@ class MyCoordinator(DataUpdateCoordinator[dict]):
             _TYPED_ALIAS,
             ("`MyConfigEntry`",),
             id="argument_with_other_name",
+        ),
+        pytest.param(
+            """
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+
+class MyCoordinator(DataUpdateCoordinator[dict]):
+    def __init__(self, hass, config_entry: ConfigEntry, /) -> None:
+        super().__init__(hass, LOGGER, config_entry=config_entry, name="test")
+""",
+            _TYPED_ALIAS,
+            ("`MyConfigEntry`",),
+            id="positional_only_argument",
         ),
         pytest.param(
             """

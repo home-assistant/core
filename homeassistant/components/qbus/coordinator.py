@@ -40,7 +40,6 @@ class QbusControllerCoordinator(DataUpdateCoordinator[QbusMqttDevice | None]):
         """Initialize Qbus coordinator."""
 
         _LOGGER.debug("%s - Initializing coordinator", entry.unique_id)
-        # pylint: disable-next=home-assistant-coordinator-redundant-config-entry
         self.config_entry: QbusConfigEntry
 
         super().__init__(
