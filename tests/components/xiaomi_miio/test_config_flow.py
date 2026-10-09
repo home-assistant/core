@@ -182,6 +182,7 @@ async def test_config_flow_gateway_success(hass: HomeAssistant) -> None:
         CONF_MODEL: TEST_MODEL,
         CONF_MAC: TEST_MAC,
     }
+    assert result["result"].unique_id == TEST_MAC
 
 
 async def test_config_flow_gateway_cloud_success(hass: HomeAssistant) -> None:
@@ -215,6 +216,7 @@ async def test_config_flow_gateway_cloud_success(hass: HomeAssistant) -> None:
         CONF_MODEL: TEST_MODEL,
         CONF_MAC: TEST_MAC,
     }
+    assert result["result"].unique_id == TEST_MAC
 
 
 async def test_config_flow_gateway_cloud_multiple_success(hass: HomeAssistant) -> None:
@@ -261,6 +263,7 @@ async def test_config_flow_gateway_cloud_multiple_success(hass: HomeAssistant) -
         CONF_MODEL: TEST_MODEL,
         CONF_MAC: TEST_MAC2,
     }
+    assert result["result"].unique_id == TEST_MAC2
 
 
 async def test_config_flow_gateway_cloud_incomplete(hass: HomeAssistant) -> None:
@@ -470,6 +473,7 @@ async def test_zeroconf_gateway_success(hass: HomeAssistant) -> None:
         CONF_MODEL: TEST_MODEL,
         CONF_MAC: TEST_MAC,
     }
+    assert result["result"].unique_id == TEST_MAC
 
 
 async def test_zeroconf_unknown_device(hass: HomeAssistant) -> None:

@@ -15,5 +15,10 @@
         }
       }
     }
+  },
+  "exceptions": {
+    "authentication_failed": {
+      "message": "Authentication with UpCloud failed"
+    }
   }
 }

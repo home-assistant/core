@@ -77,3 +77,19 @@ async def test_device_added_without_hub(
     assert child_device.via_device_id is None
 
     assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+
+
+async def test_setup_not_authorized(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_tellduslive: MagicMock,
+) -> None:
+    """Test setup fails when the session is not authorized."""
+    mock_tellduslive.is_authorized = False
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.reason == "Authentication with Telldus Live failed"

@@ -35,11 +35,13 @@ TWO_YEARS_DAYS = 2 * 365
 class MillDataUpdateCoordinator(DataUpdateCoordinator):
     """Class to manage fetching Mill data."""
 
+    # pylint: disable-next=home-assistant-coordinator-untyped-config-entry
     config_entry: ConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
+        # pylint: disable-next=home-assistant-coordinator-untyped-config-entry
         config_entry: ConfigEntry,
         mill_data_connection: Mill | MillLocal,
         update_interval: timedelta,
@@ -66,6 +68,7 @@ class MillHistoricDataUpdateCoordinator(DataUpdateCoordinator):
     def __init__(
         self,
         hass: HomeAssistant,
+        # pylint: disable-next=home-assistant-coordinator-untyped-config-entry
         config_entry: ConfigEntry,
         *,
         mill_data_connection: Mill,

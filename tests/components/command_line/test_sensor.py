@@ -1127,6 +1127,40 @@ async def test_template_with_shell_features_uses_shell_and_creates_issue(
     }
 
 
+async def test_static_command_with_shell_features_no_issue(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Commands without a template keep the shell path and create no repair issue."""
+    # A folded YAML block scalar (command: >) leaves a trailing newline,
+    # which rendering would strip.
+    command = "echo 'ROC temperature 42' | awk '/ROC temperature/ {print $NF}'\n"
+    await setup.async_setup_component(
+        hass,
+        DOMAIN,
+        {"command_line": [{"sensor": {"name": "Test", "command": command}}]},
+    )
+    await hass.async_block_till_done()
+
+    with mock_asyncio_subprocess_run(b"42\n") as mock_shell:
+        async_fire_time_changed(
+            hass,
+            dt_util.utcnow() + timedelta(minutes=1),
+        )
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    mock_shell.assert_called_once_with(
+        command,
+        stdin=None,
+        stdout=-1,
+        close_fds=False,
+    )
+    assert not any(
+        issue.translation_key == "shell_command_template_deprecation"
+        for issue in issue_registry.issues.values()
+    )
+
+
 async def test_template_shell_feature_issue_cleared_when_metachar_gone(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
@@ -1345,18 +1379,26 @@ async def test_template_quoted_executable_uses_exec(
     )
 
 
+@pytest.mark.parametrize(
+    "edited_command",
+    [
+        pytest.param("echo {{ 'clean' }}", id="template_without_shell_features"),
+        pytest.param("echo clean | cat", id="no_template"),
+    ],
+)
 async def test_template_issue_id_stable_across_command_edits(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
+    edited_command: str,
 ) -> None:
-    """Editing the command to remove shell features clears the original issue."""
+    """Editing the command to remove templated shell features clears the original issue."""
     # A shell feature creates the issue for this entity.
     render_template_args(hass, "echo {{ 'a|b' }}", "sensor", "Test")
     assert [iid for (dom, iid) in issue_registry.issues if dom == DOMAIN]
 
-    # The same entity with an edited, safe command clears it; a command-derived
+    # The same entity with an edited command clears it; a command-derived
     # id would instead leave the original issue behind.
-    render_template_args(hass, "echo {{ 'clean' }}", "sensor", "Test")
+    render_template_args(hass, edited_command, "sensor", "Test")
     assert not [iid for (dom, iid) in issue_registry.issues if dom == DOMAIN]
 
 

@@ -50,6 +50,7 @@ async def test_flow_successful(hass: HomeAssistant) -> None:
         assert result["data"][CONF_URL] == URL
         assert result["data"][CONF_TOKEN] == TOKEN
         assert result["data"][CONF_VERIFY_SSL] == VERIFY_SSL
+        assert result["result"].unique_id == SERVER_ID
         assert len(mock_setup_entry.mock_calls) == 1
 
 

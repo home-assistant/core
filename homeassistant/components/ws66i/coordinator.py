@@ -17,11 +17,13 @@ _LOGGER = logging.getLogger(__name__)
 class Ws66iDataUpdateCoordinator(DataUpdateCoordinator[list[ZoneStatus]]):
     """DataUpdateCoordinator to gather data for WS66i Zones."""
 
+    # pylint: disable-next=home-assistant-coordinator-untyped-config-entry
     config_entry: ConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
+        # pylint: disable-next=home-assistant-coordinator-untyped-config-entry
         config_entry: ConfigEntry,
         my_api: WS66i,
         zones: list[int],

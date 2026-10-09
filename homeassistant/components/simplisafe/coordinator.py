@@ -18,11 +18,13 @@ DEFAULT_SCAN_INTERVAL = timedelta(seconds=30)
 class SimpliSafeDataUpdateCoordinator(DataUpdateCoordinator[None]):
     """Class to manage fetching SimpliSafe data."""
 
+    # pylint: disable-next=home-assistant-coordinator-untyped-config-entry
     config_entry: ConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
+        # pylint: disable-next=home-assistant-coordinator-untyped-config-entry
         config_entry: ConfigEntry,
         *,
         name: str,

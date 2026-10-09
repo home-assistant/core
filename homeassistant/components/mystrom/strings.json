@@ -38,6 +38,12 @@
   "exceptions": {
     "switch_action_failed": {
       "message": "Failed to perform the action on the myStrom plug."
+    },
+    "unsupported_bulb": {
+      "message": "Device {host} ({mac}) is not a myStrom bulb nor myStrom LED Strip"
+    },
+    "unsupported_device_type": {
+      "message": "Unsupported myStrom device type: {device_type}"
     }
   }
 }

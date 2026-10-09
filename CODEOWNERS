@@ -891,8 +891,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/improv_ble/ @emontnemery
 /homeassistant/components/incomfort/ @jbouwh
 /tests/components/incomfort/ @jbouwh
-/homeassistant/components/indevolt/ @xirt
-/tests/components/indevolt/ @xirt
+/homeassistant/components/indevolt/ @xirt @INDEVOLT @indevolt-y
+/tests/components/indevolt/ @xirt @INDEVOLT @indevolt-y
 /homeassistant/components/indi_allsky/ @TN-1
 /tests/components/indi_allsky/ @TN-1
 /homeassistant/components/inels/ @epdevlab

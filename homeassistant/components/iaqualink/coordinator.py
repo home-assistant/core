@@ -24,10 +24,15 @@ _LOGGER = logging.getLogger(__name__)
 class AqualinkDataUpdateCoordinator(DataUpdateCoordinator[None]):
     """Data coordinator for Aqualink systems."""
 
+    # pylint: disable-next=home-assistant-coordinator-untyped-config-entry
     config_entry: ConfigEntry
 
     def __init__(
-        self, hass: HomeAssistant, config_entry: ConfigEntry, system: Any
+        self,
+        hass: HomeAssistant,
+        # pylint: disable-next=home-assistant-coordinator-untyped-config-entry
+        config_entry: ConfigEntry,
+        system: Any,
     ) -> None:
         """Initialize the coordinator."""
         update_interval = UPDATE_INTERVAL_BY_SYSTEM_TYPE.get(

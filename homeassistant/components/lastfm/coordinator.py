@@ -37,9 +37,11 @@ class LastFMUserData:
 class LastFMDataUpdateCoordinator(DataUpdateCoordinator[dict[str, LastFMUserData]]):
     """A LastFM Data Update Coordinator."""
 
+    # pylint: disable-next=home-assistant-coordinator-untyped-config-entry
     config_entry: ConfigEntry
     _client: LastFMNetwork
 
+    # pylint: disable-next=home-assistant-coordinator-untyped-config-entry
     def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Initialize the LastFM data coordinator."""
         super().__init__(

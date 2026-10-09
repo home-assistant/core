@@ -1860,6 +1860,11 @@ async def test_blueprint_script_bad_config(
     }
     assert issues[0]["translation_placeholders"]["error"].startswith(details)
 
+    # The script is broken, but still listed under its blueprint
+    assert script.scripts_with_blueprint(hass, "test_service.yaml") == [
+        "script.test_script"
+    ]
+
 
 async def test_blueprint_script_fails_substitution(
     hass: HomeAssistant,
