@@ -1,6 +1,7 @@
 """Tests for the Freebox utility methods."""
 
 import json
+import logging
 from pathlib import Path
 from unittest.mock import AsyncMock, Mock
 
@@ -173,6 +174,7 @@ async def test_update_home_devices_unavailable(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """An unavailable Home endpoint disables Home without a warning."""
+    caplog.set_level(logging.DEBUG, logger="homeassistant.components.freebox.router")
     router = Mock(spec=FreeboxRouter)
     router.home_granted = True
     router.home = Mock()
@@ -188,7 +190,8 @@ async def test_update_home_devices_unavailable(
 
     assert router.home_granted is False
     router.home.get_home_nodes.assert_awaited_once()
-    assert "Freebox Home API request failed" not in caplog.text
+    assert not any(record.levelno >= logging.WARNING for record in caplog.records)
+    assert "Freebox Home API endpoint is unavailable" in caplog.text
 
 
 async def test_update_home_devices_other_http_error(
