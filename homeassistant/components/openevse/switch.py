@@ -26,6 +26,13 @@ class OpenEVSESwitchDescription(SwitchEntityDescription):
     turn_off_fn: Callable[[OpenEVSE], Awaitable[Any]]
 
 
+async def _set_manual_override(charger: OpenEVSE, enable: bool) -> None:
+    """Toggle the manual override, unless it is already in the requested state."""
+    # Toggling is the only override command that works on every firmware
+    if charger.manual_override != enable:
+        await charger.toggle_override()
+
+
 SWITCH_TYPES: tuple[OpenEVSESwitchDescription, ...] = (
     OpenEVSESwitchDescription(
         key="solar_pv_divert",
@@ -49,8 +56,8 @@ SWITCH_TYPES: tuple[OpenEVSESwitchDescription, ...] = (
         key="manual_override",
         translation_key="manual_override",
         is_on_fn=lambda ev: ev.manual_override,
-        turn_on_fn=lambda ev: ev.toggle_override(),
-        turn_off_fn=lambda ev: ev.toggle_override(),
+        turn_on_fn=lambda ev: _set_manual_override(ev, True),
+        turn_off_fn=lambda ev: _set_manual_override(ev, False),
     ),
 )
 
