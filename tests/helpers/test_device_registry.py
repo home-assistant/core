@@ -4643,46 +4643,11 @@ def test_device_info_deprecated_parameters(parameter: str, value: Any) -> None:
     assert dict(device_info) == {parameter: value}
 
 
-@pytest.mark.parametrize(
-    ("integration_frame_path", "expectation", "expected_log"),
-    [
-        pytest.param(
-            "homeassistant/test_core", pytest.raises(RuntimeError), 0, id="core"
-        ),
-        pytest.param(
-            "homeassistant/components/test_integration",
-            pytest.raises(RuntimeError),
-            1,
-            id="core integration",
-        ),
-        pytest.param(
-            "custom_components/test_integration",
-            nullcontext(),
-            1,
-            id="custom integration",
-        ),
-    ],
-)
-@pytest.mark.usefixtures("hass", "mock_integration_frame")
-async def test_device_info_unknown_key_deprecated(
-    caplog: pytest.LogCaptureFixture,
-    expectation: AbstractContextManager,
-    expected_log: int,
-) -> None:
-    """Test setting a key which is not a field of a device info is deprecated.
-
-    It logs for custom integrations and raises for core and core integrations. The
-    key is kept, so it is still passed on to the device registry.
-    """
+def test_device_info_rejects_unknown_key() -> None:
+    """Test a device info rejects setting a key which is not a field."""
     device_info = dr.DeviceInfo(name="name")
-    with patch.object(frame, "_REPORTED_INTEGRATIONS", set()), expectation:
+    with pytest.raises(KeyError):
         device_info["config_entry_id"] = "entry_id"
-        assert device_info.as_dict() == {"name": "name", "config_entry_id": "entry_id"}
-
-    assert (
-        caplog.text.count("sets 'config_entry_id', which is not a DeviceInfo field")
-        == expected_log
-    )
 
 
 @pytest.mark.parametrize(

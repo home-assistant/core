@@ -135,17 +135,6 @@ class DeviceEntryDisabler(StrEnum):
 type _DeviceInfoLike = _DeviceInfoMapping | Mapping[str, Any]
 
 
-def _report_device_info_usage(what: str) -> None:
-    """Report a device info usage which is to stop working."""
-    report_usage(
-        what,
-        breaks_in_ha_version="2027.5.0",
-        core_behavior=ReportBehavior.ERROR,
-        core_integration_behavior=ReportBehavior.ERROR,
-        custom_integration_behavior=ReportBehavior.LOG,
-    )
-
-
 class _DeviceInfoMapping:
     """Dict-style access for the device info dataclasses.
 
@@ -159,21 +148,14 @@ class _DeviceInfoMapping:
     once integrations read and write the fields directly.
     """
 
-    # The keys which are not fields, set by integrations
-    __slots__ = ("_extra",)
+    __slots__ = ()
 
     if TYPE_CHECKING:
         # The mapping keys, in field declaration order, set by _device_info_fields
         _field_names: ClassVar[tuple[str, ...]]
 
-        _extra: dict[str, Any] | None
-
         # Set by the @attr.s decorator, declared for _device_info_fields
         __attrs_attrs__: ClassVar[tuple[attr.Attribute[Any], ...]]
-
-    def __attrs_post_init__(self) -> None:
-        """Start without keys which are not fields."""
-        self._extra = None
 
     def __getitem__(self, key: str) -> Any:
         """Return the value of a set field."""
@@ -182,39 +164,24 @@ class _DeviceInfoMapping:
             value = getattr(self, key)
             if value is not UNDEFINED:
                 return value
-        elif (extra := self._extra) is not None and key in extra:
-            return extra[key]
         raise KeyError(key)
 
     def __setitem__(self, key: str, value: Any) -> None:
         """Set the value of a field."""
         # Integrations fill a device info in after building it
-        if key in self._field_names:
-            setattr(self, key, value)
-            return
-        # Kept and passed on to the device registry, as the TypedDict did
-        _report_device_info_usage(
-            f"sets '{key}', which is not a {type(self).__name__} field"
-        )
-        if self._extra is None:
-            self._extra = {}
-        self._extra[key] = value
+        if key not in self._field_names:
+            raise KeyError(f"'{key}' is not a valid {type(self).__name__} field")
+        setattr(self, key, value)
 
     def __iter__(self) -> Iterator[str]:
         """Iterate over the set fields."""
         # Also backs `in`, there being no __contains__ to fall back on
-        yield from (
-            key for key in self._field_names if getattr(self, key) is not UNDEFINED
-        )
-        if self._extra is not None:
-            yield from self._extra
+        return (key for key in self._field_names if getattr(self, key) is not UNDEFINED)
 
     def __len__(self) -> int:
         """Return the number of set fields."""
         # A device info without any field must be falsy, as an empty dict was
-        return sum(
-            getattr(self, key) is not UNDEFINED for key in self._field_names
-        ) + len(self._extra or ())
+        return sum(getattr(self, key) is not UNDEFINED for key in self._field_names)
 
     @override
     def __eq__(self, other: object) -> bool:
@@ -222,13 +189,8 @@ class _DeviceInfoMapping:
         # Integrations compare a device info to a plain mapping, so this can't be
         # left to the dataclass
         if isinstance(other, _DeviceInfoMapping):
-            return (
-                type(other) is type(self)
-                and all(
-                    getattr(self, key) == getattr(other, key)
-                    for key in self._field_names
-                )
-                and self._extra == other._extra
+            return type(other) is type(self) and all(
+                getattr(self, key) == getattr(other, key) for key in self._field_names
             )
         if isinstance(other, Mapping):
             return dict(self) == other
@@ -248,7 +210,7 @@ class _DeviceInfoMapping:
 
     def items(self) -> tuple[tuple[str, Any], ...]:
         """Return the set fields as key-value pairs."""
-        return tuple(self.as_dict().items())
+        return tuple((key, getattr(self, key)) for key in self)
 
     def as_dict(self) -> dict[str, Any]:
         """Return the set fields.
@@ -257,14 +219,11 @@ class _DeviceInfoMapping:
         integrations use. The JSON encoders serialize an object with an as_dict; a
         dataclass would otherwise be serialized field by field, unset ones included.
         """
-        fields = {
+        return {
             name: value
             for name in self._field_names
             if (value := getattr(self, name)) is not UNDEFINED
         }
-        if self._extra is not None:
-            fields.update(self._extra)
-        return fields
 
     def get(self, key: str, default: Any = None) -> Any:
         """Return the value of a field, or default if the field is not set."""
@@ -288,17 +247,14 @@ class _DeviceInfoMapping:
             if default is UNDEFINED:
                 raise
             return default
-        if key in self._field_names:
-            setattr(self, key, UNDEFINED)
-        elif self._extra is not None:
-            del self._extra[key]
+        setattr(self, key, UNDEFINED)
         return value
 
     def __or__(self, other: _DeviceInfoLike) -> Self:
         """Return a copy updated with the fields of another mapping."""
         # Integrations layer a device info on top of a shared one:
         # `base_device_info | DeviceInfo(...)`
-        new = self._copy()
+        new = copy.copy(self)
         new.update(other)
         return new
 
@@ -306,17 +262,10 @@ class _DeviceInfoMapping:
         """Return a copy holding the fields of another mapping it does not set."""
         # An integration can hold a device info as a plain dict, and layer on top
         # of it: `base_device_info | DeviceInfo(...)`
-        new = self._copy()
+        new = copy.copy(self)
         for key, value in other.items():
             if key not in self:
                 new[key] = value
-        return new
-
-    def _copy(self) -> Self:
-        """Return a copy which does not share the keys which are not fields."""
-        # copy.copy only copies the attrs fields
-        new = copy.copy(self)
-        new._extra = None if self._extra is None else dict(self._extra)  # noqa: SLF001
         return new
 
     def __ior__(self, other: _DeviceInfoLike) -> Self:
