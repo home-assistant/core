@@ -208,11 +208,14 @@ async def async_remove_config_entry_device(
         return False
 
     # Extract the unique shade ID from the device's identifiers
-    shade_id: str | None = None
+    shade_id: int | None = None
     for identifier in device.identifiers:
         if identifier[0] == DOMAIN:
             # The second value in the tuple is the raw shade ID from the hub
-            shade_id = identifier[1]
+            try:
+                shade_id = int(identifier[1])
+            except (ValueError, TypeError):
+                continue
             break
 
     # Fetch the running coordinator data
