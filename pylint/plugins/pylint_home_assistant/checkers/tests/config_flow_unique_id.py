@@ -202,8 +202,12 @@ def _is_injected_error(value: nodes.NodeNG) -> bool:
 
 def _recovers_from_error(func: nodes.FunctionDef) -> bool:
     """Return True if the test injects an error or expects one."""
-    for node in func.nodes_of_class((nodes.AssignAttr, nodes.Keyword, nodes.Compare)):
+    for node in func.nodes_of_class(
+        (nodes.AssignAttr, nodes.Keyword, nodes.Compare, nodes.Assert)
+    ):
         match node:
+            case nodes.Assert(test=test) if _is_errors(test) or _is_errors_item(test):
+                return True
             case (
                 nodes.AssignAttr(
                     attrname="side_effect", parent=nodes.Assign(value=value)

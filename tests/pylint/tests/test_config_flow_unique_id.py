@@ -213,6 +213,26 @@ async def test_flow_recovers(hass):
         ),
         pytest.param(
             """
+async def test_flow_recovers(hass):
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result["errors"]
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+""",
+            id="recovers_from_truthy_errors",
+        ),
+        pytest.param(
+            """
+async def test_flow_recovers(hass):
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result.get("errors")
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+""",
+            id="recovers_from_truthy_get_errors",
+        ),
+        pytest.param(
+            """
 async def test_options_flow(hass, config_entry):
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     result = await hass.config_entries.options.async_configure(result["flow_id"], {})
@@ -392,6 +412,16 @@ async def test_full_flow(hass):
     assert result.get("type") is FlowResultType.CREATE_ENTRY
 """,
             id="no_errors_get",
+        ),
+        pytest.param(
+            """
+async def test_full_flow(hass):
+    result = await hass.config_entries.flow.async_init(DOMAIN)
+    assert not result["errors"]
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+""",
+            id="no_errors_falsy",
         ),
         pytest.param(
             """
