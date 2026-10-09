@@ -93,5 +93,4 @@ class PowerviewShadeUpdateCoordinator(DataUpdateCoordinator[PowerviewShadeData])
                         )
                         device_registry.async_remove_device(device.id)
 
-        self._previous_shade_ids = current_shade_ids
         return self.data
