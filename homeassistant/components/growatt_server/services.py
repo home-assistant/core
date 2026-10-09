@@ -18,6 +18,8 @@ from .const import (
 if TYPE_CHECKING:
     from .coordinator import GrowattCoordinator
 
+AUTH_LABELS = {"v1": "token", "classic": "username/password"}
+
 
 def _get_coordinators(
     hass: HomeAssistant, allowed: set[tuple[str, str]]
@@ -39,13 +41,18 @@ def _get_coordinator(
     """Get coordinator by device registry ID, matching an allowed (device_type, api_version) pair."""
     coordinators = _get_coordinators(hass, allowed)
 
-    type_label = "/".join(sorted({device_type.upper() for device_type, _ in allowed}))
+    supported = ", ".join(
+        sorted(
+            f"{device_type.upper()} ({AUTH_LABELS[api_version]})"
+            for device_type, api_version in allowed
+        )
+    )
 
     if not coordinators:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="no_devices_configured",
-            translation_placeholders={"device_type": type_label},
+            translation_placeholders={"supported_devices": supported},
         )
 
     device_registry = dr.async_get(hass)
@@ -76,7 +83,7 @@ def _get_coordinator(
             translation_domain=DOMAIN,
             translation_key="device_not_configured",
             translation_placeholders={
-                "device_type": type_label,
+                "supported_devices": supported,
                 "serial_number": serial_number,
             },
         )

@@ -945,9 +945,9 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             ]
         )
         return {
-            "charge_power": int(settings["chargePowerCommand"]),
-            "charge_stop_soc": int(settings["wchargeSOCLowLimit2"]),
-            "mains_enabled": int(settings["acChargeEnable"]) == 1,
+            "charge_power": self._parse_ac_int(settings["chargePowerCommand"]),
+            "charge_stop_soc": self._parse_ac_int(settings["wchargeSOCLowLimit2"]),
+            "mains_enabled": self._parse_ac_int(settings["acChargeEnable"]) == 1,
             "periods": self._parse_ac_time_periods(settings, "Charge"),
         }
 
@@ -971,7 +971,9 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             ]
         )
         return {
-            "discharge_power": int(settings["disChargePowerCommand"]),
-            "discharge_stop_soc": int(settings["wdisChargeSOCLowLimit2"]),
+            "discharge_power": self._parse_ac_int(settings["disChargePowerCommand"]),
+            "discharge_stop_soc": self._parse_ac_int(
+                settings["wdisChargeSOCLowLimit2"]
+            ),
             "periods": self._parse_ac_time_periods(settings, "Discharge"),
         }

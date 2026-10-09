@@ -603,7 +603,7 @@
       "message": "Error communicating with Growatt API: {error}"
     },
     "device_not_configured": {
-      "message": "{device_type} device {serial_number} is not configured for actions."
+      "message": "Device {serial_number} is not supported by this action. Supported devices: {supported_devices}."
     },
     "device_not_found": {
       "message": "Device {device_id} not found in the device registry."
@@ -666,7 +666,7 @@
       "message": "The Growatt Mix device rejected the charge/discharge settings write."
     },
     "no_devices_configured": {
-      "message": "No {device_type} devices are configured."
+      "message": "No devices supported by this action are configured. Supported devices: {supported_devices}."
     },
     "rate_limited": {
       "message": "Growatt API rate limited, will retry: {error}"
