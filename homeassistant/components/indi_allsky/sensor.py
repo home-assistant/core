@@ -157,8 +157,6 @@ PREDEFINED_SENSOR_DESCRIPTIONS: tuple[IndiAllSkySensorEntityDescription, ...] = 
     ),
     IndiAllSkySensorEntityDescription(
         key="wind_direction",
-        # pylint: disable-next=home-assistant-redundant-translation-key
-        translation_key="wind_direction",
         device_class=SensorDeviceClass.WIND_DIRECTION,
         native_unit_of_measurement=DEGREE,
         state_class=SensorStateClass.MEASUREMENT_ANGLE,
