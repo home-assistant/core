@@ -962,6 +962,41 @@ async def test_service_post_media_source_errors(
     assert err.value.translation_key == translation_key
 
 
+@pytest.mark.usefixtures("mock_mastodon_client")
+async def test_service_post_media_source_unknow_media_type(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the post service errors with unknown media type."""
+    assert await async_setup_component(hass, "media_source", {})
+    await setup_integration(hass, mock_config_entry)
+    with (
+        patch(
+            "homeassistant.components.tts.async_get_media_source_audio",
+            return_value=("midi", b"Tooooot"),
+        ),
+        pytest.raises(ServiceValidationError) as err,
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_POST,
+            {
+                ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+                ATTR_STATUS: "test toot",
+                ATTR_MEDIA: [
+                    {
+                        ATTR_MEDIA_SOURCE: {
+                            "media_content_id": "media-source://tts/demo?message=Tooooot&language=en",
+                            "media_content_type": "audio/mp3",
+                        },
+                    }
+                ],
+            },
+            blocking=True,
+        )
+    assert err.value.translation_key == "media_type_unknown"
+
+
 async def test_service_post_media_source_upload_error(
     hass: HomeAssistant,
     mock_mastodon_client: AsyncMock,

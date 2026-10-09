@@ -379,11 +379,6 @@ async def _async_post(call: ServiceCall) -> ServiceResponse:
                 translation_domain=DOMAIN,
                 translation_key="media_not_allowed_with_other_media",
             )
-        if audio_or_video and len(media) > 1:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="media_video_not_allowed_with_other_media",
-            )
         if not audio_or_video and media_item.get(ATTR_THUMBNAIL):
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
