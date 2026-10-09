@@ -9,6 +9,7 @@ import pytest
 from homeassistant.components.energyid import DOMAIN, _async_handle_state_change
 from homeassistant.components.energyid.const import (
     CONF_DEVICE_NAME,
+    CONF_ENABLE_DIRECTIVES,
     CONF_ENERGYID_KEY,
     CONF_HA_ENTITY_UUID,
     CONF_PROVISIONING_KEY,
@@ -1430,3 +1431,25 @@ async def test_subentry_unload_during_entry_unload(
         "async_unload should have been called for the subentry"
     )
     assert result is True
+
+
+async def test_changing_directive_option_reloads_entry(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_webhook_client: MagicMock,
+) -> None:
+    """Test enabling directives in the options reloads the entry."""
+    mock_webhook_client.api_access_token = "device-token"
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert not mock_config_entry.runtime_data.directive_coordinator.directives_enabled
+    mock_webhook_client.get_directives.assert_not_awaited()
+
+    hass.config_entries.async_update_entry(
+        mock_config_entry, options={CONF_ENABLE_DIRECTIVES: True}
+    )
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_config_entry.runtime_data.directive_coordinator.directives_enabled
+    mock_webhook_client.get_directives.assert_awaited_once()
