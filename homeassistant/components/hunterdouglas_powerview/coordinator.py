@@ -14,7 +14,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, HUB_EXCEPTIONS
+from .const import HUB_EXCEPTIONS
 from .util import get_shade_ids
 
 if TYPE_CHECKING:
