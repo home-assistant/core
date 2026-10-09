@@ -1,12 +1,11 @@
 """Tests for OAuth2 setup error handling (HA 2026.3+)."""
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 from aiohttp import RequestInfo
 import pytest
 from yarl import URL
 
-from homeassistant.components.daikin_onecta import _async_update_listener
 from homeassistant.components.daikin_onecta.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -124,31 +123,3 @@ async def test_setup_entry_not_ready_when_implementation_unavailable(
         assert not await hass.config_entries.async_setup(config_entry.entry_id)
 
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
-
-
-async def test_update_listener_notifies_entities_without_cloud_refresh() -> None:
-    """Presentation-only option changes must not consume cloud quota."""
-    coordinator = MagicMock()
-    coordinator.update_settings.return_value = True
-    coordinator.async_request_refresh = AsyncMock()
-    config_entry = MagicMock(runtime_data=coordinator)
-
-    await _async_update_listener(MagicMock(), config_entry)
-
-    coordinator.update_settings.assert_called_once_with(config_entry)
-    coordinator.async_request_refresh.assert_not_awaited()
-    coordinator.async_update_listeners.assert_called_once_with()
-
-
-async def test_update_listener_ignores_oauth_token_renewal() -> None:
-    """OAuth token renewal must not trigger a cloud refresh."""
-    coordinator = MagicMock()
-    coordinator.update_settings.return_value = False
-    coordinator.async_request_refresh = AsyncMock()
-    config_entry = MagicMock(runtime_data=coordinator)
-
-    await _async_update_listener(MagicMock(), config_entry)
-
-    coordinator.update_settings.assert_called_once_with(config_entry)
-    coordinator.async_request_refresh.assert_not_awaited()
-    coordinator.async_update_listeners.assert_not_called()

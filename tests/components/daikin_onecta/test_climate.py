@@ -12,10 +12,6 @@ from homeassistant.components.climate import (
     ATTR_PRESET_MODE,
     ATTR_SWING_MODE,
     DOMAIN as CLIMATE_DOMAIN,
-    FAN_HIGH,
-    FAN_LOW,
-    FAN_MEDIUM,
-    FAN_MIDDLE,
     PRESET_AWAY,
     PRESET_BOOST,
     PRESET_COMFORT,
@@ -181,62 +177,6 @@ async def test_async_climate_command_uses_bound_library_client() -> None:
     climate.set_fan_mode.assert_awaited_once_with("heating", "quiet")
 
 
-def test_homekit_fan_mode_aliases_follow_advertised_capabilities() -> None:
-    """Expose aliases only for fan modes actually advertised by Daikin."""
-    entity = object.__new__(DaikinClimate)
-    entity.coordinator = MagicMock(options={"homekit_fan_mode_aliases": True})
-    fan_speed = SimpleNamespace(
-        current_mode=SimpleNamespace(values=["quiet", FANMODE_FIXED]),
-        modes={FANMODE_FIXED: SimpleNamespace(min_value=1, max_value=5, step_value=1)},
-    )
-
-    assert entity._homekit_fan_mode_aliases(fan_speed) == {
-        FAN_LOW: "quiet",
-        FAN_MIDDLE: "2",
-        FAN_MEDIUM: "3",
-        FAN_HIGH: "5",
-    }
-    assert entity._get_homekit_fan_mode(fan_speed, "3") == FAN_MEDIUM
-    assert entity._resolve_homekit_fan_mode_alias(fan_speed, FAN_MEDIUM) == "3"
-
-
-@pytest.mark.parametrize(
-    ("current_mode_values", "modes"),
-    [
-        (["quiet"], None),
-        (
-            ["quiet", FANMODE_FIXED],
-            {FANMODE_FIXED: SimpleNamespace(min_value=None, max_value=5, step_value=1)},
-        ),
-    ],
-)
-def test_homekit_fan_mode_aliases_ignore_incomplete_fixed_capabilities(
-    current_mode_values: list[str],
-    modes: dict[str, SimpleNamespace] | None,
-) -> None:
-    """Expose quiet only when fixed-speed metadata is unavailable or incomplete."""
-    entity = object.__new__(DaikinClimate)
-    entity.coordinator = MagicMock(options={"homekit_fan_mode_aliases": True})
-    fan_speed = SimpleNamespace(
-        current_mode=SimpleNamespace(values=current_mode_values),
-        modes=modes,
-    )
-
-    assert entity._homekit_fan_mode_aliases(fan_speed) == {FAN_LOW: "quiet"}
-
-
-def test_homekit_fan_mode_keeps_unaliased_native_value() -> None:
-    """Keep a native mode when HomeKit has no alias for it."""
-    entity = object.__new__(DaikinClimate)
-    entity.coordinator = MagicMock(options={"homekit_fan_mode_aliases": True})
-    fan_speed = SimpleNamespace(
-        current_mode=SimpleNamespace(values=["quiet", FANMODE_FIXED]),
-        modes={FANMODE_FIXED: SimpleNamespace(min_value=1, max_value=5, step_value=1)},
-    )
-
-    assert entity._get_homekit_fan_mode(fan_speed, "auto") == "auto"
-
-
 async def test_set_fixed_fan_mode_updates_cached_speed() -> None:
     """Write a fixed fan speed and update the captured cached operation mode."""
     entity = object.__new__(DaikinClimate)
@@ -255,7 +195,6 @@ async def test_set_fixed_fan_mode_updates_cached_speed() -> None:
     entity._climate_control = MagicMock(
         return_value=SimpleNamespace(operation_mode=SimpleNamespace(value="heating"))
     )
-    entity._resolve_homekit_fan_mode_alias = MagicMock(return_value="2")
     entity._get_fan_mode = MagicMock(return_value="2")
 
     await entity.async_set_fan_mode("2")
@@ -836,7 +775,6 @@ async def test_set_fan_mode_publishes_successful_fixed_mode_write() -> None:
     entity.coordinator = coordinator
     entity._fan_operation = MagicMock(return_value=SimpleNamespace(fan_speed=fan_speed))
     entity._climate_control = MagicMock(return_value=climate_control)
-    entity._resolve_homekit_fan_mode_alias = MagicMock(return_value="3")
     entity._get_fan_mode = MagicMock(return_value="1")
 
     with pytest.raises(HomeAssistantError) as err:
@@ -900,7 +838,6 @@ async def test_set_fan_mode_updates_captured_operation_mode() -> None:
             current_management_point,
         ]
     )
-    entity._resolve_homekit_fan_mode_alias = MagicMock(return_value="quiet")
     entity._get_fan_mode = MagicMock(return_value="auto")
 
     await entity.async_set_fan_mode("quiet")

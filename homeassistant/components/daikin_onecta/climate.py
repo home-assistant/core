@@ -10,16 +10,11 @@ from daikin_onecta.models import (
     Characteristic,
     FanDirectionAxis,
     FanOperationMode,
-    FanSpeed,
     Setpoint,
 )
 
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
-    FAN_HIGH,
-    FAN_LOW,
-    FAN_MEDIUM,
-    FAN_MIDDLE,
     PRESET_AWAY,
     PRESET_BOOST,
     PRESET_COMFORT,
@@ -36,7 +31,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from .const import CONF_HOMEKIT_FAN_MODE_ALIASES, DOMAIN, FANMODE_FIXED
+from .const import DOMAIN, FANMODE_FIXED
 from .coordinator import DaikinOnectaConfigEntry, OnectaDataUpdateCoordinator
 from .device import DaikinOnectaDevice
 from .entity import DaikinOnectaEntity
@@ -46,14 +41,6 @@ _LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 1
 
 PRESET_MODES = (PRESET_BOOST, PRESET_AWAY, PRESET_COMFORT, PRESET_ECO)
-
-DAIKIN_FAN_MODE_QUIET = "quiet"
-
-HOMEKIT_FIXED_FAN_MODE_ALIASES = {
-    FAN_MIDDLE: "2",
-    FAN_MEDIUM: "3",
-    FAN_HIGH: "5",
-}
 
 CLIMATE_ENTITY_DESCRIPTIONS = {
     "calculatedLeavingWaterTemperature": ClimateEntityDescription(
@@ -244,70 +231,6 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
         """Return a preset characteristic by Daikin API name."""
         cc = self._climate_control()
         return cc.mode_characteristic(daikin_mode) if cc is not None else None
-
-    @property
-    def _homekit_fan_mode_aliases_enabled(self) -> bool:
-        """Return whether HomeKit fan mode aliases are enabled."""
-        return bool(
-            self.coordinator.config_entry.options.get(
-                CONF_HOMEKIT_FAN_MODE_ALIASES, False
-            )
-        )
-
-    def _homekit_fan_mode_aliases(self, fan_speed: FanSpeed) -> dict[str, str]:
-        """Return HomeKit fan mode aliases available for the fan speed data."""
-        aliases: dict[str, str] = {}
-        if not self._homekit_fan_mode_aliases_enabled:
-            return aliases
-
-        current_mode_values = fan_speed.current_mode.values or []
-        if DAIKIN_FAN_MODE_QUIET in current_mode_values:
-            aliases[FAN_LOW] = DAIKIN_FAN_MODE_QUIET
-
-        if FANMODE_FIXED not in current_mode_values or not fan_speed.modes:
-            return aliases
-        fixed_mode = fan_speed.modes.get(FANMODE_FIXED)
-        if (
-            fixed_mode is None
-            or fixed_mode.min_value is None
-            or fixed_mode.max_value is None
-            or fixed_mode.step_value is None
-        ):
-            return aliases
-        fixed_values = {
-            str(value)
-            for value in range(
-                int(fixed_mode.min_value),
-                int(fixed_mode.max_value) + 1,
-                int(fixed_mode.step_value),
-            )
-        }
-        aliases.update(
-            {
-                alias: daikin_mode
-                for alias, daikin_mode in HOMEKIT_FIXED_FAN_MODE_ALIASES.items()
-                if daikin_mode in fixed_values
-            }
-        )
-        return aliases
-
-    def _get_homekit_fan_mode(self, fan_speed: FanSpeed, fan_mode: str) -> str:
-        """Return the HomeKit alias for a Daikin fan mode when available."""
-        if not self._homekit_fan_mode_aliases_enabled:
-            return fan_mode
-
-        aliases = self._homekit_fan_mode_aliases(fan_speed)
-        for alias, daikin_mode in aliases.items():
-            if fan_mode == daikin_mode:
-                return alias
-
-        return fan_mode
-
-    def _resolve_homekit_fan_mode_alias(
-        self, fan_speed: FanSpeed, fan_mode: str
-    ) -> str:
-        """Return the Daikin fan mode represented by a HomeKit alias."""
-        return self._homekit_fan_mode_aliases(fan_speed).get(fan_mode, fan_mode)
 
     def _get_setpoint(self, operation_mode: str | None = None) -> Setpoint | None:
         """Return a setpoint for an operation mode."""
@@ -531,7 +454,7 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
             and FANMODE_FIXED in fan_speed.modes
         ):
             mode = str(fan_speed.modes[FANMODE_FIXED].value)
-        return self._get_homekit_fan_mode(fan_speed, mode)
+        return mode
 
     def _get_fan_modes(self) -> list[str]:
         """Return available fan modes."""
@@ -562,15 +485,12 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
                     )
             else:
                 fan_modes.append(mode)
-        for alias in self._homekit_fan_mode_aliases(fan_speed):
-            if alias not in fan_modes:
-                fan_modes.append(alias)
         return fan_modes
 
     @override
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set the fan mode."""
-        requested_fan_mode = str(fan_mode)
+        fan_mode = str(fan_mode)
         fan_operation = self._fan_operation()
         cc = self._climate_control()
         if (
@@ -582,7 +502,6 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
             self._raise_service_validation_error("fan_control_unavailable")
         fan_speed = fan_operation.fan_speed
         operation_mode = cc.operation_mode.value
-        fan_mode = self._resolve_homekit_fan_mode_alias(fan_speed, requested_fan_mode)
         if fan_mode.isnumeric():
             if fan_speed.current_mode.value != FANMODE_FIXED:
                 if not await self._async_execute_climate_command(

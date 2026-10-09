@@ -102,11 +102,6 @@
         "state_attributes": {
           "fan_mode": {
             "state": {
-              "1": "1",
-              "2": "2",
-              "3": "3",
-              "4": "4",
-              "5": "5",
               "quiet": "Quiet"
             }
           },
@@ -436,18 +431,6 @@
     },
     "water_heater_turn_on_failed": {
       "message": "Failed to turn on {device}"
-    }
-  },
-  "options": {
-    "step": {
-      "init": {
-        "data": {
-          "homekit_fan_mode_aliases": "Expose HomeKit compatible fan speed aliases"
-        },
-        "data_description": {
-          "homekit_fan_mode_aliases": "Add HomeKit-compatible names for supported fan speeds."
-        }
-      }
     }
   },
   "system_health": {

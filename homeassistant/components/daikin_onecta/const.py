@@ -10,8 +10,6 @@ DAIKIN_API_URL = ONECTA_API_URL
 
 SCHEDULE_OFF = "off"
 
-CONF_HOMEKIT_FAN_MODE_ALIASES = "homekit_fan_mode_aliases"
-
 FANMODE_FIXED = "fixed"
 
 SENSOR_PERIOD_DAILY = "d"

@@ -2,7 +2,7 @@
 
 import json
 from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock, call, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from daikin_onecta.models import GatewayDevice
 import pytest
@@ -13,10 +13,6 @@ from syrupy.location import PyTestLocation
 from homeassistant.components.climate import (
     ATTR_FAN_MODE,
     DOMAIN as CLIMATE_DOMAIN,
-    FAN_LOW,
-    FAN_MEDIUM,
-    FAN_MIDDLE,
-    SERVICE_SET_FAN_MODE,
     SERVICE_SET_HVAC_MODE,
     HVACMode,
 )
@@ -185,82 +181,3 @@ async def test_fan_mode_changes_with_hvac_mode(
     assert state is not None
     assert state.state == HVACMode.DRY
     assert state.attributes[ATTR_FAN_MODE] == "auto"
-
-
-async def test_homekit_fan_mode_aliases_through_integration_api(
-    hass: HomeAssistant, config_entry: MockConfigEntry
-) -> None:
-    """Expose and write the optional HomeKit-compatible fan aliases."""
-    hass.config_entries.async_update_entry(
-        config_entry, options={"homekit_fan_mode_aliases": True}
-    )
-    await _async_setup_fixture(hass, config_entry, "climate_fixedfanmode")
-    api = config_entry.runtime_data.api
-    api.client.patch_characteristic = AsyncMock()
-
-    state = hass.states.get(CLIMATE_ENTITY_ID)
-    assert state is not None
-    assert state.attributes[ATTR_FAN_MODE] == FAN_MEDIUM
-    assert state.attributes["fan_modes"] == [
-        "auto",
-        "quiet",
-        "1",
-        "2",
-        "3",
-        "4",
-        "5",
-        FAN_LOW,
-        FAN_MIDDLE,
-        FAN_MEDIUM,
-        "high",
-    ]
-
-    await hass.services.async_call(
-        CLIMATE_DOMAIN,
-        SERVICE_SET_FAN_MODE,
-        {"entity_id": CLIMATE_ENTITY_ID, "fan_mode": FAN_LOW},
-        blocking=True,
-    )
-    state = hass.states.get(CLIMATE_ENTITY_ID)
-    assert state is not None
-    assert state.attributes[ATTR_FAN_MODE] == FAN_LOW
-    api.client.patch_characteristic.assert_awaited_once_with(
-        "6f944461-08cb-4fee-979c-710ff66cea77",
-        "climateControl",
-        "fanControl",
-        "quiet",
-        path="/operationModes/heating/fanSpeed/currentMode",
-    )
-
-    await hass.services.async_call(
-        CLIMATE_DOMAIN,
-        SERVICE_SET_FAN_MODE,
-        {"entity_id": CLIMATE_ENTITY_ID, "fan_mode": FAN_MIDDLE},
-        blocking=True,
-    )
-    state = hass.states.get(CLIMATE_ENTITY_ID)
-    assert state is not None
-    assert state.attributes[ATTR_FAN_MODE] == FAN_MIDDLE
-    assert api.client.patch_characteristic.await_args_list == [
-        call(
-            "6f944461-08cb-4fee-979c-710ff66cea77",
-            "climateControl",
-            "fanControl",
-            "quiet",
-            path="/operationModes/heating/fanSpeed/currentMode",
-        ),
-        call(
-            "6f944461-08cb-4fee-979c-710ff66cea77",
-            "climateControl",
-            "fanControl",
-            "fixed",
-            path="/operationModes/heating/fanSpeed/currentMode",
-        ),
-        call(
-            "6f944461-08cb-4fee-979c-710ff66cea77",
-            "climateControl",
-            "fanControl",
-            2,
-            path="/operationModes/heating/fanSpeed/modes/fixed",
-        ),
-    ]

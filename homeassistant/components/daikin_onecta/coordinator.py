@@ -47,9 +47,6 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
         daikin_api: DaikinApi,
     ) -> None:
         """Initialize."""
-        # The update listener also runs when OAuth tokens change. Keep only an
-        # options snapshot so it can distinguish that from a user option edit.
-        self._options = dict(config_entry.options)
         self._daikin_api = daikin_api
 
         super().__init__(
@@ -144,15 +141,6 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
     async def _async_update_data(self) -> dict[str, DaikinOnectaDevice]:
         """Fetch data for the Home Assistant coordinator interface."""
         return await self._async_update_data_from_cloud()
-
-    def update_settings(self, config_entry: DaikinOnectaConfigEntry) -> bool:
-        """Update the option snapshot and report whether options changed."""
-        options = dict(config_entry.options)
-        if self._options == options:
-            return False
-
-        self._options = options
-        return True
 
     def _determine_update_interval(self) -> timedelta:
         """Determine the next polling interval."""
