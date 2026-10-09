@@ -367,6 +367,11 @@ async def _async_post(call: ServiceCall) -> ServiceResponse:
                 translation_domain=DOMAIN,
                 translation_key="media_type_unknown",
             )
+        if not mime_type.startswith(("audio/", "video/", "image/")):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="media_type_not_supported",
+            )
         audio_or_video = mime_type.startswith(("audio/", "video/"))
         if audio_or_video and len(media) > 1:
             raise ServiceValidationError(

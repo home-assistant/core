@@ -113,6 +113,9 @@
     "media_thumbnail_not_an_image": {
       "message": "Thumbnail has mime type {mime_type}. Only images are allowed."
     },
+    "media_type_not_supported": {
+      "message": "Media type not supported."
+    },
     "media_type_unknown": {
       "message": "Media type unknown."
     },

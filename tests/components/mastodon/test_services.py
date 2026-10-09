@@ -937,6 +937,32 @@ async def test_service_post_media_source_not_supported(
             },
             "media_thumbnail_not_an_image",
         ),
+        (
+            {
+                ATTR_MEDIA: [
+                    {
+                        ATTR_MEDIA_SOURCE: {
+                            "media_content_id": "media-source://media_source/local/not_media.txt",
+                            "media_content_type": "plain/text",
+                        },
+                    }
+                ]
+            },
+            "media_type_not_supported",
+        ),
+        (
+            {
+                ATTR_MEDIA: [
+                    {
+                        ATTR_MEDIA_SOURCE: {
+                            "media_content_id": "media-source://tts/demo?message=Tooooot&language=en",
+                            "media_content_type": "audio/mp3",
+                        },
+                    }
+                ]
+            },
+            "media_type_unknown",
+        ),
     ],
 )
 @pytest.mark.usefixtures("mock_mastodon_client")
@@ -947,28 +973,6 @@ async def test_service_post_media_source_errors(
     translation_key: str,
 ) -> None:
     """Test the post service errors with media source."""
-    assert await async_setup_component(hass, "media_source", {})
-    await setup_integration(hass, mock_config_entry)
-    with pytest.raises(ServiceValidationError) as err:
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_POST,
-            {
-                ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
-                ATTR_STATUS: "test toot",
-            }
-            | payload,
-            blocking=True,
-        )
-    assert err.value.translation_key == translation_key
-
-
-@pytest.mark.usefixtures("mock_mastodon_client")
-async def test_service_post_media_source_unknown_media_type(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test the post service errors with unknown media type."""
     assert await async_setup_component(hass, "media_source", {})
     await setup_integration(hass, mock_config_entry)
     with (
@@ -984,18 +988,11 @@ async def test_service_post_media_source_unknown_media_type(
             {
                 ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
                 ATTR_STATUS: "test toot",
-                ATTR_MEDIA: [
-                    {
-                        ATTR_MEDIA_SOURCE: {
-                            "media_content_id": "media-source://tts/demo?message=Tooooot&language=en",
-                            "media_content_type": "audio/mp3",
-                        },
-                    }
-                ],
-            },
+            }
+            | payload,
             blocking=True,
         )
-    assert err.value.translation_key == "media_type_unknown"
+    assert err.value.translation_key == translation_key
 
 
 async def test_service_post_media_source_upload_error(
