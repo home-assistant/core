@@ -41,6 +41,7 @@ async def test_user_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> No
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "10.10.10.30"
     assert result["data"] == {**USER_INPUT}
+    assert result["result"].unique_id == "9c:ad:ef:00:00:00"
 
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -121,6 +122,7 @@ async def test_dhcp_flow(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "9c:ad:ef:00:00:00"
 
 
 async def test_dhcp_flow_auth_failure(hass: HomeAssistant) -> None:

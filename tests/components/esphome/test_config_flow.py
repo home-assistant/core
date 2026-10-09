@@ -49,6 +49,7 @@ from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from . import VALID_NOISE_PSK
+from .common import MockDashboardRefresh
 from .conftest import (
     MockBluetoothEntryType,
     MockESPHomeDeviceType,
@@ -306,6 +307,7 @@ async def test_user_sets_unique_id(hass: HomeAssistant) -> None:
         CONF_NOISE_PSK: "",
         CONF_DEVICE_NAME: "test",
     }
+    assert discovery_result["result"].unique_id == "11:22:33:44:55:aa"
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -422,6 +424,7 @@ async def test_user_causes_zeroconf_to_abort(hass: HomeAssistant) -> None:
         CONF_NOISE_PSK: "",
         CONF_DEVICE_NAME: "test",
     }
+    assert result["result"].unique_id == "11:22:33:44:55:aa"
 
     assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
 
@@ -549,6 +552,7 @@ async def test_user_with_password(
         result["flow_id"], user_input={CONF_PASSWORD: "password1"}
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         CONF_HOST: "127.0.0.1",
@@ -687,7 +691,7 @@ async def test_user_discovers_name_and_gets_key_from_dashboard(
             "configuration": "test.yaml",
         }
     )
-    await dashboard.async_get_dashboard(hass).async_refresh()
+    await MockDashboardRefresh(hass).async_refresh()
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -746,7 +750,7 @@ async def test_user_discovers_name_and_gets_key_from_dashboard_fails(
             "configuration": "test.yaml",
         }
     )
-    await dashboard.async_get_dashboard(hass).async_refresh()
+    await MockDashboardRefresh(hass).async_refresh()
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
@@ -819,7 +823,7 @@ async def test_user_discovers_name_and_dashboard_is_unavailable(
         "homeassistant.components.esphome.coordinator.ESPHomeDashboardAPI.get_devices",
         side_effect=TimeoutError,
     ):
-        await dashboard.async_get_dashboard(hass).async_refresh()
+        await MockDashboardRefresh(hass).async_refresh()
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
@@ -1465,7 +1469,7 @@ async def test_reauth_fixed_via_dashboard(
         }
     )
 
-    await dashboard.async_get_dashboard(hass).async_refresh()
+    await MockDashboardRefresh(hass).async_refresh()
 
     with patch(
         "homeassistant.components.esphome.coordinator.ESPHomeDashboardAPI.get_encryption_key",
@@ -1514,7 +1518,7 @@ async def test_reauth_stale_storage_key_tries_dashboard_key(
     ]
 
     mock_dashboard["configured"].append({"name": "test", "configuration": "test.yaml"})
-    await dashboard.async_get_dashboard(hass).async_refresh()
+    await MockDashboardRefresh(hass).async_refresh()
 
     with patch(
         "homeassistant.components.esphome.coordinator.ESPHomeDashboardAPI.get_encryption_key",
@@ -1562,7 +1566,7 @@ async def test_reauth_working_storage_key_never_asks_dashboard(
     )
 
     mock_dashboard["configured"].append({"name": "test", "configuration": "test.yaml"})
-    await dashboard.async_get_dashboard(hass).async_refresh()
+    await MockDashboardRefresh(hass).async_refresh()
 
     with patch(
         "homeassistant.components.esphome.coordinator.ESPHomeDashboardAPI.get_encryption_key",
@@ -1611,7 +1615,7 @@ async def test_reauth_both_keys_wrong_falls_back_to_manual(
     ]
 
     mock_dashboard["configured"].append({"name": "test", "configuration": "test.yaml"})
-    await dashboard.async_get_dashboard(hass).async_refresh()
+    await MockDashboardRefresh(hass).async_refresh()
 
     with patch(
         "homeassistant.components.esphome.coordinator.ESPHomeDashboardAPI.get_encryption_key",
@@ -1656,7 +1660,7 @@ async def test_user_flow_stale_storage_key_falls_back_to_dashboard(
     ]
 
     mock_dashboard["configured"].append({"name": "test", "configuration": "test.yaml"})
-    await dashboard.async_get_dashboard(hass).async_refresh()
+    await MockDashboardRefresh(hass).async_refresh()
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
@@ -1716,7 +1720,7 @@ async def test_reauth_offline_device_stops_candidate_probing(
     ]
 
     mock_dashboard["configured"].append({"name": "test", "configuration": "test.yaml"})
-    await dashboard.async_get_dashboard(hass).async_refresh()
+    await MockDashboardRefresh(hass).async_refresh()
 
     with patch(
         "homeassistant.components.esphome.coordinator.ESPHomeDashboardAPI.get_encryption_key",
@@ -1752,7 +1756,7 @@ async def test_user_flow_offline_device_stops_candidate_probing(
     ]
 
     mock_dashboard["configured"].append({"name": "test", "configuration": "test.yaml"})
-    await dashboard.async_get_dashboard(hass).async_refresh()
+    await MockDashboardRefresh(hass).async_refresh()
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
@@ -1901,7 +1905,7 @@ async def test_reauth_fixed_via_dashboard_add_encryption_remove_password(
         }
     )
 
-    await dashboard.async_get_dashboard(hass).async_refresh()
+    await MockDashboardRefresh(hass).async_refresh()
 
     with patch(
         "homeassistant.components.esphome.coordinator.ESPHomeDashboardAPI.get_encryption_key",
@@ -1974,7 +1978,7 @@ async def test_reauth_fixed_via_dashboard_at_confirm(
         }
     )
 
-    await dashboard.async_get_dashboard(hass).async_refresh()
+    await MockDashboardRefresh(hass).async_refresh()
 
     with patch(
         "homeassistant.components.esphome.coordinator.ESPHomeDashboardAPI.get_encryption_key",
@@ -2387,7 +2391,7 @@ async def test_zeroconf_encryption_key_via_dashboard(
         }
     )
 
-    await dashboard.async_get_dashboard(hass).async_refresh()
+    await MockDashboardRefresh(hass).async_refresh()
 
     mock_client.device_info.side_effect = [
         RequiresEncryptionAPIError,
@@ -2454,7 +2458,7 @@ async def test_zeroconf_encryption_key_via_dashboard_with_api_encryption_prop(
         }
     )
 
-    await dashboard.async_get_dashboard(hass).async_refresh()
+    await MockDashboardRefresh(hass).async_refresh()
 
     mock_client.device_info.side_effect = [
         DeviceInfo(
@@ -2511,7 +2515,7 @@ async def test_zeroconf_no_encryption_key_via_dashboard(
     assert flow["step_id"] == "discovery_confirm"
     assert flow["description_placeholders"] == {"name": "test8266"}
 
-    await dashboard.async_get_dashboard(hass).async_refresh()
+    await MockDashboardRefresh(hass).async_refresh()
 
     mock_client.device_info.side_effect = RequiresEncryptionAPIError
 
@@ -3417,6 +3421,7 @@ async def test_user_flow_starts_zwave_discovery(
         CONF_NOISE_PSK: "",
         CONF_DEVICE_NAME: "test-zwave-device",
     }
+    assert result["result"].unique_id == "11:22:33:44:55:bb"
 
     # First call is ESPHome flow, second should be Z-Wave flow
     assert len(flow_init_calls) == 2
@@ -3491,6 +3496,7 @@ async def test_user_flow_no_zwave_discovery_without_home_id(
         CONF_NOISE_PSK: "",
         CONF_DEVICE_NAME: "test-zwave-device-no-id",
     }
+    assert result["result"].unique_id == "11:22:33:44:55:cc"
 
     # Verify only ESPHome flow was initiated, no Z-Wave flow
     assert len(flow_init_calls) == 1
@@ -3541,6 +3547,7 @@ async def test_user_flow_no_zwave_discovery_without_capabilities(
     # Verify the entry was created
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "test-regular-device"
+    assert result["result"].unique_id == "11:22:33:44:55:cc"
 
     # Verify Z-Wave discovery flow was NOT started (only ESPHome flow)
     assert len(flow_init_calls) == 1
@@ -3607,6 +3614,7 @@ async def test_user_flow_zwave_discovery_aborts(
         CONF_NOISE_PSK: "",
         CONF_DEVICE_NAME: "test-zwave-device",
     }
+    assert result["result"].unique_id == "11:22:33:44:55:dd"
 
     # Verify Z-Wave discovery flow was attempted
     assert len(flow_init_calls) == 2

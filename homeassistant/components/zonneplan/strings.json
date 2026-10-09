@@ -53,8 +53,20 @@
   },
   "entity": {
     "binary_sensor": {
+      "backup_power_active": {
+        "name": "Backup power active"
+      },
+      "dynamic_load_balancing_overload_active": {
+        "name": "Load balancing overload"
+      },
       "electricity_price_low": {
         "name": "Electricity price low"
+      },
+      "grid_congestion_active": {
+        "name": "Grid congestion"
+      },
+      "home_optimization_active": {
+        "name": "Home optimization active"
       }
     },
     "sensor": {
@@ -71,6 +83,12 @@
       },
       "current_sustainability_score": {
         "name": "Current sustainability score"
+      },
+      "electricity_cost_this_month": {
+        "name": "Electricity cost this month"
+      },
+      "electricity_delivered_this_month": {
+        "name": "Electricity used this month"
       },
       "electricity_price_low_today_end_time": {
         "name": "Electricity price low today end time"
@@ -90,6 +108,15 @@
           "available": "Available",
           "incoming": "Incoming"
         }
+      },
+      "electricity_produced_this_month": {
+        "name": "Electricity returned this month"
+      },
+      "gas_cost_this_month": {
+        "name": "Gas cost this month"
+      },
+      "gas_delivered_this_month": {
+        "name": "Gas used this month"
       },
       "gas_price_today": {
         "name": "Gas price daily"
@@ -114,6 +141,9 @@
   "exceptions": {
     "api_error": {
       "message": "Unexpected error from the Zonneplan API"
+    },
+    "battery_not_found": {
+      "message": "The Zonneplan API returned no data for the home battery"
     },
     "cannot_connect": {
       "message": "Error communicating with the Zonneplan API"

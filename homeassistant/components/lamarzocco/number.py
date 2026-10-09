@@ -6,7 +6,7 @@ from typing import Any, cast, override
 
 from pylamarzocco import LaMarzoccoMachine
 from pylamarzocco.const import DoseMode, ModelName, PreExtractionMode, WidgetType
-from pylamarzocco.exceptions import RequestNotSuccessful
+from pylamarzocco.exceptions import LaMarzoccoError
 from pylamarzocco.models import (
     BrewByWeightDoses,
     CoffeeBoiler,
@@ -363,7 +363,7 @@ class LaMarzoccoNumberEntity(LaMarzoccoEntity, NumberEntity):
                 await self.entity_description.set_value_fn(
                     self.coordinator.device, value
                 )
-            except RequestNotSuccessful as exc:
+            except (LaMarzoccoError, TimeoutError) as exc:
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
                     translation_key="number_exception",

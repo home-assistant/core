@@ -29,8 +29,17 @@ SUBSYSTEM_BATTERIES: Final = "batteries"
 SUBSYSTEM_EXPORT_CONTROL: Final = "export_control"
 SUBSYSTEM_GRID_STATUS: Final = "grid_status"
 SUBSYSTEM_METERS: Final = "meters"
+SUBSYSTEM_MMPPT: Final = "mmppt"
 SUBSYSTEM_STORAGE_CAPACITY: Final = "storage_capacity"
 SUBSYSTEM_STORAGE_CONTROL: Final = "storage_control"
+
+# The blocks that finding hardware depends on, so they are worth a timeout
+# however long they stay quiet. Meters and batteries each bring a device, and
+# the multiple-MPPT block decides the offset the meters are looked for at:
+# taking it for absent would look for them at the wrong addresses for good.
+DISCOVERY_SUBSYSTEMS: Final = frozenset(
+    {SUBSYSTEM_BATTERIES, SUBSYSTEM_METERS, SUBSYSTEM_MMPPT}
+)
 
 # The writable control blocks, as an UpdateReport names them. Export control's
 # read spans storage control, so the library reads and reports the two as one.

@@ -73,6 +73,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SenseConfigEntry) -> boo
         gateway.set_monitor_id(monitor_id)
         await gateway.get_monitor_data()
     except (SenseAuthenticationException, SenseMFARequiredException) as err:
+        # pylint: disable-next=home-assistant-log-and-raise
         _LOGGER.warning("Sense authentication expired")
         raise ConfigEntryAuthFailed(err) from err
     except SENSE_TIMEOUT_EXCEPTIONS as err:
@@ -94,6 +95,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: SenseConfigEntry) -> boo
     except SenseAPIException as err:
         raise ConfigEntryNotReady(
             str(err) or "API error retrieving realtime data"
+        ) from err
+    except SenseAuthenticationException as err:
+        # We just authenticated, sense_energy also raises this for a 404 while
+        # the monitor is reconnecting
+        raise ConfigEntryNotReady(
+            str(err) or "Monitor not available for realtime data"
         ) from err
 
     trends_coordinator = SenseTrendCoordinator(hass, entry, gateway)

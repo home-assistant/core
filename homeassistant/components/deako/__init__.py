@@ -28,6 +28,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: DeakoConfigEntry) -> boo
     try:
         await connection.find_devices()
     except FindDevicesError as exc:
+        # pylint: disable-next=home-assistant-log-and-raise
         _LOGGER.warning("Error finding devices: %s", exc)
         await connection.disconnect()
         raise ConfigEntryNotReady(exc) from exc

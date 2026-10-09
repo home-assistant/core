@@ -107,6 +107,7 @@ class GoogleWeatherBaseCoordinator(TimestampDataUpdateCoordinator[T]):
                 },
             ) from err
         except GoogleWeatherApiError as err:
+            # pylint: disable-next=home-assistant-log-and-raise
             _LOGGER.error(
                 "Error fetching %s for %s: %s",
                 self._data_type_name,

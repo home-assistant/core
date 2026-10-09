@@ -71,7 +71,9 @@ class LutronConfigFlow(ConfigFlow, domain=DOMAIN):
                 {
                     probatio.Required(CONF_HOST): str,
                     probatio.Required(CONF_USERNAME, default="lutron"): str,
-                    probatio.Required(CONF_PASSWORD, default="integration"): str,
+                    probatio.Required(
+                        probatio.Secret(CONF_PASSWORD), default="integration"
+                    ): str,
                 }
             ),
             errors=errors,

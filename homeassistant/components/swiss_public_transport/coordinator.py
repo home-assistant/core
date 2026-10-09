@@ -95,9 +95,11 @@ class SwissPublicTransportDataUpdateCoordinator(
         try:
             await self._opendata.async_get_data()
         except OpendataTransportConnectionError as e:
+            # pylint: disable-next=home-assistant-log-and-raise
             _LOGGER.warning("Connection to transport.opendata.ch cannot be established")
             raise UpdateFailed from e
         except OpendataTransportError as e:
+            # pylint: disable-next=home-assistant-log-and-raise
             _LOGGER.warning(
                 "Unable to connect and retrieve data from transport.opendata.ch"
             )

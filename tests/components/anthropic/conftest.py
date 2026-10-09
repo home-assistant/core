@@ -3,8 +3,9 @@
 from collections.abc import AsyncGenerator, Generator, Iterable
 import datetime
 from typing import Unpack
-from unittest.mock import DEFAULT, AsyncMock, patch
+from unittest.mock import DEFAULT, AsyncMock, MagicMock, patch
 
+from anthropic import AsyncStream
 from anthropic.pagination import AsyncPage
 from anthropic.types import (
     Container,
@@ -196,12 +197,22 @@ def mock_create_stream() -> Generator[AsyncMock]:
             )
         yield RawMessageStopEvent(type="message_stop")
 
+    def mock_stream(
+        events: Iterable[RawMessageStreamEvent],
+        **kwargs: Unpack[MessageCreateParamsStreaming],
+    ) -> MagicMock:
+        """Create a stream supporting asynchronous iteration and cleanup."""
+        stream = MagicMock(spec=AsyncStream)
+        stream.__aenter__.return_value = stream
+        stream.__aiter__.side_effect = lambda: mock_generator(events, **kwargs)
+        return stream
+
     with patch(
         "anthropic.resources.messages.AsyncMessages.create",
         new_callable=AsyncMock,
     ) as mock_create:
         mock_create.side_effect = lambda **kwargs: (
-            mock_generator(mock_create.return_value.pop(0), **kwargs)
+            mock_stream(mock_create.return_value.pop(0), **kwargs)
             if isinstance(mock_create.return_value, list)
             else DEFAULT
         )

@@ -95,37 +95,51 @@ async def test_get_entity_aliases_next_name_part(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test the computed name follows next_name_part."""
-    mock_config = MockConfigEntry(domain="light")
+    mock_config = MockConfigEntry(domain="sensor")
     mock_config.add_to_hass(hass)
 
-    device_entry = device_registry.async_get_or_create(
+    parent_device = device_registry.async_get_or_create(
         config_entry_id=mock_config.entry_id,
-        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
-        name="Wall switch",
+        identifiers={("test", "strip")},
+        name="Power strip",
+    )
+    child_device = device_registry.async_get_or_create_child(
+        config_entry_id=mock_config.entry_id,
+        identifiers={("test", "strip_outlet_1")},
+        parent_device_id=parent_device.id,
+        name="Freezer",
     )
     entry = entity_registry.async_get_or_create(
-        "light",
-        "hue",
+        "sensor",
+        "test",
         "1234",
         config_entry=mock_config,
-        device_id=device_entry.id,
+        device_id=child_device.id,
         has_entity_name=True,
-        original_name="Light",
+        original_name="Power",
     )
     entry = entity_registry.async_update_entity(
         entry.entity_id, aliases=[er.COMPUTED_NAME]
     )
 
-    assert er.async_get_entity_aliases(hass, entry) == ["Wall switch Light"]
+    assert er.async_get_entity_aliases(hass, entry) == ["Power strip Freezer Power"]
 
-    # An entity with an area of its own leaves the device out of its computed
-    # name; the friendly name does not follow next_name_part and is unaffected
+    # The legacy friendly name does not follow the next_name_part links
+    assert er.async_get_legacy_friendly_name(hass, entry) == "Freezer Power"
+
+    # A child device with an area of its own leaves the parent out
+    device_registry.async_update_child_device(child_device.id, area_id="garage")
+    assert er.async_get_entity_aliases(hass, entry) == ["Freezer Power"]
+
+    # The legacy friendly name does not follow the next_name_part links
+    assert er.async_get_legacy_friendly_name(hass, entry) == "Freezer Power"
+
+    # An entity with an area of its own leaves all owners out of its computed name
     entry = entity_registry.async_update_entity(entry.entity_id, area_id="garage")
-    assert er.async_get_entity_aliases(hass, entry) == ["Light"]
-    assert (
-        er.async_get_full_entity_name(hass, entry, use_next_name_part=False)
-        == "Wall switch Light"
-    )
+    assert er.async_get_entity_aliases(hass, entry) == ["Power"]
+
+    # The legacy friendly name does not follow the next_name_part links
+    assert er.async_get_legacy_friendly_name(hass, entry) == "Freezer Power"
 
 
 @pytest.mark.parametrize(
@@ -1456,7 +1470,10 @@ def test_entity_id_parts_do_not_affect_full_entity_name(
     )
     assert entry.entity_id == "sensor.first_floor_kitchen_temperature_lamp"
 
-    assert er.async_get_full_entity_name(hass, entry) == "Lamp Temperature"
+    entry = entity_registry.async_update_entity(
+        entry.entity_id, aliases=[er.COMPUTED_NAME]
+    )
+    assert er.async_get_entity_aliases(hass, entry) == ["Lamp Temperature"]
 
 
 def test_update_settings(entity_registry: er.EntityRegistry) -> None:
@@ -1574,6 +1591,28 @@ async def test_filter_on_load(
     assert entry_disabled_hass.disabled_by is er.RegistryEntryDisabler.HASS
     assert entry_disabled_user.disabled
     assert entry_disabled_user.disabled_by is er.RegistryEntryDisabler.USER
+
+
+async def test_async_load_twice_raises(hass: HomeAssistant) -> None:
+    """Test loading the entity registry twice raises."""
+    registry = er.async_get(hass)
+    with pytest.raises(RuntimeError, match="Entity registry is already loaded"):
+        await registry.async_load()
+
+
+@pytest.mark.parametrize("load_registries", [False])
+async def test_async_wait_loaded(hass: HomeAssistant) -> None:
+    """Test waiting until the entity registry is loaded."""
+    dr.async_setup(hass)
+    await dr.async_load(hass)
+    registry = er.async_get(hass)
+    wait_task = hass.async_create_task(registry.async_wait_loaded())
+    await asyncio.sleep(0)
+    assert not wait_task.done()
+
+    await er.async_load(hass)
+
+    await wait_task
 
 
 @pytest.mark.parametrize("load_registries", [False])
@@ -2978,17 +3017,14 @@ async def test_update_entity_own_area_without_own_name(
         entity_registry.async_update_entity(entry.entity_id, area_id="kitchen")
     assert entity_registry.async_get(entry.entity_id).area_id is None
 
-    # A name equal to the device name is not a name of its own
-    with pytest.raises(ValueError, match="without a name of its own"):
-        entity_registry.async_update_entity(
-            entry.entity_id, area_id="kitchen", name="Device"
-        )
-
-    # Naming the entity in the same update makes the area valid
+    # Naming the entity in the same update makes the area valid, also with a
+    # name equal to the device name, which is not consulted for an own area
     entry = entity_registry.async_update_entity(
-        entry.entity_id, area_id="kitchen", name="Light"
+        entry.entity_id, area_id="kitchen", name="Device"
     )
     assert entry.area_id == "kitchen"
+
+    entry = entity_registry.async_update_entity(entry.entity_id, name="Light")
 
     # Clearing the name would leave the area without a name
     with pytest.raises(ValueError, match="without a name of its own"):

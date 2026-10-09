@@ -62,6 +62,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
         "id": "1",
         "name": "Test",
     }
+    assert result3["result"].unique_id == "1"
     assert len(mock_setup_entry.mock_calls) == 1
 
 

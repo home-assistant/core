@@ -188,9 +188,9 @@ class HoneywellUSThermostat(ClimateEntity):
         )
 
         self._attr_translation_placeholders = {"name": device.name}
-        self._attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
+        self._attr_native_temperature_unit = UnitOfTemperature.FAHRENHEIT
         if device.temperature_unit == "C":
-            self._attr_temperature_unit = UnitOfTemperature.CELSIUS
+            self._attr_native_temperature_unit = UnitOfTemperature.CELSIUS
         self._attr_preset_modes = [PRESET_NONE, PRESET_AWAY, PRESET_HOLD]
 
         # not all honeywell HVACs support all modes
@@ -258,7 +258,7 @@ class HoneywellUSThermostat(ClimateEntity):
                 ]
             )
         return TemperatureConverter.convert(
-            DEFAULT_MIN_TEMP, UnitOfTemperature.CELSIUS, self.temperature_unit
+            DEFAULT_MIN_TEMP, UnitOfTemperature.CELSIUS, self.native_temperature_unit
         )
 
     @property
@@ -277,7 +277,7 @@ class HoneywellUSThermostat(ClimateEntity):
                 ]
             )
         return TemperatureConverter.convert(
-            DEFAULT_MAX_TEMP, UnitOfTemperature.CELSIUS, self.temperature_unit
+            DEFAULT_MAX_TEMP, UnitOfTemperature.CELSIUS, self.native_temperature_unit
         )
 
     @property
@@ -302,13 +302,13 @@ class HoneywellUSThermostat(ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self._device.current_temperature
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         if self.hvac_mode == HVACMode.COOL:
             return self._device.setpoint_cool
@@ -318,7 +318,7 @@ class HoneywellUSThermostat(ClimateEntity):
 
     @property
     @override
-    def target_temperature_high(self) -> float | None:
+    def native_target_temperature_high(self) -> float | None:
         """Return the highbound target temperature we try to reach."""
         if self.hvac_mode == HVACMode.HEAT_COOL:
             return self._device.setpoint_cool
@@ -326,7 +326,7 @@ class HoneywellUSThermostat(ClimateEntity):
 
     @property
     @override
-    def target_temperature_low(self) -> float | None:
+    def native_target_temperature_low(self) -> float | None:
         """Return the lowbound target temperature we try to reach."""
         if self.hvac_mode == HVACMode.HEAT_COOL:
             return self._device.setpoint_heat
@@ -403,6 +403,7 @@ class HoneywellUSThermostat(ClimateEntity):
             ) from err
 
         except SomeComfortError as err:
+            # pylint: disable-next=home-assistant-log-and-raise
             LOGGER.error("Invalid temperature %.1f: %s", temperature, err)
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
@@ -428,6 +429,7 @@ class HoneywellUSThermostat(ClimateEntity):
                 ) from err
 
             except SomeComfortError as err:
+                # pylint: disable-next=home-assistant-log-and-raise
                 LOGGER.error("Invalid temperature %.1f: %s", temperature, err)
                 raise ServiceValidationError(
                     translation_domain=DOMAIN,
@@ -484,6 +486,7 @@ class HoneywellUSThermostat(ClimateEntity):
             ) from err
 
         except SomeComfortError as err:
+            # pylint: disable-next=home-assistant-log-and-raise
             LOGGER.error(
                 "Temperature out of range. Mode: %s,"
                 " Heat Temperature:  %.1f,"
@@ -516,12 +519,14 @@ class HoneywellUSThermostat(ClimateEntity):
                     await self._device.set_hold_heat(True)
 
             except SomeComfortError as err:
+                # pylint: disable-next=home-assistant-log-and-raise
                 LOGGER.error("Couldn't set permanent hold")
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
                     translation_key="set_hold_failed",
                 ) from err
         else:
+            # pylint: disable-next=home-assistant-log-and-raise
             LOGGER.error("Invalid system mode returned: %s", mode)
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
@@ -538,6 +543,7 @@ class HoneywellUSThermostat(ClimateEntity):
             await self._device.set_hold_heat(False)
 
         except SomeComfortError as err:
+            # pylint: disable-next=home-assistant-log-and-raise
             LOGGER.error("Can not stop hold mode")
             raise HomeAssistantError(
                 translation_domain=DOMAIN,

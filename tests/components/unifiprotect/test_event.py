@@ -1510,6 +1510,124 @@ async def test_vehicle_detection_new_event_cancels_timer(
     unsub()
 
 
+def _vehicle_event(
+    ufp: MockUFPFixture,
+    camera_id: str,
+    *,
+    event_id: str,
+    event_type: EventType,
+    start: datetime,
+) -> Event:
+    """Build an open vehicle event without thumbnails, as Protect starts one."""
+    return Event(
+        model=ModelType.EVENT,
+        id=event_id,
+        type=event_type,
+        start=start,
+        end=None,
+        score=100,
+        smart_detect_types=[
+            SmartDetectObjectType.LICENSE_PLATE,
+            SmartDetectObjectType.VEHICLE,
+        ],
+        smart_detect_event_ids=[],
+        camera_id=camera_id,
+        api=ufp.api,
+        metadata={"detected_thumbnails": []},
+    )
+
+
+def _process_vehicle_event(ufp: MockUFPFixture, event: Event) -> None:
+    """Apply event to the bootstrap like a websocket frame and signal it."""
+    ufp.api.bootstrap.process_event(event)
+    mock_msg = Mock()
+    mock_msg.changed_data = {}
+    mock_msg.new_obj = event
+    ufp.ws_msg(mock_msg)
+
+
+@pytest.mark.parametrize(
+    ("end_order", "expected_event_id"),
+    [
+        pytest.param(("zone_event", "line_event"), "line_event", id="zone_ends_first"),
+        pytest.param(("line_event", "zone_event"), "zone_event", id="line_ends_first"),
+    ],
+)
+async def test_vehicle_detection_line_crossing_in_zone(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+    unadopted_camera: Camera,
+    fixed_now: datetime,
+    end_order: tuple[str, str],
+    expected_event_id: str,
+) -> None:
+    """A vehicle crossing a line inside a zone fires once with its plate."""
+    await init_entry(hass, ufp, [doorbell, unadopted_camera])
+    events: list[HAEvent] = []
+
+    @callback
+    def _capture_event(event: HAEvent) -> None:
+        events.append(event)
+
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.EVENT, doorbell, EVENT_DESCRIPTIONS[3]
+    )
+    unsub = async_track_state_change_event(hass, entity_id, _capture_event)
+
+    zone = _vehicle_event(
+        ufp,
+        doorbell.id,
+        event_id="zone_event",
+        event_type=EventType.SMART_DETECT,
+        start=fixed_now - timedelta(seconds=15),
+    )
+    line = _vehicle_event(
+        ufp,
+        doorbell.id,
+        event_id="line_event",
+        event_type=EventType.SMART_DETECT_LINE,
+        start=fixed_now - timedelta(seconds=10),
+    )
+    protect_events = {zone.id: zone, line.id: line}
+    for protect_event in (zone, line):
+        _process_vehicle_event(ufp, protect_event)
+
+    for event_id in end_order:
+        protect_events[event_id].update_from_dict({"end": fixed_now})
+        _process_vehicle_event(ufp, protect_events[event_id])
+
+    # Protect writes the thumbnails only once an event has ended.
+    for protect_event in (zone, line):
+        protect_event.update_from_dict(
+            {
+                "metadata": {
+                    "detected_thumbnails": [
+                        {
+                            "type": "vehicle",
+                            "confidence": 90,
+                            "clock_best_wall": fixed_now,
+                            "cropped_id": f"{protect_event.id}_thumb",
+                            "name": "7ABC123",
+                        }
+                    ]
+                }
+            }
+        )
+        _process_vehicle_event(ufp, protect_event)
+    await hass.async_block_till_done()
+    await asyncio.sleep(TEST_VEHICLE_EVENT_DELAY * 2)
+    await hass.async_block_till_done()
+
+    assert len(events) == 1
+    state = events[0].data["new_state"]
+    assert state
+    assert state.attributes[ATTR_EVENT_ID] == expected_event_id
+    assert state.attributes["license_plate"] == "7ABC123"
+
+    unsub()
+
+
 async def test_vehicle_detection_timer_cleanup_on_remove(
     hass: HomeAssistant,
     ufp: MockUFPFixture,

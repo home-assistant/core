@@ -68,9 +68,9 @@ EVENT_MESSAGE_DATA_SELECTOR = SelectSelector(
 CONFIG_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_USERNAME): str,
-        probatio.Required(CONF_PASSWORD): str,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
         probatio.Required(CONF_SERVER): str,
-        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): probatio.Port(),
         probatio.Optional(CONF_CHARSET, default="utf-8"): str,
         probatio.Optional(CONF_FOLDER, default="INBOX"): str,
         probatio.Optional(CONF_SEARCH, default="UnSeen UnDeleted"): str,
@@ -197,7 +197,7 @@ class IMAPConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="reauth_confirm",
             data_schema=probatio.Schema(
                 {
-                    probatio.Required(CONF_PASSWORD): str,
+                    probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
                 }
             ),
             errors=errors,

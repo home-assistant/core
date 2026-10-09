@@ -1023,7 +1023,7 @@ class DynamicServiceIntentHandler(IntentHandler):
         slot_schema = {
             probatio.Any("name", "area", "floor"): non_empty_string,
             probatio.Optional("domain"): probatio.All(
-                cv.ensure_list, [domain_validator]
+                probatio.EnsureList(), [domain_validator]
             ),
         }
         if self.device_classes:
@@ -1043,7 +1043,7 @@ class DynamicServiceIntentHandler(IntentHandler):
             slot_schema.update(
                 {
                     probatio.Optional("device_class"): probatio.All(
-                        cv.ensure_list,
+                        probatio.EnsureList(),
                         [flattened_device_classes],
                     )
                 }

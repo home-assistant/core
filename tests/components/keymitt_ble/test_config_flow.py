@@ -111,6 +111,7 @@ async def test_user_setup(hass: HomeAssistant) -> None:
         CONF_ADDRESS: "aa:bb:cc:dd:ee:ff",
         CONF_ACCESS_TOKEN: ANY,
     }
+    assert result3["result"].unique_id == "aa:bb:cc:dd:ee:ff"
     assert len(mock_setup_entry.mock_calls) == 1
 
 

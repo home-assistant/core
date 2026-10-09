@@ -85,6 +85,7 @@ class HassioAddonSwitch(HassioAddonEntity, SwitchEntity):
         try:
             await supervisor_client.addons.stop_addon(self._addon_slug)
         except SupervisorError as err:
+            # pylint: disable-next=home-assistant-log-and-raise
             _LOGGER.error("Failed to stop addon %s: %s", self._addon_slug, err)
             raise HomeAssistantError(err) from err
 

@@ -37,6 +37,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: WeheatConfigEntry) -> bo
     try:
         await session.async_ensure_token_valid()
     except aiohttp.ClientResponseError as ex:
+        # pylint: disable-next=home-assistant-log-and-raise
         LOGGER.warning("API error: %s (%s)", ex.status, ex.message)
         if ex.status in (
             HTTPStatus.BAD_REQUEST,

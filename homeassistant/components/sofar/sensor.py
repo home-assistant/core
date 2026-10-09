@@ -7,7 +7,11 @@ from enum import IntEnum
 from typing import cast, override
 
 from sofar_modbus.model import CorrectedTotal
-from sofar_modbus.modern.device import SofarInverter
+from sofar_modbus.modern.device import (
+    BATTERY_STRING_COMPONENTS,
+    PV_STRING_COMPONENTS,
+    SofarInverter,
+)
 from sofar_modbus.modern.enums import FeedinLimitationMode, PassiveModeTimeoutAction
 
 from homeassistant.components.sensor import (
@@ -34,7 +38,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import BATTERY_COMPONENTS, METER_ENERGY
+from .const import METER_ENERGY
 from .coordinator import SofarConfigEntry
 from .entity import SofarEntity, SofarEntityDescription
 
@@ -62,7 +66,7 @@ async def async_setup_entry(
         wired = runtime_data.wired_packs
         new = {
             number
-            for number in BATTERY_COMPONENTS
+            for number in BATTERY_STRING_COMPONENTS
             if number not in wired and runtime_data.pack_is_wired(number)
         }
         if not new:
@@ -165,20 +169,6 @@ class _PartMeasurement:
     entity_registry_enabled_default: bool = True
     value_fn: Callable[[SofarInverter, int], StateType]
 
-
-# Which register block each string or pack is read from.
-_PV_STRING_COMPONENTS = {
-    1: "pv_1_2",
-    2: "pv_1_2",
-    3: "pv_3",
-    4: "pv_4",
-    5: "pv_5_6",
-    6: "pv_5_6",
-    7: "pv_7_8",
-    8: "pv_7_8",
-    9: "pv_9_10",
-    10: "pv_9_10",
-}
 
 _PV_STRING_MEASUREMENTS = (
     _PartMeasurement(
@@ -1717,5 +1707,5 @@ SENSOR_DESCRIPTIONS: tuple[SofarSensorDescription, ...] = (
 )
 
 SENSOR_DESCRIPTIONS += _part_sensors(
-    "pv_string", _PV_STRING_COMPONENTS, _PV_STRING_MEASUREMENTS
-) + _part_sensors("battery", BATTERY_COMPONENTS, _BATTERY_MEASUREMENTS)
+    "pv_string", PV_STRING_COMPONENTS, _PV_STRING_MEASUREMENTS
+) + _part_sensors("battery", BATTERY_STRING_COMPONENTS, _BATTERY_MEASUREMENTS)

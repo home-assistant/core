@@ -3,7 +3,7 @@
 import asyncio
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from datetime import timedelta
+from datetime import datetime, timedelta
 from typing import Any, cast, override
 
 from aioshelly.ble import async_ensure_ble_enabled, async_stop_scanner
@@ -37,6 +37,7 @@ from homeassistant.helpers import (
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, format_mac
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 
 from .bluetooth import async_connect_scanner
 from .const import (
@@ -45,6 +46,7 @@ from .const import (
     ATTR_DEVICE,
     ATTR_GENERATION,
     BATTERY_DEVICES_WITH_PERMANENT_CONNECTION,
+    BLU_TRV_UPDATE_CHECK_INTERVAL,
     COIOT_UNCONFIGURED_ISSUE_ID,
     CONF_BLE_SCANNER_MODE,
     CONF_SLEEP_PERIOD,
@@ -59,6 +61,7 @@ from .const import (
     OTA_BEGIN,
     OTA_ERROR,
     OTA_PROGRESS,
+    OTA_REBOOT_TIMEOUT,
     OTA_SUCCESS,
     PUSH_UPDATE_ISSUE_ID,
     REST_SENSORS_UPDATE_INTERVAL,
@@ -93,6 +96,7 @@ class ShellyEntryData:
     rest: ShellyRestCoordinator | None = None
     rpc: ShellyRpcCoordinator | None = None
     rpc_poll: ShellyRpcPollingCoordinator | None = None
+    rpc_blu_trv_update: ShellyBluTrvUpdateCoordinator | None = None
     rpc_script_events: dict[int, list[str]] | None = None
     rpc_supports_scripts: bool | None = None
     rpc_zigbee_firmware: bool | None = None
@@ -532,6 +536,7 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         self._connection_lock = asyncio.Lock()
         self._event_listeners: list[Callable[[dict[str, Any]], None]] = []
         self._ota_event_listeners: list[Callable[[dict[str, Any]], None]] = []
+        self._ota_reboot_deadline: datetime | None = None
         self._input_event_listeners: list[Callable[[dict[str, Any]], None]] = []
         self._connect_task: asyncio.Task | None = None
 
@@ -657,6 +662,12 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
                     },
                 )
             elif event_type in (OTA_BEGIN, OTA_ERROR, OTA_PROGRESS, OTA_SUCCESS):
+                # The device reboots to apply the update, expect it to go offline
+                self._ota_reboot_deadline = (
+                    None
+                    if event_type == OTA_ERROR
+                    else dt_util.utcnow() + timedelta(seconds=OTA_REBOOT_TIMEOUT)
+                )
                 for event_callback in self._ota_event_listeners:
                     event_callback(event)
 
@@ -682,6 +693,15 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
                 return
 
             if not await self._async_device_connect_task():
+                if (
+                    self._ota_reboot_deadline is not None
+                    and dt_util.utcnow() < self._ota_reboot_deadline
+                ):
+                    LOGGER.debug(
+                        "Device %s is rebooting after a firmware update, retrying later",
+                        self.name,
+                    )
+                    return
                 raise UpdateFailed(
                     translation_domain=DOMAIN,
                     translation_key="update_error_reconnect_error",
@@ -807,6 +827,7 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
             self._came_online_once = True
             self._async_handle_rpc_device_online()
         elif update_type is RpcUpdateType.INITIALIZED:
+            self._ota_reboot_deadline = None
             self.config_entry.async_create_background_task(
                 self.hass, self._async_connected(), "rpc device init", eager_start=True
             )
@@ -885,6 +906,40 @@ class ShellyRpcPollingCoordinator(ShellyCoordinatorBase[RpcDevice]):
         LOGGER.debug("Polling Shelly RPC Device - %s", self.name)
         try:
             await self.device.poll()
+        except (DeviceConnectionError, RpcCallError) as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_error",
+                translation_placeholders={"device": self.name},
+            ) from err
+        except InvalidAuthError:
+            await self.async_shutdown_device_and_start_reauth()
+
+
+class ShellyBluTrvUpdateCoordinator(ShellyCoordinatorBase[RpcDevice]):
+    """Coordinator checking the BLU TRV firmware repository for a newer version."""
+
+    def __init__(
+        self, hass: HomeAssistant, entry: ShellyConfigEntry, device: RpcDevice
+    ) -> None:
+        """Initialize the BLU TRV firmware update coordinator."""
+        super().__init__(hass, entry, device, BLU_TRV_UPDATE_CHECK_INTERVAL)
+
+        self.available_firmware: str | None = None
+
+    @override
+    async def _async_update_data(self) -> None:
+        """Fetch the latest firmware available for BLU TRV devices."""
+        if not self.device.connected:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_error_device_disconnected",
+                translation_placeholders={"device": self.name},
+            )
+
+        LOGGER.debug("Checking for BLU TRV firmware update - %s", self.name)
+        try:
+            self.available_firmware = await self.device.blu_trv_check_for_updates()
         except (DeviceConnectionError, RpcCallError) as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,

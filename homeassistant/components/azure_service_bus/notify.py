@@ -34,7 +34,7 @@ ATTR_ASB_TITLE = "title"
 ATTR_ASB_TARGET = "target"
 
 PLATFORM_SCHEMA = probatio.All(
-    cv.has_at_least_one_key(CONF_QUEUE_NAME, CONF_TOPIC_NAME),
+    probatio.AtLeastOne(CONF_QUEUE_NAME, CONF_TOPIC_NAME),
     NOTIFY_PLATFORM_SCHEMA.extend(
         {
             probatio.Required(CONF_CONNECTION_STRING): cv.string,

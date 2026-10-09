@@ -408,6 +408,7 @@ async def test_legacy_zeroconf_discovery_zigate(
         },
         CONF_RADIO_TYPE: "zigate",
     }
+    assert result_form["result"].unique_id == "epid=aa:bb:cc:dd:ee:00:00:00"
 
 
 async def test_zeroconf_discovery_bad_payload(hass: HomeAssistant) -> None:
@@ -549,6 +550,7 @@ async def test_discovery_via_usb(hass: HomeAssistant) -> None:
         },
         CONF_RADIO_TYPE: "znp",
     }
+    assert result3["result"].unique_id == "epid=aa:bb:cc:dd:ee:00:00:00"
 
 
 @patch(
@@ -1098,6 +1100,7 @@ async def test_user_flow(hass: HomeAssistant) -> None:
         },
         CONF_RADIO_TYPE: "deconz",
     }
+    assert result2["result"].unique_id == "epid=aa:bb:cc:dd:ee:00:00:00"
 
 
 @patch(
@@ -1410,6 +1413,7 @@ async def test_hardware_flow_strategy_advanced(hass: HomeAssistant) -> None:
         },
         CONF_RADIO_TYPE: "ezsp",
     }
+    assert result_create["result"].unique_id == "epid=aa:bb:cc:dd:ee:00:00:00"
 
 
 @patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
@@ -1457,6 +1461,7 @@ async def test_hardware_flow_strategy_recommended(hass: HomeAssistant) -> None:
         },
         CONF_RADIO_TYPE: "ezsp",
     }
+    assert result_create["result"].unique_id == "epid=aa:bb:cc:dd:ee:00:00:00"
 
 
 @patch(f"zigpy_znp.{PROBE_FUNCTION_PATH}", AsyncMock(return_value=True))
@@ -1716,6 +1721,7 @@ async def test_formation_strategy_form_new_network(
     mock_app.form_network.assert_called_once()
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["result"].unique_id == "epid=aa:bb:cc:dd:ee:00:00:00"
 
 
 async def test_formation_strategy_form_initial_network(
@@ -1788,7 +1794,9 @@ async def test_onboarding_auto_formation_new_hardware(
     """Test auto network formation with new hardware during onboarding."""
     # Initially, no network is formed
     mock_app.load_network_info = DelayedAsyncMock(side_effect=NetworkNotFormed())
-    mock_app.get_device = MagicMock(return_value=MagicMock(spec=zigpy.device.Device))
+    mock_app.get_device = MagicMock(
+        return_value=MagicMock(spec=zigpy.device.ZigbeeDevice)
+    )
 
     # After form_network is called, load_network_info should return the network settings
     async def form_network_side_effect(*args, **kwargs):
@@ -1847,6 +1855,7 @@ async def test_formation_strategy_reuse_settings(
     mock_app.write_network_info.assert_not_called()
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["result"].unique_id == "epid=aa:bb:cc:dd:ee:00:00:00"
 
 
 @patch("homeassistant.components.zha.config_flow.process_uploaded_file")
@@ -1902,6 +1911,7 @@ async def test_formation_strategy_restore_manual_backup_non_ezsp(
 
     assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["data"][CONF_RADIO_TYPE] == "znp"
+    assert result3["result"].unique_id == "epid=aa:bb:cc:dd:ee:00:00:00"
 
 
 @patch("homeassistant.components.zha.radio_manager._allow_overwrite_ezsp_ieee")
@@ -2132,6 +2142,7 @@ async def test_formation_strategy_restore_automatic_backup_ezsp(
 
     assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["data"][CONF_RADIO_TYPE] == "ezsp"
+    assert result3["result"].unique_id == "epid=aa:bb:cc:dd:ee:00:00:00"
 
 
 @patch(
@@ -2194,6 +2205,7 @@ async def test_formation_strategy_restore_automatic_backup_non_ezsp(
 
     assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["data"][CONF_RADIO_TYPE] == "znp"
+    assert result3["result"].unique_id == "epid=aa:bb:cc:dd:ee:00:00:00"
 
 
 @patch("homeassistant.components.zha.async_setup_entry", return_value=True)
@@ -3336,6 +3348,7 @@ async def test_plug_in_old_radio_config_entry_removed(
         },
         CONF_RADIO_TYPE: "znp",
     }
+    assert result_recommended["result"].unique_id == "epid=aa:bb:cc:dd:ee:00:00:00"
 
     # Verify reset was attempted once on old radio
     assert mock_temp_radio_mgr.async_reset_adapter.call_count == 1

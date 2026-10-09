@@ -70,6 +70,7 @@ async def test_form(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == MOCK_USER_INPUT["host"]
     assert result["data"] == MOCK_USER_INPUT
+    assert result["result"].unique_id == str(MOCK_DEVICE.serial)
 
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -240,6 +241,36 @@ async def test_dhcp_already_configured_duplicate(
     assert mock_config_entry.data.get(CONF_MAC) == format_mac(
         DHCP_DISCOVERY_DUPLICATE_001.macaddress
     )
+
+
+@pytest.mark.parametrize(
+    ("hostname", "result_type"),
+    [
+        pytest.param("SMA987654321", FlowResultType.FORM, id="other_serial"),
+        pytest.param("evcharger", FlowResultType.ABORT, id="not_sma"),
+    ],
+)
+async def test_dhcp_other_device_on_same_host(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    hostname: str,
+    result_type: FlowResultType,
+) -> None:
+    """Test another device on the host of an entry doesn't change that entry."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_DHCP},
+        data=DhcpServiceInfo(
+            ip=mock_config_entry.data[CONF_HOST],
+            hostname=hostname,
+            macaddress="0015bb00ffff",
+        ),
+    )
+
+    assert result["type"] is result_type
+    assert CONF_MAC not in mock_config_entry.data
 
 
 @pytest.mark.parametrize(
