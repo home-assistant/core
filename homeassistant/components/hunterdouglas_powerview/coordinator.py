@@ -71,7 +71,6 @@ class PowerviewShadeUpdateCoordinator(DataUpdateCoordinator[PowerviewShadeData])
         # only update if shade_entries is valid
         self.data.store_group_data(shade_entries)
 
-        # Clean up stale devices
         self._async_remove_stale_devices(
             {str(shade_id) for shade_id in shade_entries.processed}
         )
