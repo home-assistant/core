@@ -34,7 +34,7 @@ class VelbusSwitch(VelbusEntity, SwitchEntity):
 
     @property
     @override
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return true if the switch is on."""
         return self._channel.is_on()
 
