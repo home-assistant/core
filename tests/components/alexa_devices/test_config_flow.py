@@ -9,6 +9,7 @@ from aioamazondevices.exceptions import (
 )
 import pytest
 
+from homeassistant.components.alexa_devices import config_flow
 from homeassistant.components.alexa_devices.const import (
     CONF_LOGIN_DATA,
     CONF_SITE,
@@ -128,6 +129,50 @@ async def test_flow_errors(
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
     assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_validate_input_without_existing_login_data(
+    hass: HomeAssistant, mock_amazon_devices_client: AsyncMock
+) -> None:
+    """Test initial login does not provide stored login data."""
+    await config_flow.validate_input(
+        hass,
+        {
+            CONF_USERNAME: TEST_USERNAME,
+            CONF_PASSWORD: TEST_PASSWORD,
+            CONF_CODE: TEST_CODE,
+        },
+    )
+
+    assert config_flow.AmazonEchoApi.call_args.kwargs["login_data"] is None
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_validate_input_preserves_existing_login_data(
+    hass: HomeAssistant,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reauth and reconfigure can reuse existing login data."""
+    login_data = {
+        **mock_config_entry.data[CONF_LOGIN_DATA],
+        "nested": {"value": "test"},
+    }
+
+    await config_flow.validate_input(
+        hass,
+        {
+            **mock_config_entry.data,
+            CONF_LOGIN_DATA: login_data,
+            CONF_CODE: TEST_CODE,
+        },
+    )
+
+    passed_login_data = config_flow.AmazonEchoApi.call_args.kwargs["login_data"]
+    assert passed_login_data == login_data
+    assert passed_login_data is not login_data
+    assert passed_login_data["nested"] is not login_data["nested"]
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
