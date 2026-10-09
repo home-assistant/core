@@ -10,6 +10,10 @@ LOGGER = logging.getLogger(__package__)
 CONF_BAUDRATE: Final = "baudrate"
 CONF_UNIT_ID: Final = "unit_id"
 
+# Blocks the inverter stayed silent about on the last attachment check, kept
+# with the entry so that setting it up again does not wait out their timeouts.
+CONF_SILENT_BLOCKS: Final = "silent_blocks"
+
 TYPE_SERIAL: Final = "serial"
 TYPE_TCP: Final = "tcp"
 

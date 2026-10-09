@@ -21,6 +21,7 @@ from homeassistant.components.select import (
 )
 from homeassistant.components.solaredge_modbus.const import (
     ATTACHMENT_SCAN_INTERVAL,
+    CONF_SILENT_BLOCKS,
     DOMAIN,
     SCAN_INTERVAL,
     SETTINGS_SCAN_INTERVAL,
@@ -1161,3 +1162,94 @@ async def test_a_block_discovery_depends_on_keeps_being_asked(
             await hass.async_block_till_done()
 
     assert subsystem not in asked[1], "a block discovery depends on was settled"
+
+
+async def test_a_settled_block_is_not_waited_for_on_the_next_setup(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """A block settled as silent is taken for absent when the entry loads again.
+
+    Each one would otherwise cost a full timeout every time the entry is set
+    up, which on a slow link is most of the time that takes.
+    """
+    mock_modbus_unit.fail_read(POWER_CONTROL_REGISTER, ModbusTimeoutError("timed out"))
+    await _setup(hass, mock_config_entry)
+    await _tick_attachment_check(hass, freezer)
+
+    assert mock_config_entry.data[CONF_SILENT_BLOCKS] == ["power_control"]
+
+    asked: list[frozenset[str]] = []
+    probe = SolarEdge.async_probe
+
+    async def recording_probe(
+        unit: ModbusUnit, *, assume_absent: frozenset[str] = frozenset()
+    ) -> SolarEdge:
+        asked.append(assume_absent)
+        return await probe(unit, assume_absent=assume_absent)
+
+    caplog.clear()
+    with patch.object(SolarEdge, "async_probe", recording_probe):
+        await hass.config_entries.async_reload(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert asked == [frozenset({"power_control"})]
+    assert "power_control" not in caplog.text, "a known silence is not news"
+
+
+async def test_a_settled_block_that_answers_again_is_picked_up(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """The first check after setup still asks a settled block for real.
+
+    The entry reloads to add what it found, so the block must be forgotten as
+    silent first, or that setup would take it for absent all over again.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="SolarEdge SE10000H",
+        unique_id=SERIAL_NUMBER,
+        data={**tcp_data(), CONF_SILENT_BLOCKS: ["power_control"]},
+    )
+    await _setup(hass, entry)
+
+    assert hass.states.get(ACTIVE_POWER_LIMIT_ENTITY) is None
+
+    await _tick_attachment_check(hass, freezer)
+
+    assert hass.states.get(ACTIVE_POWER_LIMIT_ENTITY) is not None
+    assert entry.data[CONF_SILENT_BLOCKS] == []
+
+
+@pytest.mark.parametrize("subsystem", ["batteries", "meters", "mmppt"])
+async def test_a_stored_discovery_block_is_still_asked_at_setup(
+    hass: HomeAssistant,
+    mock_modbus_unit: MockModbusUnit,
+    subsystem: str,
+) -> None:
+    """A block that finding hardware depends on is asked whatever was stored."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="SolarEdge SE10000H",
+        unique_id=SERIAL_NUMBER,
+        data={**tcp_data(), CONF_SILENT_BLOCKS: [subsystem, "power_control"]},
+    )
+    asked: list[frozenset[str]] = []
+    probe = SolarEdge.async_probe
+
+    async def recording_probe(
+        unit: ModbusUnit, *, assume_absent: frozenset[str] = frozenset()
+    ) -> SolarEdge:
+        asked.append(assume_absent)
+        return await probe(unit, assume_absent=assume_absent)
+
+    with patch.object(SolarEdge, "async_probe", recording_probe):
+        await _setup(hass, entry)
+
+    assert asked == [frozenset({"power_control"})]
