@@ -7,7 +7,8 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "unique_id_mismatch": "The device serial number does not match the original device."
+      "unique_id_mismatch": "The device serial number does not match the original device.",
+      "unsupported_device": "This my-PV device is not supported."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -60,13 +61,13 @@
   "entity": {
     "number": {
       "ww1boost": {
-        "name": "Boost Target Temperature"
+        "name": "Boost target temperature"
       },
       "ww_boost_h": {
-        "name": "Minimum Hysteresis"
+        "name": "Minimum hysteresis"
       },
       "ww_targ_h": {
-        "name": "Maximum Hysteresis"
+        "name": "Maximum hysteresis"
       }
     },
     "select": {
@@ -79,6 +80,91 @@
           "4": "SELV relay",
           "5": "AUX relay"
         }
+      }
+    },
+    "sensor": {
+      "cur_eth_mode": {
+        "name": "Network mode",
+        "state": {
+          "0": "LAN",
+          "1": "WLAN",
+          "2": "AP"
+        }
+      },
+      "curr_l1": {
+        "name": "Current phase L1"
+      },
+      "curr_l2": {
+        "name": "Current phase L2"
+      },
+      "curr_l3": {
+        "name": "Current phase L3"
+      },
+      "freq": {
+        "name": "Mains frequency"
+      },
+      "power_solar": {
+        "name": "PV power"
+      },
+      "screen_mode_flag": {
+        "name": "Device status",
+        "state": {
+          "0": "[%key:common::state::standby%]",
+          "1": "Heat",
+          "2": "Boost",
+          "3": "Heating finished",
+          "4": "No connection / Disabled",
+          "5": "Failure",
+          "6": "Block active"
+        }
+      },
+      "temp1": {
+        "name": "Temperature 1"
+      },
+      "temp2": {
+        "name": "Temperature 2"
+      },
+      "temp3": {
+        "name": "Temperature 3"
+      },
+      "temp4": {
+        "name": "Temperature 4"
+      },
+      "temp_ps": {
+        "name": "Device temperature"
+      },
+      "uptime": {
+        "name": "Uptime"
+      },
+      "volt_l1": {
+        "name": "Voltage phase L1"
+      },
+      "volt_l2": {
+        "name": "Voltage phase L2"
+      },
+      "volt_l3": {
+        "name": "Voltage phase L3"
+      },
+      "volt_solar": {
+        "name": "PV voltage"
+      },
+      "wifi_signal": {
+        "name": "Wi-Fi signal strength",
+        "state": {
+          "0": "Poor",
+          "1": "Low",
+          "2": "Average",
+          "3": "Good",
+          "4": "Strong"
+        }
+      },
+      "wifi_signal_strength": {
+        "name": "Wi-Fi signal strength"
+      }
+    },
+    "switch": {
+      "bstmode": {
+        "name": "Boost mode"
       }
     }
   },
@@ -95,8 +181,14 @@
     "fetch_failed": {
       "message": "Failed to fetch data."
     },
+    "rate_limiting": {
+      "message": "Too many requests."
+    },
     "unknown_error": {
       "message": "The device could not complete the requested action."
+    },
+    "unsupported_device": {
+      "message": "This my-PV device is not supported."
     }
   }
 }

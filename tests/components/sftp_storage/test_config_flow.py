@@ -144,6 +144,7 @@ async def test_config_flow_exceptions(
     )
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] and result["errors"]["base"] == error_base
 
     # Recover from the error
@@ -192,6 +193,7 @@ async def test_config_entry_error(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input
     )
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert "errors" in result and result["errors"]["base"] == "key_or_password_needed"
 
 

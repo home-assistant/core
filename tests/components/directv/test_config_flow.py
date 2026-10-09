@@ -67,6 +67,7 @@ async def test_cannot_connect(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -240,6 +241,7 @@ async def test_full_user_flow_implementation(
     assert result["data"]
     assert result["data"][CONF_HOST] == HOST
     assert result["data"][CONF_RECEIVER_ID] == RECEIVER_ID
+    assert result["result"].unique_id == RECEIVER_ID
 
 
 async def test_full_ssdp_flow_implementation(
@@ -267,3 +269,4 @@ async def test_full_ssdp_flow_implementation(
     assert result["data"]
     assert result["data"][CONF_HOST] == HOST
     assert result["data"][CONF_RECEIVER_ID] == RECEIVER_ID
+    assert result["result"].unique_id == RECEIVER_ID

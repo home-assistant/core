@@ -85,6 +85,7 @@ async def test_fail(hass: HomeAssistant, extra_input_data, error) -> None:
     )
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": error}
 
 

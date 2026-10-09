@@ -389,6 +389,7 @@ async def test_reconfigure_flow_new_line_settings_cannot_connect(
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
     assert entry.data[CONF_BAUDRATE] == DEFAULT_BAUDRATE
     # Setting the entry back up runs into the same dead device, so it lands in
@@ -447,10 +448,12 @@ async def test_reconfigure_flow_new_line_settings_while_retrying(
     states: list[ConfigEntryState] = []
     probe = SolarEdge.async_probe
 
-    async def probe_watching_the_entry(unit: ModbusUnit) -> SolarEdge:
+    async def probe_watching_the_entry(
+        unit: ModbusUnit, *, assume_absent: frozenset[str] = frozenset()
+    ) -> SolarEdge:
         """Record whether the entry could still be reaching for the bus."""
         states.append(entry.state)
-        return await probe(unit)
+        return await probe(unit, assume_absent=assume_absent)
 
     result = await entry.start_reconfigure_flow(hass)
     with patch.object(SolarEdge, "async_probe", probe_watching_the_entry):
@@ -509,6 +512,7 @@ async def test_zeroconf_uses_the_announced_device_id(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_UNIT_ID] == 2
+    assert result["result"].unique_id == SERIAL_NUMBER
 
 
 @pytest.mark.parametrize(
@@ -533,6 +537,7 @@ async def test_zeroconf_falls_back_to_the_default_device_id(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_UNIT_ID] == DEFAULT_UNIT_ID
+    assert result["result"].unique_id == SERIAL_NUMBER
 
 
 async def test_zeroconf_known_inverter_that_moved_is_followed(

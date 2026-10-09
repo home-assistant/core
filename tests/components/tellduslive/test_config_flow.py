@@ -217,6 +217,7 @@ async def test_wrong_auth_flow_implementation(
     result = await flow.async_step_auth("")
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "auth"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"]["base"] == "invalid_auth"
 
 

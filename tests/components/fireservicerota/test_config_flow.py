@@ -88,6 +88,7 @@ async def test_invalid_credentials(hass: HomeAssistant) -> None:
             result["flow_id"],
             user_input=MOCK_CONF,
         )
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"] == {"base": "invalid_auth"}
 
 
@@ -134,6 +135,7 @@ async def test_step_user(hass: HomeAssistant) -> None:
                 "created_at": 4321,
             },
         }
+        assert result["result"].unique_id == MOCK_CONF[CONF_USERNAME]
 
         assert len(mock_setup_entry.mock_calls) == 1
 

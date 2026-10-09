@@ -43,7 +43,11 @@ from .const import (
     PUBLIC_ONLY_PLATFORMS,
 )
 from .data import ProtectData, UFPConfigEntry
-from .migrate import async_deprecate_sense_setting_mirrors, async_migrate_data
+from .migrate import (
+    async_deprecate_light_setting_mirrors,
+    async_deprecate_sense_setting_mirrors,
+    async_migrate_data,
+)
 from .services import async_setup_services
 from .utils import (
     _async_unifi_mac_from_hass,
@@ -315,9 +319,10 @@ async def _async_setup_entry(
     data_service.nvr_device_id = nvr_device.id
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    # The replacement switch/number entities only exist once platforms are set
+    # The replacement entities only exist once platforms are set
     # up, so this migration runs here rather than with the others above.
     async_deprecate_sense_setting_mirrors(hass, entry, bootstrap)
+    async_deprecate_light_setting_mirrors(hass, entry, bootstrap)
     hass.http.register_view(ThumbnailProxyView(hass))
     hass.http.register_view(SnapshotProxyView(hass))
     hass.http.register_view(VideoProxyView(hass))

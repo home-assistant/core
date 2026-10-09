@@ -62,7 +62,7 @@ SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        probatio.Required(CONF_TOKEN): cv.string,
+        probatio.Required(probatio.Secret(CONF_TOKEN)): cv.string,
         probatio.Optional("name"): cv.string,
         probatio.Optional("monitored_conditions"): probatio.All(
             probatio.EnsureList(), [cv.string]

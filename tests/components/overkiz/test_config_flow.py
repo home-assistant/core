@@ -224,6 +224,7 @@ async def test_form_local_happy_flow(
         "hub": TEST_SERVER,
         "api_type": "local",
     }
+    assert result["result"].unique_id == TEST_GATEWAY_ID
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -279,6 +280,7 @@ async def test_form_invalid_auth_cloud(
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": error}
 
 
@@ -322,6 +324,7 @@ async def test_form_invalid_hardware_cloud(
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "unsupported_hardware"}
     assert result["description_placeholders"] == {
         "unsupported_device": description_placeholder
@@ -372,6 +375,7 @@ async def test_form_invalid_hardware_cloud_local(
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "unsupported_hardware"}
     assert result["description_placeholders"] == {
         "unsupported_device": description_placeholder
@@ -438,6 +442,7 @@ async def test_form_invalid_auth_local(
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": error}
 
 
@@ -477,6 +482,7 @@ async def test_form_invalid_cozytouch_auth(
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": error}
     assert result["step_id"] == "cloud"
 
@@ -643,6 +649,7 @@ async def test_cloud_allow_multiple_unique_entries(hass: HomeAssistant) -> None:
         "password": TEST_PASSWORD,
         "hub": TEST_SERVER,
     }
+    assert result["result"].unique_id == TEST_GATEWAY_ID
 
 
 async def test_cloud_reauth_success(hass: HomeAssistant) -> None:
@@ -1165,6 +1172,7 @@ async def test_dhcp_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> No
         "hub": TEST_SERVER,
         "api_type": "cloud",
     }
+    assert result["result"].unique_id == TEST_GATEWAY_ID
 
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -1242,6 +1250,7 @@ async def test_zeroconf_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -
         "hub": TEST_SERVER,
         "api_type": "cloud",
     }
+    assert result["result"].unique_id == TEST_GATEWAY_ID
 
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -1300,6 +1309,7 @@ async def test_local_zeroconf_flow(
         "hub": TEST_SERVER,
         "api_type": "local",
     }
+    assert result["result"].unique_id == TEST_GATEWAY_ID
     assert len(mock_setup_entry.mock_calls) == 1
 
 

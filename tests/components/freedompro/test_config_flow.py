@@ -50,6 +50,7 @@ async def test_invalid_auth(hass: HomeAssistant) -> None:
             user_input=VALID_CONFIG,
         )
 
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"] == {"base": "invalid_auth"}
 
 
@@ -74,6 +75,7 @@ async def test_connection_error(hass: HomeAssistant) -> None:
             user_input=VALID_CONFIG,
         )
 
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"] == {"base": "cannot_connect"}
 
 

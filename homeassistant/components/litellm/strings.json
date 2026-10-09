@@ -49,6 +49,36 @@
           "description": "Configure the conversation agent"
         }
       }
+    },
+    "stt": {
+      "abort": {
+        "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+        "entry_not_loaded": "The main integration entry is not loaded. Please ensure the integration is loaded before reconfiguring.",
+        "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+        "unknown": "[%key:common::config_flow::error::unknown%]"
+      },
+      "entry_type": "Speech-to-text",
+      "initiate_flow": {
+        "reconfigure": "Reconfigure speech-to-text service",
+        "user": "Add speech-to-text service"
+      },
+      "step": {
+        "init": {
+          "data": {
+            "custom_prompt_keywords": "Custom prompt/keywords",
+            "keywords": "Keywords",
+            "model": "[%key:common::generic::model%]",
+            "prompt": "Prompt"
+          },
+          "data_description": {
+            "custom_prompt_keywords": "Enable optional prompt and keyword hints. The selected LiteLLM backend must support each parameter; unsupported parameters can cause transcription errors.",
+            "keywords": "Comma-separated words or phrases to help the model recognize names and other terms. Supports Home Assistant templates. OpenAI models may support this together with a prompt; other models may not.",
+            "model": "The model to use to transcribe speech",
+            "prompt": "Optional context or instructions for the transcription. Supports Home Assistant templates. The prompt must match the language of the audio and be supported by the selected model."
+          },
+          "description": "Select the speech-to-text model. The transcription language is selected in the Assist pipeline. LiteLLM does not report language capabilities for individual backend models."
+        }
+      }
     }
   }
 }

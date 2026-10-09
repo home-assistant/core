@@ -40,7 +40,7 @@ TRIGGER_SCHEMA = probatio.All(
             probatio.Optional(ATTR_ENTITY_ID): cv.entity_ids,
         },
     ),
-    cv.has_at_least_one_key(ATTR_ENTITY_ID, ATTR_DEVICE_ID),
+    probatio.AtLeastOne(ATTR_ENTITY_ID, ATTR_DEVICE_ID),
 )
 
 

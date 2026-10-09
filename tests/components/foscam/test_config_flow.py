@@ -73,6 +73,7 @@ async def test_user_invalid_auth(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
         assert result["type"] is FlowResultType.FORM
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"] == {"base": "invalid_auth"}
 
 
@@ -101,6 +102,7 @@ async def test_user_cannot_connect(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
         assert result["type"] is FlowResultType.FORM
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -131,6 +133,7 @@ async def test_user_invalid_response(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
         assert result["type"] is FlowResultType.FORM
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"] == {"base": "invalid_response"}
 
 
@@ -187,4 +190,5 @@ async def test_user_unknown_exception(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
         assert result["type"] is FlowResultType.FORM
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"] == {"base": "unknown"}

@@ -1,6 +1,6 @@
 """Update the IP addresses of your Cloudflare DNS records."""
 
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, async_noop
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
@@ -23,7 +23,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: CloudflareConfigEntry) -
     await entry.runtime_data.async_config_entry_first_refresh()
 
     # Since we are not using coordinator for data reads, we need to add dummy listener
-    entry.async_on_unload(entry.runtime_data.async_add_listener(lambda: None))
+    entry.async_on_unload(entry.runtime_data.async_add_listener(async_noop))
 
     return True
 

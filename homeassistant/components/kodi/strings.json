@@ -62,6 +62,9 @@
     }
   },
   "exceptions": {
+    "login_failed": {
+      "message": "Login to {host} failed"
+    },
     "notify_failed": {
       "message": "Unable to send the notification to Kodi. Is Kodi online?"
     }

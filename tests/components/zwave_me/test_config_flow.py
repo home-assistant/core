@@ -59,6 +59,7 @@ async def test_form(hass: HomeAssistant) -> None:
         "url": "ws://192.168.1.14",
         "token": "test-token",
     }
+    assert result2["result"].unique_id == "test_uuid"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -96,6 +97,7 @@ async def test_zeroconf(hass: HomeAssistant) -> None:
         "url": "ws://192.168.1.14",
         "token": "test-token",
     }
+    assert result2["result"].unique_id == "test_uuid"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -126,6 +128,7 @@ async def test_handle_error_user(hass: HomeAssistant) -> None:
                 "token": "test-token",
             },
         )
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result2["errors"] == {"base": "no_valid_uuid_set"}
 
 

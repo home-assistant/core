@@ -276,7 +276,7 @@ class AssistantContent:
             "agent_id": self.agent_id,
             "created": self.created,
         }
-        if self.content:
+        if self.content is not None:
             result["content"] = self.content
         if self.thinking_content:
             result["thinking_content"] = self.thinking_content
@@ -522,8 +522,10 @@ class ChatLog:
 
         The keys content and tool_calls will be concatenated
         if they appear multiple times.
+
+        An explicit empty content string is preserved as a silent response.
         """
-        current_content = ""
+        current_content: str | None = None
         current_thinking_content = ""
         current_native: Any = None
         current_tool_calls: list[llm.ToolInput] = []
@@ -536,8 +538,8 @@ class ChatLog:
             if "role" not in delta:
                 # ToolResultContentDeltaDict will always have a role
                 assistant_delta = cast(AssistantContentDeltaDict, delta)
-                if delta_content := assistant_delta.get("content"):
-                    current_content += delta_content
+                if (delta_content := assistant_delta.get("content")) is not None:
+                    current_content = (current_content or "") + delta_content
                 if delta_thinking_content := assistant_delta.get("thinking_content"):
                     current_thinking_content += delta_thinking_content
                 if delta_native := assistant_delta.get("native"):
@@ -571,14 +573,14 @@ class ChatLog:
             # Starting a new message
             # Yield the previous message if it has content
             if (
-                current_content
+                current_content is not None
                 or current_thinking_content
                 or current_tool_calls
                 or current_native
             ):
                 content: AssistantContent | ToolResultContent = AssistantContent(
                     agent_id=agent_id,
-                    content=current_content or None,
+                    content=current_content,
                     thinking_content=current_thinking_content or None,
                     tool_calls=current_tool_calls or None,
                     native=current_native,
@@ -590,13 +592,13 @@ class ChatLog:
                     yield tool_result
                     if self.delta_listener:
                         self.delta_listener(self, tool_result.as_dict())
-                current_content = ""
+                current_content = None
                 current_thinking_content = ""
                 current_native = None
                 current_tool_calls = []
 
             if delta["role"] == "assistant":
-                current_content = delta.get("content") or ""
+                current_content = delta.get("content")
                 current_thinking_content = delta.get("thinking_content") or ""
                 current_tool_calls = delta.get("tool_calls") or []
                 current_native = delta.get("native")
@@ -635,14 +637,14 @@ class ChatLog:
                 )
 
         if (
-            current_content
+            current_content is not None
             or current_thinking_content
             or current_tool_calls
             or current_native
         ):
             content = AssistantContent(
                 agent_id=agent_id,
-                content=current_content or None,
+                content=current_content,
                 thinking_content=current_thinking_content or None,
                 tool_calls=current_tool_calls or None,
                 native=current_native,

@@ -69,7 +69,7 @@ PLATFORM_SCHEMA = IMAGE_PROCESSING_PLATFORM_SCHEMA.extend(
         probatio.Required(CONF_URL): cv.string,
         probatio.Required(CONF_DETECTOR): cv.string,
         probatio.Required(CONF_TIMEOUT, default=90): cv.positive_int,
-        probatio.Optional(CONF_AUTH_KEY, default=""): cv.string,
+        probatio.Optional(probatio.Secret(CONF_AUTH_KEY), default=""): cv.string,
         probatio.Optional(CONF_FILE_OUT, default=[]): probatio.All(
             probatio.EnsureList(), [cv.template]
         ),

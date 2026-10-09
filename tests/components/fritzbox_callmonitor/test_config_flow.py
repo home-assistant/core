@@ -130,6 +130,7 @@ async def test_setup_one_phonebook(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == MOCK_PHONEBOOK_NAME_1
     assert result["data"] == MOCK_CONFIG_ENTRY
+    assert result["result"].unique_id == MOCK_UNIQUE_ID
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -199,6 +200,7 @@ async def test_setup_multiple_phonebooks(hass: HomeAssistant) -> None:
         CONF_PHONEBOOK: 1,
         SERIAL_NUMBER: MOCK_SERIAL_NUMBER,
     }
+    assert result["result"].unique_id == f"{MOCK_SERIAL_NUMBER}-1"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -259,6 +261,7 @@ async def test_setup_invalid_auth(
         )
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": ConnectResult.INVALID_AUTH}
 
 
@@ -350,6 +353,7 @@ async def test_reauth_not_successful(
         )
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "reauth_confirm"
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"]["base"] == error
 
 
@@ -408,6 +412,7 @@ async def test_options_flow_incorrect_prefixes(hass: HomeAssistant) -> None:
         )
 
         assert result["type"] is FlowResultType.FORM
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"] == {"base": ConnectResult.MALFORMED_PREFIXES}
 
 

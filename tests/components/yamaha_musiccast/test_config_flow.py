@@ -148,6 +148,7 @@ async def test_user_input_device_not_found(
         {"host": "none"},
     )
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
@@ -166,6 +167,7 @@ async def test_user_input_non_yamaha_device_found(
     )
 
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "no_musiccast_device"}
 
 
@@ -208,6 +210,7 @@ async def test_user_input_unknown_error(
     )
 
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "unknown"}
 
 
@@ -234,6 +237,7 @@ async def test_user_input_device_found(
         "serial": "1234567890",
         "upnp_description": "http://127.0.0.1:9000/MediaRenderer/desc.xml",
     }
+    assert result2["result"].unique_id == "1234567890"
 
 
 async def test_user_input_device_found_no_ssdp(
@@ -259,6 +263,7 @@ async def test_user_input_device_found_no_ssdp(
         "serial": "1234567890",
         "upnp_description": "http://127.0.0.1:49154/MediaRenderer/desc.xml",
     }
+    assert result2["result"].unique_id == "1234567890"
 
 
 # SSDP Flows
@@ -318,6 +323,7 @@ async def test_ssdp_discovery_successful_add_device(
         "serial": "1234567890",
         "upnp_description": "http://127.0.0.1/desc.xml",
     }
+    assert result2["result"].unique_id == "1234567890"
 
 
 async def test_ssdp_discovery_existing_device_update(

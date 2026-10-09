@@ -75,6 +75,7 @@ async def test_form(hass: HomeAssistant, picnic_api) -> None:
         CONF_ACCESS_TOKEN: picnic_api().session.auth_token,
         CONF_COUNTRY_CODE: "NL",
     }
+    assert result2["result"].unique_id == "f29-2a6-o32n"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -159,6 +160,7 @@ async def test_form_2fa_channel_cannot_connect(hass: HomeAssistant, picnic_api) 
         await hass.async_block_till_done()
 
     assert result_step_2fa_channel["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result_step_2fa_channel["errors"] == {"base": "cannot_connect"}
 
 
@@ -193,6 +195,7 @@ async def test_form_2fa_channel_exception(hass: HomeAssistant, picnic_api) -> No
         await hass.async_block_till_done()
 
     assert result_step_2fa_channel["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result_step_2fa_channel["errors"] == {"base": "unknown"}
 
 
@@ -234,6 +237,7 @@ async def test_form_2fa_wrong_code(hass: HomeAssistant, picnic_api) -> None:
         await hass.async_block_till_done()
 
     assert result_step_2fa_verify["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result_step_2fa_verify["errors"] == {"base": "invalid_2fa_code"}
 
 
@@ -277,6 +281,7 @@ async def test_form_2fa_cannot_connect(hass: HomeAssistant, picnic_api) -> None:
         await hass.async_block_till_done()
 
     assert result_step_2fa_verify["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result_step_2fa_verify["errors"] == {"base": "cannot_connect"}
 
 
@@ -318,6 +323,7 @@ async def test_form_2fa_exception(hass: HomeAssistant, picnic_api) -> None:
         await hass.async_block_till_done()
 
     assert result_step_2fa_verify["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result_step_2fa_verify["errors"] == {"base": "unknown"}
 
 
@@ -339,6 +345,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, picnic_api) -> None:
     )
 
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
@@ -360,6 +367,7 @@ async def test_form_cannot_connect(hass: HomeAssistant, picnic_api) -> None:
     )
 
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
@@ -381,6 +389,7 @@ async def test_form_exception(hass: HomeAssistant, picnic_api) -> None:
     )
 
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "unknown"}
 
 
@@ -483,6 +492,7 @@ async def test_step_reauth_failed(hass: HomeAssistant, picnic_api) -> None:
 
     # Check that the returned flow has type form with error set
     assert result_configure["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result_configure["errors"] == {"base": "invalid_auth"}
 
     assert len(hass.config_entries.async_entries()) == 1
@@ -522,6 +532,7 @@ async def test_step_reauth_different_account(hass: HomeAssistant, picnic_api) ->
 
     # Check that the returned flow has type form with error set
     assert result_configure["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result_configure["errors"] == {"base": "different_account"}
 
     assert len(hass.config_entries.async_entries()) == 1

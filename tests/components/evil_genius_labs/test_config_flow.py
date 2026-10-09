@@ -52,6 +52,7 @@ async def test_form(
     assert result2["data"] == {
         "host": "1.1.1.1",
     }
+    assert result2["result"].unique_id == "1923d4"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -75,6 +76,7 @@ async def test_form_cannot_connect(
         )
 
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "cannot_connect"}
     assert "Unable to connect" in caplog.text
 
@@ -97,6 +99,7 @@ async def test_form_timeout(hass: HomeAssistant) -> None:
         )
 
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "timeout"}
 
 
@@ -118,4 +121,5 @@ async def test_form_unknown(hass: HomeAssistant) -> None:
         )
 
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "unknown"}

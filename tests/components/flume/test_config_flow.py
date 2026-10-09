@@ -58,6 +58,7 @@ async def test_form(hass: HomeAssistant) -> None:
         CONF_CLIENT_ID: "client_id",
         CONF_CLIENT_SECRET: "client_secret",
     }
+    assert result2["result"].unique_id == "test-username"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -86,6 +87,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, requests_mock: Mocker) -> 
     )
 
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"password": "invalid_auth"}
 
 
@@ -107,6 +109,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     )
 
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
@@ -215,4 +218,5 @@ async def test_form_no_devices(hass: HomeAssistant, requests_mock: Mocker) -> No
     )
 
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "cannot_connect"}

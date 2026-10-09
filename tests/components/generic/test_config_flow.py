@@ -8,7 +8,7 @@ import os.path
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
-import httpx
+import httpx2
 import pytest
 import respx
 
@@ -350,7 +350,7 @@ async def test_form_still_template(
     expected_errors,
 ) -> None:
     """Test we can handle various templates."""
-    with contextlib.suppress(httpx.InvalidURL):
+    with contextlib.suppress(httpx2.InvalidURL):
         # There is no need to mock the request if its an
         # invalid url because we will never make the request
         respx.get(url).respond(stream=fakeimgbytes_png)
@@ -362,6 +362,7 @@ async def test_form_still_template(
     )
     await hass.async_block_till_done()
     assert result2["step_id"] == expected_result
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2.get("errors") == expected_errors
 
 
@@ -454,6 +455,7 @@ async def test_form_still_and_stream_not_provided(
         },
     )
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "no_still_image_or_stream_url"}
 
 
@@ -461,29 +463,29 @@ async def test_form_still_and_stream_not_provided(
 @pytest.mark.parametrize(
     ("side_effect", "expected_message"),
     [
-        (httpx.TimeoutException, {"still_image_url": "unable_still_load"}),
+        (httpx2.TimeoutException, {"still_image_url": "unable_still_load"}),
         (
-            httpx.HTTPStatusError("", request=None, response=httpx.Response(401)),
+            httpx2.HTTPStatusError("", request=None, response=httpx2.Response(401)),
             {"still_image_url": "unable_still_load_auth"},
         ),
         (
-            httpx.HTTPStatusError("", request=None, response=httpx.Response(403)),
+            httpx2.HTTPStatusError("", request=None, response=httpx2.Response(403)),
             {"still_image_url": "unable_still_load_auth"},
         ),
         (
-            httpx.HTTPStatusError("", request=None, response=httpx.Response(404)),
+            httpx2.HTTPStatusError("", request=None, response=httpx2.Response(404)),
             {"still_image_url": "unable_still_load_not_found"},
         ),
         (
-            httpx.HTTPStatusError("", request=None, response=httpx.Response(500)),
+            httpx2.HTTPStatusError("", request=None, response=httpx2.Response(500)),
             {"still_image_url": "unable_still_load_server_error"},
         ),
         (
-            httpx.HTTPStatusError("", request=None, response=httpx.Response(503)),
+            httpx2.HTTPStatusError("", request=None, response=httpx2.Response(503)),
             {"still_image_url": "unable_still_load_server_error"},
         ),
         (  # Errors without specific handler should show the general message.
-            httpx.HTTPStatusError("", request=None, response=httpx.Response(507)),
+            httpx2.HTTPStatusError("", request=None, response=httpx2.Response(507)),
             {"still_image_url": "unable_still_load"},
         ),
     ],
@@ -503,6 +505,7 @@ async def test_form_image_http_exceptions(
     )
 
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == expected_message
 
 
@@ -515,7 +518,7 @@ async def test_form_image_http_302(
 ) -> None:
     """Test we handle image http 302 (temporary redirect)."""
     respx.get("http://127.0.0.1/testurl/1").side_effect = [
-        httpx.Response(
+        httpx2.Response(
             status_code=302, headers={"Location": "http://127.0.0.1/testurl2/1"}
         )
     ]
@@ -545,6 +548,7 @@ async def test_form_stream_invalidimage(
     )
 
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"still_image_url": "invalid_still_image"}
 
 
@@ -562,6 +566,7 @@ async def test_form_stream_invalidimage2(
     )
 
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"still_image_url": "unable_still_load_no_image"}
 
 
@@ -579,6 +584,7 @@ async def test_form_stream_invalidimage3(
     )
 
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"still_image_url": "invalid_still_image"}
 
 
@@ -602,6 +608,7 @@ async def test_form_stream_timeout(
         TESTDATA,
     )
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"stream_source": "timeout"}
 
 
@@ -620,6 +627,7 @@ async def test_form_stream_not_set_up(hass: HomeAssistant, user_flow) -> None:
     await hass.async_block_till_done()
 
     assert result1["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result1["errors"] == {"stream_source": "stream_not_set_up"}
 
 
@@ -656,6 +664,7 @@ async def test_form_stream_permission_error(
             TESTDATA,
         )
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"stream_source": "stream_not_permitted"}
 
 
@@ -674,6 +683,7 @@ async def test_form_no_route_to_host(
             TESTDATA,
         )
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"stream_source": "stream_no_route_to_host"}
 
 
@@ -692,6 +702,7 @@ async def test_form_stream_io_error(
             TESTDATA,
         )
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"stream_source": "stream_io_error"}
 
 
@@ -781,6 +792,7 @@ async def test_options_template_error(
         user_input=data,
     )
     assert result7.get("type") is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result7["errors"] == {"stream_source": "malformed_url"}
 
 
@@ -857,6 +869,7 @@ async def test_options_still_and_stream_not_provided(hass: HomeAssistant) -> Non
         user_input=data,
     )
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "no_still_image_or_stream_url"}
 
 
@@ -877,6 +890,7 @@ async def test_options_permission_error(
             TESTDATA,
         )
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"stream_source": "stream_not_permitted"}
 
 

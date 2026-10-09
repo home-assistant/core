@@ -95,16 +95,18 @@ async def async_setup_entry(
     assert config_entry.unique_id is not None
 
     entities: list[SensorEntity] = [
-        LunatoneSensor(
-            coordinator_sensors, description, sensor_id, config_entry.unique_id
-        )
-        for sensor_id, sensor_data in coordinator_sensors.data.items()
-        if (description := SENSOR_TYPES.get(sensor_data.data.type))
-    ]
-    entities.extend(
         LunatoneDALILineStatusSensor(coordinator_info, line_id, config_entry.unique_id)
         for line_id in coordinator_info.data.lines
-    )
+    ]
+
+    if coordinator_sensors is not None:
+        entities.extend(
+            LunatoneSensor(
+                coordinator_sensors, description, sensor_id, config_entry.unique_id
+            )
+            for sensor_id, sensor_data in coordinator_sensors.data.items()
+            if (description := SENSOR_TYPES.get(sensor_data.data.type))
+        )
 
     async_add_entities(entities)
 

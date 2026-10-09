@@ -129,7 +129,7 @@ THEME_SCHEMA = probatio.Schema(
                     {cv.string: cv.string}
                 ),
             },
-            cv.has_at_least_one_key(CONF_THEMES_LIGHT, CONF_THEMES_DARK),
+            probatio.AtLeastOne(CONF_THEMES_LIGHT, CONF_THEMES_DARK),
         ),
     }
 )
@@ -158,7 +158,9 @@ CONFIG_SCHEMA = probatio.Schema(
                 probatio.Inclusive(
                     CONF_DEVELOPMENT_PR, "development_pr"
                 ): cv.positive_int,
-                probatio.Inclusive(CONF_GITHUB_TOKEN, "development_pr"): cv.string,
+                probatio.Inclusive(
+                    probatio.Secret(CONF_GITHUB_TOKEN), "development_pr"
+                ): cv.string,
                 probatio.Optional(CONF_THEMES): probatio.All(dict, _validate_themes),
                 probatio.Optional(CONF_EXTRA_MODULE_URL): probatio.All(
                     probatio.EnsureList(), [cv.string]
@@ -783,7 +785,7 @@ async def _async_setup_themes(
                     "dark", "light"
                 ),
             },
-            cv.has_at_least_one_key(CONF_NAME, CONF_NAME_DARK),
+            probatio.AtLeastOne(CONF_NAME, CONF_NAME_DARK),
         ),
     )
 

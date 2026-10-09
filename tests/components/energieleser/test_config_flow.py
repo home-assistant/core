@@ -121,6 +121,7 @@ async def test_user_flow_client_errors(
     )
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": expected_error}
 
 
@@ -166,6 +167,7 @@ async def test_zeroconf_flow(hass: HomeAssistant) -> None:
     assert result["title"] == "stromleser.one"
     assert result["data"][CONF_DEVICE_ID] == STROMLESER_DEVICE_ID
     assert result["data"][CONF_SW_VERSION] == STROMLESER_SW_VERSION
+    assert result["result"].unique_id == STROMLESER_DEVICE_ID
 
 
 @pytest.mark.usefixtures("mock_setup_entry")

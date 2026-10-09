@@ -280,6 +280,7 @@ async def test_zone_temperature_sensor_validation_on_create(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == expected_errors
     assert len(mock_config_entry.subentries) == 0
     mock_satel.read_temperature.assert_awaited_once_with(1)
@@ -437,6 +438,7 @@ async def test_zone_temperature_sensor_validation_on_reconfigure(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {
         CONF_ENABLE_TEMPERATURE_SENSOR: "zone_does_not_report_temperature"
     }
@@ -522,6 +524,7 @@ async def test_cannot_create_same_subentry(
     )
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {error_field: "already_configured"}
     assert len(mock_config_entry_with_subentries.subentries) == 4
 

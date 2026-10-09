@@ -85,6 +85,7 @@ class UpdateCoordinatorDataType(TypedDict):
     call_deflections: dict[int, dict]
     entity_states: dict[str, StateType | bool]
     wifi_networks: dict[int, dict[str, Any]]
+    port_mappings: dict[int, dict[str, Any]]
 
 
 class FritzConnectionCached(FritzConnection):  # type: ignore[misc]
@@ -181,6 +182,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
             str, Callable[[FritzStatus, StateType], Any]
         ] = {}
         self._wifi_network_indexes: set[int] = set()
+        self._port_mapping_indexes: set[int] = set()
 
     async def async_setup(self, options: Mapping[str, Any] | None = None) -> None:
         """Wrap up FritzboxTools class setup."""
@@ -271,7 +273,11 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
 
         if self.fritz_status.has_wan_support:
             self.device_conn_type = self.fritz_status.connection_service
-            self.device_is_router = self.fritz_status.has_wan_enabled
+            try:
+                self.device_is_router = self.fritz_status.has_wan_enabled
+            except FritzActionError:
+                LOGGER.debug("assume that device has no wan enabled", exc_info=True)
+                self.device_is_router = False
 
         self.has_call_deflections = "X_AVM-DE_OnTel1" in self.connection.services
 
@@ -321,6 +327,34 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
             index: self._get_wifi_network(index) for index in self._wifi_network_indexes
         }
 
+    async def async_register_port_mapping(self, index: int) -> Callable[[], None]:
+        """Register a port mapping to be updated by coordinator."""
+
+        def unregister_port_mapping() -> None:
+            """Unregister a port mapping from coordinator updates."""
+            self._port_mapping_indexes.discard(index)
+            self.data["port_mappings"].pop(index, None)
+
+        self._port_mapping_indexes.add(index)
+        self.data["port_mappings"][index] = await self.hass.async_add_executor_job(
+            self._get_port_mapping, index
+        )
+        return unregister_port_mapping
+
+    def _get_port_mapping(self, index: int) -> dict[str, Any]:
+        """Get a port mapping entry."""
+        return self.connection.call_action(
+            f"{self.device_conn_type}1",
+            "GetGenericPortMappingEntry",
+            NewPortMappingIndex=index,
+        )
+
+    def _port_mappings_update(self) -> dict[int, dict[str, Any]]:
+        """Update registered port mappings."""
+        return {
+            index: self._get_port_mapping(index) for index in self._port_mapping_indexes
+        }
+
     def _entity_states_update(self) -> dict:
         """Run registered entity update calls."""
         entity_states = {}
@@ -339,6 +373,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
             "call_deflections": {},
             "entity_states": {},
             "wifi_networks": {},
+            "port_mappings": {},
         }
         self.connection.clear_cache()
         try:
@@ -358,6 +393,9 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
 
             entity_data["wifi_networks"] = await self.hass.async_add_executor_job(
                 self._wifi_networks_update
+            )
+            entity_data["port_mappings"] = await self.hass.async_add_executor_job(
+                self._port_mappings_update
             )
         except FRITZ_EXCEPTIONS as ex:
             LOGGER.debug(
@@ -481,11 +519,10 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                     ),
                 )
         except Exception as ex:
-            if not self.hass.is_stopping:
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN,
-                    translation_key="error_refresh_hosts_info",
-                ) from ex
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="error_refresh_hosts_info",
+            ) from ex
 
         hosts: dict[str, Device] = {}
         if hosts_attributes:
@@ -606,10 +643,6 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
 
     async def async_scan_devices(self, now: datetime | None = None) -> None:
         """Scan for new network devices."""
-
-        if self.hass.is_stopping:
-            ha_is_stopping("scan devices")
-            return
 
         LOGGER.debug("Checking devices for FRITZ!Box device %s", self.host)
         _default_consider_home = DEFAULT_CONSIDER_HOME.total_seconds()

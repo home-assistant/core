@@ -28,14 +28,14 @@ from .const import (
 DATA_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_USERNAME): cv.string,
-        probatio.Required(CONF_PASSWORD): cv.string,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): cv.string,
         probatio.Required(CONF_AREA_ID, default=DEFAULT_AREA_ID): cv.string,
     }
 )
 
 DATA_SCHEMA_AUTH = probatio.Schema(
     {
-        probatio.Required(CONF_PASSWORD): cv.string,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): cv.string,
     }
 )
 

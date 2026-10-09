@@ -1,0 +1,18 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "event_in_progress": {
+        "default": "mdi:calendar-clock"
+      }
+    },
+    "sensor": {
+      "import_export": {
+        "default": "mdi:transmission-tower",
+        "state": {
+          "export": "mdi:transmission-tower-export",
+          "import": "mdi:transmission-tower-import"
+        }
+      }
+    }
+  }
+}

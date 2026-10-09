@@ -11,7 +11,7 @@ from egauge_async.exceptions import (
 )
 from egauge_async.json.client import EgaugeJsonClient
 from egauge_async.json.models import RegisterInfo
-from httpx import ConnectError
+from httpx2 import ConnectError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -47,7 +47,7 @@ class EgaugeDataCoordinator(DataUpdateCoordinator[EgaugeData]):
     serial_number: str
     hostname: str
 
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry: EgaugeConfigEntry) -> None:
         """Initialize the coordinator."""
         super().__init__(
             hass,

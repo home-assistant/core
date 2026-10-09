@@ -424,7 +424,7 @@ async def test_switch_device_no_ip_address(
         (
             "switch.mock_title_port_forward_test_port_mapping",
             "async_add_port_mapping",
-            STATE_OFF,
+            STATE_ON,
         ),
         (
             "switch.printer_internet_access",
@@ -516,6 +516,35 @@ async def test_switch_wifi_coordinator_update(
 
     fc_data = deepcopy(MOCK_FB_SERVICES)
     fc_data["WLANConfiguration2"]["GetInfo"]["NewEnable"] = False
+    fc_class_mock.return_value.override_services(fc_data)
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_OFF
+
+
+async def test_switch_port_coordinator_update(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    fc_class_mock,
+    fh_class_mock,
+) -> None:
+    """Test port forward switch state is refreshed by the coordinator."""
+    entity_id = "switch.mock_title_port_forward_test_port_mapping"
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_ON
+
+    fc_data = deepcopy(MOCK_FB_SERVICES)
+    fc_data["WANPPPConnection1"]["GetGenericPortMappingEntry"][0]["NewEnabled"] = False
     fc_class_mock.return_value.override_services(fc_data)
 
     freezer.tick(SCAN_INTERVAL)

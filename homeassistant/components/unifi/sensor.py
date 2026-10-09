@@ -207,18 +207,21 @@ def async_device_outlet_supported_fn(hub: UnifiHub, obj_id: str) -> bool:
 
 @callback
 def async_device_battery_pool_supported_fn(
-    field: str, hub: UnifiHub, obj_id: str
+    field: str, key: str, hub: UnifiHub, obj_id: str
 ) -> bool:
-    """Determine if a device provides a battery pool field."""
-    return field in (hub.api.devices[obj_id].battery_pool or {})
+    """Discover reported battery pool fields and retain discovered sensors."""
+    return (key, obj_id) in hub.entity_loader.known_objects or (
+        async_device_battery_pool_value_fn(field, hub, hub.api.devices[obj_id])
+        is not None
+    )
 
 
 @callback
 def async_device_battery_pool_value_fn(
     field: str, hub: UnifiHub, device: Device
-) -> float | int:
+) -> float | int | None:
     """Retrieve a battery pool field."""
-    return cast(dict[str, float | int], device.battery_pool)[field]
+    return cast(dict[str, float | int | None], device.battery_pool or {}).get(field)
 
 
 @callback
@@ -656,7 +659,9 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         available_fn=async_device_available_fn,
         device_info_fn=async_device_device_info_fn,
         object_fn=lambda api, obj_id: api.devices[obj_id],
-        supported_fn=partial(async_device_battery_pool_supported_fn, "batteryLevel"),
+        supported_fn=partial(
+            async_device_battery_pool_supported_fn, "batteryLevel", "UPS battery level"
+        ),
         unique_id_fn=lambda hub, obj_id: f"ups_battery_level-{obj_id}",
         value_fn=partial(async_device_battery_pool_value_fn, "batteryLevel"),
     ),
@@ -670,7 +675,11 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         available_fn=async_device_available_fn,
         device_info_fn=async_device_device_info_fn,
         object_fn=lambda api, obj_id: api.devices[obj_id],
-        supported_fn=partial(async_device_battery_pool_supported_fn, "timeToRemain"),
+        supported_fn=partial(
+            async_device_battery_pool_supported_fn,
+            "timeToRemain",
+            "UPS battery runtime",
+        ),
         unique_id_fn=lambda hub, obj_id: f"ups_battery_runtime-{obj_id}",
         value_fn=partial(async_device_battery_pool_value_fn, "timeToRemain"),
     ),
@@ -686,7 +695,9 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         device_info_fn=async_device_device_info_fn,
         object_fn=lambda api, obj_id: api.devices[obj_id],
         supported_fn=partial(
-            async_device_battery_pool_supported_fn, "device_total_power_output"
+            async_device_battery_pool_supported_fn,
+            "device_total_power_output",
+            "UPS output power",
         ),
         unique_id_fn=lambda hub, obj_id: f"ups_output_power-{obj_id}",
         value_fn=partial(
@@ -705,7 +716,9 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         device_info_fn=async_device_device_info_fn,
         object_fn=lambda api, obj_id: api.devices[obj_id],
         supported_fn=partial(
-            async_device_battery_pool_supported_fn, "device_output_current"
+            async_device_battery_pool_supported_fn,
+            "device_output_current",
+            "UPS output current",
         ),
         unique_id_fn=lambda hub, obj_id: f"ups_output_current-{obj_id}",
         value_fn=partial(async_device_battery_pool_value_fn, "device_output_current"),
@@ -722,7 +735,9 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         device_info_fn=async_device_device_info_fn,
         object_fn=lambda api, obj_id: api.devices[obj_id],
         supported_fn=partial(
-            async_device_battery_pool_supported_fn, "device_output_voltage"
+            async_device_battery_pool_supported_fn,
+            "device_output_voltage",
+            "UPS output voltage",
         ),
         unique_id_fn=lambda hub, obj_id: f"ups_output_voltage-{obj_id}",
         value_fn=partial(async_device_battery_pool_value_fn, "device_output_voltage"),
@@ -739,7 +754,9 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         device_info_fn=async_device_device_info_fn,
         object_fn=lambda api, obj_id: api.devices[obj_id],
         supported_fn=partial(
-            async_device_battery_pool_supported_fn, "device_input_voltage"
+            async_device_battery_pool_supported_fn,
+            "device_input_voltage",
+            "UPS input voltage",
         ),
         unique_id_fn=lambda hub, obj_id: f"ups_input_voltage-{obj_id}",
         value_fn=partial(async_device_battery_pool_value_fn, "device_input_voltage"),
@@ -756,7 +773,9 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         device_info_fn=async_device_device_info_fn,
         object_fn=lambda api, obj_id: api.devices[obj_id],
         supported_fn=partial(
-            async_device_battery_pool_supported_fn, "device_bypass_voltage"
+            async_device_battery_pool_supported_fn,
+            "device_bypass_voltage",
+            "UPS bypass voltage",
         ),
         unique_id_fn=lambda hub, obj_id: f"ups_bypass_voltage-{obj_id}",
         value_fn=partial(async_device_battery_pool_value_fn, "device_bypass_voltage"),
@@ -772,7 +791,9 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         device_info_fn=async_device_device_info_fn,
         object_fn=lambda api, obj_id: api.devices[obj_id],
         supported_fn=partial(
-            async_device_battery_pool_supported_fn, "device_total_power_factor"
+            async_device_battery_pool_supported_fn,
+            "device_total_power_factor",
+            "UPS output power factor",
         ),
         unique_id_fn=lambda hub, obj_id: f"ups_output_power_factor-{obj_id}",
         value_fn=partial(
