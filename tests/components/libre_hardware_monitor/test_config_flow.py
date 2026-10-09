@@ -1,7 +1,7 @@
 """Test the LibreHardwareMonitor config flow."""
 
 from dataclasses import replace
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock, call
 
 from librehardwaremonitor_api import (
     LibreHardwareMonitorConnectionError,
@@ -366,12 +366,36 @@ async def test_reconfigure(
     assert len(hass.config_entries.async_entries()) == 1
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_reuses_saved_credentials(
+    hass: HomeAssistant,
+    mock_auth_config_entry: MockConfigEntry,
+    mock_lhm_client_class: MagicMock,
+    mock_lhm_client: AsyncMock,
+) -> None:
+    """Test that saved credentials are used to connect to the new server."""
+    mock_auth_config_entry.add_to_hass(hass)
+
+    result = await mock_auth_config_entry.start_reconfigure_flow(hass)
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], RECONFIGURE_INPUT
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_auth_config_entry.data == {**RECONFIGURE_INPUT, **AUTH_INPUT}
+    mock_lhm_client_class.assert_called_once_with(**RECONFIGURE_INPUT, **AUTH_INPUT)
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure_with_auth(
     hass: HomeAssistant,
     mock_auth_config_entry: MockConfigEntry,
+    mock_lhm_client_class: MagicMock,
     mock_lhm_client: AsyncMock,
 ) -> None:
-    """Test reconfiguring to a server which requires authentication."""
+    """Test reconfiguring to a server which rejects the saved credentials."""
     mock_auth_config_entry.add_to_hass(hass)
 
     result = await mock_auth_config_entry.start_reconfigure_flow(hass)
@@ -400,6 +424,11 @@ async def test_reconfigure_with_auth(
     assert result["reason"] == "reconfigure_successful"
     assert mock_auth_config_entry.data == {**RECONFIGURE_INPUT, **REAUTH_INPUT}
     assert mock_auth_config_entry.title == RECONFIGURED_TITLE
+    assert mock_lhm_client_class.call_args_list == [
+        call(**RECONFIGURE_INPUT, **AUTH_INPUT),  # saved credentials, rejected
+        call(**RECONFIGURE_INPUT, **REAUTH_INPUT),  # invalid_auth
+        call(**RECONFIGURE_INPUT, **REAUTH_INPUT),  # success
+    ]
 
 
 @pytest.mark.parametrize(
