@@ -13,6 +13,7 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
 )
+from homeassistant.util.hass_dict import HassKey
 
 from .base import BaseTemplateExtension, TemplateFunction
 
@@ -21,14 +22,27 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
+# Shared by all template environments, a template entity with a custom log
+# function gets a fresh environment (and extension) of its own.
+_WARNED_DEPRECATED_ATTRS: HassKey[set[str]] = HassKey(
+    "template_device_attr_warned_deprecated"
+)
+
 # Deprecated device attributes, resolved from config_entry_id and
 # config_subentry_id, so reading them in a template does not raise.
-_DEPRECATED_DEVICE_ATTRS: dict[str, Callable[[dr.BaseDeviceEntry], Any]] = {
-    "config_entries": lambda device: {device.config_entry_id},
-    "config_entries_subentries": lambda device: {
-        device.config_entry_id: {device.config_subentry_id}
-    },
-    "primary_config_entry": lambda device: device.config_entry_id,
+_DEPRECATED_DEVICE_ATTRS: dict[str, tuple[str, Callable[[dr.BaseDeviceEntry], Any]]] = {
+    "config_entries": (
+        "'config_entry_id'",
+        lambda device: {device.config_entry_id},
+    ),
+    "config_entries_subentries": (
+        "'config_entry_id' and 'config_subentry_id'",
+        lambda device: {device.config_entry_id: {device.config_subentry_id}},
+    ),
+    "primary_config_entry": (
+        "'config_entry_id'",
+        lambda device: device.config_entry_id,
+    ),
 }
 
 
@@ -37,7 +51,6 @@ class DeviceExtension(BaseTemplateExtension):
 
     def __init__(self, environment: TemplateEnvironment) -> None:
         """Initialize the device extension."""
-        self._warned_deprecated_attrs: set[str] = set()
         super().__init__(
             environment,
             functions=[
@@ -145,15 +158,18 @@ class DeviceExtension(BaseTemplateExtension):
             return None
 
         if not device.is_composite_device and (
-            resolve := _DEPRECATED_DEVICE_ATTRS.get(attr_name)
+            deprecated := _DEPRECATED_DEVICE_ATTRS.get(attr_name)
         ):
-            if attr_name not in self._warned_deprecated_attrs:
-                self._warned_deprecated_attrs.add(attr_name)
+            replacement, resolve = deprecated
+            warned = self.hass.data.setdefault(_WARNED_DEPRECATED_ATTRS, set())
+            if attr_name not in warned:
+                warned.add(attr_name)
                 _LOGGER.warning(
                     "A template reads device attribute '%s', which is deprecated "
-                    "and will stop working in Home Assistant 2027.10; use "
-                    "'config_entry_id' instead",
+                    "and will stop working in Home Assistant 2027.10; use %s "
+                    "instead",
                     attr_name,
+                    replacement,
                 )
             return resolve(device)
 
