@@ -252,8 +252,6 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
         sessions: list[JsonValueType] = []
         for index, session in enumerate(history.session):
-            # The session that is running has no end yet, and so no energy
-            # total to report for it either.
             end_energy_kwh = None
             end_time = None
             energy_kwh = None
@@ -276,11 +274,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
                     "end_energy_kwh": end_energy_kwh,
                     "energy_kwh": energy_kwh,
                     "checksum": session.checksum,
-                    # The charger checks each record against its own checksum
-                    # and reports the outcomes as a list of their own. A
-                    # charger that returns fewer of those than it returns
-                    # sessions leaves the rest unanswered, rather than
-                    # unreported.
+                    # The charger may return fewer outcomes than sessions.
                     "corrupted": (
                         history.corrupted_session[index]
                         if index < len(history.corrupted_session)
