@@ -96,9 +96,16 @@ def mock_controller_patch_is_file():
         yield is_file_mock
 
 
-@pytest.mark.parametrize("unique_id", [{}, {"label_mac": ROUTER_MAC_ADDR}])
+@pytest.mark.parametrize(
+    ("unique_id", "expected_unique_id"),
+    [({}, None), ({"label_mac": ROUTER_MAC_ADDR}, ROUTER_MAC_ADDR)],
+)
 async def test_user_legacy(
-    hass: HomeAssistant, connect_legacy, patch_setup_entry, unique_id
+    hass: HomeAssistant,
+    connect_legacy,
+    patch_setup_entry,
+    unique_id,
+    expected_unique_id: str | None,
 ) -> None:
     """Test user config."""
     flow_result = await hass.config_entries.flow.async_init(
@@ -127,6 +134,7 @@ async def test_user_legacy(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == HOST
     assert result["data"] == {**CONFIG_DATA_TELNET, CONF_MODE: MODE_AP}
+    assert result["result"].unique_id == expected_unique_id
 
     assert len(patch_setup_entry.mock_calls) == 1
 
@@ -157,6 +165,7 @@ async def test_user_http(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == HOST
     assert result["data"] == CONFIG_DATA_HTTP
+    assert result["result"].unique_id == unique_id
 
     assert len(patch_setup_entry.mock_calls) == 1
 
@@ -178,6 +187,7 @@ async def test_error_pwd_required(hass: HomeAssistant, config) -> None:
     )
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {CONF_BASE: "pwd_required"}
 
 
@@ -197,6 +207,7 @@ async def test_error_no_password_ssh(hass: HomeAssistant) -> None:
     )
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {CONF_BASE: "pwd_or_ssh"}
 
 
@@ -216,6 +227,7 @@ async def test_error_password_and_ssh(hass: HomeAssistant) -> None:
     )
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {CONF_BASE: "pwd_and_ssh"}
 
 
@@ -243,6 +255,7 @@ async def test_error_invalid_ssh(hass: HomeAssistant, patch_is_file) -> None:
     )
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {CONF_BASE: "ssh_not_file"}
 
 
@@ -262,6 +275,7 @@ async def test_error_invalid_host(hass: HomeAssistant, patch_get_host) -> None:
     )
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {CONF_BASE: "invalid_host"}
 
 
@@ -307,6 +321,7 @@ async def test_update_uniqueid_exist(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == HOST
     assert result["data"] == CONFIG_DATA_HTTP
+    assert result["result"].unique_id == ROUTER_MAC_ADDR
     prev_entry = hass.config_entries.async_get_entry(existing_entry.entry_id)
     assert not prev_entry
 
@@ -363,6 +378,7 @@ async def test_on_connect_legacy_failed(
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {CONF_BASE: error}
 
 
@@ -392,6 +408,7 @@ async def test_on_connect_http_failed(
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {CONF_BASE: error}
 
 

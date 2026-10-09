@@ -769,6 +769,7 @@ async def test_manual_hostname_is_stored_as_an_address(
     find_by_ip.assert_awaited_once_with(IP_ADDRESS)
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {CONF_HOST: IP_ADDRESS, CONF_SERIAL: SERIAL}
+    assert result["result"].unique_id == SERIAL
 
 
 @pytest.mark.parametrize(
@@ -819,6 +820,7 @@ async def test_manual_serial_that_answers_no_broadcast(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -862,6 +864,7 @@ async def test_manual_setup_rejects_a_malformed_serial(hass: HomeAssistant) -> N
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {CONF_SERIAL: "invalid_serial"}
 
 
@@ -893,6 +896,7 @@ async def test_manual_host_while_discovery_is_pending(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {CONF_HOST: IP_ADDRESS, CONF_SERIAL: SERIAL}
+    assert result["result"].unique_id == SERIAL
 
 
 @pytest.mark.parametrize(
@@ -962,6 +966,7 @@ async def test_manual_host_cannot_read_device_state(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
     mock_light.close.assert_awaited_once_with()
 
@@ -990,6 +995,7 @@ async def test_pick_broadcast_discovered_device(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {CONF_HOST: IP_ADDRESS, CONF_SERIAL: SERIAL}
+    assert result["result"].unique_id == SERIAL
 
 
 async def test_pick_device_without_discovery_results(hass: HomeAssistant) -> None:

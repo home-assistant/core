@@ -112,6 +112,7 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
         )
 
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {
         CONF_USERNAME: "invalid_auth",
         CONF_PASSWORD: "invalid_auth",
@@ -143,6 +144,7 @@ async def test_form_cannot_connect(
         )
 
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": error}
 
     # make sure we do not lose the user input if somethings gets wrong
@@ -170,6 +172,7 @@ async def test_form_invalid_charset(hass: HomeAssistant) -> None:
         )
 
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {CONF_CHARSET: "invalid_charset"}
 
 
@@ -188,6 +191,7 @@ async def test_form_invalid_folder(hass: HomeAssistant) -> None:
         )
 
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {CONF_FOLDER: "invalid_folder"}
 
 
@@ -206,6 +210,7 @@ async def test_form_invalid_search(hass: HomeAssistant) -> None:
         )
 
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {CONF_SEARCH: "invalid_search"}
 
 
@@ -269,6 +274,7 @@ async def test_reauth_failed(hass: HomeAssistant) -> None:
         )
 
         assert result2["type"] is FlowResultType.FORM
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result2["errors"] == {
             CONF_USERNAME: "invalid_auth",
             CONF_PASSWORD: "invalid_auth",
@@ -299,6 +305,7 @@ async def test_reauth_failed_conn_error(hass: HomeAssistant) -> None:
         )
 
         assert result2["type"] is FlowResultType.FORM
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result2["errors"] == {"base": "cannot_connect"}
 
 
@@ -460,6 +467,7 @@ async def test_key_options_in_options_form(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "already_configured"}
 
 

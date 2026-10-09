@@ -9,6 +9,7 @@ import pytest
 from homeassistant import config_entries
 from homeassistant.components.panasonic_viera.const import (
     ATTR_DEVICE_INFO,
+    ATTR_UDN,
     DEFAULT_NAME,
     DOMAIN,
     ERROR_INVALID_PIN_CODE,
@@ -62,6 +63,7 @@ async def test_flow_non_encrypted(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == DEFAULT_NAME
     assert result["data"] == {**MOCK_CONFIG_DATA, ATTR_DEVICE_INFO: MOCK_DEVICE_INFO}
+    assert result["result"].unique_id == MOCK_DEVICE_INFO[ATTR_UDN]
 
 
 async def test_flow_not_connected_error(hass: HomeAssistant) -> None:
@@ -85,6 +87,7 @@ async def test_flow_not_connected_error(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -203,6 +206,7 @@ async def test_flow_encrypted_valid_pin_code(hass: HomeAssistant) -> None:
         **MOCK_ENCRYPTION_DATA,
         ATTR_DEVICE_INFO: MOCK_DEVICE_INFO,
     }
+    assert result["result"].unique_id == MOCK_DEVICE_INFO[ATTR_UDN]
 
 
 async def test_flow_encrypted_invalid_pin_code_error(hass: HomeAssistant) -> None:
@@ -240,6 +244,7 @@ async def test_flow_encrypted_invalid_pin_code_error(hass: HomeAssistant) -> Non
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "pairing"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": ERROR_INVALID_PIN_CODE}
 
 
@@ -377,6 +382,7 @@ async def test_imported_flow_non_encrypted(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == DEFAULT_NAME
     assert result["data"] == {**MOCK_CONFIG_DATA, ATTR_DEVICE_INFO: MOCK_DEVICE_INFO}
+    assert result["result"].unique_id == MOCK_DEVICE_INFO[ATTR_UDN]
 
 
 async def test_imported_flow_encrypted_valid_pin_code(hass: HomeAssistant) -> None:
@@ -413,6 +419,7 @@ async def test_imported_flow_encrypted_valid_pin_code(hass: HomeAssistant) -> No
         **MOCK_ENCRYPTION_DATA,
         ATTR_DEVICE_INFO: MOCK_DEVICE_INFO,
     }
+    assert result["result"].unique_id == MOCK_DEVICE_INFO[ATTR_UDN]
 
 
 async def test_imported_flow_encrypted_invalid_pin_code_error(
@@ -446,6 +453,7 @@ async def test_imported_flow_encrypted_invalid_pin_code_error(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "pairing"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": ERROR_INVALID_PIN_CODE}
 
 
@@ -518,6 +526,7 @@ async def test_imported_flow_not_connected_error(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
 
 

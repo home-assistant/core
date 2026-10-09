@@ -18,6 +18,8 @@ from .const import DEVICE_NAME, DISCOVERY_INFO, METER_LIST
 
 from tests.common import MockConfigEntry
 
+UNIQUE_ID = "04B4:0003_1234_Rainforest Automation, Inc._RFA-Z105-2 HW2.7.3 EMU-2"
+
 
 @pytest.fixture
 def mock_device() -> Generator[AsyncMock]:
@@ -90,6 +92,7 @@ async def test_flow_usb(hass: HomeAssistant) -> None:
     )
     assert result
     assert result.get("type") is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == UNIQUE_ID
 
 
 @pytest.mark.usefixtures("mock_comports", "mock_device_no_open")
@@ -155,6 +158,7 @@ async def test_flow_user(hass: HomeAssistant) -> None:
     )
     assert result
     assert result.get("type") is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == UNIQUE_ID
 
 
 @pytest.mark.usefixtures("mock_comports")
@@ -208,6 +212,7 @@ async def test_flow_user_cannot_connect(hass: HomeAssistant) -> None:
     )
     assert result
     assert result.get("type") is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result.get("errors") == {CONF_DEVICE: "cannot_connect"}
 
 
@@ -223,6 +228,7 @@ async def test_flow_user_timeout_connect(hass: HomeAssistant) -> None:
     )
     assert result
     assert result.get("type") is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result.get("errors") == {CONF_DEVICE: "timeout_connect"}
 
 
@@ -238,4 +244,5 @@ async def test_flow_user_comm_error(hass: HomeAssistant) -> None:
     )
     assert result
     assert result.get("type") is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result.get("errors") == {CONF_DEVICE: "cannot_connect"}

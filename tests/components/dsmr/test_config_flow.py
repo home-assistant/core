@@ -63,6 +63,7 @@ async def test_setup_network(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "socket://10.10.0.1:1234"
     assert result["data"] == {**entry_data, **SERIAL_DATA}
+    assert result["result"].unique_id == "12345678"
 
 
 async def test_setup_network_rfxtrx(
@@ -106,10 +107,11 @@ async def test_setup_network_rfxtrx(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "socket://10.10.0.1:1234"
     assert result["data"] == {**entry_data, **SERIAL_DATA}
+    assert result["result"].unique_id == "12345678"
 
 
 @pytest.mark.parametrize(
-    ("version", "entry_data"),
+    ("version", "entry_data", "expected_unique_id"),
     [
         (
             "2.2",
@@ -120,6 +122,7 @@ async def test_setup_network_rfxtrx(
                 "serial_id": "12345678",
                 "serial_id_gas": "123456789",
             },
+            "12345678",
         ),
         (
             "5B",
@@ -130,6 +133,7 @@ async def test_setup_network_rfxtrx(
                 "serial_id": "12345678",
                 "serial_id_gas": "123456789",
             },
+            "12345678",
         ),
         (
             "5L",
@@ -140,6 +144,7 @@ async def test_setup_network_rfxtrx(
                 "serial_id": "12345678",
                 "serial_id_gas": "123456789",
             },
+            "12345678",
         ),
         (
             "5EONHU",
@@ -150,6 +155,7 @@ async def test_setup_network_rfxtrx(
                 "serial_id": "12345678",
                 "serial_id_gas": None,
             },
+            "12345678",
         ),
         (
             "5S",
@@ -160,6 +166,7 @@ async def test_setup_network_rfxtrx(
                 "serial_id": None,
                 "serial_id_gas": None,
             },
+            None,
         ),
         (
             "Q3D",
@@ -170,6 +177,7 @@ async def test_setup_network_rfxtrx(
                 "serial_id": "12345678",
                 "serial_id_gas": None,
             },
+            "12345678",
         ),
     ],
 )
@@ -178,6 +186,7 @@ async def test_setup_serial(
     dsmr_connection_send_validate_fixture: tuple[MagicMock, MagicMock, MagicMock],
     version: str,
     entry_data: dict[str, Any],
+    expected_unique_id: str | None,
 ) -> None:
     """Test we can setup serial."""
     port = com_port()
@@ -200,13 +209,14 @@ async def test_setup_serial(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == port.device
     assert result["data"] == entry_data
+    assert result["result"].unique_id == expected_unique_id
 
 
 @pytest.mark.parametrize(
-    ("version", "serial_data"),
+    ("version", "serial_data", "expected_unique_id"),
     [
-        ("MSn", SERIAL_DATA),
-        ("SAGEMCOM_T210_D_R", SERIAL_DATA_SWEDEN),
+        ("MSn", SERIAL_DATA, "12345678"),
+        ("SAGEMCOM_T210_D_R", SERIAL_DATA_SWEDEN, None),
     ],
 )
 async def test_setup_serial_encrypted(
@@ -214,6 +224,7 @@ async def test_setup_serial_encrypted(
     dsmr_connection_send_validate_fixture: tuple[MagicMock, MagicMock, MagicMock],
     version: str,
     serial_data: dict[str, str | None],
+    expected_unique_id: str | None,
 ) -> None:
     """Test we can setup an encrypted meter that asks for an encryption key."""
     (connection_factory, _transport, _protocol) = dsmr_connection_send_validate_fixture
@@ -251,6 +262,7 @@ async def test_setup_serial_encrypted(
         "encryption_key": "aabbccddeeff00112233445566778899",
         **serial_data,
     }
+    assert result["result"].unique_id == expected_unique_id
     # The key is decrypted without verifying the GCM authentication tag
     assert (
         connection_factory.call_args.kwargs["encryption_key"]
@@ -289,6 +301,7 @@ async def test_setup_serial_encrypted_invalid_key(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "encryption_key"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "invalid_key"}
 
 
@@ -328,6 +341,7 @@ async def test_setup_serial_encrypted_malformed_key(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "encryption_key"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "invalid_key"}
     # A malformed key must not reach the reader
     connection_factory.assert_not_called()
@@ -363,6 +377,7 @@ async def test_setup_serial_encrypted_cannot_communicate(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "encryption_key"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_communicate"}
     # Encrypted meters must not retry over the RFXtrx protocol
     assert validate.call_count == 1
@@ -408,6 +423,7 @@ async def test_setup_serial_rfxtrx(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == port.device
     assert result["data"] == {**entry_data, **SERIAL_DATA}
+    assert result["result"].unique_id == "12345678"
 
 
 @pytest.mark.parametrize(
@@ -455,6 +471,7 @@ async def test_setup_serial_fail(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -502,6 +519,7 @@ async def test_setup_serial_timeout(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_communicate"}
 
 
@@ -540,6 +558,7 @@ async def test_setup_serial_wrong_telegram(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_communicate"}
 
 

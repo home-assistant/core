@@ -174,4 +174,5 @@ async def test_invalid_ics(
         {CONF_ICS_FILE: file_id[CONF_ICS_FILE]},
     )
     assert result3["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result3["errors"] == {CONF_ICS_FILE: "invalid_ics_file"}

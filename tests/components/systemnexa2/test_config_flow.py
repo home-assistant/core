@@ -171,6 +171,7 @@ async def test_valid_hostname(hass: HomeAssistant, mock_setup_entry: AsyncMock) 
         CONF_DEVICE_ID: "aabbccddee02",
         CONF_MODEL: "WPO-01",
     }
+    assert result["result"].unique_id == "aabbccddee02"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -222,6 +223,7 @@ async def test_zeroconf_discovery(
         CONF_DEVICE_ID: "aabbccddee02",
         CONF_MODEL: "WPO-01",
     }
+    assert result["result"].unique_id == "aabbccddee02"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -340,6 +342,7 @@ async def test_reconfigure_flow_invalid_host(
         )
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "invalid_host"}
 
 
@@ -373,6 +376,7 @@ async def test_reconfigure_flow_cannot_connect(
     )
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "unknown"}
 
 

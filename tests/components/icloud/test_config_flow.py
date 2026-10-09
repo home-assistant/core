@@ -261,6 +261,7 @@ async def test_login_failed(hass: HomeAssistant) -> None:
             user_input={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
         )
         assert result["type"] is FlowResultType.FORM
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"] == {CONF_PASSWORD: "invalid_auth"}
 
 
@@ -357,6 +358,7 @@ async def test_send_verification_code_failed(hass: HomeAssistant) -> None:
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == CONF_TRUSTED_DEVICE
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {CONF_TRUSTED_DEVICE: "send_verification_code"}
 
 
@@ -457,6 +459,7 @@ async def test_validate_verification_code_failed(hass: HomeAssistant) -> None:
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == CONF_TRUSTED_DEVICE
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "validate_verification_code"}
 
 
@@ -552,6 +555,7 @@ async def test_validate_2fa_code_failed(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == CONF_VERIFICATION_CODE
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "validate_verification_code"}
 
 
@@ -580,6 +584,7 @@ async def test_validate_2fa_code_not_provided(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == CONF_VERIFICATION_CODE
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "validate_verification_code"}
 
 
@@ -613,6 +618,7 @@ async def test_2fa_code_failed_request(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == CONF_VERIFICATION_CODE
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "send_verification_code"}
 
 
@@ -646,6 +652,7 @@ async def test_2fa_code_non_pyicloud_error(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == CONF_VERIFICATION_CODE
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "send_verification_code"}
 
 
@@ -677,6 +684,7 @@ async def test_2fa_code_returned_false(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == CONF_VERIFICATION_CODE
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "send_verification_code"}
 
 
@@ -723,6 +731,7 @@ async def test_password_update_wrong_password(hass: HomeAssistant) -> None:
     )
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {CONF_PASSWORD: "invalid_auth"}
 
 

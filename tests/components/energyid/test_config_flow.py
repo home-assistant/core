@@ -139,6 +139,7 @@ async def test_config_flow_auth_and_claim_step_success(hass: HomeAssistant) -> N
         )
         await hass.async_block_till_done()
 
+        # pylint: disable-next=home-assistant-tests-config-flow-unique-id
         assert final_result["type"] is FlowResultType.CREATE_ENTRY
         assert final_result["title"] == TEST_RECORD_NAME
         assert final_result["description"] == "add_sensor_mapping_hint"
@@ -327,6 +328,7 @@ async def test_config_flow_connection_error(hass: HomeAssistant) -> None:
             },
         )
         assert result2["type"] is FlowResultType.FORM
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result2["errors"]["base"] == "cannot_connect"
 
 
@@ -351,6 +353,7 @@ async def test_config_flow_unexpected_error(hass: HomeAssistant) -> None:
             },
         )
         assert result2["type"] is FlowResultType.FORM
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result2["errors"]["base"] == "unknown_auth_error"
 
 
@@ -406,6 +409,7 @@ async def test_config_flow_external_step_claimed_during_display(
         )
         await hass.async_block_till_done()
 
+        # pylint: disable-next=home-assistant-tests-config-flow-unique-id
         assert final_result["type"] is FlowResultType.CREATE_ENTRY
 
 
@@ -536,6 +540,7 @@ async def test_config_flow_client_response_error(
         )
 
         assert result2["type"] is FlowResultType.FORM
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result2["errors"]["base"] == expected_error
 
 
@@ -795,6 +800,7 @@ async def test_reauth_with_error(hass: HomeAssistant) -> None:
             },
         )
         assert result2["type"] is FlowResultType.FORM
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result2["errors"]["base"] == "invalid_auth"
 
 
@@ -928,6 +934,7 @@ async def test_polling_cancellation_on_success(hass: HomeAssistant) -> None:
         result_done = await hass.config_entries.flow.async_configure(
             result_external["flow_id"]
         )
+        # pylint: disable-next=home-assistant-tests-config-flow-unique-id
         assert result_done["type"] is FlowResultType.CREATE_ENTRY
 
         # Verify polling was cancelled - the auth count should not increase

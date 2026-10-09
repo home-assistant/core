@@ -47,6 +47,7 @@ async def test_form(hass: HomeAssistant, surepetcare: NonCallableMagicMock) -> N
         "password": "test-password",
         "token": "token",
     }
+    assert result2["result"].unique_id == "test-username"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -69,6 +70,7 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
         )
 
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
@@ -91,6 +93,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
         )
 
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
@@ -113,6 +116,7 @@ async def test_form_unknown_error(hass: HomeAssistant) -> None:
         )
 
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "unknown"}
 
 
@@ -219,6 +223,7 @@ async def test_reauthentication_failure(hass: HomeAssistant) -> None:
 
     assert result2["step_id"] == "reauth_confirm"
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"]["base"] == "invalid_auth"
 
 
@@ -249,6 +254,7 @@ async def test_reauthentication_cannot_connect(hass: HomeAssistant) -> None:
 
     assert result2["step_id"] == "reauth_confirm"
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"]["base"] == "cannot_connect"
 
 
@@ -279,4 +285,5 @@ async def test_reauthentication_unknown_failure(hass: HomeAssistant) -> None:
 
     assert result2["step_id"] == "reauth_confirm"
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"]["base"] == "unknown"

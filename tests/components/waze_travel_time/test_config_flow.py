@@ -218,6 +218,7 @@ async def test_invalid_config_entry(
     )
 
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "cannot_connect"}
 
     assert "Error trying to validate entry" in caplog.text

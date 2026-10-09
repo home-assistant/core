@@ -225,6 +225,7 @@ async def test_show_config_form_validate_token(hass: HomeAssistant) -> None:
         CONF_DEVICE_TYPE: PlaatoDeviceType.Keg,
         CONF_DEVICE_NAME: "device_name",
     }
+    assert result["result"].unique_id == "valid_token"
 
 
 async def test_show_config_form_no_cloud_webhook(
@@ -313,6 +314,7 @@ async def test_show_config_form_api_method_no_auth_token(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "api_method"
     assert len(result["errors"]) == 1
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"]["base"] == "no_api_method"
 
 

@@ -91,6 +91,7 @@ async def test_form_success(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "ABCDEFGHIJ"
     assert result["data"] == {**CONNECTION_INPUT, CONF_MODEL: expected_model}
+    assert result["result"].unique_id == "ABCDEFGHIJ"
     assert len(mock_setup_entry.mock_calls) == 1
     assert mock_discover.call_count == 1
     assert mock_discover.call_args.kwargs == {"return_when": asyncio.ALL_COMPLETED}
@@ -122,6 +123,7 @@ async def test_form_discover_error(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": expected_error}
 
 
@@ -174,6 +176,7 @@ async def test_form_finalize_error(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == expected_step_id
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": expected_error}
 
 

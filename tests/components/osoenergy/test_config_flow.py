@@ -47,6 +47,7 @@ async def test_user_flow(hass: HomeAssistant) -> None:
     assert result2["data"] == {
         CONF_API_KEY: SUBSCRIPTION_KEY,
     }
+    assert result2["result"].unique_id == TEST_USER_EMAIL
 
     assert len(mock_setup_entry.mock_calls) == 1
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
@@ -140,6 +141,7 @@ async def test_user_flow_invalid_subscription_key(hass: HomeAssistant) -> None:
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
@@ -165,4 +167,5 @@ async def test_user_flow_exception_on_subscription_key_check(
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "invalid_auth"}

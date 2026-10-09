@@ -61,6 +61,7 @@ async def _async_snapshot_past(
     try:
         await hass.async_add_executor_job(_write_image, snapshot_file, image)
     except OSError as err:
+        # pylint: disable-next=home-assistant-log-and-raise
         _LOGGER.error(
             "Reolink snapshot_past: Can't write image to '%s': %s",
             snapshot_file,

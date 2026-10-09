@@ -181,6 +181,7 @@ async def test_reauth_flow_error_handling(
     await hass.async_block_till_done()
 
     assert result_configure["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result_configure["errors"] == expected_error
 
 
@@ -219,6 +220,7 @@ async def test_reconfigure_flow_error_handling(
     await hass.async_block_till_done()
 
     assert result_configure["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result_configure["errors"] == expected_error
 
 

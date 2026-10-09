@@ -127,6 +127,7 @@ async def async_setup_entry(  # noqa: C901
             f"Failed to connect to music assistant server {mass_url}: {err}"
         ) from err
     except MusicAssistantError as err:
+        # pylint: disable-next=home-assistant-log-and-raise
         LOGGER.exception("Failed to connect to music assistant server", exc_info=err)
         raise ConfigEntryNotReady(
             f"Unknown error connecting to the Music Assistant server {mass_url}"

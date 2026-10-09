@@ -85,6 +85,7 @@ async def test_connection_error(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -113,6 +114,7 @@ async def test_flow_errors(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": error}
 
 
@@ -304,6 +306,7 @@ async def test_hassio_connection_error(
     assert result
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "hassio_confirm"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
 
 

@@ -135,6 +135,7 @@ async def test_connection_error(hass: HomeAssistant) -> None:
         result["flow_id"], user_input=DEMO_USER_INPUT
     )
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -151,6 +152,7 @@ async def test_wrong_credentials(hass: HomeAssistant) -> None:
     )
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {
         CONF_USERNAME: "invalid_auth",
         CONF_PASSWORD: "invalid_auth",
@@ -212,6 +214,7 @@ async def test_reauth_failed(
     )
 
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {
         CONF_PASSWORD: "invalid_auth",
     }
@@ -240,6 +243,7 @@ async def test_reauth_failed_conn_error(
     )
 
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "cannot_connect"}
 
 

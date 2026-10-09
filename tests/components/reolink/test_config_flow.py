@@ -505,6 +505,7 @@ async def test_dhcp_flow(hass: HomeAssistant) -> None:
     assert result["options"] == {
         CONF_PROTOCOL: DEFAULT_PROTOCOL,
     }
+    assert result["result"].unique_id == TEST_MAC
 
 
 async def test_dhcp_ip_update_aborted_if_wrong_mac(

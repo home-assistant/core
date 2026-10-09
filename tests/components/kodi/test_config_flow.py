@@ -59,6 +59,7 @@ async def test_user_flow(hass: HomeAssistant, user_flow: str) -> None:
         result = await hass.config_entries.flow.async_configure(user_flow, TEST_HOST)
         await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TEST_HOST["host"]
     assert result["data"] == {
@@ -295,6 +296,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, user_flow: str) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "credentials"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "unknown"}
 
     with (
@@ -337,6 +339,7 @@ async def test_form_cannot_connect_http(hass: HomeAssistant, user_flow: str) -> 
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -356,6 +359,7 @@ async def test_form_exception_http(hass: HomeAssistant, user_flow: str) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "unknown"}
 
 
@@ -419,6 +423,7 @@ async def test_form_cannot_connect_ws(hass: HomeAssistant, user_flow: str) -> No
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "ws_port"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -462,6 +467,7 @@ async def test_form_exception_ws(hass: HomeAssistant, user_flow: str) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "ws_port"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "unknown"}
 
 
@@ -505,6 +511,7 @@ async def test_discovery(hass: HomeAssistant) -> None:
         "name": "hostname",
         "timeout": DEFAULT_TIMEOUT,
     }
+    assert result["result"].unique_id == UUID
 
     assert len(mock_setup_entry.mock_calls) == 1
 

@@ -170,6 +170,7 @@ async def test_flow_discovered_devices(hass: HomeAssistant) -> None:
             config_flow.CONF_USERNAME: USERNAME,
             config_flow.CONF_PASSWORD: PASSWORD,
         }
+        assert result["result"].unique_id == MAC
 
 
 async def test_flow_discovered_devices_ignore_configured_manual_input(
@@ -366,6 +367,7 @@ async def test_flow_manual_entry(hass: HomeAssistant) -> None:
             config_flow.CONF_USERNAME: USERNAME,
             config_flow.CONF_PASSWORD: PASSWORD,
         }
+        assert result["result"].unique_id == MAC
 
 
 async def test_flow_manual_entry_multiple_interfaces(hass: HomeAssistant) -> None:
@@ -592,6 +594,7 @@ async def test_flow_manual_entry_fails(hass: HomeAssistant) -> None:
 
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "configure"
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"] == {"base": "onvif_error"}
         assert result["description_placeholders"] == {
             "error": "Unknown error: camera not ready"
@@ -675,6 +678,7 @@ async def test_flow_manual_entry_wrong_password(hass: HomeAssistant) -> None:
 
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "configure"
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"] == {"password": "auth_failed"}
         assert result["description_placeholders"] == {"error": "Authority failure"}
         setup_mock_onvif_camera(mock_onvif_camera, two_profiles=True)
@@ -1071,6 +1075,7 @@ async def test_flow_manual_entry_wrong_port(hass: HomeAssistant) -> None:
 
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "configure"
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"] == {"port": "no_onvif_service"}
         assert result["description_placeholders"] == {}
         setup_mock_onvif_camera(mock_onvif_camera, two_profiles=True)

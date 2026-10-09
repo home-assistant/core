@@ -219,6 +219,7 @@ async def test_connection_error(hass: HomeAssistant) -> None:
             user_input=USER_INPUT,
         )
 
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"] == {"base": "cannot_connect"}
 
 

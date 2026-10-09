@@ -49,6 +49,7 @@ async def test_form_user(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == MOCK_NAME
     assert result2["data"] == {CONF_IP_ADDRESS: "127.0.0.1"}
+    assert result2["result"].unique_id == MOCK_UUID
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -65,6 +66,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
         )
 
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {CONF_IP_ADDRESS: "cannot_connect"}
 
 
@@ -81,6 +83,7 @@ async def test_form_unknown_exception(hass: HomeAssistant) -> None:
         )
 
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "unknown"}
 
 
@@ -116,6 +119,7 @@ async def test_zeroconf_discovery(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "My Fan"
     assert result2["data"] == {CONF_IP_ADDRESS: "127.0.0.1"}
+    assert result2["result"].unique_id == MOCK_UUID
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -201,4 +205,5 @@ async def test_user_flow_is_not_blocked_by_discovery(hass: HomeAssistant) -> Non
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == MOCK_NAME
     assert result2["data"] == {CONF_IP_ADDRESS: "127.0.0.1"}
+    assert result2["result"].unique_id == MOCK_UUID
     assert len(mock_setup_entry.mock_calls) == 1

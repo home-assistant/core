@@ -38,6 +38,7 @@ async def test_standard_config_with_single_fireplace(
         {CONF_USERNAME: "donJulio", CONF_PASSWORD: "Tequila0FD00m"},
     )
     # For a single fireplace we just create it
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         "ip_address": "192.168.2.108",
@@ -155,6 +156,7 @@ async def test_standard_config_with_multiple_fireplace(
         "username": "grumpypanda@china.cn",
         "password": "you-stole-my-pandas",
     }
+    assert result["result"].unique_id == "4GC295860E5837G40D9974B7FD459234"
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -180,6 +182,7 @@ async def test_dhcp_discovery_intellifire_device(
         {CONF_USERNAME: "donJulio", CONF_PASSWORD: "Tequila0FD00m"},
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "4GC295860E5837G40D9974B7FD459234"
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -323,6 +326,7 @@ async def test_options_flow_local_read_unavailable(
     )
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {CONF_READ_MODE: "local_unavailable"}
     # Verify connectivity was checked
     mock_fp.async_validate_connectivity.assert_called_once()
@@ -356,6 +360,7 @@ async def test_options_flow_local_control_unavailable(
     )
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {CONF_CONTROL_MODE: "local_unavailable"}
 
 
@@ -387,6 +392,7 @@ async def test_options_flow_cloud_read_unavailable(
     )
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {CONF_READ_MODE: "cloud_unavailable"}
     # Verify connectivity was checked
     mock_fp.async_validate_connectivity.assert_called_once()
@@ -420,4 +426,5 @@ async def test_options_flow_cloud_control_unavailable(
     )
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {CONF_CONTROL_MODE: "cloud_unavailable"}

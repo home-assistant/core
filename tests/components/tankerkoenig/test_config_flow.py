@@ -83,6 +83,7 @@ async def test_user(hass: HomeAssistant) -> None:
             "36b4b812-xxxx-xxxx-xxxx-c51735325858",
         ]
         assert result["options"][CONF_SHOW_ON_MAP]
+        assert result["result"].unique_id == "51.0_13.0"
 
         await hass.async_block_till_done()
 
@@ -130,6 +131,7 @@ async def test_exception_security(hass: HomeAssistant) -> None:
         )
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"][CONF_API_KEY] == "invalid_auth"
 
 
@@ -150,6 +152,7 @@ async def test_user_no_stations(hass: HomeAssistant) -> None:
         )
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"][CONF_RADIUS] == "no_stations"
 
 

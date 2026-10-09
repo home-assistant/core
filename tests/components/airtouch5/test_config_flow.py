@@ -39,6 +39,7 @@ async def test_success(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None
     assert result2["data"] == {
         "host": host,
     }
+    assert result2["result"].unique_id == host
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -60,4 +61,5 @@ async def test_cannot_connect(hass: HomeAssistant) -> None:
         )
 
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "cannot_connect"}

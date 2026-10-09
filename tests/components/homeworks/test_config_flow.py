@@ -162,6 +162,7 @@ async def test_user_flow_credentials_password_only(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "need_username_with_password"}
 
 
@@ -199,6 +200,7 @@ async def test_user_flow_already_exists(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "duplicated_controller_id"}
 
 
@@ -234,6 +236,7 @@ async def test_user_flow_cannot_connect(
         },
     )
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": error}
     assert result["step_id"] == "user"
 
@@ -322,6 +325,7 @@ async def test_reconfigure_flow_flow_duplicate(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "duplicated_host_port"}
 
 
@@ -390,6 +394,7 @@ async def test_reconfigure_flow_credentials_password_only(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "need_username_with_password"}
 
 
@@ -710,6 +715,7 @@ async def test_options_add_keypad_with_error(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "add_keypad"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "duplicated_addr"}
 
 
@@ -934,6 +940,7 @@ async def test_options_add_button_flow_duplicate(
     )
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "duplicated_number"}
 
 

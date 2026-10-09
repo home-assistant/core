@@ -78,6 +78,7 @@ async def test_form(hass: HomeAssistant) -> None:
         ATTR_SERIAL_NUMBER: "9876543",
         "title": "PhotoVoltaic Inverters",
     }
+    assert result2["result"].unique_id == "9876543"
     await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
@@ -171,5 +172,6 @@ async def test_form_invalid_com_ports(hass: HomeAssistant) -> None:
             result["flow_id"],
             {CONF_PORT: "/dev/ttyUSB7", CONF_ADDRESS: 7},
         )
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "cannot_connect"}
     assert len(mock_clientclose.mock_calls) == 1

@@ -117,6 +117,7 @@ async def test_manual_flow_success(hass: HomeAssistant) -> None:
         CONF_MAC: TEST_MAC_ADDRESS,
         CONF_SN: TEST_SERIAL_NUMBER,
     }
+    assert result["result"].unique_id == str(TEST_DEVICE_ID)
 
 
 async def test_manual_flow_duplicate_unique_id(hass: HomeAssistant) -> None:
@@ -385,6 +386,7 @@ async def test_manual_step_errors(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "manually"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": expected_error}
 
 
@@ -412,6 +414,7 @@ async def test_manual_step_retains_user_input_on_error(hass: HomeAssistant) -> N
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "manually"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "invalid_token"}
     data_schema = result["data_schema"].schema
     assert (
@@ -511,6 +514,7 @@ async def test_search_flow_no_new_devices_found(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "search"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "no_devices"}
 
 
@@ -586,6 +590,7 @@ async def test_auto_flow_cloud_device_info_overrides_name_and_subtype(
     assert result["data"][CONF_SUBTYPE] == 3
     assert result["data"][CONF_TOKEN] == TEST_TOKEN
     assert result["data"][CONF_KEY] == TEST_KEY
+    assert result["result"].unique_id == str(TEST_DEVICE_ID)
 
 
 async def test_auto_flow_v3_preset_phase1_cloud_keys_success(
@@ -657,6 +662,7 @@ async def test_auto_flow_v3_preset_phase1_cloud_keys_success(
     assert result["data"][CONF_DEVICE_ID] == TEST_DEVICE_ID
     assert result["data"][CONF_TOKEN] == TEST_TOKEN
     assert result["data"][CONF_KEY] == TEST_KEY
+    assert result["result"].unique_id == str(TEST_DEVICE_ID)
 
 
 async def test_auto_flow_v3_preset_phase1_default_key_success(
@@ -726,6 +732,7 @@ async def test_auto_flow_v3_preset_phase1_default_key_success(
     assert result["data"][CONF_DEVICE_ID] == TEST_DEVICE_ID
     assert result["data"][CONF_TOKEN] == TEST_TOKEN
     assert result["data"][CONF_KEY] == TEST_KEY
+    assert result["result"].unique_id == str(TEST_DEVICE_ID)
 
 
 async def test_auto_flow_v3_default_key_success_after_cloud_error(
@@ -868,6 +875,7 @@ async def test_auto_flow_phase2_login_false_keeps_phase1_cloud_error(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "auto"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "device_not_registered"}
     assert result["description_placeholders"] == {"error_code": "3201"}
 
@@ -943,6 +951,7 @@ async def test_auto_flow_v3_token_retrieval_exhausted(hass: HomeAssistant) -> No
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "auto"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "token_unavailable"}
     assert dm.connect.call_count == 4
 
@@ -1003,6 +1012,7 @@ async def test_auto_flow_v3_phase2_login_failed(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "auto"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "preset_login_failed"}
     assert cloud.login.call_count == 2
 
@@ -1063,6 +1073,7 @@ async def test_auto_flow_v3_phase2_no_keys_available(hass: HomeAssistant) -> Non
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "auto"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "token_unavailable"}
     assert cloud.get_cloud_keys.call_count == 2
 
@@ -1146,6 +1157,7 @@ async def test_auto_flow_v3_phase2_success_after_phase1_failure(
     assert result["data"][CONF_DEVICE_ID] == TEST_DEVICE_ID
     assert result["data"][CONF_TOKEN] == TEST_TOKEN
     assert result["data"][CONF_KEY] == TEST_KEY
+    assert result["result"].unique_id == str(TEST_DEVICE_ID)
     assert cloud.login.call_count == 2
     assert cloud.get_cloud_keys.call_count == 2
 
@@ -1212,6 +1224,7 @@ async def test_auto_flow_recovers_after_preset_login_error(
             user_input={"login_mode": LOGIN_MODE_PRESET},
         )
         assert result["step_id"] == "auto"
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"] == {"base": "preset_login_failed"}
 
         # re-selecting the device must route back through auth_method
@@ -1416,6 +1429,7 @@ async def test_login_credentials_step_login_failed_sets_error(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "login_credentials"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "login_failed"}
 
     data_schema = result["data_schema"].schema
@@ -1503,6 +1517,7 @@ async def test_login_credentials_step_maps_cloud_error(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "login_credentials"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": expected_error}
     assert result["description_placeholders"] == {"error_code": expected_code}
 
@@ -1604,6 +1619,7 @@ async def test_auto_flow_preset_auth_maps_cloud_error(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == expected_step
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": expected_error}
     assert result["description_placeholders"] == {"error_code": expected_code}
 
@@ -1862,6 +1878,7 @@ async def test_manual_step_v3_missing_token_key_sets_retrieved_values(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "manually"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "device_auth_failed"}
 
     # _select_and_connect() calls device_selector() positionally (name,
@@ -1945,6 +1962,7 @@ async def test_manual_step_v3_missing_token_key_unsupported_device_type(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "manually"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "token_unavailable"}
 
 
@@ -1999,6 +2017,7 @@ async def test_manually_flow_success(hass: HomeAssistant) -> None:
     assert result["data"][CONF_IP_ADDRESS] == TEST_IP_ADDRESS
     assert result["data"][CONF_TOKEN] == TEST_TOKEN
     assert result["data"][CONF_KEY] == TEST_KEY
+    assert result["result"].unique_id == str(TEST_DEVICE_ID)
 
 
 async def test_manually_flow_unsupported_device_type(hass: HomeAssistant) -> None:
@@ -2038,6 +2057,7 @@ async def test_manually_flow_unsupported_device_type(hass: HomeAssistant) -> Non
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "manually"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "device_auth_failed"}
 
 
@@ -2088,6 +2108,7 @@ async def test_manually_flow_builds_concrete_device_subclass(
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == str(TEST_DEVICE_ID)
     dm = mock_connect.call_args.args[0]
     assert type(dm) is not MideaDevice
     assert isinstance(dm.build_query(), list)
@@ -2145,6 +2166,7 @@ async def test_manually_flow_runs_device_selector_in_executor(
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == str(TEST_DEVICE_ID)
     dispatched_funcs = [call.args[0] for call in mock_executor_job.call_args_list]
     assert any(
         isinstance(func, partial) and func.func is _select_and_connect
@@ -2289,6 +2311,7 @@ async def test_login_credentials_step_success_resumes_auto_flow(
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_DEVICE_ID] == TEST_DEVICE_ID
+    assert result["result"].unique_id == str(TEST_DEVICE_ID)
 
 
 async def test_auth_method_account_mode_redirects_to_login_credentials(
@@ -2390,6 +2413,7 @@ async def test_auth_method_preset_login_failed(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "auth_method"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "preset_login_failed"}
 
 

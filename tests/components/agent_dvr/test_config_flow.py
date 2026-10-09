@@ -67,6 +67,7 @@ async def test_connection_error(
         user_input={CONF_HOST: "example.local", CONF_PORT: 8090},
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"]["base"] == "cannot_connect"
     assert result["step_id"] == "user"
     assert result["type"] is FlowResultType.FORM

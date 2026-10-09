@@ -111,6 +111,7 @@ async def test_user_setup(hass: HomeAssistant) -> None:
         CONF_ADDRESS: "aa:bb:cc:dd:ee:ff",
         CONF_ACCESS_TOKEN: ANY,
     }
+    assert result3["result"].unique_id == "aa:bb:cc:dd:ee:ff"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -191,6 +192,7 @@ async def test_no_link(hass: HomeAssistant) -> None:
 
     assert result3["type"] is FlowResultType.FORM
     assert result3["step_id"] == "link"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result3["errors"] == {"base": "linking"}
 
     assert len(mock_setup_entry.mock_calls) == 0

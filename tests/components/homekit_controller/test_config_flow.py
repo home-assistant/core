@@ -841,6 +841,7 @@ async def test_pair_form_errors_on_finish(
         result["flow_id"], user_input={"pairing_code": "111-22-333"}
     )
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"]["pairing_code"] == expected
 
     assert get_flow_context(hass, result) == {
@@ -890,6 +891,7 @@ async def test_pair_unknown_errors(hass: HomeAssistant, controller) -> None:
         result["flow_id"], user_input={"pairing_code": "111-22-333"}
     )
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"]["pairing_code"] == "pairing_failed"
     assert (
         result["description_placeholders"]["error"] == "The bluetooth connection failed"

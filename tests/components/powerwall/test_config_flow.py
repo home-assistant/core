@@ -64,6 +64,7 @@ async def test_form_source_user(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "MySite"
     assert result2["data"] == VALID_CONFIG
+    assert result2["result"].unique_id == MOCK_GATEWAY_DIN
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -86,6 +87,7 @@ async def test_form_cannot_connect(hass: HomeAssistant, exc: Exception) -> None:
         )
 
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {CONF_IP_ADDRESS: "cannot_connect"}
 
 
@@ -109,6 +111,7 @@ async def test_invalid_auth(hass: HomeAssistant) -> None:
         )
 
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {CONF_PASSWORD: "invalid_auth"}
 
 
@@ -166,6 +169,7 @@ async def test_form_non_404_api_error_propagates(hass: HomeAssistant) -> None:
         )
 
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "unknown"}
 
 
@@ -186,6 +190,7 @@ async def test_form_unknown_exception(hass: HomeAssistant) -> None:
         )
 
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "unknown"}
 
 
@@ -209,6 +214,7 @@ async def test_form_wrong_version(hass: HomeAssistant) -> None:
         )
 
     assert result3["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result3["errors"] == {"base": "wrong_version"}
 
 
@@ -276,6 +282,7 @@ async def test_already_configured_with_ignored(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Some site"
     assert result2["data"] == {"ip_address": "1.1.1.1", "password": "00GGX"}
+    assert result2["result"].unique_id == "00GGX"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -453,6 +460,7 @@ async def test_dhcp_discovery_auto_configure(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Some site"
     assert result2["data"] == {"ip_address": "1.1.1.1", "password": "00GGX"}
+    assert result2["result"].unique_id == "00GGX"
     assert len(mock_setup_entry.mock_calls) == 1
 
 

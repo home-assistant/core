@@ -66,6 +66,7 @@ async def test_flow_user_works(hass: HomeAssistant, device_name: str) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == device.name
     assert result["data"] == device.get_entry_data()
+    assert result["result"].unique_id == device.mac
 
     assert mock_hello.call_count == 1
     assert mock_api.auth.call_count == 1
@@ -143,6 +144,7 @@ async def test_flow_user_invalid_ip_address(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "invalid_host"}
 
 
@@ -160,6 +162,7 @@ async def test_flow_user_invalid_hostname(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "invalid_host"}
 
 
@@ -179,6 +182,7 @@ async def test_flow_user_device_not_found(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -215,6 +219,7 @@ async def test_flow_user_network_unreachable(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -232,6 +237,7 @@ async def test_flow_user_os_error(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "unknown"}
 
 
@@ -253,6 +259,7 @@ async def test_flow_auth_authentication_error(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reset"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "invalid_auth"}
 
 
@@ -274,6 +281,7 @@ async def test_flow_auth_network_timeout(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "auth"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -295,6 +303,7 @@ async def test_flow_auth_firmware_error(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "auth"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "unknown"}
 
 
@@ -316,6 +325,7 @@ async def test_flow_auth_network_unreachable(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "auth"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -337,6 +347,7 @@ async def test_flow_auth_os_error(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "auth"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "unknown"}
 
 
@@ -412,6 +423,7 @@ async def test_flow_unlock_works(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == device.name
     assert result["data"] == device.get_entry_data()
+    assert result["result"].unique_id == device.mac
 
     assert mock_api.set_lock.call_args == call(False)
     assert mock_api.set_lock.call_count == 1
@@ -441,6 +453,7 @@ async def test_flow_unlock_network_timeout(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "unlock"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -468,6 +481,7 @@ async def test_flow_unlock_firmware_error(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "unlock"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "unknown"}
 
 
@@ -495,6 +509,7 @@ async def test_flow_unlock_network_unreachable(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "unlock"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -522,6 +537,7 @@ async def test_flow_unlock_os_error(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "unlock"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "unknown"}
 
 
@@ -554,6 +570,7 @@ async def test_flow_do_not_unlock(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == device.name
     assert result["data"] == device.get_entry_data()
+    assert result["result"].unique_id == device.mac
 
     assert mock_api.set_lock.call_count == 0
 
@@ -584,6 +601,7 @@ async def test_flow_import_works(hass: HomeAssistant) -> None:
     assert result["data"]["host"] == device.host
     assert result["data"]["mac"] == device.mac
     assert result["data"]["type"] == device.devtype
+    assert result["result"].unique_id == device.mac
 
     assert mock_api.auth.call_count == 1
     assert mock_hello.call_count == 1
@@ -788,6 +806,7 @@ async def test_flow_reauth_invalid_host(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "invalid_host"}
 
     assert mock_hello.call_count == 1
@@ -861,6 +880,7 @@ async def test_dhcp_can_finish(hass: HomeAssistant) -> None:
         "timeout": 10,
         "type": 24374,
     }
+    assert result2["result"].unique_id == "34ea34b43b5a"
 
 
 async def test_dhcp_fails_to_connect(hass: HomeAssistant) -> None:

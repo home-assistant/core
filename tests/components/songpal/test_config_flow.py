@@ -115,6 +115,7 @@ async def test_flow_user(hass: HomeAssistant) -> None:
             CONF_NAME: MODEL,
             CONF_ENDPOINT: ENDPOINT,
         }
+        assert result["result"].unique_id == ENDPOINT
 
     mocked_device.get_supported_methods.assert_called_once()
     mocked_device.get_interface_information.assert_called_once()
@@ -131,6 +132,7 @@ async def test_flow_import(hass: HomeAssistant) -> None:
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == FRIENDLY_NAME
         assert result["data"] == CONF_DATA
+        assert result["result"].unique_id == ENDPOINT
 
     mocked_device.get_supported_methods.assert_called_once()
     mocked_device.get_interface_information.assert_not_called()
@@ -147,6 +149,7 @@ async def test_flow_import_without_name(hass: HomeAssistant) -> None:
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == MODEL
         assert result["data"] == {CONF_NAME: MODEL, CONF_ENDPOINT: ENDPOINT}
+        assert result["result"].unique_id == ENDPOINT
 
     mocked_device.get_supported_methods.assert_called_once()
     mocked_device.get_interface_information.assert_called_once()
@@ -243,6 +246,7 @@ async def test_user_invalid(hass: HomeAssistant) -> None:
         )
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"] == {"base": "cannot_connect"}
 
     mocked_device.get_supported_methods.assert_called_once()

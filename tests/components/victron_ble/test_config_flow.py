@@ -307,6 +307,7 @@ async def test_async_step_reauth_device_not_found(
         )
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "reauth_confirm"
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"] == {"base": "no_devices_found"}
 
 

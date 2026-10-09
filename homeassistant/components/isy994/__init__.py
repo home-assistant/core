@@ -18,7 +18,11 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 from homeassistant.helpers import (
     aiohttp_client,
     config_validation as cv,
@@ -97,8 +101,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: IsyConfigEntry) -> bool:
         port = host.port or 443
         session = aiohttp_client.async_get_clientsession(hass, verify_ssl=verify_ssl)
     else:
-        LOGGER.error("The ISY/IoX host value in configuration is invalid")
-        return False
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="invalid_host",
+        )
 
     # Connect to ISY controller.
     isy = ISY(

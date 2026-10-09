@@ -104,6 +104,7 @@ async def test_flow_init_connection_error(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "invalid_sgtin_or_pin"}
 
 
@@ -135,6 +136,7 @@ async def test_flow_init_rejected_pin(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "invalid_sgtin_or_pin"}
 
 
@@ -194,6 +196,7 @@ async def test_flow_link_press_button(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "link"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "press_the_button"}
 
 

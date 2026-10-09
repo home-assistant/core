@@ -49,6 +49,7 @@ async def test_config_flow_cannot_connect(hass: HomeAssistant) -> None:
         )
 
         assert result["type"] is FlowResultType.FORM
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"]["base"] == "cannot_connect"
 
         client_mock.side_effect = None
@@ -87,6 +88,7 @@ async def test_config_flow_timeout(hass: HomeAssistant) -> None:
         )
 
         assert result["type"] is FlowResultType.FORM
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"]["base"] == "unknown"
 
         client_mock.side_effect = None
@@ -121,6 +123,7 @@ async def test_config_flow_already_configured(hass: HomeAssistant) -> None:
         user_input={CONF_LOCATION: DEFAULT_LOCATION},
     )
     assert result1["type"] is FlowResultType.CREATE_ENTRY
+    assert result1["result"].unique_id == DEFAULT_LOCATION
 
     r2 = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}

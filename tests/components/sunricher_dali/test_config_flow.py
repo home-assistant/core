@@ -17,6 +17,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
+from .conftest import GATEWAY_SERIAL
+
 from tests.common import MockConfigEntry
 
 
@@ -91,6 +93,7 @@ async def test_discovery_no_gateways_found(
     )
 
     assert result.get("type") is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == GATEWAY_SERIAL
 
 
 async def test_discovery_gateway_error(
@@ -197,6 +200,7 @@ async def test_discovery_duplicate_filtered(
     )
 
     assert result.get("type") is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == GATEWAY_SERIAL
 
 
 async def test_discovery_unique_id_already_configured(

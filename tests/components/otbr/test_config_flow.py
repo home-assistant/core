@@ -261,6 +261,7 @@ async def test_user_flow_additional_entry_same_address(
         },
     )
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "already_configured"}
 
 
@@ -352,6 +353,7 @@ async def test_user_flow_get_dataset_404(
         },
     )
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -367,6 +369,7 @@ async def test_user_flow_get_ba_id_connect_error(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, error
 ) -> None:
     """Test the user flow."""
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     await _test_user_flow_connect_error(hass, "get_border_agent_id", error)
 
 
@@ -383,6 +386,7 @@ async def test_user_flow_get_dataset_connect_error(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, error
 ) -> None:
     """Test the user flow."""
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     await _test_user_flow_connect_error(hass, "get_active_dataset_tlvs", error)
 
 
@@ -1039,6 +1043,7 @@ async def test_hassio_discovery_flow_new_port_other_addon(hass: HomeAssistant) -
 
     # Another entry will be created
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == HASSIO_DATA.uuid
 
     # Make sure the data of the existing entry was not updated
     expected_data = {

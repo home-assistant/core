@@ -1292,6 +1292,7 @@ async def test_configure_secure_knxkeys_invalid_signature(hass: HomeAssistant) -
         assert secure_knxkeys["type"] is FlowResultType.FORM
         assert secure_knxkeys["errors"]
         assert (
+            # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
             secure_knxkeys["errors"][CONF_KNX_KNXKEY_PASSWORD]
             == "keyfile_invalid_signature"
         )
@@ -1319,6 +1320,7 @@ async def test_configure_secure_knxkeys_no_tunnel_for_host(hass: HomeAssistant) 
             },
         )
         assert secure_knxkeys["type"] is FlowResultType.FORM
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert secure_knxkeys["errors"] == {"base": "keyfile_no_tunnel_for_host"}
 
 
@@ -1868,6 +1870,7 @@ async def test_options_telegram_store_postgres_connection_failure(
         )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "telegram_store_postgres"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": expected_error}
 
 
@@ -1904,6 +1907,7 @@ async def test_options_telegram_store_postgres_timeout(
         )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "telegram_store_postgres"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "timeout"}
 
 
@@ -1931,6 +1935,7 @@ async def test_options_telegram_store_postgres_malformed_dsn(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "telegram_store_postgres"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
 
 

@@ -65,6 +65,7 @@ async def test_adding_second_device(
             user_input=USER_INPUT,
         )
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "secondary_device"
 
 
 async def test_connection_error(
@@ -86,6 +87,7 @@ async def test_connection_error(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -107,6 +109,7 @@ async def test_unauthorized(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "unauthorized"}
 
 

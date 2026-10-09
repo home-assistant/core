@@ -52,6 +52,7 @@ async def test_auth_errors(
             result["flow_id"], user_input=config_auth
         )
         assert result["type"] is FlowResultType.FORM
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"] == {"base": error}
 
 
@@ -102,6 +103,7 @@ async def test_coordinate_errors(
         result["flow_id"], user_input=config_coordinates
     )
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == errors
 
 
@@ -257,6 +259,7 @@ async def test_step_user_coordinates(
         CONF_BALANCING_AUTHORITY: "PJM New Jersey",
         CONF_BALANCING_AUTHORITY_ABBREV: "PJM_NJ",
     }
+    assert result["result"].unique_id == "32.87336, -117.22743"
 
 
 @pytest.mark.parametrize(
@@ -296,3 +299,4 @@ async def test_step_user_home(
         CONF_BALANCING_AUTHORITY: "PJM New Jersey",
         CONF_BALANCING_AUTHORITY_ABBREV: "PJM_NJ",
     }
+    assert result["result"].unique_id == "32.87336, -117.22743"

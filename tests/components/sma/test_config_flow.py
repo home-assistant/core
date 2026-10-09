@@ -70,6 +70,7 @@ async def test_form(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == MOCK_USER_INPUT["host"]
     assert result["data"] == MOCK_USER_INPUT
+    assert result["result"].unique_id == str(MOCK_DEVICE.serial)
 
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -102,6 +103,7 @@ async def test_form_exceptions(
         )
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": error}
 
 

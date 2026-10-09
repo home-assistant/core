@@ -2,7 +2,7 @@
 
 import logging
 
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, async_noop
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
@@ -31,7 +31,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: DuckDnsConfigEntry) -> b
     entry.runtime_data = coordinator
 
     # Add a dummy listener as we do not have regular entities
-    entry.async_on_unload(coordinator.async_add_listener(lambda: None))
+    entry.async_on_unload(coordinator.async_add_listener(async_noop))
 
     return True
 

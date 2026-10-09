@@ -424,6 +424,7 @@ async def test_reconfigure_flow_retains_user_input_on_error(
         )
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": error}
     assert result["data_schema"]({CONF_PASSWORD: ""}) == {
         CONF_HOST: user_input[CONF_HOST],
