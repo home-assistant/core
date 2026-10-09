@@ -4,7 +4,7 @@ from aiopvapi.helpers.aiorequest import AioRequest
 from aiopvapi.hub import Hub
 
 from homeassistant.core import HomeAssistant
-from Homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
