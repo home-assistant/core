@@ -63,3 +63,12 @@ class LIFXRssiSensor(LIFXEntity, SensorEntity):
         """Enable RSSI updates."""
         self.async_on_remove(self.coordinator.async_enable_rssi_updates())
         return await super().async_added_to_hass()
+
+    @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Opt in to in-place entity_id changes.
+
+        This can be removed in Home Assistant Core 2027.11.
+        """
+        super().async_entity_id_changed(old_entity_id)
