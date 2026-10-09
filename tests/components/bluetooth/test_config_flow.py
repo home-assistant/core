@@ -3,6 +3,7 @@
 from typing import Any
 from unittest.mock import patch
 
+import attr
 from bluetooth_adapters import DEFAULT_ADDRESS, AdapterDetails
 import pytest
 
@@ -621,6 +622,69 @@ async def test_async_step_integration_discovery_remote_adapter(
     assert ble_device_entry is not None
     assert ble_device_entry.via_device_id == device_entry.id
     assert ble_device_entry.area_id == area_entry.id
+
+    await hass.config_entries.async_unload(new_entry.entry_id)
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+    cancel_scanner()
+    await hass.async_block_till_done()
+
+
+@pytest.mark.usefixtures("enable_bluetooth")
+async def test_async_step_integration_discovery_remote_adapter_composite_source(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test a remote adapter whose stored source device was split since."""
+    entry = MockConfigEntry(domain="test")
+    entry.add_to_hass(hass)
+    other_entry = MockConfigEntry(domain="other")
+    other_entry.add_to_hass(hass)
+    connector = (
+        HaBluetoothConnector(MockBleakClient, "mock_bleak_client", lambda: False),
+    )
+    scanner = FakeRemoteScanner("esp32", "esp32", connector, True)
+    manager = _get_manager()
+    cancel_scanner = manager.async_register_scanner(scanner)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={("test", "BB:BB:BB:BB:BB:BB")},
+    )
+    other_device_entry = device_registry.async_get_or_create(
+        config_entry_id=other_entry.entry_id,
+        identifiers={("other", "BB:BB:BB:BB:BB:BB")},
+    )
+    # Simulate a device split: both devices carry the pre-migration composite id
+    composite_device_id = "composite00000000000000000000ab"
+    device_registry._devices[device_entry.id] = attr.evolve(
+        device_entry, composite_device_id=composite_device_id
+    )
+    device_registry._devices[other_device_entry.id] = attr.evolve(
+        other_device_entry, composite_device_id=composite_device_id
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+        data={
+            CONF_SOURCE: scanner.source,
+            CONF_SOURCE_DOMAIN: "test",
+            CONF_SOURCE_MODEL: "test",
+            CONF_SOURCE_CONFIG_ENTRY_ID: entry.entry_id,
+            CONF_SOURCE_DEVICE_ID: composite_device_id,
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    await hass.async_block_till_done()
+
+    new_entry = result["result"]
+    ble_device_entry = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_BLUETOOTH, scanner.source), new_entry.entry_id
+    )
+    assert ble_device_entry is not None
+    assert ble_device_entry.via_device_id == device_entry.id
+    assert "pre-migration composite device" not in caplog.text
 
     await hass.config_entries.async_unload(new_entry.entry_id)
     await hass.config_entries.async_unload(entry.entry_id)

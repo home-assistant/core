@@ -909,6 +909,9 @@ async def test_unauthenticated_request_forbidden(
     resp = await client.get("/api/brands/hardware/boards/green.png")
     assert resp.status == HTTPStatus.FORBIDDEN
 
+    resp = await client.get("/api/brands/marketplace/my_custom/icon.png")
+    assert resp.status == HTTPStatus.FORBIDDEN
+
 
 async def test_invalid_token_forbidden(
     hass: HomeAssistant,
@@ -987,3 +990,152 @@ async def test_ws_access_token(
 
     assert resp["success"]
     assert resp["result"]["token"] == hass.data[DOMAIN][-1]
+
+
+async def test_marketplace_view_serves_installed_brand(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test that an installed integration serves its own brand folder."""
+    custom = _create_custom_integration(hass, "my_custom", has_branding=True)
+    brand_dir = Path(custom.file_path) / "brand"
+    brand_dir.mkdir(parents=True, exist_ok=True)
+    (brand_dir / "icon.png").write_bytes(FAKE_PNG)
+
+    with patch(
+        "homeassistant.components.brands.async_get_custom_components",
+        return_value={"my_custom": custom},
+    ):
+        client = await hass_client()
+        resp = await client.get("/api/brands/marketplace/my_custom/icon.png")
+
+    assert resp.status == HTTPStatus.OK
+    assert await resp.read() == FAKE_PNG
+    assert aioclient_mock.call_count == 0
+
+
+async def test_marketplace_view_prefers_brands_repository(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test that an image in the brands repository wins over the Marketplace one."""
+    aioclient_mock.get(f"{BRANDS_CDN_URL}/my_custom/icon.png", content=FAKE_PNG)
+    aioclient_mock.get(
+        f"{BRANDS_CDN_URL}/marketplace/my_custom/icon.png", content=BRAND_PNG
+    )
+
+    client = await hass_client()
+    resp = await client.get("/api/brands/marketplace/my_custom/icon.png")
+
+    assert resp.status == HTTPStatus.OK
+    assert await resp.read() == FAKE_PNG
+    assert aioclient_mock.call_count == 1
+
+
+async def test_marketplace_view_serves_marketplace_image(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test serving the brand folder of an integration that is not installed."""
+    aioclient_mock.get(
+        f"{BRANDS_CDN_URL}/my_custom/icon.png", status=HTTPStatus.NOT_FOUND
+    )
+    aioclient_mock.get(
+        f"{BRANDS_CDN_URL}/marketplace/my_custom/icon.png", content=FAKE_PNG
+    )
+
+    client = await hass_client()
+    resp = await client.get("/api/brands/marketplace/my_custom/icon.png")
+
+    assert resp.status == HTTPStatus.OK
+    assert await resp.read() == FAKE_PNG
+    assert aioclient_mock.call_count == 2
+
+    # Both answers are cached, so the second request stays local
+    resp = await client.get("/api/brands/marketplace/my_custom/icon.png")
+    assert await resp.read() == FAKE_PNG
+    assert aioclient_mock.call_count == 2
+
+
+@pytest.mark.parametrize(
+    ("query", "expected_status", "expected_body"),
+    [
+        pytest.param("", HTTPStatus.OK, BRAND_PNG, id="placeholder"),
+        pytest.param(
+            "?placeholder=no", HTTPStatus.NOT_FOUND, None, id="no_placeholder"
+        ),
+    ],
+)
+async def test_marketplace_view_without_image(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    query: str,
+    expected_status: HTTPStatus,
+    expected_body: bytes | None,
+) -> None:
+    """Test an integration without any image, in the brands repository or its own."""
+    aioclient_mock.get(
+        f"{BRANDS_CDN_URL}/my_custom/icon.png", status=HTTPStatus.NOT_FOUND
+    )
+    aioclient_mock.get(
+        f"{BRANDS_CDN_URL}/marketplace/my_custom/icon.png",
+        status=HTTPStatus.NOT_FOUND,
+    )
+    aioclient_mock.get(f"{BRANDS_CDN_URL}/_/_placeholder/icon.png", content=BRAND_PNG)
+
+    client = await hass_client()
+    resp = await client.get(f"/api/brands/marketplace/my_custom/icon.png{query}")
+
+    assert resp.status == expected_status
+    if expected_body is not None:
+        assert await resp.read() == expected_body
+
+
+async def test_marketplace_view_unavailable_is_not_remembered(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test that a 503 for an image not known yet is asked for again next time."""
+    aioclient_mock.get(
+        f"{BRANDS_CDN_URL}/my_custom/icon.png", status=HTTPStatus.NOT_FOUND
+    )
+    aioclient_mock.get(
+        f"{BRANDS_CDN_URL}/marketplace/my_custom/icon.png",
+        status=HTTPStatus.SERVICE_UNAVAILABLE,
+    )
+
+    client = await hass_client()
+    resp = await client.get("/api/brands/marketplace/my_custom/icon.png?placeholder=no")
+    assert resp.status == HTTPStatus.NOT_FOUND
+    assert aioclient_mock.call_count == 2
+
+    # The 404 of the brands repository is remembered, the 503 is not
+    resp = await client.get("/api/brands/marketplace/my_custom/icon.png?placeholder=no")
+    assert resp.status == HTTPStatus.NOT_FOUND
+    assert aioclient_mock.call_count == 3
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        pytest.param("Invalid-Domain/icon.png", id="invalid_domain"),
+        pytest.param("my_custom/icon.svg", id="invalid_image"),
+    ],
+)
+async def test_marketplace_view_invalid_request(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    path: str,
+) -> None:
+    """Test that invalid domains and images are rejected without a CDN request."""
+    client = await hass_client()
+    resp = await client.get(f"/api/brands/marketplace/{path}")
+
+    assert resp.status == HTTPStatus.NOT_FOUND
+    assert aioclient_mock.call_count == 0

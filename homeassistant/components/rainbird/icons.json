@@ -21,6 +21,9 @@
       }
     },
     "sensor": {
+      "program_next_run": {
+        "default": "mdi:calendar-clock"
+      },
       "raindelay": {
         "default": "mdi:water-off"
       }

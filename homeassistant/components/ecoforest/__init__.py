@@ -2,7 +2,7 @@
 
 import logging
 
-import httpx
+import httpx2
 from pyecoforest.api import EcoforestApi
 from pyecoforest.exceptions import (
     EcoforestAuthenticationRequired,
@@ -11,8 +11,9 @@ from pyecoforest.exceptions import (
 
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 
+from .const import DOMAIN
 from .coordinator import EcoforestConfigEntry, EcoforestCoordinator
 
 PLATFORMS: list[Platform] = [Platform.NUMBER, Platform.SENSOR, Platform.SWITCH]
@@ -24,15 +25,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: EcoforestConfigEntry) ->
     """Set up Ecoforest from a config entry."""
 
     host = entry.data[CONF_HOST]
-    auth = httpx.BasicAuth(entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD])
+    auth = httpx2.BasicAuth(entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD])
     api = EcoforestApi(host, auth)
 
     try:
         device = await api.get()
         _LOGGER.debug("Ecoforest: %s", device)
-    except EcoforestAuthenticationRequired:
-        _LOGGER.error("Authentication on device %s failed", host)
-        return False
+    except EcoforestAuthenticationRequired as err:
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="authentication_failed",
+            translation_placeholders={"host": host},
+        ) from err
     except EcoforestConnectionError as err:
         _LOGGER.error("Error communicating with device %s", host)
         raise ConfigEntryNotReady from err

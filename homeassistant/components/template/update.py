@@ -24,8 +24,9 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.trigger_template_entity import CONF_PICTURE
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import TriggerUpdateCoordinator, validators as tcv
+from . import validators as tcv
 from .const import DOMAIN
+from .coordinator import TriggerUpdateCoordinator
 from .entity import AbstractTemplateEntity
 from .helpers import (
     async_setup_template_entry,
