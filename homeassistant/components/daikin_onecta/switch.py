@@ -1,6 +1,5 @@
 """Support for Daikin AirBase zones."""
 
-import logging
 from typing import TYPE_CHECKING, Any, override
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
@@ -16,8 +15,6 @@ PARALLEL_UPDATES = 1
 
 if TYPE_CHECKING:
     from .coordinator import OnectaDataUpdateCoordinator
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -82,7 +79,6 @@ class DaikinSwitch(DaikinManagementPointEntity, SwitchEntity):
         value: str,
     ) -> None:
         """Initialize the switch from a device characteristic."""
-        _LOGGER.debug("DaikinSwitch '%s'", value)
         super().__init__(device, coordinator, embedded_id)
         self._value = value
         self.entity_description = SWITCH_DESCRIPTIONS.get(
@@ -90,12 +86,6 @@ class DaikinSwitch(DaikinManagementPointEntity, SwitchEntity):
         )
         self._attr_unique_id = f"{self._device.id}_{self._embedded_id}_{self._value}"
         self.update_state()
-        _LOGGER.debug(
-            "Device '%s:%s' supports sensor '%s'",
-            device.name,
-            self._embedded_id,
-            self._value,
-        )
 
     def update_state(self) -> None:
         """Refresh the state from the current device data."""
@@ -120,9 +110,6 @@ class DaikinSwitch(DaikinManagementPointEntity, SwitchEntity):
             point.scalar_characteristic(self._value) if point is not None else None
         )
         result = characteristic.value if characteristic is not None else None
-        _LOGGER.debug(
-            "Device '%s' switch '%s' value '%s'", self._device.name, self._value, result
-        )
         return result if isinstance(result, str) else None
 
     @override
@@ -146,12 +133,6 @@ class DaikinSwitch(DaikinManagementPointEntity, SwitchEntity):
                 characteristic.value = "on"
             self.update_state()
             self.coordinator.async_update_listeners()
-        else:
-            _LOGGER.debug(
-                "Device '%s' switch '%s' request to turn on ignored because is already on",
-                self._device.name,
-                self._value,
-            )
 
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
@@ -174,9 +155,3 @@ class DaikinSwitch(DaikinManagementPointEntity, SwitchEntity):
                 characteristic.value = "off"
             self.update_state()
             self.coordinator.async_update_listeners()
-        else:
-            _LOGGER.debug(
-                "Device '%s' switch '%s' request to turn off ignored because is already off",
-                self._device.name,
-                self._value,
-            )

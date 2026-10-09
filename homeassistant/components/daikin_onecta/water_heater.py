@@ -1,7 +1,6 @@
 """Support for the Daikin BRP069A62."""
 
 from collections.abc import Awaitable, Callable
-import logging
 from typing import TYPE_CHECKING, Any, override
 
 from daikin_onecta.client import DomesticHotWaterClient
@@ -26,8 +25,6 @@ PARALLEL_UPDATES = 1
 
 if TYPE_CHECKING:
     from .coordinator import OnectaDataUpdateCoordinator
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -67,13 +64,10 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
         embedded_id: str,
     ) -> None:
         """Initialize the Water device."""
-        _LOGGER.debug("Initializing Daikin Altherma hot water tank")
         super().__init__(device, coordinator, embedded_id)
         self._attr_native_temperature_unit = UnitOfTemperature.CELSIUS
         self._attr_unique_id = f"{self._device.id}_{self._embedded_id}"
         self.update_state()
-        if self.supported_features & WaterHeaterEntityFeature.TARGET_TEMPERATURE:
-            _LOGGER.debug("Device '%s' tank temperature is settable", device.name)
 
     def update_state(self) -> None:
         """Refresh all state attributes from the device."""
@@ -154,15 +148,6 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
         hot_water = point.domestic_hot_water if point is not None else None
         if hot_water is not None and hot_water.current_temperature is not None:
             ret = float(hot_water.current_temperature)
-            _LOGGER.debug(
-                "Device '%s' hot water tank current_temperature '%s'",
-                self._device.name,
-                ret,
-            )
-        else:
-            _LOGGER.debug(
-                "Device '%s' doesn't provide a current temperature", self._device.name
-            )
 
         return ret
 
@@ -172,9 +157,6 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
         dht = self.domestic_hotwater_temperature
         if dht is not None and dht.value is not None:
             ret = float(dht.value)
-        _LOGGER.debug(
-            "Device '%s' hot water tank target_temperature '%s'", self._device.name, ret
-        )
         return ret
 
     def get_min_temp(self) -> float:
@@ -183,11 +165,6 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
         dht = self.domestic_hotwater_temperature
         if dht is not None and dht.min_value is not None:
             ret = float(dht.min_value)
-        _LOGGER.debug(
-            "Device '%s' hot water tank minimum_temperature '%s'",
-            self._device.name,
-            ret,
-        )
         return ret
 
     def get_max_temp(self) -> float:
@@ -196,16 +173,10 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
         dht = self.domestic_hotwater_temperature
         if dht is not None and dht.max_value is not None:
             ret = float(dht.max_value)
-        _LOGGER.debug(
-            "Device '%s' hot water tank maximum temperature '%s'",
-            self._device.name,
-            ret,
-        )
         return ret
 
     async def async_set_tank_temperature(self, value: float) -> None:
         """Set new target temperature."""
-        _LOGGER.debug("Device '%s' set tank temperature: %s", self._device.name, value)
         if self.current_operation == STATE_OFF:
             self._raise_service_validation_error("water_heater_off")
         dht = self.domestic_hotwater_temperature
@@ -245,9 +216,6 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
             pwf = hot_water.powerful_mode if hot_water is not None else None
             if pwf is not None and pwf.value == "on":
                 state = STATE_PERFORMANCE
-        _LOGGER.debug(
-            "Device '%s' hot water tank current mode '%s'", self._device.name, state
-        )
         return state
 
     def get_operation_list(self) -> list[str]:
@@ -268,9 +236,6 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
             if STATE_HEAT_PUMP not in states:
                 states.append(STATE_HEAT_PUMP)
             states.append(STATE_PERFORMANCE)
-        _LOGGER.debug(
-            "Device '%s' hot water tank supports modes %s", self._device.name, states
-        )
         return states
 
     def _requested_modes(self, operation_mode: str) -> tuple[str, str]:
@@ -290,7 +255,6 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
     @override
     async def async_set_operation_mode(self, operation_mode: str) -> None:
         """Set new tank state."""
-        _LOGGER.debug("Set tank operation mode: %s", operation_mode)
         if operation_mode not in self.get_operation_list():
             self._raise_service_validation_error(
                 "water_heater_operation_mode_unavailable"
@@ -326,7 +290,6 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn water heater on."""
-        _LOGGER.debug("Device '%s' request to turn on", self._device.name)
         if self.current_operation == STATE_OFF:
             if not self.supported_features & WaterHeaterEntityFeature.ON_OFF:
                 self._raise_service_validation_error("water_heater_on_off_unavailable")
@@ -338,16 +301,10 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
             if hwtd is not None and hwtd.on_off_mode is not None:
                 hwtd.on_off_mode.value = "on"
             self._publish_write_update()
-        else:
-            _LOGGER.debug(
-                "Device '%s' request to turn on ignored because device is already on",
-                self._device.name,
-            )
 
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn water heater off."""
-        _LOGGER.debug("Device '%s' request to turn off", self._device.name)
         if self.current_operation != STATE_OFF:
             if not self.supported_features & WaterHeaterEntityFeature.ON_OFF:
                 self._raise_service_validation_error("water_heater_on_off_unavailable")
@@ -359,8 +316,3 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
             if hwtd is not None and hwtd.on_off_mode is not None:
                 hwtd.on_off_mode.value = "off"
             self._publish_write_update()
-        else:
-            _LOGGER.debug(
-                "Device '%s' request to turn off ignored because device is already off",
-                self._device.name,
-            )

@@ -236,12 +236,6 @@ class DaikinEnergySensor(DaikinManagementPointEntity, SensorEntity):
         self._sensor_type = details.sensor_type
         self._attr_unique_id = _energy_sensor_unique_id(self._device.id, details)
         self.update_state()
-        _LOGGER.debug(
-            "Device '%s:%s' supports sensor '%s'",
-            device.name,
-            self._embedded_id,
-            buildname,
-        )
 
     def update_state(self) -> None:
         """Refresh the state from the current device data."""
@@ -304,7 +298,6 @@ class DaikinValueSensor(DaikinManagementPointEntity, SensorEntity):
         details: ValueSensorDetails,
     ) -> None:
         """Initialize the sensor from a device value."""
-        _LOGGER.debug("DaikinValueSensor '%s' '%s'", details.sub_type, details.value)
         super().__init__(device, coordinator, details.embedded_id)
         self._sub_type = details.sub_type
         self._value = details.value
@@ -315,12 +308,6 @@ class DaikinValueSensor(DaikinManagementPointEntity, SensorEntity):
             f"{self._device.id}_{details.embedded_id}_{self._sub_type}_{self._value}"
         )
         self.update_state()
-        _LOGGER.debug(
-            "Device '%s:%s' supports sensor '%s'",
-            device.name,
-            self._embedded_id,
-            self._value,
-        )
 
     def update_state(self) -> None:
         """Refresh the state from the current device data."""
@@ -342,9 +329,6 @@ class DaikinValueSensor(DaikinManagementPointEntity, SensorEntity):
         else:
             characteristic = point.scalar_characteristic(self._value)
         result = characteristic.value if characteristic is not None else None
-        _LOGGER.debug(
-            "Device '%s' sensor '%s' value '%s'", self._device.name, self._value, result
-        )
         return result if isinstance(result, str | int | float) else None
 
 
@@ -358,17 +342,11 @@ class DaikinLimitSensor(DaikinEntity, SensorEntity):
         limit_key: str,
     ) -> None:
         """Initialize a rate-limit sensor."""
-        _LOGGER.debug("Device '%s' LimitSensor '%s'", device.name, limit_key)
         super().__init__(device, coordinator, device.gateway_embedded_id or "gateway")
         self._limit_key = limit_key
         self._attr_unique_id = f"{self._device.id}_limitsensor_{self._limit_key}"
         self.entity_description = SENSOR_DESCRIPTIONS["RatelimitRemainingDay"]
         self.update_state()
-        _LOGGER.debug(
-            "Device '%s' supports sensor '%s'",
-            device.name,
-            self._limit_key,
-        )
 
     def update_state(self) -> None:
         """Refresh the rate-limit value."""

@@ -57,11 +57,6 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
             update_interval=self._determine_update_interval(),
         )
 
-        _LOGGER.info(
-            "Daikin coordinator initialized with %s interval",
-            self.update_interval,
-        )
-
     @property
     def api(self) -> DaikinApi:
         """Return the Daikin API client."""
@@ -69,8 +64,6 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
 
     async def _async_update_data_from_cloud(self) -> dict[str, DaikinOnectaDevice]:
         """Fetch the latest device state from Daikin."""
-        _LOGGER.debug("Daikin coordinator start _async_update_data")
-
         devices = self.data or {}
         if (
             self.api.last_patch_call is not None
@@ -78,9 +71,6 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
             < _POST_WRITE_COOLDOWN.total_seconds()
         ):
             self.update_interval = _POST_WRITE_COOLDOWN
-            _LOGGER.debug(
-                "API UPDATE skipped (just updated from UI)",
-            )
         else:
             # Restore the normal polling interval before fetching. If the
             # request fails, retries must not remain at the cooldown cadence.
@@ -109,7 +99,6 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
 
             if cloud_devices is None:
                 self.update_interval = _POST_WRITE_COOLDOWN
-                _LOGGER.debug("API UPDATE skipped (just updated from UI)")
             else:
                 cloud_device_ids = {device.id for device in cloud_devices}
                 for device_id, device in devices.items():
@@ -131,10 +120,6 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
 
                 self.update_interval = self._determine_update_interval()
 
-        _LOGGER.debug(
-            "Daikin coordinator finished _async_update_data, next interval %s",
-            self.update_interval,
-        )
         return devices
 
     @override
@@ -248,13 +233,6 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
             high_interval += 1
             low_interval = max(minimum_interval, ceil(high_interval * interval_ratio))
 
-        _LOGGER.debug(
-            "Daikin polling uses %s of %s daily calls: %s daytime, %s overnight",
-            daily_budget,
-            daily_limit,
-            timedelta(seconds=high_interval),
-            timedelta(seconds=low_interval),
-        )
         return timedelta(seconds=high_interval), timedelta(seconds=low_interval)
 
     @staticmethod

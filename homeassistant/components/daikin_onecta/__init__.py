@@ -1,7 +1,5 @@
 """Platform for the Daikin AC."""
 
-import logging
-
 import aiohttp
 
 from homeassistant.const import Platform
@@ -15,8 +13,6 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 from .const import DOMAIN
 from .coordinator import DaikinOnectaConfigEntry, OnectaDataUpdateCoordinator
 from .daikin_api import DaikinApi
-
-_LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -75,5 +71,4 @@ async def async_unload_entry(
     hass: HomeAssistant, config_entry: DaikinOnectaConfigEntry
 ) -> bool:
     """Unload a config entry."""
-    _LOGGER.debug("Unloading integration")
     return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)

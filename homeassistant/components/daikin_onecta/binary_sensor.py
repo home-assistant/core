@@ -1,6 +1,5 @@
 """Support for Daikin binary sensor sensors."""
 
-import logging
 from typing import TYPE_CHECKING, override
 
 from homeassistant.components.binary_sensor import (
@@ -19,8 +18,6 @@ PARALLEL_UPDATES = 1
 
 if TYPE_CHECKING:
     from .coordinator import OnectaDataUpdateCoordinator
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -63,7 +60,6 @@ class DaikinBinarySensor(DaikinManagementPointEntity, BinarySensorEntity):
         value: str,
     ) -> None:
         """Initialize the binary sensor from a device characteristic."""
-        _LOGGER.debug("DaikinBinarySensor '%s'", value)
         super().__init__(device, coordinator, embedded_id)
         self._value = value
         # Preserve the custom integration's ID shape for migration compatibility.
@@ -75,12 +71,6 @@ class DaikinBinarySensor(DaikinManagementPointEntity, BinarySensorEntity):
             value, BinarySensorEntityDescription(key=value)
         )
         self.update_state()
-        _LOGGER.debug(
-            "Device '%s:%s' supports binary sensor '%s'",
-            device.name,
-            self._embedded_id,
-            self._value,
-        )
 
     def update_state(self) -> None:
         """Refresh the state from the current device data."""
@@ -99,10 +89,4 @@ class DaikinBinarySensor(DaikinManagementPointEntity, BinarySensorEntity):
             point.scalar_characteristic(self._value) if point is not None else None
         )
         result = characteristic.value if characteristic is not None else None
-        _LOGGER.debug(
-            "Device '%s' binary sensor '%s' value '%s'",
-            self._device.name,
-            self._value,
-            result,
-        )
         return result if isinstance(result, bool) else None

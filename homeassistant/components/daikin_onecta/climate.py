@@ -2,7 +2,6 @@
 
 from collections.abc import Awaitable, Callable
 from datetime import timedelta
-import logging
 from typing import Any, Literal, cast, override
 
 from daikin_onecta import ClimateControl, ClimateControlClient
@@ -34,8 +33,6 @@ from .const import FANMODE_FIXED
 from .coordinator import DaikinOnectaConfigEntry, OnectaDataUpdateCoordinator
 from .device import DaikinOnectaDevice
 from .entity import DaikinOnectaEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 1
 
@@ -305,11 +302,6 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
 
         if ATTR_TEMPERATURE in kwargs:
             value = kwargs[ATTR_TEMPERATURE]
-            _LOGGER.debug(
-                "Device '%s' request to set temperature to '%s'",
-                self._device.name,
-                value,
-            )
             if self._attr_target_temperature != value:
                 operationmode = self._operation_mode()
                 if operationmode is None:
@@ -386,11 +378,6 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
     @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set HVAC mode."""
-        _LOGGER.debug(
-            "Device '%s' request to set hvac_mode to '%s'",
-            self._device.name,
-            hvac_mode,
-        )
 
         operation_mode = None
         if hvac_mode != HVACMode.OFF:
@@ -653,12 +640,6 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
                 self.coordinator.async_update_listeners()
             else:
                 self._raise_command_failed("set_swing_mode_failed")
-        else:
-            _LOGGER.debug(
-                "Device '%s' request to set vertical swing mode '%s' ignored already set",
-                self._device.name,
-                swing_mode,
-            )
 
     @override
     async def async_set_swing_horizontal_mode(self, swing_horizontal_mode: str) -> None:
@@ -674,12 +655,6 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
                 self.coordinator.async_update_listeners()
             else:
                 self._raise_command_failed("set_swing_mode_failed")
-        else:
-            _LOGGER.debug(
-                "Device '%s' request to set horizontal swing mode '%s' ignored already set",
-                self._device.name,
-                swing_horizontal_mode,
-            )
 
     def _get_preset_mode(self) -> str:
         """Return the active preset mode."""
@@ -744,9 +719,6 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
     @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the active preset mode."""
-        _LOGGER.debug(
-            "Device '%s' request set preset mode %s", self._device.name, preset_mode
-        )
         if preset_mode == self.preset_mode:
             return
         if preset_mode not in self._get_preset_modes():
@@ -781,7 +753,6 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
     @override
     async def async_turn_on(self) -> None:
         """Turn device CLIMATE on."""
-        _LOGGER.debug("Device '%s' request to turn on", self._device.name)
         cc = self._climate_control()
         result = True
         if cc is None or cc.on_off_mode is None:
@@ -801,16 +772,10 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
                 cc.on_off_mode.value = "on"
                 self._attr_hvac_mode = self._get_hvac_mode()
                 self.coordinator.async_update_listeners()
-        else:
-            _LOGGER.debug(
-                "Device '%s' request to turn on ignored because device is already on",
-                self._device.name,
-            )
 
     @override
     async def async_turn_off(self) -> None:
         """Turn the climate entity off."""
-        _LOGGER.debug("Device '%s' request to turn off", self._device.name)
         cc = self._climate_control()
         result = True
         if cc is None or cc.on_off_mode is None:
@@ -830,8 +795,3 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
                 cc.on_off_mode.value = "off"
                 self._attr_hvac_mode = self._get_hvac_mode()
                 self.coordinator.async_update_listeners()
-        else:
-            _LOGGER.debug(
-                "Device '%s' request to turn off ignored because device is already off",
-                self._device.name,
-            )

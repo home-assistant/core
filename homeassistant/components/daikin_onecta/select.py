@@ -1,6 +1,5 @@
 """Provide Daikin schedule selection entities."""
 
-import logging
 from typing import TYPE_CHECKING, override
 
 from daikin_onecta.models import ScheduleSelection
@@ -20,8 +19,6 @@ PARALLEL_UPDATES = 1
 if TYPE_CHECKING:
     from .coordinator import OnectaDataUpdateCoordinator
 
-_LOGGER = logging.getLogger(__name__)
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -32,17 +29,16 @@ async def async_setup_entry(
     coordinator: OnectaDataUpdateCoordinator = config_entry.runtime_data
     sensors: list[DaikinScheduleSelect] = []
     for device in (coordinator.data or {}).values():
-        for management_point in device.device.management_points:
-            if management_point.schedule_state is not None:
-                _LOGGER.debug("Device '%s' provides schedule", device.name)
-                sensors.append(
-                    DaikinScheduleSelect(
-                        device,
-                        coordinator,
-                        management_point.embedded_id,
-                        "schedule",
-                    )
-                )
+        sensors.extend(
+            DaikinScheduleSelect(
+                device,
+                coordinator,
+                management_point.embedded_id,
+                "schedule",
+            )
+            for management_point in device.device.management_points
+            if management_point.schedule_state is not None
+        )
 
     async_add_entities(sensors)
 
@@ -58,18 +54,11 @@ class DaikinScheduleSelect(DaikinManagementPointEntity, SelectEntity):
         value: str,
     ) -> None:
         """Initialize a schedule selection entity."""
-        _LOGGER.debug("DaikinScheduleSelect '%s'", value)
         super().__init__(device, coordinator, embedded_id)
         self._value = value
         self._attr_unique_id = f"{self._device.id}_{self._embedded_id}_{self._value}"
         self.entity_description = SELECT_DESCRIPTIONS[value]
         self.update_state()
-        _LOGGER.debug(
-            "Device '%s:%s' supports sensor '%s'",
-            device.name,
-            self._embedded_id,
-            self._value,
-        )
 
     def update_state(self) -> None:
         """Refresh the available and selected schedule options."""
@@ -100,7 +89,6 @@ class DaikinScheduleSelect(DaikinManagementPointEntity, SelectEntity):
     @override
     async def async_select_option(self, option: str) -> None:
         """Select or disable a configured schedule."""
-        _LOGGER.debug("Device '%s' selecting schedule %s", self._device.name, option)
         selection = self.selection()
         if selection is None:
             self._raise_service_validation_error("schedule_selection_unavailable")

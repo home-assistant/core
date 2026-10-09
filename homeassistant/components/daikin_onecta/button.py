@@ -1,6 +1,5 @@
 """Button platform for the Daikin Onecta integration."""
 
-import logging
 from typing import override
 
 from homeassistant.components.button import ButtonEntity
@@ -13,8 +12,6 @@ from .entity import DaikinEntity
 from .entity_descriptions import BUTTON_DESCRIPTIONS
 
 PARALLEL_UPDATES = 1
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -48,8 +45,6 @@ class DaikinRefreshButton(DaikinEntity, ButtonEntity):
         self._attr_unique_id = f"{self._device.id}_refresh"
         self.entity_description = BUTTON_DESCRIPTIONS["refresh"]
         self._config_entry = config_entry
-
-        _LOGGER.debug("Device '%s' has refresh button", self._device.name)
 
     @property
     @override

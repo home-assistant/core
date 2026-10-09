@@ -1,6 +1,5 @@
 """Support for Daikin firmware update entities."""
 
-import logging
 from typing import Any, override
 
 from daikin_onecta.models import ManagementPoint
@@ -15,8 +14,6 @@ from .entity import DaikinManagementPointEntity
 from .entity_descriptions import UPDATE_DESCRIPTIONS
 
 PARALLEL_UPDATES = 1
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -69,12 +66,6 @@ class DaikinFirmwareUpdateEntity(DaikinManagementPointEntity, UpdateEntity):
         firmware_id = self._firmware_id
         if not self._is_update_supported or firmware_id is None:
             self._raise_service_validation_error("firmware_install_unavailable")
-
-        _LOGGER.debug(
-            "Requesting firmware update for %s, firmware id %s",
-            self._device.name,
-            firmware_id,
-        )
 
         await self._async_execute_command(
             lambda client: client.firmware(self._device.id, self._embedded_id).install(
