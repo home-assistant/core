@@ -132,6 +132,7 @@ async def test_auth_error(
     )
     assert len(aioclient_mock.mock_calls) == 1
     assert aioclient_mock.mock_calls[0][0] == "POST"
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 

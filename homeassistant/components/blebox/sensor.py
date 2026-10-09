@@ -69,6 +69,7 @@ SENSOR_TYPES: tuple[BleBoxSensorEntityDescription, ...] = (
     ),
     BleBoxSensorEntityDescription(
         key="temperature",
+        # pylint: disable-next=home-assistant-redundant-translation-key
         translation_key="temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -128,6 +129,7 @@ SENSOR_TYPES: tuple[BleBoxSensorEntityDescription, ...] = (
     ),
     BleBoxSensorEntityDescription(
         key="reactivePower",
+        # pylint: disable-next=home-assistant-redundant-translation-key
         translation_key="reactive_power",
         device_class=SensorDeviceClass.REACTIVE_POWER,
         native_unit_of_measurement=UnitOfReactivePower.VOLT_AMPERE_REACTIVE,
@@ -142,6 +144,7 @@ SENSOR_TYPES: tuple[BleBoxSensorEntityDescription, ...] = (
     ),
     BleBoxSensorEntityDescription(
         key="apparentPower",
+        # pylint: disable-next=home-assistant-redundant-translation-key
         translation_key="apparent_power",
         device_class=SensorDeviceClass.APPARENT_POWER,
         native_unit_of_measurement=UnitOfApparentPower.VOLT_AMPERE,
@@ -149,6 +152,7 @@ SENSOR_TYPES: tuple[BleBoxSensorEntityDescription, ...] = (
     ),
     BleBoxSensorEntityDescription(
         key="voltage",
+        # pylint: disable-next=home-assistant-redundant-translation-key
         translation_key="voltage",
         device_class=SensorDeviceClass.VOLTAGE,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
@@ -156,6 +160,7 @@ SENSOR_TYPES: tuple[BleBoxSensorEntityDescription, ...] = (
     ),
     BleBoxSensorEntityDescription(
         key="current",
+        # pylint: disable-next=home-assistant-redundant-translation-key
         translation_key="current",
         device_class=SensorDeviceClass.CURRENT,
         native_unit_of_measurement=UnitOfElectricCurrent.MILLIAMPERE,
@@ -163,6 +168,7 @@ SENSOR_TYPES: tuple[BleBoxSensorEntityDescription, ...] = (
     ),
     BleBoxSensorEntityDescription(
         key="frequency",
+        # pylint: disable-next=home-assistant-redundant-translation-key
         translation_key="frequency",
         device_class=SensorDeviceClass.FREQUENCY,
         native_unit_of_measurement=UnitOfFrequency.HERTZ,

@@ -116,6 +116,7 @@ class EufyLifeRealTimeWeightSensorEntity(EufyLifeSensorEntity):
 class EufyLifeWeightSensorEntity(RestoreSensor, EufyLifeSensorEntity):
     """Representation of an EufyLife weight sensor."""
 
+    # pylint: disable-next=home-assistant-redundant-translation-key
     _attr_translation_key = "weight"
     _attr_native_unit_of_measurement = UnitOfMass.KILOGRAMS
     _attr_device_class = SensorDeviceClass.WEIGHT

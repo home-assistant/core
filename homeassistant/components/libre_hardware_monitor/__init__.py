@@ -6,7 +6,11 @@ from homeassistant.const import Platform, UnitOfDataRate
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .const import DOMAIN, THROUGHPUT_UNIQUE_ID_FRAGMENT
+from .const import (
+    DOMAIN,
+    LEGACY_DATA_SIZE_UNIT_EQUIVALENTS,
+    THROUGHPUT_UNIQUE_ID_FRAGMENT,
+)
 from .coordinator import (
     LibreHardwareMonitorConfigEntry,
     LibreHardwareMonitorCoordinator,
@@ -90,6 +94,24 @@ async def async_migrate_entry(
             entity_registry.async_update_entity(
                 reg_entry.entity_id,
                 unit_of_measurement=UnitOfDataRate.KIBIBYTES_PER_SECOND,
+            )
+
+        # Migrate binary Data units LHM labels MB and GB to MiB and GiB
+        for reg_entry in registry_entries:
+            if not (
+                data_size_unit := LEGACY_DATA_SIZE_UNIT_EQUIVALENTS.get(
+                    reg_entry.unit_of_measurement
+                )
+            ):
+                continue
+            _LOGGER.debug(
+                "Migrating entity %s unit from %s to %s",
+                reg_entry.entity_id,
+                reg_entry.unit_of_measurement,
+                data_size_unit,
+            )
+            entity_registry.async_update_entity(
+                reg_entry.entity_id, unit_of_measurement=data_size_unit
             )
 
         hass.config_entries.async_update_entry(

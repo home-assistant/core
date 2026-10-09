@@ -36,6 +36,7 @@ async def test_full_flow(
             CONF_PASSWORD: API_PASSWORD,
         },
     )
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == API_EMAIL
     assert result["data"] == {

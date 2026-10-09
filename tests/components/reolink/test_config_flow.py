@@ -488,6 +488,7 @@ async def test_dhcp_flow(hass: HomeAssistant) -> None:
         },
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TEST_NVR_NAME
     assert result["data"] == {

@@ -7,6 +7,7 @@ import probatio
 from homeassistant import config_entries
 from homeassistant.const import CONF_NAME, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.typing import ConfigType
 
@@ -86,7 +87,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomematicIPConfigEntry) 
 
     entry.runtime_data = hap
     if not await hap.async_setup():
-        return False
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="setup_failed",
+        )
 
     # Register on HA stop event to gracefully shutdown HomematicIP Cloud connection
     hap.reset_connection_listener = hass.bus.async_listen_once(

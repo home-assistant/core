@@ -134,6 +134,7 @@ async def test_direct_setup(hass: HomeAssistant) -> None:
             },
         )
         await hass.async_block_till_done()
+        # pylint: disable-next=home-assistant-tests-config-flow-unique-id
         assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
@@ -186,6 +187,7 @@ async def test_cloud_setup(hass: HomeAssistant) -> None:
             },
         )
         await hass.async_block_till_done()
+        # pylint: disable-next=home-assistant-tests-config-flow-unique-id
         assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
@@ -257,6 +259,7 @@ async def test_zeroconf_setup(hass: HomeAssistant) -> None:
     )
 
     await hass.async_block_till_done()
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
@@ -278,6 +281,7 @@ async def test_zeroconf_ipv6_setup(hass: HomeAssistant) -> None:
     )
 
     await hass.async_block_till_done()
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 

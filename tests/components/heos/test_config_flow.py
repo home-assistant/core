@@ -121,6 +121,7 @@ async def test_manual_setup_with_discovery_in_progress(
     user_result = await hass.config_entries.flow.async_configure(
         user_result["flow_id"], user_input={CONF_HOST: "127.0.0.1"}
     )
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert user_result["type"] is FlowResultType.CREATE_ENTRY
 
     # Discovery flow is removed

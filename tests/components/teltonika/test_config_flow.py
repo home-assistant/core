@@ -176,6 +176,7 @@ async def test_host_url_construction(
     assert call_args.kwargs["verify_ssl"] is False
 
     # Verify the result is a created entry with normalized host
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].data[CONF_HOST] == expected_host
 

@@ -73,6 +73,7 @@ async def test_user_step(
 
     result = await _submit(hass, result["flow_id"])
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == MOCK_USERNAME
     assert result["data"] == {
@@ -261,6 +262,7 @@ async def test_dhcp_discovery_starts_user_flow(
 
     result = await _submit(hass, result["flow_id"])
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == MOCK_USERNAME
 

@@ -100,6 +100,7 @@ async def test_flow_user_success(
         user_input=MOCK_DATA_LANGUAGE_STEP,
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Cookidoo"
     assert result["data"] == {

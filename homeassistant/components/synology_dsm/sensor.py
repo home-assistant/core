@@ -260,6 +260,7 @@ STORAGE_DISK_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
     SynologyDSMSensorEntityDescription(
         api_key=SynoStorage.API_KEY,
         key="disk_temp",
+        # pylint: disable-next=home-assistant-redundant-translation-key
         translation_key="disk_temp",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -319,6 +320,7 @@ INFORMATION_SENSORS: tuple[SynologyDSMSensorEntityDescription, ...] = (
     SynologyDSMSensorEntityDescription(
         api_key=SynoDSMInformation.API_KEY,
         key="temperature",
+        # pylint: disable-next=home-assistant-redundant-translation-key
         translation_key="temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,

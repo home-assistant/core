@@ -3,6 +3,7 @@
 from typing import Any
 from unittest.mock import patch
 
+import attr
 from bluetooth_adapters import DEFAULT_ADDRESS, AdapterDetails
 import pytest
 
@@ -78,6 +79,7 @@ async def test_async_step_user_macos(hass: HomeAssistant) -> None:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={}
         )
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Apple Unknown MacOS Model (Core Bluetooth)"
     assert result2["data"] == {}
@@ -106,6 +108,7 @@ async def test_async_step_user_linux_one_adapter(hass: HomeAssistant) -> None:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={}
         )
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "ACME Bluetooth Adapter 5.0 (00:00:00:00:00:01)"
     assert result2["data"] == {}
@@ -144,6 +147,7 @@ async def test_async_step_user_linux_two_adapters(hass: HomeAssistant) -> None:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_ADAPTER: "hci1"}
         )
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "ACME Bluetooth Adapter 5.0 (00:00:00:00:00:02)"
     assert result2["data"] == {}
@@ -193,6 +197,7 @@ async def test_async_step_integration_discovery(hass: HomeAssistant) -> None:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={}
         )
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "ACME Unknown (00:00:00:00:00:01)"
     assert result2["data"] == {}
@@ -226,6 +231,7 @@ async def test_async_step_integration_discovery_during_onboarding_one_adapter(
             context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
             data={CONF_ADAPTER: "hci0", CONF_DETAILS: details},
         )
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "ACME Unknown (00:00:00:00:00:01)"
     assert result["data"] == {}
@@ -271,6 +277,7 @@ async def test_async_step_integration_discovery_during_onboarding_two_adapters(
             context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
             data={CONF_ADAPTER: "hci1", CONF_DETAILS: details2},
         )
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "ACME Unknown (00:00:00:00:00:01)"
     assert result["data"] == {}
@@ -310,6 +317,7 @@ async def test_async_step_integration_discovery_during_onboarding(
             context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
             data={CONF_ADAPTER: "Core Bluetooth", CONF_DETAILS: details},
         )
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "ACME Unknown (Core Bluetooth)"
     assert result["data"] == {}
@@ -560,6 +568,7 @@ async def test_async_step_user_linux_adapter_replace_ignored(
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={}
         )
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "ACME Bluetooth Adapter 5.0 (00:00:00:00:00:01)"
     assert result2["data"] == {}
@@ -599,6 +608,7 @@ async def test_async_step_integration_discovery_remote_adapter(
             CONF_SOURCE_DEVICE_ID: device_entry.id,
         },
     )
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "esp32"
     assert result["data"] == {
@@ -621,6 +631,70 @@ async def test_async_step_integration_discovery_remote_adapter(
     assert ble_device_entry is not None
     assert ble_device_entry.via_device_id == device_entry.id
     assert ble_device_entry.area_id == area_entry.id
+
+    await hass.config_entries.async_unload(new_entry.entry_id)
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+    cancel_scanner()
+    await hass.async_block_till_done()
+
+
+@pytest.mark.usefixtures("enable_bluetooth")
+async def test_async_step_integration_discovery_remote_adapter_composite_source(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test a remote adapter whose stored source device was split since."""
+    entry = MockConfigEntry(domain="test")
+    entry.add_to_hass(hass)
+    other_entry = MockConfigEntry(domain="other")
+    other_entry.add_to_hass(hass)
+    connector = (
+        HaBluetoothConnector(MockBleakClient, "mock_bleak_client", lambda: False),
+    )
+    scanner = FakeRemoteScanner("esp32", "esp32", connector, True)
+    manager = _get_manager()
+    cancel_scanner = manager.async_register_scanner(scanner)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={("test", "BB:BB:BB:BB:BB:BB")},
+    )
+    other_device_entry = device_registry.async_get_or_create(
+        config_entry_id=other_entry.entry_id,
+        identifiers={("other", "BB:BB:BB:BB:BB:BB")},
+    )
+    # Simulate a device split: both devices carry the pre-migration composite id
+    composite_device_id = "composite00000000000000000000ab"
+    device_registry._devices[device_entry.id] = attr.evolve(
+        device_entry, composite_device_id=composite_device_id
+    )
+    device_registry._devices[other_device_entry.id] = attr.evolve(
+        other_device_entry, composite_device_id=composite_device_id
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+        data={
+            CONF_SOURCE: scanner.source,
+            CONF_SOURCE_DOMAIN: "test",
+            CONF_SOURCE_MODEL: "test",
+            CONF_SOURCE_CONFIG_ENTRY_ID: entry.entry_id,
+            CONF_SOURCE_DEVICE_ID: composite_device_id,
+        },
+    )
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    await hass.async_block_till_done()
+
+    new_entry = result["result"]
+    ble_device_entry = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_BLUETOOTH, scanner.source), new_entry.entry_id
+    )
+    assert ble_device_entry is not None
+    assert ble_device_entry.via_device_id == device_entry.id
+    assert "pre-migration composite device" not in caplog.text
 
     await hass.config_entries.async_unload(new_entry.entry_id)
     await hass.config_entries.async_unload(entry.entry_id)
@@ -674,6 +748,7 @@ async def test_async_step_integration_discovery_remote_adapter_child_source(
             CONF_SOURCE_DEVICE_ID: child_device_entry.id,
         },
     )
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     await hass.async_block_till_done()
 

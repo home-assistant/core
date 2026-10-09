@@ -92,6 +92,7 @@ async def test_step_user(hass: HomeAssistant, config: dict[str, Any]) -> None:
         result["flow_id"],
         user_input=config,
     )
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "ABCDEF123456"
     assert result["data"] == {
@@ -123,6 +124,7 @@ async def test_step_zeroconf(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={}
     )
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "ABCDEF123456"
     assert result["data"] == {
@@ -175,6 +177,7 @@ async def test_step_dhcp(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={}
     )
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "ABCDEF123456"
     assert result["data"] == {

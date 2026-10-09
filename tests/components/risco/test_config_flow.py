@@ -55,7 +55,6 @@ TEST_OPTIONS = {
 }
 
 TEST_ADVANCED_OPTIONS = {
-    "scan_interval": 10,
     "concurrency": 3,
 }
 
@@ -96,6 +95,7 @@ async def test_cloud_form(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == TEST_SITE_NAME
     assert result3["data"] == TEST_CLOUD_DATA
@@ -274,6 +274,7 @@ async def test_local_form(hass: HomeAssistant) -> None:
         "type": "local",
         CONF_COMMUNICATION_DELAY: 0,
     }
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == TEST_SITE_NAME
     assert result3["data"] == expected_data
@@ -384,7 +385,6 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert entry.options == {
         **TEST_OPTIONS,
-        "scan_interval": 30,
         "concurrency": 4,
         "risco_states_to_ha": TEST_RISCO_TO_HA,
         "ha_states_to_risco": TEST_HA_TO_RISCO,

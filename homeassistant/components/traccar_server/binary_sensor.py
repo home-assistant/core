@@ -35,6 +35,7 @@ TRACCAR_SERVER_BINARY_SENSOR_ENTITY_DESCRIPTIONS: tuple[
     TraccarServerBinarySensorEntityDescription[DeviceModel](
         key="attributes.motion",
         data_key="position",
+        # pylint: disable-next=home-assistant-redundant-translation-key
         translation_key="motion",
         device_class=BinarySensorDeviceClass.MOTION,
         value_fn=lambda x: x["attributes"].get("motion", False),

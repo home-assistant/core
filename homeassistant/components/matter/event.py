@@ -155,6 +155,7 @@ DISCOVERY_SCHEMAS = [
         entity_description=MatterEventEntityDescription(
             key="GenericSwitch",
             device_class=EventDeviceClass.BUTTON,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="button",
         ),
         entity_class=MatterEventEntity,

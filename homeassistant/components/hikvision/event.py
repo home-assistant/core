@@ -33,6 +33,7 @@ EVENT_TYPES = [EVENT_TYPE_TRIGGERED, *DETECTION_TARGETS]
 EVENT_DESCRIPTIONS: dict[str, EventEntityDescription] = {
     SENSOR_MAP["vmd"]: EventEntityDescription(
         key="motion",
+        # pylint: disable-next=home-assistant-redundant-translation-key
         translation_key="motion",
         device_class=EventDeviceClass.MOTION,
         event_types=EVENT_TYPES,

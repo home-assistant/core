@@ -167,6 +167,7 @@ async def test_form_fallback_title_when_device_name_missing(
         result["flow_id"], {CONF_HOST: "192.168.1.100"}
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "NRGkick"
     assert result["data"] == {CONF_HOST: "192.168.1.100"}

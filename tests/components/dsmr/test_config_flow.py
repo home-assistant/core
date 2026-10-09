@@ -6,6 +6,7 @@ from unittest.mock import DEFAULT, AsyncMock, MagicMock, patch
 
 from dsmr_parser.exceptions import DecryptionError
 import pytest
+from serialx.common import UnknownUriScheme
 
 from homeassistant import config_entries
 from homeassistant.components.dsmr.config_flow import CannotCommunicate
@@ -59,6 +60,7 @@ async def test_setup_network(
         "protocol": "dsmr_protocol",
     }
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "socket://10.10.0.1:1234"
     assert result["data"] == {**entry_data, **SERIAL_DATA}
@@ -102,6 +104,7 @@ async def test_setup_network_rfxtrx(
         "protocol": "rfxtrx_dsmr_protocol",
     }
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "socket://10.10.0.1:1234"
     assert result["data"] == {**entry_data, **SERIAL_DATA}
@@ -196,6 +199,7 @@ async def test_setup_serial(
         )
         await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == port.device
     assert result["data"] == entry_data
@@ -241,6 +245,7 @@ async def test_setup_serial_encrypted(
         )
         await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == port.device
     assert result["data"] == {
@@ -404,14 +409,26 @@ async def test_setup_serial_rfxtrx(
         "protocol": "rfxtrx_dsmr_protocol",
     }
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == port.device
     assert result["data"] == {**entry_data, **SERIAL_DATA}
 
 
+@pytest.mark.parametrize(
+    "exception",
+    [
+        pytest.param(OSError, id="os_error"),
+        pytest.param(
+            UnknownUriScheme("No handler registered for URI scheme 'http://'"),
+            id="unknown_uri_scheme",
+        ),
+    ],
+)
 async def test_setup_serial_fail(
     hass: HomeAssistant,
     dsmr_connection_send_validate_fixture: tuple[MagicMock, MagicMock, MagicMock],
+    exception: Exception | type[Exception],
 ) -> None:
     """Test failed serial connection."""
     (_connection_factory, transport, protocol) = dsmr_connection_send_validate_fixture
@@ -425,7 +442,7 @@ async def test_setup_serial_fail(
     # override the mock to have it fail the first time and succeed after
     first_fail_connection_factory = AsyncMock(
         return_value=(transport, protocol),
-        side_effect=chain([OSError], repeat(DEFAULT)),
+        side_effect=chain([exception], repeat(DEFAULT)),
     )
 
     assert result["type"] is FlowResultType.FORM
