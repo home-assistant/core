@@ -309,7 +309,7 @@ aiohue==4.9.0
 aioimaplib==2.0.1
 
 # homeassistant.components.immich
-aioimmich==0.17.0
+aioimmich==0.18.0
 
 # homeassistant.components.indi_allsky
 aioindiallsky==0.1.3
