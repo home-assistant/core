@@ -3,14 +3,14 @@
 import asyncio
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING, callback, override
+from typing import TYPE_CHECKING, override
 
 from aiopvapi.helpers.aiorequest import PvApiMaintenance
 from aiopvapi.hub import Hub
 from aiopvapi.resources.shade_data import PowerviewShadeData
 from aiopvapi.shades import Shades
 
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -73,7 +73,7 @@ class PowerviewShadeUpdateCoordinator(DataUpdateCoordinator[PowerviewShadeData])
 
         # Clean up stale devices
         self._async_remove_stale_devices(
-            {str(shde_id) for shade_id in shade_entries.processed}
+            {str(shade_id) for shade_id in shade_entries.processed}
         )
 
         return self.data
