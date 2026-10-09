@@ -112,6 +112,7 @@ async def test_detection_flow_with_invalid_path(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "manual"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert CONF_DEVICE in result["errors"]
 
 
@@ -147,6 +148,7 @@ async def test_manual_flow_with_invalid_path(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "manual"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert CONF_DEVICE in result["errors"]
 
 

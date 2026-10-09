@@ -5,11 +5,15 @@ Only ``tests/components/<domain>/test_config_flow.py`` modules are checked.
 A test that makes a flow step show an error, for example
 ``assert result["errors"] == {"base": "cannot_connect"}``, should then fix
 the cause and finish the flow, to prove the user can recover from the error.
-A test function is flagged when it asserts non-empty ``errors`` and, after
-the last such assertion, never asserts that a result has type
+Any error counts, on any field: ``errors == {...}``, ``errors["base"] == ...``,
+``"base" in errors``, a bare ``assert result["errors"]`` and
+``errors != {}``. A test function is flagged when it asserts an error and,
+after the last such assertion, never asserts that a result has type
 ``CREATE_ENTRY`` or aborted with a ``*_successful`` reason (as reauth and
-reconfigure flows do). Helper functions from the integration's own tests
-called after the error, such as ``_assert_create_entry(result)``, are
+reconfigure flows do). A finishing assertion in a branch that cannot run
+after the error, such as the ``else`` of the ``if`` that shows the error,
+does not count. Helper functions from the integration's own tests, such as
+``assert_form_error(result)`` or ``_assert_create_entry(result)``, are
 followed when astroid can infer them.
 """
 
@@ -47,11 +51,36 @@ def _is_error_value(value: nodes.NodeNG) -> bool:
     return True
 
 
-def _is_error_assert(node: nodes.Compare) -> bool:
-    """Return True for ``result["errors"] == {"base": ...}`` and the like."""
+def _is_no_errors_value(value: nodes.NodeNG) -> bool:
+    """Return True for ``{}`` and ``None``."""
+    match value:
+        case nodes.Dict(items=[]) | nodes.Const(value=None):
+            return True
+    return False
+
+
+def _assert_parts(test: nodes.NodeNG) -> list[nodes.NodeNG]:
+    """Return the conditions of ``assert a and b``, or the test itself."""
+    if isinstance(test, nodes.BoolOp) and test.op == "and":
+        return list(test.values)
+    return [test]
+
+
+def _is_error_assert(
+    node: nodes.NodeNG, arguments: dict[str, nodes.NodeNG] | None = None
+) -> bool:
+    """Return True if the asserted *node* expects the step to show an error.
+
+    *arguments* maps a helper's parameters to the values it was called with.
+    """
+    # assert result["errors"]
+    if _result_key(node) == "errors":
+        return True
     match node:
         case nodes.Compare(left=left, ops=[("==", value)]):
             if _result_key(left) == "errors":
+                if isinstance(value, nodes.Name) and arguments:
+                    value = arguments.get(value.name, value)
                 return _is_error_value(value)
             # result["errors"]["base"] == "cannot_connect"
             match left:
@@ -60,6 +89,12 @@ def _is_error_assert(node: nodes.Compare) -> bool:
                     | nodes.Call(func=nodes.Attribute(attrname="get", expr=errors))
                 ):
                     return _result_key(errors) == "errors"
+        # assert "base" in result["errors"]
+        case nodes.Compare(ops=[("in", errors)]):
+            return _result_key(errors) == "errors"
+        # assert result["errors"] != {}
+        case nodes.Compare(left=left, ops=[("!=" | "is not", value)]):
+            return _result_key(left) == "errors" and _is_no_errors_value(value)
     return False
 
 
@@ -127,7 +162,9 @@ def _parametrized_values(func: nodes.FunctionDef, name: str) -> list[nodes.NodeN
     return []
 
 
-def _is_finished_assert(node: nodes.Compare) -> bool:
+def _is_finished_assert(
+    node: nodes.Compare, arguments: dict[str, nodes.NodeNG] | None = None
+) -> bool:
     """Return True if *node* checks that the flow finished."""
     match node:
         case nodes.Compare(
@@ -142,20 +179,26 @@ def _is_finished_assert(node: nodes.Compare) -> bool:
         ):
             return _result_key(left) == "type"
         case nodes.Compare(left=left, ops=[("==", reason)]):
+            if isinstance(reason, nodes.Name) and arguments:
+                reason = arguments.get(reason.name, reason)
             return _result_key(left) == "reason" and _is_successful_reason(reason)
     return False
 
 
 def _finishes_flow(
-    node: nodes.NodeNG, package: str, depth: int = _HELPER_DEPTH
+    node: nodes.NodeNG,
+    package: str,
+    depth: int = _HELPER_DEPTH,
+    arguments: dict[str, nodes.NodeNG] | None = None,
 ) -> bool:
     """Return True if *node* asserts, maybe through a helper, that a flow finished.
 
     Only helpers from the integration's own tests in *package* are followed.
+    *arguments* holds the values the helper containing *node* was called with.
     """
     match node:
         case nodes.Compare():
-            return _is_finished_assert(node)
+            return _is_finished_assert(node, arguments)
         # await assert_abort_flow(hass, flow_id, reason="reconfigure_successful")
         case nodes.Call(keywords=keywords) if any(
             keyword.arg == "reason" and _is_successful_reason(keyword.value)
@@ -164,23 +207,145 @@ def _finishes_flow(
             return True
         case nodes.Call() if depth:
             return any(
-                isinstance(helper, nodes.FunctionDef)
-                and (helper.root().name + ".").startswith(package + ".")
-                and any(
-                    _finishes_flow(child, package, depth - 1)
-                    for child in helper.nodes_of_class((nodes.Compare, nodes.Call))
+                _finishes_flow(
+                    child, package, depth - 1, _call_arguments(node, helper, arguments)
                 )
-                for helper in _infer_callee(node)
+                for helper in _own_helpers(node, package)
+                for child in helper.nodes_of_class((nodes.Compare, nodes.Call))
             )
     return False
 
 
-def _infer_callee(node: nodes.Call) -> list[nodes.NodeNG]:
-    """Return what the function called by *node* infers to."""
+def _own_helpers(node: nodes.Call, package: str) -> list[nodes.FunctionDef]:
+    """Return the functions from the tests in *package* that *node* calls."""
     try:
-        return list(node.func.infer())
+        inferred = list(node.func.infer())
     except astroid.exceptions.AstroidError:
         return []
+    return [
+        helper
+        for helper in inferred
+        if isinstance(helper, nodes.FunctionDef)
+        and (helper.root().name + ".").startswith(package + ".")
+    ]
+
+
+def _branch(node: nodes.NodeNG, branch_node: nodes.If | nodes.Match) -> int | None:
+    """Return the index of the branch of *branch_node* that contains *node*."""
+    child = node
+    while child.parent is not branch_node:
+        child = child.parent
+    branches = (
+        [[case] for case in branch_node.cases]
+        if isinstance(branch_node, nodes.Match)
+        else [branch_node.body, branch_node.orelse]
+    )
+    return next(
+        (index for index, branch in enumerate(branches) if child in branch), None
+    )
+
+
+def _in_exclusive_branches(first: nodes.NodeNG, second: nodes.NodeNG) -> bool:
+    """Return True if *first* and *second* are in branches that never both run."""
+    second_ancestors = set(second.node_ancestors())
+    common = next(
+        (
+            ancestor
+            for ancestor in first.node_ancestors()
+            if ancestor in second_ancestors
+        ),
+        None,
+    )
+    if not isinstance(common, nodes.If | nodes.Match):
+        return False
+    first_branch = _branch(first, common)
+    second_branch = _branch(second, common)
+    return None not in (first_branch, second_branch) and first_branch != second_branch
+
+
+def _call_arguments(
+    call: nodes.Call,
+    helper: nodes.FunctionDef,
+    arguments: dict[str, nodes.NodeNG] | None,
+) -> dict[str, nodes.NodeNG]:
+    """Map the parameters of *helper* to the values *call* passes.
+
+    Values that are parameters of the calling helper resolve to *arguments*.
+    """
+    params = [*helper.args.posonlyargs, *helper.args.args]
+    bound: dict[str, nodes.NodeNG] = {}
+    for param, default in zip(
+        params[len(params) - len(helper.args.defaults) :],
+        helper.args.defaults,
+        strict=True,
+    ):
+        bound[param.name] = default
+    for param, default in zip(
+        helper.args.kwonlyargs, helper.args.kw_defaults, strict=True
+    ):
+        if default is not None:
+            bound[param.name] = default
+    for param, value in zip(params, call.args, strict=False):
+        if isinstance(value, nodes.Starred):
+            break
+        bound[param.name] = value
+    for keyword in call.keywords:
+        if keyword.arg is not None:
+            bound[keyword.arg] = keyword.value
+    if arguments:
+        bound = {
+            name: arguments.get(value.name, value)
+            if isinstance(value, nodes.Name)
+            else value
+            for name, value in bound.items()
+        }
+    return bound
+
+
+def _unrecovered_error(
+    scope: nodes.FunctionDef,
+    package: str,
+    depth: int = _HELPER_DEPTH,
+    arguments: dict[str, nodes.NodeNG] | None = None,
+) -> nodes.NodeNG | None:
+    """Return the last error shown in *scope* if the flow is not finished after it.
+
+    Errors shown by helpers from the tests in *package* count as well, unless
+    the helper finishes the flow itself. *arguments* holds the values a helper
+    *scope* was called with.
+    """
+    errors = [
+        test
+        for assert_node in scope.nodes_of_class(nodes.Assert)
+        for test in _assert_parts(assert_node.test)
+        if _is_error_assert(test, arguments)
+    ]
+    if depth:
+        errors.extend(
+            call
+            for call in scope.nodes_of_class(nodes.Call)
+            if any(
+                _unrecovered_error(
+                    helper,
+                    package,
+                    depth - 1,
+                    _call_arguments(call, helper, arguments),
+                )
+                is not None
+                for helper in _own_helpers(call, package)
+            )
+        )
+    if not errors:
+        return None
+    last_error = max(errors, key=lambda error: error.lineno)
+    if any(
+        child.lineno > last_error.lineno
+        and not _in_exclusive_branches(last_error, child)
+        and _finishes_flow(child, package, arguments=arguments)
+        for child in scope.nodes_of_class((nodes.Compare, nodes.Call))
+    ):
+        return None
+    return last_error
 
 
 class ConfigFlowErrorRecovery(BaseChecker):
@@ -221,18 +386,7 @@ class ConfigFlowErrorRecovery(BaseChecker):
         """Flag tests that show an error without finishing the flow."""
         if (package := self._package) is None or not node.name.startswith("test_"):
             return
-        errors = [
-            compare
-            for compare in node.nodes_of_class(nodes.Compare)
-            if _is_error_assert(compare)
-        ]
-        if not errors:
-            return
-        last_error = max(errors, key=lambda compare: compare.lineno)
-        if not any(
-            child.lineno > last_error.lineno and _finishes_flow(child, package)
-            for child in node.nodes_of_class((nodes.Compare, nodes.Call))
-        ):
+        if (last_error := _unrecovered_error(node, package)) is not None:
             self.add_message(
                 "home-assistant-tests-config-flow-error-recovery", node=last_error
             )

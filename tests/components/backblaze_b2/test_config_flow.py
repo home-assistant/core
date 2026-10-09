@@ -359,6 +359,7 @@ async def test_advanced_flows(
 
         if scenario == "validation_error":
             assert result.get("type") is FlowResultType.FORM
+            # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
             assert result.get("errors") == {"base": "invalid_credentials"}
         else:
             assert result.get("type") is FlowResultType.ABORT

@@ -369,6 +369,7 @@ async def test_user_flow_get_ba_id_connect_error(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, error
 ) -> None:
     """Test the user flow."""
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     await _test_user_flow_connect_error(hass, "get_border_agent_id", error)
 
 
@@ -385,6 +386,7 @@ async def test_user_flow_get_dataset_connect_error(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, error
 ) -> None:
     """Test the user flow."""
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     await _test_user_flow_connect_error(hass, "get_active_dataset_tlvs", error)
 
 

@@ -75,6 +75,10 @@ async def test_full_flow(hass):
     assert result["errors"] == {}
     assert result["errors"] == None
     assert result.get("errors") is None
+    assert result["errors"] != {"base": "cannot_connect"}
+    assert "base" not in result["errors"]
+    if result["errors"]:
+        pass
 """,
             _MODULE_NAME,
             id="no_errors",
@@ -155,6 +159,71 @@ async def test_form_errors(hass):
 """,
             _MODULE_NAME,
             id="helper",
+        ),
+        pytest.param(
+            """
+def _assert_form(result, step_id, errors=None):
+    assert result["step_id"] == step_id
+    if errors is None:
+        assert result.get("errors") in ({}, None)
+    else:
+        assert result["errors"] == errors
+
+def _assert_abort(result, reason):
+    assert result["reason"] == reason
+
+async def test_reconfigure_errors(hass):
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    _assert_form(result, "user")
+    _assert_form(result, "user", errors={})
+    _assert_form(result, "user", {"base": "cannot_connect"})
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    _assert_abort(result, "reconfigure_successful")
+""",
+            _MODULE_NAME,
+            id="helper_arguments",
+        ),
+        pytest.param(
+            """
+def _assert_form(result, *, errors=None, other=None):
+    assert result["errors"] == errors
+
+def _check(result, *args):
+    _assert_form(result)
+
+async def test_form(hass):
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    _assert_form(result)
+    _check(*ARGS)
+""",
+            _MODULE_NAME,
+            id="helper_keyword_only_and_starred",
+        ),
+        pytest.param(
+            """
+async def _test_error_and_recover(hass, error):
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result["errors"] == {"base": error}
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+async def test_form_errors(hass):
+    await _test_error_and_recover(hass, "cannot_connect")
+""",
+            _MODULE_NAME,
+            id="helper_recovers_itself",
+        ),
+        pytest.param(
+            """
+async def test_form_errors(hass, scenario):
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    if scenario == "error":
+        assert result["errors"] == {"base": "cannot_connect"}
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+""",
+            _MODULE_NAME,
+            id="recovery_after_branch",
         ),
         pytest.param(
             """
@@ -322,6 +391,103 @@ async def test_form_errors(hass):
             6,
             id="helper_outside_integration_tests",
         ),
+        pytest.param(
+            """
+async def test_form_errors(hass):
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result["errors"]
+""",
+            4,
+            id="truthy_errors",
+        ),
+        pytest.param(
+            """
+async def test_form_errors(hass):
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert CONF_HOST in result.get("errors")
+""",
+            4,
+            id="key_in_errors",
+        ),
+        pytest.param(
+            """
+async def test_form_errors(hass):
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result["errors"] != {}
+""",
+            4,
+            id="errors_not_empty",
+        ),
+        pytest.param(
+            """
+async def test_form_errors(hass):
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result["errors"] is not None
+""",
+            4,
+            id="errors_not_none",
+        ),
+        pytest.param(
+            """
+async def test_form_errors(hass):
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert "errors" in result and result["errors"]["base"] == "invalid_key"
+""",
+            4,
+            id="and_chain",
+        ),
+        pytest.param(
+            """
+def _assert_form_error(result, error):
+    assert result["errors"] == {"base": error}
+
+async def _test_form_error(hass, error):
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    _assert_form_error(result, error)
+
+async def test_form_errors(hass):
+    await _test_form_error(hass, "cannot_connect")
+""",
+            10,
+            id="helper_error",
+        ),
+        pytest.param(
+            """
+async def test_reconfigure(hass, scenario):
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    if scenario == "error":
+        assert result["errors"] == {"base": "invalid_auth"}
+    else:
+        assert result["reason"] == "reconfigure_successful"
+""",
+            5,
+            id="recovery_in_else",
+        ),
+        pytest.param(
+            """
+async def test_reconfigure(hass, scenario):
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    if scenario == "success":
+        assert result["type"] is FlowResultType.CREATE_ENTRY
+    elif scenario == "error":
+        assert result["errors"] == {"base": "invalid_auth"}
+""",
+            7,
+            id="recovery_in_other_elif",
+        ),
+        pytest.param(
+            """
+async def test_reconfigure(hass, scenario):
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    match scenario:
+        case "error":
+            assert result["errors"] == {"base": "invalid_auth"}
+        case _:
+            assert result["type"] is FlowResultType.CREATE_ENTRY
+""",
+            6,
+            id="recovery_in_other_case",
+        ),
     ],
 )
 def test_warning(
@@ -332,10 +498,17 @@ def test_warning(
 ) -> None:
     """Test cases that should trigger a warning."""
     root_node = astroid.parse(code, _MODULE_NAME)
-    error_node = next(
+    # The error check is the last condition of the assert on that line, or the
+    # call to the helper that shows the error
+    *_, error_node = (
         node
-        for node in root_node.nodes_of_class(nodes.Compare)
+        for node in root_node.nodes_of_class(
+            (nodes.Compare, nodes.Subscript, nodes.Call)
+        )
         if node.lineno == error_line
+        and isinstance(
+            node.parent, nodes.Assert | nodes.BoolOp | nodes.Expr | nodes.Await
+        )
     )
 
     with assert_adds_messages(

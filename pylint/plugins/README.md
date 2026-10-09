@@ -538,13 +538,21 @@ result = await hass.config_entries.flow.async_configure(
 assert result["type"] is FlowResultType.CREATE_ENTRY
 ```
 
-Only `tests/components/<domain>/test_config_flow.py` modules are checked. A
-test is flagged when, after its last assertion of non-empty `errors`, it
-never asserts that a result has type `CREATE_ENTRY` or aborted with a
-`*_successful` reason (as reauth and reconfigure flows do). Helper functions
-from the integration's own tests called after the error are followed, and a
-reason taken from a test argument counts when all its
-`pytest.mark.parametrize` values end with `_successful`.
+Only `tests/components/<domain>/test_config_flow.py` modules are checked.
+Any error counts, on any field and in any flow (user, discovery, reauth,
+reconfigure, options, subentry): `errors == {...}`, `errors["base"] == ...`,
+`"base" in errors`, a bare `assert result["errors"]` and `errors != {}`. A
+test is flagged when, after its last assertion of an error, it never asserts
+that a result has type `CREATE_ENTRY` or aborted with a `*_successful` reason
+(as reauth and reconfigure flows do). A finishing assertion in a branch that
+cannot run after the error, such as the `else` of the `if` that shows the
+error, does not count.
+
+Helper functions from the integration's own tests are followed, both for
+showing the error (such as `assert_form_error(result, "cannot_connect")`) and
+for finishing the flow, with the arguments they are called with. A reason
+taken from a test argument counts when all its `pytest.mark.parametrize`
+values end with `_successful`.
 
 See the [config-flow-test-coverage quality scale rule](https://developers.home-assistant.io/docs/core/integration-quality-scale/rules/config-flow-test-coverage).
 
