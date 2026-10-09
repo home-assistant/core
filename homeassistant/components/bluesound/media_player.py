@@ -20,11 +20,7 @@ from homeassistant.components.media_player import (
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import (
-    device_registry as dr,
-    entity_registry as er,
-    issue_registry as ir,
-)
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
     DeviceInfo,
@@ -36,22 +32,11 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.util import dt as dt_util, slugify
+from homeassistant.util import dt as dt_util
 
-from .const import (
-    ATTR_BLUESOUND_GROUP,
-    ATTR_MASTER,
-    DOMAIN,
-    SERVICE_JOIN,
-    SERVICE_UNJOIN,
-)
+from .const import ATTR_BLUESOUND_GROUP, ATTR_MASTER, DOMAIN
 from .coordinator import BluesoundCoordinator
-from .utils import (
-    dispatcher_join_signal,
-    dispatcher_unjoin_signal,
-    format_unique_id,
-    id_to_paired_player,
-)
+from .utils import dispatcher_unjoin_signal, format_unique_id, id_to_paired_player
 
 if TYPE_CHECKING:
     from . import BluesoundConfigEntry
@@ -153,17 +138,17 @@ class BluesoundPlayer(CoordinatorEntity[BluesoundCoordinator], MediaPlayerEntity
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                dispatcher_join_signal(self.entity_id),
-                self.async_add_follower,
-            )
-        )
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
                 dispatcher_unjoin_signal(self._sync_status.id),
                 self.async_remove_follower,
             )
         )
+
+    @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Rebuild the group members, which contain the entity_id."""
+        super().async_entity_id_changed(old_entity_id)
+        self._group_members = self.rebuild_group_members()
 
     @override
     async def async_will_remove_from_hass(self) -> None:
@@ -479,48 +464,6 @@ class BluesoundPlayer(CoordinatorEntity[BluesoundCoordinator], MediaPlayerEntity
         if self._sync_status.followers is not None:
             await self._player.remove_follower(self.host, self.port)
 
-    async def async_bluesound_join(self, master: str) -> None:
-        """Join the player to a group."""
-        ir.async_create_issue(
-            self.hass,
-            DOMAIN,
-            f"deprecated_service_{SERVICE_JOIN}",
-            is_fixable=False,
-            breaks_in_ha_version="2026.7.0",
-            issue_domain=DOMAIN,
-            severity=ir.IssueSeverity.WARNING,
-            translation_key="deprecated_service_join",
-            translation_placeholders={
-                "name": slugify(self.sync_status.name),
-            },
-        )
-
-        if master == self.entity_id:
-            raise ServiceValidationError("Cannot join player to itself")
-
-        _LOGGER.debug("Trying to join player: %s", self.id)
-        async_dispatcher_send(
-            self.hass, dispatcher_join_signal(master), self.host, self.port
-        )
-
-    async def async_bluesound_unjoin(self) -> None:
-        """Unjoin the player from a group."""
-        ir.async_create_issue(
-            self.hass,
-            DOMAIN,
-            f"deprecated_service_{SERVICE_UNJOIN}",
-            is_fixable=False,
-            breaks_in_ha_version="2026.7.0",
-            issue_domain=DOMAIN,
-            severity=ir.IssueSeverity.WARNING,
-            translation_key="deprecated_service_unjoin",
-            translation_placeholders={
-                "name": slugify(self.sync_status.name),
-            },
-        )
-
-        await self.async_unjoin_player()
-
     @property
     @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
@@ -625,10 +568,6 @@ class BluesoundPlayer(CoordinatorEntity[BluesoundCoordinator], MediaPlayerEntity
                     )
 
         return result
-
-    async def async_add_follower(self, host: str, port: int) -> None:
-        """Add follower to leader."""
-        await self._player.add_follower(host, port)
 
     async def async_remove_follower(self, host: str, port: int) -> None:
         """Remove follower to leader."""

@@ -58,7 +58,7 @@ class TessieClimateEntity(TessieEntity, ClimateEntity):
     _attr_precision = PRECISION_HALVES
     _attr_min_temp = 15
     _attr_max_temp = 28
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_hvac_modes = [HVACMode.HEAT_COOL, HVACMode.OFF]
     _attr_supported_features = (
         ClimateEntityFeature.TURN_ON
@@ -90,13 +90,13 @@ class TessieClimateEntity(TessieEntity, ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self.get("climate_state_inside_temp")
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         return self.get("climate_state_driver_temp_setting")
 
@@ -172,7 +172,7 @@ class TessieClimateEntity(TessieEntity, ClimateEntity):
 class TessieCabinOverheatProtectionClimateEntity(TessieEntity, ClimateEntity):
     """Vehicle Cabin Overheat Protection."""
 
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_hvac_modes = [HVACMode.OFF, HVACMode.COOL]
     _attr_entity_registry_enabled_default = False
     _attr_supported_features = (

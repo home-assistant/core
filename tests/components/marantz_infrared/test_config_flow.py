@@ -109,3 +109,4 @@ async def test_user_flow_title_from_model(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == expected_title
+    assert result["result"].unique_id == f"{model}_{MOCK_INFRARED_EMITTER_ENTITY_ID}"

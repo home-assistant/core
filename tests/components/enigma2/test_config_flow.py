@@ -13,7 +13,7 @@ from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .conftest import TEST_FULL, TEST_REQUIRED
+from .conftest import MAC_ADDRESS, TEST_FULL, TEST_REQUIRED
 
 from tests.common import MockConfigEntry
 
@@ -47,6 +47,7 @@ async def test_form_user(hass: HomeAssistant, test_config: dict[str, Any]) -> No
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == test_config[CONF_HOST]
     assert result["data"] == test_config
+    assert result["result"].unique_id == MAC_ADDRESS
 
 
 @pytest.mark.parametrize(

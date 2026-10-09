@@ -128,7 +128,7 @@ async def test_ingress_host(hass: HomeAssistant, mock_mealie_client: AsyncMock) 
 )
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_flow_version_error(
-    hass: HomeAssistant, mock_mealie_client: AsyncMock, version
+    hass: HomeAssistant, mock_mealie_client: AsyncMock, version: str
 ) -> None:
     """Test flow version error."""
     mock_mealie_client.get_about.return_value = About(version=version)
@@ -147,6 +147,14 @@ async def test_flow_version_error(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "mealie_version"}
+
+    mock_mealie_client.get_about.return_value = About(version="v3.7.0")
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "demo.mealie.io", CONF_API_TOKEN: "token"},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.usefixtures("mock_setup_entry")

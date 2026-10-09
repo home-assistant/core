@@ -70,6 +70,7 @@ async def test_device_setup_authentication_error(hass: HomeAssistant) -> None:
         mock_setup = await device.setup_entry(hass, mock_api=mock_api)
 
     assert mock_setup.entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_setup.entry.reason == "Failed to set up the device at 192.168.0.12"
     assert mock_setup.api.auth.call_count == 1
     assert mock_setup.api.aclose.await_count == 1
     assert mock_forward.call_count == 0
@@ -138,6 +139,7 @@ async def test_device_setup_broadlink_exception(hass: HomeAssistant) -> None:
         mock_setup = await device.setup_entry(hass, mock_api=mock_api)
 
     assert mock_setup.entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_setup.entry.reason == "Failed to set up the device at 192.168.0.13"
     assert mock_setup.api.auth.call_count == 1
     assert mock_setup.api.aclose.await_count == 1
     assert mock_forward.call_count == 0

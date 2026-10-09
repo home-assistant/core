@@ -86,9 +86,6 @@
       "health_istrouble": {
         "name": "Vehicle health"
       },
-      "is_charging": {
-        "name": "Charging"
-      },
       "lock_status_boot": {
         "name": "Lock status tailgate"
       },
@@ -239,6 +236,11 @@
           "ignition_on": "Ignition on"
         }
       }
+    }
+  },
+  "exceptions": {
+    "invalid_credentials": {
+      "message": "Invalid MySubaru account credentials"
     }
   },
   "options": {

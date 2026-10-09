@@ -208,7 +208,7 @@ async def test_repair_flow_no_deprecated_models(
         api_key="key-one",
         subentries_data=[
             {
-                "data": {CONF_CHAT_MODEL: "claude-sonnet-4-5"},
+                "data": {CONF_CHAT_MODEL: "claude-sonnet-4-6"},
                 "subentry_type": "conversation",
                 "title": "Conversation One",
                 "unique_id": None,
