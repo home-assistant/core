@@ -64,7 +64,6 @@ async def test_flow_manual_configuration(hass: HomeAssistant) -> None:
         },
     )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == f"M1065-LW - {dr.format_mac(MAC)}"
     assert result["data"] == {
@@ -76,6 +75,7 @@ async def test_flow_manual_configuration(hass: HomeAssistant) -> None:
         CONF_MODEL: "M1065-LW",
         CONF_NAME: f"M1065-LW - {dr.format_mac(MAC)}",
     }
+    assert result["result"].unique_id == dr.format_mac(MAC)
 
 
 async def test_manual_configuration_duplicate_fails(
@@ -197,12 +197,12 @@ async def test_flow_succeeds_with_basic_device_info(
         },
     )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == f"M1065-LW - {dr.format_mac(MAC)}"
     assert result["data"][CONF_HOST] == "1.2.3.4"
     assert result["data"][CONF_MODEL] == "M1065-LW"
     assert result["data"][CONF_NAME] == f"M1065-LW - {dr.format_mac(MAC)}"
+    assert result["result"].unique_id == dr.format_mac(MAC)
 
 
 @pytest.mark.usefixtures("mock_default_requests")
@@ -239,7 +239,6 @@ async def test_flow_create_entry_multiple_existing_entries_of_same_model(
         },
     )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == f"M1065-LW - {dr.format_mac(MAC)}"
     assert result["data"] == {
@@ -251,6 +250,7 @@ async def test_flow_create_entry_multiple_existing_entries_of_same_model(
         CONF_MODEL: "M1065-LW",
         CONF_NAME: f"M1065-LW - {dr.format_mac(MAC)}",
     }
+    assert result["result"].unique_id == dr.format_mac(MAC)
 
     assert result["data"][CONF_NAME] == f"M1065-LW - {dr.format_mac(MAC)}"
 
@@ -425,7 +425,6 @@ async def test_discovery_flow(
         },
     )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == expected_title
     assert result["data"] == {
@@ -437,6 +436,7 @@ async def test_discovery_flow(
         CONF_MODEL: "M1065-LW",
         CONF_NAME: expected_title,
     }
+    assert result["result"].unique_id == dr.format_mac(MAC)
 
     assert result["data"][CONF_NAME] == expected_title
 

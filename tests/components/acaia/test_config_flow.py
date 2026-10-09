@@ -55,13 +55,13 @@ async def test_form(
         user_input=user_input,
     )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "LUNAR-DDEEFF"
     assert result2["data"] == {
         **user_input,
         CONF_IS_NEW_STYLE_SCALE: True,
     }
+    assert result2["result"].unique_id == "aa:bb:cc:dd:ee:ff"
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -80,13 +80,13 @@ async def test_bluetooth_discovery(hass: HomeAssistant, mock_verify: AsyncMock) 
         user_input={},
     )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == service_info.name
     assert result2["data"] == {
         CONF_ADDRESS: service_info.address,
         CONF_IS_NEW_STYLE_SCALE: True,
     }
+    assert result2["result"].unique_id == "aa:bb:cc:dd:ee:ff"
 
 
 @pytest.mark.parametrize(

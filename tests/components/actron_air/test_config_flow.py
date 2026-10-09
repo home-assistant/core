@@ -332,9 +332,9 @@ async def test_user_flow_timeout(
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     # Should create entry on successful recovery
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "test@example.com"
+    assert result["result"].unique_id == "test_user_id"
 
 
 @pytest.mark.usefixtures("mock_setup_entry")

@@ -51,10 +51,10 @@ async def test_happy_path(
         },
     )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert stations_result["type"] is FlowResultType.CREATE_ENTRY
     assert stations_result["title"] == config_entry.title
     assert stations_result["data"] == config_entry.data
+    assert stations_result["result"].unique_id == "AA:AA:AA:AA:AA:AA"
     assert len(mock_setup_entry.mock_calls) == 1
 
 

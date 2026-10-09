@@ -610,5 +610,5 @@ async def test_user_form_port_bind_check(
         )
 
     assert mock_verify.await_count == expected_awaits
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == kwargs["mac_address"]

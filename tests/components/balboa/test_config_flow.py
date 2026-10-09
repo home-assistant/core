@@ -46,9 +46,9 @@ async def test_form(hass: HomeAssistant, client: MagicMock) -> None:
         )
         await hass.async_block_till_done()
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["data"] == TEST_DATA
+    assert result2["result"].unique_id == TEST_MAC
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -272,6 +272,6 @@ async def test_dhcp_discovery_manual_user_setup(
         )
         await hass.async_block_till_done()
 
-        # pylint: disable-next=home-assistant-tests-config-flow-unique-id
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["data"] == TEST_DATA
+        assert result["result"].unique_id == TEST_MAC
