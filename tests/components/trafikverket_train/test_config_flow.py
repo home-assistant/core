@@ -236,6 +236,7 @@ async def test_flow_fails(
             },
         )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == p_error
 
 
@@ -278,6 +279,7 @@ async def test_flow_fails_departures(
             },
         )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == p_error
 
 

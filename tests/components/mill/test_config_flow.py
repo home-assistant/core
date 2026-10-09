@@ -130,6 +130,7 @@ async def test_connection_error(recorder_mock: Recorder, hass: HomeAssistant) ->
         )
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -259,4 +260,5 @@ async def test_local_connection_error(
         )
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}

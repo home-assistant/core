@@ -64,6 +64,7 @@ async def test_form_invalid_api_key_format(hass: HomeAssistant) -> None:
     )
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "invalid_api_key"}
 
 
@@ -227,6 +228,7 @@ async def test_reauth_flow_invalid_api_key_format(
     )
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "invalid_api_key"}
 
 

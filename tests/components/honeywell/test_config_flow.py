@@ -49,6 +49,7 @@ async def test_connection_error(hass: HomeAssistant, client: MagicMock) -> None:
         result["flow_id"],
         user_input=FAKE_CONFIG,
     )
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -67,6 +68,7 @@ async def test_auth_error(hass: HomeAssistant, client: MagicMock) -> None:
         result["flow_id"],
         user_input=FAKE_CONFIG,
     )
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "invalid_auth"}
 
 
@@ -204,6 +206,7 @@ async def test_reauth_flow_auth_error(hass: HomeAssistant, client: MagicMock) ->
         await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
@@ -240,4 +243,5 @@ async def test_reauth_flow_connnection_error(
     await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "cannot_connect"}

@@ -169,6 +169,7 @@ async def test_form_wrong_host(
         },
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "invalid_host"}
 
 

@@ -195,6 +195,7 @@ async def test_setup_network_fail(transport_mock, hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "setup_network"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -230,6 +231,7 @@ async def test_setup_serial_fail(com_mock, transport_mock, hass: HomeAssistant) 
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "setup_serial"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -273,6 +275,7 @@ async def test_setup_serial_manual_fail(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "setup_serial_manual_path"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -444,6 +447,7 @@ async def test_options_add_duplicate_device(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "prompt_options"
     assert result["errors"]
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"]["event_code"] == "already_configured_device"
 
 

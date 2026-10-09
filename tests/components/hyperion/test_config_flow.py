@@ -194,6 +194,7 @@ async def test_user_client_errors(hass: HomeAssistant) -> None:
     ):
         result = await _configure_flow(hass, result, user_input=TEST_HOST_PORT)
         assert result["type"] is FlowResultType.FORM
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"]["base"] == "cannot_connect"
 
     # Fail the auth check call.
@@ -357,6 +358,7 @@ async def test_auth_static_token_login_fail(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"]["base"] == "invalid_access_token"
 
 

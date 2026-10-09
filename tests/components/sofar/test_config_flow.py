@@ -232,6 +232,7 @@ async def test_user_step_link_settings_conflict(
         result = await hass.config_entries.flow.async_configure(flow_id, MOCK_TCP_INPUT)
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
     assert result["description_placeholders"] == {"error": str(error)}
 
@@ -502,6 +503,7 @@ async def test_reconfigure_new_line_settings_cannot_connect(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
     assert entry.data == MOCK_SERIAL_ENTRY_DATA
     assert entry.unique_id == MOCK_SERIAL

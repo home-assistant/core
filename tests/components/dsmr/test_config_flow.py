@@ -301,6 +301,7 @@ async def test_setup_serial_encrypted_invalid_key(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "encryption_key"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "invalid_key"}
 
 
@@ -340,6 +341,7 @@ async def test_setup_serial_encrypted_malformed_key(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "encryption_key"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "invalid_key"}
     # A malformed key must not reach the reader
     connection_factory.assert_not_called()
@@ -375,6 +377,7 @@ async def test_setup_serial_encrypted_cannot_communicate(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "encryption_key"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_communicate"}
     # Encrypted meters must not retry over the RFXtrx protocol
     assert validate.call_count == 1
@@ -468,6 +471,7 @@ async def test_setup_serial_fail(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -515,6 +519,7 @@ async def test_setup_serial_timeout(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_communicate"}
 
 
@@ -553,6 +558,7 @@ async def test_setup_serial_wrong_telegram(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_communicate"}
 
 

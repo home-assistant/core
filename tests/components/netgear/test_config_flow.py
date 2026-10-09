@@ -145,6 +145,7 @@ async def test_user_connect_error(hass: HomeAssistant, service) -> None:
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "config"}
 
 

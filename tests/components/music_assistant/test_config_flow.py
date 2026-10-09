@@ -937,6 +937,7 @@ async def test_auth_manual_invalid_token(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "auth_manual"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": error_key}
 
 

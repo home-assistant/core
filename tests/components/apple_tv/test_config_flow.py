@@ -85,6 +85,7 @@ async def test_user_input_device_not_found(hass: HomeAssistant) -> None:
     )
 
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "no_devices_found"}
 
 
@@ -103,6 +104,7 @@ async def test_user_input_unexpected_error(
     )
 
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "unknown"}
 
 
@@ -368,6 +370,7 @@ async def test_user_adds_existing_device(hass: HomeAssistant) -> None:
         {"device_input": "127.0.0.1"},
     )
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "already_configured"}
 
 
@@ -526,6 +529,7 @@ async def test_user_pair_invalid_pin(
         {"pin": 1111},
     )
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
@@ -555,6 +559,7 @@ async def test_user_pair_unexpected_error(
         {"pin": 1111},
     )
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "unknown"}
 
 

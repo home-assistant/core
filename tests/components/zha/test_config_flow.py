@@ -1226,6 +1226,7 @@ async def test_user_port_config_fail(probe_mock, hass: HomeAssistant) -> None:
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "manual_port_config"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"]["base"] == "cannot_connect"
     assert probe_mock.await_count == 1
 
@@ -2076,6 +2077,7 @@ async def test_formation_strategy_restore_manual_backup_invalid_upload(
 
     assert result3["type"] is FlowResultType.FORM
     assert result3["step_id"] == "upload_manual_backup"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result3["errors"]["base"] == "invalid_backup_json"
 
 

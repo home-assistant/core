@@ -356,6 +356,7 @@ async def test_form_both_queues_empty(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "no_data"}
     assert len(mock_setup_entry.mock_calls) == 0
 
@@ -420,6 +421,7 @@ async def test_form_socket_timeout(hass: HomeAssistant) -> None:
         )
 
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
@@ -441,6 +443,7 @@ async def test_form_os_error(hass: HomeAssistant) -> None:
         )
 
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "cannot_connect"}
 
 

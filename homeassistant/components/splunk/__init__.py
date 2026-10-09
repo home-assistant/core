@@ -114,6 +114,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             translation_placeholders={"host": host, "port": str(port)},
         ) from err
     except Exception as err:
+        # pylint: disable-next=home-assistant-log-and-raise
         _LOGGER.exception("Unexpected setup error at %s:%s", host, port)
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,

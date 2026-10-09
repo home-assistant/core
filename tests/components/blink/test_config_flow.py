@@ -92,6 +92,7 @@ async def test_form_2fa_connect_error(hass: HomeAssistant) -> None:
         )
 
     assert result3["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result3["errors"] == {"base": "cannot_connect"}
 
 
@@ -132,6 +133,7 @@ async def test_form_2fa_invalid_key(hass: HomeAssistant) -> None:
         )
 
     assert result3["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result3["errors"] == {"base": "invalid_access_token"}
 
 
@@ -170,6 +172,7 @@ async def test_form_2fa_unknown_error(hass: HomeAssistant) -> None:
         )
 
     assert result3["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result3["errors"] == {"base": "unknown"}
 
 
@@ -208,6 +211,7 @@ async def test_form_2fa_wrong_pin(hass: HomeAssistant) -> None:
         )
 
     assert result3["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result3["errors"] == {"base": "invalid_auth"}
 
 
@@ -226,6 +230,7 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
         )
 
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
@@ -248,6 +253,7 @@ async def test_form_start_returns_false(hass: HomeAssistant) -> None:
         )
 
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
@@ -266,6 +272,7 @@ async def test_form_unknown_error(hass: HomeAssistant) -> None:
         )
 
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "unknown"}
 
 

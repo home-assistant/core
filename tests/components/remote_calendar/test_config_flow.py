@@ -229,6 +229,7 @@ async def test_unsupported_inputs(
     )
 
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "cannot_connect"}
     assert (
         get_schema_suggested_value(result2["data_schema"].schema, CONF_CALENDAR_NAME)

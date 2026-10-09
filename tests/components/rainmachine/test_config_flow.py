@@ -62,6 +62,7 @@ async def test_invalid_password(hass: HomeAssistant) -> None:
                 CONF_PORT: 8080,
             },
         )
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {CONF_PASSWORD: "invalid_auth"}
 
 

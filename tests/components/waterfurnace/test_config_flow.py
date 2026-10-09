@@ -138,6 +138,7 @@ async def test_user_flow_account_id_none(
     )
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "unknown"}
 
 
@@ -274,4 +275,5 @@ async def test_reauth_flow_no_account_id(
     )
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}

@@ -189,6 +189,7 @@ async def test_user_network_connect_failure(
     )
     assert result
     assert result.get("type") is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result.get("errors") == {"host": "cannot_connect"}
 
 
@@ -215,6 +216,7 @@ async def test_user_usb_connect_failure(hass: HomeAssistant) -> None:
     )
     assert result
     assert result.get("type") is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result.get("errors") == {"port": "cannot_connect"}
 
 
@@ -303,6 +305,7 @@ async def test_vlp_step_no_modules(
         await hass.async_block_till_done()
 
     assert result.get("type") is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result.get("errors") == {CONF_VLP_FILE: "no_modules"}
 
 

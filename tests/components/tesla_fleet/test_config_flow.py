@@ -214,6 +214,7 @@ async def test_region_partner_login_error(
         )
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "region"
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"] == {"base": "cannot_connect"}
 
         # Retrying succeeds and advances to the domain step
@@ -404,6 +405,7 @@ async def test_domain_input_invalid_domain(
         )
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "domain_input"
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"] == {CONF_DOMAIN: "invalid_domain"}
 
         # Enter valid domain - this should automatically register
@@ -503,6 +505,7 @@ async def test_domain_registration_errors(
         )
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "domain_registration"
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"] == {"base": expected_error}
 
 
@@ -570,6 +573,7 @@ async def test_domain_registration_precondition_failed(
         )
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "domain_input"
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"] == {CONF_DOMAIN: "precondition_failed"}
 
 
@@ -636,6 +640,7 @@ async def test_domain_registration_public_key_not_found(
         )
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "domain_registration"
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"] == {"base": "public_key_not_found"}
 
 
@@ -704,6 +709,7 @@ async def test_domain_registration_public_key_mismatch(
         )
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "domain_registration"
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"] == {"base": "public_key_mismatch"}
 
 
