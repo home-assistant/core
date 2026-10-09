@@ -1,5 +1,8 @@
 """Test device template functions."""
 
+from collections.abc import Callable
+from typing import Any
+
 import pytest
 
 from homeassistant.core import HomeAssistant
@@ -201,6 +204,53 @@ async def test_device_name(
     info = render_to_info(hass, f"{{{{ device_name('{entity_entry.entity_id}') }}}}")
     assert_result_info(info, device_entry.name_by_user)
     assert info.rate_limit is None
+
+
+@pytest.mark.parametrize(
+    ("attr_name", "expected"),
+    [
+        pytest.param(
+            "config_entries", lambda entry_id: {entry_id}, id="config_entries"
+        ),
+        pytest.param(
+            "config_entries_subentries",
+            lambda entry_id: {entry_id: {None}},
+            id="config_entries_subentries",
+        ),
+        pytest.param(
+            "primary_config_entry",
+            lambda entry_id: entry_id,
+            id="primary_config_entry",
+        ),
+    ],
+)
+async def test_device_attr_deprecated_config_entry_attributes(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    caplog: pytest.LogCaptureFixture,
+    attr_name: str,
+    expected: Callable[[str], Any],
+) -> None:
+    """Test deprecated config entry attributes keep working in templates."""
+    config_entry = MockConfigEntry(domain="light")
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+
+    info = render_to_info(
+        hass, f"{{{{ device_attr('{device_entry.id}', '{attr_name}') }}}}"
+    )
+    assert_result_info(info, expected(config_entry.entry_id))
+
+    info = render_to_info(
+        hass,
+        f"{{{{ is_device_attr('{device_entry.id}', '{attr_name}', None) }}}}",
+    )
+    assert_result_info(info, False)
+
+    assert caplog.text.count(f"device attribute '{attr_name}'") == 1
 
 
 async def test_device_attr(

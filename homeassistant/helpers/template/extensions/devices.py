@@ -1,7 +1,8 @@
 """Device functions for Home Assistant templates."""
 
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from itertools import chain
+import logging
 from typing import TYPE_CHECKING, Any
 
 import probatio
@@ -18,12 +19,25 @@ from .base import BaseTemplateExtension, TemplateFunction
 if TYPE_CHECKING:
     from homeassistant.helpers.template import TemplateEnvironment
 
+_LOGGER = logging.getLogger(__name__)
+
+# Deprecated device attributes, resolved from config_entry_id and
+# config_subentry_id, so reading them in a template does not raise.
+_DEPRECATED_DEVICE_ATTRS: dict[str, Callable[[dr.BaseDeviceEntry], Any]] = {
+    "config_entries": lambda device: {device.config_entry_id},
+    "config_entries_subentries": lambda device: {
+        device.config_entry_id: {device.config_subentry_id}
+    },
+    "primary_config_entry": lambda device: device.config_entry_id,
+}
+
 
 class DeviceExtension(BaseTemplateExtension):
     """Extension for device-related template functions."""
 
     def __init__(self, environment: TemplateEnvironment) -> None:
         """Initialize the device extension."""
+        self._warned_deprecated_attrs: set[str] = set()
         super().__init__(
             environment,
             functions=[
@@ -127,7 +141,23 @@ class DeviceExtension(BaseTemplateExtension):
             device = device_reg.async_get(_device_id)
         elif "." not in device_or_entity_id:
             device = device_reg.async_get(device_or_entity_id)
-        if device is None or not hasattr(device, attr_name):
+        if device is None:
+            return None
+
+        if not device.is_composite_device and (
+            resolve := _DEPRECATED_DEVICE_ATTRS.get(attr_name)
+        ):
+            if attr_name not in self._warned_deprecated_attrs:
+                self._warned_deprecated_attrs.add(attr_name)
+                _LOGGER.warning(
+                    "A template reads device attribute '%s', which is deprecated "
+                    "and will stop working in Home Assistant 2027.10; use "
+                    "'config_entry_id' instead",
+                    attr_name,
+                )
+            return resolve(device)
+
+        if not hasattr(device, attr_name):
             return None
         return getattr(device, attr_name)
 
