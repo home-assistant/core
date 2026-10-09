@@ -28,10 +28,7 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions:
-    status: todo
-    comment: |
-      The actions and the switch and valve commands do not handle API errors.
+  action-exceptions: done
   config-entry-unloading: done
   docs-configuration-parameters:
     status: exempt
@@ -71,9 +68,7 @@ rules:
     comment: The remaining watering time sensor is missing the duration device class.
   entity-disabled-by-default: todo
   entity-translations: done
-  exception-translations:
-    status: todo
-    comment: Errors raised by actions and entity commands are not translated.
+  exception-translations: done
   icon-translations:
     status: todo
     comment: The sensor entity overrides the icon property based on its state.
