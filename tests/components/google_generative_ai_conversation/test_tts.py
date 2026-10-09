@@ -230,3 +230,31 @@ async def test_tts_service_speak_error(
             temperature=RECOMMENDED_TEMPERATURE,
         ),
     )
+
+
+@pytest.mark.usefixtures("setup")
+async def test_tts_wav_container_passthrough(hass: HomeAssistant) -> None:
+    """Test that a WAV container returned by the model is passed through."""
+    wav_data = b"RIFF\x24\x00\x00\x00WAVEfmt "
+    tts_entity = hass.data[tts.DOMAIN].get_entity("tts.google_ai_tts")
+    tts_entity._genai_client.aio.models.generate_content.return_value = (
+        types.GenerateContentResponse(
+            candidates=(
+                types.Candidate(
+                    content=types.Content(
+                        parts=(
+                            types.Part(
+                                inline_data=types.Blob(
+                                    data=wav_data, mime_type="audio/wav"
+                                )
+                            ),
+                        )
+                    )
+                ),
+            )
+        )
+    )
+
+    assert await tts_entity.async_get_tts_audio(
+        "There is a person at the front door.", "en-US", {tts.ATTR_VOICE: "zephyr"}
+    ) == ("wav", wav_data)
