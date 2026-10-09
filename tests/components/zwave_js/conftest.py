@@ -1334,9 +1334,7 @@ def vision_security_zl7432_fixture(client, vision_security_zl7432_state) -> Node
 
 
 @pytest.fixture(name="aeotec_zwa046")
-def aeotec_zwa046_fixture(
-    client: MagicMock, aeotec_zwa046_state: NodeDataType
-) -> Node:
+def aeotec_zwa046_fixture(client: MagicMock, aeotec_zwa046_state: NodeDataType) -> Node:
     """Mock an Aeotec ZWA046 Home Energy Meter 8 node."""
     node = Node(client, copy.deepcopy(aeotec_zwa046_state))
     client.driver.controller.nodes[node.node_id] = node
