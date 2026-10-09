@@ -47,8 +47,6 @@ def setup_coordinator_side_effect(
             device.v1_properties.status.refresh.side_effect = side_effect
         if device.dyad is not None:
             device.dyad.query_values.side_effect = side_effect
-        if device.zeo is not None:
-            device.zeo.query_values.side_effect = side_effect
         if device.b01_q10_properties is not None:
             device.b01_q10_properties.refresh.side_effect = side_effect
         if device.b01_q7_properties is not None:
@@ -79,10 +77,10 @@ async def test_binary_sensors_coordinator_state(
     assert state is not None
     assert state.state == expected_state
 
-    # A01 (Dyad/Zeo) binary sensors
+    # Zeo uses the state already synchronized by the library.
     state = hass.states.get("binary_sensor.zeo_one_detergent")
     assert state is not None
-    assert state.state == expected_state
+    assert state.state == "off"
 
 
 @pytest.mark.parametrize("platforms", [[Platform.BINARY_SENSOR]])
@@ -137,7 +135,7 @@ async def test_zeo_unreported_protocol_is_unknown(
 ) -> None:
     """Test a protocol the device has not reported yet reads as unknown."""
     zeo = next(device.zeo for device in fake_devices if device.zeo is not None)
-    del zeo.query_values.return_value[RoborockZeoProtocol.DETERGENT_EMPTY]
+    del zeo.values[RoborockZeoProtocol.DETERGENT_EMPTY]
 
     await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
     await hass.async_block_till_done()
