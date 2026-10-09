@@ -76,9 +76,9 @@ class CrownstoneEntryManager:
             )
             return False
         except CrownstoneUnknownError as unknown_err:
-            # pylint: disable-next=home-assistant-log-and-raise
-            _LOGGER.error("Unknown error during login")
-            raise ConfigEntryNotReady from unknown_err
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN, translation_key="unknown_login_error"
+            ) from unknown_err
 
         # A new clientsession is created because the default
         # one does not cleanup on unload

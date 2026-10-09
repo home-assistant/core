@@ -75,12 +75,6 @@ def async_handle_api_call[_T: CieloDeviceEntity, **_P](
         )
 
         if not isinstance(res, dict):
-            # pylint: disable-next=home-assistant-log-and-raise
-            LOGGER.error(
-                "API function did not return a dictionary for entity %s, got %s",
-                entity.entity_id,
-                type(res),
-            )
             raise HomeAssistantError("Invalid API response format")
 
         data: dict[str, Any] | None = res.get("data")
