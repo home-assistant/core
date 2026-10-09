@@ -74,8 +74,17 @@ def add_energy_sensors(
         "year": SENSOR_PERIOD_YEARLY,
     }
     order = {"day": 0, "week": 1, "year": 2, "month": 3}
+    supported_aggregates = []
+    for aggregate in management_point.energy_aggregates:
+        if aggregate.period not in periods:
+            _LOGGER.debug(
+                "Skipping unsupported Daikin energy period '%s'", aggregate.period
+            )
+            continue
+        supported_aggregates.append(aggregate)
+
     for aggregate in sorted(
-        management_point.energy_aggregates,
+        supported_aggregates,
         key=lambda aggregate: order[aggregate.period],
     ):
         details = EnergySensorDetails(

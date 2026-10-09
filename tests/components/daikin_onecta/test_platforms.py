@@ -132,6 +132,31 @@ def test_unsupported_energy_aggregate_is_skipped() -> None:
     assert sensors == []
 
 
+def test_unsupported_energy_period_is_skipped() -> None:
+    """Do not prevent platform setup for an unknown Daikin energy period."""
+    sensors = []
+
+    add_energy_sensors(
+        MagicMock(),
+        MagicMock(),
+        SimpleNamespace(
+            embedded_id="outdoorUnit",
+            management_point_type="outdoorUnit",
+            energy_aggregates=[
+                SimpleNamespace(
+                    source="electrical",
+                    operation_mode="heating",
+                    period="quarter",
+                    data_type="consumed",
+                )
+            ],
+        ),
+        sensors,
+    )
+
+    assert sensors == []
+
+
 def _execute_typed_command(config_entry: MockConfigEntry) -> AsyncMock:
     """Execute a typed command callback without making a cloud request."""
     api = config_entry.runtime_data.api
