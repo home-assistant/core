@@ -21,11 +21,13 @@ _LOGGER = logging.getLogger(__name__)
 class AirQCoordinator(DataUpdateCoordinator):
     """Coordinator is responsible for querying the device at a specified route."""
 
+    # pylint: disable-next=home-assistant-coordinator-untyped-config-entry
     config_entry: ConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
+        # pylint: disable-next=home-assistant-coordinator-untyped-config-entry
         entry: ConfigEntry,
         clip_negative: bool = True,
         return_average: bool = True,

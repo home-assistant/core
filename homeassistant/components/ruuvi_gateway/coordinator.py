@@ -18,11 +18,13 @@ from .const import SCAN_INTERVAL
 class RuuviGatewayUpdateCoordinator(DataUpdateCoordinator[list[TagData]]):
     """Poll the gateway for data and return changed TagData objects."""
 
+    # pylint: disable-next=home-assistant-coordinator-untyped-config-entry
     config_entry: ConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
+        # pylint: disable-next=home-assistant-coordinator-untyped-config-entry
         config_entry: ConfigEntry,
         logger: logging.Logger,
     ) -> None:

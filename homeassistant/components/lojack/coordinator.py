@@ -38,6 +38,7 @@ class LoJackCoordinator(DataUpdateCoordinator[Location]):
         self,
         hass: HomeAssistant,
         client: LoJackClient,
+        # pylint: disable-next=home-assistant-coordinator-untyped-config-entry
         entry: ConfigEntry,
         vehicle: Vehicle,
     ) -> None:

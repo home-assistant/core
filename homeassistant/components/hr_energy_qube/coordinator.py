@@ -34,7 +34,11 @@ class QubeCoordinator(DataUpdateCoordinator[QubeData]):
     sw_version: str | None = None
 
     def __init__(
-        self, hass: HomeAssistant, client: QubeClient, entry: ConfigEntry
+        self,
+        hass: HomeAssistant,
+        client: QubeClient,
+        # pylint: disable-next=home-assistant-coordinator-untyped-config-entry
+        entry: ConfigEntry,
     ) -> None:
         """Initialize the coordinator."""
         self.client = client

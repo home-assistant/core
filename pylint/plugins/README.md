@@ -145,6 +145,8 @@ Every check has a code following the
 | `W7439` | [`home-assistant-tests-coordinator-async-refresh`](#w7439-home-assistant-tests-coordinator-async-refresh) | Tests should advance the time instead of refreshing a coordinator directly |
 | `W7440` | [`home-assistant-tests-config-flow-unique-id`](#w7440-home-assistant-tests-config-flow-unique-id) | Happy path config flow tests should assert the created entry's unique ID |
 | `W7442` | [`home-assistant-redundant-translation-key`](#w7442-home-assistant-redundant-translation-key) | `translation_key` only repeats the name the `device_class` already provides |
+| `W7447` | [`home-assistant-coordinator-untyped-config-entry`](#w7447-home-assistant-coordinator-untyped-config-entry) | Coordinator should use the integration's typed config entry instead of `ConfigEntry` |
+| `W7448` | [`home-assistant-coordinator-redundant-config-entry`](#w7448-home-assistant-coordinator-redundant-config-entry) | Coordinator assigns `self.config_entry` that `DataUpdateCoordinator.__init__` already sets |
 
 
 ## `home_assistant_logger` checker
@@ -312,6 +314,37 @@ entry unload, and avoids key collisions in the shared `hass.data` dictionary.
 
 See the [runtime-data quality scale rule](https://developers.home-assistant.io/docs/core/integration-quality-scale/rules/runtime-data)
 for migration guidance.
+
+
+## `home_assistant_coordinator_config_entry` checker
+
+Checks how a `DataUpdateCoordinator` handles its config entry.
+
+### `W7447`: `home-assistant-coordinator-untyped-config-entry`
+
+When an integration defines a typed config entry, such as
+`type MyConfigEntry = ConfigEntry[MyCoordinator]`, its coordinators should use
+it for the `config_entry` class annotation and `__init__` argument, so
+`self.config_entry.runtime_data` is typed as well:
+
+```python
+class MyCoordinator(DataUpdateCoordinator[MyData]):
+    config_entry: MyConfigEntry
+
+    def __init__(self, hass: HomeAssistant, config_entry: MyConfigEntry) -> None:
+        ...
+```
+
+When the alias lives in `__init__.py`, import it in the coordinator under
+`if TYPE_CHECKING:` to avoid a circular import, or move it to
+`coordinator.py`.
+
+### `W7448`: `home-assistant-coordinator-redundant-config-entry`
+
+`DataUpdateCoordinator.__init__` stores the `config_entry` it is given, so a
+coordinator that passes `config_entry` to `super().__init__` doesn't need to
+assign `self.config_entry` itself. To narrow its type, annotate it on the
+class instead.
 
 
 ## `home_assistant_async_load_fixtures` checker

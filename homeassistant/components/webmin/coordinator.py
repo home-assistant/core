@@ -20,10 +20,12 @@ from .helpers import get_instance_from_options, get_sorted_mac_addresses
 class WebminUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """The Webmin data update coordinator."""
 
+    # pylint: disable-next=home-assistant-coordinator-untyped-config-entry
     config_entry: ConfigEntry
     mac_address: str
     unique_id: str
 
+    # pylint: disable-next=home-assistant-coordinator-untyped-config-entry
     def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Initialize the Webmin data update coordinator."""
 

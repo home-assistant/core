@@ -22,11 +22,13 @@ class SwitcherDataUpdateCoordinator(
 ):
     """Switcher device data update coordinator."""
 
+    # pylint: disable-next=home-assistant-coordinator-untyped-config-entry
     config_entry: ConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
+        # pylint: disable-next=home-assistant-coordinator-untyped-config-entry
         entry: ConfigEntry,
         device: SwitcherBase,
     ) -> None:
