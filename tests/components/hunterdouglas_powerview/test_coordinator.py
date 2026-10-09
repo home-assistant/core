@@ -1,67 +1,47 @@
-"""Tests for the Hunter Douglas PowerView data update coordinator and device cleanup."""
+"""Tests for stale shade cleanup in the PowerView coordinator."""
 
-from unittest.mock import AsyncMock, MagicMock
+from datetime import timedelta
+
+from freezegun.api import FrozenDateTimeFactory
+import pytest
 
 from homeassistant.components.hunterdouglas_powerview.const import DOMAIN
-from homeassistant.components.hunterdouglas_powerview.coordinator import (
-    PowerviewShadeUpdateCoordinator,
-)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from tests.common import MockConfigEntry
+from .const import MOCK_MAC, MOCK_SERIAL
+
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
-async def test_coordinator_automatic_cleanup_stale_shades(
-    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+@pytest.mark.usefixtures("mock_hunterdouglas_hub")
+@pytest.mark.parametrize("api_version", [1, 2, 3])
+async def test_stale_shade_devices_removed_on_refresh(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test that the coordinator automatically removes devices when shades vanish from the hub."""
-    config_entry = MockConfigEntry(domain=DOMAIN, unique_id="hub_123")
-    config_entry.add_to_hass(hass)
+    """Test a shade missing from the hub is removed; real shades and hub stay."""
+    entry = MockConfigEntry(domain=DOMAIN, data={"host": "1.2.3.4"}, unique_id=MOCK_MAC)
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
-    # Setup our mock parent hub device in the registry
-    hub_device = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        identifiers={(DOMAIN, "hub_123")},
+    existing = {
+        d.id for d in dr.async_entries_for_config_entry(device_registry, entry.entry_id)
+    }
+    phantom = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, "99999")},
+        via_device=(DOMAIN, MOCK_SERIAL),
     )
 
-    # Pre-populate Device A: Stale shade that will vanish on the next sync cycle
-    stale_shade_device = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        identifiers={(DOMAIN, 999)},
-        via_device_id=hub_device.id,
-    )
+    freezer.tick(timedelta(seconds=61))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
-    # Pre-populate Device B: Active shade that will stay on the hub
-    active_shade_device = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        identifiers={(DOMAIN, 111)},
-        via_device_id=hub_device.id,
-    )
-
-    # Mock the underlying api client library classes
-    mock_shades_api = MagicMock()
-    mock_hub_api = MagicMock()
-    mock_hub_api.hub_address = "192.168.1.50"
-
-    coordinator = PowerviewShadeUpdateCoordinator(
-        hass, config_entry, mock_shades_api, mock_hub_api
-    )
-
-    # The mock hub payload only returns one of the two shades defined
-    mock_data = MagicMock()
-    mock_data.shades = {111: {"id": 111}}
-    coordinator.data = mock_data
-
-    # Set up the async-safe mock return data payload
-    mock_api_payload = MagicMock()
-    mock_shades_api.get_shades = AsyncMock(return_value=mock_api_payload)
-
-    # Execute the coordinator update sequence pass
-    await coordinator._async_update_data()
-
-    # Assertion 1: Active shade must still be present in the registry
-    assert device_registry.async_get(active_shade_device.id) is not None
-
-    # Assertion 2: Stale shade must be removed from the registry
-    assert device_registry.async_get(stale_shade_device.id) is None
+    assert device_registry.async_get(phantom.id) is None
+    assert {
+        d.id for d in dr.async_entries_for_config_entry(device_registry, entry.entry_id)
+    } == existing
+    
