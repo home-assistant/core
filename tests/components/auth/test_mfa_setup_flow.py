@@ -192,4 +192,4 @@ async def test_ws_setup_mfa_selector(
     assert result["success"]
     assert result["result"]["step_id"] == "setup"
     assert len(notify_calls) == 1
-    assert notify_calls[0].data["entity_id"] == ["notify.phone"]
+    assert notify_calls[0].data["entity_id"] == "notify.phone"

@@ -12,7 +12,7 @@ from homeassistant.auth import auth_manager_from_config, models as auth_models
 from homeassistant.auth.mfa_modules import auth_mfa_module_from_config
 from homeassistant.components.notify import NOTIFY_SERVICE_SCHEMA
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 
@@ -495,9 +495,8 @@ async def test_setup_user_notify_entities(
         "notify_target": f"{NOTIFY_ENTITY_ID}, {NOTIFY_ENTITY_ID_2}"
     }
 
-    assert len(notify_calls) == 1
-    assert notify_calls[0].data["entity_id"] == entity_ids
-    assert MOCK_CODE in notify_calls[0].data["message"]
+    assert [call.data["entity_id"] for call in notify_calls] == entity_ids
+    assert all(MOCK_CODE in call.data["message"] for call in notify_calls)
 
     with patch("pyotp.HOTP.verify", return_value=True):
         step = await flow.async_step_setup({"code": MOCK_CODE})
@@ -514,9 +513,8 @@ async def test_setup_user_notify_entities(
     with patch("pyotp.HOTP.at", return_value=MOCK_CODE_2):
         await notify_auth_module.async_initialize_login_mfa_step("test-user")
 
-    assert len(notify_calls) == 2
-    assert notify_calls[1].data["entity_id"] == entity_ids
-    assert MOCK_CODE_2 in notify_calls[1].data["message"]
+    assert [call.data["entity_id"] for call in notify_calls[2:]] == entity_ids
+    assert all(MOCK_CODE_2 in call.data["message"] for call in notify_calls[2:])
 
 
 async def test_entity_ids_not_stored_for_notify_service(
@@ -614,7 +612,7 @@ async def test_notify_entities_skip_unavailable(hass: HomeAssistant) -> None:
     await notify_auth_module.async_initialize_login_mfa_step("test-user")
 
     assert len(notify_calls) == 1
-    assert notify_calls[0].data["entity_id"] == [NOTIFY_ENTITY_ID]
+    assert notify_calls[0].data["entity_id"] == NOTIFY_ENTITY_ID
 
 
 async def test_notify_entities_not_available(hass: HomeAssistant) -> None:
@@ -677,7 +675,7 @@ async def test_setup_user_notify_service_and_entities(
     assert service_calls[0].data["target"] == ["target"]
     assert MOCK_CODE in service_calls[0].data["message"]
     assert len(entity_calls) == 1
-    assert entity_calls[0].data["entity_id"] == [NOTIFY_ENTITY_ID]
+    assert entity_calls[0].data["entity_id"] == NOTIFY_ENTITY_ID
     assert MOCK_CODE in entity_calls[0].data["message"]
 
     with patch("pyotp.HOTP.verify", return_value=True):
@@ -755,3 +753,26 @@ async def test_existing_send_message_service_setup(
 
     assert len(notify_calls) == 1
     assert MOCK_CODE in notify_calls[0].data["message"]
+
+
+async def test_setup_user_notify_entities_partial_failure(
+    hass: HomeAssistant,
+) -> None:
+    """Test the setup step only lists the destinations the code was sent to."""
+
+    async def send_message(call: ServiceCall) -> None:
+        if call.data["entity_id"] == NOTIFY_ENTITY_ID_2:
+            raise HomeAssistantError("Failed to send")
+
+    hass.services.async_register("notify", "send_message", send_message)
+    hass.states.async_set(NOTIFY_ENTITY_ID, STATE_UNKNOWN)
+    hass.states.async_set(NOTIFY_ENTITY_ID_2, STATE_UNKNOWN)
+    notify_auth_module = await auth_mfa_module_from_config(hass, {"type": "notify"})
+
+    flow = await notify_auth_module.async_setup_flow("test-user")
+    step = await flow.async_step_init(
+        {"entity_ids": [NOTIFY_ENTITY_ID, NOTIFY_ENTITY_ID_2]}
+    )
+    assert step["type"] is data_entry_flow.FlowResultType.FORM
+    assert step["step_id"] == "setup"
+    assert step["description_placeholders"] == {"notify_target": NOTIFY_ENTITY_ID}

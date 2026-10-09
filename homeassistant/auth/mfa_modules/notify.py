@@ -297,28 +297,22 @@ class NotifyAuthModule(MultiFactorAuthModule):
         notify_service: str | None,
         target: str | None,
         entity_ids: list[str] | None,
-    ) -> None:
-        """Send code by notify service and notify entities.
+    ) -> list[str]:
+        """Send code by notify entities and notify service.
 
-        Raises if the code could not be sent to any of them.
+        Returns the destinations the code was sent to, raises if there are none.
         """
-        sent = False
+        sent = await self.async_notify_entities(code, entity_ids or [])
         if notify_service is not None:
             try:
                 await self.async_notify(code, notify_service, target)
             except ServiceNotFound:
                 _LOGGER.warning("Notify service %s not found", notify_service)
             else:
-                sent = True
-        if entity_ids is not None:
-            try:
-                await self.async_notify_entities(code, entity_ids)
-            except HomeAssistantError as err:
-                _LOGGER.warning("Failed to notify %s: %s", entity_ids, err)
-            else:
-                sent = True
+                sent.append(f"notify.{notify_service}")
         if not sent:
             raise HomeAssistantError("Failed to send one-time password")
+        return sent
 
     async def async_notify(
         self, code: str, notify_service: str, target: str | None = None
@@ -330,27 +324,31 @@ class NotifyAuthModule(MultiFactorAuthModule):
 
         await self.hass.services.async_call("notify", notify_service, data)
 
-    async def async_notify_entities(self, code: str, entity_ids: list[str]) -> None:
-        """Send code by notify entities."""
-        # Entity services only warn about missing entities, so check explicitly
-        available_entity_ids = [
-            entity_id
-            for entity_id in entity_ids
-            if (state := self.hass.states.get(entity_id)) is not None
-            and state.state != STATE_UNAVAILABLE
-        ]
-        if not available_entity_ids:
-            raise HomeAssistantError(
-                f"None of the notify entities {entity_ids} are available"
-            )
-
-        await self.hass.services.async_call(
-            "notify",
-            "send_message",
-            {"message": self._message_template.format(code)},
-            blocking=True,
-            target={"entity_id": available_entity_ids},
-        )
+    async def async_notify_entities(
+        self, code: str, entity_ids: list[str]
+    ) -> list[str]:
+        """Send code by notify entities, returning those it was sent to."""
+        sent: list[str] = []
+        for entity_id in entity_ids:
+            # Entity services only warn about missing entities, so check explicitly
+            state = self.hass.states.get(entity_id)
+            if state is None or state.state == STATE_UNAVAILABLE:
+                _LOGGER.warning("Notify entity %s is not available", entity_id)
+                continue
+            # Sent one at a time so a failing entity does not hide the others
+            try:
+                await self.hass.services.async_call(
+                    "notify",
+                    "send_message",
+                    {"message": self._message_template.format(code)},
+                    blocking=True,
+                    target={"entity_id": entity_id},
+                )
+            except HomeAssistantError as err:
+                _LOGGER.warning("Failed to notify %s: %s", entity_id, err)
+            else:
+                sent.append(entity_id)
+        return sent
 
 
 class NotifySetupFlow(SetupFlow[NotifyAuthModule]):
@@ -453,19 +451,15 @@ class NotifySetupFlow(SetupFlow[NotifyAuthModule]):
         )
 
         try:
-            await self._auth_module.async_send_code(
+            sent = await self._auth_module.async_send_code(
                 code, self._notify_service, self._target, self._entity_ids
             )
         except HomeAssistantError:
             return self.async_abort(reason="notify_failed")
 
-        notify_targets = list(self._entity_ids or [])
-        if self._notify_service is not None:
-            notify_targets.append(f"notify.{self._notify_service}")
-
         return self.async_show_form(
             step_id="setup",
             data_schema=self._setup_schema,
-            description_placeholders={"notify_target": ", ".join(notify_targets)},
+            description_placeholders={"notify_target": ", ".join(sent)},
             errors=errors,
         )
