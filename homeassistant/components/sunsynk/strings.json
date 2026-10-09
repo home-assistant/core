@@ -99,6 +99,9 @@
     }
   },
   "exceptions": {
+    "connection_in_use": {
+      "message": "Cannot use the Modbus TCP gateway. Another integration uses the gateway with different settings: {error}"
+    },
     "modbus_error": {
       "message": "Cannot communicate with the inverter over Modbus: {error}"
     },

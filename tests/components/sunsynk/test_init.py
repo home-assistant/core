@@ -1,9 +1,9 @@
 """Test the Sunsynk integration setup."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 from modbus_connection import ModbusTimeoutError
-from modbus_connection.mock import MockModbusUnit
+from modbus_connection.mock import MockModbusConnection, MockModbusUnit
 import pytest
 from sunsynk.exceptions import SunsynkAuthenticationError, SunsynkConnectionError
 from syrupy.assertion import SnapshotAssertion
@@ -12,6 +12,7 @@ from homeassistant.components.sunsynk.const import DOMAIN, TYPE_CLOUD
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_PASSWORD, CONF_TYPE, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 
 from . import setup_integration
@@ -80,36 +81,43 @@ async def test_devices(
     assert devices == snapshot
 
 
-@pytest.mark.usefixtures("mock_get_unit")
+@pytest.mark.usefixtures("mock_modbus_connection_class")
 async def test_load_unload_modbus_entry(
-    hass: HomeAssistant, mock_modbus_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_modbus_config_entry: MockConfigEntry,
+    mock_modbus_connection: MockModbusConnection,
 ) -> None:
-    """Test a Modbus config entry loads and unloads."""
+    """Test a Modbus config entry loads, unloads and closes the connection."""
     await setup_integration(hass, mock_modbus_config_entry)
     assert mock_modbus_config_entry.state is ConfigEntryState.LOADED
+    assert mock_modbus_connection.connected is True
 
     await hass.config_entries.async_unload(mock_modbus_config_entry.entry_id)
     await hass.async_block_till_done()
     assert mock_modbus_config_entry.state is ConfigEntryState.NOT_LOADED
+    assert mock_modbus_connection.connected is False
 
 
-@pytest.mark.usefixtures("mock_get_unit")
+@pytest.mark.usefixtures("mock_modbus_connection_class")
 async def test_modbus_setup_retry(
     hass: HomeAssistant,
     mock_modbus_config_entry: MockConfigEntry,
     mock_modbus_unit: MockModbusUnit,
+    mock_modbus_connection: MockModbusConnection,
 ) -> None:
     """Test a Modbus config entry tries again when the inverter does not reply."""
     mock_modbus_unit.fail_requests(ModbusTimeoutError("no reply"))
     await setup_integration(hass, mock_modbus_config_entry)
     assert mock_modbus_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_modbus_connection.connected is False
 
 
-@pytest.mark.usefixtures("mock_get_unit")
+@pytest.mark.usefixtures("mock_modbus_connection_class")
 async def test_modbus_wrong_inverter(
     hass: HomeAssistant,
     mock_modbus_config_entry: MockConfigEntry,
     mock_modbus_unit: MockModbusUnit,
+    mock_modbus_connection: MockModbusConnection,
 ) -> None:
     """Test a Modbus config entry does not load the data of a different inverter."""
     # The serial number 2209876543, two ASCII characters in each register.
@@ -123,9 +131,26 @@ async def test_modbus_wrong_inverter(
         "expected serial number is 2201234567. Make sure that the host and the "
         "unit ID are correct"
     )
+    assert mock_modbus_connection.connected is False
 
 
-@pytest.mark.usefixtures("mock_get_unit")
+async def test_modbus_connection_in_use(
+    hass: HomeAssistant, mock_modbus_config_entry: MockConfigEntry
+) -> None:
+    """Test a Modbus config entry stops when the gateway is in use."""
+    with patch(
+        "homeassistant.components.sunsynk.async_get_unit",
+        side_effect=HomeAssistantError("different link settings"),
+    ):
+        await setup_integration(hass, mock_modbus_config_entry)
+    assert mock_modbus_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_modbus_config_entry.reason == (
+        "Cannot use the Modbus TCP gateway. Another integration uses the gateway "
+        "with different settings: different link settings"
+    )
+
+
+@pytest.mark.usefixtures("mock_modbus_connection_class")
 async def test_modbus_devices(
     hass: HomeAssistant,
     mock_modbus_config_entry: MockConfigEntry,

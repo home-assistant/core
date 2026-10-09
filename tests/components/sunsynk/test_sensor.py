@@ -134,7 +134,9 @@ async def test_no_battery(
     assert hass.states.get("sensor.battery_2938475610_state_of_charge") is None
 
 
-@pytest.mark.usefixtures("mock_get_unit", "entity_registry_enabled_by_default")
+@pytest.mark.usefixtures(
+    "mock_modbus_connection_class", "entity_registry_enabled_by_default"
+)
 async def test_modbus_sensors(
     hass: HomeAssistant,
     mock_modbus_config_entry: MockConfigEntry,
@@ -148,7 +150,7 @@ async def test_modbus_sensors(
     )
 
 
-@pytest.mark.usefixtures("mock_get_unit")
+@pytest.mark.usefixtures("mock_modbus_connection_class")
 async def test_modbus_sensors_unavailable_on_error(
     hass: HomeAssistant,
     mock_modbus_config_entry: MockConfigEntry,
@@ -173,7 +175,7 @@ async def test_modbus_sensors_unavailable_on_error(
     assert hass.states.get(entity_id).state == "20"
 
 
-@pytest.mark.usefixtures("mock_get_unit")
+@pytest.mark.usefixtures("mock_modbus_connection_class")
 async def test_modbus_sensors_unavailable_on_partial_failure(
     hass: HomeAssistant,
     mock_modbus_config_entry: MockConfigEntry,
@@ -193,7 +195,7 @@ async def test_modbus_sensors_unavailable_on_partial_failure(
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
 
-@pytest.mark.usefixtures("mock_get_unit")
+@pytest.mark.usefixtures("mock_modbus_connection_class")
 async def test_modbus_no_battery(
     hass: HomeAssistant,
     mock_modbus_config_entry: MockConfigEntry,

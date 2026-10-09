@@ -21,6 +21,7 @@ from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryError,
     ConfigEntryNotReady,
+    HomeAssistantError,
 )
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -88,12 +89,20 @@ async def _async_setup_modbus(
     """Set up an inverter that uses Modbus TCP."""
     serial_number = entry.unique_id
     assert serial_number is not None
-    unit = async_get_unit(
-        hass,
-        entry,
-        ModbusTcpParams(host=entry.data[CONF_HOST], port=entry.data[CONF_PORT]),
-        entry.data[CONF_UNIT_ID],
-    )
+    try:
+        unit = async_get_unit(
+            hass,
+            entry,
+            ModbusTcpParams(host=entry.data[CONF_HOST], port=entry.data[CONF_PORT]),
+            entry.data[CONF_UNIT_ID],
+        )
+    except HomeAssistantError as err:
+        # Another config entry uses the gateway with different link settings.
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="connection_in_use",
+            translation_placeholders={"error": str(err)},
+        ) from err
     coordinator = SunsynkModbusCoordinator(
         hass, entry, SunsynkInverter(unit), serial_number
     )

@@ -1,9 +1,11 @@
 """Test the Sunsynk config flow."""
 
-from unittest.mock import AsyncMock, MagicMock
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
+from unittest.mock import AsyncMock, patch
 
-from modbus_connection import ModbusTimeoutError
-from modbus_connection.mock import MockModbusUnit
+from modbus_connection import ModbusTcpParams, ModbusTimeoutError
+from modbus_connection.mock import MockModbusConnection, MockModbusUnit
 import pytest
 from sunsynk.exceptions import SunsynkAuthenticationError, SunsynkConnectionError
 
@@ -116,9 +118,11 @@ async def test_cloud_flow_errors(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-@pytest.mark.usefixtures("mock_get_temporary_unit")
+@pytest.mark.usefixtures("mock_modbus_connection_class")
 async def test_full_modbus_flow(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_modbus_connection: MockModbusConnection,
 ) -> None:
     """Test the full flow for an inverter that uses Modbus."""
     result = await _async_start_flow(hass, TYPE_MODBUS)
@@ -134,9 +138,11 @@ async def test_full_modbus_flow(
     assert result["data"] == {CONF_TYPE: TYPE_MODBUS, **MODBUS_USER_INPUT}
     assert result["result"].unique_id == MODBUS_SERIAL_NUMBER
     assert len(mock_setup_entry.mock_calls) == 1
+    # The flow closes its temporary connection.
+    assert mock_modbus_connection.connected is False
 
 
-@pytest.mark.usefixtures("mock_get_temporary_unit", "mock_setup_entry")
+@pytest.mark.usefixtures("mock_modbus_connection_class", "mock_setup_entry")
 async def test_duplicate_modbus_entry(
     hass: HomeAssistant, mock_modbus_config_entry: MockConfigEntry
 ) -> None:
@@ -150,7 +156,7 @@ async def test_duplicate_modbus_entry(
     assert result["reason"] == "already_configured_device"
 
 
-@pytest.mark.usefixtures("mock_get_temporary_unit", "mock_setup_entry")
+@pytest.mark.usefixtures("mock_modbus_connection_class", "mock_setup_entry")
 async def test_modbus_and_cloud_entries_coexist(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
@@ -164,20 +170,30 @@ async def test_modbus_and_cloud_entries_coexist(
     assert result["result"].unique_id == MODBUS_SERIAL_NUMBER
 
 
-@pytest.mark.usefixtures("mock_get_temporary_unit", "mock_setup_entry")
-async def test_modbus_flow_no_reply(
-    hass: HomeAssistant, mock_modbus_unit: MockModbusUnit
-) -> None:
+@asynccontextmanager
+async def _async_get_silent_unit(
+    hass: HomeAssistant, params: ModbusTcpParams, unit_id: int
+) -> AsyncIterator[MockModbusUnit]:
+    """Give a unit of an inverter that does not reply."""
+    unit = MockModbusConnection().for_unit(unit_id)
+    unit.fail_requests(ModbusTimeoutError("no reply"))
+    yield unit
+
+
+@pytest.mark.usefixtures("mock_modbus_connection_class", "mock_setup_entry")
+async def test_modbus_flow_no_reply(hass: HomeAssistant) -> None:
     """Test the Modbus flow shows an error when the inverter does not reply."""
-    mock_modbus_unit.fail_requests(ModbusTimeoutError("no reply"))
     result = await _async_start_flow(hass, TYPE_MODBUS)
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=MODBUS_USER_INPUT
-    )
+    with patch(
+        "homeassistant.components.sunsynk.config_flow.async_get_temporary_unit",
+        side_effect=_async_get_silent_unit,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=MODBUS_USER_INPUT
+        )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
 
-    mock_modbus_unit.fail_requests(None)
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=MODBUS_USER_INPUT
     )
@@ -185,21 +201,20 @@ async def test_modbus_flow_no_reply(
     assert result["result"].unique_id == MODBUS_SERIAL_NUMBER
 
 
-@pytest.mark.usefixtures("mock_setup_entry")
-async def test_modbus_flow_connection_in_use(
-    hass: HomeAssistant, mock_get_temporary_unit: MagicMock
-) -> None:
+@pytest.mark.usefixtures("mock_modbus_connection_class", "mock_setup_entry")
+async def test_modbus_flow_connection_in_use(hass: HomeAssistant) -> None:
     """Test the Modbus flow shows an error when the connection is not available."""
-    get_temporary_unit = mock_get_temporary_unit.side_effect
-    mock_get_temporary_unit.side_effect = HomeAssistantError("in use")
     result = await _async_start_flow(hass, TYPE_MODBUS)
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=MODBUS_USER_INPUT
-    )
+    with patch(
+        "homeassistant.components.sunsynk.config_flow.async_get_temporary_unit",
+        side_effect=HomeAssistantError("in use"),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=MODBUS_USER_INPUT
+        )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
 
-    mock_get_temporary_unit.side_effect = get_temporary_unit
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=MODBUS_USER_INPUT
     )
@@ -207,7 +222,7 @@ async def test_modbus_flow_connection_in_use(
     assert result["result"].unique_id == MODBUS_SERIAL_NUMBER
 
 
-@pytest.mark.usefixtures("mock_get_temporary_unit", "mock_setup_entry")
+@pytest.mark.usefixtures("mock_modbus_connection_class", "mock_setup_entry")
 async def test_modbus_flow_no_serial_number(
     hass: HomeAssistant, mock_modbus_unit: MockModbusUnit
 ) -> None:
