@@ -13,6 +13,15 @@ from .entity import LEDIrBaseEntity
 
 PARALLEL_UPDATES = 1
 
+GENERIC_10_KEY_BUTTONS = [
+    "brightness_up",
+    "brightness_down",
+    "timer_2h",
+    "timer_4h",
+    "timer_6h",
+    "timer_8h",
+]
+
 SUPPORTED_BUTTONS = {
     LEDIrDeviceType.GENERIC_24_KEY: ["brightness_up", "brightness_down"],
     LEDIrDeviceType.GENERIC_13_KEY: ["brightness_up", "brightness_down", "timer"],
@@ -42,14 +51,8 @@ SUPPORTED_BUTTONS = {
         "quick",
         "slow",
     ],
-    LEDIrDeviceType.GENERIC_10_KEY: [
-        "brightness_up",
-        "brightness_down",
-        "timer_2h",
-        "timer_4h",
-        "timer_6h",
-        "timer_8h",
-    ],
+    LEDIrDeviceType.GENERIC_10_KEY: GENERIC_10_KEY_BUTTONS,
+    LEDIrDeviceType.GENERIC_10_KEY_B708: GENERIC_10_KEY_BUTTONS,
 }
 
 

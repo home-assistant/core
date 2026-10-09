@@ -45,6 +45,7 @@ def button_only() -> Generator[None]:
     "config_entry",
     [
         LEDIrDeviceType.GENERIC_10_KEY,
+        LEDIrDeviceType.GENERIC_10_KEY_B708,
         LEDIrDeviceType.GENERIC_13_KEY,
         LEDIrDeviceType.GENERIC_24_KEY,
         LEDIrDeviceType.GENERIC_40_KEY,
