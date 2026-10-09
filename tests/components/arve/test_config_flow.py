@@ -51,8 +51,14 @@ async def test_form_cannot_connect(hass: HomeAssistant, mock_arve: AsyncMock) ->
         USER_INPUT,
     )
     assert result["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
+
+    mock_arve.get_customer_id.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        USER_INPUT,
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_abort_already_configured(

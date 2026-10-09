@@ -62,6 +62,7 @@ async def test_no_station_found(
     hass: HomeAssistant,
     aioambient: AsyncMock,
     open_api: OpenAPI,
+    devices_by_location: list[dict[str, Any]],
 ) -> None:
     """Test that we abort when we cannot find a station in the area."""
 
@@ -83,5 +84,25 @@ async def test_no_station_found(
 
     assert user_result["type"] is FlowResultType.FORM
     assert user_result["step_id"] == "user"
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert user_result["errors"] == {"base": "no_stations_found"}
+
+    with patch.object(
+        open_api,
+        "get_devices_by_location",
+        AsyncMock(return_value=devices_by_location),
+    ):
+        user_result = await hass.config_entries.flow.async_configure(
+            user_result["flow_id"],
+            {"location": {"latitude": 10.0, "longitude": 20.0, "radius": 1.0}},
+        )
+
+    assert user_result["step_id"] == "station"
+
+    stations_result = await hass.config_entries.flow.async_configure(
+        user_result["flow_id"],
+        {
+            "station": "AA:AA:AA:AA:AA:AA",
+        },
+    )
+
+    assert stations_result["type"] is FlowResultType.CREATE_ENTRY

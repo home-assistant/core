@@ -92,8 +92,25 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
             TEST_DATA,
         )
     assert result3["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result3["errors"] == {"base": "cannot_connect"}
+
+    with (
+        patch(
+            "adax.get_adax_token",
+            return_value="test_token",
+        ),
+        patch(
+            "homeassistant.components.adax.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result4 = await hass.config_entries.flow.async_configure(
+            result3["flow_id"],
+            TEST_DATA,
+        )
+        await hass.async_block_till_done()
+
+    assert result4["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_flow_entry_already_exists(hass: HomeAssistant) -> None:
@@ -267,8 +284,29 @@ async def test_local_connection_error(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
+
+    with (
+        patch(
+            "homeassistant.components.adax.async_setup_entry",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.adax.config_flow.adax_local.AdaxConfig",
+            autospec=True,
+        ) as mock_client_class,
+    ):
+        client = mock_client_class.return_value
+        client.configure_device.return_value = True
+        client.device_ip = "192.168.1.4"
+        client.access_token = "token"
+        client.mac_id = "8383838"
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            test_data,
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_local_heater_not_available(hass: HomeAssistant) -> None:
