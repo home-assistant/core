@@ -61,7 +61,6 @@
     'state': 'on',
   })
 # ---
-# ---
 # name: test_all_entities[debian-package-version-is-not-parsed][update.pve1_software_update-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -216,6 +215,7 @@
     'original_name': 'Software update',
     'platform': 'proxmoxve',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <UpdateEntityFeature: 16>,
     'translation_key': 'node_update',
     'unique_id': '1234_node/pve1_node_update',
