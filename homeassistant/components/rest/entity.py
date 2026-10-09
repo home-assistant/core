@@ -1,7 +1,6 @@
 """The base entity for the rest component."""
 
 from abc import abstractmethod
-import logging
 import ssl
 from typing import override
 
@@ -37,8 +36,6 @@ TRIGGER_ENTITY_OPTIONS = (
     CONF_UNIT_OF_MEASUREMENT,
 )
 
-_LOGGER = logging.getLogger(__name__)
-
 
 async def async_get_config_rest_data_and_coordinator(
     hass: HomeAssistant,
@@ -62,13 +59,9 @@ async def async_get_config_rest_data_and_coordinator(
     if rest.data is None:
         if rest.last_exception:
             if isinstance(rest.last_exception, ssl.SSLError):
-                # pylint: disable-next=home-assistant-log-and-raise
-                _LOGGER.error(
-                    "Error connecting %s failed with %s",
-                    rest.url,
-                    rest.last_exception,
-                )
-                raise HomeAssistantError from rest.last_exception
+                raise HomeAssistantError(
+                    f"Error connecting {rest.url} failed with {rest.last_exception}"
+                ) from rest.last_exception
             raise PlatformNotReady from rest.last_exception
         raise PlatformNotReady
 
