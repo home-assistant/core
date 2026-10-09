@@ -1513,6 +1513,7 @@ async def test_purge_filtered_event_data(
                 )
 
     await recorder_mock.async_add_executor_job(_add_db_entries, hass)
+    expected_scan_count = len(event_data) // batch_size + 1
     with (
         patch.object(recorder_mock, "max_bind_vars", batch_size),
         patch.object(
@@ -1523,9 +1524,9 @@ async def test_purge_filtered_event_data(
             DOMAIN, SERVICE_PURGE, {"keep_days": 10, "apply_filter": True}
         )
         await async_recorder_block_till_done(hass)
-        await async_wait_purge_done(hass)
+        await async_wait_purge_done(hass, max_number=expected_scan_count)
 
-    assert scan.call_count == len(event_data) // batch_size + 1
+    assert scan.call_count == expected_scan_count
     with session_scope(hass=hass, read_only=True) as session:
         events = (
             session.query(EventData.shared_data)
