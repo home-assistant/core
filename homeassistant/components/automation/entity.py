@@ -23,6 +23,7 @@ from homeassistant.core import (
     Context,
     CoreState,
     HassJob,
+    async_noop,
     callback,
     split_entity_id,
 )
@@ -642,7 +643,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
                 return
             if self.entity_id == entity_id:
                 # Not None when nothing was attached, so a rename still re-attaches
-                self._async_detach_triggers = detach or (lambda: None)
+                self._async_detach_triggers = detach or async_noop
                 return
             # Changed again while attaching, `this` is stale
             if detach is not None:
