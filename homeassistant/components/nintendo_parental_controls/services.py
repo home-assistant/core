@@ -2,8 +2,8 @@
 
 from enum import StrEnum
 import logging
-import probatio
 
+import probatio
 from pynintendoparental.const import DAYS_OF_WEEK
 from pynintendoparental.device import Device
 from pynintendoparental.enum import SafeLaunchSetting
