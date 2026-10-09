@@ -417,6 +417,7 @@ async def test_manual_flow_ignores_pending_discovery_for_same_device(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_IP_ADDRESS] == "2.2.2.2"
+    assert result["result"].unique_id == "HWE-P1_5c2fafabcdef"
 
     # The stale discovery flow is cleaned up once the manual flow succeeds
     assert len(hass.config_entries.flow.async_progress()) == 0

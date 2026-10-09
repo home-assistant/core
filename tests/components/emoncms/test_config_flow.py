@@ -139,6 +139,7 @@ async def test_user_flow_manual_mode(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == SENSOR_NAME
     assert result["data"] == {**USER_INPUT, CONF_ONLY_INCLUDE_FEEDID: ["1"]}
+    assert result["result"].unique_id == UNIQUE_ID
     # assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -162,6 +163,7 @@ async def test_user_flow_auto_mode(
         **USER_INPUT,
         CONF_ONLY_INCLUDE_FEEDID: FLOW_RESULT[CONF_ONLY_INCLUDE_FEEDID],
     }
+    assert result["result"].unique_id == UNIQUE_ID
     assert len(mock_setup_entry.mock_calls) == 1
 
 

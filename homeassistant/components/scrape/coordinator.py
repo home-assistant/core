@@ -28,6 +28,7 @@ class ScrapeCoordinator(DataUpdateCoordinator[BeautifulSoup]):
     def __init__(
         self,
         hass: HomeAssistant,
+        # pylint: disable-next=home-assistant-coordinator-untyped-config-entry
         config_entry: ConfigEntry | None,
         rest: RestData,
         rest_config: dict[str, Any],

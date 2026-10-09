@@ -20,7 +20,11 @@ from homeassistant.components.update import (
     SERVICE_INSTALL,
 )
 from homeassistant.components.wled import WLED_KEY
-from homeassistant.components.wled.const import DOMAIN, RELEASES_SCAN_INTERVAL
+from homeassistant.components.wled.const import (
+    DOMAIN,
+    RELEASES_SCAN_INTERVAL,
+    SCAN_INTERVAL,
+)
 from homeassistant.components.wled.coordinator import WLEDReleasesDataUpdateCoordinator
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -336,6 +340,7 @@ async def test_update_follows_firmware_repository_change(
     hass: HomeAssistant,
     mock_wled: MagicMock,
     mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the update entity follows a device flashed with another firmware."""
     assert (state := hass.states.get("update.wled_rgb_light_firmware"))
@@ -345,8 +350,9 @@ async def test_update_follows_firmware_repository_change(
     data = await async_load_json_object_fixture(hass, "rgb.json", DOMAIN)
     data["info"]["repo"] = "MoonModules/WLED-MM"
     mock_wled.update.return_value.update_from_dict(data)
-    await mock_config_entry.runtime_data.async_refresh()
-    await hass.async_block_till_done()
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert (state := hass.states.get("update.wled_rgb_light_firmware"))
     assert "github.com/MoonModules/WLED-MM/" in state.attributes[ATTR_RELEASE_URL]

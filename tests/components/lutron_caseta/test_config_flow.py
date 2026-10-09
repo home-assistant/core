@@ -243,6 +243,7 @@ async def test_form_user(hass: HomeAssistant, tmp_path: Path) -> None:
         )
         await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == "1.1.1.1"
     assert result3["data"] == {
@@ -347,6 +348,7 @@ async def test_form_user_reuses_existing_assets_when_pairing_again(
         )
         await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == "1.1.1.1"
     assert result3["data"] == {
@@ -545,5 +547,6 @@ async def test_zeroconf(hass: HomeAssistant, source, tmp_path: Path) -> None:
         CONF_CERTFILE: "lutron_caseta-abc-cert.pem",
         CONF_CA_CERTS: "lutron_caseta-abc-ca.pem",
     }
+    assert result2["result"].unique_id == "abc"
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1

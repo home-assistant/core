@@ -225,6 +225,7 @@ async def test_show_config_form_validate_token(hass: HomeAssistant) -> None:
         CONF_DEVICE_TYPE: PlaatoDeviceType.Keg,
         CONF_DEVICE_NAME: "device_name",
     }
+    assert result["result"].unique_id == "valid_token"
 
 
 async def test_show_config_form_no_cloud_webhook(

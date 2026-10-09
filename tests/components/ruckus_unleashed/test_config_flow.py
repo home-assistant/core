@@ -29,6 +29,7 @@ from . import (
     CONFIG,
     DEFAULT_SYSTEM_INFO,
     DEFAULT_TITLE,
+    DEFAULT_UNIQUEID,
     TEST_CLIENT,
     RuckusAjaxApiPatchContext,
     init_integration,
@@ -63,6 +64,7 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == DEFAULT_TITLE
     assert result2["data"] == CONFIG
+    assert result2["result"].unique_id == DEFAULT_UNIQUEID
 
 
 async def test_form_invalid_auth(hass: HomeAssistant) -> None:

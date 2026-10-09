@@ -20,6 +20,7 @@ type Status = dict[str, Any] | None
 class SwitchBotCoordinator(DataUpdateCoordinator[Status]):
     """SwitchBot Cloud coordinator."""
 
+    # pylint: disable-next=home-assistant-coordinator-untyped-config-entry
     config_entry: ConfigEntry
     _api: SwitchBotAPI
     _device_id: str
@@ -29,6 +30,7 @@ class SwitchBotCoordinator(DataUpdateCoordinator[Status]):
     def __init__(
         self,
         hass: HomeAssistant,
+        # pylint: disable-next=home-assistant-coordinator-untyped-config-entry
         config_entry: ConfigEntry,
         api: SwitchBotAPI,
         device: Device | Remote,
