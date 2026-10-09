@@ -121,3 +121,150 @@
     'state': 'unknown',
   })
 # ---
+# name: test_get_circulation_schedule
+  dict({
+    'water_heater.model0_domestic_hot_water': dict({
+      'active': True,
+      'friday': list([
+        dict({
+          'end': '09:00',
+          'mode': 'on',
+          'position': 0,
+          'start': '05:30',
+        }),
+        dict({
+          'end': '13:00',
+          'mode': 'on',
+          'position': 1,
+          'start': '12:00',
+        }),
+        dict({
+          'end': '20:00',
+          'mode': 'on',
+          'position': 2,
+          'start': '18:00',
+        }),
+      ]),
+      'monday': list([
+        dict({
+          'end': '09:00',
+          'mode': 'on',
+          'position': 0,
+          'start': '05:30',
+        }),
+        dict({
+          'end': '13:00',
+          'mode': 'on',
+          'position': 1,
+          'start': '12:00',
+        }),
+        dict({
+          'end': '20:00',
+          'mode': 'on',
+          'position': 2,
+          'start': '18:00',
+        }),
+      ]),
+      'saturday': list([
+        dict({
+          'end': '09:30',
+          'mode': 'on',
+          'position': 0,
+          'start': '07:00',
+        }),
+        dict({
+          'end': '13:00',
+          'mode': 'on',
+          'position': 1,
+          'start': '12:00',
+        }),
+        dict({
+          'end': '20:00',
+          'mode': 'on',
+          'position': 2,
+          'start': '18:00',
+        }),
+      ]),
+      'sunday': list([
+        dict({
+          'end': '09:30',
+          'mode': 'on',
+          'position': 0,
+          'start': '07:00',
+        }),
+        dict({
+          'end': '13:00',
+          'mode': 'on',
+          'position': 1,
+          'start': '12:00',
+        }),
+        dict({
+          'end': '20:00',
+          'mode': 'on',
+          'position': 2,
+          'start': '18:00',
+        }),
+      ]),
+      'thursday': list([
+        dict({
+          'end': '09:00',
+          'mode': 'on',
+          'position': 0,
+          'start': '05:30',
+        }),
+        dict({
+          'end': '13:00',
+          'mode': 'on',
+          'position': 1,
+          'start': '12:00',
+        }),
+        dict({
+          'end': '20:00',
+          'mode': 'on',
+          'position': 2,
+          'start': '18:00',
+        }),
+      ]),
+      'tuesday': list([
+        dict({
+          'end': '09:00',
+          'mode': 'on',
+          'position': 0,
+          'start': '05:30',
+        }),
+        dict({
+          'end': '13:00',
+          'mode': 'on',
+          'position': 1,
+          'start': '12:00',
+        }),
+        dict({
+          'end': '20:00',
+          'mode': 'on',
+          'position': 2,
+          'start': '18:00',
+        }),
+      ]),
+      'wednesday': list([
+        dict({
+          'end': '09:00',
+          'mode': 'on',
+          'position': 0,
+          'start': '05:30',
+        }),
+        dict({
+          'end': '13:00',
+          'mode': 'on',
+          'position': 1,
+          'start': '12:00',
+        }),
+        dict({
+          'end': '20:00',
+          'mode': 'on',
+          'position': 2,
+          'start': '18:00',
+        }),
+      ]),
+    }),
+  })
+# ---

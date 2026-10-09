@@ -7,17 +7,23 @@ from typing import Any, override
 from PyViCare.PyViCareDevice import Device as PyViCareDevice
 from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
 from PyViCare.PyViCareHeatingDevice import HeatingCircuit as PyViCareHeatingCircuit
-from PyViCare.PyViCareUtils import PyViCareNotSupportedFeatureError
+from PyViCare.PyViCareUtils import (
+    PyViCareCommandError,
+    PyViCareNotSupportedFeatureError,
+)
 
 from homeassistant.components.water_heater import (
     WaterHeaterEntity,
     WaterHeaterEntityFeature,
 )
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS, UnitOfTemperature
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceResponse
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import DOMAIN
 from .entity import ViCareEntity
+from .services import WEEKDAYS
 from .types import ViCareConfigEntry, ViCareDevice
 from .utils import get_circuits
 
@@ -51,6 +57,9 @@ HA_TO_VICARE_HVAC_DHW = {
     OPERATION_MODE_OFF: VICARE_MODE_OFF,
     OPERATION_MODE_ON: VICARE_MODE_DHW,
 }
+
+# ViCare marks the end of the day as 24:00, the time selector can only send 00:00.
+CIRCULATION_SCHEDULE_DAY_END = "24:00"
 
 
 def _build_entities(
@@ -144,3 +153,48 @@ class ViCareWater(ViCareEntity, WaterHeaterEntity):
         if self._current_mode is None:
             return None
         return VICARE_TO_HA_HVAC_DHW.get(self._current_mode)
+
+    def get_circulation_schedule(self) -> ServiceResponse:
+        """Return the DHW circulation pump schedule."""
+        schedule = self._get_circulation_schedule()
+        return {
+            "active": schedule["active"],
+            **{day: schedule[day[:3]] for day in WEEKDAYS},
+        }
+
+    def set_circulation_schedule(self, **slots_by_day: list[dict[str, str]]) -> None:
+        """Set the DHW circulation pump schedule, keeping days not passed."""
+        schedule = self._get_circulation_schedule()
+        new_schedule = {day[:3]: schedule[day[:3]] for day in WEEKDAYS}
+        for day, slots in slots_by_day.items():
+            new_schedule[day[:3]] = [
+                {
+                    "start": slot["start"],
+                    "end": (
+                        CIRCULATION_SCHEDULE_DAY_END
+                        if slot["end"] == "00:00"
+                        else slot["end"]
+                    ),
+                    "mode": slot["mode"],
+                    "position": position,
+                }
+                for position, slot in enumerate(slots)
+            ]
+        try:
+            self._api.setDomesticHotWaterCirculationSchedule(new_schedule)
+        except PyViCareCommandError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="circulation_schedule_not_set",
+                translation_placeholders={"error": str(err)},
+            ) from err
+
+    def _get_circulation_schedule(self) -> dict[str, Any]:
+        """Return the raw circulation schedule or raise if unsupported."""
+        try:
+            return self._api.getDomesticHotWaterCirculationSchedule()
+        except PyViCareNotSupportedFeatureError as err:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="circulation_schedule_not_supported",
+            ) from err

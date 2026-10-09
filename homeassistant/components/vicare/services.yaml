@@ -1,3 +1,46 @@
+.circulation_slots: &circulation_slots
+  selector:
+    object:
+      multiple: true
+      label_field: start
+      description_field: end
+      fields:
+        start:
+          required: true
+          selector:
+            time:
+        end:
+          required: true
+          selector:
+            time:
+        mode:
+          required: true
+          selector:
+            select:
+              options:
+                - "on"
+                - "5/25-cycles"
+                - "5/10-cycles"
+              custom_value: true
+
+get_circulation_schedule:
+  target:
+    entity:
+      integration: vicare
+      domain: water_heater
+set_circulation_schedule:
+  target:
+    entity:
+      integration: vicare
+      domain: water_heater
+  fields:
+    monday: *circulation_slots
+    tuesday: *circulation_slots
+    wednesday: *circulation_slots
+    thursday: *circulation_slots
+    friday: *circulation_slots
+    saturday: *circulation_slots
+    sunday: *circulation_slots
 set_vicare_mode:
   target:
     entity:

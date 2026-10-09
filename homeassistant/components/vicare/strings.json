@@ -679,6 +679,12 @@
     }
   },
   "exceptions": {
+    "circulation_schedule_not_set": {
+      "message": "Unable to set the circulation schedule: {error}"
+    },
+    "circulation_schedule_not_supported": {
+      "message": "This device does not support a domestic hot water circulation schedule"
+    },
     "program_not_activated": {
       "message": "Unable to activate ViCare program {program}"
     },
@@ -699,6 +705,44 @@
     }
   },
   "services": {
+    "get_circulation_schedule": {
+      "description": "Gets the domestic hot water circulation pump schedule.",
+      "name": "Get circulation schedule"
+    },
+    "set_circulation_schedule": {
+      "description": "Sets the domestic hot water circulation pump schedule.",
+      "fields": {
+        "friday": {
+          "description": "Circulation slots for Friday. Each slot has a start, an end on a 10-minute grid (use 24:00 or 00:00 for the end of the day) and a mode supported by the device. Days not passed keep their current schedule.",
+          "name": "[%key:common::time::friday%]"
+        },
+        "monday": {
+          "description": "Circulation slots for Monday. Each slot has a start, an end on a 10-minute grid (use 24:00 or 00:00 for the end of the day) and a mode supported by the device. Days not passed keep their current schedule.",
+          "name": "[%key:common::time::monday%]"
+        },
+        "saturday": {
+          "description": "Circulation slots for Saturday. Each slot has a start, an end on a 10-minute grid (use 24:00 or 00:00 for the end of the day) and a mode supported by the device. Days not passed keep their current schedule.",
+          "name": "[%key:common::time::saturday%]"
+        },
+        "sunday": {
+          "description": "Circulation slots for Sunday. Each slot has a start, an end on a 10-minute grid (use 24:00 or 00:00 for the end of the day) and a mode supported by the device. Days not passed keep their current schedule.",
+          "name": "[%key:common::time::sunday%]"
+        },
+        "thursday": {
+          "description": "Circulation slots for Thursday. Each slot has a start, an end on a 10-minute grid (use 24:00 or 00:00 for the end of the day) and a mode supported by the device. Days not passed keep their current schedule.",
+          "name": "[%key:common::time::thursday%]"
+        },
+        "tuesday": {
+          "description": "Circulation slots for Tuesday. Each slot has a start, an end on a 10-minute grid (use 24:00 or 00:00 for the end of the day) and a mode supported by the device. Days not passed keep their current schedule.",
+          "name": "[%key:common::time::tuesday%]"
+        },
+        "wednesday": {
+          "description": "Circulation slots for Wednesday. Each slot has a start, an end on a 10-minute grid (use 24:00 or 00:00 for the end of the day) and a mode supported by the device. Days not passed keep their current schedule.",
+          "name": "[%key:common::time::wednesday%]"
+        }
+      },
+      "name": "Set circulation schedule"
+    },
     "set_vicare_mode": {
       "description": "Sets the mode of the climate device as defined by Viessmann.",
       "fields": {
