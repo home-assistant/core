@@ -784,6 +784,15 @@ class LIFXComponentLight[
                 extra.as_dict()
             ).colors
 
+    @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Opt in to in-place entity_id changes.
+
+        This can be removed in Home Assistant Core 2027.11.
+        """
+        super().async_entity_id_changed(old_entity_id)
+
     @property
     @override
     def extra_restore_state_data(self) -> LIFXComponentExtraData:
