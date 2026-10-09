@@ -101,6 +101,9 @@
   "exceptions": {
     "modbus_error": {
       "message": "Cannot communicate with the inverter over Modbus: {error}"
+    },
+    "wrong_inverter": {
+      "message": "The inverter at this address has the serial number {found}. The expected serial number is {expected}. Make sure that the host and the unit ID are correct."
     }
   }
 }

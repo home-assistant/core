@@ -106,6 +106,26 @@ async def test_modbus_setup_retry(
 
 
 @pytest.mark.usefixtures("mock_get_unit")
+async def test_modbus_wrong_inverter(
+    hass: HomeAssistant,
+    mock_modbus_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """Test a Modbus config entry does not load the data of a different inverter."""
+    # The serial number 2209876543, two ASCII characters in each register.
+    mock_modbus_unit.load_raw(
+        {"holding": {3: 0x3232, 4: 0x3039, 5: 0x3837, 6: 0x3635, 7: 0x3433}}
+    )
+    await setup_integration(hass, mock_modbus_config_entry)
+    assert mock_modbus_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_modbus_config_entry.reason == (
+        "The inverter at this address has the serial number 2209876543. The "
+        "expected serial number is 2201234567. Make sure that the host and the "
+        "unit ID are correct"
+    )
+
+
+@pytest.mark.usefixtures("mock_get_unit")
 async def test_modbus_devices(
     hass: HomeAssistant,
     mock_modbus_config_entry: MockConfigEntry,

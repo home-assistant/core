@@ -17,11 +17,15 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_UNIT_ID, TYPE_CLOUD, TYPE_MODBUS
+from .const import CONF_UNIT_ID, DOMAIN, TYPE_CLOUD, TYPE_MODBUS
 from .coordinator import (
     SunsynkConfigEntry,
     SunsynkDataUpdateCoordinator,
@@ -94,6 +98,19 @@ async def _async_setup_modbus(
         hass, entry, SunsynkInverter(unit), serial_number
     )
     await coordinator.async_config_entry_first_refresh()
+
+    # Make sure that the data comes from the configured inverter. If the
+    # address changes, the data of a different inverter must not replace it.
+    found = coordinator.inverter.identity.serial_number
+    if found != serial_number:
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="wrong_inverter",
+            translation_placeholders={
+                "expected": serial_number,
+                "found": found or "unknown",
+            },
+        )
 
     # The battery device links to its inverter, so the inverter must exist first.
     dr.async_get(hass).async_get_or_create(
