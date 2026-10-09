@@ -1,0 +1,38 @@
+send_message:
+  target:
+    entity:
+      domain: notify
+      integration: prowl
+  fields:
+    title:
+      required: false
+      selector:
+        text:
+      example: Home Assistant
+      default: Home Assistant
+    message:
+      required: true
+      selector:
+        text:
+          multiline: true
+      example: Hello World
+    priority:
+      required: false
+      selector:
+        select:
+          options:
+            - very_low
+            - moderate
+            - normal
+            - high
+            - emergency
+          mode: dropdown
+          translation_key: priority
+          sort: false
+      example: high
+    url:
+      required: false
+      selector:
+        text:
+          type: url
+      example: https://www.home-assistant.io
