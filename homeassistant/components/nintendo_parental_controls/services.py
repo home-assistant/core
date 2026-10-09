@@ -30,6 +30,7 @@ from .const import (
     ATTR_BONUS_TIME,
     ATTR_DAY_OF_WEEK,
     ATTR_MAX_PLAY_TIME,
+    BEDTIME_ALARM_DISABLE,
     BEDTIME_ALARM_MAX,
     BEDTIME_ALARM_MIN,
     BEDTIME_END_TIME_MAX,
@@ -259,5 +260,6 @@ async def async_set_per_day_controls(call: ServiceCall) -> None:
                 "bedtime_alarm_max": BEDTIME_ALARM_MAX,
                 "bedtime_end_time_min": BEDTIME_END_TIME_MIN,
                 "bedtime_end_time_max": BEDTIME_END_TIME_MAX,
+                "bedtime_alarm_disable": BEDTIME_ALARM_DISABLE,
             },
         ) from err
