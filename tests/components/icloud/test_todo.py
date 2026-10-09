@@ -338,9 +338,12 @@ async def test_update_item_with_datetime_due(
     reminders: MagicMock,
 ) -> None:
     """Test that a timed due value clears the all-day flag."""
-    existing = _reminder("r1", "Milk")
+    await hass.config.async_set_time_zone("UTC")
+    existing = _reminder("r1", "Milk", due=datetime(2024, 5, 1, 9, 30, tzinfo=UTC))
     existing.all_day = True
+    existing.time_zone = "America/New_York"
     reminders.get.return_value = existing
+    reminders.list_reminders.return_value = MagicMock(reminders=[existing])
 
     await _setup(hass, config_entry)
 
@@ -359,6 +362,7 @@ async def test_update_item_with_datetime_due(
     # Home Assistant hands the platform a timezone-aware value.
     assert existing.due_date.tzinfo is not None
     assert existing.due_date.replace(tzinfo=None) == datetime(2024, 5, 1, 9, 30)
+    assert existing.time_zone == "UTC"
 
 
 @pytest.mark.parametrize(
@@ -412,9 +416,10 @@ async def test_item_due_time_zone(
 ) -> None:
     """Test that writes pair due timestamps with the Home Assistant time zone."""
     await hass.config.async_set_time_zone("Europe/Paris")
-    existing = _reminder("r1", "Milk")
+    existing = _reminder("r1", "Milk", due=datetime(2026, 10, 1, tzinfo=UTC))
     existing.time_zone = "America/New_York"
     reminders.get.return_value = existing
+    reminders.list_reminders.return_value = MagicMock(reminders=[existing])
     await _setup(hass, config_entry)
 
     await hass.services.async_call(
@@ -444,6 +449,55 @@ async def test_item_due_time_zone(
     assert existing.due_date == expected_due
     assert existing.all_day is all_day
     assert existing.time_zone == time_zone
+
+
+@pytest.mark.parametrize(
+    "update_data",
+    [
+        pytest.param({ATTR_RENAME: "Oat milk"}, id="rename"),
+        pytest.param({ATTR_STATUS: "completed"}, id="status"),
+        pytest.param({ATTR_DESCRIPTION: "One bottle"}, id="description"),
+        pytest.param(
+            {ATTR_DUE_DATETIME: "2026-10-09T13:50:00+02:00"},
+            id="same-instant-different-offset",
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    ("time_zone", "expected_time_zone"),
+    [
+        pytest.param("America/New_York", "America/New_York", id="preserve-zone"),
+        pytest.param(None, "Europe/Paris", id="missing-zone"),
+    ],
+)
+async def test_update_item_with_unchanged_due_time_zone(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    reminders: MagicMock,
+    update_data: dict[str, str],
+    time_zone: str | None,
+    expected_time_zone: str,
+) -> None:
+    """Test that an unchanged timed due value retains its zone or fills a missing one."""
+    await hass.config.async_set_time_zone("Europe/Paris")
+    due = datetime(2026, 10, 9, 11, 50, tzinfo=UTC)
+    existing = _reminder("r1", "Milk", due=due)
+    existing.time_zone = time_zone
+    reminders.get.return_value = existing
+    reminders.list_reminders.return_value = MagicMock(reminders=[existing])
+    await _setup(hass, config_entry)
+
+    await hass.services.async_call(
+        TODO_DOMAIN,
+        TodoServices.UPDATE_ITEM,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_ITEM: "Milk", **update_data},
+        blocking=True,
+    )
+
+    reminders.update.assert_called_once_with(existing)
+    assert existing.due_date == due
+    assert existing.all_day is False
+    assert existing.time_zone == expected_time_zone
 
 
 async def test_nested_subtasks_follow_their_parent(
