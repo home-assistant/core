@@ -5,7 +5,12 @@ import logging
 from typing import TYPE_CHECKING
 
 from pyportainer import Portainer, PortainerImageWatcher
-from pyportainer.exceptions import PortainerError
+from pyportainer.exceptions import (
+    PortainerAuthenticationError,
+    PortainerConnectionError,
+    PortainerError,
+    PortainerTimeoutError,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -18,6 +23,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.device_registry as dr
@@ -242,9 +248,26 @@ async def async_migrate_entry(hass: HomeAssistant, entry: PortainerConfigEntry) 
         )
         try:
             system_status = await client.portainer_system_status()
-        except PortainerError:
-            _LOGGER.exception("Failed to fetch instance ID during migration")
-            return False
+        except PortainerAuthenticationError as err:
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_auth",
+            ) from err
+        except PortainerConnectionError as err:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+            ) from err
+        except PortainerTimeoutError as err:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="timeout_connect",
+            ) from err
+        except PortainerError as err:
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="instance_id_failed",
+            ) from err
 
         hass.config_entries.async_update_entry(
             entry=entry,
