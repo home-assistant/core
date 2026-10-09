@@ -398,6 +398,7 @@ async def test_legacy_zeroconf_discovery_zigate(
     )
     await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result_form["type"] is FlowResultType.CREATE_ENTRY
     assert result_form["title"] == ""
     assert result_form["data"] == {
@@ -539,6 +540,7 @@ async def test_discovery_via_usb(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == ""
     assert result3["data"] == {
@@ -1088,6 +1090,7 @@ async def test_user_flow(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == ""
     assert result2["data"] == {
@@ -1400,6 +1403,7 @@ async def test_hardware_flow_strategy_advanced(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result_create["type"] is FlowResultType.CREATE_ENTRY
     assert result_create["title"] == ""
     assert result_create["data"] == {
@@ -1447,6 +1451,7 @@ async def test_hardware_flow_strategy_recommended(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result_create["type"] is FlowResultType.CREATE_ENTRY
     assert result_create["title"] == ""
     assert result_create["data"] == {
@@ -1715,6 +1720,7 @@ async def test_formation_strategy_form_new_network(
     # A new network will be formed
     mock_app.form_network.assert_called_once()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
 
 
@@ -1848,6 +1854,7 @@ async def test_formation_strategy_reuse_settings(
     # Nothing will be written when settings are reused
     mock_app.write_network_info.assert_not_called()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
 
 
@@ -1902,6 +1909,7 @@ async def test_formation_strategy_restore_manual_backup_non_ezsp(
     mock_app.backups.restore_backup.assert_called_once()
     allow_overwrite_ieee_mock.assert_not_called()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["data"][CONF_RADIO_TYPE] == "znp"
 
@@ -2132,6 +2140,7 @@ async def test_formation_strategy_restore_automatic_backup_ezsp(
 
     mock_app.backups.restore_backup.assert_called_once()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["data"][CONF_RADIO_TYPE] == "ezsp"
 
@@ -2194,6 +2203,7 @@ async def test_formation_strategy_restore_automatic_backup_non_ezsp(
 
     mock_app.backups.restore_backup.assert_called_once_with(backup)
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["data"][CONF_RADIO_TYPE] == "znp"
 
@@ -3328,6 +3338,7 @@ async def test_plug_in_old_radio_config_entry_removed(
 
     # Since config entry was removed, flow skipped to maybe_confirm_ezsp_restore
     # and restored backup, creating a new entry in the end
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result_recommended["type"] is FlowResultType.CREATE_ENTRY
     assert result_recommended["title"] == ""
     assert result_recommended["data"] == {

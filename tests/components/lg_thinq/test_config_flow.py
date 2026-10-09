@@ -38,6 +38,7 @@ async def test_config_flow(
         result["flow_id"],
         user_input={CONF_ACCESS_TOKEN: MOCK_PAT, CONF_COUNTRY: MOCK_COUNTRY},
     )
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         CONF_ACCESS_TOKEN: MOCK_PAT,
@@ -106,6 +107,7 @@ async def test_dhcp_config_flow(
         result["flow_id"],
         user_input={CONF_ACCESS_TOKEN: MOCK_PAT, CONF_COUNTRY: MOCK_COUNTRY},
     )
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         CONF_ACCESS_TOKEN: MOCK_PAT,

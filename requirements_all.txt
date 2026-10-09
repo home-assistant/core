@@ -466,7 +466,7 @@ aiotedee==0.3.0
 aiothreema==0.1.0
 
 # homeassistant.components.tractive
-aiotractive==1.1.1
+aiotractive==1.1.2
 
 # homeassistant.components.unifi
 aiounifi==97
@@ -3202,7 +3202,7 @@ switchbot-api==2.13.0
 synology-srm==0.2.0
 
 # homeassistant.components.system_bridge
-systembridgeconnector==5.4.3
+systembridgeconnector==5.5.0
 
 # homeassistant.components.tailscale
 tailscale==0.7.0

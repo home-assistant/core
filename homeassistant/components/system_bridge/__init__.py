@@ -160,6 +160,16 @@ async def async_setup_entry(
             },
         ) from exception
 
+    if coordinator.data.system is None:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="timeout",
+            translation_placeholders={
+                "title": entry.title,
+                "host": entry.data[CONF_HOST],
+            },
+        )
+
     # Fetch initial data so we have data when entities subscribe
     await coordinator.async_config_entry_first_refresh()
 

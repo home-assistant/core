@@ -783,6 +783,7 @@ async def test_region_override(
 
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == UNIQUE_ID
     # The overridden region determines which server is registered
@@ -866,6 +867,7 @@ async def test_registration_complete_with_domain_and_user_input(
     flow_instance.data = {"token": {"access_token": "test"}}
 
     result = await flow_instance.async_step_registration_complete({"complete": True})
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == UNIQUE_ID
 

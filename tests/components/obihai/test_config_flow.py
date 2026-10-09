@@ -38,6 +38,7 @@ async def test_user_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> No
         )
         await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "10.10.10.30"
     assert result["data"] == {**USER_INPUT}
@@ -120,6 +121,7 @@ async def test_dhcp_flow(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 

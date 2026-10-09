@@ -48,6 +48,7 @@ async def test_form(hass: HomeAssistant, mock_list_contracts) -> None:
         )
         await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == "Contract 123"
     assert result3["data"] == {

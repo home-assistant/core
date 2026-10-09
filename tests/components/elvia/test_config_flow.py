@@ -42,6 +42,7 @@ async def test_single_metering_point(
         )
         await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "1234"
     assert result["data"] == {
@@ -91,6 +92,7 @@ async def test_multiple_metering_points(
     )
     await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "5678"
     assert result["data"] == {

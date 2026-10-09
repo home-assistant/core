@@ -34,6 +34,7 @@ async def test_full_user_flow(
         },
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2.get("type") is FlowResultType.CREATE_ENTRY
     assert result2.get("title") == "homeassistant.github"
     assert result2.get("data") == {

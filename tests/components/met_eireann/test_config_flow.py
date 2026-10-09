@@ -75,6 +75,7 @@ async def test_create_entry(hass: HomeAssistant) -> None:
         user_input=test_data,
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == test_data.get("name")
     assert result["data"] == test_data
@@ -104,6 +105,7 @@ async def test_flow_entry_already_exists(hass: HomeAssistant) -> None:
         result1["flow_id"],
         user_input=test_data,
     )
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result1["type"] is FlowResultType.CREATE_ENTRY
 
     # Create the second entry and assert that it is aborted

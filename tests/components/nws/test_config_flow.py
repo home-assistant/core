@@ -56,6 +56,7 @@ async def test_form_location(
     )
     await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == "ABC"
     assert result3["data"] == {
@@ -124,6 +125,7 @@ async def test_form_location_already_configured(
     )
     await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -365,6 +367,7 @@ async def test_form_entity_already_configured(
     )
     await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
 
     result = await hass.config_entries.flow.async_init(

@@ -174,6 +174,7 @@ async def test_step_user(
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_AUTH_CODE: auth_code}
         )
+        # pylint: disable-next=home-assistant-tests-config-flow-unique-id
         assert result["type"] is FlowResultType.CREATE_ENTRY
 
     if log_statement:

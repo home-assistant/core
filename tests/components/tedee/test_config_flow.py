@@ -44,6 +44,7 @@ async def test_flow(hass: HomeAssistant, mock_tedee: MagicMock) -> None:
             },
         )
 
+        # pylint: disable-next=home-assistant-tests-config-flow-unique-id
         assert result2["type"] is FlowResultType.CREATE_ENTRY
         assert result2["data"] == {
             CONF_HOST: "192.168.1.62",

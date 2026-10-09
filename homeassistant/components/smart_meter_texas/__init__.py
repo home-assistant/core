@@ -1,21 +1,18 @@
 """The Smart Meter Texas integration."""
 
-import logging
-
 from smart_meter_texas import Account
 from smart_meter_texas.exceptions import SmartMeterTexasAuthError
 
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 
+from .const import DOMAIN
 from .coordinator import (
     SmartMeterTexasConfigEntry,
     SmartMeterTexasCoordinator,
     SmartMeterTexasData,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.SENSOR]
 
@@ -33,9 +30,11 @@ async def async_setup_entry(
     smart_meter_texas_data = SmartMeterTexasData(hass, account)
     try:
         await smart_meter_texas_data.client.authenticate()
-    except SmartMeterTexasAuthError:
-        _LOGGER.error("Username or password was not accepted")
-        return False
+    except SmartMeterTexasAuthError as error:
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="invalid_auth",
+        ) from error
     except TimeoutError as error:
         raise ConfigEntryNotReady from error
 

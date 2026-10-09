@@ -39,6 +39,7 @@ async def test_user_flow_success(
         },
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == f"Hegel {TEST_MODEL}"
     assert result["data"] == {
@@ -166,6 +167,7 @@ async def test_ssdp_discovery_from_ssdp_location(
         result["flow_id"], {CONF_MODEL: TEST_MODEL}
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TEST_NAME
     assert result["data"] == {CONF_HOST: TEST_HOST, CONF_MODEL: TEST_MODEL}

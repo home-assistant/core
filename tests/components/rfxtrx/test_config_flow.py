@@ -65,6 +65,7 @@ async def test_setup_network(transport_mock, hass: HomeAssistant) -> None:
             result["flow_id"], {"host": "10.10.0.1", "port": 1234}
         )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "RFXTRX"
     assert result["data"] == {
@@ -106,6 +107,7 @@ async def test_setup_serial(com_mock, transport_mock, hass: HomeAssistant) -> No
             result["flow_id"], {"device": port.device}
         )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "RFXTRX"
     assert result["data"] == {
@@ -155,6 +157,7 @@ async def test_setup_serial_manual(
             result["flow_id"], {"device": "/dev/ttyUSB0"}
         )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "RFXTRX"
     assert result["data"] == {

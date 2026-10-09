@@ -1,13 +1,16 @@
 """Test the ISS sensor platform."""
 
+from datetime import timedelta
 from unittest.mock import MagicMock
+
+from freezegun.api import FrozenDateTimeFactory
 
 from homeassistant.components.iss.const import DEFAULT_NAME, DOMAIN
 from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, CONF_SHOW_ON_MAP
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_sensor_created(
@@ -75,7 +78,10 @@ async def test_sensor_device_info(
 
 
 async def test_sensor_updates_with_coordinator(
-    hass: HomeAssistant, init_integration: MockConfigEntry, mock_pyiss: MagicMock
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_pyiss: MagicMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test sensor updates when coordinator data changes."""
     state = hass.states.get("sensor.iss")
@@ -88,11 +94,9 @@ async def test_sensor_updates_with_coordinator(
         "longitude": "-100.0",
     }
 
-    # Trigger coordinator refresh
-    coordinator = init_integration.runtime_data
-    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
-    await coordinator.async_refresh()
-    await hass.async_block_till_done()
+    freezer.tick(timedelta(seconds=60))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     # Check sensor updated
     state = hass.states.get("sensor.iss")

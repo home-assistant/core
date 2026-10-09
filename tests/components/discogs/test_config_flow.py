@@ -127,6 +127,7 @@ async def test_import_flow_with_name(
         context={"source": SOURCE_IMPORT},
         data={CONF_TOKEN: MOCK_TOKEN, "name": "My Vinyl"},
     )
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "My Vinyl"
     assert result["data"] == {CONF_TOKEN: MOCK_TOKEN}

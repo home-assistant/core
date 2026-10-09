@@ -75,6 +75,7 @@ async def test_user_form(
         )
         await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "friend"
     assert result2["data"] == expected_data
@@ -130,6 +131,7 @@ async def test_form_ssdp(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Harmony Hub"
     assert result2["data"] == {"host": "192.168.1.12", "name": "Harmony Hub"}

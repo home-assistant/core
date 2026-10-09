@@ -466,6 +466,7 @@ async def test_create_webhook_entry(
     )
     await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Testbot"
     assert result["data"][CONF_PLATFORM] == PLATFORM_WEBHOOKS
@@ -798,6 +799,7 @@ async def test_duplicate_entry(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
+        # pylint: disable-next=home-assistant-tests-config-flow-unique-id
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["data"][CONF_PLATFORM] == PLATFORM_BROADCAST
         assert result["data"][CONF_API_KEY] == "mock api key"

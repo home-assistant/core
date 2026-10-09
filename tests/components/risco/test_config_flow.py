@@ -95,6 +95,7 @@ async def test_cloud_form(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == TEST_SITE_NAME
     assert result3["data"] == TEST_CLOUD_DATA
@@ -273,6 +274,7 @@ async def test_local_form(hass: HomeAssistant) -> None:
         "type": "local",
         CONF_COMMUNICATION_DELAY: 0,
     }
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == TEST_SITE_NAME
     assert result3["data"] == expected_data
