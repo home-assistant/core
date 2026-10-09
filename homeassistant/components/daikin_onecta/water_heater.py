@@ -104,6 +104,11 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
             translation_key,
         )
 
+    def _publish_write_update(self) -> None:
+        """Publish a successful write to all entities sharing the device data."""
+        self.update_state()
+        self.coordinator.async_update_listeners()
+
     @callback
     @override
     def _handle_coordinator_update(self) -> None:
@@ -218,8 +223,7 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
             dht = self.domestic_hotwater_temperature
             if dht is not None:
                 dht.value = int_value
-            self.update_state()
-            self.async_write_ha_state()
+            self._publish_write_update()
 
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
@@ -304,8 +308,7 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
             hwtd = self.hot_water_management_point
             if hwtd is not None and hwtd.on_off_mode is not None:
                 hwtd.on_off_mode.value = on_off_mode
-            self.update_state()
-            self.async_write_ha_state()
+            self._publish_write_update()
 
         # Only set powerfulMode when it is set and supported by the device
         if powerful_mode != "" and STATE_PERFORMANCE in (self.operation_list or []):
@@ -318,8 +321,7 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
             pwf = hot_water.powerful_mode if hot_water is not None else None
             if pwf is not None and pwf.settable:
                 pwf.value = powerful_mode
-            self.update_state()
-            self.async_write_ha_state()
+            self._publish_write_update()
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
@@ -335,9 +337,7 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
             hwtd = self.hot_water_management_point
             if hwtd is not None and hwtd.on_off_mode is not None:
                 hwtd.on_off_mode.value = "on"
-            self._attr_current_operation = self.get_current_operation()
-            self._attr_operation_list = self.get_operation_list()
-            self.async_write_ha_state()
+            self._publish_write_update()
         else:
             _LOGGER.debug(
                 "Device '%s' request to turn on ignored because device is already on",
@@ -358,9 +358,7 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
             hwtd = self.hot_water_management_point
             if hwtd is not None and hwtd.on_off_mode is not None:
                 hwtd.on_off_mode.value = "off"
-            self._attr_current_operation = self.get_current_operation()
-            self._attr_operation_list = self.get_operation_list()
-            self.async_write_ha_state()
+            self._publish_write_update()
         else:
             _LOGGER.debug(
                 "Device '%s' request to turn off ignored because device is already off",

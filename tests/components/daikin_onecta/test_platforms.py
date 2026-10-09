@@ -637,6 +637,8 @@ async def test_water_heater_turn_off_updates_cached_state(
     config_entry.runtime_data.api.async_execute_command = _execute_typed_command(
         config_entry
     )
+    listener = MagicMock()
+    remove_listener = config_entry.runtime_data.async_add_listener(listener)
 
     await hass.services.async_call(
         WATER_HEATER_DOMAIN,
@@ -658,6 +660,8 @@ async def test_water_heater_turn_off_updates_cached_state(
     state = hass.states.get(state.entity_id)
     assert state is not None
     assert state.attributes["operation_mode"] == STATE_PERFORMANCE
+    assert listener.call_count == 2
+    remove_listener()
 
 
 async def test_water_heater_temperature_updates_typed_cache(
@@ -668,6 +672,8 @@ async def test_water_heater_temperature_updates_typed_cache(
     config_entry.runtime_data.api.async_execute_command = _execute_typed_command(
         config_entry
     )
+    listener = MagicMock()
+    remove_listener = config_entry.runtime_data.async_add_listener(listener)
 
     await hass.services.async_call(
         WATER_HEATER_DOMAIN,
@@ -685,6 +691,8 @@ async def test_water_heater_temperature_updates_typed_cache(
     assert management_point.domestic_hot_water is not None
     assert management_point.domestic_hot_water.temperature is not None
     assert management_point.domestic_hot_water.temperature.value == 50
+    listener.assert_called_once()
+    remove_listener()
 
 
 async def test_water_heater_publishes_successful_partial_operation_write() -> None:
@@ -714,14 +722,14 @@ async def test_water_heater_publishes_successful_partial_operation_write() -> No
     entity._async_execute_hot_water_command = AsyncMock(
         side_effect=[None, HomeAssistantError]
     )
-    entity.async_write_ha_state = MagicMock()
+    entity.coordinator = MagicMock()
 
     with pytest.raises(HomeAssistantError):
         await entity.async_set_operation_mode(STATE_PERFORMANCE)
 
     assert power.value == "on"
     assert entity.current_operation == STATE_HEAT_PUMP
-    entity.async_write_ha_state.assert_called_once()
+    entity.coordinator.async_update_listeners.assert_called_once()
 
 
 async def test_firmware_install_executes_command(
