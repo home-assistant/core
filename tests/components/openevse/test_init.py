@@ -17,6 +17,7 @@ from homeassistant.components.openevse.coordinator import SCAN_INTERVAL
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -292,3 +293,41 @@ async def test_sensor_startup_replay_and_coalescing(
     mock_charger.self_production.assert_called_once_with(
         grid=3000, solar=None, invert=False
     )
+
+
+async def test_sensor_entity_registry_rename(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_charger: MagicMock,
+) -> None:
+    """Test that renaming a configured sensor in entity registry updates entry and reloads."""
+    sensor_entry = entity_registry.async_get_or_create(
+        "sensor",
+        "test",
+        "car_battery_unique_id",
+        suggested_object_id="car_battery",
+    )
+    assert sensor_entry.entity_id == "sensor.car_battery"
+
+    config_entry = MockConfigEntry(
+        title="OpenEVSE",
+        domain=DOMAIN,
+        data={CONF_HOST: "192.168.1.100"},
+        entry_id="FAKE",
+        unique_id="deadbeeffeed",
+        options={
+            "vehicle_soc": "sensor.car_battery",
+        },
+    )
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Rename entity in entity registry
+    entity_registry.async_update_entity(
+        "sensor.car_battery",
+        new_entity_id="sensor.my_new_car_battery",
+    )
+    await hass.async_block_till_done()
+
+    assert config_entry.options["vehicle_soc"] == "sensor.my_new_car_battery"

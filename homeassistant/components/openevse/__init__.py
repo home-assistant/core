@@ -32,8 +32,12 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.event import (
+    async_track_entity_registry_updated_event,
+    async_track_state_change_event,
+)
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import (
     DistanceConverter,
@@ -339,6 +343,35 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenEVSEConfigEntry) -> 
         entry.async_on_unload(
             async_track_state_change_event(
                 hass, tracked_sensors, _on_sensor_state_change
+            )
+        )
+
+        @callback
+        def _on_entity_registry_update(
+            event: Event[er.EventEntityRegistryUpdatedData],
+        ) -> None:
+            data = event.data
+            if data["action"] != "update" or "entity_id" not in data["changes"]:
+                return
+
+            old_entity_id = data["changes"]["entity_id"]
+            new_entity_id = data["entity_id"]
+
+            updated_options = {
+                field: new_entity_id if current_id == old_entity_id else current_id
+                for field in SENSOR_FIELDS
+                if (current_id := entry.options.get(field))
+            }
+            if updated_options:
+                hass.config_entries.async_update_entry(
+                    entry,
+                    options={**entry.options, **updated_options},
+                )
+                hass.config_entries.async_schedule_reload(entry.entry_id)
+
+        entry.async_on_unload(
+            async_track_entity_registry_updated_event(
+                hass, tracked_sensors, _on_entity_registry_update
             )
         )
 
