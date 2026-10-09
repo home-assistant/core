@@ -1,5 +1,7 @@
 """Tests for the Synology DSM config flow."""
 
+from collections.abc import Generator
+from contextlib import contextmanager
 from ipaddress import ip_address
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
@@ -60,6 +62,18 @@ from .consts import (
 )
 
 from tests.common import MockConfigEntry
+
+USER_INPUT = {CONF_HOST: HOST, CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD}
+
+
+@contextmanager
+def _patch_dsm(service: MagicMock) -> Generator[None]:
+    """Patch the config flow to use a working service."""
+    with patch(
+        "homeassistant.components.synology_dsm.config_flow.SynologyDSM",
+        return_value=service,
+    ):
+        yield
 
 
 @pytest.fixture(name="service")
@@ -577,8 +591,13 @@ async def test_login_failed(hass: HomeAssistant, service: MagicMock) -> None:
         user_input={CONF_HOST: HOST, CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
     )
     assert result["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {CONF_USERNAME: "invalid_auth"}
+
+    with _patch_dsm(service):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=USER_INPUT
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -601,8 +620,13 @@ async def test_connection_failed(hass: HomeAssistant, service: MagicMock) -> Non
     )
 
     assert result["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {CONF_HOST: "cannot_connect"}
+
+    with _patch_dsm(service):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=USER_INPUT
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -623,13 +647,18 @@ async def test_unknown_failed(hass: HomeAssistant, service: MagicMock) -> None:
     )
 
     assert result["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "unknown"}
+
+    with _patch_dsm(service):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=USER_INPUT
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_missing_data_after_login(
-    hass: HomeAssistant, service_failed: MagicMock
+    hass: HomeAssistant, service: MagicMock, service_failed: MagicMock
 ) -> None:
     """Test when we have errors during connection."""
     result = await hass.config_entries.flow.async_init(
@@ -652,8 +681,13 @@ async def test_missing_data_after_login(
             },
         )
     assert result["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "missing_data"}
+
+    with _patch_dsm(service):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=USER_INPUT
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
