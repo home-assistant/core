@@ -88,14 +88,17 @@ async def test_device(
     }
 
 
-async def test_optional_sensors_added_once_reported(
+@pytest.mark.parametrize("key", OPTIONAL_SENSOR_KEYS)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_optional_sensor_added_once_reported(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
     mock_config_entry: MockConfigEntry,
     mock_pvoutput: MagicMock,
+    key: str,
 ) -> None:
-    """Test optional sensors are only added once the system reports them."""
+    """Test an optional sensor is only added once the system reports it."""
     status = mock_pvoutput.status.return_value
     mock_pvoutput.status.return_value = dataclasses.replace(
         status, **dict.fromkeys(OPTIONAL_SENSOR_KEYS)
@@ -119,14 +122,24 @@ async def test_optional_sensors_added_once_reported(
 
     assert _unique_ids(entity_registry, mock_config_entry) == core_unique_ids
 
-    mock_pvoutput.status.return_value = status
+    # Only this sensor reports a value, so only this sensor is added
+    mock_pvoutput.status.return_value = dataclasses.replace(
+        status, **{**dict.fromkeys(OPTIONAL_SENSOR_KEYS), key: getattr(status, key)}
+    )
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert _unique_ids(entity_registry, mock_config_entry) == core_unique_ids | {
-        f"12345_{key}" for key in OPTIONAL_SENSOR_KEYS
+        f"12345_{key}"
     }
+
+    entity_id = entity_registry.async_get_entity_id(
+        Platform.SENSOR, DOMAIN, f"12345_{key}"
+    )
+    assert entity_id
+    assert (state := hass.states.get(entity_id))
+    assert float(state.state) == getattr(status, key)
 
 
 async def test_optional_sensors_kept_when_registered(
