@@ -99,7 +99,6 @@ async def test_user_custom_url(
         {CONF_URL: "test-user"},
     )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         CONF_SESSION_ID: "fake_token",
@@ -107,6 +106,7 @@ async def test_user_custom_url(
         CONF_URL: "apiieu.ezvizlife.com",
         CONF_TYPE: ATTR_TYPE_CLOUD,
     }
+    assert result["result"].unique_id == "test-username"
 
     assert len(mock_setup_entry.mock_calls) == 1
 

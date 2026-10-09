@@ -45,7 +45,6 @@ async def test_form(
     mock_pydrawise.get_user.return_value = user
     await hass.async_block_till_done()
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "asdf@asdf.com"
     assert result["data"] == {
@@ -53,6 +52,7 @@ async def test_form(
         CONF_PASSWORD: "__password__",
         CONF_API_KEY: "__api-key__",
     }
+    assert result["result"].unique_id == f"hydrawise-{user.customer_id}"
     assert len(mock_setup_entry.mock_calls) == 1
     mock_auth.check.assert_awaited_once_with()
     mock_pydrawise.get_user.assert_awaited_once_with(fetch_zones=False)

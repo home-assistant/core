@@ -31,10 +31,10 @@ async def test_full_user_flow(
         user_input={"garage_name": "IJDok"},
     )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result.get("type") is FlowResultType.CREATE_ENTRY
     assert result.get("title") == "IJDok"
     assert result.get("data") == {"garage_name": "IJDok"}
+    assert result["result"].unique_id == "IJDok"
     assert len(mock_garages_amsterdam.all_garages.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
