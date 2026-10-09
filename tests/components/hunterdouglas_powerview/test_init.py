@@ -32,12 +32,12 @@ async def test_setup_not_primary_hub(hass: HomeAssistant) -> None:
         " Primary Hub can manage shades"
     )
 
-async def test_remove_shade_device_via_websocket(
+async def test_remove_shade_device_via_websocket_allowed_when_offline(
     hass: HomeAssistant, 
     device_registry: dr.DeviceRegistry, 
     hass_ws_client: WebSocketGenerator
 ) -> None:
-    """Test removing a shade device through the supported WebSocket command structure."""
+    """Test removing a shade device is successful if it is missing from the physical hub."""
     config_entry = MockConfigEntry(domain=DOMAIN, unique_id="hub_123")
     config_entry.supports_remove_device = True
     config_entry.add_to_hass(hass)
@@ -49,14 +49,21 @@ async def test_remove_shade_device_via_websocket(
 
     shade_device = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        identifiers={(DOMAIN, "shade_999")},
+        identifiers={(DOMAIN, 999)},
         via_device_id=hub_device.id,
     )
 
-    # Initialize authenticated WebSocket channel session
+    # Mock runtime data structures to show the shade is GONE from the hub
+    mock_coordinator = MagicMock()
+    # Emulate coordinator.data.shades being empty or at least missing ID 999
+    mock_coordinator.data.shades = {} 
+    
+    mock_runtime_data = MagicMock(coordinator=mock_coordinator)
+    config_entry.runtime_data = mock_runtime_data
+
     client = await hass_ws_client(hass)
 
-    # Send the supported core framework device removal command
+    # Dispatch device removal request
     await client.send_json(
         {
             "id": 1,
@@ -67,9 +74,59 @@ async def test_remove_shade_device_via_websocket(
     )
     msg = await client.receive_json()
 
+    # The shade is offline/deleted from the hub, so the UI deletion must be allowed
     assert msg["success"] is True
     assert device_registry.async_get(shade_device.id) is None
+
+
+async def test_remove_shade_device_via_websocket_blocked_when_online(
+    hass: HomeAssistant, 
+    device_registry: dr.DeviceRegistry, 
+    hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test that removing a shade device fails if it is still reported as online by the hub."""
+    config_entry = MockConfigEntry(domain=DOMAIN, unique_id="hub_123")
+    config_entry.supports_remove_device = True
+    config_entry.add_to_hass(hass)
+
+    hub_device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, "hub_123")},
+    )
+
+    shade_device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, 111)},
+        via_device_id=hub_device.id,
+    )
+
+    # Mock runtime data structures to show the shade is still ACTIVE on the hub
+    mock_coordinator = MagicMock()
+    # The shade ID 111 is present in the hub's payload, so it must be protected
+    mock_coordinator.data.shades = {111: {"id": 111}} 
     
+    mock_runtime_data = MagicMock(coordinator=mock_coordinator)
+    config_entry.runtime_data = mock_runtime_data
+
+    client = await hass_ws_client(hass)
+
+    # Dispatch device removal request
+    await client.send_json(
+        {
+            "id": 2,
+            "type": "config_entries/device/remove",
+            "config_entry_id": config_entry.entry_id,
+            "device_id": shade_device.id,
+        }
+    )
+    msg = await client.receive_json()
+
+    # The deletion must fail because the device is still physically active on the network
+    assert msg["success"] is False
+    assert msg["error"]["code"] in ("unknown_error", "cannot_remove")
+    assert device_registry.async_get(shade_device.id) is not None
+
+
 async def test_remove_hub_device_via_websocket_is_blocked(
     hass: HomeAssistant, 
     device_registry: dr.DeviceRegistry, 
@@ -79,7 +136,6 @@ async def test_remove_hub_device_via_websocket_is_blocked(
     config_entry = MockConfigEntry(domain=DOMAIN, unique_id="hub_123")
     config_entry.add_to_hass(hass)
 
-    # Register the main hub device (via_device_id remains None)
     hub_device = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         identifiers={(DOMAIN, "hub_123")},
@@ -88,10 +144,9 @@ async def test_remove_hub_device_via_websocket_is_blocked(
 
     client = await hass_ws_client(hass)
 
-    # Dispatch the removal request targeted directly at the hub
     await client.send_json(
         {
-            "id": 2,
+            "id": 3,
             "type": "config_entries/device/remove",
             "config_entry_id": config_entry.entry_id,
             "device_id": hub_device.id,
@@ -99,7 +154,7 @@ async def test_remove_hub_device_via_websocket_is_blocked(
     )
     msg = await client.receive_json()
 
-    # Assertions: The request must fail, and the Hub device must NOT be deleted
     assert msg["success"] is False
     assert msg["error"]["code"] == "home_assistant_error"
     assert device_registry.async_get(hub_device.id) is not None
+    
