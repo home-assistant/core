@@ -7,14 +7,15 @@ A test that makes a flow step show an error, for example
 the cause and finish the flow, to prove the user can recover from the error.
 Any error counts, on any field: ``errors == {...}``, ``errors["base"] == ...``,
 ``"base" in errors``, a bare ``assert result["errors"]`` and
-``errors != {}``. A test function is flagged when it asserts an error and,
-after the last such assertion, never asserts that a result has type
-``CREATE_ENTRY`` or aborted with a ``*_successful`` reason (as reauth and
-reconfigure flows do). A finishing assertion in a branch that cannot run
-after the error, such as the ``else`` of the ``if`` that shows the error,
-does not count. Helper functions from the integration's own tests, such as
-``assert_form_error(result)`` or ``_assert_create_entry(result)``, are
-followed when astroid can infer them.
+``errors != {}``, also through a local alias such as
+``errors = result["errors"]``. A test function is flagged when, after an
+error assertion, it never asserts that a result has type ``CREATE_ENTRY`` or
+aborted with a ``*_successful`` reason (as reauth and reconfigure flows do).
+Every error assertion needs its own finishing assertion after it. A
+finishing assertion in a branch that cannot run after the error, such as the
+``else`` of the ``if`` that shows the error, does not count. Helper functions
+from the integration's own tests, such as ``assert_form_error(result)`` or
+``_assert_create_entry(result)``, are followed when astroid can infer them.
 """
 
 import astroid
@@ -66,19 +67,40 @@ def _assert_parts(test: nodes.NodeNG) -> list[nodes.NodeNG]:
     return [test]
 
 
+def _errors_aliases(scope: nodes.FunctionDef) -> frozenset[str]:
+    """Return the local names *scope* assigns ``result["errors"]`` to."""
+    return frozenset(
+        target.name
+        for assign in scope.nodes_of_class(nodes.Assign)
+        if _result_key(assign.value) == "errors"
+        for target in assign.targets
+        if isinstance(target, nodes.AssignName)
+    )
+
+
+def _is_errors(node: nodes.NodeNG, aliases: frozenset[str]) -> bool:
+    """Return True for ``result["errors"]`` or a local alias of it."""
+    if isinstance(node, nodes.Name):
+        return node.name in aliases
+    return _result_key(node) == "errors"
+
+
 def _is_error_assert(
-    node: nodes.NodeNG, arguments: dict[str, nodes.NodeNG] | None = None
+    node: nodes.NodeNG,
+    arguments: dict[str, nodes.NodeNG] | None = None,
+    aliases: frozenset[str] = frozenset(),
 ) -> bool:
     """Return True if the asserted *node* expects the step to show an error.
 
-    *arguments* maps a helper's parameters to the values it was called with.
+    *arguments* maps a helper's parameters to the values it was called with,
+    *aliases* are local names for ``result["errors"]``.
     """
     # assert result["errors"]
-    if _result_key(node) == "errors":
+    if _is_errors(node, aliases):
         return True
     match node:
         case nodes.Compare(left=left, ops=[("==", value)]):
-            if _result_key(left) == "errors":
+            if _is_errors(left, aliases):
                 if isinstance(value, nodes.Name) and arguments:
                     value = arguments.get(value.name, value)
                 return _is_error_value(value)
@@ -88,13 +110,13 @@ def _is_error_assert(
                     nodes.Subscript(value=errors)
                     | nodes.Call(func=nodes.Attribute(attrname="get", expr=errors))
                 ):
-                    return _result_key(errors) == "errors"
+                    return _is_errors(errors, aliases)
         # assert "base" in result["errors"]
         case nodes.Compare(ops=[("in", errors)]):
-            return _result_key(errors) == "errors"
+            return _is_errors(errors, aliases)
         # assert result["errors"] != {}
         case nodes.Compare(left=left, ops=[("!=" | "is not", value)]):
-            return _result_key(left) == "errors" and _is_no_errors_value(value)
+            return _is_errors(left, aliases) and _is_no_errors_value(value)
     return False
 
 
@@ -308,17 +330,19 @@ def _unrecovered_error(
     depth: int = _HELPER_DEPTH,
     arguments: dict[str, nodes.NodeNG] | None = None,
 ) -> nodes.NodeNG | None:
-    """Return the last error shown in *scope* if the flow is not finished after it.
+    """Return the last error shown in *scope* that the flow is not finished after.
 
+    Every error needs a finishing assertion after it that can run after it.
     Errors shown by helpers from the tests in *package* count as well, unless
     the helper finishes the flow itself. *arguments* holds the values a helper
     *scope* was called with.
     """
+    aliases = _errors_aliases(scope)
     errors = [
         test
         for assert_node in scope.nodes_of_class(nodes.Assert)
         for test in _assert_parts(assert_node.test)
-        if _is_error_assert(test, arguments)
+        if _is_error_assert(test, arguments, aliases)
     ]
     if depth:
         errors.extend(
@@ -337,15 +361,20 @@ def _unrecovered_error(
         )
     if not errors:
         return None
-    last_error = max(errors, key=lambda error: error.lineno)
-    if any(
-        child.lineno > last_error.lineno
-        and not _in_exclusive_branches(last_error, child)
-        and _finishes_flow(child, package, arguments=arguments)
+    finishes = [
+        child
         for child in scope.nodes_of_class((nodes.Compare, nodes.Call))
-    ):
-        return None
-    return last_error
+        if _finishes_flow(child, package, arguments=arguments)
+    ]
+    unrecovered = [
+        error
+        for error in errors
+        if not any(
+            finish.lineno > error.lineno and not _in_exclusive_branches(error, finish)
+            for finish in finishes
+        )
+    ]
+    return max(unrecovered, key=lambda error: error.lineno, default=None)
 
 
 class ConfigFlowErrorRecovery(BaseChecker):

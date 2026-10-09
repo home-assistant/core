@@ -488,6 +488,30 @@ async def test_reconfigure(hass, scenario):
             6,
             id="recovery_in_other_case",
         ),
+        pytest.param(
+            """
+async def test_form_errors(hass):
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    errors = result["errors"]
+    assert errors.get("base") == "cannot_connect"
+""",
+            5,
+            id="errors_alias",
+        ),
+        pytest.param(
+            """
+async def test_form_errors(hass, scenario):
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    if scenario == "auth":
+        assert result["errors"] == {"base": "invalid_auth"}
+    else:
+        assert result["errors"] == {"base": "cannot_connect"}
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+        assert result["type"] is FlowResultType.CREATE_ENTRY
+""",
+            5,
+            id="earlier_error_unrecovered",
+        ),
     ],
 )
 def test_warning(

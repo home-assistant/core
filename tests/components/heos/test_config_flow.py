@@ -72,6 +72,7 @@ async def test_cannot_connect_shows_error_form(
     assert result["step_id"] == "user"
     errors = result["errors"]
     assert errors is not None
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert errors[CONF_HOST] == "cannot_connect"
     assert controller.connect.call_count == 1
     assert controller.disconnect.call_count == 1

@@ -541,12 +541,13 @@ assert result["type"] is FlowResultType.CREATE_ENTRY
 Only `tests/components/<domain>/test_config_flow.py` modules are checked.
 Any error counts, on any field and in any flow (user, discovery, reauth,
 reconfigure, options, subentry): `errors == {...}`, `errors["base"] == ...`,
-`"base" in errors`, a bare `assert result["errors"]` and `errors != {}`. A
-test is flagged when, after its last assertion of an error, it never asserts
-that a result has type `CREATE_ENTRY` or aborted with a `*_successful` reason
-(as reauth and reconfigure flows do). A finishing assertion in a branch that
-cannot run after the error, such as the `else` of the `if` that shows the
-error, does not count.
+`"base" in errors`, a bare `assert result["errors"]` and `errors != {}`, also
+through a local alias such as `errors = result["errors"]`. A test is flagged
+when, after an error assertion, it never asserts that a result has type
+`CREATE_ENTRY` or aborted with a `*_successful` reason (as reauth and
+reconfigure flows do); every error needs its own. A finishing assertion in a
+branch that cannot run after the error, such as the `else` of the `if` that
+shows the error, does not count.
 
 Helper functions from the integration's own tests are followed, both for
 showing the error (such as `assert_form_error(result, "cannot_connect")`) and
