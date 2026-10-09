@@ -11,8 +11,9 @@ from pymystrom.switch import MyStromSwitch
 
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 
+from .const import DOMAIN
 from .models import MyStromConfigEntry, MyStromData
 
 PLATFORMS_PLUGS = [Platform.SENSOR, Platform.SWITCH]
@@ -71,19 +72,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: MyStromConfigEntry) -> b
         platforms = PLATFORMS_BULB
         await _async_get_device_state(device, info["ip"])
         if device.bulb_type not in ["rgblamp", "strip"]:
-            _LOGGER.error(
-                "Device %s (%s) is not a myStrom bulb nor myStrom LED Strip",
-                host,
-                mac,
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="unsupported_bulb",
+                translation_placeholders={"host": host, "mac": mac},
             )
-            return False
     elif device_type == 110:
         device = _get_mystrom_pir(host)
         platforms = PLATFORMS_MOTION_SENSOR
         await _async_get_device_state(device, info["ip"])
     else:
-        _LOGGER.error("Unsupported myStrom device type: %s", device_type)
-        return False
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="unsupported_device_type",
+            translation_placeholders={"device_type": str(device_type)},
+        )
 
     entry.runtime_data = MyStromData(
         device=device,

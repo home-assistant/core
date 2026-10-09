@@ -65,7 +65,7 @@ async def test_show_form(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
 
 
-async def test_config_flow(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
+async def test_config_flow(hass: HomeAssistant) -> None:
     """Test that the user step works."""
     with (
         patch(
@@ -83,25 +83,57 @@ async def test_config_flow(hass: HomeAssistant, config_entry: MockConfigEntry) -
     ):
         mock_get_request.return_value = SAMPLE_CONFIG
         mock_test_connection.return_value = ["ok", "My Music on myhost"]
-        config_data = config_entry.data
+
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=config_data
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+        assert result["errors"] == {}
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_HOST: "192.168.1.1",
+                CONF_PORT: 2345,
+                CONF_PASSWORD: "",
+            },
         )
         await hass.async_block_till_done()
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == "My Music on myhost"
-        assert result["data"][CONF_HOST] == config_data[CONF_HOST]
-        assert result["data"][CONF_PORT] == config_data[CONF_PORT]
-        assert result["data"][CONF_PASSWORD] == config_data[CONF_PASSWORD]
+        assert result["data"] == {
+            CONF_HOST: "192.168.1.1",
+            CONF_PORT: 2345,
+            CONF_PASSWORD: "",
+        }
 
-        # Also test that creating a new entry with the same host aborts
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data=config_entry.data,
-        )
-        await hass.async_block_till_done()
-        assert result["type"] is FlowResultType.ABORT
+
+async def test_config_flow_already_configured(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Test that the user step aborts if already configured."""
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: "192.168.1.1",
+            CONF_PORT: 2345,
+            CONF_PASSWORD: "",
+        },
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
 
 async def test_zeroconf_updates_title(
@@ -129,20 +161,57 @@ async def test_zeroconf_updates_title(
     assert len(hass.config_entries.async_entries(DOMAIN)) == 2
 
 
-async def test_config_flow_no_websocket(
-    hass: HomeAssistant, config_entry: MockConfigEntry
-) -> None:
+async def test_config_flow_no_websocket(hass: HomeAssistant) -> None:
     """Test config flow setup without websocket enabled on server."""
-    with patch(
-        "homeassistant.components.forked_daapd.config_flow.ForkedDaapdAPI.test_connection",
-        new=AsyncMock(),
-    ) as mock_test_connection:
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    with (
+        patch(
+            "homeassistant.components.forked_daapd.config_flow.ForkedDaapdAPI.test_connection",
+            new=AsyncMock(),
+        ) as mock_test_connection,
+        patch(
+            "homeassistant.components.forked_daapd.async_setup_entry",
+            return_value=True,
+        ),
+    ):
         # test invalid config data
         mock_test_connection.return_value = ["websocket_not_enabled"]
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=config_entry.data
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_HOST: "192.168.1.1",
+                CONF_PORT: 2345,
+                CONF_PASSWORD: "",
+            },
         )
         assert result["type"] is FlowResultType.FORM
+        assert result["errors"] == {"base": "websocket_not_enabled"}
+
+        mock_test_connection.return_value = ["ok", "My Music on myhost"]
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_HOST: "192.168.1.1",
+                CONF_PORT: 2345,
+                CONF_PASSWORD: "",
+            },
+        )
+        await hass.async_block_till_done()
+
+        assert result["type"] is FlowResultType.CREATE_ENTRY
+        assert result["title"] == "My Music on myhost"
+        assert result["data"] == {
+            CONF_HOST: "192.168.1.1",
+            CONF_PORT: 2345,
+            CONF_PASSWORD: "",
+        }
 
 
 async def test_config_flow_zeroconf_invalid(hass: HomeAssistant) -> None:

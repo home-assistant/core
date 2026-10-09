@@ -47,7 +47,7 @@ def _write_service_schema(
             probatio.Exclusive(ATTR_UNIT, "unit"): cv.positive_int,
             probatio.Required(ATTR_ADDRESS): cv.positive_int,
             probatio.Required(attr): probatio.Any(
-                cv.positive_int, probatio.All(cv.ensure_list, [validator])
+                cv.positive_int, probatio.All(probatio.EnsureList(), [validator])
             ),
         }
     )

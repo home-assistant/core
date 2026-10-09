@@ -65,6 +65,13 @@
           ]),
         }),
         'release': dict({
+          'assets': dict({
+            'nodes': list([
+              dict({
+                'download_count': 42,
+              }),
+            ]),
+          }),
           'name': 'v1.0.0',
           'tag': 'v1.0.0',
           'url': 'https://github.com/octocat/Hello-World/releases/v1.0.0',

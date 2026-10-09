@@ -153,10 +153,12 @@ class NestEventMediaStore(EventMediaStore):
         self._data: dict[str, Any] | None = None
         self._devices: Mapping[str, str] | None = {}
         # Invoke garbage collection for orphaned files one per
-        async_track_time_interval(
-            hass,
-            self.async_remove_orphaned_media,
-            datetime.timedelta(days=1),
+        config_entry.async_on_unload(
+            async_track_time_interval(
+                hass,
+                self.async_remove_orphaned_media,
+                datetime.timedelta(days=1),
+            )
         )
 
     @override

@@ -245,8 +245,14 @@ async def test_invalid_redirect_uri(
     assert data["message"] == "Invalid redirect URI"
 
 
+@pytest.mark.parametrize(
+    "authorization_data",
+    [{}, {"response_type": "code"}],
+)
 async def test_login_exist_user(
-    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    authorization_data: dict[str, str],
 ) -> None:
     """Test logging in with exist user."""
     client = await async_setup_auth(hass, aiohttp_client, setup_api=True)
@@ -261,6 +267,7 @@ async def test_login_exist_user(
             "client_id": CLIENT_ID,
             "handler": ["insecure_example", None],
             "redirect_uri": CLIENT_REDIRECT_URI,
+            **authorization_data,
         },
     )
     assert resp.status == HTTPStatus.OK
@@ -425,7 +432,11 @@ async def test_well_known_auth_info(
         "authorization_endpoint": f"{expected_url_prefix}/auth/authorize",
         "token_endpoint": f"{expected_url_prefix}/auth/token",
         "revocation_endpoint": f"{expected_url_prefix}/auth/revoke",
+        "grant_types_supported": ["authorization_code", "refresh_token"],
+        "token_endpoint_auth_methods_supported": ["none"],
+        "revocation_endpoint_auth_methods_supported": ["none"],
         "client_id_metadata_document_supported": True,
+        "code_challenge_methods_supported": ["S256"],
         "response_types_supported": ["code"],
         "service_documentation": "https://developers.home-assistant.io/docs/auth_api",
     }
@@ -496,3 +507,101 @@ async def test_well_known_protected_resource_no_url(
         "/.well-known/oauth-protected-resource",
     )
     assert resp.status == 404
+
+
+@pytest.mark.parametrize(
+    ("payload", "expected_message"),
+    [
+        (
+            {
+                "code_challenge_method": "S256",
+            },
+            "code_challenge required when code_challenge_method is provided",
+        ),
+        (
+            {
+                "code_challenge": "E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM",
+            },
+            "Transform algorithm not supported",
+        ),
+        (
+            {
+                "code_challenge": "E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM",
+                "code_challenge_method": "plain",
+            },
+            "Transform algorithm not supported",
+        ),
+        (
+            {
+                "code_challenge": "short",
+                "code_challenge_method": "S256",
+            },
+            "Message format incorrect",
+        ),
+        (
+            {
+                "code_challenge": "a" * 43 + "=",
+                "code_challenge_method": "S256",
+            },
+            "Message format incorrect",
+        ),
+        (
+            {
+                "response_type": "token",
+            },
+            "Response type not supported",
+        ),
+    ],
+    ids=[
+        "method_without_challenge",
+        "challenge_without_method",
+        "unsupported_plain_method",
+        "challenge_too_short",
+        "challenge_padded",
+        "unsupported_response_type",
+    ],
+)
+async def test_login_flow_pkce_validation(
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    payload: dict[str, str],
+    expected_message: str,
+) -> None:
+    """Test PKCE parameter validation in login_flow."""
+    client = await async_setup_auth(hass, aiohttp_client, setup_api=True)
+    resp = await client.post(
+        "/auth/login_flow",
+        json={
+            "client_id": CLIENT_ID,
+            "handler": ["insecure_example", None],
+            "redirect_uri": CLIENT_REDIRECT_URI,
+            **payload,
+        },
+    )
+    assert resp.status == HTTPStatus.BAD_REQUEST
+    result = await resp.json()
+    assert expected_message in result["message"]
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        pytest.param(
+            "/.well-known/oauth-authorization-server", id="authorization-server"
+        ),
+        pytest.param("/.well-known/oauth-protected-resource", id="protected-resource"),
+    ],
+)
+async def test_well_known_auth_info_allows_cors(
+    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator, path: str
+) -> None:
+    """Test browser clients can discover authorization server capabilities."""
+    client = await async_setup_auth(hass, aiohttp_client, setup_api=True)
+
+    resp = await client.get(
+        path,
+        headers={"origin": "https://client.example"},
+    )
+
+    assert resp.status == HTTPStatus.OK
+    assert resp.headers["Access-Control-Allow-Origin"] == "https://client.example"

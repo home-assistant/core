@@ -18,7 +18,7 @@ from typing import Any, Final, Protocol
 
 from aiohttp import web
 import mutagen
-from mutagen.id3 import ID3, TextFrame as ID3Text
+from mutagen.id3 import TALB, TIT2, TPE1, Encoding
 import probatio
 from propcache.api import cached_property
 
@@ -37,7 +37,7 @@ from homeassistant.core import (
     HomeAssistant,
     callback,
 )
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.network import get_url
@@ -355,6 +355,9 @@ async def _async_convert_audio(
     if to_sample_bytes == 2:
         # 16-bit samples.
         command.extend(["-sample_fmt", "s16"])
+    # Do not write the muxer's own encoder metadata; metadata from the input
+    # is still copied.
+    command.extend(["-fflags", "+bitexact"])
     command.append("pipe:1")  # Send output to stdout.
 
     process = await asyncio.create_subprocess_exec(
@@ -508,6 +511,18 @@ class ResultStream:
         return asyncio.Future()
 
     @callback
+    def _async_mark_used(self) -> None:
+        """Keep the stream available now that its result is about to be used.
+
+        A pipeline creates its stream when the run starts, for example before
+        waiting for a wake word, which can be longer ago than the memory cache
+        keeps an unused stream around.
+        """
+        self.last_used = monotonic()
+        self._manager.token_to_stream[self.token] = self
+        self._manager.token_to_stream_cleanup.schedule()
+
+    @callback
     def async_set_message(self, message: str) -> None:
         """Set message to be generated.
 
@@ -515,6 +530,7 @@ class ResultStream:
         """
         if self._result_cache.done():
             return
+        self._async_mark_used()
         self._result_cache.set_result(
             self._manager.async_cache_message_in_memory(
                 engine=self.engine,
@@ -533,6 +549,7 @@ class ResultStream:
         """
         if self._result_cache.done():
             return
+        self._async_mark_used()
         self._result_cache.set_result(
             self._manager.async_cache_message_stream_in_memory(
                 engine=self.engine,
@@ -560,6 +577,7 @@ class ResultStream:
 
     def async_override_result(self, media_path: str | Path) -> None:
         """Override the TTS stream with a different media path."""
+        self._async_mark_used()
         self._override_media_path = Path(media_path)
 
     @property
@@ -795,7 +813,11 @@ class SpeechManager:
             or engine_instance.supported_languages is None
             or language not in engine_instance.supported_languages
         ):
-            raise HomeAssistantError(f"Language '{language}' not supported")
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="language_not_supported",
+                translation_placeholders={"language": str(language)},
+            )
 
         options = options or {}
         supported_options = engine_instance.supported_options or []
@@ -815,7 +837,11 @@ class SpeechManager:
                 invalid_opts.append(option_name)
 
         if invalid_opts:
-            raise HomeAssistantError(f"Invalid options found: {invalid_opts}")
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="unsupported_options",
+                translation_placeholders={"options": ", ".join(invalid_opts)},
+            )
 
         return language, merged_options
 
@@ -1195,23 +1221,10 @@ class SpeechManager:
             if tts_file is not None:
                 if not tts_file.tags:
                     tts_file.add_tags()
-                if isinstance(tts_file.tags, ID3):
-                    tts_file["artist"] = ID3Text(
-                        encoding=3,
-                        text=artist,  # type: ignore[no-untyped-call]
-                    )
-                    tts_file["album"] = ID3Text(
-                        encoding=3,
-                        text=album,  # type: ignore[no-untyped-call]
-                    )
-                    tts_file["title"] = ID3Text(
-                        encoding=3,
-                        text=message,  # type: ignore[no-untyped-call]
-                    )
-                else:
-                    tts_file["artist"] = artist
-                    tts_file["album"] = album
-                    tts_file["title"] = message
+                tts_file.tags.add(TPE1(encoding=Encoding.UTF8, text=artist))  # type: ignore[no-untyped-call]
+                tts_file.tags.add(TALB(encoding=Encoding.UTF8, text=album))  # type: ignore[no-untyped-call]
+                tts_file.tags.add(TIT2(encoding=Encoding.UTF8, text=message))  # type: ignore[no-untyped-call]
+                data_bytes.seek(0)
                 tts_file.save(data_bytes)
         except mutagen.MutagenError as err:
             _LOGGER.error("ID3 tag error: %s", err)

@@ -211,7 +211,7 @@ class EntityComponent[_EntityT: entity.Entity = entity.Entity]:
             )
             return True
 
-        await platform.async_reset()
+        await platform.async_destroy()
         return True
 
     async def async_extract_from_service(

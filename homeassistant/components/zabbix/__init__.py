@@ -64,7 +64,7 @@ CONFIG_SCHEMA = probatio.Schema(
         DOMAIN: INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA.extend(
             {
                 probatio.Required(CONF_HOST): cv.string,
-                probatio.Optional(CONF_PASSWORD): cv.string,
+                probatio.Optional(probatio.Secret(CONF_PASSWORD)): cv.string,
                 probatio.Optional(CONF_PATH, default=DEFAULT_PATH): cv.string,
                 probatio.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
                 probatio.Optional(CONF_USERNAME): cv.string,
