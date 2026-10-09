@@ -376,11 +376,22 @@ async def test_request_device_verification_code_error(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "auth"
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == errors
     mock_authenticator.verify_device.assert_not_called()
     mock_mqtt_client.verify_config.assert_not_called()
     mock_setup_entry.assert_not_called()
+
+    mock_authenticator.request_device_verification_code.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=VALID_ENTRY_DATA_CLOUD
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "device_verification"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_VERIFICATION_CODE: "123456"}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.parametrize(
@@ -416,10 +427,15 @@ async def test_verify_device_error(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "device_verification"
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == errors
     mock_mqtt_client.verify_config.assert_not_called()
     mock_setup_entry.assert_not_called()
+
+    mock_authenticator.verify_device.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_VERIFICATION_CODE: "123456"}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_mqtt_retry_after_device_verification(
@@ -511,10 +527,16 @@ async def test_reauth_error(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "invalid_auth"}
     assert mock_config_entry.data == STORED_ENTRY_DATA_CLOUD
     mock_setup_entry.assert_not_called()
+
+    mock_authenticator.authenticate.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_PASSWORD: "new-password"}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
 
 
 async def test_reauth_device_verification(
