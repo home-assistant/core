@@ -176,7 +176,7 @@
           "name": "Horizontal focus"
         },
         "focus_y": {
-          "description": "Sets the vertical focal point used when previewing or cropping an image. Use -1.0 for the top, 0.0 for the center, and 1.0 for the bottom.",
+          "description": "Sets the vertical focal point used when previewing or cropping an image. Use -1.0 for the bottom, 0.0 for the center, and 1.0 for the top.",
           "name": "Vertical focus"
         },
         "media_description": {
