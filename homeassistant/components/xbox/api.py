@@ -2,7 +2,7 @@
 
 from typing import override
 
-from httpx import AsyncClient, HTTPStatusError, RequestError
+from httpx2 import AsyncClient, HTTPStatusError, RequestError
 from pythonxbox.authentication.manager import AuthenticationManager
 from pythonxbox.authentication.models import OAuth2TokenResponse
 from pythonxbox.common.exceptions import AuthenticationException

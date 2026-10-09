@@ -11,6 +11,7 @@ from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
@@ -69,8 +70,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
 
     if not session.is_authorized:
-        _LOGGER.error("Authentication Error")
-        return False
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="authentication_error",
+        )
 
     hass.data[DATA_CONFIG_ENTRY_LOCK] = asyncio.Lock()
     hass.data[CONFIG_ENTRY_IS_SETUP] = set()
@@ -128,7 +131,7 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     interval_tracker = hass.data.pop(INTERVAL_TRACKER)
     interval_tracker()
     unload_ok = await hass.config_entries.async_unload_platforms(
-        config_entry, CONFIG_ENTRY_IS_SETUP
+        config_entry, hass.data[CONFIG_ENTRY_IS_SETUP]
     )
     del hass.data[DOMAIN]
     del hass.data[DATA_CONFIG_ENTRY_LOCK]

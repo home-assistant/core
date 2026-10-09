@@ -5,7 +5,7 @@ from dataclasses import replace
 import socket
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from arcam.fmj.client import ConnectionFailed
+from arcam.fmj.errors import ConnectionFailed
 import pytest
 
 from homeassistant.components.arcam_fmj.const import DOMAIN
@@ -94,6 +94,7 @@ async def test_ssdp(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == f"Arcam FMJ ({MOCK_HOST})"
     assert result["data"] == MOCK_CONFIG_ENTRY
+    assert result["result"].unique_id == MOCK_UUID
 
 
 async def test_ssdp_abort(hass: HomeAssistant) -> None:

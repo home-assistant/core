@@ -628,7 +628,7 @@ async def test_firmware_update_raises(
 
     with (
         patch(
-            "zigpy.device.Device.update_firmware",
+            "zigpy.device.ZigbeeDevice.update_firmware",
             AsyncMock(side_effect=DeliveryError("failed to deliver")),
         ),
         pytest.raises(HomeAssistantError),

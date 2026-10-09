@@ -1,5 +1,6 @@
 """Config flow for OpenDisplay integration."""
 
+import asyncio
 from collections.abc import Mapping
 import logging
 from typing import TYPE_CHECKING, Any, override
@@ -11,6 +12,7 @@ from opendisplay import (
     BLEConnectionError,
     OpenDisplayDevice,
     OpenDisplayError,
+    parse_advertisement,
 )
 import probatio
 
@@ -31,6 +33,24 @@ _ENCRYPTION_KEY_VALIDATOR = probatio.All(
     str.strip, str.lower, probatio.Match(r"^[0-9a-f]{32}$")
 )
 
+CONNECT_TIMEOUT = 45
+
+# Firmware advertises as "OD" followed by the device id in hex.
+NAME_PREFIX = "OD"
+
+
+def _is_opendisplay(discovery_info: BluetoothServiceInfoBleak) -> bool:
+    """Return if the advertisement looks like an OpenDisplay device."""
+    if not discovery_info.name.startswith(NAME_PREFIX):
+        return False
+    if (data := discovery_info.manufacturer_data.get(MANUFACTURER_ID)) is None:
+        return False
+    try:
+        parse_advertisement(data)
+    except ValueError:
+        return False
+    return True
+
 
 class OpenDisplayConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for OpenDisplay."""
@@ -48,47 +68,66 @@ class OpenDisplayConfigFlow(ConfigFlow, domain=DOMAIN):
         if ble_device is None:
             raise BLEConnectionError(f"Could not find connectable device for {address}")
 
-        async with OpenDisplayDevice(
-            mac_address=address, ble_device=ble_device, encryption_key=encryption_key
-        ) as device:
-            await device.read_firmware_version()
+        # A device that stops responding mid-probe would otherwise hold both the
+        # dialog and one of the adapter's connection slots indefinitely.
+        try:
+            async with (
+                asyncio.timeout(CONNECT_TIMEOUT),
+                OpenDisplayDevice(
+                    mac_address=address,
+                    ble_device=ble_device,
+                    encryption_key=encryption_key,
+                ) as device,
+            ):
+                await device.read_firmware_version()
+        except TimeoutError as err:
+            raise BLEConnectionError(
+                f"Connection probe exceeded {CONNECT_TIMEOUT}s"
+            ) from err
 
     @override
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak
     ) -> ConfigFlowResult:
         """Handle the Bluetooth discovery step."""
+        if not _is_opendisplay(discovery_info):
+            return self.async_abort(reason="not_supported")
         await self.async_set_unique_id(discovery_info.address)
         self._abort_if_unique_id_configured()
         self._discovery_info = discovery_info
         self.context["title_placeholders"] = {"name": discovery_info.name}
-
-        try:
-            await self._async_test_connection(discovery_info.address)
-        except AuthenticationRequiredError:
-            return await self.async_step_encryption_key()
-        except OpenDisplayError:
-            return self.async_abort(reason="cannot_connect")
-        except Exception:
-            _LOGGER.exception("Unexpected error")
-            return self.async_abort(reason="unknown")
 
         return await self.async_step_bluetooth_confirm()
 
     async def async_step_bluetooth_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Confirm discovery."""
+        """Confirm discovery and verify the device responds."""
         assert self._discovery_info is not None
+        errors: dict[str, str] = {}
 
-        if user_input is None:
-            self._set_confirm_only()
-            return self.async_show_form(
-                step_id="bluetooth_confirm",
-                description_placeholders=self.context["title_placeholders"],
-            )
+        # The device is only contacted once the user confirms: every unconfigured
+        # device in range is discovered on every restart, and probing them all
+        # would exhaust the adapter's connection slots.
+        if user_input is not None:
+            try:
+                await self._async_test_connection(self._discovery_info.address)
+            except AuthenticationRequiredError:
+                return await self.async_step_encryption_key()
+            except OpenDisplayError:
+                errors["base"] = "cannot_connect"
+            except Exception:
+                _LOGGER.exception("Unexpected error")
+                errors["base"] = "unknown"
+            else:
+                return self.async_create_entry(title=self._discovery_info.name, data={})
 
-        return self.async_create_entry(title=self._discovery_info.name, data={})
+        self._set_confirm_only()
+        return self.async_show_form(
+            step_id="bluetooth_confirm",
+            description_placeholders=self.context["title_placeholders"],
+            errors=errors,
+        )
 
     @override
     async def async_step_user(
@@ -125,7 +164,7 @@ class OpenDisplayConfigFlow(ConfigFlow, domain=DOMAIN):
                 address = discovery_info.address
                 if address in current_addresses or address in self._discovered_devices:
                     continue
-                if MANUFACTURER_ID in discovery_info.manufacturer_data:
+                if _is_opendisplay(discovery_info):
                     self._discovered_devices[address] = discovery_info
 
         if not self._discovered_devices:
@@ -191,7 +230,9 @@ class OpenDisplayConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="encryption_key",
-            data_schema=probatio.Schema({probatio.Required(CONF_ENCRYPTION_KEY): str}),
+            data_schema=probatio.Schema(
+                {probatio.Required(probatio.Secret(CONF_ENCRYPTION_KEY)): str}
+            ),
             description_placeholders={"name": name},
             errors=errors,
         )
@@ -237,7 +278,11 @@ class OpenDisplayConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=probatio.Schema(
-                {probatio.Optional(CONF_ENCRYPTION_KEY, default=""): str}
+                {
+                    probatio.Optional(
+                        probatio.Secret(CONF_ENCRYPTION_KEY), default=""
+                    ): str
+                }
             ),
             description_placeholders={"name": reauth_entry.title},
             errors=errors,

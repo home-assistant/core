@@ -143,6 +143,7 @@ SAVE_DELAY = 1
 DISCOVERY_COOLDOWN = 1
 
 SETUP_RETRY_MAX_WAIT = 600  # 10 minutes
+SETUP_RETRY_AFTER_MAX_WAIT = 86400  # 1 day
 
 ISSUE_UNIQUE_ID_COLLISION = "config_entry_unique_id_collision"
 UNIQUE_ID_COLLISION_TITLE_LIMIT = 5
@@ -238,9 +239,6 @@ class ConfigEntryDisabler(StrEnum):
 
     USER = "user"
 
-
-# DISABLED_* is deprecated, to be removed in 2022.3
-DISABLED_USER = ConfigEntryDisabler.USER.value
 
 RELOAD_AFTER_UPDATE_DELAY = 30
 
@@ -345,7 +343,6 @@ class FlowType(StrEnum):
 def _validate_item(*, disabled_by: ConfigEntryDisabler | Any | None = None) -> None:
     """Validate config entry item."""
 
-    # Deprecated in 2022.1, stopped working in 2024.10
     if disabled_by is not None and not isinstance(disabled_by, ConfigEntryDisabler):
         raise TypeError(
             f"disabled_by must be a ConfigEntryDisabler value, got {disabled_by}"
@@ -806,7 +803,14 @@ class ConfigEntry[_DataT = Any]:
                 reason.translation_placeholders,
                 reason.translation_domain,
             )
-            wait_time = min(2**self._tries * 5, SETUP_RETRY_MAX_WAIT) + (
+            wait_time = min(2**self._tries * 5, SETUP_RETRY_MAX_WAIT)
+            if exc.retry_after is not None:
+                # The backoff stays the floor, so a delay that has already
+                # passed does not retry immediately.
+                wait_time = max(
+                    wait_time, min(exc.retry_after, SETUP_RETRY_AFTER_MAX_WAIT)
+                )
+            wait_time += (
                 randint(RANDOM_MICROSECOND_MIN, RANDOM_MICROSECOND_MAX) / 1000000
             )
             self._tries += 1
@@ -1986,6 +1990,21 @@ class ConfigEntriesFlowManager(
         return False
 
     @callback
+    def async_dismiss_discovery_flows(
+        self, init_data_type: type, matcher: Callable[[Any], bool]
+    ) -> None:
+        """Abort discovery flows for a thing that is no longer reachable.
+
+        Flows the user has started interacting with are left alone, because a
+        device often stops answering discovery precisely because it is being
+        paired.
+        """
+        for flow in self.async_progress_by_init_data_type(init_data_type, matcher):
+            if flow["context"].get("dismiss_protected"):
+                continue
+            self.async_abort(flow["flow_id"])
+
+    @callback
     def async_has_matching_flow(self, flow: ConfigFlow) -> bool:
         """Check if an existing matching flow is in progress."""
         if not (flows := self._handler_progress_index.get(flow.handler)):
@@ -2406,8 +2425,22 @@ class ConfigEntries:
             return
 
         entries: ConfigEntryItems = ConfigEntryItems(self.hass)
+        migrated_domains: set[str] = set()
         for entry in config["entries"]:
             entry_id = entry["entry_id"]
+            entry_domain = entry["domain"]
+
+            # A custom integration that a built-in integration took over keeps its
+            # entries, they belong to the built-in domain from now on. Recovery
+            # and safe mode change nothing, they are often the way back to an
+            # older version that still knows the custom integration.
+            if (
+                (replacement := loader.MIGRATED_CUSTOM_INTEGRATIONS.get(entry_domain))
+                and not self.hass.config.recovery_mode
+                and not self.hass.config.safe_mode
+            ):
+                migrated_domains.add(entry_domain)
+                entry_domain = replacement
 
             config_entry = ConfigEntry(
                 created_at=datetime.fromisoformat(entry["created_at"]),
@@ -2419,7 +2452,7 @@ class ConfigEntries:
                         for domain, keys in entry["discovery_keys"].items()
                     }
                 ),
-                domain=entry["domain"],
+                domain=entry_domain,
                 entry_id=entry_id,
                 minor_version=entry["minor_version"],
                 modified_at=datetime.fromisoformat(entry["modified_at"]),
@@ -2435,6 +2468,17 @@ class ConfigEntries:
             entries[entry_id] = config_entry
 
         self._entries = entries
+
+        if migrated_domains:
+            _LOGGER.info(
+                "Migrated config entries of %s",
+                ", ".join(
+                    f"'{domain}' to '{loader.MIGRATED_CUSTOM_INTEGRATIONS[domain]}'"
+                    for domain in sorted(migrated_domains)
+                ),
+            )
+            self._async_schedule_save()
+
         self.async_update_issues()
 
         if not self.hass.config.recovery_mode and not self.hass.config.safe_mode:

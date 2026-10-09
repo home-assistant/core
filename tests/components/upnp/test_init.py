@@ -5,6 +5,7 @@ import copy
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from async_upnp_client.aiohttp import AiohttpNotifyServer
 from async_upnp_client.exceptions import UpnpCommunicationError
 from async_upnp_client.profiles.igd import IgdDevice
 import pytest
@@ -19,6 +20,7 @@ from homeassistant.components.upnp.const import (
     CONFIG_ENTRY_UDN,
     DOMAIN,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.service_info.ssdp import ATTR_UPNP_UDN, SsdpServiceInfo
 
@@ -60,6 +62,22 @@ async def test_async_setup_entry_default(
 
     mock_igd_device.async_subscribe_services.assert_called()
     assert entry.update_listeners == []
+
+
+async def test_unload_stops_notify_server(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_igd_device: IgdDevice,
+    mock_notify_server: AiohttpNotifyServer,
+) -> None:
+    """Test unloading stops the notify server started during setup."""
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    mock_notify_server.async_start_server.assert_awaited_once()
+
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+
+    mock_igd_device.async_unsubscribe_services.assert_awaited_once()
+    mock_notify_server.async_stop_server.assert_awaited_once()
 
 
 @pytest.mark.usefixtures("ssdp_instant_discovery", "mock_no_mac_address_from_host")
