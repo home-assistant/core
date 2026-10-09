@@ -81,14 +81,6 @@
       }
     },
     "select": {
-      "auto_preference": {
-        "name": "Auto mode preference",
-        "state": {
-          "default": "Default",
-          "efficient": "Efficient",
-          "quiet": "Quiet"
-        }
-      },
       "night_light_level": {
         "name": "Night light level",
         "state": {
