@@ -261,10 +261,11 @@ async def async_setup_entry(
             SunsynkModbusInverterSensorEntity(runtime_data, description)
             for description in SENSORS_INVERTER
         )
-        entities.extend(
-            SunsynkModbusBatterySensorEntity(runtime_data, description)
-            for description in SENSORS_BATTERY
-        )
+        if runtime_data.inverter.has_battery:
+            entities.extend(
+                SunsynkModbusBatterySensorEntity(runtime_data, description)
+                for description in SENSORS_BATTERY
+            )
         async_add_entities(entities)
         return
 

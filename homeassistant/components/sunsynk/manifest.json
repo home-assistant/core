@@ -9,5 +9,5 @@
   "iot_class": "cloud_polling",
   "loggers": ["modbus_connection", "sunsynk", "sunsynk_modbus"],
   "quality_scale": "bronze",
-  "requirements": ["sunsynk-api-client==1.4.0", "sunsynk-modbus==0.1.0"]
+  "requirements": ["sunsynk-api-client==1.4.0", "sunsynk-modbus==0.2.0"]
 }

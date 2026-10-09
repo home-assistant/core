@@ -191,3 +191,29 @@ async def test_modbus_sensors_unavailable_on_partial_failure(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+
+@pytest.mark.usefixtures("mock_get_unit")
+async def test_modbus_no_battery(
+    hass: HomeAssistant,
+    mock_modbus_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test an inverter without a battery gets no battery device or entities."""
+    # Battery mode 2: the inverter is set to operate without a battery.
+    mock_modbus_unit.load_raw({"holding": {213: 2}})
+    await setup_integration(hass, mock_modbus_config_entry)
+    entry_id = mock_modbus_config_entry.entry_id
+    assert (
+        device_registry.async_get_device_by_identifier((DOMAIN, "2201234567"), entry_id)
+        is not None
+    )
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, "2201234567_battery"), entry_id
+        )
+        is None
+    )
+    assert hass.states.get("sensor.inverter_2201234567_grid_power") is not None
+    assert hass.states.get("sensor.battery_2201234567_state_of_charge") is None
