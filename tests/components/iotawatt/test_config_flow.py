@@ -1,13 +1,16 @@
 """Test the IoTawatt config flow."""
 
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import httpx2
 
 from homeassistant import config_entries
-from homeassistant.components.iotawatt.const import DOMAIN
+from homeassistant.components.iotawatt.const import CONF_LEGACY_ENERGY, DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.setup import async_setup_component
+
+from tests.common import MockConfigEntry
 
 
 async def test_form(hass: HomeAssistant) -> None:
@@ -147,3 +150,47 @@ async def test_form_setup_exception(hass: HomeAssistant) -> None:
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
+
+
+async def test_new_entry_defaults_to_lifetime_sensors(hass: HomeAssistant) -> None:
+    """Test newly created entries do not get the legacy energy sensors."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    with (
+        patch(
+            "homeassistant.components.iotawatt.async_setup_entry",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.iotawatt.config_flow.Iotawatt.connect",
+            return_value=True,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"host": "1.1.1.1"}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].options == {CONF_LEGACY_ENERGY: False}
+
+
+async def test_options_flow(
+    hass: HomeAssistant, mock_iotawatt: MagicMock, entry: MockConfigEntry
+) -> None:
+    """Test the legacy energy sensors can be toggled via options."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {CONF_LEGACY_ENERGY: False}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert entry.options == {CONF_LEGACY_ENERGY: False}
