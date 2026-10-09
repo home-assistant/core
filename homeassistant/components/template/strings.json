@@ -1237,11 +1237,6 @@
         "text": "Text"
       }
     },
-    "sensor_unit_of_measurement": {
-      "options": {
-        "none": "No unit of measurement"
-      }
-    },
     "update_device_class": {
       "options": {
         "firmware": "[%key:component::update::entity_component::firmware::name%]"

@@ -374,20 +374,14 @@ def generate_schema(domain: str, flow_type: str) -> probatio.Schema:
 
     if domain == Platform.SENSOR:
         schema |= _SCHEMA_STATE | {
-            probatio.Optional(CONF_UNIT_OF_MEASUREMENT): selector.SelectSelector(
-                selector.SelectSelectorConfig(
-                    options=list(
-                        {
-                            str(unit)
-                            for units in DEVICE_CLASS_UNITS.values()
-                            for unit in units
-                            if unit is not None
-                        }
-                    ),
-                    mode=selector.SelectSelectorMode.DROPDOWN,
-                    translation_key="sensor_unit_of_measurement",
-                    custom_value=True,
-                    sort=True,
+            probatio.Optional(
+                CONF_UNIT_OF_MEASUREMENT
+            ): selector.UnitOfMeasurementSelector(
+                selector.UnitOfMeasurementSelectorConfig(
+                    context={
+                        "filter_device_class": CONF_DEVICE_CLASS,
+                        "filter_state_class": CONF_STATE_CLASS,
+                    }
                 ),
             ),
             probatio.Optional(CONF_DEVICE_CLASS): selector.DeviceClassSelector(
