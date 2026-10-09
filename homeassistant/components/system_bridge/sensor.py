@@ -191,18 +191,22 @@ def gpu_usage_percentage(gpu: GPU) -> float | None:
 
 def memory_free(data: SystemBridgeData) -> float | None:
     """Return the free memory."""
-    if (virtual := data.memory.virtual) is not None and (
-        free := virtual.free
-    ) is not None:
+    if (
+        data.memory is not None
+        and (virtual := data.memory.virtual) is not None
+        and (free := virtual.free) is not None
+    ):
         return round(free / 1000**3, 2)
     return None
 
 
 def memory_used(data: SystemBridgeData) -> float | None:
     """Return the used memory."""
-    if (virtual := data.memory.virtual) is not None and (
-        used := virtual.used
-    ) is not None:
+    if (
+        data.memory is not None
+        and (virtual := data.memory.virtual) is not None
+        and (used := virtual.used) is not None
+    ):
         return round(used / 1000**3, 2)
     return None
 
@@ -214,7 +218,8 @@ def partition_usage(
 ) -> float | None:
     """Return the used memory."""
     if (
-        (devices := data.disks.devices) is not None
+        data.disks is not None
+        and (devices := data.disks.devices) is not None
         and device_index < len(devices)
         and (partitions := devices[device_index].partitions) is not None
         and partition_index < len(partitions)
@@ -371,7 +376,10 @@ async def async_setup_entry(
         for description in BASE_SENSOR_TYPES
     ]
 
-    for index_device, device in enumerate(coordinator.data.disks.devices):
+    disk_devices = (
+        coordinator.data.disks.devices if coordinator.data.disks is not None else []
+    )
+    for index_device, device in enumerate(disk_devices):
         if device.partitions is None:
             continue
 
