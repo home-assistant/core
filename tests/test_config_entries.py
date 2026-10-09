@@ -280,9 +280,13 @@ async def test_call_setup_entry_without_reload_support(hass: HomeAssistant) -> N
     assert not entry.supports_unload
 
 
+@pytest.mark.parametrize("return_value", [True, None])
 @pytest.mark.parametrize(("major_version", "minor_version"), [(2, 1), (1, 2), (2, 2)])
 async def test_call_async_migrate_entry(
-    hass: HomeAssistant, major_version: int, minor_version: int
+    hass: HomeAssistant,
+    major_version: int,
+    minor_version: int,
+    return_value: bool | None,
 ) -> None:
     """Test we call <component>.async_migrate_entry when version mismatch."""
     entry = MockConfigEntry(
@@ -292,8 +296,8 @@ async def test_call_async_migrate_entry(
 
     entry.add_to_hass(hass)
 
-    mock_migrate_entry = AsyncMock(return_value=True)
-    mock_setup_entry = AsyncMock(return_value=True)
+    mock_migrate_entry = AsyncMock(return_value=return_value)
+    mock_setup_entry = AsyncMock(return_value=return_value)
 
     mock_integration(
         hass,
@@ -328,18 +332,19 @@ async def test_call_async_migrate_entry(
     assert entry.supports_unload
 
 
+@pytest.mark.parametrize("migrate_result", [False, "foo"])
 @pytest.mark.parametrize(("major_version", "minor_version"), [(2, 1), (1, 2), (2, 2)])
-async def test_call_async_migrate_entry_failure_false(
-    hass: HomeAssistant, major_version: int, minor_version: int
+async def test_call_async_migrate_entry_failure(
+    hass: HomeAssistant, major_version: int, minor_version: int, migrate_result: Any
 ) -> None:
-    """Test migration fails if returns false."""
+    """Test migration fails if it returns False or a non-boolean."""
     entry = MockConfigEntry(
         domain="comp", version=major_version, minor_version=minor_version
     )
     entry.add_to_hass(hass)
     assert not entry.supports_unload
 
-    mock_migrate_entry = AsyncMock(return_value=False)
+    mock_migrate_entry = AsyncMock(return_value=migrate_result)
     mock_setup_entry = AsyncMock(return_value=True)
 
     mock_integration(
@@ -412,60 +417,6 @@ async def test_call_async_migrate_entry_failure_exception(
     assert len(mock_setup_entry.mock_calls) == 0
     assert entry.state is config_entries.ConfigEntryState.MIGRATION_ERROR
     assert not entry.supports_unload
-
-
-@pytest.mark.parametrize(("major_version", "minor_version"), [(2, 1), (1, 2), (2, 2)])
-async def test_call_config_entry_methods_success_on_returning_none(
-    hass: HomeAssistant, major_version: int, minor_version: int
-) -> None:
-    """Test config entry methods success on returning None."""
-    entry = MockConfigEntry(
-        domain="comp", version=major_version, minor_version=minor_version
-    )
-    entry.add_to_hass(hass)
-    assert not entry.supports_unload
-
-    mock_migrate_entry = AsyncMock(return_value=None)
-    mock_setup_entry = AsyncMock(return_value=None)
-    mock_unload_entry = AsyncMock(return_value=None)
-
-    mock_integration(
-        hass,
-        MockModule(
-            "comp",
-            async_setup_entry=mock_setup_entry,
-            async_migrate_entry=mock_migrate_entry,
-            async_unload_entry=mock_unload_entry,
-        ),
-    )
-    mock_platform(hass, "comp.config_flow", None)
-
-    class TestFlow(config_entries.ConfigFlow):
-        """Test flow."""
-
-        VERSION = 3
-        MINOR_VERSION = 1
-
-        async def async_step_user(self, user_input=None):
-            """Test user step."""
-            return self.async_create_entry(title="title", data={})
-
-    with mock_config_flow("comp", TestFlow):
-        result = await async_setup_component(hass, "comp", {})
-    assert result
-    assert len(mock_migrate_entry.mock_calls) == 1
-    assert len(mock_setup_entry.mock_calls) == 1
-    assert len(mock_unload_entry.mock_calls) == 0
-    assert entry.state is config_entries.ConfigEntryState.LOADED
-    assert entry.supports_unload
-
-    result = await hass.config_entries.async_unload(entry.entry_id)
-    assert result
-    assert len(mock_migrate_entry.mock_calls) == 1
-    assert len(mock_setup_entry.mock_calls) == 1
-    assert len(mock_unload_entry.mock_calls) == 1
-    assert entry.state is config_entries.ConfigEntryState.NOT_LOADED
-    assert entry.supports_unload
 
 
 async def test_migrate_from_higher_version_not_supported(
@@ -3386,8 +3337,11 @@ async def test_entry_subentry_unsupported(
         )
 
 
+@pytest.mark.parametrize("setup_result", [True, None])
 async def test_entry_setup_succeed(
-    hass: HomeAssistant, manager: config_entries.ConfigEntries
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    setup_result: bool | None,
 ) -> None:
     """Test that we can setup an entry."""
     entry = MockConfigEntry(
@@ -3396,7 +3350,7 @@ async def test_entry_setup_succeed(
     entry.add_to_hass(hass)
 
     mock_setup = AsyncMock(return_value=True)
-    mock_setup_entry = AsyncMock(return_value=True)
+    mock_setup_entry = AsyncMock(return_value=setup_result)
 
     mock_integration(
         hass,
@@ -3408,6 +3362,25 @@ async def test_entry_setup_succeed(
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
     assert entry.state is config_entries.ConfigEntryState.LOADED
+
+
+@pytest.mark.parametrize("setup_result", [False, "foo"])
+async def test_entry_setup_failure(
+    hass: HomeAssistant, manager: config_entries.ConfigEntries, setup_result: Any
+) -> None:
+    """Test setup fails if async_setup_entry returns False or a non-boolean."""
+    entry = MockConfigEntry(
+        domain="comp", state=config_entries.ConfigEntryState.NOT_LOADED
+    )
+    entry.add_to_hass(hass)
+
+    mock_setup_entry = AsyncMock(return_value=setup_result)
+    mock_integration(hass, MockModule("comp", async_setup_entry=mock_setup_entry))
+    mock_platform(hass, "comp.config_flow", None)
+
+    assert not await manager.async_setup(entry.entry_id)
+    assert len(mock_setup_entry.mock_calls) == 1
+    assert entry.state is config_entries.ConfigEntryState.SETUP_ERROR
 
 
 @pytest.mark.parametrize(
@@ -3449,13 +3422,14 @@ async def test_entry_setup_invalid_state(
     ("unload_result", "expected_result", "expected_state", "has_runtime_data"),
     [
         (True, True, config_entries.ConfigEntryState.NOT_LOADED, False),
+        (None, True, config_entries.ConfigEntryState.NOT_LOADED, False),
         (False, False, config_entries.ConfigEntryState.FAILED_UNLOAD, True),
     ],
 )
 async def test_entry_unload(
     hass: HomeAssistant,
     manager: config_entries.ConfigEntries,
-    unload_result: bool,
+    unload_result: bool | None,
     expected_result: bool,
     expected_state: config_entries.ConfigEntryState,
     has_runtime_data: bool,
@@ -3470,7 +3444,7 @@ async def test_entry_unload(
 
     async def async_unload_entry(
         hass: HomeAssistant, entry: config_entries.ConfigEntry
-    ) -> bool:
+    ) -> bool | None:
         """Mock unload entry."""
         unload_entry_calls.append(None)
         verify_runtime_data()
