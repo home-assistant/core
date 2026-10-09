@@ -742,7 +742,8 @@ def _event_data_filter_matches(
     return any(
         all(
             key in data
-            and type(data[key]) is type(expected_value)
+            and isinstance(data[key], type(expected_value))
+            and (not isinstance(data[key], bool) or isinstance(expected_value, bool))
             and data[key] == expected_value
             for key, expected_value in rule
         )

@@ -3,6 +3,8 @@
 import asyncio
 from collections.abc import Generator
 from datetime import datetime, timedelta
+from http import HTTPStatus
+import math
 import sqlite3
 import sys
 import threading
@@ -86,6 +88,7 @@ from homeassistant.util.json import json_loads
 from .common import (
     async_block_recorder,
     async_recorder_block_till_done,
+    async_wait_purge_done,
     async_wait_recorder,
     async_wait_recording_done,
     convert_pending_states_to_meta,
@@ -818,6 +821,69 @@ async def test_saving_event_exclude_event_data(
     assert len(received_events) == 5
 
 
+@pytest.mark.parametrize(
+    ("filter_type", "store_matches"), [("include", True), ("exclude", False)]
+)
+@pytest.mark.parametrize(
+    ("event_value", "match_value", "matches"),
+    [
+        (LockState.LOCKED, "locked", True),
+        (HTTPStatus.OK, 200, True),
+        (True, True, True),
+        (1.5, 1.5, True),
+        (True, 1, False),
+        (1, True, False),
+        (200.0, 200, False),
+        (200, 200.0, False),
+    ],
+)
+async def test_event_data_filter_scalar_types(
+    hass: HomeAssistant,
+    async_setup_recorder_instance: RecorderInstanceGenerator,
+    filter_type: str,
+    store_matches: bool,
+    event_value: str | bool | float,
+    match_value: str | bool | float,
+    matches: bool,
+) -> None:
+    """Test live and historical filters agree on JSON scalar types and enums."""
+    instance = await async_setup_recorder_instance(
+        hass,
+        {
+            filter_type: {
+                "event_data": [
+                    {"event_type": "scalar_event", "match": {"value": match_value}}
+                ]
+            }
+        },
+    )
+    hass.bus.async_fire("scalar_event", {"value": event_value})
+    await async_wait_recording_done(hass)
+
+    def _get_event_count(hass: HomeAssistant) -> int:
+        with session_scope(hass=hass, read_only=True) as session:
+            return (
+                session.query(Events)
+                .filter(
+                    Events.event_type_id.in_(select_event_type_ids(("scalar_event",)))
+                )
+                .count()
+            )
+
+    assert await instance.async_add_executor_job(_get_event_count, hass) == int(
+        matches == store_matches
+    )
+
+    await hass.services.async_call(
+        DOMAIN, SERVICE_PURGE, {"keep_days": 10, "apply_filter": True}, blocking=True
+    )
+    await async_wait_purge_done(hass)
+
+    assert await instance.async_add_executor_job(_get_event_count, hass) == int(
+        matches == store_matches
+    )
+
+
 async def test_event_data_filter_include_exclude_precedence(
     hass: HomeAssistant,
     async_setup_recorder_instance: RecorderInstanceGenerator,
@@ -909,6 +975,26 @@ def test_invalid_event_data_filter_config(
     """Test invalid event data filters are rejected by the configuration schema."""
     with pytest.raises(probatio.Invalid):
         CONFIG_SCHEMA({DOMAIN: {filter_type: event_data_filter}})
+
+
+@pytest.mark.parametrize("filter_type", ["include", "exclude"])
+@pytest.mark.parametrize("value", [math.nan, math.inf, -math.inf])
+def test_event_data_filter_config_rejects_non_finite_floats(
+    filter_type: str, value: float
+) -> None:
+    """Test non-finite values cannot be configured as exact-match event data."""
+    with pytest.raises(probatio.Invalid, match="expected a finite float"):
+        CONFIG_SCHEMA(
+            {
+                DOMAIN: {
+                    filter_type: {
+                        "event_data": [
+                            {"event_type": "test_event", "match": {"value": value}}
+                        ]
+                    }
+                }
+            }
+        )
 
 
 def test_event_data_filter_config_normalizes_string_subclasses() -> None:

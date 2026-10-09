@@ -159,7 +159,8 @@ def _event_data_filter_matches(
         all(
             (actual_value := event.data.get(key, _MISSING_EVENT_DATA_VALUE))
             is not _MISSING_EVENT_DATA_VALUE
-            and type(actual_value) is type(expected_value)
+            and isinstance(actual_value, type(expected_value))
+            and (not isinstance(actual_value, bool) or isinstance(expected_value, bool))
             and actual_value == expected_value
             for key, expected_value in rule
         )

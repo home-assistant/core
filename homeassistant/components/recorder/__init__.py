@@ -1,6 +1,7 @@
 """Support for recording details."""
 
 import logging
+import math
 from typing import Any, cast
 
 import probatio
@@ -77,6 +78,8 @@ def _validate_event_data_value(value: Any) -> str | bool | int | float:
     """Validate an exact-match event data value."""
     if isinstance(value, str):
         return str(value)
+    if type(value) is float and not math.isfinite(value):
+        raise probatio.Invalid("expected a finite float")
     if type(value) in (bool, int, float):
         return cast(str | bool | int | float, value)
     raise probatio.Invalid("expected a string, boolean, integer, or float")
