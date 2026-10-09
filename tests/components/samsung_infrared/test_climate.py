@@ -7,6 +7,7 @@ from infrared_protocols.commands.samsung_ac import (
     SamsungAC0292HvacMode,
     SamsungACFanMode,
 )
+import pytest
 
 from homeassistant.components.climate import (
     ATTR_FAN_MODE,
@@ -19,8 +20,18 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.components.samsung_infrared.const import DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, STATE_ON
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_TEMPERATURE,
+    STATE_ON,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant, State
+from homeassistant.util.unit_system import (
+    METRIC_SYSTEM,
+    US_CUSTOMARY_SYSTEM,
+    UnitSystem,
+)
 
 from tests.common import (
     MockConfigEntry,
@@ -317,6 +328,87 @@ async def test_samsung_infrared_climate_restores_state_after_restart(
         assert state.state == HVACMode.HEAT
         assert state.attributes[ATTR_TEMPERATURE] == 27
         assert state.attributes[ATTR_FAN_MODE] == FAN_HIGH
+
+
+@pytest.mark.parametrize(
+    ("restored_attributes", "unit_system", "expected_temperature"),
+    [
+        pytest.param(
+            {ATTR_TEMPERATURE: 17, "temperature_unit": UnitOfTemperature.CELSIUS},
+            METRIC_SYSTEM,
+            17,
+            id="celsius_to_celsius",
+        ),
+        pytest.param(
+            {ATTR_TEMPERATURE: 17, "temperature_unit": UnitOfTemperature.CELSIUS},
+            US_CUSTOMARY_SYSTEM,
+            63,
+            id="celsius_to_fahrenheit",
+        ),
+        pytest.param(
+            {ATTR_TEMPERATURE: 63, "temperature_unit": UnitOfTemperature.FAHRENHEIT},
+            METRIC_SYSTEM,
+            17,
+            id="fahrenheit_to_celsius",
+        ),
+        pytest.param(
+            {ATTR_TEMPERATURE: 63, "temperature_unit": UnitOfTemperature.FAHRENHEIT},
+            US_CUSTOMARY_SYSTEM,
+            63,
+            id="fahrenheit_to_fahrenheit",
+        ),
+        pytest.param({ATTR_TEMPERATURE: 17}, METRIC_SYSTEM, 17, id="legacy_celsius"),
+        pytest.param(
+            {ATTR_TEMPERATURE: 63}, US_CUSTOMARY_SYSTEM, 63, id="legacy_fahrenheit"
+        ),
+    ],
+)
+async def test_samsung_infrared_climate_restore_temperature_unit(
+    hass: HomeAssistant,
+    restored_attributes: dict[str, int | str],
+    unit_system: UnitSystem,
+    expected_temperature: int,
+) -> None:
+    """Test restoration uses the saved unit, falling back to the configured unit."""
+    hass.config.units = unit_system
+    remote_entity_id = "remote.living_room_ir"
+    hass.states.async_set(remote_entity_id, STATE_ON)
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "infrared_emitter_entity_id": remote_entity_id,
+            "device_type": "ac",
+        },
+        unique_id="samsung_ir_ac_test",
+    )
+    entry.add_to_hass(hass)
+
+    mock_restore_cache(
+        hass,
+        [State("climate.samsung_ac", HVACMode.COOL, restored_attributes)],
+    )
+
+    with patch(
+        "homeassistant.components.samsung_infrared.climate.SamsungIrClimate._send_command",
+        new_callable=AsyncMock,
+    ) as mock_send_command:
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        state = hass.states.get("climate.samsung_ac")
+        assert state is not None
+        assert state.attributes[ATTR_TEMPERATURE] == expected_temperature
+
+        await hass.services.async_call(
+            "climate",
+            SERVICE_SET_HVAC_MODE,
+            {ATTR_ENTITY_ID: "climate.samsung_ac", ATTR_HVAC_MODE: HVACMode.COOL},
+            blocking=True,
+        )
+
+        sent_command = mock_send_command.call_args[0][0]
+        assert sent_command.target_temperature == 17
 
 
 async def test_samsung_infrared_climate_turn_on_after_restart_resumes_last_mode(
