@@ -12,9 +12,17 @@ from systembridgeconnector.models.modules import ModulesData
 from homeassistant.components.system_bridge.config_flow import SystemBridgeConfigFlow
 from homeassistant.components.system_bridge.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT, CONF_TOKEN
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_HOST,
+    CONF_PORT,
+    CONF_TOKEN,
+    EVENT_HOMEASSISTANT_STOP,
+)
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import entity_registry as er
+from homeassistant.setup import async_setup_component
 
 from . import FIXTURE_USER_INPUT, FIXTURE_UUID
 
@@ -214,4 +222,28 @@ async def test_get_data_failure_closes_websocket(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    mock_websocket_client.close.assert_awaited_once()
+
+
+@pytest.mark.usefixtures("mock_version")
+async def test_platform_setup_failure_cleans_up(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_websocket_client: MagicMock,
+) -> None:
+    """Test the stop listener is removed when setup fails after the first refresh."""
+    assert await async_setup_component(hass, "media_source", {})
+    stop_listeners = hass.bus.async_listeners().get(EVENT_HOMEASSISTANT_STOP, 0)
+
+    mock_config_entry.add_to_hass(hass)
+    with patch.object(
+        hass.config_entries,
+        "async_forward_entry_setups",
+        side_effect=ConfigEntryNotReady,
+    ):
+        assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert hass.bus.async_listeners().get(EVENT_HOMEASSISTANT_STOP, 0) == stop_listeners
     mock_websocket_client.close.assert_awaited_once()

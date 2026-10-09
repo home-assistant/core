@@ -127,7 +127,6 @@ async def async_setup_entry(
         _LOGGER,
         entry=entry,
     )
-    entry.async_on_unload(coordinator.websocket_client.close)
 
     try:
         async with asyncio.timeout(DATA_WAIT_TIMEOUT):
@@ -202,14 +201,7 @@ async def async_unload_entry(
     hass: HomeAssistant, entry: SystemBridgeConfigEntry
 ) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        coordinator = entry.runtime_data
-
-        if coordinator.unsub:
-            coordinator.unsub()
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 async def async_reload_entry(
