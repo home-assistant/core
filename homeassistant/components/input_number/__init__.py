@@ -7,9 +7,10 @@ from typing import Any, Self, override
 
 import probatio
 
-from homeassistant.components.number import NumberEntity
+from homeassistant.components.number import DEVICE_CLASSES_SCHEMA, NumberEntity
 from homeassistant.const import (  # noqa: F401
     ATTR_MODE,
+    CONF_DEVICE_CLASS,
     CONF_ICON,
     CONF_ID,
     CONF_MODE,
@@ -78,6 +79,7 @@ STORAGE_FIELDS: VolDictType = {
     ),
     probatio.Optional(CONF_ICON): cv.icon,
     probatio.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+    probatio.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
     probatio.Optional(CONF_MODE, default=MODE_SLIDER): probatio.In(
         [MODE_BOX, MODE_SLIDER]
     ),
@@ -97,6 +99,7 @@ CONFIG_SCHEMA = probatio.Schema(
                     ),
                     probatio.Optional(CONF_ICON): cv.icon,
                     probatio.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+                    probatio.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
                     probatio.Optional(CONF_MODE, default=MODE_SLIDER): probatio.In(
                         [MODE_BOX, MODE_SLIDER]
                     ),
@@ -220,6 +223,7 @@ class InputNumber(collection.CollectionEntity, NumberEntity, RestoreEntity):
         self._attr_native_step = config[CONF_STEP]
         self._attr_unique_id = config[CONF_ID]
         self._attr_native_unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
+        self._attr_device_class = config.get(CONF_DEVICE_CLASS)
 
     @classmethod
     @override

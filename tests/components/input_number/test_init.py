@@ -1,5 +1,6 @@
 """The tests for the Input number component."""
 
+from collections.abc import Awaitable, Callable
 from typing import Any
 from unittest.mock import patch
 
@@ -15,6 +16,7 @@ from homeassistant.components.input_number import (
     SERVICE_SET_VALUE,
 )
 from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
     ATTR_EDITABLE,
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
@@ -106,6 +108,7 @@ async def decrement(hass: HomeAssistant, entity_id: str) -> None:
         {"name with space": None},
         {"test_1": {"min": 50, "max": 50}},
         {"test_1": {"min": 0, "max": 10, "initial": 11}},
+        {"test_1": {"min": 0, "max": 10, "device_class": "invalid"}},
     ],
 )
 async def test_config(hass: HomeAssistant, invalid_config) -> None:
@@ -258,6 +261,33 @@ async def test_unit_of_measurement(hass: HomeAssistant) -> None:
     state = hass.states.get("input_number.without_unit")
     assert state
     assert ATTR_UNIT_OF_MEASUREMENT not in state.attributes
+
+
+async def test_device_class(hass: HomeAssistant) -> None:
+    """Test device class is exposed in the state attributes."""
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: {
+                "with_device_class": {
+                    "min": 0,
+                    "max": 100,
+                    "device_class": "temperature",
+                    "unit_of_measurement": "°C",
+                },
+                "without_device_class": {"min": 0, "max": 100},
+            }
+        },
+    )
+
+    state = hass.states.get("input_number.with_device_class")
+    assert state
+    assert state.attributes[ATTR_DEVICE_CLASS] == "temperature"
+
+    state = hass.states.get("input_number.without_device_class")
+    assert state
+    assert ATTR_DEVICE_CLASS not in state.attributes
 
 
 async def test_restore_state(hass: HomeAssistant) -> None:
@@ -603,6 +633,63 @@ async def test_update_min_max(
 
     state = hass.states.get(input_entity_id)
     assert float(state.state) == 5
+
+
+async def test_ws_update_device_class(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    storage_setup: Callable[..., Awaitable[bool]],
+) -> None:
+    """Test setting, removing and rejecting a device class via WS."""
+    settings = {
+        "name": "from storage",
+        "max": 100,
+        "min": 0,
+        "step": 1,
+        "mode": "slider",
+    }
+    assert await storage_setup([{"id": "from_storage"} | settings])
+    input_entity_id = f"{DOMAIN}.from_storage"
+
+    client = await hass_ws_client(hass)
+
+    updated_settings = settings | {
+        "device_class": "temperature",
+        "unit_of_measurement": "°C",
+    }
+    await client.send_json_auto_id(
+        {
+            "type": f"{DOMAIN}/update",
+            f"{DOMAIN}_id": "from_storage",
+            **updated_settings,
+        }
+    )
+    resp = await client.receive_json()
+    assert resp["success"]
+    assert resp["result"] == {"id": "from_storage"} | updated_settings
+
+    state = hass.states.get(input_entity_id)
+    assert state.attributes[ATTR_DEVICE_CLASS] == "temperature"
+
+    await client.send_json_auto_id(
+        {"type": f"{DOMAIN}/update", f"{DOMAIN}_id": "from_storage", **settings}
+    )
+    resp = await client.receive_json()
+    assert resp["success"]
+
+    state = hass.states.get(input_entity_id)
+    assert ATTR_DEVICE_CLASS not in state.attributes
+
+    await client.send_json_auto_id(
+        {
+            "type": f"{DOMAIN}/update",
+            f"{DOMAIN}_id": "from_storage",
+            **settings,
+            "device_class": "invalid",
+        }
+    )
+    resp = await client.receive_json()
+    assert not resp["success"]
 
 
 async def test_ws_create(
