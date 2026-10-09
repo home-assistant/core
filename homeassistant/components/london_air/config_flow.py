@@ -1,5 +1,6 @@
 """Config flow for the London Air integration."""
 
+from collections.abc import Mapping
 from typing import Any, override
 
 import aiohttp
@@ -56,4 +57,20 @@ class LondonAirConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=self._schema(default),
             errors=errors,
+        )
+
+    async def async_step_import(
+        self, import_config: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle import from configuration.yaml."""
+        try:
+            await self._test_connection()
+        except aiohttp.ClientError:
+            return self.async_abort(reason="cannot_connect")
+
+        await self.async_set_unique_id(DOMAIN)
+        self._abort_if_unique_id_configured()
+        return self.async_create_entry(
+            title="London Air",
+            data={CONF_LOCATIONS: list(import_config[CONF_LOCATIONS])},
         )
