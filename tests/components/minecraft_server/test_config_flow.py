@@ -1,5 +1,7 @@
 """Tests for the Minecraft Server config flow."""
 
+from collections.abc import Callable
+from typing import Any
 from unittest.mock import patch
 
 from mcstatus import BedrockServer, JavaServer, LegacyServer
@@ -194,27 +196,17 @@ async def test_recovery(
 
 
 @pytest.mark.parametrize(
-    ("server_type", "lookup_target"),
-    [
-        (
-            MinecraftServerType.LEGACY_JAVA_EDITION,
-            "homeassistant.components.minecraft_server.api.LegacyServer.async_lookup",
-        ),
-        (
-            MinecraftServerType.JAVA_EDITION,
-            "homeassistant.components.minecraft_server.api.JavaServer.async_lookup",
-        ),
-        (
-            MinecraftServerType.BEDROCK_EDITION,
-            "homeassistant.components.minecraft_server.api.BedrockServer.lookup",
-        ),
-    ],
+    SERVER_EDITION_CASE_PARAM_NAMES,
+    SERVER_EDITION_SUCCESS_CASES,
     ids=SERVER_EDITION_CASE_IDS,
 )
 async def test_address_lookup_error(
     hass: HomeAssistant,
     server_type: MinecraftServerType,
     lookup_target: str,
+    lookup_result: Callable[[], Any],
+    status_target: str,
+    status_response: dict[str, Any],
 ) -> None:
     """Test config flow handles a server address lookup error."""
     result = await hass.config_entries.flow.async_init(
@@ -235,8 +227,21 @@ async def test_address_lookup_error(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
+
+    with (
+        patch(lookup_target, return_value=lookup_result()),
+        patch(status_target, return_value=status_response),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_TYPE: server_type,
+                CONF_ADDRESS: TEST_ADDRESS,
+            },
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_recovery_java(hass: HomeAssistant) -> None:

@@ -78,6 +78,7 @@ async def test_full_flow(
     assert result["result"].unique_id == expected_unique_id
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_full_flow_fail_because_of_missing_device_infos(
     hass: HomeAssistant, mock_lunatone_info: AsyncMock
 ) -> None:
@@ -96,8 +97,15 @@ async def test_full_flow_fail_because_of_missing_device_infos(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "missing_device_info"}
+
+    mock_lunatone_info.data = build_info_data()
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_URL: BASE_URL},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_device_already_configured(
