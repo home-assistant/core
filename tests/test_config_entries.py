@@ -3512,6 +3512,60 @@ async def test_entry_unload(
 
 
 @pytest.mark.parametrize(
+    (
+        "exc",
+        "reason",
+        "translation_key",
+        "translation_placeholders",
+        "translation_domain",
+    ),
+    [
+        pytest.param(Exception(), "Unknown error", None, None, None, id="exception"),
+        pytest.param(
+            Exception("Some error"), "Some error", None, None, None, id="message"
+        ),
+        pytest.param(
+            ConfigEntryError(
+                translation_domain="comp",
+                translation_key="unload_failed",
+                translation_placeholders={"host": "localhost"},
+            ),
+            "unload_failed",
+            "unload_failed",
+            {"host": "localhost"},
+            "comp",
+            id="translated_config_entry_error",
+        ),
+    ],
+)
+async def test_entry_unload_raises(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    caplog: pytest.LogCaptureFixture,
+    exc: Exception,
+    reason: str,
+    translation_key: str | None,
+    translation_placeholders: dict[str, str] | None,
+    translation_domain: str | None,
+) -> None:
+    """Test an exception from unload sets the failed unload reason."""
+    entry = MockConfigEntry(domain="comp", state=config_entries.ConfigEntryState.LOADED)
+    entry.add_to_hass(hass)
+
+    mock_integration(
+        hass, MockModule("comp", async_unload_entry=AsyncMock(side_effect=exc))
+    )
+
+    assert not await manager.async_unload(entry.entry_id)
+    assert entry.state is config_entries.ConfigEntryState.FAILED_UNLOAD
+    assert entry.reason == reason
+    assert entry.error_reason_translation_key == translation_key
+    assert entry.error_reason_translation_placeholders == translation_placeholders
+    assert entry.error_reason_translation_domain == translation_domain
+    assert "Error unloading entry" in caplog.text
+
+
+@pytest.mark.parametrize(
     "state",
     [
         config_entries.ConfigEntryState.NOT_LOADED,
