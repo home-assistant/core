@@ -2,7 +2,7 @@
 
 from collections.abc import Awaitable, Callable
 import logging
-from typing import TYPE_CHECKING, Any, cast, override
+from typing import TYPE_CHECKING, Any, override
 
 from daikin_onecta.client import DomesticHotWaterClient
 from daikin_onecta.models import ManagementPoint, Setpoint
@@ -85,8 +85,8 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
         self._attr_supported_features = self.get_supported_features()
         self._attr_native_current_temperature = self.get_current_temperature()
         self._attr_native_target_temperature = self.get_target_temperature()
-        self._attr_min_temp = cast("float", self.get_min_temp())
-        self._attr_max_temp = cast("float", self.get_max_temp())
+        self._attr_min_temp = self.get_min_temp()
+        self._attr_max_temp = self.get_max_temp()
         self._attr_operation_list = self.get_operation_list()
         self._attr_current_operation = self.get_current_operation()
 
@@ -164,7 +164,7 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
         """Return the temperature we try to reach."""
         ret = None
         dht = self.domestic_hotwater_temperature
-        if dht is not None:
+        if dht is not None and dht.value is not None:
             ret = float(dht.value)
         _LOGGER.debug(
             "Device '%s' hot water tank target_temperature '%s'", self._device.name, ret
@@ -181,9 +181,9 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
             data = {"target_temp_step": float(dht.step_value)}
         return data
 
-    def get_min_temp(self) -> float | None:
+    def get_min_temp(self) -> float:
         """Return the supported minimum value target temperature."""
-        ret = None
+        ret = super().min_temp
         dht = self.domestic_hotwater_temperature
         if dht is not None and dht.min_value is not None:
             ret = float(dht.min_value)
@@ -194,9 +194,9 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
         )
         return ret
 
-    def get_max_temp(self) -> float | None:
+    def get_max_temp(self) -> float:
         """Return the supported maximum value of target temperature."""
-        ret = None
+        ret = super().max_temp
         dht = self.domestic_hotwater_temperature
         if dht is not None and dht.max_value is not None:
             ret = float(dht.max_value)

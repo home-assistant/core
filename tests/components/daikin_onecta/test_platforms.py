@@ -48,7 +48,7 @@ from homeassistant.components.water_heater import (
     STATE_PERFORMANCE,
     WaterHeaterEntityFeature,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
@@ -424,6 +424,25 @@ def test_water_heater_read_only_power_keeps_writable_boost(power: str) -> None:
     )
 
 
+def test_water_heater_handles_missing_temperature_values() -> None:
+    """Use HA defaults when Daikin omits temperature bounds and target."""
+    device = DaikinOnectaDevice(_load_gateway_devices("altherma_boost")[0])
+    point = device.device.management_points_by_type("domesticHotWaterTank")[0]
+    assert point.domestic_hot_water is not None
+    assert point.domestic_hot_water.temperature is not None
+    point.domestic_hot_water.temperature.value = None
+    point.domestic_hot_water.temperature.min_value = None
+    point.domestic_hot_water.temperature.max_value = None
+
+    entity = DaikinWaterTank(
+        device, MagicMock(), point.management_point_type, point.embedded_id
+    )
+
+    assert entity.target_temperature is None
+    assert entity.min_temp == super(DaikinWaterTank, entity).min_temp
+    assert entity.max_temp == super(DaikinWaterTank, entity).max_temp
+
+
 async def test_schedule_select_updates_cached_selection(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
@@ -544,6 +563,7 @@ async def test_water_heater_publishes_successful_partial_operation_write() -> No
         ),
     )
     entity._embedded_id = "tank"
+    entity._attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     entity._attr_current_operation = "off"
     entity._attr_operation_list = ["off", STATE_HEAT_PUMP, STATE_PERFORMANCE]
     entity._async_execute_hot_water_command = AsyncMock(
