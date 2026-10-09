@@ -24,6 +24,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 
 POWER_LIMIT = "number.gen24_storage_ac_power_limit"
 CHARGE_LIMIT = "number.gen24_storage_battery_charge_power_limit"
+DISCHARGE_LIMIT = "number.gen24_storage_battery_discharge_power_limit"
 
 
 async def _setup(
@@ -139,6 +140,29 @@ async def test_battery_setpoint_leaves_the_mode_bits_alone(
     assert_state(hass, CHARGE_LIMIT, 50.0)
     assert storage.charge_limit_enabled is False
     assert storage.discharge_limit_enabled is False
+
+
+async def test_negative_discharge_limit_forces_charging(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_fronius_modbus: MockModbusConnection,
+) -> None:
+    """Test a negative discharge rate is written - it forces charging."""
+    config_entry = await _setup(hass, aioclient_mock, mock_fronius_modbus)
+    storage = config_entry.runtime_data.modbus_settings_coordinators[
+        0
+    ].modbus_inverter.storage
+
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        {ATTR_ENTITY_ID: DISCHARGE_LIMIT, ATTR_VALUE: -100},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    assert_state(hass, DISCHARGE_LIMIT, -100.0)
+    assert storage.discharge_limit == -100.0
 
 
 async def test_a_refused_write_raises(
