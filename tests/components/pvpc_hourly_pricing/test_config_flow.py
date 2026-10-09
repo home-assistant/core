@@ -212,7 +212,6 @@ async def test_reauth(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={CONF_API_TOKEN: "test-token"}
     )
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     config_entry = result["result"]
     assert pvpc_aioclient_mock.call_count == 4

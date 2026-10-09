@@ -224,7 +224,6 @@ async def test_api_failure_flow(
     result = await _async_run_flow_to_completion(
         hass, result, mock_config_flow_api, configure=False
     )
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 

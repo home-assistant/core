@@ -158,7 +158,6 @@ async def test_form_missing_serial_number(
         result["flow_id"],
         MOCK_USER_INPUT_ETHERNET,
     )
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result.get("type") is FlowResultType.CREATE_ENTRY
 
 

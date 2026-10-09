@@ -146,7 +146,6 @@ async def test_full_flow(
         ]
     }
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert flow5.get("type") is FlowResultType.CREATE_ENTRY
 
     assert len(mock_setup.mock_calls) == 1

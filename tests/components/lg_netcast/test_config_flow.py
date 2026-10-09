@@ -82,7 +82,6 @@ async def test_manual_host(hass: HomeAssistant) -> None:
             result["flow_id"], {CONF_ACCESS_TOKEN: FAKE_PIN}
         )
 
-        # pylint: disable-next=home-assistant-tests-config-flow-unique-id
         assert result3["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
         assert result3["title"] == FRIENDLY_NAME
         assert result3["data"] == {

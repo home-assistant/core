@@ -170,6 +170,36 @@ async def test_flow_recovers(hass, expected_errors):
         ),
         pytest.param(
             """
+async def test_flow_recovers(hass):
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result["errors"]["base"] == "cannot_connect"
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+""",
+            id="recovers_from_nested_errors",
+        ),
+        pytest.param(
+            """
+async def test_flow_recovers(hass):
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result.get("errors") == {"base": "cannot_connect"}
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
+""",
+            id="recovers_from_get_errors",
+        ),
+        pytest.param(
+            """
+async def test_flow_recovers(hass):
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result.get("errors", {}).get("base") == "cannot_connect"
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+""",
+            id="recovers_from_nested_get_errors",
+        ),
+        pytest.param(
+            """
 async def test_options_flow(hass, config_entry):
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     result = await hass.config_entries.options.async_configure(result["flow_id"], {})
@@ -281,6 +311,18 @@ def test_module_not_checked(
             id="no_unique_id",
         ),
         pytest.param({"manifest.json": "{}"}, id="no_config_flow"),
+        pytest.param(
+            {
+                "config_flow.py": (
+                    "# Calls async_set_unique_id in the base class\n"
+                    'class MyConfigFlow(ConfigFlow, domain="test_integration"):\n'
+                    "    async def async_step_user(self, user_input=None):\n"
+                    "        await self._async_set_unique_id_from_udn()\n"
+                )
+            },
+            id="only_mentions_unique_id",
+        ),
+        pytest.param({"config_flow.py": "def broken(:\n"}, id="syntax_error"),
     ],
 )
 def test_flow_without_unique_id(
@@ -326,6 +368,17 @@ async def test_full_flow(hass):
     assert result["type"] is FlowResultType.CREATE_ENTRY
 """,
             id="no_errors_literal",
+        ),
+        pytest.param(
+            """
+async def test_full_flow(hass):
+    result = await hass.config_entries.flow.async_init(DOMAIN)
+    assert result.get("errors") == {}
+    assert result["errors"].get("base") == None
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
+""",
+            id="no_errors_get",
         ),
         pytest.param(
             """

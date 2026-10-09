@@ -100,7 +100,6 @@ async def test_show_user_form_robot_is_offline_and_locked(hass: HomeAssistant) -
         )
 
         assert "errors" not in result3
-        # pylint: disable-next=home-assistant-tests-config-flow-unique-id
         assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
@@ -191,7 +190,6 @@ async def test_show_user_form_robot_reachable_again(hass: HomeAssistant) -> None
         )
 
         assert "errors" not in result2
-        # pylint: disable-next=home-assistant-tests-config-flow-unique-id
         assert result2["type"] is FlowResultType.CREATE_ENTRY
 
 

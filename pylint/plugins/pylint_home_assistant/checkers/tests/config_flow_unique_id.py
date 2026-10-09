@@ -30,16 +30,29 @@ from pylint_home_assistant.helpers.module_info import is_test_module, parse_modu
 _OTHER_FLOW_MANAGERS = frozenset({"options", "subentries"})
 
 
+def _calls_set_unique_id(source: Path) -> bool:
+    """Return True if *source* calls ``async_set_unique_id``."""
+    try:
+        module = astroid.parse(source.read_text())
+    except astroid.exceptions.AstroidSyntaxError:
+        return False
+    for call in module.nodes_of_class(nodes.Call):
+        match call.func:
+            case (
+                nodes.Attribute(attrname="async_set_unique_id")
+                | nodes.Name(name="async_set_unique_id")
+            ):
+                return True
+    return False
+
+
 def _config_flow_sets_unique_id(integration_dir: Path) -> bool:
     """Return True if the integration's config flow sets a unique ID."""
     sources = [
         integration_dir / "config_flow.py",
         *(integration_dir / "config_flow").glob("*.py"),
     ]
-    return any(
-        source.is_file() and "async_set_unique_id" in source.read_text()
-        for source in sources
-    )
+    return any(source.is_file() and _calls_set_unique_id(source) for source in sources)
 
 
 def _create_entry_result_name(node: nodes.Compare) -> str | None:
@@ -113,6 +126,31 @@ def _last_assigned_value(
     return value
 
 
+def _is_errors(node: nodes.NodeNG) -> bool:
+    """Return True for ``result["errors"]`` or ``result.get("errors")``."""
+    match node:
+        case (
+            nodes.Subscript(slice=nodes.Const(value="errors"))
+            | nodes.Call(
+                func=nodes.Attribute(attrname="get"),
+                args=[nodes.Const(value="errors"), *_],
+            )
+        ):
+            return True
+    return False
+
+
+def _is_errors_item(node: nodes.NodeNG) -> bool:
+    """Return True for ``result["errors"]["base"]`` or its ``.get()`` forms."""
+    match node:
+        case (
+            nodes.Subscript(value=inner)
+            | nodes.Call(func=nodes.Attribute(attrname="get", expr=inner))
+        ) if _is_errors(inner):
+            return True
+    return False
+
+
 def _is_error_value(value: nodes.NodeNG) -> bool:
     """Return True if an expected ``errors`` value can hold an error."""
     match value:
@@ -121,6 +159,15 @@ def _is_error_value(value: nodes.NodeNG) -> bool:
         case nodes.Const():
             return False
     return True
+
+
+def _expects_error(left: nodes.NodeNG, value: nodes.NodeNG) -> bool:
+    """Return True if ``left == value`` expects the flow to show an error."""
+    if _is_errors(left):
+        return _is_error_value(value)
+    return _is_errors_item(left) and not (
+        isinstance(value, nodes.Const) and value.value is None
+    )
 
 
 def _is_injected_error(value: nodes.NodeNG) -> bool:
@@ -151,10 +198,9 @@ def _recovers_from_error(func: nodes.FunctionDef) -> bool:
                 | nodes.Keyword(arg="side_effect", value=value)
             ) if _is_injected_error(value):
                 return True
-            case nodes.Compare(
-                left=nodes.Subscript(slice=nodes.Const(value="errors")),
-                ops=[("==", value)],
-            ) if _is_error_value(value):
+            case nodes.Compare(left=left, ops=[("==", value)]) if _expects_error(
+                left, value
+            ):
                 return True
     return False
 

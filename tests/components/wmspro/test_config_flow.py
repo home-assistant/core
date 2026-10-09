@@ -248,7 +248,6 @@ async def test_config_flow_ping_failed(
             },
         )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result.get("type") is FlowResultType.CREATE_ENTRY
     assert result.get("title") == "1.2.3.4"
     assert result.get("data") == {
