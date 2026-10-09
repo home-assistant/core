@@ -1153,8 +1153,20 @@ class ConfigEntry[_DataT = Any]:
                 "Error unloading entry %s for %s", self.title, integration.domain
             )
             if domain_is_integration:
+                translation = (
+                    (
+                        exc.translation_key,
+                        exc.translation_placeholders,
+                        exc.translation_domain,
+                    )
+                    if isinstance(exc, HomeAssistantError)
+                    else (None, None, None)
+                )
                 self._async_set_state(
-                    hass, ConfigEntryState.FAILED_UNLOAD, str(exc) or "Unknown error"
+                    hass,
+                    ConfigEntryState.FAILED_UNLOAD,
+                    str(exc) or "Unknown error",
+                    *translation,
                 )
             return False
         return result  # type: ignore[unreachable]
