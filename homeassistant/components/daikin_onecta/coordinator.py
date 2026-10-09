@@ -90,10 +90,6 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
                     cooldown=_POST_WRITE_COOLDOWN
                 )
             except OnectaRateLimitError as err:
-                _LOGGER.warning(
-                    "Daikin API rate limit reached; retrying after %s seconds",
-                    err.retry_after,
-                )
                 raise UpdateFailed(
                     translation_domain=DOMAIN,
                     translation_key="rate_limit_exceeded",
