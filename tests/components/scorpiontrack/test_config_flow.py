@@ -153,12 +153,19 @@ async def test_user_flow_shows_validation_errors(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": expected_error}
     assert (
         get_schema_suggested_value(result["data_schema"].schema, CONF_SHARE_TOKEN)
         == "canonical-token"
     )
+
+    mock_scorpiontrack_client.async_get_share.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_SHARE_TOKEN: "canonical-token"},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_user_flow_maps_malformed_input_to_invalid_token(
@@ -177,8 +184,14 @@ async def test_user_flow_maps_malformed_input_to_invalid_token(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "invalid_token"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_SHARE_TOKEN: "canonical-token"},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_user_flow_recovers_after_invalid_token(
