@@ -622,6 +622,7 @@ FLOWS = {
         "plaato",
         "playstation_network",
         "plex",
+        "plexilent",
         "plugwise",
         "point",
         "pooldose",

@@ -2528,6 +2528,9 @@ pypjlink2==1.2.1
 # homeassistant.components.plaato
 pyplaato==0.0.19
 
+# homeassistant.components.plexilent
+pyplexilent==0.1.1
+
 # homeassistant.components.point
 pypoint==3.0.0
 
