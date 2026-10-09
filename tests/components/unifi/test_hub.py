@@ -268,7 +268,11 @@ async def test_polling_connection_failure_reports_connection_failure(
             wraps=hub.connection.report_failure,
         ) as report_failure,
     ):
-        await coordinator.async_refresh()
+        assert coordinator.update_interval is not None
+        async_fire_time_changed(
+            hub.hass, dt_util.utcnow() + coordinator.update_interval
+        )
+        await hub.hass.async_block_till_done()
 
     report_failure.assert_called_once()
     assert not hub.available
