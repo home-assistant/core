@@ -314,7 +314,6 @@ def make_script_schema(
             probatio.Optional(
                 CONF_MAX_EXCEEDED, default=DEFAULT_MAX_EXCEEDED
             ): probatio.All(probatio.Upper, probatio.In(_MAX_EXCEEDED_CHOICES)),
-            probatio.Optional(CONF_PERMISSION_CHECK, default=True): cv.boolean,
         },
         extra=extra,
     )
