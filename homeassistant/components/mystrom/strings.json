@@ -36,6 +36,9 @@
     }
   },
   "exceptions": {
+    "cannot_connect": {
+      "message": "No route to myStrom device: {host}"
+    },
     "switch_action_failed": {
       "message": "Failed to perform the action on the myStrom plug."
     },
