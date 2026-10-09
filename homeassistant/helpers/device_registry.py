@@ -268,12 +268,6 @@ class _DeviceInfoMapping:
                 new[key] = value
         return new
 
-    def __ior__(self, other: _DeviceInfoLike) -> Self:
-        """Update with the fields of another mapping."""
-        # Integrations merge extra fields in: `self._attr_device_info |= {...}`
-        self.update(other)
-        return self
-
 
 def _device_info_fields[_DeviceInfoT: _DeviceInfoMapping](
     cls: type[_DeviceInfoT],
