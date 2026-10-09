@@ -1,6 +1,6 @@
 """Test the Canary config flow."""
 
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from requests import ConnectTimeout, HTTPError
 
@@ -42,7 +42,7 @@ async def test_user_form(hass: HomeAssistant, canary_config_flow) -> None:
 
 
 async def test_user_form_cannot_connect(
-    hass: HomeAssistant, canary_config_flow
+    hass: HomeAssistant, canary_config_flow: MagicMock
 ) -> None:
     """Test we handle errors that should trigger the cannot connect error."""
     canary_config_flow.side_effect = HTTPError()
@@ -67,8 +67,18 @@ async def test_user_form_cannot_connect(
     )
 
     assert result["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
+
+    canary_config_flow.side_effect = None
+
+    with _patch_async_setup_entry():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            USER_INPUT,
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_user_form_unexpected_exception(

@@ -14,7 +14,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from .conftest import DEVICE_1_ID, DEVICE_1_IP, DEVICE_1_NAME
+from .conftest import DEVICE_1_ID, DEVICE_1_IP, DEVICE_1_NAME, DEVICE_1_URL
 
 
 async def test_user_flow_create_entry(
@@ -52,7 +52,7 @@ async def test_user_flow_create_entry(
 
 
 async def test_user_flow_cannot_connect(
-    hass: HomeAssistant, requests_mock: requests_mock.Mocker
+    hass: HomeAssistant, requests_mock: requests_mock.Mocker, device1_info: str
 ) -> None:
     """Test a manual user flow with an invalid host."""
     requests_mock.get(ANY, exc=RequestException())
@@ -66,8 +66,17 @@ async def test_user_flow_cannot_connect(
     )
 
     assert result["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
+
+    requests_mock.get(f"{DEVICE_1_URL}/info", text=device1_info)
+    with patch(
+        "homeassistant.components.soundtouch.async_setup_entry", return_value=True
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_HOST: DEVICE_1_IP}
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_zeroconf_flow_create_entry(

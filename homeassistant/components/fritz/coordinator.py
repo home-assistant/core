@@ -85,6 +85,7 @@ class UpdateCoordinatorDataType(TypedDict):
     call_deflections: dict[int, dict]
     entity_states: dict[str, StateType | bool]
     wifi_networks: dict[int, dict[str, Any]]
+    guest_wifi: int | None
     port_mappings: dict[int, dict[str, Any]]
 
 
@@ -182,6 +183,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
             str, Callable[[FritzStatus, StateType], Any]
         ] = {}
         self._wifi_network_indexes: set[int] = set()
+        self._guest_wifi_registered = False
         self._port_mapping_indexes: set[int] = set()
 
     async def async_setup(self, options: Mapping[str, Any] | None = None) -> None:
@@ -327,6 +329,34 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
             index: self._get_wifi_network(index) for index in self._wifi_network_indexes
         }
 
+    async def async_register_guest_wifi(self) -> Callable[[], None]:
+        """Register the guest Wi-Fi to be updated by coordinator."""
+
+        def unregister_guest_wifi() -> None:
+            """Unregister the guest Wi-Fi from coordinator updates."""
+            self._guest_wifi_registered = False
+            self.data["guest_wifi"] = None
+
+        self._guest_wifi_registered = True
+        self.data["guest_wifi"] = await self.hass.async_add_executor_job(
+            self._guest_wifi_update
+        )
+        return unregister_guest_wifi
+
+    def _guest_wifi_update(self) -> int | None:
+        """Return a fingerprint of the guest Wi-Fi QR code content."""
+        if not self._guest_wifi_registered:
+            return None
+        # Hashed so the password doesn't end up in coordinator data or logs
+        return hash(
+            (
+                self.fritz_guest_wifi.ssid,
+                self.fritz_guest_wifi.beacontype,
+                self.fritz_guest_wifi.is_hidden,
+                self.fritz_guest_wifi.get_password(),
+            )
+        )
+
     async def async_register_port_mapping(self, index: int) -> Callable[[], None]:
         """Register a port mapping to be updated by coordinator."""
 
@@ -355,6 +385,16 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
             index: self._get_port_mapping(index) for index in self._port_mapping_indexes
         }
 
+    def _registered_entities_update(
+        self,
+    ) -> tuple[dict[int, dict[str, Any]], int | None, dict[int, dict[str, Any]]]:
+        """Update registered Wi-Fi networks, guest Wi-Fi and port mappings."""
+        return (
+            self._wifi_networks_update(),
+            self._guest_wifi_update(),
+            self._port_mappings_update(),
+        )
+
     def _entity_states_update(self) -> dict:
         """Run registered entity update calls."""
         entity_states = {}
@@ -373,6 +413,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
             "call_deflections": {},
             "entity_states": {},
             "wifi_networks": {},
+            "guest_wifi": None,
             "port_mappings": {},
         }
         self.connection.clear_cache()
@@ -391,12 +432,11 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                     "call_deflections"
                 ] = await self.async_update_call_deflections()
 
-            entity_data["wifi_networks"] = await self.hass.async_add_executor_job(
-                self._wifi_networks_update
-            )
-            entity_data["port_mappings"] = await self.hass.async_add_executor_job(
-                self._port_mappings_update
-            )
+            (
+                entity_data["wifi_networks"],
+                entity_data["guest_wifi"],
+                entity_data["port_mappings"],
+            ) = await self.hass.async_add_executor_job(self._registered_entities_update)
         except FRITZ_EXCEPTIONS as ex:
             LOGGER.debug(
                 "Reload %s due to error '%s' to ensure proper re-login",

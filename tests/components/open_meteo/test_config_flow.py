@@ -79,8 +79,14 @@ async def test_flow_zone_not_found(hass: HomeAssistant) -> None:
     )
 
     assert result.get("type") is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result.get("errors") == {CONF_ZONE: "zone_not_found"}
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_ZONE: ENTITY_ID_HOME},
+    )
+
+    assert result2.get("type") is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.usefixtures("mock_setup_entry", "mock_open_meteo")

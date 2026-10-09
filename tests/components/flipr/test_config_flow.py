@@ -131,19 +131,10 @@ async def test_no_flipr_found(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "no_flipr_id_found"}
 
     # Test of recover in normal state after correction of the 1st error
     mock_flipr_client.search_all_ids.return_value = {"flipr": ["myfliprid"], "hub": []}
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],

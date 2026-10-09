@@ -377,13 +377,22 @@ async def test_form_exceptions(
         )
 
     assert result2["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": expected_error}
     # On error, the form should have the previous user input as suggested values.
     data_schema = result2["data_schema"].schema
     assert get_schema_suggested_value(data_schema, "username") == "test-username"
     assert get_schema_suggested_value(data_schema, "password") == "test-password"
     assert mock_login.call_count == 1
+
+    with patch("homeassistant.components.opower.config_flow.Opower.async_login"):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "username": "test-username",
+                "password": "test-password",
+            },
+        )
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_already_configured(

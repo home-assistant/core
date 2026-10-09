@@ -181,8 +181,16 @@ async def test_reauth_flow_error_handling(
     await hass.async_block_till_done()
 
     assert result_configure["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result_configure["errors"] == expected_error
+
+    mock_paperless.initialize.side_effect = None
+
+    result_configure = await hass.config_entries.flow.async_configure(
+        reauth_flow["flow_id"], USER_INPUT_REAUTH
+    )
+
+    assert result_configure["type"] is FlowResultType.ABORT
+    assert result_configure["reason"] == "reauth_successful"
 
 
 @pytest.mark.parametrize(
@@ -220,8 +228,17 @@ async def test_reconfigure_flow_error_handling(
     await hass.async_block_till_done()
 
     assert result_configure["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result_configure["errors"] == expected_error
+
+    mock_paperless.initialize.side_effect = None
+
+    result_configure = await hass.config_entries.flow.async_configure(
+        reauth_flow["flow_id"],
+        USER_INPUT_TWO,
+    )
+
+    assert result_configure["type"] is FlowResultType.ABORT
+    assert result_configure["reason"] == "reconfigure_successful"
 
 
 async def test_config_already_exists(
