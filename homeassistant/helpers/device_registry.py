@@ -18,7 +18,6 @@ from typing import (
     ClassVar,
     Literal,
     NamedTuple,
-    Self,
     TypedDict,
     Unpack,
     overload,
@@ -241,24 +240,6 @@ class _DeviceInfoMapping:
         # Integrations merge fields in with `device_info.update(...)`
         for key, value in other.items():
             self[key] = value
-
-    def __or__(self, other: _DeviceInfoLike) -> Self:
-        """Return a copy updated with the fields of another mapping."""
-        # Integrations layer a device info on top of a shared one:
-        # `base_device_info | DeviceInfo(...)`
-        new = copy.copy(self)
-        new.update(other)
-        return new
-
-    def __ror__(self, other: _DeviceInfoLike) -> Self:
-        """Return a copy holding the fields of another mapping it does not set."""
-        # An integration can hold a device info as a plain dict, and layer on top
-        # of it: `base_device_info | DeviceInfo(...)`
-        new = copy.copy(self)
-        for key, value in other.items():
-            if key not in self:
-                new[key] = value
-        return new
 
 
 def _device_info_fields[_DeviceInfoT: _DeviceInfoMapping](
