@@ -35,9 +35,9 @@ class UnifiConnectionManager:
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: UnifiConfigEntry,
         api: aiounifi.Controller,
         signal: str,
-        config_entry: UnifiConfigEntry,
     ) -> None:
         """Initialize the manager."""
         self.hass = hass
