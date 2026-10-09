@@ -858,6 +858,7 @@ async def test_ws_create_unit_conversion(
             "hPa",
             id="change_device_class",
         ),
+        pytest.param({"device_class": "temperature"}, None, id="remove_unit"),
     ],
 )
 async def test_ws_update_drops_incompatible_display_unit(
@@ -866,7 +867,7 @@ async def test_ws_update_drops_incompatible_display_unit(
     hass_ws_client: WebSocketGenerator,
     storage_setup: Callable[..., Awaitable[bool]],
     updated_settings: dict[str, Any],
-    expected_unit: str,
+    expected_unit: str | None,
 ) -> None:
     """Test a display unit from the entity settings is dropped when it no longer fits."""
     settings = {
@@ -907,7 +908,7 @@ async def test_ws_update_drops_incompatible_display_unit(
 
     state = hass.states.get(input_entity_id)
     assert float(state.state) == 0
-    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == expected_unit
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == expected_unit
 
     # The native unit is used again, so setting a value needs no conversion
     await set_value(hass, input_entity_id, "10")
