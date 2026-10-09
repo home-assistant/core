@@ -344,7 +344,6 @@ async def test_reconfigure_flow_error(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure_folder"
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "folder_rename_error"}
 
     # clear side effect
@@ -352,6 +351,9 @@ async def test_reconfigure_flow_error(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_FOLDER_NAME: "newFolder"}
     )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
 
     assert mock_config_entry.data[CONF_FOLDER_NAME] == "newFolder"
     assert mock_config_entry.data[CONF_TOKEN][CONF_ACCESS_TOKEN] == "mock-access-token"
