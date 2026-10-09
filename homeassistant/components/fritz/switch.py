@@ -117,7 +117,11 @@ async def _migrate_to_new_unique_id(
             Platform.SWITCH, DOMAIN, old_unique_id
         )
 
-        if entity_id is not None:
+        existing_entity_id = entity_registry.async_get_entity_id(
+            Platform.SWITCH, DOMAIN, new_unique_id
+        )
+
+        if entity_id is not None and existing_entity_id is None:
             entity_registry.async_update_entity(
                 entity_id,
                 new_unique_id=new_unique_id,
