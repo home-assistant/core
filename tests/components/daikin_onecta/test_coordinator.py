@@ -17,6 +17,10 @@ from homeassistant.components.daikin_onecta.coordinator import (
 )
 from homeassistant.components.daikin_onecta.device import DaikinOnectaDevice
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    OAuth2TokenRequestReauthError,
+)
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from tests.common import MockConfigEntry
@@ -320,6 +324,37 @@ class TestOnectaDataUpdateCoordinator:
 
         assert exc_info.value.translation_key == "api_error"
         assert exc_info.value.translation_placeholders == {"status": "500"}
+
+    async def test_unauthorized_api_error_requires_authentication(self, coordinator):
+        """A rejected cloud token must not become a polling retry."""
+        coordinator.api.last_patch_call = None
+        coordinator.api.get_cloud_device_details = AsyncMock(
+            side_effect=OnectaApiError(
+                401,
+                "Unauthorized",
+                method="GET",
+                path="/v1/gateway-devices",
+            )
+        )
+
+        with pytest.raises(ConfigEntryAuthFailed):
+            await coordinator._async_update_data_from_cloud()
+
+    async def test_token_refresh_reauth_error_propagates(self, coordinator):
+        """Preserve OAuth refresh failures for Home Assistant reauthentication."""
+        coordinator.api.last_patch_call = None
+        token_error = OAuth2TokenRequestReauthError(
+            domain=DOMAIN,
+            request_info=MagicMock(),
+            status=401,
+            message="invalid_grant",
+        )
+        coordinator.api.get_cloud_device_details = AsyncMock(side_effect=token_error)
+
+        with pytest.raises(OAuth2TokenRequestReauthError) as exc_info:
+            await coordinator._async_update_data_from_cloud()
+
+        assert exc_info.value is token_error
 
     async def test_post_write_cooldown_is_checked_under_cloud_lock(self, coordinator):
         """Keep cached data when a write completes while polling waits for the lock."""
