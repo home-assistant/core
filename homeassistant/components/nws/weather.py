@@ -324,13 +324,12 @@ class NWSWeather(CoordinatorWeatherEntity[TimestampDataUpdateCoordinator[None]])
         return self._forecast(self.nws.forecast, DAYNIGHT)
 
     @override
-    # pylint: disable-next=home-assistant-coordinator-entity-async-update
     async def async_update(self) -> None:
         """Update the entity.
 
         Only used by the generic entity update service.
         """
-        await self.coordinator.async_request_refresh()
+        await super().async_update()
 
         for forecast_type in ("twice_daily", "hourly"):
             if (coordinator := self.forecast_coordinators[forecast_type]) is not None:
