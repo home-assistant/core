@@ -215,7 +215,7 @@ class ViCareWater(ViCareEntity, WaterHeaterEntity):
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="circulation_schedule_not_set",
-                translation_placeholders={"error": str(err)},
+                translation_placeholders={"error": err.message},
             ) from err
         except VICARE_API_ERRORS as err:
             raise HomeAssistantError(

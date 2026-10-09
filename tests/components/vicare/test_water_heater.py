@@ -217,15 +217,17 @@ async def test_set_circulation_schedule_invalid_slot(
 
 
 @pytest.mark.parametrize(
-    ("side_effect", "translation_key"),
+    ("side_effect", "message"),
     [
         pytest.param(
             PyViCareCommandError("invalid mode"),
-            "circulation_schedule_not_set",
+            'Unable to set the circulation schedule: Command failed with message "invalid mode"',
             id="command_error",
         ),
         pytest.param(
-            RequestConnectionError("unreachable"), "api_error", id="connection_error"
+            RequestConnectionError("unreachable"),
+            "Unable to communicate with the ViCare API",
+            id="connection_error",
         ),
         pytest.param(
             PyViCareRateLimitError(
@@ -237,7 +239,7 @@ async def test_set_circulation_schedule_invalid_slot(
                     }
                 }
             ),
-            "api_error",
+            "Unable to communicate with the ViCare API",
             id="rate_limit",
         ),
     ],
@@ -246,7 +248,7 @@ async def test_set_circulation_schedule_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     side_effect: Exception,
-    translation_key: str,
+    message: str,
 ) -> None:
     """Test a failing schedule write is reported to the user."""
     mock_vicare = MockPyViCare(CIRCULATION_SCHEDULE_FIXTURES)
@@ -263,7 +265,7 @@ async def test_set_circulation_schedule_error(
             },
             blocking=True,
         )
-    assert exc_info.value.translation_key == translation_key
+    assert str(exc_info.value) == message
 
 
 async def test_get_circulation_schedule_api_error(
