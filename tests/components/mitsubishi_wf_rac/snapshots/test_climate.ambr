@@ -36,7 +36,6 @@
         'right_right',
         'left_right',
         'right_left',
-        '3d_auto',
       ]),
       <ClimateEntityCapabilityAttribute.SWING_MODES: 'swing_modes'>: list([
         'up_down_auto',
@@ -74,7 +73,7 @@
     'suggested_object_id': None,
     'supported_features': <ClimateEntityFeature: 953>,
     'translation_key': 'mitsubishi_wf_rac',
-    'unique_id': 'mitsubishi_wf_rac-0011223344aa-climate',
+    'unique_id': '0011223344aa',
     'unit_of_measurement': None,
   })
 # ---
@@ -118,7 +117,6 @@
         'right_right',
         'left_right',
         'right_left',
-        '3d_auto',
       ]),
       <ClimateEntityStateAttribute.SWING_MODE: 'swing_mode'>: 'highest',
       <ClimateEntityCapabilityAttribute.SWING_MODES: 'swing_modes'>: list([
@@ -131,6 +129,7 @@
       ]),
       <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.5,
       <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 22.0,
+      <ClimateEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.living_room',

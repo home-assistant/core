@@ -4,12 +4,11 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
-      "cannot_connect": "Could not connect with the Airco: {reason}",
-      "host_already_configured": "Airco IP already configured as [{error_name}]",
-      "invalid_host": "[%key:common::config_flow::error::invalid_host%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "too_many_devices_registered": "There are too many devices registered for this airco. Please delete a device (in the app) or do a factory reset of the module.",
-      "unexpected_error": "An unexpected error occurred. Please check the log for details."
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
+    "flow_title": "{name}",
     "step": {
       "discovery_confirm": {
         "data": {
@@ -23,12 +22,10 @@
       },
       "user": {
         "data": {
-          "force_update": "Ignore duplicate IP address",
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]"
         },
         "data_description": {
-          "force_update": "Add this airco even though another entry already uses this IP address. Meant for re-adding a unit whose old entry went missing: the module accepts one connection at a time, so two entries polling it will produce errors in the log.",
           "host": "The local IP address of the airco's wireless module. A changed address is picked up when the module announces itself again; give the module a fixed address in your router, or correct it here if it does not.",
           "port": "The port the module's local API listens on. Leave this at 51443 unless your module announces a different one."
         },
@@ -43,16 +40,11 @@
         "state_attributes": {
           "fan_mode": {
             "state": {
-              "auto": "Auto",
-              "high": "High",
-              "low": "Low",
-              "medium": "Medium",
               "quiet": "Quiet"
             }
           },
           "swing_horizontal_mode": {
             "state": {
-              "3d_auto": "3D Auto",
               "center_center": "Center-Center",
               "center_right": "Center-Right",
               "left_center": "Left-Center",
@@ -78,11 +70,14 @@
     }
   },
   "exceptions": {
-    "cannot_connect": {
-      "message": "Could not reach the Airco at {device}."
+    "command_cancelled": {
+      "message": "The command to the airco at {device} was cancelled because the integration is shutting down."
     },
     "command_failed": {
-      "message": "Sending the command to the Airco at {device} failed: {error}"
+      "message": "Sending the command to the airco at {device} failed: {error}"
+    },
+    "command_unencodable": {
+      "message": "The airco at {device} reported a setting that Home Assistant cannot send back, so nothing was sent. Set the fan mode first, then try again."
     },
     "preset_away_needs_cool_or_heat": {
       "message": "Home Leave mode is only available while cooling or heating, not in {hvac_mode}. Switch the unit to cool or heat first, so the direction it should hold is unambiguous."
@@ -94,12 +89,13 @@
       "message": "{temperature} °C is below the {min_temp} °C minimum for hvac_mode {hvac_mode}. Include hvac_mode in the same action call to check against the mode you are switching to instead."
     },
     "update_failed": {
-      "message": "Polling the Airco at {device} failed: {error}"
+      "message": "Polling the airco at {device} failed: {error}"
     }
   },
   "issues": {
     "too_many_devices": {
-      "description": "This unit has room for four registered accounts and all four are taken, so Home Assistant cannot register itself. The module never frees a slot by itself: registrations do not expire, and a new one is refused rather than replacing an older one. In the Smart M-Air app, remove this unit from a phone that no longer needs it - each account can only remove itself, and several phones sharing one Smart M-Air account take up a single slot between them. Then reload this integration. If nobody can free a slot - a phone that is long gone still holds one - the module has to be set up again from scratch.",
+      "description": "{device_name} has room for four registered accounts and all four are taken, so Home Assistant cannot register itself. Registrations never expire, and the module never replaces one.\n\nTo free a slot:\n\n1. Open the Smart M-Air app on a phone that no longer needs this unit.\n2. Remove the unit from that app. Each account can only remove itself, and phones sharing one Smart M-Air account take up a single slot between them.\n3. Send any command to the climate entity. Home Assistant registers again with it and this message clears.\n\nIf no slot can be freed, the module has to be set up again from scratch.",
+      "short_title": "Too many accounts registered",
       "title": "Too many accounts registered on {device_name}"
     }
   }

@@ -1,6 +1,8 @@
-"""Constants used by the mitsubishi-wf-rac component."""
+"""Constants for the Mitsubishi WF-RAC integration."""
 
 from datetime import timedelta
+
+from pywfrac import AirFlow, OperationMode, WindDirectionLR, WindDirectionUD
 
 from homeassistant.components.climate import (
     FAN_AUTO,
@@ -13,32 +15,28 @@ from homeassistant.components.climate import (
 
 DOMAIN = "mitsubishi_wf_rac"
 
-# Served here on every firmware branch and not changeable on the device; only
-# the scheme differs. Also the fallback for an odd announcement.
+# Fixed on every firmware branch; only the scheme differs.
 DEFAULT_PORT = 51443
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
 CONF_OPERATOR_ID = "operator_id"
 CONF_AIRCO_ID = "airco_id"
-# Removed option, kept so async_migrate_entry can strip it from old entries.
+# Removed option, kept so async_migrate_entry can strip it.
 CONF_AVAILABILITY_CHECK = "availability_check"
-# Floored at coordinator.py's AVAILABILITY_FAILURE_LIMIT_MIN.
+# Removed option, kept so async_migrate_entry can strip it.
 CONF_AVAILABILITY_RETRY_LIMIT = "availability_retry_limit"
 CONF_CONNECTION_METHOD = "connection_method"
 
 
-# Heating matches the unit's own Heating TempSetting. Cooling does not: that
-# reads 33.0°C, but the app's away-cool mode runs at 31.0°C, and only the
-# applied value is known to flip Vacant.
+# The unit's own cooling Home Leave default is 33 °C, but only 31 °C sets Vacant.
 HOME_LEAVE_TEMP_HEAT = 10.0
 HOME_LEAVE_TEMP_COOL = 31.0
-# Restored when leaving Home Leave: the unit does not report what was set
-# before it, so this is a plain default.
+# The unit does not report the setpoint from before Home Leave.
 NORMAL_TEMP = 21.0
 
 
-# Horizontal swing and the away preset are added per unit, from its table.
+# Horizontal swing and the away preset depend on the unit's capabilities.
 SUPPORT_FLAGS = (
     ClimateEntityFeature.FAN_MODE
     | ClimateEntityFeature.SWING_MODE
@@ -57,12 +55,13 @@ SUPPORTED_HVAC_MODES = [
 ]
 
 HVAC_TRANSLATION = {
-    HVACMode.AUTO: 0,
-    HVACMode.COOL: 1,
-    HVACMode.HEAT: 2,
-    HVACMode.FAN_ONLY: 3,
-    HVACMode.DRY: 4,
+    HVACMode.AUTO: OperationMode.AUTO,
+    HVACMode.COOL: OperationMode.COOL,
+    HVACMode.HEAT: OperationMode.HEAT,
+    HVACMode.FAN_ONLY: OperationMode.FAN,
+    HVACMode.DRY: OperationMode.DRY,
 }
+HVAC_MODE_BY_OPERATION = {mode: hvac for hvac, mode in HVAC_TRANSLATION.items()}
 
 SWING_3D_AUTO = "3d_auto"
 SWING_VERTICAL_POSITION_1 = "highest"
@@ -82,12 +81,13 @@ SWING_HORIZONTAL_AUTO = "left_right_auto"
 
 
 SWING_MODE_TRANSLATION = {
-    SWING_VERTICAL_AUTO: 0,
-    SWING_VERTICAL_POSITION_1: 1,
-    SWING_VERTICAL_POSITION_2: 2,
-    SWING_VERTICAL_POSITION_3: 3,
-    SWING_VERTICAL_POSITION_4: 4,
+    SWING_VERTICAL_AUTO: WindDirectionUD.AUTO,
+    SWING_VERTICAL_POSITION_1: WindDirectionUD.POSITION_1,
+    SWING_VERTICAL_POSITION_2: WindDirectionUD.POSITION_2,
+    SWING_VERTICAL_POSITION_3: WindDirectionUD.POSITION_3,
+    SWING_VERTICAL_POSITION_4: WindDirectionUD.POSITION_4,
 }
+SWING_MODE_BY_DIRECTION = {mode: name for name, mode in SWING_MODE_TRANSLATION.items()}
 
 SUPPORT_SWING_MODES = [
     SWING_VERTICAL_AUTO,
@@ -99,14 +99,18 @@ SUPPORT_SWING_MODES = [
 ]
 
 SWING_HORIZONTAL_MODE_TRANSLATION = {
-    SWING_HORIZONTAL_AUTO: 0,
-    SWING_HORIZONTAL_POSITION_1: 1,
-    SWING_HORIZONTAL_POSITION_2: 2,
-    SWING_HORIZONTAL_POSITION_3: 3,
-    SWING_HORIZONTAL_POSITION_4: 4,
-    SWING_HORIZONTAL_POSITION_5: 5,
-    SWING_HORIZONTAL_POSITION_6: 6,
-    SWING_HORIZONTAL_POSITION_7: 7,
+    SWING_HORIZONTAL_AUTO: WindDirectionLR.AUTO,
+    SWING_HORIZONTAL_POSITION_1: WindDirectionLR.POSITION_1,
+    SWING_HORIZONTAL_POSITION_2: WindDirectionLR.POSITION_2,
+    SWING_HORIZONTAL_POSITION_3: WindDirectionLR.POSITION_3,
+    SWING_HORIZONTAL_POSITION_4: WindDirectionLR.POSITION_4,
+    SWING_HORIZONTAL_POSITION_5: WindDirectionLR.POSITION_5,
+    SWING_HORIZONTAL_POSITION_6: WindDirectionLR.POSITION_6,
+    SWING_HORIZONTAL_POSITION_7: WindDirectionLR.POSITION_7,
+}
+
+SWING_HORIZONTAL_MODE_BY_DIRECTION = {
+    mode: name for name, mode in SWING_HORIZONTAL_MODE_TRANSLATION.items()
 }
 
 SUPPORT_SWING_HORIZONTAL_MODES = [
@@ -118,19 +122,19 @@ SUPPORT_SWING_HORIZONTAL_MODES = [
     SWING_HORIZONTAL_POSITION_5,
     SWING_HORIZONTAL_POSITION_6,
     SWING_HORIZONTAL_POSITION_7,
-    SWING_3D_AUTO,
 ]
 
 
 FAN_QUIET = "quiet"
 
 FAN_MODE_TRANSLATION = {
-    FAN_AUTO: 0,
-    FAN_QUIET: 1,
-    FAN_LOW: 2,
-    FAN_MEDIUM: 3,
-    FAN_HIGH: 4,
+    FAN_AUTO: AirFlow.AUTO,
+    FAN_QUIET: AirFlow.QUIET,
+    FAN_LOW: AirFlow.LOW,
+    FAN_MEDIUM: AirFlow.MEDIUM,
+    FAN_HIGH: AirFlow.HIGH,
 }
+FAN_MODE_BY_AIRFLOW = {flow: name for name, flow in FAN_MODE_TRANSLATION.items()}
 
 SUPPORTED_FAN_MODES = [
     FAN_AUTO,
@@ -139,11 +143,3 @@ SUPPORTED_FAN_MODES = [
     FAN_MEDIUM,
     FAN_HIGH,
 ]
-
-
-# Optional certificate for the unit's HTTPS stack, from the config directory;
-# without it the connection falls back to a permissive SSL context. Create it
-# there with:
-#   openssl s_client -connect <AC_IP_ADDRESS>:51443 -showcerts </dev/null 2>/dev/null \
-#       | openssl x509 -outform PEM > ac_cert.pem
-AC_CERT_FILENAME = "ac_cert.pem"

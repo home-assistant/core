@@ -61,9 +61,15 @@ rules:
   dynamic-devices:
     status: exempt
     comment: One device per config entry; no dynamically appearing sub-devices.
-  entity-category: done
-  entity-device-class: done
-  entity-disabled-by-default: done
+  entity-category:
+    status: exempt
+    comment: The single climate entity is the device itself; no category applies.
+  entity-device-class:
+    status: exempt
+    comment: Climate entities have no device class.
+  entity-disabled-by-default:
+    status: exempt
+    comment: The only entity is the primary one; nothing to disable by default.
   entity-translations: done
   exception-translations: done
   icon-translations: done

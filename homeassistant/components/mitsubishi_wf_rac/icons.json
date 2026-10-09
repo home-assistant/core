@@ -10,7 +10,7 @@
           },
           "swing_horizontal_mode": {
             "state": {
-              "3d_auto": "mdi:video-3d",
+              "center_center": "mdi:circle-medium",
               "center_right": "mdi:arrow-right",
               "left_center": "mdi:arrow-left",
               "left_left": "mdi:arrow-left-thick",
