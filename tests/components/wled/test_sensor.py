@@ -321,6 +321,24 @@ async def test_usermod_internal_temperature(
     assert entry.entity_category is EntityCategory.DIAGNOSTIC
 
 
+async def test_usermod_internal_temperature_disabled_by_default(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_wled: MagicMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the chip temperature sensor is disabled by default."""
+    await _async_setup_with_readings(
+        hass, mock_config_entry, mock_wled, {"Internal Temperature": [47.2, "°C"]}
+    )
+
+    assert hass.states.get("sensor.wled_rgb_light_internal_temperature") is None
+    assert (
+        entry := entity_registry.async_get("sensor.wled_rgb_light_internal_temperature")
+    )
+    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+
+
 async def test_usermod_readings_without_a_sensor(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

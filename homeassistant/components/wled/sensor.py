@@ -174,8 +174,8 @@ SENSORS: tuple[WLEDSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda device: device.info.ip,
     ),
-    # Readings of usermods, like a DS18B20 temperature sensor or an SHT
-    # temperature and humidity sensor. Each is a number in a unit.
+    # Usermods name their readings themselves: "temperature" is the
+    # Temperature usermod (like a DS18B20), "temp" and "humidity" the SHT one.
     _usermod_sensor(
         "usermod_temperature",
         "temperature",
