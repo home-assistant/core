@@ -1767,8 +1767,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/snooz/ @AustinBrunkhorst
 /homeassistant/components/sofar/ @darkrain-nl
 /tests/components/sofar/ @darkrain-nl
-/homeassistant/components/solaredge/ @frenck @bdraco @tronikos
-/tests/components/solaredge/ @frenck @bdraco @tronikos
+/homeassistant/components/solaredge/ @bdraco @tronikos
+/tests/components/solaredge/ @bdraco @tronikos
 /homeassistant/components/solaredge_modbus/ @frenck
 /tests/components/solaredge_modbus/ @frenck
 /homeassistant/components/solarlog/ @Ernst79 @dontinelli
