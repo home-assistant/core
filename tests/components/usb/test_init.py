@@ -1863,8 +1863,8 @@ async def test_list_serial_integrations(
     result = await _async_list_serial_integrations(hass_ws_client, hass)
 
     assert result == sorted(result)
-    assert {"alarmdecoder", "elkm1", "esphome", "zha"} <= set(result)
-    assert "hue" not in result
+    assert {"alarmdecoder", "elkm1", "zha"} <= set(result)
+    assert not {"bluetooth", "esphome", "hue"} & set(result)
 
 
 @pytest.mark.usefixtures("setup_usb")

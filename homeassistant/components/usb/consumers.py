@@ -36,6 +36,17 @@ SERIAL_PORT_KEY_PATHS: tuple[tuple[str, ...], ...] = (
 # Integrations configured with a serial port but not depending on `usb`
 NON_USB_SERIAL_DOMAINS = ("alarmdecoder", "bryant_evolution", "elkm1", "mysensors")
 
+# Integrations depending on `usb` that are not set up with a chosen serial port
+NON_SERIAL_USB_DEPENDENTS = (
+    "bluetooth",
+    "default_config",
+    "esphome",
+    "homeassistant_connect_zbt2",
+    "homeassistant_hardware",
+    "homeassistant_sky_connect",
+    "homeassistant_yellow",
+)
+
 # States in which the entry claims its configured port, even if the port is not
 # open right now: a retrying setup typically failed to open the port, while an
 # unloading or failed-to-unload entry may still hold it
@@ -87,7 +98,7 @@ async def async_get_serial_integrations(hass: HomeAssistant) -> set[str]:
         else:
             domains.discard(integration.domain)
 
-    return domains
+    return domains.difference(NON_SERIAL_USB_DEPENDENTS)
 
 
 def _resolve_key_path(data: Mapping[str, Any], key_path: tuple[str, ...]) -> Any:
