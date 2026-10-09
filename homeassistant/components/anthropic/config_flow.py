@@ -169,6 +169,7 @@ class AnthropicConfigFlow(ConfigFlow, domain=DOMAIN):
         elif self.source == SOURCE_RECONFIGURE:
             step_id = "reconfigure"
 
+        # pylint: disable-next=home-assistant-step_id-match-method
         return self.async_show_form(
             step_id=step_id,
             data_schema=STEP_USER_DATA_SCHEMA,
