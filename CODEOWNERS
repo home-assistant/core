@@ -1832,6 +1832,7 @@ CLAUDE.md @home-assistant/core
 /homeassistant/components/sunsynk/ @jamesridgway
 /tests/components/sunsynk/ @jamesridgway
 /homeassistant/components/supla/ @mwegrzynek
+/tests/components/supla/ @mwegrzynek
 /homeassistant/components/surepetcare/ @benleb @danielhiversen
 /tests/components/surepetcare/ @benleb @danielhiversen
 /homeassistant/components/swiss_hydrological_data/ @fabaff
