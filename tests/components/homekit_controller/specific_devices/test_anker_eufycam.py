@@ -44,6 +44,7 @@ async def test_eufycam_setup(hass: HomeAssistant) -> None:
                             friendly_name="eufyCam2-0000",
                             unique_id="00:00:00:00:00:00_4",
                             state="idle",
+                            capabilities={"has_two_way_audio": False},
                         ),
                     ],
                 ),

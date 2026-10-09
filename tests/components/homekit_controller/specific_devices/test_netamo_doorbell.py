@@ -39,6 +39,7 @@ async def test_netamo_doorbell_setup(hass: HomeAssistant) -> None:
                     friendly_name="Netatmo-Doorbell-g738658",
                     unique_id="00:00:00:00:00:00_1",
                     state="idle",
+                    capabilities={"has_two_way_audio": False},
                 ),
             ],
             stateless_triggers=[

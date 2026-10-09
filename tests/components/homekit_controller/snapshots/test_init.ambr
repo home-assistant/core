@@ -852,7 +852,9 @@
               None,
             ]),
             'area_id': None,
-            'capabilities': None,
+            'capabilities': dict({
+              <CameraEntityCapabilityAttribute.HAS_TWO_WAY_AUDIO: 'has_two_way_audio'>: False,
+            }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
             'device_class': None,
@@ -885,6 +887,7 @@
           'state': dict({
             'attributes': dict({
               <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'eufyCam2-0000',
+              <CameraEntityCapabilityAttribute.HAS_TWO_WAY_AUDIO: 'has_two_way_audio'>: False,
               <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CameraEntityFeature: 0>,
             }),
             'entity_id': 'camera.eufycam2_0000',
@@ -1113,7 +1116,9 @@
               None,
             ]),
             'area_id': None,
-            'capabilities': None,
+            'capabilities': dict({
+              <CameraEntityCapabilityAttribute.HAS_TWO_WAY_AUDIO: 'has_two_way_audio'>: False,
+            }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
             'device_class': None,
@@ -1146,6 +1151,7 @@
           'state': dict({
             'attributes': dict({
               <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'eufyCam2-000A',
+              <CameraEntityCapabilityAttribute.HAS_TWO_WAY_AUDIO: 'has_two_way_audio'>: False,
               <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CameraEntityFeature: 0>,
             }),
             'entity_id': 'camera.eufycam2_000a',
@@ -1374,7 +1380,9 @@
               None,
             ]),
             'area_id': None,
-            'capabilities': None,
+            'capabilities': dict({
+              <CameraEntityCapabilityAttribute.HAS_TWO_WAY_AUDIO: 'has_two_way_audio'>: False,
+            }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
             'device_class': None,
@@ -1407,6 +1415,7 @@
           'state': dict({
             'attributes': dict({
               <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'eufyCam2-000A',
+              <CameraEntityCapabilityAttribute.HAS_TWO_WAY_AUDIO: 'has_two_way_audio'>: False,
               <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CameraEntityFeature: 0>,
             }),
             'entity_id': 'camera.eufycam2_000a_2',
@@ -2458,7 +2467,9 @@
               None,
             ]),
             'area_id': None,
-            'capabilities': None,
+            'capabilities': dict({
+              <CameraEntityCapabilityAttribute.HAS_TWO_WAY_AUDIO: 'has_two_way_audio'>: False,
+            }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
             'device_class': None,
@@ -2491,6 +2502,7 @@
           'state': dict({
             'attributes': dict({
               <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'ArloBabyA0',
+              <CameraEntityCapabilityAttribute.HAS_TWO_WAY_AUDIO: 'has_two_way_audio'>: False,
               <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CameraEntityFeature: 0>,
             }),
             'entity_id': 'camera.arlobabya0',
@@ -20542,7 +20554,9 @@
               None,
             ]),
             'area_id': None,
-            'capabilities': None,
+            'capabilities': dict({
+              <CameraEntityCapabilityAttribute.HAS_TWO_WAY_AUDIO: 'has_two_way_audio'>: False,
+            }),
             'config_entry_id': <ANY>,
             'config_subentry_id': <ANY>,
             'device_class': None,
@@ -20575,6 +20589,7 @@
           'state': dict({
             'attributes': dict({
               <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Netatmo-Doorbell-g738658',
+              <CameraEntityCapabilityAttribute.HAS_TWO_WAY_AUDIO: 'has_two_way_audio'>: False,
               <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CameraEntityFeature: 0>,
             }),
             'entity_id': 'camera.netatmo_doorbell_g738658',
