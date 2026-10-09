@@ -128,21 +128,18 @@ async def test_callbacks_after_entity_id_change(
     [{"motion_detectors": [battery_only_device()]}],
     indirect=True,
 )
-async def test_callbacks_ignored_after_failed_entity_add(
+async def test_callbacks_unsubscribed_after_failed_entity_add(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     motion_device: MagicMock,
 ) -> None:
-    """Callbacks of an entity that failed to be added do not raise."""
-    callbacks = []
-    motion_device.subscribe_callback.side_effect = lambda _key, cb: callbacks.append(cb)
-
+    """Callbacks are unsubscribed when adding the entity is aborted."""
     await setup_integration(hass, mock_config_entry)
-    assert callbacks
+    key = motion_device.subscribe_callback.call_args.args[0]
+    motion_device.unsubscribe_callback.assert_not_called()
 
-    # HA clears the hass reference when adding an entity fails.
-    for entity in hass.data["entity_components"]["binary_sensor"].entities:
-        entity.hass = None
+    entity = next(iter(hass.data["entity_components"]["binary_sensor"].entities))
+    # HA calls this instead of async_will_remove_from_hass if adding fails.
+    entity.add_to_platform_abort()
 
-    for callback in callbacks:
-        callback()
+    motion_device.unsubscribe_callback.assert_called_once_with(key)
