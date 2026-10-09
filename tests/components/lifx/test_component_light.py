@@ -330,7 +330,7 @@ async def test_uplight_turn_on_with_brightness(
 
     await _call(hass, LIGHT_DOMAIN, SERVICE_TURN_ON, "uplight", brightness=255)
 
-    device.turn_uplight_on.assert_awaited_once_with(HSBK(0.0, 0.0, 1.0, 3500), 0.0)
+    device.turn_uplight_on.assert_awaited_once_with([HSBK(0.0, 0.0, 1.0, 3500)], 0.0)
 
 
 @pytest.mark.parametrize(("factory", "keys", "key", "field", "turn_on"), MANY_ZONE)
@@ -475,7 +475,7 @@ async def test_turn_on_with_a_brightness_step(
         **{ATTR_BRIGHTNESS_STEP_PCT: 10},
     )
 
-    color, _ = device.turn_uplight_on.await_args.args
+    (color,), _ = device.turn_uplight_on.await_args.args
     assert color.brightness == pytest.approx(0.6, abs=0.01)
 
 
@@ -804,7 +804,7 @@ async def test_restored_colors_used_after_restart(
         blocking=True,
     )
 
-    device.turn_uplight_on.assert_awaited_once_with(HSBK(30.0, 0.5, 0.9, 3500), 0.0)
+    device.turn_uplight_on.assert_awaited_once_with([HSBK(30.0, 0.5, 0.9, 3500)], 0.0)
 
 
 @pytest.mark.parametrize(
@@ -866,7 +866,7 @@ async def test_dark_restored_colors_not_merged_onto(
 
     await _call(hass, LIGHT_DOMAIN, SERVICE_TURN_ON, "uplight", hs_color=(120.0, 50.0))
 
-    color, _ = device.turn_uplight_on.await_args.args
+    (color,), _ = device.turn_uplight_on.await_args.args
     assert color.hue == 120.0
     # The downlight's brightness is borrowed instead
     assert color.brightness == pytest.approx(0.5, abs=0.01)
