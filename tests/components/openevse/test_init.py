@@ -3,10 +3,12 @@
 from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock
 
+from aiohttp import ServerTimeoutError
 from freezegun.api import FrozenDateTimeFactory
 from openevsehttp.exceptions import (
     AuthenticationError,
     MissingSerial,
+    ParseJSONError,
     UnsupportedFeature,
 )
 
@@ -210,9 +212,11 @@ async def test_sensor_state_change_pushes_data(
     await hass.async_block_till_done()
     mock_charger.home_battery.assert_called_with(soc=95, power=3200)
 
+    mock_charger.grid_voltage.reset_mock()
     hass.states.async_set("sensor.grid_power", "unknown")
     hass.states.async_set("sensor.grid_voltage", "invalid")
     await hass.async_block_till_done()
+    mock_charger.grid_voltage.assert_not_called()
 
     mock_charger.soc.side_effect = UnsupportedFeature
     hass.states.async_set("sensor.car_battery", "85")
@@ -220,4 +224,12 @@ async def test_sensor_state_change_pushes_data(
 
     mock_charger.self_production.side_effect = TimeoutError
     hass.states.async_set("sensor.grid_power", "3000", {"unit_of_measurement": "W"})
+    await hass.async_block_till_done()
+
+    mock_charger.self_production.side_effect = ServerTimeoutError
+    hass.states.async_set("sensor.grid_power", "3100", {"unit_of_measurement": "W"})
+    await hass.async_block_till_done()
+
+    mock_charger.self_production.side_effect = ParseJSONError
+    hass.states.async_set("sensor.grid_power", "3200", {"unit_of_measurement": "W"})
     await hass.async_block_till_done()

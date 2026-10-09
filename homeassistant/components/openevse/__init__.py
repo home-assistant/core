@@ -1,12 +1,16 @@
 """The OpenEVSE integration."""
 
+import asyncio
 import contextlib
 import logging
 
+from aiohttp import ContentTypeError, ServerTimeoutError
 from openevsehttp.__main__ import OpenEVSE
 from openevsehttp.exceptions import (
     AuthenticationError,
     MissingSerial,
+    ParseJSONError,
+    UnknownError,
     UnsupportedFeature,
 )
 
@@ -186,7 +190,8 @@ async def _handle_sensor_state_change(
 
         if changed_entity == options.get(CONF_VOLTAGE):
             voltage = _parse_voltage_state(hass.states.get(changed_entity))
-            await charger.grid_voltage(voltage=voltage)
+            if voltage is not None:
+                await charger.grid_voltage(voltage=voltage)
 
         if changed_entity == options.get(CONF_SHAPER):
             power = _parse_power_state(hass.states.get(changed_entity))
@@ -240,7 +245,15 @@ async def _handle_sensor_state_change(
         _LOGGER.debug(
             "Pushing %s data is unsupported by this OpenEVSE firmware", changed_entity
         )
-    except (TimeoutError, OSError) as err:
+    except (
+        TimeoutError,
+        ServerTimeoutError,
+        ContentTypeError,
+        ParseJSONError,
+        UnknownError,
+        RuntimeError,
+        OSError,
+    ) as err:
         _LOGGER.debug(
             "Failed to push %s update to OpenEVSE charger: %s", changed_entity, err
         )
@@ -290,14 +303,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenEVSEConfigEntry) -> 
         }
     )
     if tracked_sensors:
+        queue: asyncio.Queue[Event[EventStateChangedData]] = asyncio.Queue()
+
+        async def _push_worker() -> None:
+            """Process queued state change events sequentially."""
+            while True:
+                event = await queue.get()
+                try:
+                    await _handle_sensor_state_change(hass, entry, event)
+                finally:
+                    queue.task_done()
+
+        worker_task = entry.async_create_background_task(
+            hass,
+            _push_worker(),
+            "openevse_push_worker",
+        )
+        entry.async_on_unload(worker_task.cancel)
 
         @callback
         def _on_sensor_state_change(event: Event[EventStateChangedData]) -> None:
-            entry.async_create_task(
-                hass,
-                _handle_sensor_state_change(hass, entry, event),
-                "openevse_sensor_state_change",
-            )
+            queue.put_nowait(event)
 
         entry.async_on_unload(
             async_track_state_change_event(
