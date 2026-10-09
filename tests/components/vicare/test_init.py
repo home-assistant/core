@@ -480,6 +480,7 @@ async def test_setup_entry_rate_limited(
         PyViCareDeviceCommunicationError(
             {"extendedPayload": {"reason": "GATEWAY_OFFLINE"}}
         ),
+        PyViCareInvalidDataError({"error": "no data"}),
         requests.ConnectionError,
     ],
 )
