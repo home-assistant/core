@@ -77,6 +77,7 @@ async def test_show_form_one_hub(hass: HomeAssistant, mock_hub_discover) -> None
         DOMAIN, context={"source": SOURCE_USER}
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == dummy_hub_1.id
     assert result["result"].data == {
@@ -129,6 +130,7 @@ async def test_create_second_entry(hass: HomeAssistant, mock_hub_discover) -> No
         DOMAIN, context={"source": SOURCE_USER}
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == dummy_hub_2.id
     assert result["result"].data == {

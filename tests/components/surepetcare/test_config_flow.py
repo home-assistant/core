@@ -40,6 +40,7 @@ async def test_form(hass: HomeAssistant, surepetcare: NonCallableMagicMock) -> N
         )
         await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Sure Petcare"
     assert result2["data"] == {

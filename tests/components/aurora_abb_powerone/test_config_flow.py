@@ -68,6 +68,7 @@ async def test_form(hass: HomeAssistant) -> None:
             {CONF_PORT: "/dev/ttyUSB7", CONF_ADDRESS: 7},
         )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
 
     assert result2["data"] == {

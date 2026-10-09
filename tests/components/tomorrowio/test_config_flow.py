@@ -51,6 +51,7 @@ async def test_user_flow_minimum_fields(hass: HomeAssistant) -> None:
         user_input=_get_config_schema(hass, SOURCE_USER, MIN_CONFIG)(MIN_CONFIG),
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == DEFAULT_NAME
     assert result["data"][CONF_NAME] == DEFAULT_NAME
@@ -84,6 +85,7 @@ async def test_user_flow_minimum_fields_in_zone(hass: HomeAssistant) -> None:
         user_input=_get_config_schema(hass, SOURCE_USER, MIN_CONFIG)(MIN_CONFIG),
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == f"{DEFAULT_NAME} - Home"
     assert result["data"][CONF_NAME] == f"{DEFAULT_NAME} - Home"

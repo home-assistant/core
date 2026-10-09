@@ -273,6 +273,7 @@ async def test_bluetooth_step_uses_discovery_name_for_unknown_bulb_name(
         )
         await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == AVEA_DISCOVERY_INFO.name
 

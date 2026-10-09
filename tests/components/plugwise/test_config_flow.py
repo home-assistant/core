@@ -200,6 +200,7 @@ async def test_zeroconf_flow_stretch(
     )
     await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2.get("type") is FlowResultType.CREATE_ENTRY
     assert result2.get("title") == "Test Smile Name"
     assert result2.get("data") == {

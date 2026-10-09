@@ -234,6 +234,7 @@ async def test_full_user_flow_implementation(
             user_input=user_input,
         )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == HOST
 
@@ -261,6 +262,7 @@ async def test_full_ssdp_flow_implementation(
         result["flow_id"], user_input={}
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == HOST
 

@@ -146,6 +146,7 @@ async def test_dhcp_discovery(
     )
     await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Test Thermostat"
     assert result["data"][CONF_HOST] == "192.168.1.100"

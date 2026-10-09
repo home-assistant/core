@@ -367,6 +367,7 @@ async def test_user_websocket_k_series_stays_on_websocket(
         result["flow_id"], user_input=MOCK_USER_DATA
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["data"][CONF_METHOD] == METHOD_WEBSOCKET
     assert result2["data"][CONF_MODEL] == "UN55KU6290"
@@ -1513,6 +1514,7 @@ async def test_autodetect_legacy(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=MOCK_USER_DATA
     )
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_METHOD] == METHOD_LEGACY
     assert result["data"][CONF_MAC] is None

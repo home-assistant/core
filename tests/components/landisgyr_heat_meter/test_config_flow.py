@@ -46,6 +46,7 @@ async def test_user_flow_success(mock_heat_meter, hass: HomeAssistant) -> None:
         result["flow_id"], {"device": "/dev/ttyUSB0"}
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "LUGCUH50"
     assert result["data"] == {

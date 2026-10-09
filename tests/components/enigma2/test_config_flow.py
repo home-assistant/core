@@ -44,6 +44,7 @@ async def test_form_user(hass: HomeAssistant, test_config: dict[str, Any]) -> No
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], test_config
     )
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == test_config[CONF_HOST]
     assert result["data"] == test_config

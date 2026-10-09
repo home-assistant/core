@@ -53,6 +53,7 @@ async def test_user_form(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "bond-name"
     assert result2["data"] == {
@@ -297,6 +298,7 @@ async def test_zeroconf_form(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "bond-name"
     assert result2["data"] == {
@@ -440,6 +442,7 @@ async def test_zeroconf_form_token_unavailable(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "bond-name"
     assert result2["data"] == {
@@ -524,6 +527,7 @@ async def test_zeroconf_form_with_token_available(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "discovered-name"
     assert result2["data"] == {

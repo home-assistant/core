@@ -61,6 +61,7 @@ async def test_form_source_user(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "MySite"
     assert result2["data"] == VALID_CONFIG
@@ -273,6 +274,7 @@ async def test_already_configured_with_ignored(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Some site"
     assert result2["data"] == {"ip_address": "1.1.1.1", "password": "00GGX"}
@@ -450,6 +452,7 @@ async def test_dhcp_discovery_auto_configure(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Some site"
     assert result2["data"] == {"ip_address": "1.1.1.1", "password": "00GGX"}

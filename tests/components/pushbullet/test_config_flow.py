@@ -35,6 +35,7 @@ async def test_flow_user(hass: HomeAssistant, requests_mock_fixture) -> None:
         result["flow_id"],
         user_input=MOCK_CONFIG,
     )
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "pushbullet"
     assert result["data"] == MOCK_CONFIG

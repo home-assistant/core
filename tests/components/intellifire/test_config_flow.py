@@ -38,6 +38,7 @@ async def test_standard_config_with_single_fireplace(
         {CONF_USERNAME: "donJulio", CONF_PASSWORD: "Tequila0FD00m"},
     )
     # For a single fireplace we just create it
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         "ip_address": "192.168.2.108",
@@ -144,6 +145,7 @@ async def test_standard_config_with_multiple_fireplace(
         result["flow_id"],
         {CONF_SERIAL: "4GC295860E5837G40D9974B7FD459234"},
     )
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         "ip_address": "192.168.2.109",
@@ -179,6 +181,7 @@ async def test_dhcp_discovery_intellifire_device(
         result["flow_id"],
         {CONF_USERNAME: "donJulio", CONF_PASSWORD: "Tequila0FD00m"},
     )
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 

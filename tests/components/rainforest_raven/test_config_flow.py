@@ -89,6 +89,7 @@ async def test_flow_usb(hass: HomeAssistant) -> None:
         result["flow_id"], user_input={CONF_MAC: [METER_LIST.meter_mac_ids[0].hex()]}
     )
     assert result
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result.get("type") is FlowResultType.CREATE_ENTRY
 
 
@@ -154,6 +155,7 @@ async def test_flow_user(hass: HomeAssistant) -> None:
         result["flow_id"], user_input={CONF_MAC: [METER_LIST.meter_mac_ids[0].hex()]}
     )
     assert result
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result.get("type") is FlowResultType.CREATE_ENTRY
 
 

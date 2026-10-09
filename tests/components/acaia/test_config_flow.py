@@ -55,6 +55,7 @@ async def test_form(
         user_input=user_input,
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "LUNAR-DDEEFF"
     assert result2["data"] == {
@@ -79,6 +80,7 @@ async def test_bluetooth_discovery(hass: HomeAssistant, mock_verify: AsyncMock) 
         user_input={},
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == service_info.name
     assert result2["data"] == {

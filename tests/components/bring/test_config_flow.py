@@ -40,6 +40,7 @@ async def test_form(
     )
     await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Bring"
     assert result["data"] == MOCK_DATA_STEP

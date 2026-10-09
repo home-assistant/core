@@ -126,6 +126,7 @@ async def test_user_flow_undiscovered_manual(hass: HomeAssistant) -> None:
         result["flow_id"], user_input={CONF_URL: MOCK_DEVICE_LOCATION}
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == MOCK_DEVICE_NAME
     assert result["data"] == {
@@ -166,6 +167,7 @@ async def test_user_flow_discovered_manual(
         result["flow_id"], user_input={CONF_URL: MOCK_DEVICE_LOCATION}
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == MOCK_DEVICE_NAME
     assert result["data"] == {
@@ -196,6 +198,7 @@ async def test_user_flow_selected(hass: HomeAssistant, ssdp_scanner_mock: Mock) 
         result["flow_id"], user_input={CONF_HOST: MOCK_DEVICE_NAME}
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == MOCK_DEVICE_NAME
     assert result["data"] == {
@@ -260,6 +263,7 @@ async def test_user_flow_embedded_st(
         result["flow_id"], user_input={CONF_URL: MOCK_DEVICE_LOCATION}
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == MOCK_DEVICE_NAME
     assert result["data"] == {
@@ -311,6 +315,7 @@ async def test_ssdp_flow_success(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == MOCK_DEVICE_NAME
     assert result["data"] == {
@@ -641,6 +646,7 @@ async def test_ignore_flow(hass: HomeAssistant, ssdp_scanner_mock: Mock) -> None
     )
     await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == MOCK_DEVICE_NAME
     assert result["data"] == {
@@ -665,6 +671,7 @@ async def test_ignore_flow_no_ssdp(
     )
     await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == MOCK_DEVICE_NAME
     assert result["data"] == {

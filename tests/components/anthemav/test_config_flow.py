@@ -36,6 +36,7 @@ async def test_form_with_valid_connection(
 
         await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Anthem AV"
     assert result2["data"] == {

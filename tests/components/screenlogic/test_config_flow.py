@@ -57,6 +57,7 @@ async def test_flow_discovery(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Pentair: 01-01-01"
     assert result2["data"] == {
@@ -120,6 +121,7 @@ async def test_flow_replace_ignored(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Pentair: 01-01-01"
     assert result2["data"] == {
@@ -207,6 +209,7 @@ async def test_dhcp(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == "Pentair: 01-01-01"
     assert result3["data"] == {
@@ -265,6 +268,7 @@ async def test_form_manual_entry(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == "Pentair: 01-01-01"
     assert result3["data"] == {
