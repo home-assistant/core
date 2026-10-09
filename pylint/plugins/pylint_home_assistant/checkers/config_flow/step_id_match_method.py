@@ -38,7 +38,8 @@ class HassEnforceConfigEntryStepIdMatchMethodChecker(BaseChecker):
             (
                 "Used when the step_id does not match the method name. "
                 "The step_id should match the method name after removing the "
-                "'async_step_' prefix. "
+                "'async_step_' prefix. Show a form by moving to that step "
+                "first using 'return await self.async_step_<step_id>'."
             ),
         ),
     }

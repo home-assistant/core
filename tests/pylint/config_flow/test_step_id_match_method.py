@@ -112,6 +112,40 @@ from tests.pylint import assert_no_messages, walk_checker
             "homeassistant.components.test.config_flow",
             id="using_an_async_function",
         ),
+        pytest.param(
+            """
+                async def async_step_user() -> FlowResult:
+                    return self.async_external_step(
+                        step_id="user",
+                        url="http://example.com"
+                    )
+                """,
+            "homeassistant.components.test.config_flow",
+            id="correct_method_external_step",
+        ),
+        pytest.param(
+            """
+                async def async_step_user() -> FlowResult:
+                    return self.async_show_progress(
+                        step_id="user",
+                        progress_action="action",
+                        progress_task=SomeTask()
+                    )
+                """,
+            "homeassistant.components.test.config_flow",
+            id="correct_method_show_progress",
+        ),
+        pytest.param(
+            """
+                async def async_step_user() -> FlowResult:
+                    return self.async_show_menu(
+                        step_id="user",
+                        menu_options=["option1", "option2"]
+                    )
+                """,
+            "homeassistant.components.test.config_flow",
+            id="correct_method_show_menu",
+        ),
     ],
 )
 def test_step_id_match_method(
@@ -185,6 +219,40 @@ def test_step_id_match_method(
         """,
             "homeassistant.components.test.config_flow",
             id="incorrect_method_if_statement",
+        ),
+        pytest.param(
+            """
+                async def async_step_user() -> FlowResult:
+                    return self.async_external_step(
+                        step_id="other",
+                        url="http://example.com"
+                    )
+                """,
+            "homeassistant.components.test.config_flow",
+            id="incorrect_method_external_step",
+        ),
+        pytest.param(
+            """
+                async def async_step_user() -> FlowResult:
+                    return self.async_show_progress(
+                        step_id="other",
+                        progress_action="action",
+                        progress_task=SomeTask()
+                    )
+                """,
+            "homeassistant.components.test.config_flow",
+            id="incorrect_method_show_progress",
+        ),
+        pytest.param(
+            """
+                async def async_step_user() -> FlowResult:
+                    return self.async_show_menu(
+                        step_id="other",
+                        menu_options=["option1", "option2"]
+                    )
+                """,
+            "homeassistant.components.test.config_flow",
+            id="incorrect_method_show_menu",
         ),
     ],
 )
