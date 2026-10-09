@@ -788,6 +788,67 @@ async def test_ws_update_device_class(
     assert not resp["success"]
 
 
+async def test_ws_create_unit_conversion(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    storage_setup: Callable[..., Awaitable[bool]],
+) -> None:
+    """Test unit conversion for a helper created via the UI."""
+    hass.config.units = US_CUSTOMARY_SYSTEM
+    assert await storage_setup(items=[])
+    input_entity_id = f"{DOMAIN}.new_input"
+
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {
+            "type": f"{DOMAIN}/create",
+            "name": "New Input",
+            "min": 0,
+            "max": 40,
+            "initial": 20,
+            "step": 1,
+            "mode": "slider",
+            "device_class": "temperature",
+            "unit_of_measurement": "°C",
+        }
+    )
+    resp = await client.receive_json()
+    assert resp["success"]
+    assert resp["result"]["unit_of_measurement"] == "°C"
+
+    state = hass.states.get(input_entity_id)
+    assert float(state.state) == 68
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "°F"
+    assert state.attributes["min"] == 32
+    assert state.attributes["max"] == 104
+
+    await set_value(hass, input_entity_id, "86")
+    state = hass.states.get(input_entity_id)
+    assert float(state.state) == 86
+
+    # Removing the device class stops the conversion
+    await client.send_json_auto_id(
+        {
+            "type": f"{DOMAIN}/update",
+            f"{DOMAIN}_id": "new_input",
+            "name": "New Input",
+            "min": 0,
+            "max": 40,
+            "step": 1,
+            "mode": "slider",
+            "unit_of_measurement": "°C",
+        }
+    )
+    resp = await client.receive_json()
+    assert resp["success"]
+
+    state = hass.states.get(input_entity_id)
+    assert float(state.state) == 30
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "°C"
+    assert state.attributes["max"] == 40
+
+
 async def test_ws_create(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
