@@ -396,15 +396,17 @@ class LlamaCppBaseLLMEntity(Entity):
                     cast(ChatCompletion, result).choices[0].message
                 )
 
-            messages.extend(
-                [
-                    msg
-                    async for content in chat_log.async_add_delta_content_stream(
-                        self.entity_id, async_generator
-                    )
-                    if (msg := convert_message(content))
-                ]
-            )
+            # Streamed responses raise API errors while being consumed
+            with api_error_handler():
+                messages.extend(
+                    [
+                        msg
+                        async for content in chat_log.async_add_delta_content_stream(
+                            self.entity_id, async_generator
+                        )
+                        if (msg := convert_message(content))
+                    ]
+                )
 
             if not chat_log.unresponded_tool_results:
                 break

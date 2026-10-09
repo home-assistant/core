@@ -45,7 +45,7 @@ from tesla_fleet_api.teslemetry import EnergySite, Vehicle
 from teslemetry_stream import TeslemetryStreamAuthenticationError
 
 from homeassistant.components.homeassistant import (
-    DOMAIN as HA_DOMAIN,
+    DOMAIN as HOMEASSISTANT_DOMAIN,
     SERVICE_UPDATE_ENTITY,
 )
 from homeassistant.components.number import (
@@ -135,6 +135,20 @@ from .const import (
 )
 
 from tests.common import MockConfigEntry, async_fire_time_changed
+
+LIVE_STATUS_ENTITY_ID = "sensor.energy_site_battery_power"
+
+
+async def _async_update_live_status(hass: HomeAssistant) -> None:
+    """Ask for a live status update, as a user would."""
+    await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
+    await hass.services.async_call(
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: LIVE_STATUS_ENTITY_ID},
+        blocking=True,
+    )
+
 
 ERRORS = [
     (InvalidToken, ConfigEntryState.SETUP_ERROR),
@@ -694,7 +708,7 @@ async def test_live_status_coordinator_retry_exceptions(
     assert call_count == 1
 
     # The recovery/manual REST path still raises the exception
-    await entry.runtime_data.energysites[0].live_coordinator.async_refresh()
+    await _async_update_live_status(hass)
     await hass.async_block_till_done()
 
     # API was called exactly once for this refresh (no manual retry loop)
@@ -724,11 +738,13 @@ async def test_live_status_auth_error(
         assert entry.state is ConfigEntryState.LOADED
 
         # The recovery/manual REST path surfaces the auth error
-        await entry.runtime_data.energysites[0].live_coordinator.async_refresh()
+        await _async_update_live_status(hass)
         await hass.async_block_till_done()
 
-        # Auth error triggers reauth flow
+        # An auth error fails the live update
         assert entry.state is ConfigEntryState.LOADED
+        live_coordinator = entry.runtime_data.energysites[0].live_coordinator
+        assert not live_coordinator.last_update_success
 
 
 async def test_live_status_generic_error(
@@ -752,11 +768,13 @@ async def test_live_status_generic_error(
         assert entry.state is ConfigEntryState.LOADED
 
         # The recovery/manual REST path surfaces the error
-        await entry.runtime_data.energysites[0].live_coordinator.async_refresh()
+        await _async_update_live_status(hass)
         await hass.async_block_till_done()
 
         # Entry stays loaded but coordinator will have failed
         assert entry.state is ConfigEntryState.LOADED
+        live_coordinator = entry.runtime_data.energysites[0].live_coordinator
+        assert not live_coordinator.last_update_success
 
 
 async def test_missing_token_data(hass: HomeAssistant) -> None:
@@ -1104,10 +1122,11 @@ async def test_live_status_coordinator_refresh_error(
     entry = await setup_platform(hass)
     assert entry.state is ConfigEntryState.LOADED
 
-    await entry.runtime_data.energysites[0].live_coordinator.async_refresh()
+    await _async_update_live_status(hass)
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.LOADED
+    assert not entry.runtime_data.energysites[0].live_coordinator.last_update_success
 
 
 async def test_dynamic_device_discovery_triggers_reload(
@@ -2153,6 +2172,38 @@ async def test_energy_stream_unload_unsubscribes_and_closes_stream(
     tariff_unsub.assert_called_once()
     totals_unsub.assert_called_once()
     mock_close.assert_called_once()
+
+
+async def test_energy_stream_stop_does_not_fail_coordinators(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    mock_stream_listen: MagicMock,
+    mock_add_connection_listener: MagicMock,
+    mock_energy_totals_stream: MagicMock,
+) -> None:
+    """Stopping Home Assistant does not fail the energy coordinators."""
+
+    async def listen() -> None:
+        # Like the library, report a disconnect when the listen task ends.
+        try:
+            await asyncio.Event().wait()
+        finally:
+            mock_add_connection_listener.send(False)
+
+    mock_stream_listen.side_effect = listen
+    await setup_platform(hass, [Platform.SENSOR, Platform.CALENDAR])
+    mock_energy_totals_stream.send()
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.energy_site_solar_power").state == "1.185"
+    assert hass.states.get("calendar.energy_site_buy_tariff").state != STATE_UNAVAILABLE
+    assert hass.states.get("sensor.energy_site_battery_discharged").state == "0.036"
+
+    await hass.async_stop()
+
+    assert hass.states.get("sensor.energy_site_solar_power").state == "1.185"
+    assert hass.states.get("calendar.energy_site_buy_tariff").state != STATE_UNAVAILABLE
+    assert hass.states.get("sensor.energy_site_battery_discharged").state == "0.036"
+    assert "Disconnected from the Teslemetry stream" not in caplog.text
 
 
 async def test_energy_stream_disconnect_marks_unavailable_and_recovers(
@@ -3314,7 +3365,7 @@ async def _refresh_site_info(
 ) -> None:
     """Deliver the cloud site_info by a manual entity refresh."""
     await hass.services.async_call(
-        HA_DOMAIN,
+        HOMEASSISTANT_DOMAIN,
         SERVICE_UPDATE_ENTITY,
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
@@ -3413,7 +3464,7 @@ async def test_cloud_owned_command_value_held_until_cloud_site_info(
     site_info = deepcopy(SITE_INFO)
     site_info["response"]["off_grid_vehicle_charging_reserve_percent"] = 20
     mock_site_info.side_effect = lambda: deepcopy(site_info)
-    assert await async_setup_component(hass, HA_DOMAIN, {})
+    assert await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
     await _setup_energy_site_entry(hass, entry_factory(), [platform])
 
     with (
@@ -3492,7 +3543,7 @@ async def test_paired_site_manual_refresh_merges_and_keeps_cloud_read(
 ) -> None:
     """A manual refresh on a paired site publishes merged data and keeps its cloud read."""
     mock_powerwall_live_status.side_effect = lambda: deepcopy(_LOCAL_LIVE_STATUS)
-    assert await async_setup_component(hass, HA_DOMAIN, {})
+    assert await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
     await _setup_energy_site_entry(hass, _entry_with_powerwall(), [Platform.SENSOR])
 
     await _tick_local_live(hass, freezer, 1)
@@ -3503,7 +3554,7 @@ async def test_paired_site_manual_refresh_merges_and_keeps_cloud_read(
     refreshed["response"]["grid_services_power"] = 7000
     mock_live_status.side_effect = lambda: deepcopy(refreshed)
     await hass.services.async_call(
-        HA_DOMAIN,
+        HOMEASSISTANT_DOMAIN,
         SERVICE_UPDATE_ENTITY,
         {ATTR_ENTITY_ID: "sensor.energy_site_grid_services_power"},
         blocking=True,
@@ -3526,14 +3577,14 @@ async def test_unpaired_site_manual_refresh_publishes_cloud_read(
     mock_live_status: AsyncMock,
 ) -> None:
     """A manual refresh on an unpaired site publishes the refreshed cloud read."""
-    assert await async_setup_component(hass, HA_DOMAIN, {})
+    assert await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
     await setup_platform(hass, [Platform.SENSOR])
 
     refreshed = deepcopy(LIVE_STATUS)
     refreshed["response"]["solar_power"] = 9999
     mock_live_status.side_effect = lambda: deepcopy(refreshed)
     await hass.services.async_call(
-        HA_DOMAIN,
+        HOMEASSISTANT_DOMAIN,
         SERVICE_UPDATE_ENTITY,
         {ATTR_ENTITY_ID: "sensor.energy_site_solar_power"},
         blocking=True,

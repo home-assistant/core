@@ -82,7 +82,7 @@ PLATFORM_SCHEMA = probatio.All(
             probatio.Inclusive(CONF_LONGITUDE, "coordinates"): cv.longitude,
             probatio.Optional(CONF_RADIUS, "station_filter"): cv.positive_int,
             probatio.Optional(CONF_STATIONS_LIST, "station_filter"): probatio.All(
-                probatio.EnsureList(), probatio.Length(min=1), [cv.string]
+                probatio.EnsureList(), probatio.NonEmpty(), [cv.string]
             ),
         }
     ),

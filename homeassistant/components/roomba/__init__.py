@@ -18,7 +18,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from .const import CONF_BLID, CONF_CONTINUOUS, PLATFORMS, ROOMBA_SESSION
+from .const import CONF_BLID, CONF_CONTINUOUS, DOMAIN, PLATFORMS, ROOMBA_SESSION
 from .models import RoombaConfigEntry, RoombaData
 
 _LOGGER = logging.getLogger(__name__)
@@ -52,7 +52,11 @@ async def async_setup_entry(
 
     try:
         if not await async_connect_or_timeout(hass, roomba):
-            return False
+            raise exceptions.ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+                translation_placeholders={"host": config_entry.data[CONF_HOST]},
+            )
     except CannotConnect as err:
         raise exceptions.ConfigEntryNotReady from err
 

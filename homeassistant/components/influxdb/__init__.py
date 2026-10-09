@@ -338,6 +338,14 @@ def _generate_event_to_json(conf: dict) -> Callable[[Event], dict[str, Any] | No
                     if not math.isfinite(json[INFLUX_CONF_FIELDS][key]):
                         del json[INFLUX_CONF_FIELDS][key]
 
+        # InfluxDB reserves "time"; leave the valid "time_str" field unchanged.
+        fields = json[INFLUX_CONF_FIELDS]
+        if INFLUX_CONF_TIME in fields:
+            key = f"{INFLUX_CONF_TIME}_"
+            while key in fields:
+                key = f"{key}_"
+            fields[key] = fields.pop(INFLUX_CONF_TIME)
+
         json[INFLUX_CONF_TAGS].update(tags)
 
         return json

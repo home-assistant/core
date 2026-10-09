@@ -77,6 +77,9 @@ NUMBER_DESCRIPTIONS: dict[
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
     ),
+    SystemEndpoints.AUTUMN_DRYING_OUTDOOR_TEMP_LIMIT: _temperature_number(
+        device=OumanDevice.MAIN, key="autumn_drying_outdoor_temperature_limit"
+    ),
     # L1 base water-out temperature limits.
     L1BaseEndpoints.WATER_OUT_MIN_TEMP: _temperature_number(
         device=OumanDevice.L1, key="water_out_minimum_temperature"
@@ -127,6 +130,11 @@ NUMBER_DESCRIPTIONS: dict[
         key="room_temperature_fine_tuning",
         device_class=NumberDeviceClass.TEMPERATURE_DELTA,
     ),
+    L1NoRoomSensor.AUTUMN_DRYING_SETPOINT: _temperature_number(
+        device=OumanDevice.L1,
+        key="autumn_drying_setpoint",
+        device_class=NumberDeviceClass.TEMPERATURE_DELTA,
+    ),
     L1RoomSensor.TEMPERATURE_DROP: _temperature_number(
         device=OumanDevice.L1,
         key="temperature_drop",
@@ -140,6 +148,11 @@ NUMBER_DESCRIPTIONS: dict[
     L1RoomSensor.ROOM_TEMPERATURE_FINE_TUNING: _temperature_number(
         device=OumanDevice.L1,
         key="room_temperature_fine_tuning",
+        device_class=NumberDeviceClass.TEMPERATURE_DELTA,
+    ),
+    L1RoomSensor.AUTUMN_DRYING_SETPOINT: _temperature_number(
+        device=OumanDevice.L1,
+        key="autumn_drying_setpoint",
         device_class=NumberDeviceClass.TEMPERATURE_DELTA,
     ),
     L1ConstantTempMode.CONSTANT_TEMP_SETPOINT: _temperature_number(
@@ -193,6 +206,11 @@ NUMBER_DESCRIPTIONS: dict[
         key="room_temperature_fine_tuning",
         device_class=NumberDeviceClass.TEMPERATURE_DELTA,
     ),
+    L2NoRoomSensor.AUTUMN_DRYING_SETPOINT: _temperature_number(
+        device=OumanDevice.L2,
+        key="autumn_drying_setpoint",
+        device_class=NumberDeviceClass.TEMPERATURE_DELTA,
+    ),
     L2RoomSensor.TEMPERATURE_DROP: _temperature_number(
         device=OumanDevice.L2,
         key="temperature_drop",
@@ -206,6 +224,11 @@ NUMBER_DESCRIPTIONS: dict[
     L2RoomSensor.ROOM_TEMPERATURE_FINE_TUNING: _temperature_number(
         device=OumanDevice.L2,
         key="room_temperature_fine_tuning",
+        device_class=NumberDeviceClass.TEMPERATURE_DELTA,
+    ),
+    L2RoomSensor.AUTUMN_DRYING_SETPOINT: _temperature_number(
+        device=OumanDevice.L2,
+        key="autumn_drying_setpoint",
         device_class=NumberDeviceClass.TEMPERATURE_DELTA,
     ),
 }

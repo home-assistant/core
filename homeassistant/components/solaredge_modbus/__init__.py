@@ -33,6 +33,7 @@ from homeassistant.helpers.event import async_track_time_interval
 from .const import (
     ATTACHMENT_SCAN_INTERVAL,
     CONF_UNIT_ID,
+    DISCOVERY_SUBSYSTEMS,
     DOMAIN,
     LOGGER,
     SCAN_INTERVAL,
@@ -237,12 +238,23 @@ async def _async_reload_when_attachments_change(
         return
 
     try:
-        probed = await SolarEdge.async_probe(unit)
+        probed = await SolarEdge.async_probe(
+            unit, assume_absent=entry.runtime_data.settled_silent_blocks
+        )
     except SolarEdgeError as err:
         # Nothing to conclude from a probe that did not finish; the coordinators
         # report an inverter that stopped answering.
         LOGGER.debug("%s: could not probe for attached hardware: %s", entry.title, err)
         return
+
+    # Silent while setting up and silent again here. A block that answered at
+    # setup and merely blipped now is not settled, or one timeout would hide a
+    # later removal until the entry loads again. Blocks that finding hardware
+    # depends on are never settled: picking up what was wired in later is what
+    # asking is for.
+    entry.runtime_data.settled_silent_blocks = (
+        probed.unresponsive_blocks & solaredge.unresponsive_blocks
+    ) - DISCOVERY_SUBSYSTEMS
 
     known = _probed_blocks(solaredge)
     for name, found in _probed_blocks(probed).items():

@@ -142,6 +142,7 @@ Every check has a code following the
 | `W7435` | [`home-assistant-json-fixture`](#w7435-home-assistant-json-fixture) | Use a JSON fixture helper instead of parsing a loaded fixture |
 | `W7436` | [`home-assistant-light-missing-color-mode`](#w7436-home-assistant-light-missing-color-mode) | Light entity sets supported color modes but does not report a `color_mode` |
 | `W7437` | [`home-assistant-light-missing-supported-color-modes`](#w7437-home-assistant-light-missing-supported-color-modes) | Light entity reports a `color_mode` but does not set supported color modes |
+| `W7439` | [`home-assistant-tests-coordinator-async-refresh`](#w7439-home-assistant-tests-coordinator-async-refresh) | Tests should advance the time instead of refreshing a coordinator directly |
 
 
 ## `home_assistant_logger` checker
@@ -493,6 +494,29 @@ that the real unload flow (platform unloading, listener teardown,
 `runtime_data` cleanup, etc.) is exercised.
 
 
+## `home_assistant_tests_coordinator_async_refresh` checker
+
+Detects integration tests that refresh a coordinator directly.
+
+### `W7439`: `home-assistant-tests-coordinator-async-refresh`
+
+Tests should not refresh a `DataUpdateCoordinator` by calling
+`async_refresh()`, `async_request_refresh()` or `_async_refresh()`. Instead,
+advance the time so the coordinator refreshes on its own schedule:
+
+```python
+freezer.tick(SCAN_INTERVAL)
+async_fire_time_changed(hass)
+await hass.async_block_till_done(wait_background_tasks=True)
+```
+
+Coordinators mostly reach tests through `entry.runtime_data` or a fixture,
+whose type cannot be inferred. So every use of these methods in
+`tests/components` is flagged, including passing one around without calling
+it, unless the receiver is known to be something other than a coordinator,
+such as a mock.
+
+
 ## `home_assistant_enforce_utcnow` checker
 
 Ensures the Home Assistant helper is used to get the current UTC time.
@@ -632,6 +656,12 @@ Three locations are scanned: class-body `_attr_unique_id` assignments,
 Aliased imports (`from .const import DOMAIN as MY_DOMAIN`) are not
 scanned.
 
+The rule targets new unique ids. Integrations with existing unique ids in
+this format should keep them and disable the check on that line: migrating
+unique ids rewrites the entity registry and is easy to get wrong (for example,
+a downgrade leaves duplicate entities behind), which the cosmetic gain doesn't
+justify.
+
 ### `W7427`: `home-assistant-entity-unique-id-redundant-platform`
 
 In `(domain, platform, unique_id)` the `domain` field is the entity
@@ -656,6 +686,9 @@ are in scope. `entity.py`, `__init__.py` at the integration root, and
 other helper sub-modules are out of scope because the platform
 context is ambiguous there. The three in-class scan locations are
 the same as for `W7425`.
+
+As for `W7425`, the rule targets new unique ids: existing unique ids in
+this format should be kept, with the check disabled on that line.
 
 
 ## `home_assistant_entity_description_defaults` checker
