@@ -251,11 +251,11 @@ class SpeechToTextEntity(RestoreEntity):
             async for result in results:
                 yield result
 
-    @abstractmethod
     async def async_process_audio_stream(
         self, metadata: SpeechMetadata, stream: AsyncIterable[bytes]
     ) -> SpeechResult:
         """Process an audio stream to STT service."""
+        raise NotImplementedError
 
     async def async_process_audio_stream_with_progress(
         self, metadata: SpeechMetadata, stream: AsyncIterable[bytes]
