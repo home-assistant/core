@@ -167,16 +167,15 @@ def _parse_eta_state(state: State | None) -> int | None:
     return None
 
 
-async def _handle_sensor_state_change(
+async def _handle_sensor_update(
     hass: HomeAssistant,
     entry: OpenEVSEConfigEntry,
-    event: Event[EventStateChangedData],
+    changed_entity: str,
 ) -> None:
-    """Track state changes to configured sensor entities and push data to OpenEVSE."""
+    """Track updates to configured sensor entities and push data to OpenEVSE."""
     coordinator = entry.runtime_data
     charger = coordinator.charger
     options = entry.options
-    changed_entity = event.data["entity_id"]
 
     try:
         if changed_entity == options.get(CONF_GRID):
@@ -303,16 +302,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenEVSEConfigEntry) -> 
         }
     )
     if tracked_sensors:
-        queue: asyncio.Queue[Event[EventStateChangedData]] = asyncio.Queue()
+        pending_entities: set[str] = set()
+        work_available = asyncio.Event()
 
         async def _push_worker() -> None:
-            """Process queued state change events sequentially."""
+            """Process pending sensor entity updates sequentially and coalesced."""
             while True:
-                event = await queue.get()
-                try:
-                    await _handle_sensor_state_change(hass, entry, event)
-                finally:
-                    queue.task_done()
+                await work_available.wait()
+                work_available.clear()
+                entities_to_process = list(pending_entities)
+                pending_entities.clear()
+                for entity_id in entities_to_process:
+                    await _handle_sensor_update(hass, entry, entity_id)
 
         entry.async_create_background_task(
             hass,
@@ -321,14 +322,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenEVSEConfigEntry) -> 
         )
 
         @callback
+        def _schedule_update(entity_id: str) -> None:
+            pending_entities.add(entity_id)
+            work_available.set()
+
+        @callback
         def _on_sensor_state_change(event: Event[EventStateChangedData]) -> None:
-            queue.put_nowait(event)
+            _schedule_update(event.data["entity_id"])
 
         entry.async_on_unload(
             async_track_state_change_event(
                 hass, tracked_sensors, _on_sensor_state_change
             )
         )
+
+        # Replay current states for configured sensors on startup
+        for sensor_id in tracked_sensors:
+            if hass.states.get(sensor_id) is not None:
+                _schedule_update(sensor_id)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True

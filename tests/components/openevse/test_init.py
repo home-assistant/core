@@ -233,3 +233,53 @@ async def test_sensor_state_change_pushes_data(
     mock_charger.self_production.side_effect = ParseJSONError
     hass.states.async_set("sensor.grid_power", "3200", {"unit_of_measurement": "W"})
     await hass.async_block_till_done()
+
+
+async def test_sensor_startup_replay_and_coalescing(
+    hass: HomeAssistant,
+    mock_charger: MagicMock,
+) -> None:
+    """Test that existing sensor states are replayed on setup and multiple updates coalesce."""
+    mock_charger.self_production = AsyncMock()
+    mock_charger.grid_voltage = AsyncMock()
+    mock_charger.set_shaper_live_pwr = AsyncMock()
+    mock_charger.soc = AsyncMock()
+    mock_charger.home_battery = AsyncMock()
+
+    # Set states before setting up the entry
+    hass.states.async_set("sensor.car_battery", "75")
+    hass.states.async_set("sensor.car_range", "150")
+
+    config_entry = MockConfigEntry(
+        title="OpenEVSE",
+        domain=DOMAIN,
+        data={CONF_HOST: "192.168.1.100"},
+        entry_id="FAKE",
+        unique_id="deadbeeffeed",
+        options={
+            "vehicle_soc": "sensor.car_battery",
+            "vehicle_range": "sensor.car_range",
+            "grid": "sensor.grid_power",
+        },
+    )
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Verify initial states were replayed and pushed to charger
+    mock_charger.soc.assert_called_with(
+        battery_level=75, battery_range=150, time_to_full=None
+    )
+
+    # Coalescing: trigger multiple rapid state updates before block_till_done
+    mock_charger.self_production.reset_mock()
+    hass.states.async_set("sensor.grid_power", "1000", {"unit_of_measurement": "W"})
+    hass.states.async_set("sensor.grid_power", "2000", {"unit_of_measurement": "W"})
+    hass.states.async_set("sensor.grid_power", "3000", {"unit_of_measurement": "W"})
+    await hass.async_block_till_done()
+
+    # Only the latest coalesced state should be pushed once
+    assert mock_charger.self_production.call_count == 1
+    mock_charger.self_production.assert_called_once_with(
+        grid=3000, solar=None, invert=False
+    )
