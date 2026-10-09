@@ -12,7 +12,6 @@ from typing import (
     get_args,
     get_origin,
     get_type_hints,
-    overload,
     override,
 )
 
@@ -73,8 +72,6 @@ def to_storage_dict(data: KnxEntityData[Any]) -> dict[str, Any]:
 
 
 def _knx_to_storage(knx_config: Any) -> dict[str, Any]:
-    if isinstance(knx_config, dict):
-        return knx_config  # platform not yet migrated to a typed config
     return {
         name: encode(getattr(knx_config, name))
         for name, encode in _storage_encoders(type(knx_config))
@@ -209,26 +206,16 @@ class KNXConfigStore:
         """Add platform controller."""
         self._platform_controllers[platform] = controller
 
-    @overload
-    def get_entity_configs(
-        self, platform: Platform
-    ) -> dict[str, KnxEntityData[Any]]: ...
-
-    @overload
+    @callback
     def get_entity_configs[KnxT](
         self, platform: Platform, config_type: type[KnxT]
-    ) -> dict[str, KnxEntityData[KnxT]]: ...
-
-    @callback
-    def get_entity_configs(
-        self, platform: Platform, config_type: type | None = None
-    ) -> dict[str, KnxEntityData[Any]]:
+    ) -> dict[str, KnxEntityData[KnxT]]:
         """Return validated entity configurations for a platform.
 
         Invalid configurations are reported as a repair issue and stay in
         `self.data` so they aren't dropped from storage.
         """
-        validated: dict[str, KnxEntityData[Any]] = {}
+        validated: dict[str, KnxEntityData[KnxT]] = {}
         invalid: list[str] = []
         for unique_id, config in self.data["entities"].get(platform, {}).items():
             try:
@@ -238,8 +225,8 @@ class KNXConfigStore:
             except EntityStoreValidationException:
                 invalid.append(unique_id)
                 continue
-            data: KnxEntityData[Any] = result[CONF_DATA]
-            if config_type is not None and not isinstance(data.knx, config_type):
+            data: KnxEntityData[KnxT] = result[CONF_DATA]
+            if not isinstance(data.knx, config_type):
                 raise TypeError(
                     f"{platform} schema yields {type(data.knx).__name__},"
                     f" not {config_type.__name__}"

@@ -745,6 +745,20 @@ async def test_load_skips_invalid_entity_config(
     }
 
 
+async def test_get_entity_configs_wrong_type(
+    hass: HomeAssistant, knx: KNXTestKit
+) -> None:
+    """Test requesting a config type the platform schema doesn't yield fails."""
+    await knx.setup_integration(
+        config_store_fixture="config_store_invalid.json", state_updater=False
+    )
+    config_store = hass.data[KNX_MODULE_KEY].config_store
+    with pytest.raises(
+        TypeError, match="light schema yields LightKnxConfig, not SwitchKnxConfig"
+    ):
+        config_store.get_entity_configs(Platform.LIGHT, SwitchKnxConfig)
+
+
 async def test_load_applies_schema_defaults_and_coercion(
     hass: HomeAssistant,
     knx: KNXTestKit,
@@ -761,7 +775,9 @@ async def test_load_applies_schema_defaults_and_coercion(
     )
     assert hass.states.get("light.missing_defaults") is not None
     config_store = hass.data[KNX_MODULE_KEY].config_store
-    light_config = config_store.get_entity_configs(Platform.LIGHT)[LIGHT_UID].knx
+    light_config = config_store.get_entity_configs(Platform.LIGHT, LightKnxConfig)[
+        LIGHT_UID
+    ].knx
     assert light_config.color_temp_min == 2700
     assert light_config.color_temp_max == 6000
 
