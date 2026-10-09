@@ -46,6 +46,7 @@ async def test_form_user(
             user_flow, TEST_USER_INPUT
         )
         await hass.async_block_till_done()
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TEST_USER_INPUT[CONF_HOST]
     assert result["options"] == TEST_USER_INPUT
@@ -120,6 +121,7 @@ async def test_duplicate_entry(hass: HomeAssistant, user_flow: str) -> None:
         )
         await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TEST_USER_INPUT[CONF_HOST]
     assert result["options"] == TEST_USER_INPUT

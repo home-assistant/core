@@ -59,6 +59,7 @@ async def test_flow_non_encrypted(hass: HomeAssistant) -> None:
             {**MOCK_BASIC_DATA},
         )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == DEFAULT_NAME
     assert result["data"] == {**MOCK_CONFIG_DATA, ATTR_DEVICE_INFO: MOCK_DEVICE_INFO}
@@ -196,6 +197,7 @@ async def test_flow_encrypted_valid_pin_code(hass: HomeAssistant) -> None:
         {CONF_PIN: "1234"},
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == DEFAULT_NAME
     assert result["data"] == {
@@ -374,6 +376,7 @@ async def test_imported_flow_non_encrypted(hass: HomeAssistant) -> None:
             data={**MOCK_CONFIG_DATA},
         )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == DEFAULT_NAME
     assert result["data"] == {**MOCK_CONFIG_DATA, ATTR_DEVICE_INFO: MOCK_DEVICE_INFO}
@@ -406,6 +409,7 @@ async def test_imported_flow_encrypted_valid_pin_code(hass: HomeAssistant) -> No
         {CONF_PIN: "1234"},
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == DEFAULT_NAME
     assert result["data"] == {

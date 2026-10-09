@@ -27,6 +27,7 @@ async def test_create_entry(hass: HomeAssistant, mock_israelrail: AsyncMock) -> 
         result["flow_id"],
         VALID_CONFIG,
     )
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "באר יעקב אשקלון"
     assert result["data"] == {

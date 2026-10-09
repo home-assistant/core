@@ -59,6 +59,7 @@ async def test_user_flow(hass: HomeAssistant, user_flow: str) -> None:
         result = await hass.config_entries.flow.async_configure(user_flow, TEST_HOST)
         await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TEST_HOST["host"]
     assert result["data"] == {
@@ -495,6 +496,7 @@ async def test_discovery(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "hostname"
     assert result["data"] == {

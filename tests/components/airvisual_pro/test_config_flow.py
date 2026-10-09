@@ -80,6 +80,7 @@ async def test_step_import(hass: HomeAssistant, config, setup_airvisual_pro) -> 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_IMPORT}, data=config
     )
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "192.168.1.101"
     assert result["data"] == {

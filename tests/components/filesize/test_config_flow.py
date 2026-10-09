@@ -35,6 +35,7 @@ async def test_full_user_flow(hass: HomeAssistant, tmp_path: Path) -> None:
         user_input={CONF_FILE_PATH: test_file},
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2.get("type") is FlowResultType.CREATE_ENTRY
     assert result2.get("title") == TEST_FILE_NAME
     assert result2.get("data") == {CONF_FILE_PATH: test_file}

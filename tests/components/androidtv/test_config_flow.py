@@ -138,6 +138,7 @@ async def test_user(
         )
         await hass.async_block_till_done()
 
+        # pylint: disable-next=home-assistant-tests-config-flow-unique-id
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == HOST
         assert result["data"] == expected_data
@@ -175,6 +176,7 @@ async def test_user_adbkey(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
+        # pylint: disable-next=home-assistant-tests-config-flow-unique-id
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == HOST
         assert result["data"] == expected_data

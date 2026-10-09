@@ -52,6 +52,7 @@ async def test_create_entry(recorder_mock: Recorder, hass: HomeAssistant) -> Non
         )
         await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "user"
     assert result["data"] == {
@@ -167,6 +168,7 @@ async def test_local_create_entry(recorder_mock: Recorder, hass: HomeAssistant) 
         )
 
     test_data[CONNECTION_TYPE] = LOCAL
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == test_data[CONF_IP_ADDRESS]
     assert result["data"] == test_data

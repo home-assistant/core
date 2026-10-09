@@ -101,6 +101,7 @@ async def test_manual_flow_success(hass: HomeAssistant) -> None:
             user_input={**EXTENDED_DATA},
         )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == MIDEA_DEVICE_NAMES[TEST_TYPE]
     assert result["data"] == {
@@ -581,6 +582,7 @@ async def test_auto_flow_cloud_device_info_overrides_name_and_subtype(
             user_input={"login_mode": LOGIN_MODE_PRESET},
         )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Cloud Device Name"
     assert result["data"][CONF_SUBTYPE] == 3
@@ -653,6 +655,7 @@ async def test_auto_flow_v3_preset_phase1_cloud_keys_success(
             user_input={"login_mode": LOGIN_MODE_PRESET},
         )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_DEVICE_ID] == TEST_DEVICE_ID
     assert result["data"][CONF_TOKEN] == TEST_TOKEN
@@ -722,6 +725,7 @@ async def test_auto_flow_v3_preset_phase1_default_key_success(
             user_input={"login_mode": LOGIN_MODE_PRESET},
         )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_DEVICE_ID] == TEST_DEVICE_ID
     assert result["data"][CONF_TOKEN] == TEST_TOKEN
@@ -1142,6 +1146,7 @@ async def test_auto_flow_v3_phase2_success_after_phase1_failure(
             user_input={"login_mode": LOGIN_MODE_PRESET},
         )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_DEVICE_ID] == TEST_DEVICE_ID
     assert result["data"][CONF_TOKEN] == TEST_TOKEN
@@ -1993,6 +1998,7 @@ async def test_manually_flow_success(hass: HomeAssistant) -> None:
             },
         )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == MIDEA_DEVICE_NAMES[TEST_TYPE]
     assert result["data"][CONF_DEVICE_ID] == TEST_DEVICE_ID
@@ -2087,6 +2093,7 @@ async def test_manually_flow_builds_concrete_device_subclass(
             },
         )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     dm = mock_connect.call_args.args[0]
     assert type(dm) is not MideaDevice
@@ -2144,6 +2151,7 @@ async def test_manually_flow_runs_device_selector_in_executor(
             },
         )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     dispatched_funcs = [call.args[0] for call in mock_executor_job.call_args_list]
     assert any(
@@ -2287,6 +2295,7 @@ async def test_login_credentials_step_success_resumes_auto_flow(
     mock_get_midea_cloud.assert_called_once_with(
         DEFAULT_CLOUD, mock_session.return_value, "user", "pass"
     )
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_DEVICE_ID] == TEST_DEVICE_ID
 

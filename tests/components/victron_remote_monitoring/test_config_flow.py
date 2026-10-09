@@ -57,6 +57,7 @@ async def test_full_flow_success(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_SITE_ID: str(site1.id)}
     )
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == f"VRM for {site1.name}"
     assert result["data"] == {
@@ -248,6 +249,7 @@ async def test_select_site_duplicate_aborts(
     result_new2 = await hass.config_entries.flow.async_configure(
         result_new["flow_id"], {CONF_API_TOKEN: "token3"}
     )
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result_new2["type"] is FlowResultType.CREATE_ENTRY
     assert result_new2["data"] == {
         CONF_API_TOKEN: "token3",

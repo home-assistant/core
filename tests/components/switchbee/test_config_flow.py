@@ -57,6 +57,7 @@ async def test_form(hass: HomeAssistant, test_cucode_in_coordinator_data) -> Non
         )
         await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "1.1.1.1"
     assert result2["data"] == {

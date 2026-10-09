@@ -243,6 +243,7 @@ async def test_form_user(hass: HomeAssistant, tmp_path: Path) -> None:
         )
         await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == "1.1.1.1"
     assert result3["data"] == {
@@ -347,6 +348,7 @@ async def test_form_user_reuses_existing_assets_when_pairing_again(
         )
         await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == "1.1.1.1"
     assert result3["data"] == {
@@ -537,6 +539,7 @@ async def test_zeroconf(hass: HomeAssistant, source, tmp_path: Path) -> None:
         )
         await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "abc"
     assert result2["data"] == {

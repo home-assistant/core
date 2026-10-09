@@ -38,6 +38,7 @@ async def test_form(hass: HomeAssistant) -> None:
             CONFIG,
         )
 
+        # pylint: disable-next=home-assistant-tests-config-flow-unique-id
         assert result2["type"] is FlowResultType.CREATE_ENTRY
         assert result2["title"] == SERVER_STATUS.name  # pylint: disable=maybe-no-member
         assert result2["data"] == CONFIG

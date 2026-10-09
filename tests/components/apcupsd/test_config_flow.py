@@ -86,6 +86,7 @@ async def test_config_flow_duplicate_host_port(
         result["flow_id"],
         user_input=another_host,
     )
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == another_host
 
@@ -133,6 +134,7 @@ async def test_config_flow_duplicate_serial_number(
         result["flow_id"],
         user_input=another_host,
     )
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == another_host
 
@@ -199,6 +201,7 @@ async def test_flow_minimal_status(
         user_input=CONF_DATA,
     )
     await hass.async_block_till_done()
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == CONF_DATA
     assert result["title"] == expected_title

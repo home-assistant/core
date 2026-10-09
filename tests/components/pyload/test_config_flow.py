@@ -44,6 +44,7 @@ async def test_form(
         user_input,
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == DEFAULT_NAME
     assert result["data"] == user_input
@@ -340,6 +341,7 @@ async def test_hassio_discovery_confirm_only(
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "p539df76c_pyload-ng"
     assert result["data"] == {**ADDON_DISCOVERY_INFO, CONF_VERIFY_SSL: False}

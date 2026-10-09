@@ -286,6 +286,7 @@ async def test_discovery_flow_edit_discovered_success(
         result["flow_id"], {CONF_USERNAME: "admin", CONF_PASSWORD: "password"}
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "1.1.1.1"
     assert result["data"][CONF_HOST] == "1.1.1.1"

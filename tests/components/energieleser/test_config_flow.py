@@ -162,6 +162,7 @@ async def test_zeroconf_flow(hass: HomeAssistant) -> None:
         result["flow_id"], user_input={}
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "stromleser.one"
     assert result["data"][CONF_DEVICE_ID] == STROMLESER_DEVICE_ID

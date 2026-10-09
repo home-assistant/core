@@ -137,6 +137,7 @@ async def test_successful_config_flow(
         result["flow_id"], user_input=config
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TEST_USERNAME
     assert result["data"] == config

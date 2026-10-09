@@ -306,6 +306,7 @@ async def test_user_flow_succeeds_during_zeroconf_discovery(
     )
     await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert user_result2["type"] is FlowResultType.CREATE_ENTRY
     assert user_result2["title"] == TEST_DEVICE_INFO["name"]
     assert user_result2["data"] == TEST_USER_DATA

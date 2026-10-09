@@ -180,6 +180,7 @@ async def test_homekit_discovery(
     )
     await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == NAME_ROKUTV
 
@@ -250,6 +251,7 @@ async def test_ssdp_discovery(
     )
     await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == UPNP_FRIENDLY_NAME
 
