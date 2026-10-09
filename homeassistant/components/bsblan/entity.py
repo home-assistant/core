@@ -30,10 +30,6 @@ class BSBLanEntityBase[_T: BSBLanCoordinator](CoordinatorEntity[_T]):
 class BSBLanEntity(BSBLanEntityBase[BSBLanFastCoordinator]):
     """Defines a base BSBLan entity using the fast coordinator."""
 
-    def __init__(self, coordinator: BSBLanFastCoordinator, data: BSBLanData) -> None:
-        """Initialize BSBLan entity."""
-        super().__init__(coordinator, data)
-
 
 class BSBLanCircuitEntity(BSBLanEntity):
     """BSBLan entity belonging to a heating circuit sub-device."""

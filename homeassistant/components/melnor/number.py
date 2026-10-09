@@ -15,7 +15,7 @@ from homeassistant.const import EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import MelnorConfigEntry, MelnorDataUpdateCoordinator
+from .coordinator import MelnorConfigEntry
 from .entity import MelnorZoneEntity, get_entities_for_valves
 
 
@@ -86,15 +86,6 @@ class MelnorZoneNumber(MelnorZoneEntity, NumberEntity):
 
     entity_description: MelnorZoneNumberEntityDescription
     _attr_mode = NumberMode.BOX
-
-    def __init__(
-        self,
-        coordinator: MelnorDataUpdateCoordinator,
-        entity_description: MelnorZoneNumberEntityDescription,
-        valve: Valve,
-    ) -> None:
-        """Initialize a number for a melnor device."""
-        super().__init__(coordinator, entity_description, valve)
 
     @property
     @override
