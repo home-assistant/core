@@ -291,6 +291,7 @@ async def test_discovery_flow_edit_discovered_success(
     assert result["data"][CONF_HOST] == "1.1.1.1"
     assert result["data"][CONF_USERNAME] == "admin"
     assert result["data"][CONF_PASSWORD] == "password"
+    assert result["result"].unique_id == TEST_UUID
     assert len(mock_setup_entry.mock_calls) == 1
 
 

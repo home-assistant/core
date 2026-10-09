@@ -100,6 +100,17 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
                 msg="WebSocket closed on Home Assistant shutdown",
             )
 
+    @override
+    async def async_shutdown(self) -> None:
+        """Stop listening and close the WebSocket on unload or failed setup."""
+        await super().async_shutdown()
+        if self.unsub:
+            self.unsub()
+            self.unsub = None
+        await self.websocket_client.close()
+        if self.listen_task is not None:
+            self.listen_task.cancel(msg="Config entry unloaded")
+
     async def clean_disconnect(self) -> None:
         """Clean disconnect WebSocket."""
         if self.unsub:

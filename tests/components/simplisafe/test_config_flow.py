@@ -13,6 +13,8 @@ from homeassistant.const import CONF_CODE, CONF_TOKEN, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from .common import USER_ID
+
 from tests.common import MockConfigEntry
 
 VALID_AUTH_CODE = "code12345123451234512345123451234512345123451"
@@ -177,6 +179,7 @@ async def test_step_user(
             result["flow_id"], user_input={CONF_AUTH_CODE: auth_code}
         )
         assert result["type"] is FlowResultType.CREATE_ENTRY
+        assert result["result"].unique_id == USER_ID
 
     if log_statement:
         assert any(m for m in caplog.messages if log_statement in m)

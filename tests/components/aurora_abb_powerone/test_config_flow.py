@@ -78,6 +78,7 @@ async def test_form(hass: HomeAssistant) -> None:
         ATTR_SERIAL_NUMBER: "9876543",
         "title": "PhotoVoltaic Inverters",
     }
+    assert result2["result"].unique_id == "9876543"
     await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1

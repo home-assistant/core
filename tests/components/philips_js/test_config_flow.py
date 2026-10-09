@@ -18,6 +18,7 @@ from . import (
     MOCK_HOSTNAME,
     MOCK_NAME,
     MOCK_PASSWORD,
+    MOCK_SERIAL_NO,
     MOCK_SYSTEM,
     MOCK_SYSTEM_UNPAIRED,
     MOCK_USERINPUT,
@@ -61,6 +62,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry) -> None:
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Philips TV (1234567890)"
     assert result2["data"] == MOCK_CONFIG
+    assert result2["result"].unique_id == MOCK_SERIAL_NO
     assert len(mock_setup_entry.mock_calls) == 1
 
 

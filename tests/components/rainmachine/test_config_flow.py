@@ -163,7 +163,7 @@ async def test_show_form(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("setup_rainmachine")
-async def test_step_user(hass: HomeAssistant) -> None:
+async def test_step_user(hass: HomeAssistant, controller_mac: str) -> None:
     """Test that the user step works."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -189,6 +189,7 @@ async def test_step_user(hass: HomeAssistant) -> None:
         CONF_SSL: True,
         CONF_DEFAULT_ZONE_RUN_TIME: 600,
     }
+    assert result["result"].unique_id == controller_mac
 
 
 @pytest.mark.parametrize(
@@ -253,7 +254,7 @@ async def test_step_homekit_zeroconf_ip_change(
     "source", [config_entries.SOURCE_ZEROCONF, config_entries.SOURCE_HOMEKIT]
 )
 async def test_step_homekit_zeroconf_new_controller_when_some_exist(
-    hass: HomeAssistant, client: AsyncMock, source: str
+    hass: HomeAssistant, client: AsyncMock, controller_mac: str, source: str
 ) -> None:
     """Test homekit and zeroconf for a new controller when one already exists."""
     with patch(
@@ -304,6 +305,7 @@ async def test_step_homekit_zeroconf_new_controller_when_some_exist(
         CONF_SSL: True,
         CONF_DEFAULT_ZONE_RUN_TIME: 600,
     }
+    assert result2["result"].unique_id == controller_mac
 
 
 async def test_discovery_by_homekit_and_zeroconf_same_time(

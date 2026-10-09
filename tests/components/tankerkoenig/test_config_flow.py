@@ -83,6 +83,7 @@ async def test_user(hass: HomeAssistant) -> None:
             "36b4b812-xxxx-xxxx-xxxx-c51735325858",
         ]
         assert result["options"][CONF_SHOW_ON_MAP]
+        assert result["result"].unique_id == "51.0_13.0"
 
         await hass.async_block_till_done()
 

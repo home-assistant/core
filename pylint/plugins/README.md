@@ -143,7 +143,11 @@ Every check has a code following the
 | `W7436` | [`home-assistant-light-missing-color-mode`](#w7436-home-assistant-light-missing-color-mode) | Light entity sets supported color modes but does not report a `color_mode` |
 | `W7437` | [`home-assistant-light-missing-supported-color-modes`](#w7437-home-assistant-light-missing-supported-color-modes) | Light entity reports a `color_mode` but does not set supported color modes |
 | `W7439` | [`home-assistant-tests-coordinator-async-refresh`](#w7439-home-assistant-tests-coordinator-async-refresh) | Tests should advance the time instead of refreshing a coordinator directly |
+| `W7440` | [`home-assistant-tests-config-flow-unique-id`](#w7440-home-assistant-tests-config-flow-unique-id) | Happy path config flow tests should assert the created entry's unique ID |
 | `W7441` | [`home-assistant-tests-config-flow-error-recovery`](#w7441-home-assistant-tests-config-flow-error-recovery) | Config flow tests that show an error should finish the flow afterwards |
+| `W7442` | [`home-assistant-redundant-translation-key`](#w7442-home-assistant-redundant-translation-key) | `translation_key` only repeats the name the `device_class` already provides |
+| `W7447` | [`home-assistant-coordinator-untyped-config-entry`](#w7447-home-assistant-coordinator-untyped-config-entry) | Coordinator should use the integration's typed config entry instead of `ConfigEntry` |
+| `W7448` | [`home-assistant-coordinator-redundant-config-entry`](#w7448-home-assistant-coordinator-redundant-config-entry) | Coordinator assigns `self.config_entry` that `DataUpdateCoordinator.__init__` already sets |
 
 
 ## `home_assistant_logger` checker
@@ -311,6 +315,37 @@ entry unload, and avoids key collisions in the shared `hass.data` dictionary.
 
 See the [runtime-data quality scale rule](https://developers.home-assistant.io/docs/core/integration-quality-scale/rules/runtime-data)
 for migration guidance.
+
+
+## `home_assistant_coordinator_config_entry` checker
+
+Checks how a `DataUpdateCoordinator` handles its config entry.
+
+### `W7447`: `home-assistant-coordinator-untyped-config-entry`
+
+When an integration defines a typed config entry, such as
+`type MyConfigEntry = ConfigEntry[MyCoordinator]`, its coordinators should use
+it for the `config_entry` class annotation and `__init__` argument, so
+`self.config_entry.runtime_data` is typed as well:
+
+```python
+class MyCoordinator(DataUpdateCoordinator[MyData]):
+    config_entry: MyConfigEntry
+
+    def __init__(self, hass: HomeAssistant, config_entry: MyConfigEntry) -> None:
+        ...
+```
+
+When the alias lives in `__init__.py`, import it in the coordinator under
+`if TYPE_CHECKING:` to avoid a circular import, or move it to
+`coordinator.py`.
+
+### `W7448`: `home-assistant-coordinator-redundant-config-entry`
+
+`DataUpdateCoordinator.__init__` stores the `config_entry` it is given, so a
+coordinator that passes `config_entry` to `super().__init__` doesn't need to
+assign `self.config_entry` itself. To narrow its type, annotate it on the
+class instead.
 
 
 ## `home_assistant_async_load_fixtures` checker
@@ -516,6 +551,32 @@ whose type cannot be inferred. So every use of these methods in
 `tests/components` is flagged, including passing one around without calling
 it, unless the receiver is known to be something other than a coordinator,
 such as a mock.
+
+
+## `home_assistant_tests_config_flow_unique_id` checker
+
+Detects config flow tests that create an entry without checking its unique ID.
+
+### `W7440`: `home-assistant-tests-config-flow-unique-id`
+
+When the integration's config flow calls `async_set_unique_id`, a happy path
+test in `tests/components/<domain>/test_config_flow.py` that asserts a
+`CREATE_ENTRY` result should also assert the unique ID of the new entry:
+
+```python
+assert result["type"] is FlowResultType.CREATE_ENTRY
+assert result["result"].unique_id == "1234"
+```
+
+An assert that references `unique_id` or a `snapshot` counts as a check.
+Results of options and subentry flows are ignored, as those don't set a
+unique ID; results that can't be traced, such as those returned by a helper,
+are checked. Tests that start an options or subentry flow are skipped, as
+they run the config flow only as setup. Tests that recover from an error are
+skipped too: they make a mock raise an exception through `side_effect` or
+expect non-empty `errors`. Resetting a `side_effect` to `None`, replacing a
+method with a function or a mock, or returning a list of values doesn't count
+as an error.
 
 
 ## `home_assistant_tests_config_flow_error_recovery` checker
@@ -743,6 +804,46 @@ An EntityDescription field is set equal to a default already declared
 anywhere in the class hierarchy; the assignment can be removed. Only the
 literal defaults `None`, `True`, and `False` are checked; other default
 values are not flagged.
+
+
+## `home_assistant_redundant_translation_key` checker
+
+Detects entity descriptions and entity classes whose `translation_key` only
+repeats the name the `device_class` already provides.
+
+### `W7442`: `home-assistant-redundant-translation-key`
+
+Entities on the `binary_sensor`, `button`, `event`, `number`, `sensor` and
+`update` platforms are named after their device class when they have no
+name of their own. The name comes from `entity_component.<device_class>.name`
+in the platform's `strings.json`. Sensors with the `enum` device class are
+the exception.
+
+An entity description that sets a `device_class` and a `translation_key`
+whose name translates to the same string adds nothing:
+
+```python
+SensorEntityDescription(
+    key="power",
+    translation_key="power",  # "Power", the same as the device class name
+    device_class=SensorDeviceClass.POWER,
+)
+```
+
+The same goes for an entity class that sets `_attr_translation_key` and
+`_attr_device_class` in its body.
+
+When the key is used for nothing else, remove it and its `strings.json`
+entry. When it also holds other translations (such as states, state
+attributes or the unit of measurement) or icons, or the integration's code
+reads it, keep the key and remove only its `name`.
+
+Entities with an explicit `name` (or `_attr_name`) are skipped, as that name
+takes over once the translated name is gone. So are translated names that
+another translation references with `[%key:...%]`.
+
+Other platforms, such as `switch`, don't fall back to the device class name,
+so they are not checked.
 
 
 ## `home_assistant_duplicate_const` checker

@@ -16,8 +16,13 @@ from . import MOCK_FAILED_TO_LOGIN_MSG, MOCK_INVALID_TOKEN_MGS
 from tests.common import MockConfigEntry, async_load_json_object_fixture
 
 
-@pytest.mark.parametrize("test_cucode_in_coordinator_data", [False, True])
-async def test_form(hass: HomeAssistant, test_cucode_in_coordinator_data) -> None:
+@pytest.mark.parametrize(
+    ("test_cucode_in_coordinator_data", "expected_unique_id"),
+    [(False, "a8:21:08:e7:67:b6"), (True, "300F123456")],
+)
+async def test_form(
+    hass: HomeAssistant, test_cucode_in_coordinator_data, expected_unique_id: str
+) -> None:
     """Test we get the form."""
 
     coordinator_data = await async_load_json_object_fixture(
@@ -64,6 +69,7 @@ async def test_form(hass: HomeAssistant, test_cucode_in_coordinator_data) -> Non
         CONF_USERNAME: "test-username",
         CONF_PASSWORD: "test-password",
     }
+    assert result2["result"].unique_id == expected_unique_id
 
 
 async def test_form_invalid_auth(hass: HomeAssistant) -> None:

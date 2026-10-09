@@ -131,6 +131,7 @@ SENSOR_DESCRIPTIONS: tuple[IstaSensorEntityDescription, ...] = (
     ),
     IstaSensorEntityDescription(
         key=IstaSensorEntity.WATER,
+        # pylint: disable-next=home-assistant-redundant-translation-key
         translation_key=IstaSensorEntity.WATER,
         device_class=SensorDeviceClass.WATER,
         native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,

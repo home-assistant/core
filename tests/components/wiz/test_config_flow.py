@@ -75,6 +75,7 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result2["data"] == {
         CONF_HOST: "1.1.1.1",
     }
+    assert result2["result"].unique_id == FAKE_MAC
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
     bulb.async_close.assert_awaited_once()
@@ -303,6 +304,7 @@ async def test_discovered_by_dhcp_or_integration_discovery(
     assert result2["data"] == {
         CONF_HOST: "1.1.1.1",
     }
+    assert result2["result"].unique_id == FAKE_MAC
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
     bulb.async_close.assert_awaited_once()
@@ -422,6 +424,7 @@ async def test_setup_via_discovery(hass: HomeAssistant) -> None:
     assert result3["data"] == {
         CONF_HOST: "1.1.1.1",
     }
+    assert result3["result"].unique_id == FAKE_MAC
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
     bulb.async_close.assert_awaited_once()
@@ -544,6 +547,7 @@ async def test_discovery_with_firmware_update(hass: HomeAssistant) -> None:
     assert result2["data"] == {
         CONF_HOST: "1.1.1.1",
     }
+    assert result2["result"].unique_id == FAKE_MAC
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -580,6 +584,7 @@ async def test_discovered_during_onboarding(hass: HomeAssistant, source, data) -
     assert result["data"] == {
         CONF_HOST: "1.1.1.1",
     }
+    assert result["result"].unique_id == FAKE_MAC
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -623,5 +628,6 @@ async def test_flow_replace_ignored_device(hass: HomeAssistant) -> None:
     assert result["data"] == {
         CONF_HOST: "1.1.1.1",
     }
+    assert result["result"].unique_id == FAKE_MAC
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1

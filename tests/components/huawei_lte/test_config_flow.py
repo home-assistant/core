@@ -337,6 +337,7 @@ async def test_success(hass: HomeAssistant, login_requests_mock, scheme: str) ->
         )
         await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_URL] == user_input[CONF_URL]
     assert result["data"][CONF_USERNAME] == user_input[CONF_USERNAME]
@@ -344,7 +345,12 @@ async def test_success(hass: HomeAssistant, login_requests_mock, scheme: str) ->
 
 
 @pytest.mark.parametrize(
-    ("requests_mock_request_kwargs", "upnp_data", "expected_result"),
+    (
+        "requests_mock_request_kwargs",
+        "upnp_data",
+        "expected_result",
+        "expected_unique_id",
+    ),
     [
         (
             {
@@ -361,6 +367,7 @@ async def test_success(hass: HomeAssistant, login_requests_mock, scheme: str) ->
                 "step_id": "user",
                 "errors": {},
             },
+            "00000000",
         ),
         (
             {
@@ -377,6 +384,7 @@ async def test_success(hass: HomeAssistant, login_requests_mock, scheme: str) ->
                 "step_id": "user",
                 "errors": {},
             },
+            "uuid:XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX",
         ),
         (
             {
@@ -391,6 +399,7 @@ async def test_success(hass: HomeAssistant, login_requests_mock, scheme: str) ->
                 "type": FlowResultType.ABORT,
                 "reason": "unsupported_device",
             },
+            "uuid:XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX",
         ),
     ],
 )
@@ -400,6 +409,7 @@ async def test_ssdp(
     requests_mock_request_kwargs,
     upnp_data,
     expected_result,
+    expected_unique_id: str,
 ) -> None:
     """Test SSDP discovery initiates config properly."""
     url = FIXTURE_USER_INPUT[CONF_URL][:-1]  # strip trailing slash for appending port
@@ -452,6 +462,7 @@ async def test_ssdp(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == service_info.upnp[ATTR_UPNP_MODEL_NAME]
     assert result["result"].data[CONF_UPNP_UDN] == service_info.upnp[ATTR_UPNP_UDN]
+    assert result["result"].unique_id == expected_unique_id
 
 
 @pytest.mark.parametrize(

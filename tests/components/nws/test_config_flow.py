@@ -64,6 +64,7 @@ async def test_form_location(
         "longitude": -90,
         CONF_STATION: "ABC",
     }
+    assert result3["result"].unique_id == "35.0_-90.0"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -127,6 +128,7 @@ async def test_form_location_already_configured(
     await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["result"].unique_id == "32.87336_-117.22743"
     assert len(mock_setup_entry.mock_calls) == 1
 
     mock_setup_entry.reset_mock()
@@ -373,6 +375,7 @@ async def test_form_entity_already_configured(
     )
     await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
 
     result = await hass.config_entries.flow.async_init(

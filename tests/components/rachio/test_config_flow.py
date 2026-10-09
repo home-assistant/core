@@ -70,6 +70,7 @@ async def test_form(hass: HomeAssistant) -> None:
         CONF_CUSTOM_URL: "http://custom.url",
         CONF_MANUAL_RUN_MINS: 5,
     }
+    assert result2["result"].unique_id == "api_key"
     assert len(mock_setup_entry.mock_calls) == 1
 
 

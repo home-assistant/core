@@ -17,6 +17,7 @@ from . import (
     DEVICE_ID,
     IP_ADDRESS,
     MODULE,
+    ZC_NAME,
     ZEROCONF_DATA,
     _patch_get_info,
 )
@@ -45,6 +46,7 @@ async def test_manual_setup(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {CONF_HOST: IP_ADDRESS}
     assert result["title"] == DEFAULT_ENTRY_TITLE
+    assert result["result"].unique_id == DEVICE_ID
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -137,6 +139,7 @@ async def test_discovered_zeroconf(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["data"] == {CONF_HOST: IP_ADDRESS}
     assert result2["title"] == DEFAULT_ENTRY_TITLE
+    assert result2["result"].unique_id == ZC_NAME.upper()
     assert mock_async_setup_entry.called
 
     entry = hass.config_entries.async_entries(DOMAIN)[0]

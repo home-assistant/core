@@ -46,6 +46,7 @@ async def test_form(
         CONF_USERNAME: "hello@home-assistant.io",
         CONF_TOKEN: {"access_token": "mock-token"},
     }
+    assert result2["result"].unique_id == "hello@home-assistant.io"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -294,6 +295,7 @@ async def test_dhcp_discovery(
         CONF_USERNAME: username,
         CONF_TOKEN: {"access_token": "mock-token"},
     }
+    assert result["result"].unique_id == username
 
     config_entry = hass.config_entries.async_entry_for_domain_unique_id(
         DOMAIN, username

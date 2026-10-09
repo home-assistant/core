@@ -162,6 +162,7 @@ async def test_user_flow_with_no_2fa(hass: HomeAssistant) -> None:
             "mock-device-password",
         ],
     }
+    assert result["result"].unique_id == USERNAME
 
     assert len(mock_setup_entry.mock_calls) == 1
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
@@ -259,6 +260,7 @@ async def test_user_flow_2fa(hass: HomeAssistant) -> None:
             "mock-device-password",
         ],
     }
+    assert result["result"].unique_id == USERNAME
 
     assert len(mock_setup_entry.mock_calls) == 1
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
@@ -684,6 +686,7 @@ async def test_user_flow_2fa_send_new_code(hass: HomeAssistant) -> None:
             "mock-device-password",
         ],
     }
+    assert result["result"].unique_id == USERNAME
     assert len(mock_setup_entry.mock_calls) == 1
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 

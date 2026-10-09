@@ -28,6 +28,7 @@ async def test_flow_user(hass: HomeAssistant, anova_api: AnovaApi) -> None:
         CONF_USERNAME: "sample@gmail.com",
         CONF_PASSWORD: "sample",
     }
+    assert result["result"].unique_id == "sample@gmail.com"
 
 
 async def test_flow_wrong_login(hass: HomeAssistant) -> None:

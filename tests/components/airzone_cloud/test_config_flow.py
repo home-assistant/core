@@ -92,6 +92,7 @@ async def test_form(hass: HomeAssistant) -> None:
         assert result["data"][CONF_ID] == CONFIG[CONF_ID]
         assert result["data"][CONF_USERNAME] == CONFIG[CONF_USERNAME]
         assert result["data"][CONF_PASSWORD] == CONFIG[CONF_PASSWORD]
+        assert result["result"].unique_id == CONFIG[CONF_ID]
 
         assert len(mock_setup_entry.mock_calls) == 1
 

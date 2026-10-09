@@ -42,6 +42,9 @@
     "is_pm4_value": {
       "condition": "mdi:blur"
     },
+    "is_radon_value": {
+      "condition": "mdi:radioactive"
+    },
     "is_smoke_cleared": {
       "condition": "mdi:check-circle"
     },

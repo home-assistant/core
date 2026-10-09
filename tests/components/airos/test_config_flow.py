@@ -619,6 +619,7 @@ async def test_discover_flow_one_device_found(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == MOCK_DISC_DEV1[HOSTNAME]
     assert result["data"][CONF_HOST] == MOCK_DISC_DEV1[IP_ADDRESS]
+    assert result["result"].unique_id == MOCK_DISC_DEV1[MAC_ADDRESS]
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -697,6 +698,7 @@ async def test_discover_flow_multiple_devices_found(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == MOCK_DISC_DEV1[HOSTNAME]
     assert result["data"][CONF_HOST] == MOCK_DISC_DEV1[IP_ADDRESS]
+    assert result["result"].unique_id == MOCK_DISC_DEV1[MAC_ADDRESS]
 
 
 async def test_discover_flow_with_existing_device(

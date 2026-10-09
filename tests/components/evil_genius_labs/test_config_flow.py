@@ -52,6 +52,7 @@ async def test_form(
     assert result2["data"] == {
         "host": "1.1.1.1",
     }
+    assert result2["result"].unique_id == "1923d4"
     assert len(mock_setup_entry.mock_calls) == 1
 
 

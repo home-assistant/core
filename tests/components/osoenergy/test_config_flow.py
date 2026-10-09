@@ -47,6 +47,7 @@ async def test_user_flow(hass: HomeAssistant) -> None:
     assert result2["data"] == {
         CONF_API_KEY: SUBSCRIPTION_KEY,
     }
+    assert result2["result"].unique_id == TEST_USER_EMAIL
 
     assert len(mock_setup_entry.mock_calls) == 1
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1

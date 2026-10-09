@@ -29,9 +29,6 @@
       "charge_total": {
         "name": "Charge total"
       },
-      "current": {
-        "name": "Current"
-      },
       "discharge_today": {
         "name": "Discharge today"
       },
@@ -65,9 +62,6 @@
       "load_power": {
         "name": "Load power"
       },
-      "power": {
-        "name": "Power"
-      },
       "solar_energy_today": {
         "name": "Solar energy today"
       },
@@ -79,12 +73,6 @@
       },
       "state_of_charge": {
         "name": "State of charge"
-      },
-      "temperature": {
-        "name": "Temperature"
-      },
-      "voltage": {
-        "name": "Voltage"
       }
     }
   }

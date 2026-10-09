@@ -178,6 +178,7 @@ async def test_host_url_construction(
     # Verify the result is a created entry with normalized host
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].data[CONF_HOST] == expected_host
+    assert result["result"].unique_id == "1234567890"
 
 
 @pytest.mark.usefixtures("mock_setup_entry")

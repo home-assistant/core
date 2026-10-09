@@ -259,6 +259,7 @@ async def test_step_user_coordinates(
         CONF_BALANCING_AUTHORITY: "PJM New Jersey",
         CONF_BALANCING_AUTHORITY_ABBREV: "PJM_NJ",
     }
+    assert result["result"].unique_id == "32.87336, -117.22743"
 
 
 @pytest.mark.parametrize(
@@ -298,3 +299,4 @@ async def test_step_user_home(
         CONF_BALANCING_AUTHORITY: "PJM New Jersey",
         CONF_BALANCING_AUTHORITY_ABBREV: "PJM_NJ",
     }
+    assert result["result"].unique_id == "32.87336, -117.22743"

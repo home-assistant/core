@@ -284,6 +284,7 @@ async def test_successful_login_no_usb(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == entry_data_without_usb
     assert result["options"] == entry_options_without_usb
+    assert result["result"].unique_id == "account_id"
     assert crownstone_setup.call_count == 1
 
 
@@ -337,6 +338,7 @@ async def test_successful_login_with_usb(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == entry_data_with_usb
     assert result["options"] == entry_options_with_usb
+    assert result["result"].unique_id == "account_id"
     assert crownstone_setup.call_count == 1
 
 
@@ -381,6 +383,7 @@ async def test_successful_login_with_manual_usb_path(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == entry_data_with_manual_usb
     assert result["options"] == entry_options_with_manual_usb
+    assert result["result"].unique_id == "account_id"
     assert crownstone_setup.call_count == 1
 
 

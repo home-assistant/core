@@ -44,6 +44,7 @@ async def test_config_flow(
         CONF_COUNTRY: MOCK_COUNTRY,
         CONF_CONNECT_CLIENT_ID: MOCK_CONNECT_CLIENT_ID,
     }
+    assert result["result"].unique_id == MOCK_PAT
 
     mock_config_thinq_api.async_get_device_list.assert_called_once()
 
@@ -113,6 +114,7 @@ async def test_dhcp_config_flow(
         CONF_COUNTRY: MOCK_COUNTRY,
         CONF_CONNECT_CLIENT_ID: MOCK_CONNECT_CLIENT_ID,
     }
+    assert result["result"].unique_id == MOCK_PAT
 
     mock_config_thinq_api.async_get_device_list.assert_called_once()
 

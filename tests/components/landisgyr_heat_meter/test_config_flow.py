@@ -53,6 +53,7 @@ async def test_user_flow_success(mock_heat_meter, hass: HomeAssistant) -> None:
         "model": "LUGCUH50",
         "device_number": "123456789",
     }
+    assert result["result"].unique_id == "123456789"
 
 
 @patch(API_HEAT_METER_SERVICE)

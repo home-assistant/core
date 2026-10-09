@@ -64,6 +64,7 @@ async def test_form(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "127.0.0.1"
     assert result2["data"] == {
@@ -195,6 +196,7 @@ async def test_discovery(hass: HomeAssistant) -> None:
     assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == DEVICE_NAME
     assert result3["data"] == DEFAULT_ENTRY_DATA
+    assert result3["result"].unique_id == FORMATTED_MAC_ADDRESS
     mock_setup.assert_called_once()
     mock_setup_entry.assert_called_once()
 
@@ -279,6 +281,7 @@ async def test_discovered_by_discovery(hass: HomeAssistant) -> None:
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["data"] == DEFAULT_ENTRY_DATA
+    assert result2["result"].unique_id == FORMATTED_MAC_ADDRESS
     assert mock_async_setup.called
     assert mock_async_setup_entry.called
 
@@ -310,6 +313,7 @@ async def test_discovered_by_dhcp(hass: HomeAssistant) -> None:
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["data"] == DEFAULT_ENTRY_DATA
+    assert result2["result"].unique_id == FORMATTED_MAC_ADDRESS
     assert mock_async_setup.called
     assert mock_async_setup_entry.called
 

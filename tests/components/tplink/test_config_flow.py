@@ -147,6 +147,7 @@ async def test_discovery(
     assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == DEFAULT_ENTRY_TITLE
     assert result3["data"] == expected_entry_data
+    assert result3["result"].unique_id == MAC_ADDRESS
     mock_setup.assert_called_once()
     mock_setup_entry.assert_called_once()
 
@@ -959,6 +960,7 @@ async def test_manual_camera_no_live_view(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert CONF_CAMERA_CREDENTIALS not in result["data"]
     assert result["data"][CONF_LIVE_VIEW] is False
+    assert result["result"].unique_id == MAC_ADDRESS3
 
 
 async def test_manual_no_capabilities(hass: HomeAssistant) -> None:
@@ -1083,6 +1085,7 @@ async def test_manual_auth_camera(
         CONF_PASSWORD: "campass",
     }
     assert result["data"][CONF_LIVE_VIEW] is True
+    assert result["result"].unique_id == MAC_ADDRESS3
 
 
 @pytest.mark.parametrize(

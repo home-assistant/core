@@ -54,6 +54,7 @@ async def test_async_step_user_success(hass: HomeAssistant, user: User) -> None:
         CONF_EMAIL: "aseko@example.com",
         CONF_PASSWORD: "passw0rd",
     }
+    assert result2["result"].unique_id == "a_user_id"
     assert len(mock_setup_entry.mock_calls) == 1
 
 

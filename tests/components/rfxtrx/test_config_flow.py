@@ -74,6 +74,7 @@ async def test_setup_network(transport_mock, hass: HomeAssistant) -> None:
         "automatic_add": False,
         "devices": {},
     }
+    assert result["result"].unique_id == DOMAIN
 
 
 @patch(
@@ -115,6 +116,7 @@ async def test_setup_serial(com_mock, transport_mock, hass: HomeAssistant) -> No
         "automatic_add": False,
         "devices": {},
     }
+    assert result["result"].unique_id == DOMAIN
 
 
 @patch(
@@ -164,6 +166,7 @@ async def test_setup_serial_manual(
         "automatic_add": False,
         "devices": {},
     }
+    assert result["result"].unique_id == DOMAIN
 
 
 async def test_setup_network_fail(transport_mock, hass: HomeAssistant) -> None:

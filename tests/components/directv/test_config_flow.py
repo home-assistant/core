@@ -241,6 +241,7 @@ async def test_full_user_flow_implementation(
     assert result["data"]
     assert result["data"][CONF_HOST] == HOST
     assert result["data"][CONF_RECEIVER_ID] == RECEIVER_ID
+    assert result["result"].unique_id == RECEIVER_ID
 
 
 async def test_full_ssdp_flow_implementation(
@@ -268,3 +269,4 @@ async def test_full_ssdp_flow_implementation(
     assert result["data"]
     assert result["data"][CONF_HOST] == HOST
     assert result["data"][CONF_RECEIVER_ID] == RECEIVER_ID
+    assert result["result"].unique_id == RECEIVER_ID

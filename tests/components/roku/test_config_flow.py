@@ -24,6 +24,7 @@ from . import (
     MOCK_SSDP_DISCOVERY_INFO,
     NAME_ROKUTV,
     UPNP_FRIENDLY_NAME,
+    UPNP_SERIAL,
 )
 
 from tests.common import MockConfigEntry
@@ -187,6 +188,7 @@ async def test_homekit_discovery(
     assert "data" in result
     assert result["data"][CONF_HOST] == HOMEKIT_HOST
     assert result["data"][CONF_NAME] == NAME_ROKUTV
+    assert result["result"].unique_id == "YN00H5555555"
 
     # test abort on existing host
     discovery_info = dataclasses.replace(MOCK_HOMEKIT_DISCOVERY_INFO)
@@ -257,6 +259,7 @@ async def test_ssdp_discovery(
     assert result["data"]
     assert result["data"][CONF_HOST] == HOST
     assert result["data"][CONF_NAME] == UPNP_FRIENDLY_NAME
+    assert result["result"].unique_id == UPNP_SERIAL
 
 
 @pytest.mark.usefixtures("mock_setup_entry")

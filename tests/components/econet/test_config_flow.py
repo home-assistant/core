@@ -107,6 +107,7 @@ async def test_auth_worked(hass: HomeAssistant) -> None:
             CONF_EMAIL: "admin@localhost.com",
             CONF_PASSWORD: "password0",
         }
+        assert result["result"].unique_id == "admin@localhost.com"
 
 
 async def test_already_configured(hass: HomeAssistant) -> None:

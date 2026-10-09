@@ -56,6 +56,7 @@ async def test_form(hass: HomeAssistant, mock_list_contracts) -> None:
         "password": "test-password",
         "country": "PT",
     }
+    assert result3["result"].unique_id == "123"
     assert len(mock_setup_entry.mock_calls) == 1
 
     assert len(mock_retrieve.mock_calls) == 1

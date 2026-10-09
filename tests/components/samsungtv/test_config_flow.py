@@ -371,6 +371,7 @@ async def test_user_websocket_k_series_stays_on_websocket(
     assert result2["data"][CONF_METHOD] == METHOD_WEBSOCKET
     assert result2["data"][CONF_MODEL] == "UN55KU6290"
     assert result2["data"][CONF_PORT] == 8002
+    assert result2["result"].unique_id == "0dd7f9c9-b9a0-4b7e-8c3e-1f2b3c4d5e6f"
 
 
 @pytest.mark.usefixtures("rest_api")
@@ -1515,6 +1516,7 @@ async def test_autodetect_legacy(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=MOCK_USER_DATA
     )
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_METHOD] == METHOD_LEGACY
     assert result["data"][CONF_MAC] is None

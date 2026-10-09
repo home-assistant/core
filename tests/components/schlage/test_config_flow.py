@@ -53,6 +53,7 @@ async def test_form(
         "username": "test-username",
         "password": "test-password",
     }
+    assert result2["result"].unique_id == "abc123"
     assert len(mock_setup_entry.mock_calls) == 1
 
 

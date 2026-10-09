@@ -65,6 +65,7 @@ async def test_adding_second_device(
             user_input=USER_INPUT,
         )
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "secondary_device"
 
 
 async def test_connection_error(

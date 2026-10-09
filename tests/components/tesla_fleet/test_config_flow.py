@@ -791,6 +791,7 @@ async def test_region_override(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == UNIQUE_ID
+    assert result["result"].unique_id == UNIQUE_ID
     # The overridden region determines which server is registered
     assert mock_api_class.call_args.kwargs["server"] == SERVERS["eu"]
 
@@ -872,6 +873,7 @@ async def test_registration_complete_with_domain_and_user_input(
     flow_instance.data = {"token": {"access_token": "test"}}
 
     result = await flow_instance.async_step_registration_complete({"complete": True})
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == UNIQUE_ID
 

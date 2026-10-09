@@ -44,6 +44,7 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == TEST_LOGIN[CONF_USERNAME]
     assert result2["data"] == TEST_LOGIN
+    assert result2["result"].unique_id == TEST_LOGIN[CONF_USERNAME]
     assert len(mock_setup_entry.mock_calls) == 1
 
 

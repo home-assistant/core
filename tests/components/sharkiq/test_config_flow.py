@@ -66,6 +66,7 @@ async def test_form(hass: HomeAssistant) -> None:
         "password": TEST_PASSWORD,
         "region": TEST_REGION,
     }
+    assert result2["result"].unique_id == TEST_USERNAME
 
     await hass.async_block_till_done()
     mock_setup_entry.assert_called_once()

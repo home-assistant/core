@@ -48,6 +48,7 @@ async def test_form(hass: HomeAssistant, client: MagicMock) -> None:
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["data"] == TEST_DATA
+    assert result2["result"].unique_id == TEST_MAC
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -276,3 +277,4 @@ async def test_dhcp_discovery_manual_user_setup(
 
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["data"] == TEST_DATA
+        assert result["result"].unique_id == TEST_MAC

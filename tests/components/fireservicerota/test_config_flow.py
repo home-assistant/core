@@ -135,6 +135,7 @@ async def test_step_user(hass: HomeAssistant) -> None:
                 "created_at": 4321,
             },
         }
+        assert result["result"].unique_id == MOCK_CONF[CONF_USERNAME]
 
         assert len(mock_setup_entry.mock_calls) == 1
 
