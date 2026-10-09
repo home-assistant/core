@@ -13,7 +13,7 @@
   "mfa_setup": {
     "notify": {
       "abort": {
-        "no_available_service": "No notification services available.",
+        "no_available_service": "No notify entities or notification services available.",
         "notify_failed": "Failed to send the one-time password with the selected notify entities or notification service."
       },
       "error": {

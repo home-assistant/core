@@ -532,7 +532,7 @@ async def test_entity_ids_not_stored_for_notify_service(
 
 
 async def test_include_exclude_notify_entities(hass: HomeAssistant) -> None:
-    """Test include and exclude config apply to notify entities."""
+    """Test include and exclude config apply to notify entities by object ID."""
     for entity_id in ("notify.include1", "notify.include2", "notify.exclude1"):
         hass.states.async_set(entity_id, STATE_UNKNOWN)
 
@@ -540,8 +540,8 @@ async def test_include_exclude_notify_entities(hass: HomeAssistant) -> None:
         hass,
         {
             "type": "notify",
-            "include": ["notify.include1", "notify.exclude1"],
-            "exclude": ["notify.exclude1"],
+            "include": ["include1", "exclude1"],
+            "exclude": ["exclude1"],
         },
     )
     assert notify_auth_module.async_get_available_notify_entities() == [

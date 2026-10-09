@@ -11,7 +11,7 @@ import attr
 import probatio
 
 from homeassistant.const import CONF_EXCLUDE, CONF_INCLUDE, STATE_UNAVAILABLE
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback, split_entity_id
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError, ServiceNotFound
 from homeassistant.helpers import config_validation as cv
@@ -177,11 +177,15 @@ class NotifyAuthModule(MultiFactorAuthModule):
         unordered_entities = {
             entity_id
             for entity_id in self.hass.states.async_entity_ids("notify")
-            if entity_id not in self._exclude
+            if split_entity_id(entity_id)[1] not in self._exclude
         }
 
         if self._include:
-            unordered_entities &= set(self._include)
+            unordered_entities = {
+                entity_id
+                for entity_id in unordered_entities
+                if split_entity_id(entity_id)[1] in self._include
+            }
 
         return sorted(unordered_entities)
 
