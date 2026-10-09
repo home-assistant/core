@@ -107,7 +107,6 @@ async def test_config_flow_manual_host_success(hass: HomeAssistant) -> None:
         {CONF_HOST: TEST_HOST},
     )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TEST_NAME
     assert result["data"] == {
@@ -117,6 +116,7 @@ async def test_config_flow_manual_host_success(hass: HomeAssistant) -> None:
         CONF_MANUFACTURER: TEST_MANUFACTURER,
         CONF_SERIAL_NUMBER: TEST_SERIALNUMBER,
     }
+    assert result["result"].unique_id == TEST_UNIQUE_ID
     assert result["options"] == {CONF_USE_TELNET: True}
 
 
@@ -142,7 +142,6 @@ async def test_config_flow_manual_discover_1_success(hass: HomeAssistant) -> Non
             {},
         )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TEST_NAME
     assert result["data"] == {
@@ -152,6 +151,7 @@ async def test_config_flow_manual_discover_1_success(hass: HomeAssistant) -> Non
         CONF_MANUFACTURER: TEST_MANUFACTURER,
         CONF_SERIAL_NUMBER: TEST_SERIALNUMBER,
     }
+    assert result["result"].unique_id == TEST_UNIQUE_ID
     assert result["options"] == {CONF_USE_TELNET: True}
 
 
@@ -186,7 +186,6 @@ async def test_config_flow_manual_discover_2_success(hass: HomeAssistant) -> Non
         {"select_host": TEST_HOST2},
     )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TEST_NAME
     assert result["data"] == {
@@ -196,6 +195,7 @@ async def test_config_flow_manual_discover_2_success(hass: HomeAssistant) -> Non
         CONF_MANUFACTURER: TEST_MANUFACTURER,
         CONF_SERIAL_NUMBER: TEST_SERIALNUMBER,
     }
+    assert result["result"].unique_id == TEST_UNIQUE_ID
     assert result["options"] == {CONF_USE_TELNET: True}
 
 
@@ -343,7 +343,6 @@ async def test_config_flow_ssdp(hass: HomeAssistant) -> None:
         {},
     )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TEST_NAME
     assert result["data"] == {
@@ -353,6 +352,7 @@ async def test_config_flow_ssdp(hass: HomeAssistant) -> None:
         CONF_MANUFACTURER: TEST_MANUFACTURER,
         CONF_SERIAL_NUMBER: TEST_SERIALNUMBER,
     }
+    assert result["result"].unique_id == TEST_UNIQUE_ID
     assert result["options"] == {CONF_USE_TELNET: True}
 
 
