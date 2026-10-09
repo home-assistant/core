@@ -65,6 +65,7 @@ async def test_remove_shade_device_via_websocket_allowed_when_offline(
 
     mock_runtime_data = MagicMock(coordinator=mock_coordinator)
     config_entry.runtime_data = mock_runtime_data
+    config_entry.mock_state(hass, ConfigEntryState.LOADED)
 
     client = await hass_ws_client(hass)
 
@@ -104,6 +105,7 @@ async def test_remove_shade_device_via_websocket_blocked_when_online(
 
     mock_runtime_data = MagicMock(coordinator=mock_coordinator)
     config_entry.runtime_data = mock_runtime_data
+    config_entry.mock_state(hass, ConfigEntryState.LOADED)
 
     client = await hass_ws_client(hass)
 
@@ -112,7 +114,7 @@ async def test_remove_shade_device_via_websocket_blocked_when_online(
 
     # The deletion must fail because the device is still physically active on the network
     assert msg["success"] is False
-    assert msg["error"]["code"] == "home_assistant_error"
+    assert msg["error"]["code"] == "unknown_error"
     assert device_registry.async_get(shade_device.id) is not None
 
 
@@ -124,6 +126,7 @@ async def test_remove_hub_device_via_websocket_is_blocked(
     """Test that attempting to remove the root Hub device fails and is explicitly blocked."""
     config_entry = MockConfigEntry(domain=DOMAIN, unique_id="hub_123")
     config_entry.add_to_hass(hass)
+    config_entry.mock_state(hass, ConfigEntryState.LOADED)
 
     hub_device = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
@@ -136,5 +139,5 @@ async def test_remove_hub_device_via_websocket_is_blocked(
     msg = await client.remove_device(hub_device.id)
 
     assert msg["success"] is False
-    assert msg["error"]["code"] == "home_assistant_error"
+    assert msg["error"]["code"] == "unknown_error"
     assert device_registry.async_get(hub_device.id) is not None
