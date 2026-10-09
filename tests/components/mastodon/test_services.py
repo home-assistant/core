@@ -964,7 +964,7 @@ async def test_service_post_media_source_errors(
 
 
 @pytest.mark.usefixtures("mock_mastodon_client")
-async def test_service_post_media_source_unknow_media_type(
+async def test_service_post_media_source_unknown_media_type(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
 ) -> None:

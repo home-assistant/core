@@ -116,9 +116,6 @@
     "media_type_unknown": {
       "message": "Media type unknown."
     },
-    "media_video_not_allowed_with_other_media": {
-      "message": "Video media is not allowed with other media."
-    },
     "mute_duration_too_long": {
       "message": "Mute duration is too long."
     },
