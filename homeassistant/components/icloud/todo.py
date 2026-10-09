@@ -172,11 +172,17 @@ class IcloudTodoListEntity(
         if item.summary is not None:
             reminder.title = item.summary
         reminder.desc = item.description or ""
+        old_due = reminder.due_date
+        old_all_day = reminder.all_day
         reminder.due_date, reminder.all_day = _as_due(item.due)
-        if isinstance(item.due, datetime):
-            reminder.time_zone = self.hass.config.time_zone
-        else:
+        if reminder.due_date is None or reminder.all_day:
             reminder.time_zone = None
+        elif (
+            reminder.time_zone is None
+            or reminder.due_date != old_due
+            or reminder.all_day != old_all_day
+        ):
+            reminder.time_zone = self.hass.config.time_zone
         if item.status is not None:
             reminder.completed = item.status == TodoItemStatus.COMPLETED
 
