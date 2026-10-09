@@ -14,7 +14,8 @@ from homeassistant.helpers.deprecation import (
     DeprecatedAlias,
     DeprecatedConstant,
     DeprecatedConstantEnum,
-    DeprecatedEntityAlias,
+    DeprecatedEntityAttr,
+    DeprecatedEntityProperty,
     EnumWithDeprecatedMembers,
     check_if_deprecated_constant,
     deprecated_class,
@@ -729,18 +730,18 @@ def test_deprecated_hass_argument(
     assert calls[0] == calls[2]
 
 
-class MockAliasEntity(Entity, cached_properties={"native_value"}):
+class MockRenamedEntity(Entity, cached_properties={"native_value"}):
     """Entity base class which renamed value to native_value."""
 
     _attr_native_value: int | None = None
 
-    value = DeprecatedEntityAlias[int | None]("native_value", "2099.1")
-    _attr_value = DeprecatedEntityAlias[int | None]("_attr_native_value", "2099.1")
+    value = DeprecatedEntityProperty[int | None]("native_value", "2099.1")
+    _attr_value = DeprecatedEntityAttr[int | None]("_attr_native_value", "2099.1")
 
     def __init_subclass__(cls, **kwargs: Any) -> None:
         """Serve native_value from subclasses still providing value."""
         super().__init_subclass__(**kwargs)
-        migrate_deprecated_entity_members(cls, MockAliasEntity)
+        migrate_deprecated_entity_members(cls, MockRenamedEntity)
 
     @cached_property
     def native_value(self) -> int | None:
@@ -748,18 +749,18 @@ class MockAliasEntity(Entity, cached_properties={"native_value"}):
         return self._attr_native_value
 
 
-def test_deprecated_entity_alias_class_attribute(
+def test_deprecated_entity_member_class_attribute(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test a deprecated _attr_ class attribute becomes the native storage."""
 
-    class LegacyEntity(MockAliasEntity):
+    class LegacyEntity(MockRenamedEntity):
         _attr_value = 1
 
     entity = LegacyEntity()
     assert entity.native_value == 1
     assert (
-        f"{__name__}::test_deprecated_entity_alias_class_attribute.<locals>."
+        f"{__name__}::test_deprecated_entity_member_class_attribute.<locals>."
         "LegacyEntity provides the deprecated _attr_value, this will stop working "
         "in Home Assistant 2099.1, use _attr_native_value instead"
     ) in caplog.text
@@ -779,10 +780,10 @@ def test_deprecated_entity_alias_class_attribute(
     ) in caplog.text
 
 
-def test_deprecated_entity_alias_property(caplog: pytest.LogCaptureFixture) -> None:
+def test_deprecated_entity_member_property(caplog: pytest.LogCaptureFixture) -> None:
     """Test a deprecated property override serves the native property."""
 
-    class LegacyEntity(MockAliasEntity):
+    class LegacyEntity(MockRenamedEntity):
         reads = 0
 
         @property
@@ -804,10 +805,10 @@ def test_deprecated_entity_alias_property(caplog: pytest.LogCaptureFixture) -> N
     assert "reads the deprecated" not in caplog.text
 
 
-def test_deprecated_entity_alias_migrated(caplog: pytest.LogCaptureFixture) -> None:
+def test_deprecated_entity_member_migrated(caplog: pytest.LogCaptureFixture) -> None:
     """Test a migrated subclass of a legacy class serves its native storage."""
 
-    class LegacyEntity(MockAliasEntity):
+    class LegacyEntity(MockRenamedEntity):
         @property
         def value(self) -> int | None:
             return self._attr_value
@@ -815,7 +816,7 @@ def test_deprecated_entity_alias_migrated(caplog: pytest.LogCaptureFixture) -> N
     class MigratedEntity(LegacyEntity):
         _attr_native_value = 5
 
-    class NativeEntity(MockAliasEntity):
+    class NativeEntity(MockRenamedEntity):
         _attr_native_value = 6
 
     caplog.clear()
@@ -826,11 +827,11 @@ def test_deprecated_entity_alias_migrated(caplog: pytest.LogCaptureFixture) -> N
     assert _count_records(caplog, "reads the deprecated") == 2
 
 
-class QuietAliasEntity(Entity, cached_properties={"native_value"}):
+class QuietRenamedEntity(Entity, cached_properties={"native_value"}):
     """Entity base class not reporting core integrations."""
 
     _attr_native_value: int | None = None
-    _attr_value = DeprecatedEntityAlias[int | None](
+    _attr_value = DeprecatedEntityAttr[int | None](
         "_attr_native_value",
         "2099.1",
         core_integration_behavior=ReportBehavior.IGNORE,
@@ -839,7 +840,7 @@ class QuietAliasEntity(Entity, cached_properties={"native_value"}):
     def __init_subclass__(cls, **kwargs: Any) -> None:
         """Serve native_value from subclasses still providing value."""
         super().__init_subclass__(**kwargs)
-        migrate_deprecated_entity_members(cls, QuietAliasEntity)
+        migrate_deprecated_entity_members(cls, QuietRenamedEntity)
 
     @cached_property
     def native_value(self) -> int | None:
@@ -847,11 +848,11 @@ class QuietAliasEntity(Entity, cached_properties={"native_value"}):
         return self._attr_native_value
 
 
-class StrictAliasEntity(Entity, cached_properties={"native_value"}):
+class StrictRenamedEntity(Entity, cached_properties={"native_value"}):
     """Entity base class raising for core integrations."""
 
     _attr_native_value: int | None = None
-    _attr_value = DeprecatedEntityAlias[int | None](
+    _attr_value = DeprecatedEntityAttr[int | None](
         "_attr_native_value",
         "2099.1",
         core_integration_behavior=ReportBehavior.ERROR,
@@ -860,7 +861,7 @@ class StrictAliasEntity(Entity, cached_properties={"native_value"}):
     def __init_subclass__(cls, **kwargs: Any) -> None:
         """Serve native_value from subclasses still providing value."""
         super().__init_subclass__(**kwargs)
-        migrate_deprecated_entity_members(cls, StrictAliasEntity)
+        migrate_deprecated_entity_members(cls, StrictRenamedEntity)
 
     @cached_property
     def native_value(self) -> int | None:
@@ -868,18 +869,18 @@ class StrictAliasEntity(Entity, cached_properties={"native_value"}):
         return self._attr_native_value
 
 
-def test_deprecated_entity_alias_core_declaration_ignored(
+def test_deprecated_entity_member_core_declaration_ignored(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test declarations in core integrations are not reported when ignored."""
     core = type(
         "CoreEntity",
-        (QuietAliasEntity,),
+        (QuietRenamedEntity,),
         {"__module__": "homeassistant.components.hue.sensor", "_attr_value": 1},
     )
     custom = type(
         "CustomEntity",
-        (QuietAliasEntity,),
+        (QuietRenamedEntity,),
         {"__module__": "custom_components.foo.sensor", "_attr_value": 2},
     )
 
@@ -889,7 +890,7 @@ def test_deprecated_entity_alias_core_declaration_ignored(
     assert "custom_components.foo.sensor::CustomEntity provides" in caplog.text
 
 
-def test_deprecated_entity_alias_core_declaration_error() -> None:
+def test_deprecated_entity_member_core_declaration_error() -> None:
     """Test declarations in core integrations raise when set to error."""
     with pytest.raises(
         RuntimeError,
@@ -898,36 +899,36 @@ def test_deprecated_entity_alias_core_declaration_error() -> None:
     ):
         type(
             "CoreEntity",
-            (StrictAliasEntity,),
+            (StrictRenamedEntity,),
             {"__module__": "homeassistant.components.hue.sensor", "_attr_value": 1},
         )
 
 
 @pytest.mark.usefixtures("hass", "mock_integration_frame")
-def test_deprecated_entity_alias_core_usage_error() -> None:
+def test_deprecated_entity_member_core_usage_error() -> None:
     """Test usage from a core integration raises when set to error."""
-    entity = StrictAliasEntity()
+    entity = StrictRenamedEntity()
 
     with pytest.raises(
         RuntimeError,
         match="Detected that integration 'hue' writes the deprecated "
-        "StrictAliasEntity._attr_value",
+        "StrictRenamedEntity._attr_value",
     ):
         entity._attr_value = 1
 
 
 @pytest.mark.usefixtures("mock_integration_frame")
-def test_deprecated_entity_alias_core_usage_error_without_frame_helper(
+def test_deprecated_entity_member_core_usage_error_without_frame_helper(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test usage before the frame helper is set up is logged, not raised."""
-    entity = StrictAliasEntity()
+    entity = StrictRenamedEntity()
 
     entity._attr_value = 1
 
     assert entity.native_value == 1
     assert (
-        "Detected code that writes the deprecated StrictAliasEntity._attr_value"
+        "Detected code that writes the deprecated StrictRenamedEntity._attr_value"
     ) in caplog.text
 
 

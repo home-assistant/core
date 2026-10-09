@@ -452,13 +452,12 @@ class EnumWithDeprecatedMembers(EnumType):
         return super().__getattribute__(name)
 
 
-class DeprecatedEntityAlias[_T]:
+class _DeprecatedEntityMember[_T]:
     """Deprecated name of an entity member, forwarding to its replacement.
 
-    Declare it on the entity base class for both the property and its _attr_
-    shorthand, and call migrate_deprecated_entity_members from the base class'
+    Declare a DeprecatedEntityProperty and a DeprecatedEntityAttr on the entity base
+    class, and call migrate_deprecated_entity_members from the base class'
     __init_subclass__ to serve subclasses which still provide the deprecated name.
-    Only the _attr_ shorthand can be written, like a property it aliases.
 
     core_integration_behavior applies to core integrations providing or using the
     deprecated name, it defaults to ReportBehavior.LOG.
@@ -508,15 +507,9 @@ class DeprecatedEntityAlias[_T]:
             return target
         raise AttributeError(self.replacement)
 
-    def __set__(self, instance: object, value: _T) -> None:
-        """Write the replacement of a deprecated _attr_ shorthand."""
-        if not self.name.startswith("_attr_"):
-            raise AttributeError(
-                f"property {self.name!r} of {type(instance).__name__!r} object "
-                "has no setter"
-            )
-        self._report_usage(instance, "writes")
-        setattr(instance, self.replacement, value)
+    def migrate_subclass(self, cls: type) -> None:
+        """Serve the replacement from a subclass providing the deprecated name."""
+        raise NotImplementedError
 
     def _report_usage(self, instance: object, action: str) -> None:
         cls = type(instance)
@@ -559,6 +552,41 @@ class DeprecatedEntityAlias[_T]:
         )
 
 
+class DeprecatedEntityProperty[_T](_DeprecatedEntityMember[_T]):
+    """Deprecated entity property, a read-only alias of its replacement."""
+
+    def __set__(self, instance: object, value: _T) -> None:
+        """Refuse a write, like a property without setter."""
+        raise AttributeError(
+            f"property {self.name!r} of {type(instance).__name__!r} object "
+            "has no setter"
+        )
+
+    @override
+    def migrate_subclass(self, cls: type) -> None:
+        """Serve the replacement from the deprecated property of cls."""
+        setattr(cls, self.replacement, _DeprecatedEntityFallback(self.name))
+
+
+class DeprecatedEntityAttr[_T](_DeprecatedEntityMember[_T]):
+    """Deprecated _attr_ shorthand, an alias of its replacement shorthand."""
+
+    def __set__(self, instance: object, value: _T) -> None:
+        """Write the replacement."""
+        self._report_usage(instance, "writes")
+        setattr(instance, self.replacement, value)
+
+    @override
+    def migrate_subclass(self, cls: type) -> None:
+        """Move the deprecated class attribute of cls to the replacement.
+
+        The metaclass wraps the replacement as storage, the alias is restored so
+        later writes reach it.
+        """
+        setattr(cls, self.replacement, inspect.getattr_static(cls, self.name))
+        setattr(cls, self.name, self)
+
+
 _REPORTED_DEPRECATED_ENTITY_USAGE: set[tuple[type, CodeType, int]] = set()
 _MISSING = object()
 
@@ -589,7 +617,7 @@ def migrate_deprecated_entity_members(cls: type, base: type) -> None:
     from .frame import ReportBehavior  # noqa: PLC0415
 
     for name, alias in vars(base).items():
-        if not isinstance(alias, DeprecatedEntityAlias):
+        if not isinstance(alias, _DeprecatedEntityMember):
             continue
         # The most derived class providing either name wins
         provider = next(
@@ -599,13 +627,7 @@ def migrate_deprecated_entity_members(cls: type, base: type) -> None:
         )
         if provider is base or alias.replacement in vars(provider):
             continue
-        if name.startswith("_attr_"):
-            # Move the value to the replacement, which the metaclass wraps as
-            # storage, and restore the alias so later writes reach it
-            setattr(cls, alias.replacement, inspect.getattr_static(cls, name))
-            setattr(cls, name, alias)
-        else:
-            setattr(cls, alias.replacement, _DeprecatedEntityFallback(name))
+        alias.migrate_subclass(cls)
         behavior = ReportBehavior.LOG
         if cls.__module__.startswith("homeassistant.components."):
             behavior = alias.core_integration_behavior

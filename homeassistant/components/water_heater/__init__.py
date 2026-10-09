@@ -25,7 +25,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.deprecation import (
-    DeprecatedEntityAlias,
+    DeprecatedEntityAttr,
+    DeprecatedEntityProperty,
     migrate_deprecated_entity_members,
 )
 from homeassistant.helpers.entity import Entity, EntityDescription
@@ -263,10 +264,10 @@ class WaterHeaterEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             """Deprecated, use native_temperature_unit instead."""
 
     else:
-        temperature_unit = DeprecatedEntityAlias[str](
+        temperature_unit = DeprecatedEntityProperty[str](
             "native_temperature_unit", "2027.11"
         )
-        _attr_temperature_unit = DeprecatedEntityAlias[str](
+        _attr_temperature_unit = DeprecatedEntityAttr[str](
             "_attr_native_temperature_unit", "2027.11"
         )
 
@@ -302,10 +303,10 @@ class WaterHeaterEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             """Deprecated, use native_current_temperature instead."""
 
     else:
-        current_temperature = DeprecatedEntityAlias[float | None](
+        current_temperature = DeprecatedEntityProperty[float | None](
             "native_current_temperature", "2027.11"
         )
-        _attr_current_temperature = DeprecatedEntityAlias[float | None](
+        _attr_current_temperature = DeprecatedEntityAttr[float | None](
             "_attr_native_current_temperature", "2027.11"
         )
 
@@ -331,10 +332,10 @@ class WaterHeaterEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             """Deprecated, use native_target_temperature instead."""
 
     else:
-        target_temperature = DeprecatedEntityAlias[float | None](
+        target_temperature = DeprecatedEntityProperty[float | None](
             "native_target_temperature", "2027.11"
         )
-        _attr_target_temperature = DeprecatedEntityAlias[float | None](
+        _attr_target_temperature = DeprecatedEntityAttr[float | None](
             "_attr_native_target_temperature", "2027.11"
         )
 
@@ -363,10 +364,10 @@ class WaterHeaterEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             """Deprecated, use native_target_temperature_high instead."""
 
     else:
-        target_temperature_high = DeprecatedEntityAlias[float | None](
+        target_temperature_high = DeprecatedEntityProperty[float | None](
             "native_target_temperature_high", "2027.11"
         )
-        _attr_target_temperature_high = DeprecatedEntityAlias[float | None](
+        _attr_target_temperature_high = DeprecatedEntityAttr[float | None](
             "_attr_native_target_temperature_high", "2027.11"
         )
 
@@ -395,10 +396,10 @@ class WaterHeaterEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             """Deprecated, use native_target_temperature_low instead."""
 
     else:
-        target_temperature_low = DeprecatedEntityAlias[float | None](
+        target_temperature_low = DeprecatedEntityProperty[float | None](
             "native_target_temperature_low", "2027.11"
         )
-        _attr_target_temperature_low = DeprecatedEntityAlias[float | None](
+        _attr_target_temperature_low = DeprecatedEntityAttr[float | None](
             "_attr_native_target_temperature_low", "2027.11"
         )
 
