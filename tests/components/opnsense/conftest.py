@@ -44,6 +44,9 @@ def mock_opnsense_client() -> Generator[AsyncMock]:
     ):
         client = mock_client.return_value
         client.get_host_firmware_version.return_value = "25.7.8"
+        client.get_firmware_update_info.return_value = {
+            "product": {"product_version": "25.7.8", "product_latest": "25.7.8"}
+        }
         client.get_arp_table.return_value = ARP
         client.get_interfaces.return_value = INTERFACES
         client.get_device_unique_id.return_value = "mocked_unique_id"
