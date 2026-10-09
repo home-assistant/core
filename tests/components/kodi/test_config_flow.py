@@ -296,6 +296,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, user_flow: str) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "credentials"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "unknown"}
 
     with (
@@ -338,6 +339,7 @@ async def test_form_cannot_connect_http(hass: HomeAssistant, user_flow: str) -> 
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -357,6 +359,7 @@ async def test_form_exception_http(hass: HomeAssistant, user_flow: str) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "unknown"}
 
 
@@ -420,6 +423,7 @@ async def test_form_cannot_connect_ws(hass: HomeAssistant, user_flow: str) -> No
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "ws_port"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -463,6 +467,7 @@ async def test_form_exception_ws(hass: HomeAssistant, user_flow: str) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "ws_port"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "unknown"}
 
 

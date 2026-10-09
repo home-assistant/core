@@ -128,6 +128,7 @@ async def test_form_invalid_hosts(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {CONF_HOSTS_LIST: "invalid_hosts"}
 
 
@@ -190,6 +191,7 @@ async def test_form_invalid_ip_excludes(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {CONF_HOSTS_EXCLUDE: "invalid_hosts"}
 
 
@@ -221,6 +223,7 @@ async def test_form_invalid_mac_excludes(
     await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {CONF_MAC_EXCLUDE: "invalid_hosts"}
 
 

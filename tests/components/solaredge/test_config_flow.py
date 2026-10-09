@@ -173,6 +173,7 @@ async def test_abort_if_already_setup(
         },
     )
     assert result.get("type") is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result.get("errors") == {CONF_SITE_ID: "already_configured"}
 
 
@@ -221,6 +222,7 @@ async def test_no_auth_provided(recorder_mock: Recorder, hass: HomeAssistant) ->
         {CONF_NAME: NAME, CONF_SITE_ID: SITE_ID},
     )
     assert result.get("type") is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result.get("errors") == {"base": "auth_missing"}
 
 

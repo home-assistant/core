@@ -143,6 +143,7 @@ async def test_config_flow_step_gateway_connect_error(hass: HomeAssistant) -> No
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "connect"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -286,6 +287,7 @@ async def test_config_flow_gateway_cloud_incomplete(hass: HomeAssistant) -> None
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "cloud"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cloud_credentials_incomplete"}
 
 
@@ -331,6 +333,7 @@ async def test_config_flow_gateway_cloud_login_error(hass: HomeAssistant) -> Non
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "cloud"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cloud_login_error"}
 
     with patch(
@@ -375,6 +378,7 @@ async def test_config_flow_gateway_cloud_no_devices(hass: HomeAssistant) -> None
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "cloud"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cloud_no_devices"}
 
     with patch(
@@ -566,6 +570,7 @@ async def test_config_flow_step_device_connect_error(hass: HomeAssistant) -> Non
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "connect"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -601,6 +606,7 @@ async def test_config_flow_step_unknown_device(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "connect"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "unknown_device"}
 
 
@@ -634,6 +640,7 @@ async def test_config_flow_step_device_manual_model_error(hass: HomeAssistant) -
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "connect"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
 
     with patch(
@@ -955,6 +962,7 @@ async def test_options_flow_incomplete(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cloud_credentials_incomplete"}
 
 

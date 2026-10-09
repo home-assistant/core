@@ -149,6 +149,7 @@ async def test_user_form_query_unexpected_error(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "unknown"}
     mock_samsung_tv.disconnect.assert_awaited_once()
 

@@ -123,6 +123,7 @@ async def test_form_discover_error(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": expected_error}
 
 
@@ -175,6 +176,7 @@ async def test_form_finalize_error(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == expected_step_id
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": expected_error}
 
 

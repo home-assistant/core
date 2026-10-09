@@ -196,4 +196,5 @@ async def test_config_flow_with_errors(hass: HomeAssistant) -> None:
 
     await hass.async_block_till_done()
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "ambiguous_identifier"}

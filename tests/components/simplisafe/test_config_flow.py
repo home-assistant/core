@@ -52,6 +52,7 @@ async def test_invalid_auth_code_length(hass: HomeAssistant) -> None:
         result["flow_id"], user_input={CONF_AUTH_CODE: "too_short_code"}
     )
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {CONF_AUTH_CODE: "invalid_auth_code_length"}
 
 
@@ -72,6 +73,7 @@ async def test_invalid_credentials(hass: HomeAssistant) -> None:
             user_input={CONF_AUTH_CODE: VALID_AUTH_CODE},
         )
         assert result["type"] is FlowResultType.FORM
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"] == {CONF_AUTH_CODE: "invalid_auth"}
 
 
@@ -203,4 +205,5 @@ async def test_unknown_error(hass: HomeAssistant, setup_simplisafe) -> None:
             result["flow_id"], user_input={CONF_AUTH_CODE: VALID_AUTH_CODE}
         )
         assert result["type"] is FlowResultType.FORM
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"] == {"base": "unknown"}

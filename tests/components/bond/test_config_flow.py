@@ -173,6 +173,7 @@ async def test_user_form_invalid_auth(hass: HomeAssistant) -> None:
         )
 
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
@@ -193,6 +194,7 @@ async def test_user_form_cannot_connect(hass: HomeAssistant) -> None:
         )
 
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
@@ -213,11 +215,13 @@ async def test_user_form_old_firmware(hass: HomeAssistant) -> None:
         )
 
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "old_firmware"}
 
 
 async def test_user_form_unexpected_client_error(hass: HomeAssistant) -> None:
     """Test we handle unexpected client error gracefully."""
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     await _help_test_form_unexpected_error(
         hass,
         source=config_entries.SOURCE_USER,
@@ -228,6 +232,7 @@ async def test_user_form_unexpected_client_error(hass: HomeAssistant) -> None:
 
 async def test_user_form_unexpected_error(hass: HomeAssistant) -> None:
     """Test we handle unexpected error gracefully."""
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     await _help_test_form_unexpected_error(
         hass,
         source=config_entries.SOURCE_USER,
@@ -774,6 +779,7 @@ async def test_zeroconf_already_configured_keeps_valid_host(
 
 async def test_zeroconf_form_unexpected_error(hass: HomeAssistant) -> None:
     """Test we handle unexpected error gracefully."""
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     await _help_test_form_unexpected_error(
         hass,
         source=config_entries.SOURCE_ZEROCONF,

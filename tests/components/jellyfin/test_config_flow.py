@@ -123,6 +123,7 @@ async def test_form_cannot_connect(
     await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "cannot_connect"}
 
     assert len(mock_client.auth.connect_to_address.mock_calls) == 1
@@ -152,6 +153,7 @@ async def test_form_invalid_auth(
     await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "invalid_auth"}
 
     assert len(mock_client.auth.connect_to_address.mock_calls) == 1
@@ -177,6 +179,7 @@ async def test_form_exception(
     await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "unknown"}
 
     assert len(mock_client.auth.connect_to_address.mock_calls) == 1

@@ -258,6 +258,7 @@ async def test_subentry_unsupported_model(
     )
     await hass.async_block_till_done()
     assert subentry_flow["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert subentry_flow["errors"] == {"chat_model": "model_not_supported"}
 
 
@@ -681,6 +682,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
         )
 
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": error}
 
 
@@ -1826,6 +1828,7 @@ async def test_reconfigure_invalid_auth(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "invalid_auth"}
     assert mock_config_entry.data[CONF_API_KEY] == "bla"
 

@@ -61,6 +61,7 @@ async def test_user_unavailable_user_step_link_step(hass: HomeAssistant) -> None
         )
     assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "cannot_connect"}
     assert not result2["last_step"]
 
@@ -218,6 +219,7 @@ async def test_user_exception_user_step(hass: HomeAssistant) -> None:
         result4 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         assert result4["type"] is FlowResultType.FORM
         assert result4["step_id"] == "link"
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result4["errors"] == {"base": "unknown"}
 
         mock_nanoleaf.return_value.authorize.side_effect = None

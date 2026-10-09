@@ -234,6 +234,7 @@ async def test_failed_connection_plm(hass: HomeAssistant) -> None:
         hass, result["flow_id"], mock_failed_connection, MOCK_USER_INPUT_PLM
     )
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
@@ -249,6 +250,7 @@ async def test_failed_connection_plm_manually(hass: HomeAssistant) -> None:
         hass, result["flow_id"], mock_failed_connection, MOCK_USER_INPUT_PLM
     )
     assert result3["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result3["errors"] == {"base": "cannot_connect"}
 
 
@@ -261,6 +263,7 @@ async def test_failed_connection_hub(hass: HomeAssistant) -> None:
         hass, result["flow_id"], mock_failed_connection, MOCK_USER_INPUT_HUB_V2
     )
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "cannot_connect"}
 
 

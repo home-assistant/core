@@ -413,6 +413,7 @@ async def test_cloud_invalid_credentials(hass: HomeAssistant) -> None:
         )
         assert login_result["step_id"] == CONF_ELMAX_MODE_CLOUD
         assert login_result["type"] is FlowResultType.FORM
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert login_result["errors"] == {"base": "invalid_auth"}
 
 
@@ -438,6 +439,7 @@ async def test_cloud_connection_error(hass: HomeAssistant) -> None:
         )
         assert login_result["step_id"] == CONF_ELMAX_MODE_CLOUD
         assert login_result["type"] is FlowResultType.FORM
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert login_result["errors"] == {"base": "network_error"}
 
 
@@ -465,6 +467,7 @@ async def test_direct_connection_error(hass: HomeAssistant) -> None:
         )
         assert result["step_id"] == CONF_ELMAX_MODE_DIRECT
         assert result["type"] is FlowResultType.FORM
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"] == {"base": "network_error"}
 
 
@@ -492,6 +495,7 @@ async def test_direct_wrong_panel_code(hass: HomeAssistant) -> None:
         )
         assert result["step_id"] == CONF_ELMAX_MODE_DIRECT
         assert result["type"] is FlowResultType.FORM
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"] == {"base": "invalid_auth"}
 
 
@@ -524,6 +528,7 @@ async def test_unhandled_error(hass: HomeAssistant) -> None:
         )
         assert result["step_id"] == "panels"
         assert result["type"] is FlowResultType.FORM
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"] == {"base": "unknown"}
 
 
@@ -557,6 +562,7 @@ async def test_invalid_pin(hass: HomeAssistant) -> None:
         )
         assert result["step_id"] == "panels"
         assert result["type"] is FlowResultType.FORM
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"] == {"base": "invalid_pin"}
 
 
@@ -583,6 +589,7 @@ async def test_no_online_panel(hass: HomeAssistant) -> None:
         )
         assert login_result["step_id"] == CONF_ELMAX_MODE_CLOUD
         assert login_result["type"] is FlowResultType.FORM
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert login_result["errors"] == {"base": "no_panel_online"}
 
 
@@ -669,6 +676,7 @@ async def test_reauth_panel_disappeared(hass: HomeAssistant) -> None:
         )
         assert result["step_id"] == "reauth_confirm"
         assert result["type"] is FlowResultType.FORM
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"] == {"base": "reauth_panel_disappeared"}
 
 
@@ -702,6 +710,7 @@ async def test_reauth_invalid_pin(hass: HomeAssistant) -> None:
         )
         assert result["step_id"] == "reauth_confirm"
         assert result["type"] is FlowResultType.FORM
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"] == {"base": "invalid_pin"}
 
 
@@ -735,4 +744,5 @@ async def test_reauth_bad_login(hass: HomeAssistant) -> None:
         )
         assert result["step_id"] == "reauth_confirm"
         assert result["type"] is FlowResultType.FORM
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"] == {"base": "invalid_auth"}

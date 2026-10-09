@@ -102,6 +102,7 @@ async def test_step_auth_app_code_falls(hass: HomeAssistant) -> None:
         )
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "auth_app"
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"] == {"base": "error_auth_app"}
 
 
@@ -131,6 +132,7 @@ async def test_step_auth_app_token_falls(hass: HomeAssistant) -> None:
         )
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "auth_app"
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"] == {"base": "error_auth_app"}
 
 
@@ -148,4 +150,5 @@ async def test_step_auth_user_falls(hass: HomeAssistant) -> None:
         )
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "auth_user"
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"] == {"base": "error_auth_user"}

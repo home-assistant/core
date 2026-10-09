@@ -377,6 +377,7 @@ async def test_form_exceptions(
         )
 
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": expected_error}
     # On error, the form should have the previous user input as suggested values.
     data_schema = result2["data_schema"].schema

@@ -229,6 +229,7 @@ async def test_user_flow_uncontactable(
     )
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
     assert result["step_id"] == "manual"
 
@@ -293,6 +294,7 @@ async def test_user_flow_wrong_st(hass: HomeAssistant, domain_data_mock: Mock) -
     )
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "not_dmr"}
     assert result["step_id"] == "manual"
 

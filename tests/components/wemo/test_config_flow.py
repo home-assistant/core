@@ -58,6 +58,7 @@ async def test_invalid_options(hass: HomeAssistant) -> None:
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], user_input={"enable_subscription": False}
     )
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {
         "enable_subscription": "long_press_requires_subscription"
     }

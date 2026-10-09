@@ -389,6 +389,7 @@ async def test_reconfigure_flow_new_line_settings_cannot_connect(
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
     assert entry.data[CONF_BAUDRATE] == DEFAULT_BAUDRATE
     # Setting the entry back up runs into the same dead device, so it lands in

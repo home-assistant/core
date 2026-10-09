@@ -337,6 +337,7 @@ async def test_bluetooth_step_cannot_associate(hass: HomeAssistant, exc, error) 
         )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "associate"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": error}
 
 

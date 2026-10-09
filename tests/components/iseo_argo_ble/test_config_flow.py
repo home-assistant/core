@@ -235,6 +235,7 @@ async def test_gw_register_connection_error(
     )
 
     assert result3["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result3["errors"] == {"base": "cannot_connect"}
 
 
@@ -263,6 +264,7 @@ async def test_gw_register_auth_error(
     )
 
     assert result3["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result3["errors"] == {"base": "auth_failed"}
 
 
@@ -292,6 +294,7 @@ async def test_gw_register_no_ble_device(
         )
 
     assert result3["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result3["errors"] == {"base": "cannot_connect"}
 
 
@@ -320,6 +323,7 @@ async def test_gw_register_unknown_error(
     )
 
     assert result3["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result3["errors"] == {"base": "unknown"}
 
 

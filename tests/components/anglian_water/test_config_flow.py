@@ -272,6 +272,7 @@ async def test_account_fetch_exception(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": expected_error}
 
 
@@ -323,6 +324,7 @@ async def test_mfa_account_fetch_exception(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "mfa"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": expected_error}
 
 
@@ -807,5 +809,6 @@ async def test_reauth_flow_account_fetch_exception(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": expected_error}
     assert mock_config_entry.data == original_data

@@ -118,6 +118,7 @@ async def test_flow_entry_already_exists(hass: HomeAssistant) -> None:
     )
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"]["name"] == "already_configured"
 
 

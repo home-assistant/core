@@ -250,6 +250,7 @@ async def test_config_flow_errors(
             )
 
     assert result.get("type") is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result.get("errors") == {expected_field: expected_error}
 
     if error_type == "restricted_bucket":
@@ -358,6 +359,7 @@ async def test_advanced_flows(
 
         if scenario == "validation_error":
             assert result.get("type") is FlowResultType.FORM
+            # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
             assert result.get("errors") == {"base": "invalid_credentials"}
         else:
             assert result.get("type") is FlowResultType.ABORT

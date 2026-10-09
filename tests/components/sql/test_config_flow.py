@@ -250,6 +250,7 @@ async def test_flow_fails_db_url(hass: HomeAssistant) -> None:
             user_input=DATA_CONFIG,
         )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {CONF_DB_URL: "db_url_invalid"}
 
 
@@ -535,6 +536,7 @@ async def test_options_flow_fails_db_url(hass: HomeAssistant) -> None:
             },
         )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {CONF_DB_URL: "db_url_invalid"}
 
 

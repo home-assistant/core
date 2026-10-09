@@ -826,6 +826,7 @@ async def test_reconfigure_connect_error(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == SOURCE_RECONFIGURE
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -1044,6 +1045,7 @@ async def test_options_flow_not_loaded(
     result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
 
 
