@@ -292,8 +292,9 @@ async def test_service_message_sound_url(
         "doorbell",
         "",
         {"media_content_type": "audio/mpeg"},
+        "http://[::1",
     ],
-    ids=["no_url", "empty", "no_media_content_id"],
+    ids=["no_url", "empty", "no_media_content_id", "unparsable"],
 )
 async def test_service_message_invalid_sound_url(
     hass: HomeAssistant,

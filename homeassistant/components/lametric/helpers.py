@@ -88,10 +88,9 @@ async def async_resolve_sound_url(hass: HomeAssistant, sound: str) -> str:
         media = await media_source.async_resolve_media(hass, sound, None)
         sound = media.url
 
-    url = async_process_play_media_url(hass, sound)
     try:
-        return cv.url(url)
-    except probatio.Invalid as err:
+        return cv.url(async_process_play_media_url(hass, sound))
+    except (probatio.Invalid, ValueError) as err:
         raise invalid from err
 
 
