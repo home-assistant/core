@@ -359,6 +359,12 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
             index: self._get_port_mapping(index) for index in self._port_mapping_indexes
         }
 
+    def _guest_wifi_and_port_mappings_update(
+        self,
+    ) -> tuple[int | None, dict[int, dict[str, Any]]]:
+        """Update the guest Wi-Fi and registered port mappings."""
+        return self._guest_wifi_update(), self._port_mappings_update()
+
     def _entity_states_update(self) -> dict:
         """Run registered entity update calls."""
         entity_states = {}
@@ -395,11 +401,11 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                     "call_deflections"
                 ] = await self.async_update_call_deflections()
 
-            entity_data["guest_wifi"] = await self.hass.async_add_executor_job(
-                self._guest_wifi_update
-            )
-            entity_data["port_mappings"] = await self.hass.async_add_executor_job(
-                self._port_mappings_update
+            (
+                entity_data["guest_wifi"],
+                entity_data["port_mappings"],
+            ) = await self.hass.async_add_executor_job(
+                self._guest_wifi_and_port_mappings_update
             )
         except FRITZ_EXCEPTIONS as ex:
             LOGGER.debug(
