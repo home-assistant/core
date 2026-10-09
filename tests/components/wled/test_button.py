@@ -197,7 +197,7 @@ async def test_button_next_playlist_entry_after_firmware_update(
     mock_wled: MagicMock,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test the next playlist entry button shows up with firmware that has it."""
+    """Test the next playlist entry button follows the firmware's support."""
     # WLED 0.14 can't skip a playlist entry.
     assert not hass.states.get("button.wled_rgb_light_next_playlist_entry")
 
@@ -216,3 +216,13 @@ async def test_button_next_playlist_entry_after_firmware_update(
     await hass.async_block_till_done()
 
     assert "does not generate unique IDs" not in caplog.text
+
+    # Going back to firmware without it makes the button unavailable.
+    data["info"]["ver"] = "0.14.4"
+    mock_wled.update.return_value.update_from_dict(data)
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get("button.wled_rgb_light_next_playlist_entry"))
+    assert state.state == STATE_UNAVAILABLE

@@ -22,6 +22,12 @@ PARALLEL_UPDATES = 1
 NEXT_PLAYLIST_ENTRY_MIN_VERSION = AwesomeVersion("0.15.0")
 
 
+def _can_skip_playlist_entry(coordinator: WLEDDataUpdateCoordinator) -> bool:
+    """Return whether the firmware can skip to the next playlist entry."""
+    version = coordinator.data.info.version
+    return version is not None and version >= NEXT_PLAYLIST_ENTRY_MIN_VERSION
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: WLEDConfigEntry,
@@ -39,10 +45,7 @@ async def async_setup_entry(
     def async_add_next_playlist_entry_button() -> None:
         """Add the next playlist entry button once the firmware supports it."""
         nonlocal next_playlist_entry_added
-        if next_playlist_entry_added or (
-            (version := coordinator.data.info.version) is None
-            or version < NEXT_PLAYLIST_ENTRY_MIN_VERSION
-        ):
+        if next_playlist_entry_added or not _can_skip_playlist_entry(coordinator):
             return
 
         next_playlist_entry_added = True
@@ -83,6 +86,13 @@ class WLEDNextPlaylistEntryButton(WLEDEntity, ButtonEntity):
         self._attr_unique_id = (
             f"{coordinator.data.info.mac_address}_next_playlist_entry"
         )
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        # Like after going back to firmware that can't skip an entry.
+        return super().available and _can_skip_playlist_entry(self.coordinator)
 
     @wled_exception_handler
     @override
