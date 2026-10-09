@@ -1,64 +1,90 @@
-"""The tests for the london_air platform."""
+"""Tests for the London Air sensor platform."""
 
-from http import HTTPStatus
+from typing import Any
+from unittest.mock import AsyncMock, MagicMock, Mock
 
-import requests_mock
+from aiohttp import ClientConnectorError
 
-from homeassistant.components.london_air.sensor import CONF_LOCATIONS, URL
+from homeassistant.components.london_air.const import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.common import async_load_fixture
-
-VALID_CONFIG = {"sensor": {"platform": "london_air", CONF_LOCATIONS: ["Merton"]}}
+from tests.common import MockConfigEntry
 
 
-async def test_valid_state(
-    hass: HomeAssistant, requests_mock: requests_mock.Mocker
+async def test_sensor_state(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_session: MagicMock,
+    api_payload: dict[str, Any],
 ) -> None:
-    """Test for operational london_air sensor with proper attributes."""
-    requests_mock.get(
-        URL,
-        text=await async_load_fixture(hass, "london_air.json", "london_air"),
-        status_code=HTTPStatus.OK,
-    )
-    assert await async_setup_component(hass, "sensor", VALID_CONFIG)
+    """Test the sensor reports the authority air quality band."""
+    response = MagicMock()
+    response.raise_for_status = MagicMock()
+    response.json = AsyncMock(return_value=api_payload)
+    mock_session.get.return_value = response
+
+    mock_config_entry.add_to_hass(hass)
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.merton")
+    state = hass.states.get("sensor.merton_air_quality")
     assert state is not None
     assert state.state == "Low"
-    assert state.attributes["icon"] == "mdi:cloud-outline"
-    assert state.attributes["updated"] == "2017-08-03 03:00:00"
     assert state.attributes["sites"] == 2
-    assert state.attributes["friendly_name"] == "Merton"
-
-    sites = state.attributes["data"]
-    assert sites is not None
-    assert len(sites) == 2
-    assert sites[0]["site_code"] == "ME2"
-    assert sites[0]["site_type"] == "Roadside"
-    assert sites[0]["site_name"] == "Merton Road"
-    assert sites[0]["pollutants_status"] == "Low"
-
-    pollutants = sites[0]["pollutants"]
-    assert pollutants is not None
-    assert len(pollutants) == 1
-    assert pollutants[0]["code"] == "PM10"
-    assert pollutants[0]["quality"] == "Low"
-    assert int(pollutants[0]["index"]) == 2
-    assert pollutants[0]["summary"] == "PM10 is Low"
+    assert state.attributes["updated"] == "2017-08-03 03:00:00"
+    data = state.attributes["data"]
+    assert len(data) == 2
+    assert data[0]["site_code"] == "ME2"
+    assert data[0]["site_name"] == "Merton Road"
+    assert data[0]["pollutants"][0]["code"] == "PM10"
+    assert data[0]["pollutants"][0]["summary"] == "PM10 is Low"
 
 
-async def test_api_failure(
-    hass: HomeAssistant, requests_mock: requests_mock.Mocker
+async def test_sensor_unavailable(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_session: MagicMock,
+    api_payload: dict[str, Any],
 ) -> None:
-    """Test for failure in the API."""
-    requests_mock.get(URL, status_code=HTTPStatus.SERVICE_UNAVAILABLE)
-    assert await async_setup_component(hass, "sensor", VALID_CONFIG)
+    """Test the sensor becomes unavailable when a refresh fails."""
+    response = MagicMock()
+    response.raise_for_status = MagicMock()
+    response.json = AsyncMock(return_value=api_payload)
+    mock_session.get.return_value = response
+
+    mock_config_entry.add_to_hass(hass)
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.merton")
+    mock_session.get.return_value = MagicMock(
+        raise_for_status=MagicMock(
+            side_effect=ClientConnectorError(Mock(), OSError("test"))
+        )
+    )
+    await mock_config_entry.runtime_data.async_refresh()
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.merton_air_quality")
     assert state is not None
-    assert state.attributes["updated"] is None
-    assert state.attributes["sites"] == 0
+    assert state.state == "unavailable"
+
+
+async def test_setup_failure(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_session: MagicMock,
+) -> None:
+    """Test setup retries when the API is unavailable."""
+    mock_session.get.return_value = MagicMock(
+        raise_for_status=MagicMock(
+            side_effect=ClientConnectorError(Mock(), OSError("test"))
+        )
+    )
+
+    mock_config_entry.add_to_hass(hass)
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
