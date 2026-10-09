@@ -185,8 +185,6 @@ EV_PLUG_BINARY_SENSOR = SubaruBinarySensorEntityDescription(
 
 EV_CHARGING_BINARY_SENSOR = SubaruBinarySensorEntityDescription(
     key=API_KEY_EV_CHARGER_STATE_TYPE,
-    # pylint: disable-next=home-assistant-redundant-translation-key
-    translation_key="is_charging",
     device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
     entity_registry_enabled_default=False,
     is_on_fn=lambda d: (
