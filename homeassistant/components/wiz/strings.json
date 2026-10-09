@@ -39,5 +39,10 @@
         "name": "Effect speed"
       }
     }
+  },
+  "exceptions": {
+    "communication_error": {
+      "message": "Error while communicating with the WiZ device: {error}"
+    }
   }
 }

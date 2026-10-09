@@ -1,6 +1,8 @@
 """Tests for light platform."""
 
+import pytest
 from pywizlight import PilotBuilder, PilotParser
+from pywizlight.exceptions import WizLightConnectionError, WizLightTimeOutError
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -20,6 +22,7 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import (
@@ -70,6 +73,26 @@ async def test_light_operation(
 
     await async_push_update(hass, bulb, {"mac": FAKE_MAC, "state": True})
     assert hass.states.get(entity_id).state == STATE_ON
+
+
+async def test_light_operation_fails(hass: HomeAssistant) -> None:
+    """Test a light command raises HomeAssistantError when the bulb does not answer."""
+    bulb, _ = await async_setup_integration(hass)
+    entity_id = "light.mock_title"
+
+    bulb.turn_on.side_effect = WizLightConnectionError("Network is unreachable")
+    with pytest.raises(HomeAssistantError, match="Network is unreachable"):
+        await hass.services.async_call(
+            LIGHT_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        )
+
+    bulb.turn_off.side_effect = WizLightTimeOutError(
+        "The request to the bulb timed out"
+    )
+    with pytest.raises(HomeAssistantError, match="timed out"):
+        await hass.services.async_call(
+            LIGHT_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        )
 
 
 async def test_rgbww_light(hass: HomeAssistant) -> None:
