@@ -31,6 +31,7 @@ async def async_connect_hub(
     )
     return PowerviewAPI(hub, pv_request, info)
 
+
 def get_shade_ids(device: dr.DeviceEntry) -> set[str]:
     """Return the Powerview identifiers on a device as strings."""
     return {str(ident) for domain, ident in device.identifiers if domain == DOMAIN}
