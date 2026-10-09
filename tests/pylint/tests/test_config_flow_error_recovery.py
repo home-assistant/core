@@ -284,6 +284,18 @@ async def test_form_errors(hass):
         ),
         pytest.param(
             """
+async def test_form_errors(hass):
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result["errors"] == {"base": "cannot_connect"}
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    if result["type"] is FlowResultType.CREATE_ENTRY:
+        pass
+""",
+            4,
+            id="finish_not_asserted",
+        ),
+        pytest.param(
+            """
 async def test_form_errors(hass, error):
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     assert result["errors"] == {"base": error}

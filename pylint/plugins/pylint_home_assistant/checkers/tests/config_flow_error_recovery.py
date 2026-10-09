@@ -208,6 +208,16 @@ def _is_finished_assert(
     return False
 
 
+def _in_assert(node: nodes.NodeNG) -> bool:
+    """Return True if *node* is part of an ``assert`` in its function."""
+    for ancestor in node.node_ancestors():
+        if isinstance(ancestor, nodes.Assert):
+            return True
+        if isinstance(ancestor, nodes.FunctionDef | nodes.Lambda):
+            return False
+    return False
+
+
 def _finishes_flow(
     node: nodes.NodeNG,
     package: str,
@@ -220,8 +230,9 @@ def _finishes_flow(
     *arguments* holds the values the helper containing *node* was called with.
     """
     match node:
+        # Only an assert verifies the outcome; ``if result["type"] is ...`` doesn't
         case nodes.Compare():
-            return _is_finished_assert(node, arguments)
+            return _in_assert(node) and _is_finished_assert(node, arguments)
         # await assert_abort_flow(hass, flow_id, reason="reconfigure_successful")
         case nodes.Call(keywords=keywords) if any(
             keyword.arg == "reason" and _is_successful_reason(keyword.value)
