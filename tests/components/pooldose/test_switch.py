@@ -57,6 +57,7 @@ async def test_switch_entity_unavailable_no_coordinator_data(
     # Update coordinator data to None
     mock_pooldose_client.instant_values_structured.return_value = (None, None)
     coordinator = init_integration.runtime_data
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
     await coordinator.async_refresh()
     await hass.async_block_till_done()
 
@@ -87,6 +88,7 @@ async def test_switch_state_changes(
     )
 
     coordinator = init_integration.runtime_data
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
     await coordinator.async_refresh()
     await hass.async_block_till_done()
 

@@ -142,6 +142,7 @@ Every check has a code following the
 | `W7435` | [`home-assistant-json-fixture`](#w7435-home-assistant-json-fixture) | Use a JSON fixture helper instead of parsing a loaded fixture |
 | `W7436` | [`home-assistant-light-missing-color-mode`](#w7436-home-assistant-light-missing-color-mode) | Light entity sets supported color modes but does not report a `color_mode` |
 | `W7437` | [`home-assistant-light-missing-supported-color-modes`](#w7437-home-assistant-light-missing-supported-color-modes) | Light entity reports a `color_mode` but does not set supported color modes |
+| `W7439` | [`home-assistant-tests-coordinator-async-refresh`](#w7439-home-assistant-tests-coordinator-async-refresh) | Tests should advance the time instead of refreshing a coordinator directly |
 
 
 ## `home_assistant_logger` checker
@@ -491,6 +492,29 @@ Tests should not invoke an integration's `async_unload_entry` from
 the unload via `await hass.config_entries.async_unload(entry.entry_id)` so
 that the real unload flow (platform unloading, listener teardown,
 `runtime_data` cleanup, etc.) is exercised.
+
+
+## `home_assistant_tests_coordinator_async_refresh` checker
+
+Detects integration tests that refresh a coordinator directly.
+
+### `W7439`: `home-assistant-tests-coordinator-async-refresh`
+
+Tests should not refresh a `DataUpdateCoordinator` by calling
+`async_refresh()`, `async_request_refresh()` or `_async_refresh()`. Instead,
+advance the time so the coordinator refreshes on its own schedule:
+
+```python
+freezer.tick(SCAN_INTERVAL)
+async_fire_time_changed(hass)
+await hass.async_block_till_done(wait_background_tasks=True)
+```
+
+Coordinators mostly reach tests through `entry.runtime_data` or a fixture,
+whose type cannot be inferred. So every use of these methods in
+`tests/components` is flagged, including passing one around without calling
+it, unless the receiver is known to be something other than a coordinator,
+such as a mock.
 
 
 ## `home_assistant_enforce_utcnow` checker

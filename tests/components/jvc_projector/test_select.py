@@ -70,6 +70,7 @@ async def test_motion_enhance_timeout_is_unknown(
 
     await hass.config_entries.async_reload(mock_integration.entry_id)
     await hass.async_block_till_done()
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
     await mock_integration.runtime_data.async_refresh()
     await hass.async_block_till_done()
 

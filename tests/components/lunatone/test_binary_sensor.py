@@ -70,6 +70,7 @@ async def test_sensor_value_update(
     assert all(entity.state == STATE_OFF for entity in entities)
     assert coordinator.update_interval == timedelta(seconds=10)
 
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
     await coordinator.async_refresh()
     await hass.async_block_till_done()
 
@@ -79,6 +80,7 @@ async def test_sensor_value_update(
     assert entities[2].state == STATE_OFF
     assert coordinator.update_interval == timedelta(seconds=1)
 
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
     await coordinator.async_refresh()
     await hass.async_block_till_done()
 

@@ -212,6 +212,7 @@ async def test_voltage_partial_degrade_when_one_sensor_data_call_fails(
         == 1
     )
 
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
     await mock_config_entry.runtime_data.async_refresh()
     await hass.async_block_till_done()
 
@@ -222,6 +223,7 @@ async def test_voltage_partial_degrade_when_one_sensor_data_call_fails(
 
     device_sensor_data[2].side_effect = None
     device_sensor_data[2].return_value = SensorData(did=2, volt=12500)
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
     await mock_config_entry.runtime_data.async_refresh()
     await hass.async_block_till_done()
 
@@ -230,6 +232,7 @@ async def test_voltage_partial_degrade_when_one_sensor_data_call_fails(
     assert state_2 is not None
     assert state_2.state == "12.5"
 
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
     await mock_config_entry.runtime_data.async_refresh()
     await hass.async_block_till_done()
 

@@ -33,15 +33,13 @@ from .entity import (
 )
 from .knx_module import KNXModule
 from .schema import FanSchema
-from .storage.const import (
-    CONF_GA_OSCILLATION,
-    CONF_GA_SPEED,
-    CONF_GA_STEP,
-    CONF_GA_SWITCH,
-    CONF_SPEED,
+from .storage.entity_store_schema import (
+    FanKnxConfig,
+    FanSpeedPercentage,
+    FanSpeedStep,
+    KnxEntityData,
 )
-from .storage.entity_store_schema import KnxEntityData
-from .storage.util import ConfigExtractor
+from .storage.knx_selector import GroupAddressConfig, state_and_passive, write_address
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -122,7 +120,9 @@ async def async_setup_entry(
             KnxYamlFan(knx_module, entity_config)
             for entity_config in yaml_platform_config
         )
-    if ui_config := knx_module.config_store.get_entity_configs(Platform.FAN):
+    if ui_config := knx_module.config_store.get_entity_configs(
+        Platform.FAN, FanKnxConfig
+    ):
         entities.extend(
             KnxUiFan(knx_module, unique_id, config)
             for unique_id, config in ui_config.items()
@@ -253,39 +253,38 @@ class KnxUiFan(_KnxFan, KnxUiEntity):
     _device: XknxFan
 
     def __init__(
-        self, knx_module: KNXModule, unique_id: str, config: KnxEntityData[Any]
+        self,
+        knx_module: KNXModule,
+        unique_id: str,
+        config: KnxEntityData[FanKnxConfig],
     ) -> None:
         """Initialize of KNX fan."""
-        knx_conf = ConfigExtractor(config.knx)
-        # max_step is required for step mode, thus can be used to differentiate modes
-        max_step: int | None = knx_conf.get(CONF_SPEED, FanConf.MAX_STEP)
+        knx_conf = config.knx
         super().__init__(
             knx_module=knx_module,
             unique_id=unique_id,
             entity_config=config.entity,
         )
-        if max_step:
-            # step control
-            speed_write = knx_conf.get_write(CONF_SPEED, CONF_GA_STEP)
-            speed_state = knx_conf.get_state_and_passive(CONF_SPEED, CONF_GA_STEP)
-        else:
-            # percentage control
-            speed_write = knx_conf.get_write(CONF_SPEED, CONF_GA_SPEED)
-            speed_state = knx_conf.get_state_and_passive(CONF_SPEED, CONF_GA_SPEED)
+        speed_ga: GroupAddressConfig | None = None
+        max_step: int | None = None
+        match knx_conf.speed:
+            case FanSpeedStep():
+                speed_ga = knx_conf.speed.ga_step
+                max_step = knx_conf.speed.max_step
+            case FanSpeedPercentage():
+                speed_ga = knx_conf.speed.ga_speed
 
         self._device = XknxFan(
             xknx=knx_module.xknx,
             name=config.entity.xknx_name,
-            group_address_speed=speed_write,
-            group_address_speed_state=speed_state,
-            group_address_oscillation=knx_conf.get_write(CONF_GA_OSCILLATION),
-            group_address_oscillation_state=knx_conf.get_state_and_passive(
-                CONF_GA_OSCILLATION
-            ),
-            group_address_switch=knx_conf.get_write(CONF_GA_SWITCH),
-            group_address_switch_state=knx_conf.get_state_and_passive(CONF_GA_SWITCH),
+            group_address_speed=write_address(speed_ga),
+            group_address_speed_state=state_and_passive(speed_ga),
+            group_address_oscillation=write_address(knx_conf.ga_oscillation),
+            group_address_oscillation_state=state_and_passive(knx_conf.ga_oscillation),
+            group_address_switch=write_address(knx_conf.ga_switch),
+            group_address_switch_state=state_and_passive(knx_conf.ga_switch),
             max_step=max_step,
-            sync_state=knx_conf.get(CONF_SYNC_STATE),
+            sync_state=knx_conf.sync_state,
         )
         # FanSpeedMode.STEP if max_step is set
         self._step_range: tuple[int, int] | None = (1, max_step) if max_step else None

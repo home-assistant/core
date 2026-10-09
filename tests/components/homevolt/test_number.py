@@ -112,6 +112,7 @@ async def test_number_unknown_value(
 ) -> None:
     """Test an absent manual parameter has an unknown state."""
     mock_homevolt_client.schedule["setpoint"] = None
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
     await init_integration.runtime_data.async_request_refresh()
 
     state = hass.states.get(SETPOINT_ENTITY_ID)
@@ -126,6 +127,7 @@ async def test_numbers_unavailable_without_writable_manual_schedule(
 ) -> None:
     """Test parameter writes are unavailable for non-manual schedules."""
     mock_homevolt_client.writable_battery_parameters = frozenset()
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
     await init_integration.runtime_data.async_request_refresh()
 
     state = hass.states.get(SETPOINT_ENTITY_ID)

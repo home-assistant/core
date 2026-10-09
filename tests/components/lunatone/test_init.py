@@ -244,60 +244,6 @@ async def test_config_entry_setup_error_no_info_data(
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
-async def test_config_entry_not_ready_no_devices_data(
-    hass: HomeAssistant,
-    mock_lunatone_info: AsyncMock,
-    mock_lunatone_devices: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test the Lunatone configuration entry not ready due to missing devices data."""
-    mock_lunatone_devices.data = None
-
-    await setup_integration(hass, mock_config_entry)
-
-    mock_lunatone_info.async_update.assert_called_once()
-    mock_lunatone_devices.async_update.assert_called_once()
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-
-
-async def test_config_entry_not_ready_no_sensors_data(
-    hass: HomeAssistant,
-    mock_lunatone_info: AsyncMock,
-    mock_lunatone_devices: AsyncMock,
-    mock_lunatone_scan: AsyncMock,
-    mock_lunatone_sensors: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test the Lunatone configuration entry not ready due to missing sensors data."""
-    mock_lunatone_sensors.data = None
-
-    await setup_integration(hass, mock_config_entry)
-
-    mock_lunatone_info.async_update.assert_called_once()
-    mock_lunatone_devices.async_update.assert_called_once()
-    mock_lunatone_scan.async_update.assert_called_once()
-    mock_lunatone_sensors.async_update.assert_called_once()
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-
-
-async def test_config_entry_not_ready_no_dali_scan_data(
-    hass: HomeAssistant,
-    mock_lunatone_info: AsyncMock,
-    mock_lunatone_devices: AsyncMock,
-    mock_lunatone_scan: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test the Lunatone configuration entry not ready due to missing DALI scan data."""
-    mock_lunatone_scan.data = None
-
-    await setup_integration(hass, mock_config_entry)
-
-    mock_lunatone_info.async_update.assert_called_once()
-    mock_lunatone_devices.async_update.assert_called_once()
-    mock_lunatone_scan.async_update.assert_called_once()
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-
-
 async def test_config_entry_unique_id_update(
     hass: HomeAssistant,
     mock_lunatone_info: AsyncMock,

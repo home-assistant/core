@@ -35,6 +35,7 @@ async def test_entry_diagnostics(
 
     # Trigger update for all coordinators before diagnostics
     for coordinator in mock_config_entry.runtime_data.values():
+        # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
         await coordinator.async_refresh()
 
     result = await get_diagnostics_for_config_entry(
@@ -63,6 +64,7 @@ async def test_device_diagnostics(
 
     # Trigger update for the coordinator before diagnostics
     coordinator = mock_config_entry.runtime_data[SUBENTRY_ID_1]
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
     await coordinator.async_refresh()
 
     result = await get_diagnostics_for_device(
