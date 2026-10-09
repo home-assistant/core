@@ -24,6 +24,7 @@ class HarborEntity(CoordinatorEntity[HarborCoordinator]):
 
     @override
     @property
+    # pylint: disable-next=home-assistant-coordinator-entity-available
     def available(self) -> bool:
         """Return if the entity is currently available."""
         if not self.coordinator.connected:

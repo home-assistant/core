@@ -147,6 +147,7 @@ Every check has a code following the
 | `W7442` | [`home-assistant-redundant-translation-key`](#w7442-home-assistant-redundant-translation-key) | `translation_key` only repeats the name the `device_class` already provides |
 | `W7447` | [`home-assistant-coordinator-untyped-config-entry`](#w7447-home-assistant-coordinator-untyped-config-entry) | Coordinator should use the integration's typed config entry instead of `ConfigEntry` |
 | `W7448` | [`home-assistant-coordinator-redundant-config-entry`](#w7448-home-assistant-coordinator-redundant-config-entry) | Coordinator assigns `self.config_entry` that `DataUpdateCoordinator.__init__` already sets |
+| `W7449` | [`home-assistant-coordinator-entity-available`](#w7449-home-assistant-coordinator-entity-available) | `CoordinatorEntity` overrides `available` without using `super().available` |
 
 
 ## `home_assistant_logger` checker
@@ -345,6 +346,25 @@ When the alias lives in `__init__.py`, import it in the coordinator under
 coordinator that passes `config_entry` to `super().__init__` doesn't need to
 assign `self.config_entry` itself. To narrow its type, annotate it on the
 class instead.
+
+
+## `home_assistant_coordinator_entity_available` checker
+
+Checks `available` overrides on coordinator entities.
+
+### `W7449`: `home-assistant-coordinator-entity-available`
+
+`CoordinatorEntity.available` returns `coordinator.last_update_success`, so the
+entity becomes unavailable when an update fails. An override that doesn't use
+it keeps the entity available with the data of the last successful update:
+
+```python
+@property
+def available(self) -> bool:
+    return super().available and self.device_id in self.coordinator.data
+```
+
+An override that only returns `True` is deliberate and not flagged.
 
 
 ## `home_assistant_async_load_fixtures` checker

@@ -32,6 +32,7 @@ class TraccarServerEntity(CoordinatorEntity[TraccarServerCoordinator]):
 
     @property
     @override
+    # pylint: disable-next=home-assistant-coordinator-entity-available
     def available(self) -> bool:
         """Return True if entity is available."""
         return bool(self.coordinator.data and self.device_id in self.coordinator.data)

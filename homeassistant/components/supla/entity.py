@@ -42,6 +42,7 @@ class SuplaEntity(CoordinatorEntity[SuplaCoordinator]):
 
     @property
     @override
+    # pylint: disable-next=home-assistant-coordinator-entity-available
     def available(self) -> bool:
         """Return True if entity is available."""
         if self.channel_data is None:

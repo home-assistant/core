@@ -59,6 +59,7 @@ class ScorpionTrackTrackerEntity(ScorpionTrackEntity, TrackerEntity):
 
     @property
     @override
+    # pylint: disable-next=home-assistant-coordinator-entity-available
     def available(self) -> bool:
         """Return if the tracker is available."""
         vehicle = self._available_vehicle()

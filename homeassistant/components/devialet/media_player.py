@@ -106,6 +106,7 @@ class DevialetMediaPlayerEntity(
 
     @property
     @override
+    # pylint: disable-next=home-assistant-coordinator-entity-available
     def available(self) -> bool:
         """Return if the media player is available."""
         return self.coordinator.client.is_available

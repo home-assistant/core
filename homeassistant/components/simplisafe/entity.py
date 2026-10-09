@@ -128,6 +128,7 @@ class SimpliSafeEntity(CoordinatorEntity[SimpliSafeDataUpdateCoordinator]):
 
     @property
     @override
+    # pylint: disable-next=home-assistant-coordinator-entity-available
     def available(self) -> bool:
         """Return whether the entity is available."""
         # We can easily detect if the V3 system is offline, but no simple check exists

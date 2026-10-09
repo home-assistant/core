@@ -116,6 +116,7 @@ class DropletSensor(CoordinatorEntity[DropletDataCoordinator], SensorEntity):
 
     @property
     @override
+    # pylint: disable-next=home-assistant-coordinator-entity-available
     def available(self) -> bool:
         """Get Droplet's availability."""
         return self.coordinator.get_availability()

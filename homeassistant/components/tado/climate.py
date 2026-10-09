@@ -508,6 +508,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
 
     @property
     @override
+    # pylint: disable-next=home-assistant-coordinator-entity-available
     def available(self) -> bool:
         """Return if the device is available."""
         return self._tado_zone_data.available

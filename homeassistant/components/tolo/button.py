@@ -43,6 +43,7 @@ class ToloLampNextColorButton(ToloSaunaCoordinatorEntity, ButtonEntity):
 
     @property
     @override
+    # pylint: disable-next=home-assistant-coordinator-entity-available
     def available(self) -> bool:
         """Return if entity is available."""
         return (

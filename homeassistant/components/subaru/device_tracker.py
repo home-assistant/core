@@ -64,6 +64,7 @@ class SubaruDeviceTracker(SubaruCoordinatorEntity, TrackerEntity):
 
     @property
     @override
+    # pylint: disable-next=home-assistant-coordinator-entity-available
     def available(self) -> bool:
         """Return if available; not gated on last_update_success, only on the relevant status keys being present."""
         if not (vehicle_data := (self.coordinator.data or {}).get(self.vin)):
