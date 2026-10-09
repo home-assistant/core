@@ -61,7 +61,9 @@ async def test_show_set_form(hass: HomeAssistant) -> None:
         (SleepIQTimeoutException, "cannot_connect"),
     ],
 )
-async def test_login_failure(hass: HomeAssistant, side_effect, error) -> None:
+async def test_login_failure(
+    hass: HomeAssistant, side_effect: type[Exception], error: str
+) -> None:
     """Test that we show user form with appropriate error on login failure."""
     with patch(
         "asyncsleepiq.AsyncSleepIQ.login",
@@ -81,6 +83,13 @@ async def test_login_failure(hass: HomeAssistant, side_effect, error) -> None:
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
         assert result["errors"] == {"base": error}
+
+    with patch("asyncsleepiq.AsyncSleepIQ.login", return_value=True):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=SLEEPIQ_CONFIG
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_success(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:

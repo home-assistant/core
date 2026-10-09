@@ -1,5 +1,7 @@
 """Test the Dexcom config flow."""
 
+from collections.abc import Generator
+from contextlib import contextmanager
 from unittest.mock import patch
 
 from pydexcom.errors import AccountError, SessionError
@@ -11,6 +13,16 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import CONFIG
+
+
+@contextmanager
+def _patch_success() -> Generator[None]:
+    """Patch the Dexcom client and entry setup."""
+    with (
+        patch("homeassistant.components.dexcom.config_flow.Dexcom"),
+        patch("homeassistant.components.dexcom.async_setup_entry", return_value=True),
+    ):
+        yield
 
 
 async def test_form(hass: HomeAssistant) -> None:
@@ -60,6 +72,15 @@ async def test_form_account_error(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_auth"}
 
+    with _patch_success():
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            CONFIG,
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_form_session_error(hass: HomeAssistant) -> None:
     """Test we handle session error."""
@@ -79,6 +100,15 @@ async def test_form_session_error(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
+    with _patch_success():
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            CONFIG,
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_form_unknown_error(hass: HomeAssistant) -> None:
     """Test we handle unknown error."""
@@ -97,3 +127,12 @@ async def test_form_unknown_error(hass: HomeAssistant) -> None:
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
+
+    with _patch_success():
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            CONFIG,
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY

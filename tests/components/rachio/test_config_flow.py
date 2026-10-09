@@ -95,6 +95,28 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_auth"}
 
+    rachio_mock = _mock_rachio_return_value(
+        get=({"status": 200}, {"username": "myusername"}),
+        info=({"status": 200}, {"id": "myid"}),
+    )
+    with (
+        patch(
+            "homeassistant.components.rachio.config_flow.Rachio",
+            return_value=rachio_mock,
+        ),
+        patch(
+            "homeassistant.components.rachio.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_API_KEY: "api_key"},
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     """Test we handle cannot connect error."""
@@ -116,6 +138,28 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
+
+    rachio_mock = _mock_rachio_return_value(
+        get=({"status": 200}, {"username": "myusername"}),
+        info=({"status": 200}, {"id": "myid"}),
+    )
+    with (
+        patch(
+            "homeassistant.components.rachio.config_flow.Rachio",
+            return_value=rachio_mock,
+        ),
+        patch(
+            "homeassistant.components.rachio.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_API_KEY: "api_key"},
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_homekit(hass: HomeAssistant) -> None:

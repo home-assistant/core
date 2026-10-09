@@ -68,6 +68,21 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {CONF_IP_ADDRESS: "cannot_connect"}
 
+    with (
+        _patch_device_config_flow(),
+        patch(
+            "homeassistant.components.baf.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_IP_ADDRESS: "127.0.0.1"},
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_form_unknown_exception(hass: HomeAssistant) -> None:
     """Test we handle unknown exceptions."""
@@ -83,6 +98,21 @@ async def test_form_unknown_exception(hass: HomeAssistant) -> None:
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
+
+    with (
+        _patch_device_config_flow(),
+        patch(
+            "homeassistant.components.baf.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_IP_ADDRESS: "127.0.0.1"},
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_zeroconf_discovery(hass: HomeAssistant) -> None:

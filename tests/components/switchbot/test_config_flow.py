@@ -1226,6 +1226,35 @@ async def test_user_cloud_login_auth_failed(hass: HomeAssistant) -> None:
     assert result["errors"] == {"base": "auth_failed"}
     assert "Invalid credentials" in result["description_placeholders"]["error_detail"]
 
+    with (
+        patch(
+            "homeassistant.components.switchbot.config_flow.fetch_cloud_devices",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.switchbot.config_flow.async_discovered_service_info",
+            return_value=[WOHAND_SERVICE_INFO],
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_USERNAME: "test@example.com",
+                CONF_PASSWORD: "testpass",
+            },
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "confirm"
+
+    with patch_async_setup_entry():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {},
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 @pytest.mark.usefixtures("mock_scanners_all_passive")
 async def test_user_cloud_login_api_error(hass: HomeAssistant) -> None:

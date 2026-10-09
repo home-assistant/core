@@ -25,7 +25,7 @@ from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from . import DHCP_FORMATTED_MAC, IP_ADDRESS, LABEL, SERIAL
-from .helpers import LEGACY_SERIAL
+from .helpers import LEGACY_SERIAL, create_mock_light
 
 from tests.common import MockConfigEntry
 
@@ -804,7 +804,7 @@ async def test_manual_serial_creates_version_2_entry(
 
 
 async def test_manual_serial_that_answers_no_broadcast(
-    hass: HomeAssistant,
+    hass: HomeAssistant, mock_light: Light
 ) -> None:
     """Test a serial no device answers for returns to the form."""
     result = await hass.config_entries.flow.async_init(
@@ -821,6 +821,16 @@ async def test_manual_serial_that_answers_no_broadcast(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "cannot_connect"}
+
+    with patch(
+        "homeassistant.components.lifx.config_flow.find_by_serial",
+        return_value=mock_light,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_SERIAL: SERIAL}
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_manual_host_and_serial_connects_directly(
@@ -852,7 +862,9 @@ async def test_manual_host_and_serial_connects_directly(
     assert result["result"].unique_id == SERIAL
 
 
-async def test_manual_setup_rejects_a_malformed_serial(hass: HomeAssistant) -> None:
+async def test_manual_setup_rejects_a_malformed_serial(
+    hass: HomeAssistant, mock_light: Light
+) -> None:
     """Test the manual step reports a serial it cannot act on."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -864,6 +876,16 @@ async def test_manual_setup_rejects_a_malformed_serial(hass: HomeAssistant) -> N
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {CONF_SERIAL: "invalid_serial"}
+
+    with patch(
+        "homeassistant.components.lifx.config_flow.find_by_serial",
+        return_value=mock_light,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_SERIAL: SERIAL}
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_manual_host_while_discovery_is_pending(
@@ -966,6 +988,16 @@ async def test_manual_host_cannot_read_device_state(
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "cannot_connect"}
     mock_light.close.assert_awaited_once_with()
+
+    with patch(
+        "homeassistant.components.lifx.config_flow.find_by_ip",
+        return_value=create_mock_light(),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: IP_ADDRESS}
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_pick_broadcast_discovered_device(

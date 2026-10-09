@@ -74,7 +74,6 @@ async def async_setup_entry(
         async with asyncio.timeout(DATA_WAIT_TIMEOUT):
             supported = await version.check_supported()
     except AuthenticationException as exception:
-        _LOGGER.error("Authentication failed for %s: %s", entry.title, exception)
         raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
             translation_key="authentication_failed",
@@ -132,7 +131,6 @@ async def async_setup_entry(
         async with asyncio.timeout(DATA_WAIT_TIMEOUT):
             await coordinator.async_get_data(MODULES)
     except AuthenticationException as exception:
-        _LOGGER.error("Authentication failed for %s: %s", entry.title, exception)
         raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
             translation_key="authentication_failed",

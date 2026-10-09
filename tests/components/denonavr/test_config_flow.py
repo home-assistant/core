@@ -225,6 +225,17 @@ async def test_config_flow_manual_discover_error(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "discovery_error"}
 
+    with patch(
+        "homeassistant.components.denonavr.config_flow.denonavr.async_discover",
+        return_value=TEST_DISCOVER_1_RECEIVER,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {},
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_config_flow_manual_host_no_serial(hass: HomeAssistant) -> None:
     """Successful flow manually initialized by the user.
