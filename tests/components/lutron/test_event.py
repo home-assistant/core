@@ -129,7 +129,7 @@ async def test_event_press_and_release_button(
     events = async_capture_events(hass, "lutron_event")
 
     # Fires on the press and skips its release. A release with no press
-    # before it (e.g. a dropped press) still fires.
+    # before it (e.g. a dropped press, or HA started mid-hold) still fires.
     for event, expected in (
         (Button.Event.PRESSED, 1),
         (Button.Event.RELEASED, 1),

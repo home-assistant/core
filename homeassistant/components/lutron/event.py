@@ -100,8 +100,9 @@ class LutronEventEntity(LutronKeypad, EventEntity):
             action = LutronEventType.SINGLE_PRESS
         elif event == Button.Event.RELEASED:
             # Keypad buttons programmed with a hold or multi-tap report only a
-            # release, others only a press, and Picos both. Fire on whichever
-            # arrives first.
+            # release, others only a press. Picos report both, and so does any
+            # button tapped over the integration (the processor echoes it), so
+            # fire on whichever arrives first.
             if not self._press_pending:
                 action = LutronEventType.SINGLE_PRESS
             self._press_pending = False
