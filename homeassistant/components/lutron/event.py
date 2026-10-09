@@ -73,6 +73,7 @@ class LutronEventEntity(LutronKeypad, EventEntity):
         else:
             self._attr_event_types = [LutronEventType.SINGLE_PRESS]
 
+        self._press_pending = False
         self._full_id = slugify(f"{area_name} {name}")
         self._id = slugify(name)
 
@@ -94,9 +95,16 @@ class LutronEventEntity(LutronKeypad, EventEntity):
                 action = LutronEventType.PRESS
             else:
                 action = LutronEventType.RELEASE
-        elif event in (Button.Event.PRESSED, Button.Event.RELEASED):
-            # Buttons carrying a hold action report only a release, never a press.
+        elif event == Button.Event.PRESSED:
+            self._press_pending = True
             action = LutronEventType.SINGLE_PRESS
+        elif event == Button.Event.RELEASED:
+            # Buttons carrying a hold action report only a release, never a
+            # press. Others (e.g. Picos) report both, so skip a release that
+            # follows a press.
+            if not self._press_pending:
+                action = LutronEventType.SINGLE_PRESS
+            self._press_pending = False
 
         if action:
             data = {
