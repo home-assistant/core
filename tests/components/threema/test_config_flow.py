@@ -306,12 +306,12 @@ async def test_credentials_private_key_prefix_stripped(
         },
     )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert (
         result["data"][CONF_PRIVATE_KEY]
         == "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
     )
+    assert result["result"].unique_id == MOCK_GATEWAY_ID
 
 
 async def test_credentials_public_key_in_private_key_field_rejected(
@@ -455,10 +455,10 @@ async def test_credentials_public_key_matches(
         },
     )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_PRIVATE_KEY] == private_key
     assert _CONF_PUBLIC_KEY not in result["data"]
+    assert result["result"].unique_id == MOCK_GATEWAY_ID
 
 
 async def test_credentials_public_key_mismatch(

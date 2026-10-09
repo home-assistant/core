@@ -34,13 +34,13 @@ async def test_full_user_flow(
         },
     )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2.get("type") is FlowResultType.CREATE_ENTRY
     assert result2.get("title") == "homeassistant.github"
     assert result2.get("data") == {
         CONF_TAILNET: "homeassistant.github",
         CONF_API_KEY: "tskey-FAKE",
     }
+    assert result2["result"].unique_id == "homeassistant.github"
 
     assert len(mock_setup_entry.mock_calls) == 1
     assert len(mock_tailscale_config_flow.devices.mock_calls) == 1

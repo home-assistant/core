@@ -466,7 +466,6 @@ async def test_create_webhook_entry(
     )
     await hass.async_block_till_done()
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Testbot"
     assert result["data"][CONF_PLATFORM] == PLATFORM_WEBHOOKS
@@ -474,6 +473,7 @@ async def test_create_webhook_entry(
     assert result["data"][CONF_API_ENDPOINT] == api_endpoint
     assert result["data"][CONF_URL] == webhook_url
     assert result["data"][CONF_TRUSTED_NETWORKS] == ["149.154.160.0/20"]
+    assert result["result"].unique_id == "mock api key"
 
 
 async def test_reauth_flow(
@@ -799,12 +799,12 @@ async def test_duplicate_entry(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-        # pylint: disable-next=home-assistant-tests-config-flow-unique-id
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["data"][CONF_PLATFORM] == PLATFORM_BROADCAST
         assert result["data"][CONF_API_KEY] == "mock api key"
         assert result["data"][CONF_API_ENDPOINT] == "http://mock_api_endpoint"
         assert result["options"][ATTR_PARSER] == PARSER_MD
+        assert result["result"].unique_id == "mock api key"
 
         # test: import 2nd entry failed due to duplicate
 

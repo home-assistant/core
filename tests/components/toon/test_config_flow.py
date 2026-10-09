@@ -352,8 +352,8 @@ async def test_import_migration(
     with patch("toonapi.Toon.agreements", return_value=[Agreement(agreement_id=123)]):
         result = await hass.config_entries.flow.async_configure(flows[0]["flow_id"])
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "123"
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1

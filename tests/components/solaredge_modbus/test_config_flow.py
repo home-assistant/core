@@ -507,9 +507,9 @@ async def test_zeroconf_uses_the_announced_device_id(
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     await hass.async_block_till_done()
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_UNIT_ID] == 2
+    assert result["result"].unique_id == SERIAL_NUMBER
 
 
 @pytest.mark.parametrize(
@@ -532,9 +532,9 @@ async def test_zeroconf_falls_back_to_the_default_device_id(
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     await hass.async_block_till_done()
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_UNIT_ID] == DEFAULT_UNIT_ID
+    assert result["result"].unique_id == SERIAL_NUMBER
 
 
 async def test_zeroconf_known_inverter_that_moved_is_followed(
