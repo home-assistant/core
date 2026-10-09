@@ -44,11 +44,13 @@ BINARY_SENSORS: list[BinarySensorEntityDescription] = [
         key="refrigerator_door_overtime",
         translation_key="refrigerator_door_overtime",
         device_class=BinarySensorDeviceClass.PROBLEM,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     BinarySensorEntityDescription(
         key="freezer_door_overtime",
         translation_key="freezer_door_overtime",
         device_class=BinarySensorDeviceClass.PROBLEM,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     BinarySensorEntityDescription(
         key="rinse_aid",
