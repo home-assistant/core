@@ -95,7 +95,9 @@ def _without_loopback_port(uri: str) -> str | None:
     ):
         return None
 
-    prefix = f"http://{parts.netloc}"
+    # urlparse lowercases the scheme, but only the port may differ.
+    scheme = uri[: len(parts.scheme)]
+    prefix = f"{scheme}://{parts.netloc}"
     if not uri.startswith(prefix):
         return None
     if port is None:
@@ -103,7 +105,7 @@ def _without_loopback_port(uri: str) -> str | None:
 
     # Preserve the original spelling, path and query, including an empty query.
     host = parts.netloc.rsplit(":", 1)[0]
-    return f"http://{host}{uri[len(prefix) :]}"
+    return f"{scheme}://{host}{uri[len(prefix) :]}"
 
 
 class LinkTagParser(HTMLParser):

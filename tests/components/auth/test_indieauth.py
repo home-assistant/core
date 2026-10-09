@@ -439,6 +439,18 @@ async def test_verify_redirect_uri_unparsable(hass: HomeAssistant) -> None:
             "http://127.0.0.1:54321/callback?client=example",
             id="registered-port-and-query",
         ),
+        pytest.param(
+            "https://example.com/client",
+            "HTTP://localhost/callback",
+            "HTTP://localhost:12345/callback",
+            id="uppercase-scheme",
+        ),
+        pytest.param(
+            "https://example.com/client",
+            "HtTp://localhost:12345/callback",
+            "HtTp://localhost:54321/callback",
+            id="mixed-case-scheme",
+        ),
     ],
 )
 async def test_verify_redirect_uri_metadata_loopback(
@@ -505,6 +517,16 @@ async def test_verify_redirect_uri_metadata_loopback(
         ),
         pytest.param(
             "http://localhost/callback", "https://localhost:12345/callback", id="scheme"
+        ),
+        pytest.param(
+            "http://localhost/callback",
+            "HTTP://localhost:12345/callback",
+            id="requested-scheme-case-differs",
+        ),
+        pytest.param(
+            "HTTP://localhost/callback",
+            "http://localhost:12345/callback",
+            id="registered-scheme-case-differs",
         ),
         pytest.param(
             "http://localhost/callback",
