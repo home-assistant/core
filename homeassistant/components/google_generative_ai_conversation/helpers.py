@@ -8,18 +8,24 @@ from homeassistant.exceptions import HomeAssistantError
 
 from .const import LOGGER
 
+WAV_MIME_TYPES = {"audio/wav", "audio/wave", "audio/x-wav"}
+
 
 def convert_to_wav(audio_data: bytes, mime_type: str) -> bytes:
-    """Generate a WAV file header for the given audio data and parameters.
+    """Return the given audio data as a WAV file.
 
     Args:
-        audio_data: The raw audio data as a bytes object.
+        audio_data: The raw PCM or WAV audio data as a bytes object.
         mime_type: Mime type of the audio data.
 
     Returns:
-        A bytes object representing the WAV file header.
+        A bytes object representing the WAV file.
 
     """
+    # Newer TTS models (e.g. gemini-3.8-flash-tts) return a complete WAV file
+    if mime_type.split(";", 1)[0].strip().lower() in WAV_MIME_TYPES:
+        return audio_data
+
     parameters = _parse_audio_mime_type(mime_type)
 
     wav_buffer = io.BytesIO()
