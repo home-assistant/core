@@ -178,9 +178,9 @@ async def test_multiple_config_entries(
     responses.extend(config_flow_responses)
 
     result = await complete_flow(hass)
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result.get("type") is FlowResultType.CREATE_ENTRY
     assert dict(result.get("result").data) == expected_config_entry
+    assert result["result"].unique_id == MAC_ADDRESS_UNIQUE_ID
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 2

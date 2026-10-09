@@ -69,13 +69,13 @@ async def test_form(hass: HomeAssistant, picnic_api) -> None:
         )
         await hass.async_block_till_done()
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Picnic"
     assert result2["data"] == {
         CONF_ACCESS_TOKEN: picnic_api().session.auth_token,
         CONF_COUNTRY_CODE: "NL",
     }
+    assert result2["result"].unique_id == "f29-2a6-o32n"
     assert len(mock_setup_entry.mock_calls) == 1
 
 

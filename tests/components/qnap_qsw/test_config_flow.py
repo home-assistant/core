@@ -27,6 +27,7 @@ DHCP_SERVICE_INFO = DhcpServiceInfo(
 TEST_PASSWORD = "test-password"
 TEST_URL = f"http://{DHCP_SERVICE_INFO.ip}"
 TEST_USERNAME = "test-username"
+SYSTEM_BOARD_UNIQUE_ID = format_mac(SYSTEM_BOARD_MOCK[API_RESULT][API_MAC_ADDR])
 
 
 async def test_form(hass: HomeAssistant) -> None:
@@ -68,7 +69,6 @@ async def test_form(hass: HomeAssistant) -> None:
         entry = conf_entries[0]
         assert entry.state is ConfigEntryState.LOADED
 
-        # pylint: disable-next=home-assistant-tests-config-flow-unique-id
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == (
             f"QNAP {SYSTEM_BOARD_MOCK[API_RESULT][API_PRODUCT]}"
@@ -77,6 +77,7 @@ async def test_form(hass: HomeAssistant) -> None:
         assert result["data"][CONF_URL] == CONFIG[CONF_URL]
         assert result["data"][CONF_USERNAME] == CONFIG[CONF_USERNAME]
         assert result["data"][CONF_PASSWORD] == CONFIG[CONF_PASSWORD]
+        assert result["result"].unique_id == SYSTEM_BOARD_UNIQUE_ID
 
         assert len(mock_setup_entry.mock_calls) == 1
 
@@ -227,13 +228,13 @@ async def test_dhcp_flow(hass: HomeAssistant) -> None:
             },
         )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["data"] == {
         CONF_USERNAME: TEST_USERNAME,
         CONF_PASSWORD: TEST_PASSWORD,
         CONF_URL: TEST_URL,
     }
+    assert result2["result"].unique_id == format_mac(DHCP_SERVICE_INFO.macaddress)
 
     assert len(mock_setup_entry.mock_calls) == 1
 
