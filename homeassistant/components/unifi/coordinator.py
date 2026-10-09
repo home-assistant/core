@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, override
 
 from aiounifi import EndpointNotFound, Unauthorized
 from aiounifi.interfaces.api_handlers import APIHandler, ItemEvent
-from aiounifi.network.v1.api_handlers import APIHandler as NetworkAPIHandler
+from aiounifi.network.v1.interfaces.api_handlers import APIHandler as NetworkAPIHandler
 
 from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryAuthFailed

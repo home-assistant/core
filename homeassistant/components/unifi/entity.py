@@ -9,6 +9,7 @@ import aiounifi
 from aiounifi.interfaces.api_handlers import CallbackType, ItemEvent, UnsubscribeType
 from aiounifi.models.api import ApiItem
 from aiounifi.models.event import Event, EventKey
+from aiounifi.network.v1.models.device import DeviceState as NetworkDeviceState
 
 from homeassistant.core import callback
 from homeassistant.helpers import entity_registry as er
@@ -96,7 +97,7 @@ def async_client_device_info_fn(hub: UnifiHub, obj_id: str) -> DeviceInfo:
 def async_network_device_available_fn(hub: UnifiHub, obj_id: str) -> bool:
     """Check if a device of the Integration API is online."""
     device = hub.api.network.devices.get(obj_id)
-    return device is not None and device.state == "ONLINE"
+    return device is not None and device.state is NetworkDeviceState.ONLINE
 
 
 @callback

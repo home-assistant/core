@@ -16,7 +16,7 @@ from aiounifi.models.device import Device
 from aiounifi.models.event import Event, EventKey
 from aiounifi.network.v1.interfaces.clients import Clients as NetworkClients
 from aiounifi.network.v1.interfaces.devices import Devices as NetworkDevices
-from aiounifi.network.v1.models.client import Client as NetworkClient
+from aiounifi.network.v1.models.client import Client as NetworkClient, ClientType
 from aiounifi.network.v1.models.device import Device as NetworkDevice
 from propcache.api import cached_property
 
@@ -167,7 +167,7 @@ def async_network_client_allowed_fn(hub: UnifiHub, obj_id: str) -> bool:
     if not hub.config.option_track_clients:
         return False
 
-    wired = hub.api.network.clients[obj_id].type == "WIRED"
+    wired = hub.api.network.clients[obj_id].type is ClientType.WIRED
     if wired and not hub.config.option_track_wired_clients:
         return False
 

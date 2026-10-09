@@ -31,7 +31,10 @@ from aiounifi.models.wlan import Wlan
 from aiounifi.network.v1.interfaces.clients import Clients as NetworkClients
 from aiounifi.network.v1.interfaces.devices import Devices as NetworkDevices
 from aiounifi.network.v1.models.client import Client as NetworkClient
-from aiounifi.network.v1.models.device import Device as NetworkDevice
+from aiounifi.network.v1.models.device import (
+    Device as NetworkDevice,
+    DeviceState as NetworkDeviceState,
+)
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -79,15 +82,17 @@ PARALLEL_UPDATES = 0
 type WanName = Literal["WAN", "WAN2", "WAN3"]
 
 NETWORK_DEVICE_STATES = {
-    "ONLINE": DEVICE_STATES[DeviceState.CONNECTED],
-    "OFFLINE": DEVICE_STATES[DeviceState.DISCONNECTED],
-    "PENDING_ADOPTION": DEVICE_STATES[DeviceState.PENDING],
-    "UPDATING": DEVICE_STATES[DeviceState.UPGRADING],
-    "GETTING_READY": DEVICE_STATES[DeviceState.PROVISIONING],
-    "ADOPTING": DEVICE_STATES[DeviceState.ADOPTING],
-    "DELETING": DEVICE_STATES[DeviceState.DELETING],
-    "CONNECTION_INTERRUPTED": DEVICE_STATES[DeviceState.HEARTBEAT_MISSED],
-    "ISOLATED": DEVICE_STATES[DeviceState.ISOLATED],
+    NetworkDeviceState.ONLINE: DEVICE_STATES[DeviceState.CONNECTED],
+    NetworkDeviceState.OFFLINE: DEVICE_STATES[DeviceState.DISCONNECTED],
+    NetworkDeviceState.PENDING_ADOPTION: DEVICE_STATES[DeviceState.PENDING],
+    NetworkDeviceState.UPDATING: DEVICE_STATES[DeviceState.UPGRADING],
+    NetworkDeviceState.GETTING_READY: DEVICE_STATES[DeviceState.PROVISIONING],
+    NetworkDeviceState.ADOPTING: DEVICE_STATES[DeviceState.ADOPTING],
+    NetworkDeviceState.DELETING: DEVICE_STATES[DeviceState.DELETING],
+    NetworkDeviceState.CONNECTION_INTERRUPTED: DEVICE_STATES[
+        DeviceState.HEARTBEAT_MISSED
+    ],
+    NetworkDeviceState.ISOLATED: DEVICE_STATES[DeviceState.ISOLATED],
 }
 """Device states of the Integration API, as the classic state sensor's options."""
 
