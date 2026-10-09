@@ -233,7 +233,6 @@ SENSOR_DESCRIPTIONS = (
     ),
     SensorEntityDescription(
         key=TYPE_WINDDIR,
-        # pylint: disable-next=home-assistant-redundant-translation-key
         translation_key="wind_direction",
         native_unit_of_measurement=DEGREE,
         suggested_display_precision=0,
