@@ -4643,6 +4643,81 @@ def test_device_info_deprecated_parameters(parameter: str, value: Any) -> None:
     assert dict(device_info) == {parameter: value}
 
 
+def _device_info_from_mapping() -> dr.DeviceInfo:
+    """Build a device info from a mapping."""
+    return dr.DeviceInfo({"name": "name"})
+
+
+def _device_info_with_unknown_key() -> dr.DeviceInfo:
+    """Build a device info and set a key which is not a field."""
+    device_info = dr.DeviceInfo(name="name")
+    device_info["config_entry_id"] = "entry_id"
+    return device_info
+
+
+@pytest.mark.parametrize(
+    ("integration_frame_path", "expectation", "expected_log"),
+    [
+        pytest.param(
+            "homeassistant/test_core", pytest.raises(RuntimeError), 0, id="core"
+        ),
+        pytest.param(
+            "homeassistant/components/test_integration",
+            pytest.raises(RuntimeError),
+            1,
+            id="core integration",
+        ),
+        pytest.param(
+            "custom_components/test_integration",
+            nullcontext(),
+            1,
+            id="custom integration",
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    ("build", "what", "expected"),
+    [
+        pytest.param(
+            _device_info_from_mapping,
+            "builds a DeviceInfo from a mapping",
+            {"name": "name"},
+            id="from_mapping",
+        ),
+        pytest.param(
+            _device_info_with_unknown_key,
+            "sets 'config_entry_id', which is not a DeviceInfo field",
+            {"name": "name", "config_entry_id": "entry_id"},
+            id="unknown_key",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("hass", "mock_integration_frame")
+async def test_device_info_mapping_usage_deprecated(
+    caplog: pytest.LogCaptureFixture,
+    expectation: AbstractContextManager,
+    expected_log: int,
+    build: Callable[[], dr.DeviceInfo],
+    what: str,
+    expected: dict[str, Any],
+) -> None:
+    """Test building a device info from a mapping or with an unknown key is deprecated.
+
+    It logs for custom integrations and raises for core and core integrations. An
+    unknown key is kept, so it is still passed on to the device registry.
+    """
+    with patch.object(frame, "_REPORTED_INTEGRATIONS", set()), expectation:
+        assert build().as_dict() == expected
+
+    assert caplog.text.count(what) == expected_log
+
+
+def test_device_info_unknown_keyword_argument() -> None:
+    """Test a device info rejects a keyword argument which is not a field."""
+    with pytest.raises(TypeError):
+        dr.DeviceInfo(config_entry_id="entry_id")  # type: ignore[call-arg]
+
+
 @pytest.mark.parametrize(
     ("parameter", "value"),
     [
