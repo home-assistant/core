@@ -30,8 +30,11 @@ def _device_info(hub: RitualsGenieHub) -> DeviceInfo:
 
 
 def _hub_available(hubs: RitualsHubsCoordinator, hublot: str) -> bool:
-    """Return if a diffuser is on the account, and not reported offline."""
-    if (hub := hubs.data.get(hublot)) is None:
+    """Return if the diffusers could be fetched, and this one is available.
+
+    That is: on the account, and not reported offline.
+    """
+    if not hubs.last_update_success or (hub := hubs.data.get(hublot)) is None:
         return False
 
     return hub.is_online is not False
