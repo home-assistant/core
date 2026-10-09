@@ -52,6 +52,18 @@ BINARY_SENSOR_OPTIONS = {
     "state": "{{ now().minute % 2 == 0 else }}",
 }
 
+NUMBER_OPTIONS = {
+    "state": "{{ 10 }}",
+    "min": 0,
+    "max": 100,
+    "step": 0.1,
+    "set_value": {
+        "action": "input_number.set_value",
+        "target": {"entity_id": "input_number.test"},
+        "data": {"value": "{{ value }}"},
+    },
+}
+
 
 @pytest.mark.parametrize(
     (
@@ -1107,10 +1119,22 @@ def _assert_number_unit_of_measurement_context(data_schema: probatio.Schema) -> 
     )
 
 
-async def test_config_flow_number_unit_of_measurement_context(
+@pytest.mark.parametrize(
+    ("device_class_input", "unit_of_measurement"),
+    [
+        pytest.param({"device_class": "distance"}, "cm", id="device_class_unit"),
+        pytest.param(
+            {"device_class": "distance"}, "cats", id="device_class_custom_unit"
+        ),
+        pytest.param({}, "cats", id="custom_unit"),
+    ],
+)
+async def test_config_flow_number_unit_of_measurement(
     hass: HomeAssistant,
+    device_class_input: dict[str, str],
+    unit_of_measurement: str,
 ) -> None:
-    """Test the number unit of measurement selector context in the config flow."""
+    """Test setting the number unit of measurement in the config flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -1123,28 +1147,54 @@ async def test_config_flow_number_unit_of_measurement_context(
 
     _assert_number_unit_of_measurement_context(result["data_schema"])
 
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "name": "My template",
+            **NUMBER_OPTIONS,
+            **device_class_input,
+            "unit_of_measurement": unit_of_measurement,
+        },
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["options"] == {
+        "name": "My template",
+        "template_type": "number",
+        **NUMBER_OPTIONS,
+        **device_class_input,
+        "unit_of_measurement": unit_of_measurement,
+    }
 
-async def test_options_number_unit_of_measurement_context(
+    state = hass.states.get("number.my_template")
+    assert state.attributes["unit_of_measurement"] == unit_of_measurement
+
+
+@pytest.mark.parametrize(
+    ("device_class_input", "unit_of_measurement"),
+    [
+        pytest.param({"device_class": "distance"}, "m", id="device_class_unit"),
+        pytest.param(
+            {"device_class": "distance"}, "cats", id="device_class_custom_unit"
+        ),
+        pytest.param({}, "cats", id="custom_unit"),
+    ],
+)
+async def test_options_number_unit_of_measurement(
     hass: HomeAssistant,
+    device_class_input: dict[str, str],
+    unit_of_measurement: str,
 ) -> None:
-    """Test the number unit of measurement selector context in the options flow."""
+    """Test changing the number unit of measurement in the options flow."""
     config_entry = MockConfigEntry(
         data={},
         domain=DOMAIN,
         options={
             "name": "My template",
             "template_type": "number",
-            "state": "{{ 10 }}",
-            "min": 0,
-            "max": 100,
-            "step": 0.1,
+            **NUMBER_OPTIONS,
             "device_class": "distance",
             "unit_of_measurement": "cm",
-            "set_value": {
-                "action": "input_number.set_value",
-                "target": {"entity_id": "input_number.test"},
-                "data": {"value": "{{ value }}"},
-            },
         },
         title="My template",
     )
@@ -1157,6 +1207,27 @@ async def test_options_number_unit_of_measurement_context(
     assert result["step_id"] == "number"
 
     _assert_number_unit_of_measurement_context(result["data_schema"])
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            **NUMBER_OPTIONS,
+            **device_class_input,
+            "unit_of_measurement": unit_of_measurement,
+        },
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert config_entry.options == {
+        "name": "My template",
+        "template_type": "number",
+        **NUMBER_OPTIONS,
+        **device_class_input,
+        "unit_of_measurement": unit_of_measurement,
+    }
+
+    state = hass.states.get("number.my_template")
+    assert state.attributes["unit_of_measurement"] == unit_of_measurement
 
 
 @pytest.mark.parametrize(
