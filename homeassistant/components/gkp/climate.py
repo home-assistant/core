@@ -1,5 +1,7 @@
 """Climate platform for GKP integration."""
 
+from collections.abc import Coroutine
+from datetime import timedelta
 import logging
 from typing import Any, override
 
@@ -145,20 +147,9 @@ class GkpClimate(GkpEntity, ClimateEntity):
 
     async def _async_set_mode(self, mode: GkpMode, error_key: str) -> None:
         """Send a new mode to the device."""
-        try:
-            await self.coordinator.client.set_mode(self.device_id, mode)
-        except GkpRateLimitError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="rate_limited",
-                translation_placeholders={"retry_after": str(err.retry_after)},
-            ) from err
-        except GkpError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key=error_key,
-            ) from err
-
+        await self._async_send_command(
+            self.coordinator.client.set_mode(self.device_id, mode), error_key
+        )
         _LOGGER.debug("Successfully set mode %s for %s", mode.name, self.device_id)
         await self._async_refresh_after_command()
 
@@ -178,10 +169,57 @@ class GkpClimate(GkpEntity, ClimateEntity):
                 translation_placeholders={"entity_id": self.entity_id},
             )
 
-        try:
-            await self.coordinator.client.set_temperature(
-                self.device_id, mode, temperature
+        await self._async_send_command(
+            self.coordinator.client.set_temperature(self.device_id, mode, temperature),
+            "set_temperature_error",
+        )
+        _LOGGER.debug(
+            "Successfully set temperature to %s in %s mode for %s",
+            temperature,
+            mode.name,
+            self.device_id,
+        )
+        await self._async_refresh_after_command()
+
+    async def async_activate_boost(
+        self, temperature: float, duration: timedelta
+    ) -> None:
+        """Activate boost mode with a target temperature and duration."""
+        if not SETPOINT_MIN <= temperature <= SETPOINT_MAX:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="boost_temperature_out_of_range",
+                translation_placeholders={
+                    "temperature": str(temperature),
+                    "min_temp": str(SETPOINT_MIN),
+                    "max_temp": str(SETPOINT_MAX),
+                },
             )
+
+        duration_minutes, remainder = divmod(duration, timedelta(minutes=1))
+        if remainder:
+            duration_minutes += 1
+
+        await self._async_send_command(
+            self.coordinator.client.activate_boost(
+                self.device_id, temperature, duration_minutes
+            ),
+            "activate_boost_error",
+        )
+        _LOGGER.debug(
+            "Successfully activated boost at %s for %d min on %s",
+            temperature,
+            duration_minutes,
+            self.device_id,
+        )
+        await self._async_refresh_after_command()
+
+    async def _async_send_command(
+        self, command: Coroutine[Any, Any, None], error_key: str
+    ) -> None:
+        """Send a command, translating API errors."""
+        try:
+            await command
         except GkpRateLimitError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
@@ -191,16 +229,8 @@ class GkpClimate(GkpEntity, ClimateEntity):
         except GkpError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key="set_temperature_error",
+                translation_key=error_key,
             ) from err
-
-        _LOGGER.debug(
-            "Successfully set temperature to %s in %s mode for %s",
-            temperature,
-            mode.name,
-            self.device_id,
-        )
-        await self._async_refresh_after_command()
 
     async def _async_refresh_after_command(self) -> None:
         """Poll the device quickly until the command is reflected."""

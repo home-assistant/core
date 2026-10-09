@@ -1,0 +1,23 @@
+activate_boost:
+  target:
+    entity:
+      domain: climate
+      integration: gkp
+  fields:
+    temperature:
+      required: true
+      selector:
+        number:
+          min: 5
+          max: 35
+          step: 0.5
+          unit_of_measurement: "°C"
+          mode: box
+    duration:
+      required: true
+      default:
+        hours: 2
+        minutes: 0
+      selector:
+        duration:
+          enable_second: false

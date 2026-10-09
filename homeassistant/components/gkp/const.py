@@ -55,3 +55,6 @@ GKP_MODE_TO_PRESET: dict[GkpMode, str] = {
 PRESET_TO_GKP_MODE: dict[str, GkpMode] = {v: k for k, v in GKP_MODE_TO_PRESET.items()}
 
 PRESET_MODES: list[str] = list(GKP_MODE_TO_PRESET.values())
+
+SERVICE_ACTIVATE_BOOST = "activate_boost"
+ATTR_DURATION = "duration"

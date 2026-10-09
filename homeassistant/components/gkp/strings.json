@@ -33,8 +33,14 @@
     }
   },
   "exceptions": {
+    "activate_boost_error": {
+      "message": "An error occurred while activating boost mode"
+    },
     "authentication_failed": {
       "message": "Authentication failed"
+    },
+    "boost_temperature_out_of_range": {
+      "message": "Boost temperature {temperature} is out of range ({min_temp}-{max_temp})"
     },
     "failed_to_discover_devices": {
       "message": "Failed to discover devices"
@@ -68,6 +74,22 @@
     },
     "temporary_connection_error": {
       "message": "Temporary connection error"
+    }
+  },
+  "services": {
+    "activate_boost": {
+      "description": "Activates boost mode on the radiator at a temperature for a duration.",
+      "fields": {
+        "duration": {
+          "description": "Duration of the boost.",
+          "name": "Duration"
+        },
+        "temperature": {
+          "description": "Target temperature while the boost is active.",
+          "name": "Temperature"
+        }
+      },
+      "name": "Activate boost"
     }
   }
 }

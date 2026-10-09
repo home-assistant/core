@@ -1,8 +1,6 @@
 rules:
   # Bronze
-  action-setup:
-    status: exempt
-    comment: This integration does not register actions.
+  action-setup: done
   appropriate-polling: done
   brands: todo
   common-modules: done
@@ -11,9 +9,7 @@ rules:
   dependency-transparency:
     status: todo
     comment: gkphomepython is only built locally for now and not published on PyPI.
-  docs-actions:
-    status: exempt
-    comment: This integration does not register actions.
+  docs-actions: todo
   docs-conditions:
     status: exempt
     comment: This integration does not have any conditions.

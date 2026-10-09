@@ -11,6 +11,7 @@ from gkphomepython import (
     GkpMode,
     GkpRateLimitError,
 )
+from probatio import Invalid
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -32,7 +33,13 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.components.gkp.const import FAST_POLLING_INTERVAL, PRESET_DEFROST
+from homeassistant.components.gkp.const import (
+    ATTR_DURATION,
+    DOMAIN,
+    FAST_POLLING_INTERVAL,
+    PRESET_DEFROST,
+    SERVICE_ACTIVATE_BOOST,
+)
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -455,3 +462,124 @@ async def test_command_rate_limited(
 
     assert err.value.translation_key == "rate_limited"
     assert err.value.translation_placeholders == {"retry_after": "30"}
+
+
+@pytest.mark.parametrize(
+    ("duration", "expected_minutes"),
+    [
+        pytest.param(timedelta(minutes=90), 90, id="whole_minutes"),
+        pytest.param(timedelta(minutes=3, seconds=30), 4, id="rounded_up"),
+    ],
+)
+async def test_activate_boost(
+    hass: HomeAssistant,
+    mock_gkp_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    duration: timedelta,
+    expected_minutes: int,
+) -> None:
+    """Test activating boost with a temperature and a duration."""
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_ACTIVATE_BOOST,
+        {
+            ATTR_ENTITY_ID: LIVING_ROOM_ENTITY_ID,
+            ATTR_TEMPERATURE: 24.5,
+            ATTR_DURATION: duration,
+        },
+        blocking=True,
+    )
+
+    mock_gkp_client.activate_boost.assert_called_once_with(
+        LIVING_ROOM_ID, 24.5, expected_minutes
+    )
+
+
+@pytest.mark.parametrize("temperature", [4.5, 35.5])
+async def test_activate_boost_temperature_out_of_range(
+    hass: HomeAssistant,
+    mock_gkp_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    temperature: float,
+) -> None:
+    """Test boost temperatures outside the allowed range are rejected."""
+    await setup_integration(hass, mock_config_entry)
+
+    with pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_ACTIVATE_BOOST,
+            {
+                ATTR_ENTITY_ID: LIVING_ROOM_ENTITY_ID,
+                ATTR_TEMPERATURE: temperature,
+                ATTR_DURATION: timedelta(minutes=90),
+            },
+            blocking=True,
+        )
+
+    assert err.value.translation_key == "boost_temperature_out_of_range"
+    mock_gkp_client.activate_boost.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    "duration", [timedelta(minutes=2), timedelta(days=1, minutes=1)]
+)
+async def test_activate_boost_duration_out_of_range(
+    hass: HomeAssistant,
+    mock_gkp_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    duration: timedelta,
+) -> None:
+    """Test boost durations outside the firmware range are rejected."""
+    await setup_integration(hass, mock_config_entry)
+
+    with pytest.raises(Invalid):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_ACTIVATE_BOOST,
+            {
+                ATTR_ENTITY_ID: LIVING_ROOM_ENTITY_ID,
+                ATTR_TEMPERATURE: 24.5,
+                ATTR_DURATION: duration,
+            },
+            blocking=True,
+        )
+
+    mock_gkp_client.activate_boost.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    ("error", "translation_key"),
+    [
+        pytest.param(GkpConnectionError("lost"), "activate_boost_error", id="error"),
+        pytest.param(
+            GkpRateLimitError("limited", 30), "rate_limited", id="rate_limited"
+        ),
+    ],
+)
+async def test_activate_boost_error(
+    hass: HomeAssistant,
+    mock_gkp_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    error: Exception,
+    translation_key: str,
+) -> None:
+    """Test API errors while activating boost."""
+    await setup_integration(hass, mock_config_entry)
+    mock_gkp_client.activate_boost.side_effect = error
+
+    with pytest.raises(HomeAssistantError) as err:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_ACTIVATE_BOOST,
+            {
+                ATTR_ENTITY_ID: LIVING_ROOM_ENTITY_ID,
+                ATTR_TEMPERATURE: 24.5,
+                ATTR_DURATION: timedelta(minutes=90),
+            },
+            blocking=True,
+        )
+
+    assert err.value.translation_key == translation_key
