@@ -193,6 +193,9 @@ async def async_remove_config_entry_device(
     This function is called when a user attempts to remove a device from the UI.
     We should return True if the device can be removed, False otherwise.
     """
+    if not isinstance(device, dr.DeviceEntry):
+        return False
+    
     # Prevent removing the hub device itself
     # The hub device is the one without a via_device_id (it's not a child of another device)
     if device.via_device_id is None:
