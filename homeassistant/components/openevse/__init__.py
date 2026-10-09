@@ -16,6 +16,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     Platform,
     UnitOfElectricPotential,
+    UnitOfLength,
     UnitOfPower,
     UnitOfTime,
 )
@@ -31,6 +32,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import (
+    DistanceConverter,
     DurationConverter,
     ElectricPotentialConverter,
     PowerConverter,
@@ -104,6 +106,27 @@ def _parse_voltage_state(state: State | None) -> int | None:
     return round(val)
 
 
+def _parse_range_state(state: State | None) -> int | None:
+    """Parse vehicle range sensor state and convert to kilometers if necessary."""
+    if not state or state.state in (None, "unavailable", "unknown", ""):
+        return None
+    try:
+        val = float(state.state)
+    except ValueError, TypeError:
+        return None
+
+    unit = state.attributes.get("unit_of_measurement")
+    if (
+        unit
+        and unit != UnitOfLength.KILOMETERS
+        and unit in DistanceConverter.VALID_UNITS
+    ):
+        with contextlib.suppress(Exception):
+            val = DistanceConverter.convert(val, unit, UnitOfLength.KILOMETERS)
+
+    return round(val)
+
+
 def _parse_int_state(state: State | None) -> int | None:
     """Parse sensor state to integer."""
     if not state or state.state in (None, "unavailable", "unknown", ""):
@@ -157,20 +180,20 @@ async def _handle_sensor_state_change(
             invert = options.get(CONF_INVERT_GRID, False)
             await charger.self_production(grid=grid, solar=None, invert=invert)
 
-        elif changed_entity == options.get(CONF_SOLAR):
+        if changed_entity == options.get(CONF_SOLAR):
             solar = _parse_power_state(hass.states.get(changed_entity))
             await charger.self_production(grid=None, solar=solar, invert=False)
 
-        elif changed_entity == options.get(CONF_VOLTAGE):
+        if changed_entity == options.get(CONF_VOLTAGE):
             voltage = _parse_voltage_state(hass.states.get(changed_entity))
             await charger.grid_voltage(voltage=voltage)
 
-        elif changed_entity == options.get(CONF_SHAPER):
+        if changed_entity == options.get(CONF_SHAPER):
             power = _parse_power_state(hass.states.get(changed_entity))
             if power is not None:
                 await charger.set_shaper_live_pwr(power=power)
 
-        elif changed_entity in (
+        if changed_entity in (
             options.get(CONF_VEHICLE_SOC),
             options.get(CONF_VEHICLE_RANGE),
             options.get(CONF_VEHICLE_ETA),
@@ -181,7 +204,7 @@ async def _handle_sensor_state_change(
 
             soc = _parse_int_state(hass.states.get(soc_sensor)) if soc_sensor else None
             vrange = (
-                _parse_int_state(hass.states.get(range_sensor))
+                _parse_range_state(hass.states.get(range_sensor))
                 if range_sensor
                 else None
             )
@@ -193,7 +216,7 @@ async def _handle_sensor_state_change(
                 time_to_full=eta,
             )
 
-        elif changed_entity in (
+        if changed_entity in (
             options.get(CONF_HOME_BATTERY_SOC),
             options.get(CONF_HOME_BATTERY_POWER),
         ):
@@ -259,9 +282,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenEVSEConfigEntry) -> 
     entry.async_on_unload(coordinator.async_stop_websocket)
 
     # Track sensor entities configured in options flow
-    tracked_sensors = [
-        sensor_id for field in SENSOR_FIELDS if (sensor_id := entry.options.get(field))
-    ]
+    tracked_sensors = list(
+        {
+            sensor_id
+            for field in SENSOR_FIELDS
+            if (sensor_id := entry.options.get(field))
+        }
+    )
     if tracked_sensors:
 
         @callback

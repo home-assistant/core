@@ -147,81 +147,73 @@ async def test_sensor_state_change_pushes_data(
 
     assert config_entry.state is ConfigEntryState.LOADED
 
-    # Grid update (with kW conversion and invert)
     hass.states.async_set("sensor.grid_power", "2.5", {"unit_of_measurement": "kW"})
     await hass.async_block_till_done()
     mock_charger.self_production.assert_called_with(grid=2500, solar=None, invert=True)
 
-    # Solar update
     hass.states.async_set("sensor.solar_power", "1800", {"unit_of_measurement": "W"})
     await hass.async_block_till_done()
     mock_charger.self_production.assert_called_with(grid=None, solar=1800, invert=False)
 
-    # Voltage update
     hass.states.async_set("sensor.grid_voltage", "240.4")
     await hass.async_block_till_done()
     mock_charger.grid_voltage.assert_called_with(voltage=240)
 
-    # Voltage update with kV conversion
     hass.states.async_set("sensor.grid_voltage", "0.24", {"unit_of_measurement": "kV"})
     await hass.async_block_till_done()
     mock_charger.grid_voltage.assert_called_with(voltage=240)
 
-    # Shaper power update
     hass.states.async_set("sensor.shaper_power", "5000", {"unit_of_measurement": "W"})
     await hass.async_block_till_done()
     mock_charger.set_shaper_live_pwr.assert_called_with(power=5000)
 
-    # Vehicle SoC update
     hass.states.async_set("sensor.car_battery", "80")
     await hass.async_block_till_done()
     mock_charger.soc.assert_called_with(
         battery_level=80, battery_range=None, time_to_full=None
     )
 
-    # Vehicle range update (now includes previous or current SoC if set)
     hass.states.async_set("sensor.car_range", "220")
     await hass.async_block_till_done()
     mock_charger.soc.assert_called_with(
         battery_level=80, battery_range=220, time_to_full=None
     )
 
-    # Vehicle ETA update (now includes all three)
+    hass.states.async_set("sensor.car_range", "100", {"unit_of_measurement": "mi"})
+    await hass.async_block_till_done()
+    mock_charger.soc.assert_called_with(
+        battery_level=80, battery_range=161, time_to_full=None
+    )
+
     hass.states.async_set("sensor.car_eta", "3600")
     await hass.async_block_till_done()
     mock_charger.soc.assert_called_with(
-        battery_level=80, battery_range=220, time_to_full=3600
+        battery_level=80, battery_range=161, time_to_full=3600
     )
 
-    # Vehicle ETA update with datetime sensor (converts to remaining seconds)
     eta_dt = dt_util.utcnow() + timedelta(seconds=1800)
     hass.states.async_set("sensor.car_eta", eta_dt.isoformat())
     await hass.async_block_till_done()
     assert mock_charger.soc.call_args.kwargs["time_to_full"] in (1799, 1800, 1801)
 
-    # Vehicle ETA update with duration unit sensor (converts to seconds)
     hass.states.async_set("sensor.car_eta", "30", {"unit_of_measurement": "min"})
     await hass.async_block_till_done()
     assert mock_charger.soc.call_args.kwargs["time_to_full"] == 1800
 
-    # Home battery SoC update
     hass.states.async_set("sensor.home_battery_soc", "95")
     await hass.async_block_till_done()
     mock_charger.home_battery.assert_called_with(soc=95, power=None)
 
-    # Home battery power update (now includes SoC as well)
     hass.states.async_set(
         "sensor.home_battery_power", "3200", {"unit_of_measurement": "W"}
     )
     await hass.async_block_till_done()
     mock_charger.home_battery.assert_called_with(soc=95, power=3200)
 
-    # Invalid / non-numeric states should not crash
     hass.states.async_set("sensor.grid_power", "unknown")
     hass.states.async_set("sensor.grid_voltage", "invalid")
     await hass.async_block_till_done()
 
-    # UnsupportedFeature and TimeoutError should be caught gracefully
     mock_charger.soc.side_effect = UnsupportedFeature
     hass.states.async_set("sensor.car_battery", "85")
     await hass.async_block_till_done()
