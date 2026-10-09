@@ -5,6 +5,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, replace
 import logging
 import math
+import time
 from typing import Any, cast, override
 import unicodedata
 
@@ -53,7 +54,12 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+# Expiry window for deduplicating access events, in seconds
+_ACCESS_EVENT_DEDUP_WINDOW = 10.0
+
 type UnifiAccessConfigEntry = ConfigEntry[UnifiAccessCoordinator]
+# (event object, event type, published, result, auth, actor, door)
+type _AccessEventKey = tuple[str, str, int, str, str, str, str]
 
 
 @dataclass(frozen=True)
@@ -101,6 +107,7 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
         self.client = client
         self._event_listeners: list[Callable[[DoorEvent], None]] = []
         self._device_to_door: dict[str, str] = {}
+        self._recent_access_events: dict[_AccessEventKey, float] = {}
 
     @callback
     def async_subscribe_door_events(
@@ -490,6 +497,39 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
         if update.data.unique_id and update.data.door and update.data.door.unique_id:
             self._device_to_door[update.data.unique_id] = update.data.door.unique_id
 
+    def _is_duplicate_access_event(
+        self,
+        event_object_id: str,
+        event_type: str,
+        published: int | None,
+        result: str,
+        auth_id: str,
+        actor: str,
+        door_id: str,
+    ) -> bool:
+        """Record an access event and return True when it was already dispatched.
+
+        The controller can deliver the same door event twice — once as an
+        ``access.logs.insights.add`` and once as an ``access.logs.add``
+        message. Only events that reach this point are recorded, so a copy
+        that could not be resolved to a door does not shadow its pair.
+        """
+        published = published or 0
+        if not published:
+            return False
+        now = time.monotonic()
+        self._recent_access_events = {
+            key: seen_at
+            for key, seen_at in self._recent_access_events.items()
+            if now - seen_at <= _ACCESS_EVENT_DEDUP_WINDOW
+        }
+        key = (event_object_id, event_type, published, result, auth_id, actor, door_id)
+        if key in self._recent_access_events:
+            _LOGGER.debug("Suppressing duplicate access event %s", key)
+            return True
+        self._recent_access_events[key] = now
+        return False
+
     async def _handle_insights_add(self, msg: WebsocketMessage) -> None:
         """Handle access insights events (entry/exit)."""
         insights = cast(InsightsAdd, msg)
@@ -510,6 +550,16 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
             attrs["direction"] = insights.data.metadata.direction
         for door in door_entries:
             if door.id:
+                if self._is_duplicate_access_event(
+                    insights.event_object_id,
+                    insights.data.event_type,
+                    insights.data.published,
+                    insights.data.result,
+                    insights.data.metadata.authentication.id,
+                    insights.data.metadata.actor.display_name,
+                    door.id,
+                ):
+                    continue
                 self._dispatch_door_event(door.id, "access", event_type, attrs)
 
     async def _handle_logs_add(self, msg: WebsocketMessage) -> None:
@@ -538,6 +588,16 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
             attrs["result"] = source.event.result
         if source.direction:
             attrs["direction"] = source.direction
+        if self._is_duplicate_access_event(
+            log.event_object_id,
+            source.event.type,
+            source.event.published,
+            source.event.result,
+            source.authentication.issuer,
+            source.actor.display_name,
+            door_id,
+        ):
+            return
         self._dispatch_door_event(door_id, "access", event_type, attrs)
 
     def get_lock_rule_status(self, door_id: str) -> DoorLockRuleStatus | None:
