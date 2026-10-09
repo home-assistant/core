@@ -129,7 +129,8 @@ async def test_unique_id_migration_failure(
 
     assert config_entry.minor_version == 1
     assert config_entry.unique_id == DOMAIN
-    assert config_entry.state is ConfigEntryState.MIGRATION_ERROR
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert config_entry.reason == "Failed to connect to Electric Kiwi"
 
 
 async def test_unique_id_migration_auth_failure(
@@ -142,3 +143,7 @@ async def test_unique_id_migration_auth_failure(
     assert config_entry.minor_version == 1
     assert config_entry.unique_id == DOMAIN
     assert config_entry.state is ConfigEntryState.MIGRATION_ERROR
+    assert (
+        config_entry.reason
+        == "Authentication with Electric Kiwi failed. Please re-authenticate"
+    )
