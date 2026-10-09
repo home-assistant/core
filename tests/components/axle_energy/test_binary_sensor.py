@@ -146,6 +146,7 @@ async def test_unchanged_refresh_at_boundary(
 
     freezer.move_to(boundary)
     freezer.tick(timedelta(seconds=delay))
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
     await mock_config_entry.runtime_data.async_refresh()
     async_fire_time_changed(hass)
     await hass.async_block_till_done()

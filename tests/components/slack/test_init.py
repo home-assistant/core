@@ -38,3 +38,4 @@ async def test_async_setup_entry_invalid_auth(
     )
     await hass.async_block_till_done()
     assert entry.state is ConfigEntryState.SETUP_ERROR
+    assert entry.reason == "Invalid API key"

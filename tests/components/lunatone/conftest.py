@@ -54,9 +54,9 @@ def mock_lunatone_devices(mock_lunatone_auth: AsyncMock) -> Generator[AsyncMock]
     """Mock a Lunatone devices object."""
 
     def build_devices_mock(devices: Devices):
-        device_list = []
+        device_dict = {}
         if devices.data is None:
-            return device_list
+            return device_dict
         for device_data in devices.data.devices:
             device = AsyncMock(spec=Device)
             device.data = device_data
@@ -92,8 +92,8 @@ def mock_lunatone_devices(mock_lunatone_auth: AsyncMock) -> Generator[AsyncMock]
                 if device.data.features.color_rgb and device.data.features.color_waf
                 else None
             )
-            device_list.append(device)
-        return device_list
+            device_dict[device_data.id] = device
+        return device_dict
 
     with patch(
         "homeassistant.components.lunatone.Devices", autospec=True
@@ -154,14 +154,14 @@ def mock_lunatone_sensors(mock_lunatone_auth: AsyncMock) -> Generator[AsyncMock]
     """Mock a Lunatone sensors object."""
 
     def build_sensors_mock(sensors: Sensors):
-        sensor_list = []
+        sensor_dict = {}
         if sensors.data is None:
-            return sensor_list
+            return sensor_dict
         for sensor_data in sensors.data.sensors:
             sensor = AsyncMock(spec=Sensor)
             sensor.data = sensor_data
-            sensor_list.append(sensor)
-        return sensor_list
+            sensor_dict[sensor_data.id] = sensor
+        return sensor_dict
 
     with patch(
         "homeassistant.components.lunatone.Sensors",

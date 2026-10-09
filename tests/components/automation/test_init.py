@@ -17,7 +17,7 @@ from homeassistant.components.automation import (
     EVENT_AUTOMATION_TRIGGERED,
     AutomationEntity,
 )
-from homeassistant.components.automation.const import SERVICE_TRIGGER
+from homeassistant.components.automation.const import CONF_STOP_ACTIONS, SERVICE_TRIGGER
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -809,7 +809,7 @@ async def test_automation_stops(
         await hass.services.async_call(
             automation.DOMAIN,
             SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: entity_id, automation.CONF_STOP_ACTIONS: False},
+            {ATTR_ENTITY_ID: entity_id, CONF_STOP_ACTIONS: False},
             blocking=True,
         )
     elif service == "reload":
@@ -3340,6 +3340,11 @@ async def test_blueprint_automation_bad_config(
         "name": "automation 0",
     }
     assert issues[0]["translation_placeholders"]["error"].startswith(details)
+
+    # The automation is broken, but still listed under its blueprint
+    assert automation.automations_with_blueprint(hass, "test_event_service.yaml") == [
+        "automation.automation_0"
+    ]
 
 
 async def test_blueprint_automation_fails_substitution(
