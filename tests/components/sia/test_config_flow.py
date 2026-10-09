@@ -246,6 +246,7 @@ async def test_validation_errors_user(
     config[field] = value
     result_err = await hass.config_entries.flow.async_configure(flow_id, config)
     assert result_err["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result_err["errors"] == {"base": error}
 
 
@@ -276,6 +277,7 @@ async def test_validation_errors_account(
     config[field] = value
     result_err = await hass.config_entries.flow.async_configure(flow_id, config)
     assert result_err["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result_err["errors"] == {"base": error}
 
 
@@ -290,6 +292,7 @@ async def test_unknown_user(hass: HomeAssistant, flow_at_user_step) -> None:
         result_err = await hass.config_entries.flow.async_configure(flow_id, config)
         assert result_err
         assert result_err["step_id"] == "user"
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result_err["errors"] == {"base": "unknown"}
         assert result_err["data_schema"] == HUB_SCHEMA
 
@@ -308,6 +311,7 @@ async def test_unknown_account(hass: HomeAssistant, flow_at_user_step) -> None:
         result_err = await hass.config_entries.flow.async_configure(flow_id, config)
         assert result_err
         assert result_err["step_id"] == "add_account"
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result_err["errors"] == {"base": "unknown"}
         assert result_err["data_schema"] == ACCOUNT_SCHEMA
 

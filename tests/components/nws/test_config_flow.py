@@ -64,6 +64,7 @@ async def test_form_location(
         "longitude": -90,
         CONF_STATION: "ABC",
     }
+    assert result3["result"].unique_id == "35.0_-90.0"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -85,6 +86,7 @@ async def test_form_location_cannot_connect(
     )
 
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
@@ -106,6 +108,7 @@ async def test_form_location_unknown_error(
     )
 
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "unknown"}
 
 
@@ -125,6 +128,7 @@ async def test_form_location_already_configured(
     await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["result"].unique_id == "32.87336_-117.22743"
     assert len(mock_setup_entry.mock_calls) == 1
 
     mock_setup_entry.reset_mock()
@@ -202,6 +206,7 @@ async def test_form_entity_no_coordinates(
     )
 
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "entity_no_coordinates"}
 
 
@@ -230,6 +235,7 @@ async def test_form_entity_non_numeric_coordinates(
     )
 
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "entity_no_coordinates"}
 
 
@@ -248,6 +254,7 @@ async def test_form_entity_not_found(
     )
 
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "entity_not_found"}
 
 
@@ -274,6 +281,7 @@ async def test_form_entity_disabled(
     )
 
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "entity_disabled"}
 
 
@@ -305,6 +313,7 @@ async def test_form_entity_unknown_error(
     )
 
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "unknown"}
 
 
@@ -336,6 +345,7 @@ async def test_form_entity_cannot_connect(
     )
 
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
@@ -365,6 +375,7 @@ async def test_form_entity_already_configured(
     )
     await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
 
     result = await hass.config_entries.flow.async_init(

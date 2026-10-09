@@ -98,6 +98,7 @@ async def test_one_time_password(hass: HomeAssistant) -> None:
             result["flow_id"], {CONF_OTP: "1234"}
         )
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "0521234567"
 
 
 async def test_one_time_password_api_error(hass: HomeAssistant) -> None:
@@ -155,6 +156,7 @@ async def test_cannot_connect(hass: HomeAssistant) -> None:
         )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -184,6 +186,7 @@ async def test_invalid_phone_number(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"phone_number": "invalid_phone_number"}
 
 
@@ -225,4 +228,5 @@ async def test_invalid_auth(hass: HomeAssistant) -> None:
         )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == CONF_OTP
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {CONF_OTP: "invalid_auth"}

@@ -19,6 +19,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.typing import ConfigType
 
@@ -52,7 +53,9 @@ AWS_CREDENTIAL_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_NAME): cv.string,
         probatio.Inclusive(CONF_ACCESS_KEY_ID, ATTR_CREDENTIALS): cv.string,
-        probatio.Inclusive(CONF_SECRET_ACCESS_KEY, ATTR_CREDENTIALS): cv.string,
+        probatio.Inclusive(
+            probatio.Secret(CONF_SECRET_ACCESS_KEY), ATTR_CREDENTIALS
+        ): cv.string,
         probatio.Exclusive(CONF_PROFILE_NAME, ATTR_CREDENTIALS): cv.string,
         probatio.Optional(CONF_VALIDATE, default=True): cv.boolean,
     }
@@ -72,7 +75,9 @@ NOTIFY_PLATFORM_SCHEMA = probatio.Schema(
         ),
         probatio.Required(CONF_REGION): probatio.All(cv.string, probatio.Lower),
         probatio.Inclusive(CONF_ACCESS_KEY_ID, ATTR_CREDENTIALS): cv.string,
-        probatio.Inclusive(CONF_SECRET_ACCESS_KEY, ATTR_CREDENTIALS): cv.string,
+        probatio.Inclusive(
+            probatio.Secret(CONF_SECRET_ACCESS_KEY), ATTR_CREDENTIALS
+        ): cv.string,
         probatio.Exclusive(CONF_PROFILE_NAME, ATTR_CREDENTIALS): cv.string,
         probatio.Exclusive(CONF_CREDENTIAL_NAME, ATTR_CREDENTIALS): cv.string,
         probatio.Optional(CONF_CONTEXT): probatio.Coerce(dict),
@@ -127,7 +132,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if conf is None:
             # user removed config from configuration.yaml, abort setup
             hass.async_create_task(hass.config_entries.async_remove(entry.entry_id))
-            return False
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="config_removed",
+            )
 
         if conf != entry.data:
             # user changed config from configuration.yaml, use conf to setup
@@ -163,7 +171,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             )
         )
 
-    return validation
+    if not validation:
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="credential_validation_failed",
+        )
+
+    return True
 
 
 async def _validate_aws_credentials(hass, credential):

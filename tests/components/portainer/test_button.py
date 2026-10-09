@@ -14,6 +14,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import SERVICE_PRESS
 from homeassistant.components.portainer.const import DOMAIN
+from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -110,6 +111,31 @@ async def test_buttons_containers_exceptions(
             {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
+
+
+async def test_buttons_invalid_auth_starts_reauth(
+    hass: HomeAssistant,
+    mock_portainer_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test an invalid API key on press starts a reauth flow."""
+    await setup_integration(hass, mock_config_entry)
+    mock_portainer_client.restart_container.side_effect = PortainerAuthenticationError(
+        "auth"
+    )
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            SERVICE_PRESS,
+            {ATTR_ENTITY_ID: "button.practical_morse_restart_container"},
+            blocking=True,
+        )
+    await hass.async_block_till_done()
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
 
 
 @pytest.mark.parametrize(

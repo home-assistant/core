@@ -48,6 +48,7 @@ async def test_form(mock_wall_connector_version, hass: HomeAssistant) -> None:
     assert result2["title"] == "Tesla Wall Connector"
     assert result2["data"] == {CONF_HOST: "1.1.1.1"}
     assert result2["options"] == {CONF_SPLIT_PHASE: DEFAULT_SPLIT_PHASE}
+    assert result2["result"].unique_id == "abc123"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -67,6 +68,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
         )
 
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "cannot_connect"}
     assert (
         get_schema_suggested_value(result2["data_schema"].schema, CONF_HOST)
@@ -96,6 +98,7 @@ async def test_form_other_error(
         )
 
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "unknown"}
 
 
@@ -153,6 +156,7 @@ async def test_dhcp_can_finish(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {CONF_HOST: "1.2.3.4"}
     assert result["options"] == {CONF_SPLIT_PHASE: DEFAULT_SPLIT_PHASE}
+    assert result["result"].unique_id == "abc123"
 
 
 async def test_form_with_split_phase(hass: HomeAssistant) -> None:
@@ -183,6 +187,7 @@ async def test_form_with_split_phase(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["data"] == {CONF_HOST: "1.1.1.1"}
     assert result2["options"] == {CONF_SPLIT_PHASE: True}
+    assert result2["result"].unique_id == "abc123"
 
 
 async def test_options_flow(hass: HomeAssistant) -> None:

@@ -101,6 +101,7 @@ async def test_auth_fail(
     )
     assert result
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
 
 

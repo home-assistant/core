@@ -76,6 +76,7 @@ async def test_detection_flow_with_valid_path(hass: HomeAssistant) -> None:
             DOMAIN, context={"source": "detect"}, data={CONF_DEVICE: USER_PROVIDED_PATH}
         )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_DEVICE] == USER_PROVIDED_PATH
 
@@ -112,6 +113,7 @@ async def test_detection_flow_with_invalid_path(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "manual"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert CONF_DEVICE in result["errors"]
 
 
@@ -127,6 +129,7 @@ async def test_manual_flow_with_valid_path(hass: HomeAssistant) -> None:
             DOMAIN, context={"source": "manual"}, data={CONF_DEVICE: USER_PROVIDED_PATH}
         )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_DEVICE] == USER_PROVIDED_PATH
 
@@ -147,6 +150,7 @@ async def test_manual_flow_with_invalid_path(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "manual"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert CONF_DEVICE in result["errors"]
 
 
@@ -164,6 +168,7 @@ async def test_import_flow_with_valid_path(hass: HomeAssistant) -> None:
             data=DATA_TO_IMPORT,
         )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_DEVICE] == DATA_TO_IMPORT[CONF_DEVICE]
 

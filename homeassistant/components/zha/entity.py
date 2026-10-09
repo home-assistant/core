@@ -193,6 +193,15 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
         )
 
     @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Update the gateway entity reference to the new entity_id."""
+        super().async_entity_id_changed(old_entity_id)
+        self.entity_data.device_proxy.gateway_proxy.update_entity_reference(
+            self, old_entity_id
+        )
+
+    @callback
     def restore_external_state_attributes(self, state: State) -> None:
         """Restore ephemeral external state from Home Assistant back into ZHA."""
 

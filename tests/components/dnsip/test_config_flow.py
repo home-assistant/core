@@ -143,6 +143,7 @@ async def test_form_error(hass: HomeAssistant) -> None:
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "invalid_hostname"}
 
 
@@ -380,6 +381,7 @@ async def test_options_error(hass: HomeAssistant, p_input: dict[str, str]) -> No
     if p_input[CONF_IPV4]:
         assert result2["errors"] == {"resolver": "invalid_resolver"}
     if p_input[CONF_IPV6]:
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result2["errors"] == {"resolver_ipv6": "invalid_resolver"}
 
 

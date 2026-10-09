@@ -38,7 +38,7 @@ PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
         probatio.Optional(CONF_VERIFY_SSL, default=True): probatio.Any(
             cv.boolean, cv.isfile
         ),
-        probatio.Required(CONF_PASSWORD): cv.string,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): cv.string,
         probatio.Required(CONF_USERNAME): cv.string,
         probatio.Required(CONF_HTTP_ID): cv.string,
     }

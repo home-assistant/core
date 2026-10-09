@@ -158,7 +158,9 @@ CONFIG_SCHEMA = probatio.Schema(
                 probatio.Inclusive(
                     CONF_DEVELOPMENT_PR, "development_pr"
                 ): cv.positive_int,
-                probatio.Inclusive(CONF_GITHUB_TOKEN, "development_pr"): cv.string,
+                probatio.Inclusive(
+                    probatio.Secret(CONF_GITHUB_TOKEN), "development_pr"
+                ): cv.string,
                 probatio.Optional(CONF_THEMES): probatio.All(dict, _validate_themes),
                 probatio.Optional(CONF_EXTRA_MODULE_URL): probatio.All(
                     probatio.EnsureList(), [cv.string]

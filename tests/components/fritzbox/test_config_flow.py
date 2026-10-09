@@ -68,6 +68,36 @@ MOCK_SSDP_DATA = {
             ATTR_UPNP_PRESENTATION_URL: "http://[1234::1]",
         },
     ),
+    "ip4_hostname": SsdpServiceInfo(
+        ssdp_usn="mock_usn",
+        ssdp_st="mock_st",
+        ssdp_location="http://10.0.0.1:49000/fboxdesc.xml",
+        upnp={
+            ATTR_UPNP_FRIENDLY_NAME: CONF_FAKE_NAME,
+            ATTR_UPNP_UDN: "uuid:only-a-test",
+            ATTR_UPNP_PRESENTATION_URL: "http://fritz.repeater",
+        },
+    ),
+    "ip4_relative_presentation_url": SsdpServiceInfo(
+        ssdp_usn="mock_usn",
+        ssdp_st="mock_st",
+        ssdp_location="http://10.0.0.1:49000/fboxdesc.xml",
+        upnp={
+            ATTR_UPNP_FRIENDLY_NAME: CONF_FAKE_NAME,
+            ATTR_UPNP_UDN: "uuid:only-a-test",
+            ATTR_UPNP_PRESENTATION_URL: "/",
+        },
+    ),
+    "ip6_invalid_hostname": SsdpServiceInfo(
+        ssdp_usn="mock_usn",
+        ssdp_st="mock_st",
+        ssdp_location="http://[fe80::1%1]:49000/fboxdesc.xml",
+        upnp={
+            ATTR_UPNP_FRIENDLY_NAME: CONF_FAKE_NAME,
+            ATTR_UPNP_UDN: "uuid:only-a-test",
+            ATTR_UPNP_PRESENTATION_URL: "http://fritz.repeater",
+        },
+    ),
     "ip6_invalid": SsdpServiceInfo(
         ssdp_usn="mock_usn",
         ssdp_st="mock_st",
@@ -127,6 +157,7 @@ async def test_user_auth_failed(hass: HomeAssistant, fritz: Mock) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"]["base"] == "invalid_auth"
 
 
@@ -225,6 +256,7 @@ async def test_reauth_auth_failed(hass: HomeAssistant, fritz: Mock) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"]["base"] == "invalid_auth"
 
 
@@ -332,8 +364,15 @@ async def test_reconfigure_failed(hass: HomeAssistant, fritz: Mock) -> None:
     [
         (MOCK_SSDP_DATA["ip4_valid"], "http://10.0.0.1", FlowResultType.FORM),
         (MOCK_SSDP_DATA["ip4_ssdp_fallback"], "http://10.0.0.1", FlowResultType.FORM),
+        (MOCK_SSDP_DATA["ip4_hostname"], "http://fritz.repeater", FlowResultType.FORM),
+        (
+            MOCK_SSDP_DATA["ip4_relative_presentation_url"],
+            "http://10.0.0.1",
+            FlowResultType.FORM,
+        ),
         (MOCK_SSDP_DATA["ip6_valid"], "http://[1234::1]", FlowResultType.FORM),
         (MOCK_SSDP_DATA["ip6_invalid"], None, FlowResultType.ABORT),
+        (MOCK_SSDP_DATA["ip6_invalid_hostname"], None, FlowResultType.ABORT),
     ],
 )
 async def test_ssdp(
@@ -408,6 +447,7 @@ async def test_ssdp_auth_failed(hass: HomeAssistant, fritz: Mock) -> None:
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "confirm"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"]["base"] == "invalid_auth"
 
 

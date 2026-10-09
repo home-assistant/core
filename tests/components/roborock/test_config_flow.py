@@ -617,4 +617,5 @@ async def test_config_flow_custom_url_invalid_format(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "custom_url"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {CONF_ROBOROCK_SERVER_URL: "invalid_url_format"}

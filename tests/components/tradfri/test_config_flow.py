@@ -43,6 +43,7 @@ async def test_already_paired(hass: HomeAssistant, mock_entry_setup) -> None:
         )
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_authenticate"}
 
 
@@ -62,6 +63,7 @@ async def test_user_connection_successful(
 
     assert len(mock_entry_setup.mock_calls) == 1
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].data == {
         "host": "123.123.123.123",
@@ -86,6 +88,7 @@ async def test_user_connection_timeout(
     assert len(mock_entry_setup.mock_calls) == 0
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "timeout"}
 
 
@@ -106,6 +109,7 @@ async def test_user_connection_bad_key(
     assert len(mock_entry_setup.mock_calls) == 0
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "invalid_security_code"}
 
 

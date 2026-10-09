@@ -70,7 +70,7 @@ STEP_AUTH_DATA_SCHEMA = probatio.Schema(
         probatio.Optional(CONF_USERNAME): TextSelector(
             TextSelectorConfig(autocomplete="off")
         ),
-        probatio.Optional(CONF_PASSWORD): TextSelector(
+        probatio.Optional(probatio.Secret(CONF_PASSWORD)): TextSelector(
             TextSelectorConfig(type=TextSelectorType.PASSWORD)
         ),
     }

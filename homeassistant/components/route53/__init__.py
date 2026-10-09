@@ -34,7 +34,7 @@ CONFIG_SCHEMA = probatio.Schema(
                 probatio.Required(CONF_RECORDS): probatio.All(
                     probatio.EnsureList(), [cv.string]
                 ),
-                probatio.Required(CONF_SECRET_ACCESS_KEY): cv.string,
+                probatio.Required(probatio.Secret(CONF_SECRET_ACCESS_KEY)): cv.string,
                 probatio.Required(CONF_ZONE): cv.string,
                 probatio.Optional(CONF_TTL, default=DEFAULT_TTL): cv.positive_int,
             }

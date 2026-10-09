@@ -80,6 +80,7 @@ async def test_login_failure(hass: HomeAssistant, side_effect, error) -> None:
 
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"] == {"base": error}
 
 
@@ -100,6 +101,7 @@ async def test_success(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["data"][CONF_USERNAME] == SLEEPIQ_CONFIG[CONF_USERNAME]
     assert result2["data"][CONF_PASSWORD] == SLEEPIQ_CONFIG[CONF_PASSWORD]
+    assert result2["result"].unique_id == SLEEPIQ_CONFIG[CONF_USERNAME].lower()
     assert len(mock_setup_entry.mock_calls) == 1
 
 

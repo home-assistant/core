@@ -59,7 +59,7 @@ PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
         probatio.Required(CONF_HOST): cv.string,
         probatio.Required(CONF_PORT, default=DEFAULT_PORT): probatio.Port(),
         probatio.Required(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
-        probatio.Required(CONF_PASSWORD): cv.string,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): cv.string,
         probatio.Optional(CONF_OUTLETS): {cv.string: cv.string},
     }
 )

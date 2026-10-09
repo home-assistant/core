@@ -40,6 +40,7 @@ async def test_user_flow(hass: HomeAssistant, mock_client: MagicMock) -> None:
         },
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "UniFi Access"
     assert result["data"] == {
@@ -139,6 +140,7 @@ async def test_user_flow_different_host(
         },
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
@@ -447,6 +449,7 @@ async def test_user_flow_protect_api_key_unreachable(
     )
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "invalid_auth"}
 
 
@@ -472,6 +475,7 @@ async def test_user_flow_protect_api_key_check_raises(
     )
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "invalid_auth"}
 
 
@@ -605,6 +609,7 @@ async def test_discovery_confirm_success(
         CONF_API_TOKEN: MOCK_API_TOKEN,
         CONF_VERIFY_SSL: False,
     }
+    assert result["result"].unique_id == "AABBCCDDEEFF"
 
 
 @pytest.mark.usefixtures("mock_setup_entry")

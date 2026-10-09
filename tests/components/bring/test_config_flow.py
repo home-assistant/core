@@ -11,7 +11,7 @@ from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .conftest import EMAIL, PASSWORD
+from .conftest import EMAIL, PASSWORD, UUID
 
 from tests.common import MockConfigEntry
 
@@ -43,6 +43,7 @@ async def test_form(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Bring"
     assert result["data"] == MOCK_DATA_STEP
+    assert result["result"].unique_id == UUID
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -70,6 +71,7 @@ async def test_flow_user_init_data_unknown_error_and_recover(
     )
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"]["base"] == text_error
 
     # Recover

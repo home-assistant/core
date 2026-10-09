@@ -48,6 +48,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "test-username"
     assert result2["data"] == CONFIG
+    assert result2["result"].unique_id == "test-username"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -107,6 +108,7 @@ async def test_form_error(hass: HomeAssistant, side_effect, error_message) -> No
         )
 
         assert result["type"] is FlowResultType.FORM
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"] == {"base": error_message}
 
 
