@@ -65,8 +65,28 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
         )
 
     assert result2["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "cannot_connect"}
+
+    with (
+        patch(
+            "homeassistant.components.ialarm.config_flow.IAlarm.get_status",
+            return_value=1,
+        ),
+        patch(
+            "homeassistant.components.ialarm.config_flow.IAlarm.get_mac",
+            return_value=TEST_MAC,
+        ),
+        patch(
+            "homeassistant.components.ialarm.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], TEST_DATA
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_exception(hass: HomeAssistant) -> None:
@@ -84,8 +104,28 @@ async def test_form_exception(hass: HomeAssistant) -> None:
         )
 
     assert result2["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "unknown"}
+
+    with (
+        patch(
+            "homeassistant.components.ialarm.config_flow.IAlarm.get_status",
+            return_value=1,
+        ),
+        patch(
+            "homeassistant.components.ialarm.config_flow.IAlarm.get_mac",
+            return_value=TEST_MAC,
+        ),
+        patch(
+            "homeassistant.components.ialarm.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], TEST_DATA
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_already_exists(hass: HomeAssistant) -> None:
