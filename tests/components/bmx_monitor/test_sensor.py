@@ -202,3 +202,67 @@ def test_availability(available: bool) -> None:
     entity.processor.available = available
     assert sensor.BMxBluetoothSensorEntity.available.fget(entity) is available
     assert sensor.BMxBluetoothSensorEntity.assumed_state.fget(entity) is not available
+
+
+@pytest.mark.usefixtures("mock_bluetooth", "entity_registry_enabled_by_default")
+async def test_timer_updates_real_sensor_without_changed_advertisements(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """An unchanged broadcast does not prevent a later GATT sensor update."""
+    entry = MockConfigEntry(domain=DOMAIN, unique_id=ADDRESS)
+    entry.add_to_hass(hass)
+    await async_setup_with_default_adapter(hass)
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    device = generate_ble_device(ADDRESS, "Battery Monitor")
+    advertisement = generate_advertisement_data(
+        local_name="Battery Monitor", manufacturer_data={}, rssi=-60
+    )
+    inject_advertisement_with_time_and_source_connectable(
+        hass, device, advertisement, monotonic(), "timer-test-proxy", True
+    )
+    with (
+        patch(
+            "homeassistant.components.bmx_monitor.async_validate_device",
+            return_value="valid_active",
+        ),
+        patch(
+            "homeassistant.components.bmx_monitor.coordinator.monotonic_time_coarse",
+            side_effect=monotonic,
+        ),
+        patch(
+            "homeassistant.components.bluetooth.active_update_processor.monotonic_time_coarse",
+            side_effect=monotonic,
+        ),
+        patch.object(
+            BM2Protocol,
+            "async_poll",
+            side_effect=[
+                BM2Reading(12.5, 67, 2, "active"),
+                BM2Reading(12.8, 100, 2, "active"),
+            ],
+        ) as poll,
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+        entity_id = entity_registry.async_get_entity_id(
+            "sensor", DOMAIN, f"{ADDRESS}-battery_voltage"
+        )
+        assert entity_id is not None
+        assert hass.states.get(entity_id).state == "12.5"
+        assert poll.await_count == 1
+        freezer.tick(timedelta(seconds=60))
+        inject_advertisement_with_time_and_source_connectable(
+            hass, device, advertisement, monotonic(), "timer-test-proxy", True
+        )
+        async_fire_time_changed(hass, dt_util.utcnow())
+        await hass.async_block_till_done(wait_background_tasks=True)
+        assert poll.await_count == 2
+        assert hass.states.get(entity_id).state == "12.8"
+        assert await hass.config_entries.async_unload(entry.entry_id)
+        freezer.tick(timedelta(seconds=120))
+        async_fire_time_changed(hass, dt_util.utcnow())
+        await hass.async_block_till_done(wait_background_tasks=True)
+        assert poll.await_count == 2

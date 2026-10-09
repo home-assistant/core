@@ -46,7 +46,7 @@ async def test_setup_from_cached_advertisement(
             new_callable=AsyncMock,
             return_value=validation,
         ) as validate,
-        patch.object(integration, "ActiveBluetoothProcessorCoordinator") as coordinator,
+        patch.object(integration, "BMxBluetoothCoordinator") as coordinator,
         patch.object(
             hass.config_entries, "async_forward_entry_setups", new_callable=AsyncMock
         ),
@@ -89,7 +89,7 @@ async def test_setup_waits_for_advertisement(
             new_callable=AsyncMock,
             return_value="valid_passive",
         ) as validate,
-        patch.object(integration, "ActiveBluetoothProcessorCoordinator"),
+        patch.object(integration, "BMxBluetoothCoordinator"),
         patch.object(
             hass.config_entries, "async_forward_entry_setups", new_callable=AsyncMock
         ),
@@ -111,7 +111,7 @@ async def test_setup_retries_when_device_is_absent(
         patch.object(
             integration, "async_validate_device", new_callable=AsyncMock
         ) as validate,
-        patch.object(integration, "ActiveBluetoothProcessorCoordinator") as coordinator,
+        patch.object(integration, "BMxBluetoothCoordinator") as coordinator,
     ):
         assert not await hass.config_entries.async_setup(entry.entry_id)
     assert entry.state is ConfigEntryState.SETUP_RETRY
@@ -142,7 +142,7 @@ async def test_setup_validation_failure(
             new_callable=AsyncMock,
             return_value=validation,
         ),
-        patch.object(integration, "ActiveBluetoothProcessorCoordinator") as coordinator,
+        patch.object(integration, "BMxBluetoothCoordinator") as coordinator,
     ):
         assert not await hass.config_entries.async_setup(entry.entry_id)
     assert entry.state is expected_state
@@ -172,7 +172,7 @@ async def test_poll_callback(
             integration, "async_validate_device", return_value="valid_passive"
         ),
         patch.object(integration, "BMxBluetoothDeviceData", return_value=data),
-        patch.object(integration, "ActiveBluetoothProcessorCoordinator") as coordinator,
+        patch.object(integration, "BMxBluetoothCoordinator") as coordinator,
         patch.object(hass.config_entries, "async_forward_entry_setups"),
         patch.object(
             integration, "async_ble_device_from_address", return_value=active_device
@@ -212,7 +212,7 @@ async def test_poll_gate(
             integration, "async_validate_device", return_value="valid_passive"
         ),
         patch.object(integration, "BMxBluetoothDeviceData", return_value=data),
-        patch.object(integration, "ActiveBluetoothProcessorCoordinator") as coordinator,
+        patch.object(integration, "BMxBluetoothCoordinator") as coordinator,
         patch.object(hass.config_entries, "async_forward_entry_setups"),
         patch.object(hass, "state", state),
     ):
@@ -233,7 +233,7 @@ async def test_unload(
         patch.object(
             integration, "async_validate_device", return_value="valid_passive"
         ),
-        patch.object(integration, "ActiveBluetoothProcessorCoordinator"),
+        patch.object(integration, "BMxBluetoothCoordinator"),
         patch.object(hass.config_entries, "async_forward_entry_setups"),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)

@@ -12,14 +12,12 @@ from homeassistant.components.bluetooth import (
     async_last_service_info,
     async_process_advertisements,
 )
-from homeassistant.components.bluetooth.active_update_processor import (
-    ActiveBluetoothProcessorCoordinator,
-)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 
+from .coordinator import BMxBluetoothCoordinator
 from .device_data import BMxBluetoothDeviceData
 from .validation import async_validate_device
 
@@ -28,7 +26,7 @@ PLATFORMS: list[Platform] = [Platform.SENSOR]
 _LOGGER = logging.getLogger(__name__)
 SETUP_ADVERTISEMENT_TIMEOUT = 10
 
-type BMxConfigEntry = ConfigEntry[ActiveBluetoothProcessorCoordinator]
+type BMxConfigEntry = ConfigEntry[BMxBluetoothCoordinator]
 
 
 async def async_setup_entry(
@@ -98,7 +96,7 @@ async def async_setup_entry(
         # the cached advertisement if the newer telemetry packet was decoded.
         return await device_data.async_poll_sensors(connectable_device)
 
-    coordinator = config_entry.runtime_data = ActiveBluetoothProcessorCoordinator(
+    coordinator = config_entry.runtime_data = BMxBluetoothCoordinator(
         hass,
         _LOGGER,
         address=address,

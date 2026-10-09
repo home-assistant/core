@@ -14,6 +14,7 @@ from bmx_ble.battery import (
     get_battery_profile,
     interpret_reading,
 )
+from habluetooth import BluetoothServiceInfoBleak
 from home_assistant_bluetooth import BluetoothServiceInfo
 from sensor_state_data import SensorDeviceClass, SensorUpdate, Units
 
@@ -84,7 +85,10 @@ class BMxBluetoothDeviceData(BM2Protocol, BluetoothData):
         self.set_device_name(name)
         self.set_title(name)
 
-        self.process_advertisement(data.manufacturer_data)
+        self.process_advertisement(
+            data.manufacturer_data,
+            raw=data.raw if isinstance(data, BluetoothServiceInfoBleak) else None,
+        )
 
     def poll_needed(
         self,

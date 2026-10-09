@@ -8,6 +8,7 @@ from bmx_ble.battery import BATTERY_PROFILES, Battery, BatteryReading
 import pytest
 from sensor_state_data import SensorUpdate
 
+from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.components.bmx_monitor.const import (
     CONF_BATTERY_TYPE,
     CONF_CUSTOM_BATTERY_CHEMISTRY,
@@ -37,7 +38,7 @@ def device() -> BMxBluetoothDeviceData:
 
 def test_advertisement_metadata(device: BMxBluetoothDeviceData) -> None:
     """Refresh metadata and delegate the packet to the protocol library."""
-    info = MagicMock()
+    info = MagicMock(spec=BluetoothServiceInfoBleak)
     info.address = ADDRESS
     info.manufacturer_data = {76: b"test"}
     with (
@@ -53,7 +54,7 @@ def test_advertisement_metadata(device: BMxBluetoothDeviceData) -> None:
     name.assert_called_once()
     assert name.call_args == title.call_args
     assert "BM2 battery monitor" in name.call_args.args[0]
-    decode.assert_called_once_with(info.manufacturer_data)
+    decode.assert_called_once_with(info.manufacturer_data, raw=info.raw)
 
 
 @pytest.mark.parametrize(
