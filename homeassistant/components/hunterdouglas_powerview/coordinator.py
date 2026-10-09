@@ -3,7 +3,7 @@
 import asyncio
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING, override
+from typing import TYPE_CHECKING, callback, override
 
 from aiopvapi.helpers.aiorequest import PvApiMaintenance
 from aiopvapi.hub import Hub
@@ -15,9 +15,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, HUB_EXCEPTIONS
-
-if TYPE_CHECKING:
-    from .model import PowerviewConfigEntry
+from .util import get_shade_ids
 
 if TYPE_CHECKING:
     from .model import PowerviewConfigEntry
@@ -74,26 +72,21 @@ class PowerviewShadeUpdateCoordinator(DataUpdateCoordinator[PowerviewShadeData])
         self.data.store_group_data(shade_entries)
 
         # Clean up stale devices
-        current_shade_ids = set(shade_entries.processed.keys())
-
-        device_registry = dr.async_get(self.hass)
-        devices = dr.async_entries_for_config_entry(
-            device_registry, self.config_entry.entry_id
+        self._async_remove_stale_devices(
+            {str(shde_id) for shade_id in shade_entries.processed}
         )
 
-        # Audit registry devices to catch phantoms
-        for device in devices:
-            # Only include shades, don't include the hub device
-            if device.via_device_id is not None:
-                for identifier in device.identifiers:
-                    if (
-                        identifier[0] == DOMAIN
-                        and identifier[1] not in current_shade_ids
-                    ):
-                        _LOGGER.info(
-                            "Removing device for shade %s that no longer exists on hub",
-                            identifier[1],
-                        )
-                        device_registry.async_remove_device(device.id)
-
         return self.data
+
+    @callback
+    def _async_remove_stale_devices(self, current_shace_ids: set[str]) -> None:
+        """Remove shade devices the hub no longer reports."""
+        device_registry = dr.async_get(self.hass)
+        for device in dr.async_entries_for_config_entry(
+            device_registry, self.config_entry.entry_id
+        ):
+            if device.via_device_id is None:
+                continue
+            if not get_shade_ids(device) & current_shade_ids:
+                _LOGGER.debug("removing stale shade device %s", device.name)
+                device_registry.async_remove_device(device.id)
