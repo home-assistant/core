@@ -2686,11 +2686,15 @@ def _async_entity_id_changed(self: entity.Entity, old_entity_id: str) -> None:
     """Run when the entity_id has been changed."""
 
 
-def _entity_class(module: str, methods: dict[str, Any]) -> type[entity.Entity]:
+def _entity_class(
+    module: str,
+    methods: dict[str, Any],
+    base: type[entity.Entity] = entity.Entity,
+) -> type[entity.Entity]:
     """Return an entity class defined in module with the given methods."""
     return type(
         "GeneratedEntity",
-        (entity.Entity,),
+        (base,),
         {"__module__": module, "_attr_unique_id": "5678", **methods},
     )
 
@@ -2705,6 +2709,10 @@ _CORE_ADDED = _entity_class(_CORE_MODULE, _ADDED_METHODS)
 _CUSTOM_ADDED = _entity_class(_CUSTOM_MODULE, _ADDED_METHODS)
 _CORE_ADDED_HOOK = _entity_class(_CORE_MODULE, _ADDED_HOOK_METHODS)
 _CUSTOM_ADDED_HOOK = _entity_class(_CUSTOM_MODULE, _ADDED_HOOK_METHODS)
+_CUSTOM_SUBCLASS_OF_CORE_ADDED = _entity_class(_CUSTOM_MODULE, {}, _CORE_ADDED)
+_CUSTOM_ADDED_SUBCLASS_OF_CORE_ADDED = _entity_class(
+    _CUSTOM_MODULE, _ADDED_METHODS, _CORE_ADDED
+)
 
 
 class _AddedEntity(entity.Entity):
@@ -2927,10 +2935,18 @@ class _InternalAndAddedEntity(_InternalAddedEntity):
         pytest.param(_AddedEntity, True, id="added"),
         pytest.param(_RemovedEntity, True, id="removed"),
         pytest.param(_PreparedEntity, True, id="prepared"),
-        pytest.param(_CORE_ADDED, True, id="core_module_added"),
+        pytest.param(_CORE_ADDED, False, id="core_module_added"),
         pytest.param(_CUSTOM_ADDED, True, id="custom_module_added"),
         pytest.param(_CORE_ADDED_HOOK, False, id="core_module_added_hook"),
         pytest.param(_CUSTOM_ADDED_HOOK, False, id="custom_module_added_hook"),
+        pytest.param(
+            _CUSTOM_SUBCLASS_OF_CORE_ADDED, False, id="custom_subclass_of_core_added"
+        ),
+        pytest.param(
+            _CUSTOM_ADDED_SUBCLASS_OF_CORE_ADDED,
+            True,
+            id="custom_added_subclass_of_core_added",
+        ),
         pytest.param(_HookOnly, False, id="hook_only"),
         pytest.param(_HookAboveAdded, False, id="hook_above_added"),
         pytest.param(_AddedBelowHook, True, id="added_below_hook"),
@@ -2981,9 +2997,18 @@ def _custom_on_remove() -> None:
         pytest.param(_PlainEntity, False, id="plain"),
         pytest.param(_AddedEntity, True, id="added"),
         pytest.param(_RemovedEntity, True, id="removed"),
+        pytest.param(_CORE_ADDED, False, id="core_module_added"),
         pytest.param(_CUSTOM_ADDED, True, id="custom_module_added"),
         pytest.param(_CORE_ADDED_HOOK, False, id="core_module_added_hook"),
         pytest.param(_CUSTOM_ADDED_HOOK, False, id="custom_module_added_hook"),
+        pytest.param(
+            _CUSTOM_SUBCLASS_OF_CORE_ADDED, False, id="custom_subclass_of_core_added"
+        ),
+        pytest.param(
+            _CUSTOM_ADDED_SUBCLASS_OF_CORE_ADDED,
+            True,
+            id="custom_added_subclass_of_core_added",
+        ),
         pytest.param(_HookAboveAdded, False, id="hook_above_added"),
         pytest.param(_AddedBelowHook, True, id="added_below_hook"),
         pytest.param(
