@@ -10,7 +10,7 @@ from nexia.zone import NexiaThermostatZone
 
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
@@ -60,10 +60,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: NexiaConfigEntry) -> boo
         ) from ex
     except aiohttp.ClientResponseError as http_ex:
         if is_invalid_auth_code(http_ex.status):
-            _LOGGER.error(
-                "Access error from Nexia service, please check credentials: %s", http_ex
-            )
-            return False
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_credentials",
+            ) from http_ex
         raise ConfigEntryNotReady(f"Error from Nexia service: {http_ex}") from http_ex
     except aiohttp.ClientOSError as os_error:
         raise ConfigEntryNotReady(

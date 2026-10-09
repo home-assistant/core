@@ -177,5 +177,10 @@
         "name": "Storage power"
       }
     }
+  },
+  "exceptions": {
+    "site_not_active": {
+      "message": "The SolarEdge site is not active"
+    }
   }
 }
