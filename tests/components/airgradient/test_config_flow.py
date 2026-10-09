@@ -284,8 +284,8 @@ async def test_zeroconf_flow_cloud_device(
         result["flow_id"],
         {},
     )
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "84fce612f5b8"
     mock_cloud_airgradient_client.set_configuration_control.assert_not_called()
 
 
@@ -406,8 +406,8 @@ async def test_zeroconf_flow_v1_hint(
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "84fce612f5b8"
 
 
 @pytest.mark.parametrize(
@@ -438,8 +438,8 @@ async def test_zeroconf_flow_probes_for_missing_or_unknown_api_hint(
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "84fce612f5b8"
 
 
 @pytest.mark.usefixtures("mock_airgradient_client", "mock_setup_entry")
@@ -478,8 +478,8 @@ async def test_user_flow_v1_skips_legacy_firmware_gate(
         result["flow_id"], {CONF_HOST: "10.0.0.131"}
     )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "84fce612f5b8"
 
 
 @pytest.mark.parametrize(
@@ -548,8 +548,8 @@ async def test_user_flow_works_discovery(
         result["flow_id"],
         {CONF_HOST: "10.0.0.131"},
     )
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "84fce612f5b8"
 
     # Verify the discovery flow was aborted
     assert not hass.config_entries.flow.async_progress(DOMAIN)

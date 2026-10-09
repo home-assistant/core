@@ -30,10 +30,10 @@ async def test_form(
     }
 
     result2 = await hass.config_entries.flow.async_configure(result["flow_id"], config)
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["data"] == config
     assert result2["options"] == options
+    assert result2["result"].unique_id == "34.053718--118.244842"
 
 
 @pytest.mark.parametrize("mock_api_get", [AsyncMock(side_effect=InvalidKeyError)])

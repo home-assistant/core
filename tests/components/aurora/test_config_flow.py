@@ -35,10 +35,10 @@ async def test_full_flow(
     result = await hass.config_entries.flow.async_configure(result["flow_id"], DATA)
     await hass.async_block_till_done()
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Aurora visibility"
     assert result["data"] == DATA
+    assert result["result"].unique_id == "10.2_-10.0"
     assert len(mock_setup_entry.mock_calls) == 1
 
 

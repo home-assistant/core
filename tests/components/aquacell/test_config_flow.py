@@ -69,13 +69,13 @@ async def test_full_flow(
     )
     await hass.async_block_till_done()
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == TEST_CONFIG_ENTRY[CONF_EMAIL]
     assert result2["data"][CONF_EMAIL] == TEST_CONFIG_ENTRY[CONF_EMAIL]
     assert result2["data"][CONF_PASSWORD] == TEST_CONFIG_ENTRY[CONF_PASSWORD]
     assert result2["data"][CONF_REFRESH_TOKEN] == TEST_CONFIG_ENTRY[CONF_REFRESH_TOKEN]
     assert result2["data"][CONF_BRAND] == TEST_CONFIG_ENTRY[CONF_BRAND]
+    assert result2["result"].unique_id == TEST_USER_INPUT[CONF_EMAIL]
     assert len(mock_setup_entry.mock_calls) == 1
 
 

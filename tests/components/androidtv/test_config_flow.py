@@ -101,14 +101,14 @@ class MockConfigDevice:
 
 
 @pytest.mark.parametrize(
-    ("flow_input", "expected_data", "eth_mac", "wifi_mac"),
+    ("flow_input", "expected_data", "eth_mac", "wifi_mac", "expected_unique_id"),
     [
-        (FLOW_PYTHON_ADB, CONFIG_PYTHON_ADB, ETH_MAC, None),
-        (FLOW_ADB_SERVER, CONFIG_ADB_SERVER, ETH_MAC, None),
-        (FLOW_PYTHON_ADB, CONFIG_PYTHON_ADB, None, WIFI_MAC),
-        (FLOW_ADB_SERVER, CONFIG_ADB_SERVER, None, WIFI_MAC),
-        (FLOW_PYTHON_ADB, CONFIG_PYTHON_ADB, ETH_MAC, WIFI_MAC),
-        (FLOW_ADB_SERVER, CONFIG_ADB_SERVER, ETH_MAC, WIFI_MAC),
+        (FLOW_PYTHON_ADB, CONFIG_PYTHON_ADB, ETH_MAC, None, ETH_MAC),
+        (FLOW_ADB_SERVER, CONFIG_ADB_SERVER, ETH_MAC, None, ETH_MAC),
+        (FLOW_PYTHON_ADB, CONFIG_PYTHON_ADB, None, WIFI_MAC, WIFI_MAC),
+        (FLOW_ADB_SERVER, CONFIG_ADB_SERVER, None, WIFI_MAC, WIFI_MAC),
+        (FLOW_PYTHON_ADB, CONFIG_PYTHON_ADB, ETH_MAC, WIFI_MAC, ETH_MAC),
+        (FLOW_ADB_SERVER, CONFIG_ADB_SERVER, ETH_MAC, WIFI_MAC, ETH_MAC),
     ],
 )
 async def test_user(
@@ -117,6 +117,7 @@ async def test_user(
     expected_data: dict[str, Any],
     eth_mac: str | None,
     wifi_mac: str | None,
+    expected_unique_id: str,
 ) -> None:
     """Test user config."""
     flow_result = await hass.config_entries.flow.async_init(
@@ -138,10 +139,10 @@ async def test_user(
         )
         await hass.async_block_till_done()
 
-        # pylint: disable-next=home-assistant-tests-config-flow-unique-id
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == HOST
         assert result["data"] == expected_data
+        assert result["result"].unique_id == expected_unique_id
 
         assert len(mock_setup_entry.mock_calls) == 1
 
@@ -176,10 +177,10 @@ async def test_user_adbkey(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-        # pylint: disable-next=home-assistant-tests-config-flow-unique-id
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == HOST
         assert result["data"] == expected_data
+        assert result["result"].unique_id == ETH_MAC
 
         assert len(mock_setup_entry.mock_calls) == 1
 

@@ -77,12 +77,12 @@ async def test_show_form_one_hub(hass: HomeAssistant, mock_hub_discover) -> None
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == dummy_hub_1.id
     assert result["result"].data == {
         CONF_HOST: DUMMY_HOST1,
     }
+    assert result["result"].unique_id == dummy_hub_1.id
 
     # Check we performed the discovery
     assert len(mock_hub_discover.mock_calls) == 1
@@ -130,12 +130,12 @@ async def test_create_second_entry(hass: HomeAssistant, mock_hub_discover) -> No
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == dummy_hub_2.id
     assert result["result"].data == {
         CONF_HOST: DUMMY_HOST2,
     }
+    assert result["result"].unique_id == dummy_hub_2.id
 
 
 async def test_already_configured(hass: HomeAssistant, mock_hub_discover) -> None:

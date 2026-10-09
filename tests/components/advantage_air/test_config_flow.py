@@ -40,10 +40,10 @@ async def test_form(hass: HomeAssistant) -> None:
         mock_setup_entry.assert_called_once()
         mock_get.assert_called_once()
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "testname"
     assert result2["data"] == USER_INPUT
+    assert result2["result"].unique_id == "uniqueid"
 
     # Test Duplicate Config Flow
     result3 = await hass.config_entries.flow.async_init(

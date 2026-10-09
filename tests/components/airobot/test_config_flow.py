@@ -146,13 +146,13 @@ async def test_dhcp_discovery(
     )
     await hass.async_block_till_done()
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Test Thermostat"
     assert result["data"][CONF_HOST] == "192.168.1.100"
     assert result["data"][CONF_USERNAME] == "T01A1B2C3"
     assert result["data"][CONF_PASSWORD] == "test-password"
     assert result["data"][CONF_MAC] == "b8d61aabcdef"
+    assert result["result"].unique_id == "T01A1B2C3"
 
 
 @pytest.mark.parametrize(

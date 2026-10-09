@@ -64,8 +64,8 @@ async def test_adding_second_device(
             result["flow_id"],
             user_input=USER_INPUT,
         )
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "secondary_device"
 
 
 async def test_connection_error(

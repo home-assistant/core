@@ -237,7 +237,6 @@ async def test_dhcp_can_finish(
 
     await hass.async_block_till_done()
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == f"Bosch {panel_model.name}"
     assert result["data"] == {
@@ -247,6 +246,7 @@ async def test_dhcp_can_finish(
         CONF_MODEL: panel_model.name,
         **config_flow_data,
     }
+    assert result["result"].unique_id == serial_number
 
 
 @pytest.mark.parametrize(

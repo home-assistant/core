@@ -36,7 +36,6 @@ async def test_form_with_valid_connection(
 
         await hass.async_block_till_done()
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Anthem AV"
     assert result2["data"] == {
@@ -45,6 +44,7 @@ async def test_form_with_valid_connection(
         "mac": "00:00:00:00:00:01",
         "model": "MRX 520",
     }
+    assert result2["result"].unique_id == "00:00:00:00:00:01"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
