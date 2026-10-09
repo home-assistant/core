@@ -14,7 +14,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import UnitOfEnergy
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt as dt_util
@@ -132,39 +132,35 @@ async def async_setup_entry(
     """Set up OVO Energy sensor based on a config entry."""
     coordinator = entry.runtime_data
 
-    entities = []
+    added_keys: set[str] = set()
 
-    if coordinator.data:
-        if coordinator.data.electricity:
-            for description in SENSOR_TYPES_ELECTRICITY:
+    @callback
+    def async_discover_sensors() -> None:
+        """Add sensors when their fuel's usage first becomes available."""
+        entities = []
+        for usage, descriptions in (
+            (coordinator.data.electricity, SENSOR_TYPES_ELECTRICITY),
+            (coordinator.data.gas, SENSOR_TYPES_GAS),
+        ):
+            if not usage:
+                continue
+            for description in descriptions:
+                if description.key in added_keys:
+                    continue
                 if (
-                    description.key == KEY_LAST_ELECTRICITY_COST
-                    and coordinator.data.electricity[-1] is not None
-                    and coordinator.data.electricity[-1].cost is not None
+                    description.key in (KEY_LAST_ELECTRICITY_COST, KEY_LAST_GAS_COST)
+                    and usage[-1].cost is not None
                 ):
                     description = dataclasses.replace(
                         description,
-                        native_unit_of_measurement=(
-                            coordinator.data.electricity[-1].cost.currency_unit
-                        ),
+                        native_unit_of_measurement=usage[-1].cost.currency_unit,
                     )
                 entities.append(OVOEnergySensor(coordinator, description))
-        if coordinator.data.gas:
-            for description in SENSOR_TYPES_GAS:
-                if (
-                    description.key == KEY_LAST_GAS_COST
-                    and coordinator.data.gas[-1] is not None
-                    and coordinator.data.gas[-1].cost is not None
-                ):
-                    description = dataclasses.replace(
-                        description,
-                        native_unit_of_measurement=coordinator.data.gas[
-                            -1
-                        ].cost.currency_unit,
-                    )
-                entities.append(OVOEnergySensor(coordinator, description))
+                added_keys.add(description.key)
+        async_add_entities(entities, True)
 
-    async_add_entities(entities, True)
+    async_discover_sensors()
+    entry.async_on_unload(coordinator.async_add_listener(async_discover_sensors))
 
 
 class OVOEnergySensor(OVOEnergyDeviceEntity, SensorEntity):
