@@ -41,6 +41,7 @@ from homeassistant.helpers.event import (
     async_track_time_interval,
     async_track_utc_time_change,
 )
+from homeassistant.helpers.json import json_bytes, json_bytes_strip_null
 from homeassistant.helpers.recorder import DATA_RECORDER
 from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
@@ -152,8 +153,11 @@ def _event_data_filter_matches(
     """Return if an event matches an event data filter."""
     if not (rules := filters.get(cast(str, event.event_type))):
         return False
+    encoder = (
+        json_bytes_strip_null if dialect == SupportedDialect.POSTGRESQL else json_bytes
+    )
     try:
-        data = json_loads(EventData.shared_data_bytes_from_event(event, dialect))
+        data = json_loads(encoder(event.data))
     except JSON_ENCODE_EXCEPTIONS:
         return False
     if not isinstance(data, Mapping):

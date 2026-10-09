@@ -43,6 +43,7 @@ from homeassistant.components.recorder.const import (
 )
 from homeassistant.components.recorder.core import _event_data_filter_matches
 from homeassistant.components.recorder.db_schema import (
+    MAX_EVENT_DATA_BYTES,
     SCHEMA_VERSION,
     EventData,
     Events,
@@ -85,7 +86,7 @@ from homeassistant.helpers.event import async_track_entity_registry_updated_even
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-from homeassistant.util.json import json_loads
+from homeassistant.util.json import JsonValueType, json_loads
 
 from .common import (
     async_block_recorder,
@@ -887,6 +888,71 @@ async def test_event_data_filter_scalar_types(
 
     assert await instance.async_add_executor_job(_get_event_count, hass) == int(
         matches == store_matches
+    )
+
+
+@pytest.mark.parametrize(
+    ("filter_type", "expected_event_data"), [("include", [{}]), ("exclude", [])]
+)
+async def test_event_data_filter_oversized_payload(
+    hass: HomeAssistant,
+    async_setup_recorder_instance: RecorderInstanceGenerator,
+    filter_type: str,
+    expected_event_data: list[dict[str, str]],
+) -> None:
+    """Test live filtering matches complete payloads before storage truncation."""
+    instance = await async_setup_recorder_instance(
+        hass,
+        {
+            filter_type: {
+                "event_data": [
+                    {"event_type": "large_event", "match": {"value": "match"}}
+                ]
+            }
+        },
+    )
+    hass.bus.async_fire(
+        "large_event", {"value": "match", "payload": "x" * MAX_EVENT_DATA_BYTES}
+    )
+    await async_wait_recording_done(hass)
+
+    def _get_event_data(hass: HomeAssistant) -> list[JsonValueType]:
+        with session_scope(hass=hass, read_only=True) as session:
+            return [
+                json_loads(shared_data)
+                for (shared_data,) in session.query(EventData.shared_data)
+                .join(Events)
+                .filter(
+                    Events.event_type_id.in_(select_event_type_ids(("large_event",)))
+                )
+            ]
+
+    assert (
+        await instance.async_add_executor_job(_get_event_data, hass)
+        == expected_event_data
+    )
+
+
+@pytest.mark.parametrize(
+    ("dialect", "match_value", "matches"),
+    [
+        (SupportedDialect.SQLITE, "before", False),
+        (SupportedDialect.POSTGRESQL, "before", True),
+        (SupportedDialect.SQLITE, "before\0after", True),
+        (SupportedDialect.POSTGRESQL, "before\0after", False),
+    ],
+)
+def test_event_data_filter_dialect_normalization(
+    dialect: SupportedDialect, match_value: str, matches: bool
+) -> None:
+    """Test live filters preserve database-specific string normalization."""
+    assert (
+        _event_data_filter_matches(
+            Event("test_event", {"value": "before\0after"}),
+            {"test_event": ((("value", match_value),),)},
+            dialect,
+        )
+        is matches
     )
 
 
