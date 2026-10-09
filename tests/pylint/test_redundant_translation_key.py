@@ -31,8 +31,8 @@ _SENSOR_STRINGS = {
 
 _REMOVE_KEY = "remove the translation_key and its strings.json entry"
 _REMOVE_NAME = (
-    "remove only its name from strings.json, the key is also used for states, "
-    "state attributes, icons or in code"
+    "remove only its name from strings.json, the key is also used for other "
+    "translations, icons or in code"
 )
 
 
@@ -197,6 +197,67 @@ class PowerSensor(SensorEntity):
             "sensor",
             id="entity_without_device_class",
         ),
+        pytest.param(
+            """
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntityDescription
+
+SensorEntityDescription(
+    key="power",
+    name=None,
+    translation_key="power",
+    device_class=SensorDeviceClass.POWER,
+)
+""",
+            {"sensor": {"power": {"name": "Power"}}},
+            "sensor",
+            id="description_with_name",
+        ),
+        pytest.param(
+            """
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+
+class PowerSensor(SensorEntity):
+    _attr_name = None
+    _attr_translation_key = "power"
+    _attr_device_class = SensorDeviceClass.POWER
+""",
+            {"sensor": {"power": {"name": "Power"}}},
+            "sensor",
+            id="entity_with_name",
+        ),
+        pytest.param(
+            """
+from homeassistant.components.sensor import SensorDeviceClass
+
+class NotAnEntity:
+    _attr_translation_key = "power"
+    _attr_device_class = SensorDeviceClass.POWER
+""",
+            {"sensor": {"power": {"name": "Power"}}},
+            "sensor",
+            id="not_an_entity",
+        ),
+        pytest.param(
+            """
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntityDescription
+
+SensorEntityDescription(
+    key="power",
+    translation_key="power",
+    device_class=SensorDeviceClass.POWER,
+)
+""",
+            {
+                "sensor": {"power": {"name": "Power"}},
+                "binary_sensor": {
+                    "power": {
+                        "name": "[%key:component::test_int::entity::sensor::power::name%]"
+                    }
+                },
+            },
+            "sensor",
+            id="referenced_name",
+        ),
     ],
 )
 def test_no_warning(
@@ -295,6 +356,34 @@ class PowerSensor(SensorEntity):
             None,
             ("power", "power", "Power", _REMOVE_KEY),
             id="entity_class_attributes",
+        ),
+        pytest.param(
+            """
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+
+class PowerSensor(SensorEntity):
+    _attr_translation_key: str = "power"
+    _attr_device_class: SensorDeviceClass = SensorDeviceClass.POWER
+""",
+            {"sensor": {"power": {"name": "Power"}}},
+            None,
+            ("power", "power", "Power", _REMOVE_KEY),
+            id="entity_class_annotated_attributes",
+        ),
+        pytest.param(
+            """
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntityDescription
+
+SensorEntityDescription(
+    key="power",
+    translation_key="power",
+    device_class=SensorDeviceClass.POWER,
+)
+""",
+            {"sensor": {"power": {"name": "Power", "unit_of_measurement": "W"}}},
+            None,
+            ("power", "power", "Power", _REMOVE_NAME),
+            id="key_with_unit_of_measurement",
         ),
         pytest.param(
             """

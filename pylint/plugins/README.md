@@ -759,8 +759,13 @@ The same goes for an entity class that sets `_attr_translation_key` and
 `_attr_device_class` in its body.
 
 When the key is used for nothing else, remove it and its `strings.json`
-entry. When it also holds states, state attributes or icons, or the
-integration's code reads it, keep the key and remove only its `name`.
+entry. When it also holds other translations (such as states, state
+attributes or the unit of measurement) or icons, or the integration's code
+reads it, keep the key and remove only its `name`.
+
+Entities with an explicit `name` (or `_attr_name`) are skipped, as that name
+takes over once the translated name is gone. So are translated names that
+another translation references with `[%key:...%]`.
 
 Other platforms, such as `switch`, don't fall back to the device class name,
 so they are not checked.

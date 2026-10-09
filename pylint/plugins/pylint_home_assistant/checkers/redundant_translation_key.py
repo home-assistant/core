@@ -8,21 +8,29 @@ An ``EntityDescription``, or an entity class through ``_attr_device_class``
 and ``_attr_translation_key``, that sets both a device class and a
 translation key whose name translates to that same string adds nothing.
 When the translation key is used for nothing else, remove it. When it also
-holds states, state attributes or icons, or the integration's code reads it,
-remove only its name.
+holds other translations or icons, or the integration's code reads it, remove
+only its name.
+
+An entity with an explicit name, or whose translated name another translation
+references, is skipped: removing the name would change it or break the
+reference.
 
 ``W7442`` (``home-assistant-redundant-translation-key``)
 """
 
 from functools import cache
 from pathlib import Path
+import re
 
 import astroid
 from astroid import nodes
 from pylint.checkers import BaseChecker
 from pylint.lint import PyLinter
 
-from pylint_home_assistant.helpers.entity_class import resolve_entity_description_class
+from pylint_home_assistant.helpers.entity_class import (
+    inherits_from_entity,
+    resolve_entity_description_class,
+)
 from pylint_home_assistant.helpers.icons import load_icons
 from pylint_home_assistant.helpers.integration import get_integration_dir
 from pylint_home_assistant.helpers.module_info import (
@@ -44,6 +52,26 @@ _PLATFORMS_NAMED_BY_DEVICE_CLASS = frozenset(
 
 # Sensors with this device class don't fall back to the device class name
 _SENSOR_ENUM_DEVICE_CLASS = "enum"
+
+_ENTITY_NAME_REFERENCE = re.compile(
+    r"\[%key:component::(\w+)::entity::(\w+)::(\w+)::name%\]"
+)
+
+
+@cache
+def _referenced_entity_names(components_dir: Path) -> frozenset[tuple[str, ...]]:
+    """Return ``(domain, platform, translation_key)`` of referenced entity names.
+
+    These are the targets of ``[%key:component::<domain>::entity::...::name%]``
+    references in any integration's ``strings.json``.
+    """
+    references: set[tuple[str, ...]] = set()
+    for strings in components_dir.glob("*/strings.json"):
+        try:
+            references.update(_ENTITY_NAME_REFERENCE.findall(strings.read_text()))
+        except OSError:
+            continue
+    return frozenset(references)
 
 
 @cache
@@ -105,8 +133,8 @@ class RedundantTranslationKeyChecker(BaseChecker):
                 "Used when an entity description or entity class sets a "
                 "translation_key whose name is the same as the name its device "
                 "class already provides. Remove the translation_key, or only "
-                "its name when the key is also used for states, state "
-                "attributes, icons or in code."
+                "its name when the key is also used for other translations, "
+                "icons or in code."
             ),
         ),
     }
@@ -138,6 +166,8 @@ class RedundantTranslationKeyChecker(BaseChecker):
         if (
             translation_key_keyword is None
             or device_class_keyword is None
+            # An explicit name takes over once the translated name is gone
+            or "name" in keywords
             or resolve_entity_description_class(node) is None
         ):
             return
@@ -153,27 +183,24 @@ class RedundantTranslationKeyChecker(BaseChecker):
         if self._platform is None or self._module is None:
             return
 
-        values: dict[str, nodes.Assign] = {}
+        values: dict[str, nodes.NodeNG] = {}
         for item in node.body:
             match item:
-                case nodes.Assign(
-                    targets=[
-                        nodes.AssignName(
-                            name="_attr_translation_key" | "_attr_device_class" as name
-                        )
-                    ]
-                ):
-                    values[name] = item
-        if (translation_key_assign := values.get("_attr_translation_key")) is None or (
-            device_class_assign := values.get("_attr_device_class")
-        ) is None:
+                case (
+                    nodes.Assign(targets=[nodes.AssignName(name=name)], value=value)
+                    | nodes.AnnAssign(target=nodes.AssignName(name=name), value=value)
+                ) if value is not None:
+                    values[name] = value
+        if (
+            (translation_key := values.get("_attr_translation_key")) is None
+            or (device_class := values.get("_attr_device_class")) is None
+            # An explicit name always wins over the translated name
+            or "_attr_name" in values
+            or not inherits_from_entity(node)
+        ):
             return
 
-        self._check(
-            translation_key_assign,
-            translation_key_assign.value,
-            device_class_assign.value,
-        )
+        self._check(translation_key.parent, translation_key, device_class)
 
     def _check(
         self,
@@ -233,6 +260,13 @@ class RedundantTranslationKeyChecker(BaseChecker):
 
         integration_dir = get_integration_dir(self._module)
         components_dir = integration_dir.parent if integration_dir else None
+        if integration_dir is not None and (
+            integration_dir.name,
+            self._platform,
+            translation_key,
+        ) in _referenced_entity_names(integration_dir.parent):
+            return None
+
         entity_name = resolve_translation_reference(entity_name, components_dir)
         device_class_name = resolve_translation_reference(
             device_class_name, components_dir
@@ -264,7 +298,7 @@ class RedundantTranslationKeyChecker(BaseChecker):
         ):
             return (
                 "remove only its name from strings.json, the key is also used "
-                "for states, state attributes, icons or in code"
+                "for other translations, icons or in code"
             )
         return "remove the translation_key and its strings.json entry"
 
