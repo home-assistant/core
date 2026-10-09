@@ -50,6 +50,7 @@ ENTITY_DESCRIPTIONS = [
     ),
     NestEventEntityDescription(
         key=EVENT_CAMERA_MOTION,
+        # pylint: disable-next=home-assistant-redundant-translation-key
         translation_key="motion",
         device_class=EventDeviceClass.MOTION,
         event_types=[EVENT_CAMERA_MOTION, EVENT_CAMERA_PERSON, EVENT_CAMERA_SOUND],

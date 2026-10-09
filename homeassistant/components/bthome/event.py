@@ -29,6 +29,7 @@ from .types import BTHomeConfigEntry
 DESCRIPTIONS_BY_EVENT_CLASS = {
     EVENT_CLASS_BUTTON: EventEntityDescription(
         key=EVENT_CLASS_BUTTON,
+        # pylint: disable-next=home-assistant-redundant-translation-key
         translation_key="button",
         event_types=[
             "press",

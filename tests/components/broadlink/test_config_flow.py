@@ -63,6 +63,7 @@ async def test_flow_user_works(hass: HomeAssistant, device_name: str) -> None:
         {"name": device.name},
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == device.name
     assert result["data"] == device.get_entry_data()
@@ -409,6 +410,7 @@ async def test_flow_unlock_works(hass: HomeAssistant) -> None:
         {"name": device.name},
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == device.name
     assert result["data"] == device.get_entry_data()
@@ -551,6 +553,7 @@ async def test_flow_do_not_unlock(hass: HomeAssistant) -> None:
         {"name": device.name},
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == device.name
     assert result["data"] == device.get_entry_data()
@@ -579,6 +582,7 @@ async def test_flow_import_works(hass: HomeAssistant) -> None:
         {"name": device.name},
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == device.name
     assert result["data"]["host"] == device.host
@@ -853,6 +857,7 @@ async def test_dhcp_can_finish(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Living Room"
     assert result2["data"] == {

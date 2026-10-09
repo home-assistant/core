@@ -335,6 +335,7 @@ async def test_success(hass: HomeAssistant, login_requests_mock, scheme: str) ->
         )
         await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_URL] == user_input[CONF_URL]
     assert result["data"][CONF_USERNAME] == user_input[CONF_USERNAME]
@@ -447,6 +448,7 @@ async def test_ssdp(
     )
     await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == service_info.upnp[ATTR_UPNP_MODEL_NAME]
     assert result["result"].data[CONF_UPNP_UDN] == service_info.upnp[ATTR_UPNP_UDN]

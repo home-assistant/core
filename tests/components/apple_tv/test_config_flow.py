@@ -142,6 +142,7 @@ async def test_user_adds_full_device(hass: HomeAssistant) -> None:
     result6 = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"pin": 1234}
     )
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result6["type"] is FlowResultType.CREATE_ENTRY
     assert result6["data"] == {
         "address": "127.0.0.1",
@@ -175,6 +176,7 @@ async def test_user_pair_leading_zero_pin(
         result["flow_id"], {"pin": "0123"}
     )
     assert pairing.handler.pin_code == "0123"
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
@@ -198,6 +200,7 @@ async def test_user_adds_previously_ignored_device(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"pin": "1111"}
     )
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
     entries = hass.config_entries.async_entries(DOMAIN, include_ignore=True)
@@ -259,6 +262,7 @@ async def test_user_adds_dmap_device(hass: HomeAssistant) -> None:
     result6 = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"pin": 1234}
     )
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result6["type"] is FlowResultType.CREATE_ENTRY
     assert result6["data"] == {
         "address": "127.0.0.1",
@@ -627,6 +631,7 @@ async def test_ignores_disabled_service(hass: HomeAssistant) -> None:
     result3 = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"pin": 1111}
     )
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["data"] == {
         "address": "127.0.0.1",
@@ -707,6 +712,7 @@ async def test_zeroconf_add_mrp_device(hass: HomeAssistant) -> None:
     result3 = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"pin": 1111}
     )
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["data"] == {
         "address": "127.0.0.1",
@@ -736,6 +742,7 @@ async def test_zeroconf_add_dmap_device(hass: HomeAssistant) -> None:
     assert result2["description_placeholders"] == {"protocol": "DMAP", "pin": "1111"}
 
     result3 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["data"] == {
         "address": "127.0.0.1",
@@ -1219,6 +1226,7 @@ async def test_zeroconf_pair_additionally_found_protocols(
         result["flow_id"],
         {"pin": 1234},
     )
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result5["type"] is FlowResultType.CREATE_ENTRY
 
 

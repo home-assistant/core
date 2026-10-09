@@ -111,6 +111,7 @@ async def test_current_measurement_once_reported(
     mock_config_entry: MockConfigEntry,
     mock_wled: MagicMock,
     caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the current sensors are added once the device reports a current."""
     # WLED reports no current while the light is off.
@@ -127,8 +128,9 @@ async def test_current_measurement_once_reported(
 
     device.info.leds.max_power = 850
     device.info.leds.power = 470
-    await mock_config_entry.runtime_data.async_refresh()
-    await hass.async_block_till_done()
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert (state := hass.states.get("sensor.wled_rgb_light_max_current"))
     assert state.state == "850"
@@ -136,8 +138,11 @@ async def test_current_measurement_once_reported(
     assert state.state == "470"
 
     # Later updates don't add them again.
-    await mock_config_entry.runtime_data.async_refresh()
-    await hass.async_block_till_done()
+    updates = mock_wled.update.call_count
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert mock_wled.update.call_count > updates
     assert "does not generate unique IDs" not in caplog.text
 
 

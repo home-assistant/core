@@ -68,6 +68,7 @@ async def test_form(hass: HomeAssistant) -> None:
         entry = conf_entries[0]
         assert entry.state is ConfigEntryState.LOADED
 
+        # pylint: disable-next=home-assistant-tests-config-flow-unique-id
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == (
             f"QNAP {SYSTEM_BOARD_MOCK[API_RESULT][API_PRODUCT]}"
@@ -226,6 +227,7 @@ async def test_dhcp_flow(hass: HomeAssistant) -> None:
             },
         )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["data"] == {
         CONF_USERNAME: TEST_USERNAME,

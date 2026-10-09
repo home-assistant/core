@@ -47,6 +47,7 @@ async def test_form(
     )
     await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Intergas InComfort/Intouch Lan2RF gateway"
     assert result["data"] == MOCK_CONFIG
@@ -147,6 +148,7 @@ async def test_dhcp_flow_simple(
     assert result["step_id"] == "dhcp_confirm"
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {"host": "192.168.1.12"}
 

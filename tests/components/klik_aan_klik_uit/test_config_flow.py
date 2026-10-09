@@ -58,6 +58,7 @@ async def test_user_flow(
         result["flow_id"], user_input={"device_responded": True}
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "KlikAanKlikUit ID 123456 CH 1"
     assert result["data"] == user_input
@@ -100,6 +101,7 @@ async def test_user_flow_retry_learn(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={"device_responded": True}
     )
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 

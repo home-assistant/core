@@ -88,6 +88,7 @@ WEBSOCKET_WIND_SENSORS: tuple[
 ] = (
     WeatherFlowCloudSensorEntityDescriptionWebsocketWind(
         key="wind_speed",
+        # pylint: disable-next=home-assistant-redundant-translation-key
         translation_key="wind_speed",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.WIND_SPEED,
@@ -98,6 +99,7 @@ WEBSOCKET_WIND_SENSORS: tuple[
     WeatherFlowCloudSensorEntityDescriptionWebsocketWind(
         key="wind_direction",
         device_class=SensorDeviceClass.WIND_DIRECTION,
+        # pylint: disable-next=home-assistant-redundant-translation-key
         translation_key="wind_direction",
         value_fn=lambda data: data.wind_direction_degrees,
         native_unit_of_measurement="°",
@@ -169,6 +171,7 @@ WF_SENSORS: tuple[WeatherFlowCloudSensorEntityDescription, ...] = (
     # Light Sensors
     WeatherFlowCloudSensorEntityDescription(
         key="brightness",
+        # pylint: disable-next=home-assistant-redundant-translation-key
         translation_key="illuminance",
         device_class=SensorDeviceClass.ILLUMINANCE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -196,6 +199,7 @@ WF_SENSORS: tuple[WeatherFlowCloudSensorEntityDescription, ...] = (
     # Temp Sensors
     WeatherFlowCloudSensorEntityDescription(
         key="air_temperature",
+        # pylint: disable-next=home-assistant-redundant-translation-key
         translation_key="air_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,

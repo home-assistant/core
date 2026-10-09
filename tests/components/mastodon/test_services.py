@@ -10,6 +10,7 @@ from mastodon.Mastodon import (
     MastodonUnauthorizedError,
     MediaAttachment,
 )
+import probatio
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -688,9 +689,9 @@ async def test_post_path_not_whitelisted(
         )
 
 
+@pytest.mark.usefixtures("mock_mastodon_client")
 async def test_idempotency_key_too_short(
     hass: HomeAssistant,
-    mock_mastodon_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test post service error when idempotency key is too short."""
@@ -701,8 +702,8 @@ async def test_idempotency_key_too_short(
     payload = {"status": "test toot", "idempotency_key": "abc"}
 
     with pytest.raises(
-        ServiceValidationError,
-        match="Idempotency key must be at least 4 characters long",
+        probatio.error.MultipleInvalid,
+        match="length of value must be at least 4 at 'idempotency_key'",
     ):
         await hass.services.async_call(
             DOMAIN,

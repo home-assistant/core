@@ -210,7 +210,7 @@
         'sensor.mock_air_purifier_temperature_2': 'Temperature',
         'sensor.mock_air_purifier_tvoc_level': 'TVOC level',
         'sensor.mock_air_purifier_uptime': 'Uptime',
-        'sensor.mock_air_purifier_volatile_organic_compounds_parts': 'Volatile organic compounds parts',
+        'sensor.mock_air_purifier_volatile_organic_compounds': 'Volatile organic compounds',
         'update.mock_air_purifier_firmware': 'Firmware',
       }),
       'name': 'Mock Air Purifier',

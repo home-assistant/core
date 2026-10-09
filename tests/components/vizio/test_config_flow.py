@@ -65,6 +65,7 @@ async def test_user_flow_minimum_fields(hass: HomeAssistant) -> None:
         result["flow_id"], user_input=MOCK_SPEAKER_CONFIG
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == NAME
     assert result["data"][CONF_NAME] == NAME
@@ -87,6 +88,7 @@ async def test_user_flow_all_fields(hass: HomeAssistant) -> None:
         result["flow_id"], user_input=MOCK_USER_VALID_TV_CONFIG
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == NAME
     assert result["data"][CONF_NAME] == NAME
@@ -396,6 +398,7 @@ async def test_user_tv_pairing_no_apps(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == NAME
     assert result["data"][CONF_NAME] == NAME
@@ -473,6 +476,7 @@ async def test_user_ignore(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=MOCK_SPEAKER_CONFIG
     )
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
@@ -504,6 +508,7 @@ async def test_zeroconf_flow(hass: HomeAssistant) -> None:
         result["flow_id"], user_input=user_input
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == NAME
     assert result["data"][CONF_HOST] == HOST
@@ -910,6 +915,7 @@ async def test_user_flow_resolves_host_without_port(hass: HomeAssistant) -> None
         )
 
     assert mock_resolve.call_args[0][0] == PORTLESS_HOST
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_HOST] == HOST
 

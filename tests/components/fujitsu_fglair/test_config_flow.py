@@ -39,6 +39,7 @@ async def test_full_flow(hass: HomeAssistant, mock_ayla_api: AsyncMock) -> None:
     result = await _initial_step(hass)
     mock_ayla_api.async_sign_in.assert_called_once()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == f"FGLair ({TEST_USERNAME})"
     assert result["data"] == {

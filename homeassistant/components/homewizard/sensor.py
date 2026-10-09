@@ -666,6 +666,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
     ),
     HomeWizardSensorEntityDescription(
         key="uptime",
+        # pylint: disable-next=home-assistant-redundant-translation-key
         translation_key="uptime",
         device_class=SensorDeviceClass.UPTIME,
         entity_category=EntityCategory.DIAGNOSTIC,

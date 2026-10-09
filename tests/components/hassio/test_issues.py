@@ -1580,8 +1580,8 @@ async def test_supervisor_issues_suggestions_change_updates_fixable_state(
     await hass.async_block_till_done()
     assert events == ["changed"]
 
-    await issues_coordinator.async_refresh()
-    await hass.async_block_till_done()
+    async_fire_time_changed(hass, dt_util.utcnow() + HASSIO_ISSUES_UPDATE_INTERVAL)
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert events == ["changed", "changed"]
 
     unsubscribe()
@@ -1631,8 +1631,8 @@ async def test_supervisor_issues_periodic_refresh_recovers_after_initial_failure
     assert issues_coordinator is not None
     assert len(issues_coordinator.issues) == 0
 
-    await issues_coordinator.async_refresh()
-    await hass.async_block_till_done()
+    async_fire_time_changed(hass, dt_util.utcnow() + HASSIO_ISSUES_UPDATE_INTERVAL)
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert len(issues_coordinator.issues) == 1
 
 
