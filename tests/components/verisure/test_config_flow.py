@@ -51,7 +51,6 @@ async def test_full_user_flow_single_installation(
     )
     await hass.async_block_till_done()
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2.get("type") is FlowResultType.CREATE_ENTRY
     assert result2.get("title") == "ascending (12345th street)"
     assert result2.get("data") == {
@@ -59,6 +58,7 @@ async def test_full_user_flow_single_installation(
         CONF_EMAIL: "verisure_my_pages@example.com",
         CONF_PASSWORD: "SuperS3cr3t!",
     }
+    assert result2["result"].unique_id == "12345"
 
     assert len(mock_verisure_config_flow.login.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
@@ -95,7 +95,6 @@ async def test_full_user_flow_multiple_installations(
     )
     await hass.async_block_till_done()
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result3.get("type") is FlowResultType.CREATE_ENTRY
     assert result3.get("title") == "descending (54321th street)"
     assert result3.get("data") == {
@@ -103,6 +102,7 @@ async def test_full_user_flow_multiple_installations(
         CONF_EMAIL: "verisure_my_pages@example.com",
         CONF_PASSWORD: "SuperS3cr3t!",
     }
+    assert result3["result"].unique_id == "54321"
 
     assert len(mock_verisure_config_flow.login.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1

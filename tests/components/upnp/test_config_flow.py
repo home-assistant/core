@@ -61,7 +61,6 @@ async def test_flow_ssdp(hass: HomeAssistant) -> None:
         result["flow_id"],
         user_input={},
     )
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TEST_FRIENDLY_NAME
     assert result["data"] == {
@@ -72,6 +71,7 @@ async def test_flow_ssdp(hass: HomeAssistant) -> None:
         CONFIG_ENTRY_MAC_ADDRESS: TEST_MAC_ADDRESS,
         CONFIG_ENTRY_HOST: TEST_HOST,
     }
+    assert result["result"].unique_id == TEST_USN
 
 
 @pytest.mark.usefixtures(
@@ -96,7 +96,6 @@ async def test_flow_ssdp_ignore(hass: HomeAssistant) -> None:
         context={"source": config_entries.SOURCE_IGNORE},
         data={"unique_id": TEST_USN, "title": TEST_FRIENDLY_NAME},
     )
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TEST_FRIENDLY_NAME
     assert result["data"] == {
@@ -107,6 +106,7 @@ async def test_flow_ssdp_ignore(hass: HomeAssistant) -> None:
         CONFIG_ENTRY_MAC_ADDRESS: TEST_MAC_ADDRESS,
         CONFIG_ENTRY_HOST: TEST_HOST,
     }
+    assert result["result"].unique_id == TEST_USN
 
 
 async def test_flow_ssdp_incomplete_discovery(hass: HomeAssistant) -> None:
@@ -172,7 +172,6 @@ async def test_flow_ssdp_no_mac_address(hass: HomeAssistant) -> None:
         result["flow_id"],
         user_input={},
     )
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TEST_FRIENDLY_NAME
     assert result["data"] == {
@@ -183,6 +182,7 @@ async def test_flow_ssdp_no_mac_address(hass: HomeAssistant) -> None:
         CONFIG_ENTRY_MAC_ADDRESS: None,
         CONFIG_ENTRY_HOST: TEST_HOST,
     }
+    assert result["result"].unique_id == TEST_USN
 
 
 @pytest.mark.usefixtures("mock_mac_address_from_host")
@@ -421,7 +421,6 @@ async def test_flow_user(hass: HomeAssistant) -> None:
         result["flow_id"],
         user_input={"unique_id": TEST_USN},
     )
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TEST_FRIENDLY_NAME
     assert result["data"] == {
@@ -432,6 +431,7 @@ async def test_flow_user(hass: HomeAssistant) -> None:
         CONFIG_ENTRY_MAC_ADDRESS: TEST_MAC_ADDRESS,
         CONFIG_ENTRY_HOST: TEST_HOST,
     }
+    assert result["result"].unique_id == TEST_USN
 
 
 @pytest.mark.usefixtures(
@@ -472,7 +472,6 @@ async def test_flow_ssdp_with_mismatched_udn(hass: HomeAssistant) -> None:
         result["flow_id"],
         user_input={},
     )
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TEST_FRIENDLY_NAME
     assert result["data"] == {
@@ -483,6 +482,7 @@ async def test_flow_ssdp_with_mismatched_udn(hass: HomeAssistant) -> None:
         CONFIG_ENTRY_MAC_ADDRESS: TEST_MAC_ADDRESS,
         CONFIG_ENTRY_HOST: TEST_HOST,
     }
+    assert result["result"].unique_id == TEST_USN
 
 
 async def test_options_flow(

@@ -247,7 +247,6 @@ async def test_step_user_coordinates(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=config_coordinates
     )
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "32.87336, -117.22743"
     assert result["data"] == {
@@ -258,6 +257,7 @@ async def test_step_user_coordinates(
         CONF_BALANCING_AUTHORITY: "PJM New Jersey",
         CONF_BALANCING_AUTHORITY_ABBREV: "PJM_NJ",
     }
+    assert result["result"].unique_id == "32.87336, -117.22743"
 
 
 @pytest.mark.parametrize(
@@ -287,7 +287,6 @@ async def test_step_user_home(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=config_location_type
     )
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "32.87336, -117.22743"
     assert result["data"] == {
@@ -298,3 +297,4 @@ async def test_step_user_home(
         CONF_BALANCING_AUTHORITY: "PJM New Jersey",
         CONF_BALANCING_AUTHORITY_ABBREV: "PJM_NJ",
     }
+    assert result["result"].unique_id == "32.87336, -117.22743"

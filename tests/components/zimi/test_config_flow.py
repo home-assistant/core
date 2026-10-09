@@ -116,13 +116,13 @@ async def test_user_discovery_success_selection(
         },
     )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         "host": INPUT_HOST_EXTRA,
         "port": INPUT_PORT_EXTRA,
         "mac": format_mac(INPUT_MAC_EXTRA),
     }
+    assert result["result"].unique_id == format_mac(INPUT_MAC_EXTRA)
 
 
 async def test_user_discovery_duplicates(

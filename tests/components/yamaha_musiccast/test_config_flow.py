@@ -227,7 +227,6 @@ async def test_user_input_device_found(
         {"host": "127.0.0.1"},
     )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert isinstance(result2["result"], ConfigEntry)
     assert result2["data"] == {
@@ -235,6 +234,7 @@ async def test_user_input_device_found(
         "serial": "1234567890",
         "upnp_description": "http://127.0.0.1:9000/MediaRenderer/desc.xml",
     }
+    assert result2["result"].unique_id == "1234567890"
 
 
 async def test_user_input_device_found_no_ssdp(
@@ -253,7 +253,6 @@ async def test_user_input_device_found_no_ssdp(
         {"host": "127.0.0.1"},
     )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert isinstance(result2["result"], ConfigEntry)
     assert result2["data"] == {
@@ -261,6 +260,7 @@ async def test_user_input_device_found_no_ssdp(
         "serial": "1234567890",
         "upnp_description": "http://127.0.0.1:49154/MediaRenderer/desc.xml",
     }
+    assert result2["result"].unique_id == "1234567890"
 
 
 # SSDP Flows
@@ -313,7 +313,6 @@ async def test_ssdp_discovery_successful_add_device(
         {},
     )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert isinstance(result2["result"], ConfigEntry)
     assert result2["data"] == {
@@ -321,6 +320,7 @@ async def test_ssdp_discovery_successful_add_device(
         "serial": "1234567890",
         "upnp_description": "http://127.0.0.1/desc.xml",
     }
+    assert result2["result"].unique_id == "1234567890"
 
 
 async def test_ssdp_discovery_existing_device_update(
