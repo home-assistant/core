@@ -57,7 +57,7 @@ class ClimateControl(SHCEntity, ClimateEntity):
     _attr_max_temp = 30.0
     _attr_min_temp = 5.0
     _attr_target_temperature_step = 0.5
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _device: SHCClimateControl
 
     def __init__(
@@ -98,13 +98,13 @@ class ClimateControl(SHCEntity, ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self._device.temperature
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the target temperature."""
         return self._device.setpoint_temperature
 
