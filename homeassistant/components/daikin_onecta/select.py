@@ -28,7 +28,7 @@ async def async_setup_entry(
     config_entry: DaikinOnectaConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up Daikin climate based on config_entry."""
+    """Set up Daikin select entities."""
     coordinator: OnectaDataUpdateCoordinator = config_entry.runtime_data
     sensors: list[DaikinScheduleSelect] = []
     for device in (coordinator.data or {}).values():

@@ -18,8 +18,6 @@ PARALLEL_UPDATES = 1
 
 _LOGGER = logging.getLogger(__name__)
 
-# The Daikin Onecta cloud API exposes firmware updates
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
