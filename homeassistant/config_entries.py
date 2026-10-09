@@ -982,15 +982,18 @@ class ConfigEntry[_DataT = Any]:
             with async_start_setup(
                 hass, integration=self.domain, group=self.entry_id, phase=setup_phase
             ):
-                setup_result = await component.async_setup_entry(hass, self)  # type: ignore[func-returns-value]
+                setup_result: bool | None = await component.async_setup_entry(
+                    hass, self
+                )  # type: ignore[func-returns-value]
 
             # Custom components can continue to return a boolean
             # See https://github.com/home-assistant/architecture/discussions/1463
             if setup_result is None:
                 result = True
-            elif not isinstance(setup_result, bool):  # type: ignore[unreachable]
-                logger.error(
-                    "%s.async_setup_entry did not return boolean", integration.domain
+            elif not isinstance(setup_result, bool):
+                logger.error(  # type: ignore[unreachable]
+                    "%s.async_setup_entry did not return None or a boolean",
+                    integration.domain,
                 )
                 result = False
             else:
@@ -1136,17 +1139,17 @@ class ConfigEntry[_DataT = Any]:
 
         result = False
         try:
-            unload_result = await component.async_unload_entry(hass, self)  # type: ignore[func-returns-value]
+            unload_result: bool | None = await component.async_unload_entry(hass, self)  # type: ignore[func-returns-value]
 
+            # Custom components can continue to return a boolean
+            # See https://github.com/home-assistant/architecture/discussions/1463
             if unload_result is None:
                 result = True
             else:
-                result = unload_result  # type: ignore[unreachable]
+                result = unload_result
             assert isinstance(result, bool)
 
             # Only do side effects if we unloaded the integration
-            # Custom components can continue to return a boolean
-            # See https://github.com/home-assistant/architecture/discussions/1463
             if domain_is_integration:
                 if result:  # type: ignore[unused-ignore]
                     await self._async_process_on_unload(hass)
