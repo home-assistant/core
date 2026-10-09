@@ -314,12 +314,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenEVSEConfigEntry) -> 
                 finally:
                     queue.task_done()
 
-        worker_task = entry.async_create_background_task(
+        entry.async_create_background_task(
             hass,
             _push_worker(),
             "openevse_push_worker",
         )
-        entry.async_on_unload(worker_task.cancel)
 
         @callback
         def _on_sensor_state_change(event: Event[EventStateChangedData]) -> None:
