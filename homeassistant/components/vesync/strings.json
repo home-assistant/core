@@ -149,8 +149,26 @@
       "filter_life": {
         "name": "Filter lifetime"
       },
+      "hold_option": {
+        "name": "Hold duration",
+        "state": {
+          "four_hours": "4 hours",
+          "permanently": "Permanently",
+          "two_hours": "2 hours",
+          "until_next_scheduled_item": "Until next scheduled event"
+        }
+      },
       "preheat_set_time": {
         "name": "Preheating set time"
+      },
+      "schedule_status": {
+        "name": "Schedule status",
+        "state": {
+          "not_schedule_not_hold": "Manual",
+          "on_hold": "On hold",
+          "on_schedule": "On schedule",
+          "vacation": "Vacation"
+        }
       }
     },
     "switch": {
