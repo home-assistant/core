@@ -25,11 +25,13 @@ type ModernFormsConfigEntry = ConfigEntry[ModernFormsDataUpdateCoordinator]
 class ModernFormsDataUpdateCoordinator(DataUpdateCoordinator[ModernFormsDeviceState]):
     """Class to manage fetching Modern Forms data from single endpoint."""
 
+    # pylint: disable-next=home-assistant-coordinator-untyped-config-entry
     config_entry: ConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
+        # pylint: disable-next=home-assistant-coordinator-untyped-config-entry
         config_entry: ConfigEntry,
     ) -> None:
         """Initialize global Modern Forms data updater."""
