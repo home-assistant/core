@@ -94,20 +94,9 @@ class AprilaireCoordinator(BaseDataUpdateCoordinatorProtocol):
             and new_device_info is not None
             and old_device_info != new_device_info
         ):
-            device_registry = dr.async_get(self.hass)
-
-            device = device_registry.async_get_device_by_identifier(
-                next(iter(old_device_info["identifiers"])), self.config_entry.entry_id
+            dr.async_get(self.hass).async_get_or_create(
+                config_entry_id=self.config_entry.entry_id, **new_device_info
             )
-
-            if device is not None:
-                # The device is found by its identifiers and connections
-                fields: dict[str, Any] = {
-                    key: value
-                    for key, value in new_device_info.items()
-                    if key not in ("identifiers", "connections")
-                }
-                device_registry.async_update_device(device_id=device.id, **fields)
 
     async def start_listen(self):
         """Start listening for data."""
