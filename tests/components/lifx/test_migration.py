@@ -183,7 +183,7 @@ async def test_migrate_malformed_current_entry_fails_cleanly(
 
 @pytest.mark.parametrize("unique_id", [None, DOMAIN])
 async def test_migrate_removes_the_legacy_shared_entry(
-    hass: HomeAssistant, unique_id: str | None
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, unique_id: str | None
 ) -> None:
     """Test the shared entry every device once lived on is dropped, not migrated.
 
@@ -197,6 +197,10 @@ async def test_migrate_removes_the_legacy_shared_entry(
     await hass.async_block_till_done()
 
     assert hass.config_entries.async_entries(DOMAIN) == []
+    assert (
+        "The legacy LIFX configuration entry is removed, its devices will be"
+        " discovered again"
+    ) in caplog.text
 
 
 async def test_migrate_version_2_entry_is_noop(hass: HomeAssistant) -> None:

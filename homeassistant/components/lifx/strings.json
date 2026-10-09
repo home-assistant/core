@@ -102,6 +102,9 @@
     "invalid_serial": {
       "message": "The LIFX device identified by {unique_id} cannot be migrated because that is not a LIFX serial number. Delete the entry and add the device again."
     },
+    "legacy_entry": {
+      "message": "The legacy LIFX configuration entry is removed, its devices will be discovered again"
+    },
     "no_hev": {
       "message": "{entity_id} does not have HEV LEDs"
     },

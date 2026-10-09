@@ -77,7 +77,10 @@ async def async_migrate_entry(hass: HomeAssistant, entry: LIFXConfigEntry) -> bo
         # found in the first place
         LOGGER.debug("Removing the legacy LIFX config entry %s", entry.entry_id)
         hass.async_create_task(hass.config_entries.async_remove(entry.entry_id))
-        return False
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="legacy_entry",
+        )
 
     await async_migrate_serials(hass, entry)
     try:
