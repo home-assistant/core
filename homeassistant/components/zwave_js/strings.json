@@ -437,6 +437,9 @@
     "delete_user_failed": {
       "message": "Failed to delete user {user_id}: {error}"
     },
+    "driver_not_ready": {
+      "message": "The Z-Wave JS driver is not ready."
+    },
     "get_credential_capabilities_failed": {
       "message": "Failed to get credential capabilities: {error}"
     },
