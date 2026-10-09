@@ -249,8 +249,59 @@
     "invalid_value": {
       "message": "Value {value} is invalid for the charger."
     },
+    "no_matching_target_entries": {
+      "message": "No matching OpenEVSE chargers found for the specified target."
+    },
     "unsupported_feature": {
       "message": "The charger does not support this feature."
+    }
+  },
+  "selector": {
+    "override_state": {
+      "options": {
+        "active": "Active",
+        "disabled": "Disabled"
+      }
+    }
+  },
+  "services": {
+    "clear_override": {
+      "description": "Clears any active manual override, restoring automatic control.",
+      "name": "Clear manual override"
+    },
+    "get_override": {
+      "description": "Returns details of the current manual override status.",
+      "name": "Get manual override"
+    },
+    "set_override": {
+      "description": "Sets or updates the manual override on the charger.",
+      "fields": {
+        "auto_release": {
+          "description": "Automatically clear the override when the session completes or limits are reached.",
+          "name": "Auto release"
+        },
+        "charge_current": {
+          "description": "Target charging current in Amperes.",
+          "name": "Charge current"
+        },
+        "energy_limit": {
+          "description": "Energy limit for the override session in Watt-hours.",
+          "name": "Energy limit"
+        },
+        "max_current": {
+          "description": "Maximum allowed charging current in Amperes.",
+          "name": "Maximum current"
+        },
+        "state": {
+          "description": "Override charging state.",
+          "name": "State"
+        },
+        "time_limit": {
+          "description": "Time limit duration for the override session.",
+          "name": "Time limit"
+        }
+      },
+      "name": "Set manual override"
     }
   }
 }

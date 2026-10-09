@@ -97,6 +97,16 @@ def mock_charger() -> Generator[MagicMock]:
         charger.has_limit = False
         charger.mqtt_connected = False
         charger.get_override_state = AsyncMock(return_value="auto")
+        charger.get_override = AsyncMock(
+            return_value={
+                "state": "active",
+                "charge_current": 32,
+                "max_current": 48,
+                "energy_limit": 10000,
+                "time_limit": 3600,
+                "auto_release": True,
+            }
+        )
         charger.set_override = AsyncMock()
         charger.clear_override = AsyncMock()
         yield charger
