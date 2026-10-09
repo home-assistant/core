@@ -11,6 +11,7 @@ from aiopvapi.shades import Shades
 
 from homeassistant.const import CONF_API_VERSION, CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import AnyDeviceEntry
@@ -187,51 +188,20 @@ async def _migrate_unique_ids(hass: HomeAssistant, entry: PowerviewConfigEntry) 
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, entry: PowerviewConfigEntry, device: AnyDeviceEntry
+    hass: HomeAssistant, entry: PowerviewConfigEntry, device_entry: dr.DeviceEntry
 ) -> bool:
     """Remove a config entry from a device.
 
     This function is called when a user attempts to remove a device from the UI.
     We should return True if the device can be removed, False otherwise.
     """
-    if not isinstance(device, dr.DeviceEntry):
+    if entry.state is not ConfigEntryState.LOADED:
         return False
-
-    # Prevent removing the hub device itself
-    # The hub device is the one without a via_device_id (it's not a child of another device)
-    if device.via_device_id is None:
-        # This is the hub device, don't allow removal
-        _LOGGER.warning(
-            "Cannot remove PowerView hub device %s. Remove the integration instead",
-            device.name,
-        )
+    if device_entry.via_device_id is None:
+        # the hub can only be removed by removing the integration
         return False
-
-    # Extract the unique shade ID from the device's identifiers
-    shade_id: int | None = None
-    for identifier in device.identifiers:
-        if identifier[0] == DOMAIN:
-            # The second value in the tuple is the raw shade ID from the hub
-            try:
-                shade_id = int(identifier[1])
-            except ValueError, TypeError:
-                continue
-            break
-
-    # Fetch the running coordinator data
-    coordinator = entry.runtime_data.coordinator
-    if (
-        shade_id is not None
-        and coordinator.data
-        and shade_id in coordinator.data.get_all_raw_data()
-    ):
-        _LOGGER.warning(
-            "Cannot remove active shade device %s (ID: %s) because it is still present on the PowerView Hub",
-            device.name,
-            shade_id,
-        )
-        return False
-
-    # Allow removing shade devices only if they've been removed from the hub
-    _LOGGER.info("Allowing removal of PowerView shade device %s", device.name)
-    return True
+    active_ids = {
+        str(shade_id)
+        for shade_id in entry.runtime_data.coordinator.data.get_all_raw_data()
+    }
+    return not get_shade_ids(device_entry) & active_ids
