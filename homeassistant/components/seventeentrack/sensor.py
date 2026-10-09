@@ -62,10 +62,9 @@ class SeventeenTrackSummarySensor(SeventeenTrackSensor):
 
     @property
     @override
-    # pylint: disable-next=home-assistant-coordinator-entity-available
     def available(self) -> bool:
         """Return whether the entity is available."""
-        return self._status in self.coordinator.data.summary
+        return super().available and self._status in self.coordinator.data.summary
 
     @property
     @override
