@@ -222,6 +222,7 @@ USB_DEPENDENTS = [
     "lg_tv_rs232",
     "modem_callerid",
     "monoprice",
+    "neosol",
     "rainforest_raven",
     "rfxtrx",
     "route_b_smart_meter",
