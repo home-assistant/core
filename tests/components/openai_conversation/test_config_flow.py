@@ -36,11 +36,13 @@ from homeassistant.components.openai_conversation.const import (
     CONF_WEB_SEARCH_USER_LOCATION,
     DEFAULT_AI_TASK_NAME,
     DEFAULT_CONVERSATION_NAME,
+    DEFAULT_EVALUATION_NAME,
     DEFAULT_STT_NAME,
     DEFAULT_TTS_NAME,
     DOMAIN,
     RECOMMENDED_AI_TASK_OPTIONS,
     RECOMMENDED_CHAT_MODEL,
+    RECOMMENDED_EVALUATION_OPTIONS,
     RECOMMENDED_MAX_TOKENS,
     RECOMMENDED_REASONING_SUMMARY,
     RECOMMENDED_STT_OPTIONS,
@@ -106,6 +108,12 @@ async def test_form(hass: HomeAssistant) -> None:
             "unique_id": None,
         },
         {
+            "subentry_type": "ai_task_evaluate",
+            "data": RECOMMENDED_EVALUATION_OPTIONS,
+            "title": DEFAULT_EVALUATION_NAME,
+            "unique_id": None,
+        },
+        {
             "subentry_type": "stt",
             "data": RECOMMENDED_STT_OPTIONS,
             "title": DEFAULT_STT_NAME,
@@ -119,7 +127,7 @@ async def test_form(hass: HomeAssistant) -> None:
         },
     ]
     assert result2["version"] == 2
-    assert result2["minor_version"] == 7
+    assert result2["minor_version"] == 8
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -1337,8 +1345,8 @@ async def test_creating_ai_task_subentry(
 ) -> None:
     """Test creating an AI task subentry."""
     old_subentries = set(mock_config_entry.subentries)
-    # Original conversation + ai_task + stt + tts
-    assert len(mock_config_entry.subentries) == 4
+    # Original conversation + data + evaluation + stt + tts
+    assert len(mock_config_entry.subentries) == 5
 
     result = await hass.config_entries.subentries.async_init(
         (mock_config_entry.entry_id, "ai_task_data"),
@@ -1364,9 +1372,7 @@ async def test_creating_ai_task_subentry(
         CONF_RECOMMENDED: True,
     }
 
-    assert (
-        len(mock_config_entry.subentries) == 5
-    )  # Original conversation + stt + tts + ai_task + new ai_task
+    assert len(mock_config_entry.subentries) == 6  # Original subentries + new AI task
 
     new_subentry_id = list(set(mock_config_entry.subentries) - old_subentries)[0]
     new_subentry = mock_config_entry.subentries[new_subentry_id]
@@ -1570,8 +1576,8 @@ async def test_creating_stt_subentry(
 ) -> None:
     """Test creating a STT subentry."""
     old_subentries = set(mock_config_entry.subentries)
-    # Original conversation + ai_task + stt + tts
-    assert len(mock_config_entry.subentries) == 4
+    # Original conversation + data + evaluation + stt + tts
+    assert len(mock_config_entry.subentries) == 5
 
     result = await hass.config_entries.subentries.async_init(
         (mock_config_entry.entry_id, "stt"),
@@ -1603,9 +1609,7 @@ async def test_creating_stt_subentry(
         CONF_CHAT_MODEL: "gpt-4o-transcribe",
     }
 
-    assert (
-        len(mock_config_entry.subentries) == 5
-    )  # Original conversation + ai_task + tts + original stt + new stt
+    assert len(mock_config_entry.subentries) == 6  # Original subentries + new STT
 
     new_subentry_id = list(set(mock_config_entry.subentries) - old_subentries)[0]
     new_subentry = mock_config_entry.subentries[new_subentry_id]
@@ -1659,8 +1663,8 @@ async def test_creating_tts_subentry(
 ) -> None:
     """Test creating a TTS subentry."""
     old_subentries = set(mock_config_entry.subentries)
-    # Original conversation + ai_task + stt + tts
-    assert len(mock_config_entry.subentries) == 4
+    # Original conversation + data + evaluation + stt + tts
+    assert len(mock_config_entry.subentries) == 5
 
     result = await hass.config_entries.subentries.async_init(
         (mock_config_entry.entry_id, "tts"),
@@ -1689,8 +1693,8 @@ async def test_creating_tts_subentry(
     }
 
     assert (
-        len(mock_config_entry.subentries) == 5
-    )  # Original conversation + ai_task + stt + tts + new tts
+        len(mock_config_entry.subentries) == 6
+    )  # Original conversation + data + evaluation + stt + tts + new tts
 
     new_subentry_id = list(set(mock_config_entry.subentries) - old_subentries)[0]
     new_subentry = mock_config_entry.subentries[new_subentry_id]
