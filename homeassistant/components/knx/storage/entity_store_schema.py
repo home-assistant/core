@@ -11,14 +11,8 @@ from xknx.dpt import DPTBase, DPTBinary, DPTNumeric
 from xknx.exceptions import ConversionError
 
 from homeassistant.components.climate import HVACMode
-from homeassistant.components.number import (
-    DEVICE_CLASS_UNITS as NUMBER_DEVICE_CLASS_UNITS,
-    NumberMode,
-)
-from homeassistant.components.sensor import (
-    DEVICE_CLASS_UNITS as SENSOR_DEVICE_CLASS_UNITS,
-    SensorDeviceClass,
-)
+from homeassistant.components.number import NumberMode
+from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.components.text import TextMode
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
@@ -526,18 +520,9 @@ class NumberKnxConfig:
     unit_of_measurement: Annotated[
         str | None,
         probatio.Maybe(
-            selector.SelectSelector(
-                selector.SelectSelectorConfig(
-                    options=sorted(
-                        {
-                            str(unit)
-                            for units in NUMBER_DEVICE_CLASS_UNITS.values()
-                            for unit in units
-                            if unit is not None
-                        }
-                    ),
-                    mode=selector.SelectSelectorMode.DROPDOWN,
-                    custom_value=True,
+            selector.UnitOfMeasurementSelector(
+                selector.UnitOfMeasurementSelectorConfig(
+                    context={"filter_device_class": "device_class"}
                 ),
             )
         ),
@@ -987,19 +972,12 @@ class SensorKnxConfig:
     unit_of_measurement: Annotated[
         str | None,
         probatio.Maybe(
-            selector.SelectSelector(
-                selector.SelectSelectorConfig(
-                    options=sorted(
-                        {
-                            str(unit)
-                            for units in SENSOR_DEVICE_CLASS_UNITS.values()
-                            for unit in units
-                            if unit is not None
-                        }
-                    ),
-                    mode=selector.SelectSelectorMode.DROPDOWN,
-                    translation_key="component.knx.selector.sensor_unit_of_measurement",
-                    custom_value=True,
+            selector.UnitOfMeasurementSelector(
+                selector.UnitOfMeasurementSelectorConfig(
+                    context={
+                        "filter_device_class": "device_class",
+                        "filter_state_class": "state_class",
+                    }
                 ),
             )
         ),
