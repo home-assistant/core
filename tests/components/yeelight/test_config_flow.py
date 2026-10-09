@@ -107,10 +107,10 @@ async def test_discovery(hass: HomeAssistant) -> None:
         result3 = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_DEVICE: ID}
         )
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == UNIQUE_FRIENDLY_NAME
     assert result3["data"] == {CONF_ID: ID, CONF_HOST: IP_ADDRESS, CONF_MODEL: MODEL}
+    assert result3["result"].unique_id == ID
     await hass.async_block_till_done()
     mock_setup.assert_called_once()
     mock_setup_entry.assert_called_once()
@@ -188,7 +188,6 @@ async def test_discovery_with_existing_device_present(hass: HomeAssistant) -> No
         result3 = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_DEVICE: ID}
         )
-        # pylint: disable-next=home-assistant-tests-config-flow-unique-id
         assert result3["type"] is FlowResultType.CREATE_ENTRY
         assert result3["title"] == UNIQUE_FRIENDLY_NAME
         assert result3["data"] == {
@@ -196,6 +195,7 @@ async def test_discovery_with_existing_device_present(hass: HomeAssistant) -> No
             CONF_HOST: IP_ADDRESS,
             CONF_MODEL: MODEL,
         }
+        assert result3["result"].unique_id == ID
         await hass.async_block_till_done()
         await hass.async_block_till_done()
 
@@ -266,7 +266,6 @@ async def test_import(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=config
         )
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == DEFAULT_NAME
     assert result["data"] == {
@@ -277,6 +276,7 @@ async def test_import(hass: HomeAssistant) -> None:
         CONF_SAVE_ON_CHANGE: DEFAULT_SAVE_ON_CHANGE,
         CONF_NIGHTLIGHT_SWITCH: True,
     }
+    assert result["result"].unique_id == ID
     await hass.async_block_till_done()
     mock_setup.assert_called_once()
     mock_setup_entry.assert_called_once()
@@ -722,13 +722,13 @@ async def test_discovered_ssdp(hass: HomeAssistant) -> None:
         result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         await hass.async_block_till_done()
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["data"] == {
         CONF_HOST: IP_ADDRESS,
         CONF_ID: "0x000000000015243f",
         CONF_MODEL: MODEL,
     }
+    assert result2["result"].unique_id == ID
     assert mock_async_setup.called
     assert mock_async_setup_entry.called
 
@@ -777,13 +777,13 @@ async def test_discovered_zeroconf(hass: HomeAssistant) -> None:
         result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         await hass.async_block_till_done()
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["data"] == {
         CONF_HOST: IP_ADDRESS,
         CONF_ID: "0x000000000015243f",
         CONF_MODEL: MODEL,
     }
+    assert result2["result"].unique_id == ID
     assert mock_async_setup.called
     assert mock_async_setup_entry.called
 
@@ -943,13 +943,13 @@ async def test_discovered_during_onboarding(hass: HomeAssistant, source, data) -
         )
         await hass.async_block_till_done()
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         CONF_HOST: IP_ADDRESS,
         CONF_ID: "0x000000000015243f",
         CONF_MODEL: MODEL,
     }
+    assert result["result"].unique_id == ID
     assert mock_async_setup.called
     assert mock_async_setup_entry.called
     assert mock_is_onboarded.called
