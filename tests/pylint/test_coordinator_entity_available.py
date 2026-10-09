@@ -78,6 +78,66 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 class MyEntity(CoordinatorEntity):
     @property
+    def available(self) -> bool:
+        def check():
+            return self.device.online
+        return True
+""",
+            _MODULE,
+            id="always_available_nested_function",
+        ),
+        pytest.param(
+            """
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
+
+class MyCoordinator(DataUpdateCoordinator[dict]):
+    def __init__(self, hass, config_entry) -> None:
+        super().__init__(hass, LOGGER, config_entry=config_entry, name="test")
+
+class MyEntity(CoordinatorEntity[MyCoordinator]):
+    @property
+    def available(self) -> bool:
+        return self.coordinator.client.connected
+""",
+            _MODULE,
+            id="push_coordinator",
+        ),
+        pytest.param(
+            """
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
+
+class MyCoordinator(DataUpdateCoordinator[dict]):
+    def __init__(self, hass, config_entry) -> None:
+        super().__init__(
+            hass, LOGGER, config_entry=config_entry, name="test", update_interval=None
+        )
+
+class MyBaseCoordinator(MyCoordinator):
+    pass
+
+class MyBaseEntity(CoordinatorEntity["MyBaseCoordinator"]):
+    pass
+
+class MyEntity(MyBaseEntity):
+    @property
+    def available(self) -> bool:
+        return self.coordinator.client.connected
+""",
+            _MODULE,
+            id="push_coordinator_forward_reference",
+        ),
+        pytest.param(
+            """
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+class MyEntity(CoordinatorEntity):
+    @property
     def native_value(self) -> int:
         return self.coordinator.data
 """,
@@ -174,6 +234,113 @@ class MyEntity(CoordinatorEntity):
         return True
 """,
             id="not_always_available",
+        ),
+        pytest.param(
+            """
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+class MyEntity(CoordinatorEntity):
+    @property
+    def available(self) -> bool:
+        if self.device is not None:
+            return True
+""",
+            id="conditional_true_falls_through",
+        ),
+        pytest.param(
+            """
+from datetime import timedelta
+
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
+
+class MyCoordinator(DataUpdateCoordinator[dict]):
+    def __init__(self, hass, config_entry) -> None:
+        super().__init__(
+            hass,
+            LOGGER,
+            config_entry=config_entry,
+            name="test",
+            update_interval=timedelta(minutes=1),
+        )
+
+class MyEntity(CoordinatorEntity[MyCoordinator]):
+    @property
+    def available(self) -> bool:
+        return self.device.online
+""",
+            id="polling_coordinator",
+        ),
+        pytest.param(
+            """
+from datetime import timedelta
+
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
+
+class MyCoordinator(DataUpdateCoordinator[dict]):
+    def __init__(self, hass, config_entry) -> None:
+        super().__init__(hass, LOGGER, config_entry=config_entry, name="test")
+
+    async def _async_setup(self) -> None:
+        self.update_interval = timedelta(minutes=1)
+
+class MyEntity(CoordinatorEntity[MyCoordinator]):
+    @property
+    def available(self) -> bool:
+        return self.device.online
+""",
+            id="interval_set_later",
+        ),
+        pytest.param(
+            """
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
+
+class MyCoordinator(DataUpdateCoordinator[dict]):
+    def __init__(self, hass, **kwargs) -> None:
+        super().__init__(hass, LOGGER, **kwargs)
+
+class MyEntity(CoordinatorEntity[MyCoordinator]):
+    @property
+    def available(self) -> bool:
+        return self.device.online
+""",
+            id="interval_in_kwargs",
+        ),
+        pytest.param(
+            """
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
+
+class MyCoordinator(DataUpdateCoordinator[dict]):
+    pass
+
+class MyEntity(CoordinatorEntity[MyCoordinator]):
+    @property
+    def available(self) -> bool:
+        return self.device.online
+""",
+            id="coordinator_without_init",
+        ),
+        pytest.param(
+            """
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+class MyEntity(CoordinatorEntity[UnknownCoordinator]):
+    @property
+    def available(self) -> bool:
+        return self.device.online
+""",
+            id="unknown_coordinator",
         ),
     ],
 )

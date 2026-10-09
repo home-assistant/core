@@ -364,7 +364,11 @@ def available(self) -> bool:
     return super().available and self.device_id in self.coordinator.data
 ```
 
-An override that only returns `True` is deliberate and not flagged.
+An override that only returns `True` is deliberate and not flagged. Neither
+are entities of a push coordinator, one that never sets an `update_interval`
+and gets its data through `async_set_updated_data`: its `last_update_success`
+doesn't show whether the device is reachable, so those entities use their own
+availability source.
 
 
 ## `home_assistant_async_load_fixtures` checker

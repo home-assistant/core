@@ -510,7 +510,6 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
 
     @property
     @override
-    # pylint: disable-next=home-assistant-coordinator-entity-available
     def available(self) -> bool:
         """Return True if the device is available."""
         return self._player.available
