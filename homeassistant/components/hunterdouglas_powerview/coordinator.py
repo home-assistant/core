@@ -79,7 +79,7 @@ class PowerviewShadeUpdateCoordinator(DataUpdateCoordinator[PowerviewShadeData])
         return self.data
 
     @callback
-    def _async_remove_stale_devices(self, current_shace_ids: set[str]) -> None:
+    def _async_remove_stale_devices(self, current_shade_ids: set[str]) -> None:
         """Remove shade devices the hub no longer reports."""
         device_registry = dr.async_get(self.hass)
         for device in dr.async_entries_for_config_entry(
