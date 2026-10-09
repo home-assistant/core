@@ -95,7 +95,6 @@ async def test_form_user(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == "shc012345"
     assert result3["data"] == {
@@ -105,6 +104,7 @@ async def test_form_user(hass: HomeAssistant) -> None:
         "token": "abc:123",
         "hostname": "123",
     }
+    assert result3["result"].unique_id == "test-mac"
 
     assert len(mock_authenticate.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
@@ -546,7 +546,6 @@ async def test_zeroconf(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == "shc012345"
     assert result3["data"] == {
@@ -556,6 +555,7 @@ async def test_zeroconf(hass: HomeAssistant) -> None:
         "token": "abc:123",
         "hostname": "123",
     }
+    assert result3["result"].unique_id == "test-mac"
     assert len(mock_setup_entry.mock_calls) == 1
 
 

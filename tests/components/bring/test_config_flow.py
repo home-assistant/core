@@ -11,7 +11,7 @@ from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .conftest import EMAIL, PASSWORD
+from .conftest import EMAIL, PASSWORD, UUID
 
 from tests.common import MockConfigEntry
 
@@ -40,10 +40,10 @@ async def test_form(
     )
     await hass.async_block_till_done()
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Bring"
     assert result["data"] == MOCK_DATA_STEP
+    assert result["result"].unique_id == UUID
     assert len(mock_setup_entry.mock_calls) == 1
 
 

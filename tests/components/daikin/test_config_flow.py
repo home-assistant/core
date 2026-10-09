@@ -70,11 +70,11 @@ async def test_user(hass: HomeAssistant, mock_daikin) -> None:
         result["flow_id"],
         user_input={CONF_HOST: HOST},
     )
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == HOST
     assert result["data"][CONF_HOST] == HOST
     assert result["data"][KEY_MAC] == MAC
+    assert result["result"].unique_id == MAC
 
 
 async def test_abort_if_already_setup(hass: HomeAssistant, mock_daikin) -> None:

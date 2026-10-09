@@ -16,6 +16,7 @@ from . import (
     MOCK_USER_INPUT,
     MOCK_ZEROCONF_DATA,
     NAME,
+    SERIAL,
     mock_playing,
     setup_integration,
 )
@@ -94,12 +95,12 @@ async def test_full_user_flow_implementation(
             user_input=user_input,
         )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == NAME
 
     assert result["data"]
     assert result["data"][CONF_HOST] == HOST
+    assert result["result"].unique_id == SERIAL
 
 
 async def test_zeroconf_devialet(
@@ -124,13 +125,13 @@ async def test_zeroconf_devialet(
         )
         await hass.async_block_till_done()
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Livingroom"
     assert result2["data"] == {
         CONF_HOST: HOST,
         CONF_NAME: NAME,
     }
+    assert result2["result"].unique_id == SERIAL
 
     assert len(mock_setup_entry.mock_calls) == 1
 
