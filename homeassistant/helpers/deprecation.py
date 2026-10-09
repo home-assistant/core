@@ -507,6 +507,11 @@ class _DeprecatedEntityMember[_T]:
             return target
         raise AttributeError(self.replacement)
 
+    @property
+    def native_names(self) -> frozenset[str]:
+        """Return the names under which a subclass provides the replacement."""
+        return frozenset({self.replacement})
+
     def migrate_subclass(self, cls: type) -> None:
         """Serve the replacement from a subclass providing the deprecated name."""
         raise NotImplementedError
@@ -554,6 +559,12 @@ class _DeprecatedEntityMember[_T]:
 
 class DeprecatedEntityProperty[_T](_DeprecatedEntityMember[_T]):
     """Deprecated entity property, a read-only alias of its replacement."""
+
+    @property
+    @override
+    def native_names(self) -> frozenset[str]:
+        """Return the replacement and the _attr_ shorthand storing it."""
+        return frozenset({self.replacement, f"_attr_{self.replacement}"})
 
     def __set__(self, instance: object, value: _T) -> None:
         """Refuse a write, like a property without setter."""
@@ -619,13 +630,15 @@ def migrate_deprecated_entity_members(cls: type, base: type) -> None:
     for name, alias in vars(base).items():
         if not isinstance(alias, _DeprecatedEntityMember):
             continue
-        # The most derived class providing either name wins
+        # The most derived class providing the deprecated or the native member
+        # wins, the native one when a class provides both
+        native_names = alias.native_names
         provider = next(
             klass
             for klass in cls.__mro__
-            if name in vars(klass) or alias.replacement in vars(klass)
+            if name in vars(klass) or not native_names.isdisjoint(vars(klass))
         )
-        if provider is base or alias.replacement in vars(provider):
+        if provider is base or not native_names.isdisjoint(vars(provider)):
             continue
         alias.migrate_subclass(cls)
         behavior = ReportBehavior.LOG

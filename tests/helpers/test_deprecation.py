@@ -869,6 +869,30 @@ class StrictRenamedEntity(Entity, cached_properties={"native_value"}):
         return self._attr_native_value
 
 
+def test_deprecated_entity_member_native_storage_wins(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test native storage wins over a deprecated property of the same class."""
+
+    class BothPropertyEntity(MockRenamedEntity):
+        _attr_native_value = 2
+
+        @property
+        def value(self) -> int:
+            return 1
+
+    class BothSlotEntity(MockRenamedEntity):
+        __slots__ = ("value",)
+        _attr_native_value = 2
+
+        def __init__(self) -> None:
+            self.value = 1
+
+    assert BothPropertyEntity().native_value == 2
+    assert BothSlotEntity().native_value == 2
+    assert "provides the deprecated" not in caplog.text
+
+
 def test_deprecated_entity_member_same_line(caplog: pytest.LogCaptureFixture) -> None:
     """Test each deprecated member and action on a single line is reported."""
 
