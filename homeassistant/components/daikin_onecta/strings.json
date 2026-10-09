@@ -348,6 +348,15 @@
     "air_purifier_set_percentage_failed": {
       "message": "Failed to set the fan speed for {device}"
     },
+    "air_purifier_mode_unavailable": {
+      "message": "Air purifier mode control is unavailable for {device}"
+    },
+    "air_purifier_power_unavailable": {
+      "message": "Air purifier power control is unavailable for {device}"
+    },
+    "air_purifier_speed_unavailable": {
+      "message": "Air purifier speed control is unavailable for {device}"
+    },
     "air_purifier_turn_off_failed": {
       "message": "Failed to turn off {device}"
     },
@@ -360,14 +369,29 @@
     "climate_operation_mode_unavailable": {
       "message": "Cannot set the temperature for {device} because its operation mode is unavailable"
     },
+    "climate_hvac_mode_unavailable": {
+      "message": "The requested HVAC mode is unavailable for {device}"
+    },
+    "climate_power_unavailable": {
+      "message": "The power control is unavailable for {device}"
+    },
+    "climate_temperature_unavailable": {
+      "message": "The temperature control is unavailable for {device}"
+    },
     "connection_failed": {
       "message": "Unable to connect to the Daikin API"
     },
     "fan_control_unavailable": {
       "message": "Cannot set the fan mode for {device} because fan-control data is unavailable"
     },
+    "fan_mode_unavailable": {
+      "message": "The requested fan mode is unavailable for {device}"
+    },
     "firmware_install_failed": {
       "message": "Failed to install firmware on {device}"
+    },
+    "firmware_install_unavailable": {
+      "message": "Firmware installation is unavailable for {device}"
     },
     "oauth2_implementation_unavailable": {
       "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
@@ -381,11 +405,17 @@
     "refresh_failed": {
       "message": "Failed to refresh {device}"
     },
+    "preset_mode_unavailable": {
+      "message": "The requested preset mode is unavailable for {device}"
+    },
     "schedule_select_failed": {
       "message": "Failed to select schedule for {device}"
     },
     "schedule_selection_unavailable": {
       "message": "Cannot select a schedule for {device} because schedule data is unavailable"
+    },
+    "schedule_option_unavailable": {
+      "message": "The requested schedule option is unavailable for {device}"
     },
     "set_fan_mode_failed": {
       "message": "Failed to set the fan mode for {device}"
@@ -408,6 +438,9 @@
     "switch_turn_on_failed": {
       "message": "Failed to turn on {device}"
     },
+    "swing_control_unavailable": {
+      "message": "Swing control is unavailable for {device}"
+    },
     "turn_off_failed": {
       "message": "Failed to turn off {device}"
     },
@@ -416,6 +449,12 @@
     },
     "water_heater_off": {
       "message": "Cannot set the temperature for {device} while it is off"
+    },
+    "water_heater_on_off_unavailable": {
+      "message": "Water heater on/off control is unavailable for {device}"
+    },
+    "water_heater_operation_mode_unavailable": {
+      "message": "The requested water heater operation mode is unavailable for {device}"
     },
     "water_heater_set_operation_mode_failed": {
       "message": "Failed to set operation mode for {device}"

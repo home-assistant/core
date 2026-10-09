@@ -108,6 +108,8 @@ class DaikinScheduleSelect(DaikinManagementPointEntity, SelectEntity):
         selection = self.selection()
         if selection is None:
             self._raise_service_validation_error("schedule_selection_unavailable")
+        if option not in self.get_options():
+            self._raise_service_validation_error("schedule_option_unavailable")
         if option == self.get_current_option():
             return
 

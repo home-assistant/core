@@ -297,7 +297,9 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
         """Set new tank state."""
         _LOGGER.debug("Set tank operation mode: %s", operation_mode)
         if operation_mode not in self.get_operation_list():
-            self._raise_command_failed("water_heater_set_operation_mode_failed")
+            self._raise_service_validation_error(
+                "water_heater_operation_mode_unavailable"
+            )
         # First determine the new settings for onOffMode/powerfulMode, we need these to set them to Daikin
         # and update our local cached version when succeeded
         on_off_mode, powerful_mode = self._requested_modes(operation_mode)
@@ -334,7 +336,7 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
         _LOGGER.debug("Device '%s' request to turn on", self._device.name)
         if self.current_operation == STATE_OFF:
             if not self.supported_features & WaterHeaterEntityFeature.ON_OFF:
-                self._raise_command_failed("water_heater_turn_on_failed")
+                self._raise_service_validation_error("water_heater_on_off_unavailable")
             await self._async_execute_hot_water_command(
                 lambda hot_water: hot_water.set_power(True),
                 "water_heater_turn_on_failed",
@@ -357,7 +359,7 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
         _LOGGER.debug("Device '%s' request to turn off", self._device.name)
         if self.current_operation != STATE_OFF:
             if not self.supported_features & WaterHeaterEntityFeature.ON_OFF:
-                self._raise_command_failed("water_heater_turn_off_failed")
+                self._raise_service_validation_error("water_heater_on_off_unavailable")
             await self._async_execute_hot_water_command(
                 lambda hot_water: hot_water.set_power(False),
                 "water_heater_turn_off_failed",

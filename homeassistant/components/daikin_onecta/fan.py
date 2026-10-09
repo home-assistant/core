@@ -130,6 +130,15 @@ class DaikinAirPurifier(DaikinManagementPointEntity, FanEntity):
             return None
         return int((fixed.max_value - fixed.min_value) / fixed.step_value) + 1
 
+    def _power_control_is_available(self) -> bool:
+        """Return whether the air purifier power control is writable."""
+        purification = self._air_purification()
+        return bool(
+            purification is not None
+            and purification.power is not None
+            and purification.power.settable
+        )
+
     def _update_state(self) -> None:
         """Refresh entity state from typed purifier data."""
         purification = self._air_purification()
@@ -168,6 +177,8 @@ class DaikinAirPurifier(DaikinManagementPointEntity, FanEntity):
         **kwargs: Any,
     ) -> None:
         """Turn on the air purifier."""
+        if not self._power_control_is_available():
+            self._raise_service_validation_error("air_purifier_power_unavailable")
         if not self.is_on:
             await self._async_execute_air_purification_command(
                 lambda purifier: purifier.set_power(True),
@@ -186,6 +197,8 @@ class DaikinAirPurifier(DaikinManagementPointEntity, FanEntity):
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the air purifier."""
+        if not self._power_control_is_available():
+            self._raise_service_validation_error("air_purifier_power_unavailable")
         if not self.is_on:
             return
         await self._async_execute_air_purification_command(
@@ -208,7 +221,7 @@ class DaikinAirPurifier(DaikinManagementPointEntity, FanEntity):
             or not purification.mode.settable
             or preset_mode not in purification.modes
         ):
-            self._raise_command_failed("air_purifier_set_mode_failed")
+            self._raise_service_validation_error("air_purifier_mode_unavailable")
         if preset_mode == self.preset_mode:
             return
         await self._async_execute_air_purification_command(
@@ -229,15 +242,15 @@ class DaikinAirPurifier(DaikinManagementPointEntity, FanEntity):
             return
         purification = self._air_purification()
         if purification is None or purification.mode is None:
-            self._raise_command_failed("air_purifier_set_percentage_failed")
+            self._raise_service_validation_error("air_purifier_speed_unavailable")
         if self._fixed_speed_range() is None and "manualFan" in purification.modes:
             await self.async_set_preset_mode("manualFan")
         speed_range = self._fixed_speed_range()
         if speed_range is None:
-            self._raise_command_failed("air_purifier_set_percentage_failed")
+            self._raise_service_validation_error("air_purifier_speed_unavailable")
         purification = self._air_purification()
         if purification is None or purification.mode is None:
-            self._raise_command_failed("air_purifier_set_percentage_failed")
+            self._raise_service_validation_error("air_purifier_speed_unavailable")
         mode = purification.mode.value
         speed = ceil(percentage_to_ranged_value(speed_range, percentage))
         await self._async_execute_air_purification_command(

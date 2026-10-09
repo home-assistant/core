@@ -76,11 +76,7 @@ class DaikinFirmwareUpdateEntity(DaikinManagementPointEntity, UpdateEntity):
         """Trigger a firmware update via the Daikin Onecta cloud API."""
         firmware_id = self._firmware_id
         if not self._is_update_supported or firmware_id is None:
-            _LOGGER.error(
-                "Cannot install firmware for %s: update is not supported or no firmware ID is available",
-                self._device.name,
-            )
-            self._raise_command_failed("firmware_install_failed")
+            self._raise_service_validation_error("firmware_install_unavailable")
 
         _LOGGER.debug(
             "Requesting firmware update for %s, firmware id %s",

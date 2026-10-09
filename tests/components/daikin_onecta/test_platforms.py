@@ -541,6 +541,89 @@ async def test_schedule_select_rejects_missing_selection() -> None:
     assert err.value.translation_key == "schedule_selection_unavailable"
 
 
+async def test_schedule_select_rejects_unadvertised_option() -> None:
+    """Reject a schedule option that is not advertised by the device."""
+    entity = object.__new__(DaikinScheduleSelect)
+    object.__setattr__(entity, "_device", MagicMock(name="Device"))
+    entity.selection = MagicMock(return_value=MagicMock())
+    entity.get_options = MagicMock(return_value=[])
+
+    with pytest.raises(ServiceValidationError) as err:
+        await entity.async_select_option("Schedule")
+
+    assert err.value.translation_key == "schedule_option_unavailable"
+
+
+@pytest.mark.parametrize(
+    ("current_operation", "supported_features", "method", "translation_key"),
+    [
+        (
+            STATE_OFF,
+            WaterHeaterEntityFeature(0),
+            "async_turn_on",
+            "water_heater_on_off_unavailable",
+        ),
+        (
+            STATE_HEAT_PUMP,
+            WaterHeaterEntityFeature(0),
+            "async_turn_off",
+            "water_heater_on_off_unavailable",
+        ),
+    ],
+)
+async def test_water_heater_rejects_unavailable_power_control(
+    current_operation: str,
+    supported_features: WaterHeaterEntityFeature,
+    method: str,
+    translation_key: str,
+) -> None:
+    """Reject turning a water heater on or off without a writable power control."""
+    entity = object.__new__(DaikinWaterTank)
+    object.__setattr__(entity, "_device", MagicMock(name="Device"))
+    object.__setattr__(entity, "_attr_current_operation", current_operation)
+    object.__setattr__(entity, "_attr_supported_features", supported_features)
+
+    with pytest.raises(ServiceValidationError) as err:
+        await getattr(entity, method)()
+
+    assert err.value.translation_key == translation_key
+
+
+async def test_water_heater_rejects_unadvertised_operation_mode() -> None:
+    """Reject an operation mode that the heater does not advertise."""
+    entity = object.__new__(DaikinWaterTank)
+    object.__setattr__(entity, "_device", MagicMock(name="Device"))
+    entity.get_operation_list = MagicMock(return_value=[STATE_OFF])
+
+    with pytest.raises(ServiceValidationError) as err:
+        await entity.async_set_operation_mode(STATE_HEAT_PUMP)
+
+    assert err.value.translation_key == "water_heater_operation_mode_unavailable"
+
+
+@pytest.mark.parametrize(
+    ("method", "args", "translation_key"),
+    [
+        ("async_turn_on", (), "air_purifier_power_unavailable"),
+        ("async_turn_off", (), "air_purifier_power_unavailable"),
+        ("async_set_preset_mode", ("autoFan",), "air_purifier_mode_unavailable"),
+        ("async_set_percentage", (100,), "air_purifier_speed_unavailable"),
+    ],
+)
+async def test_air_purifier_rejects_unavailable_controls(
+    method: str, args: tuple[object, ...], translation_key: str
+) -> None:
+    """Reject purifier controls that are not provided by the device."""
+    entity = object.__new__(DaikinAirPurifier)
+    object.__setattr__(entity, "_device", MagicMock(name="Device"))
+    entity._air_purification = MagicMock(return_value=None)
+
+    with pytest.raises(ServiceValidationError) as err:
+        await getattr(entity, method)(*args)
+
+    assert err.value.translation_key == translation_key
+
+
 async def test_water_heater_turn_off_updates_cached_state(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
@@ -656,6 +739,24 @@ async def test_firmware_install_executes_command(
     state = hass.states.get("update.johnny_maaike_firmware_update")
     assert state is not None
     assert state.attributes["in_progress"] is False
+
+
+@pytest.mark.parametrize("update_supported", [False, True])
+async def test_firmware_install_rejects_unavailable_firmware(
+    update_supported: bool,
+) -> None:
+    """Do not issue a cloud command without a usable firmware offer."""
+    entity = object.__new__(DaikinFirmwareUpdateEntity)
+    entity._device = MagicMock(name="Device")
+    entity._is_update_supported = update_supported
+    entity._firmware_id = None
+    entity._async_execute_command = AsyncMock()
+
+    with pytest.raises(ServiceValidationError) as err:
+        await entity.async_install(None, False)
+
+    assert err.value.translation_key == "firmware_install_unavailable"
+    entity._async_execute_command.assert_not_awaited()
 
 
 async def test_air_purifier_preset_updates_cached_state(

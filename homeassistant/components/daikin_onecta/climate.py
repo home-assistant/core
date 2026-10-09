@@ -315,6 +315,11 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
                         "climate_operation_mode_unavailable"
                     )
                 omv = operationmode.value
+                setpoint = self._get_setpoint(omv)
+                if setpoint is None or not setpoint.settable:
+                    self._raise_service_validation_error(
+                        "climate_temperature_unavailable"
+                    )
                 res = await self._async_execute_climate_command(
                     lambda climate: climate.set_temperature(omv, self._setpoint, value)
                 )
@@ -385,6 +390,12 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
             hvac_mode,
         )
 
+        operation_mode = None
+        if hvac_mode != HVACMode.OFF:
+            operation_mode = self._native_hvac_mode(hvac_mode)
+            if operation_mode is None:
+                self._raise_service_validation_error("climate_hvac_mode_unavailable")
+
         # First determine the new settings for onOffMode/operationMode
         on_off_mode = None
         if hvac_mode == HVACMode.OFF:
@@ -397,6 +408,8 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
 
         # Only set the on/off to Daikin when we need to change it
         if on_off_mode is not None:
+            if cc is None or cc.on_off_mode is None or not cc.on_off_mode.settable:
+                self._raise_service_validation_error("climate_power_unavailable")
             if not await self._async_execute_climate_command(
                 lambda climate: climate.set_power(on_off_mode == "on")
             ):
@@ -408,10 +421,6 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
                 # operation-mode write, which may be rejected by the cloud.
                 self._update_state()
                 self.coordinator.async_update_listeners()
-
-        operation_mode = (
-            self._native_hvac_mode(hvac_mode) if hvac_mode != HVACMode.OFF else None
-        )
 
         # Only set the advertised operationMode when it has changed.
         if (
@@ -491,6 +500,8 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
             or cc.operation_mode is None
         ):
             self._raise_service_validation_error("fan_control_unavailable")
+        if fan_mode not in self._get_fan_modes():
+            self._raise_service_validation_error("fan_mode_unavailable")
         fan_speed = fan_operation.fan_speed
         operation_mode = cc.operation_mode.value
         if fan_mode.isnumeric():
@@ -629,6 +640,8 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
     @override
     async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set the vertical swing mode."""
+        if swing_mode not in self._get_swing_modes():
+            self._raise_service_validation_error("swing_control_unavailable")
         res = True
         if self.swing_mode != swing_mode:
             res = await self._async_set_swing("vertical", swing_mode)
@@ -648,6 +661,8 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
     @override
     async def async_set_swing_horizontal_mode(self, swing_horizontal_mode: str) -> None:
         """Set the horizontal swing mode."""
+        if swing_horizontal_mode not in self._get_swing_horizontal_modes():
+            self._raise_service_validation_error("swing_control_unavailable")
         res = True
         if self.swing_horizontal_mode != swing_horizontal_mode:
             res = await self._async_set_swing("horizontal", swing_horizontal_mode)
@@ -730,6 +745,8 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
         _LOGGER.debug(
             "Device '%s' request set preset mode %s", self._device.name, preset_mode
         )
+        if preset_mode not in self._get_preset_modes():
+            self._raise_service_validation_error("preset_mode_unavailable")
         if (current_preset := self.preset_mode) not in (None, PRESET_NONE):
             if not await self._async_disable_preset_mode(current_preset):
                 self._raise_command_failed("set_preset_mode_failed")
@@ -759,11 +776,11 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
         _LOGGER.debug("Device '%s' request to turn on", self._device.name)
         cc = self._climate_control()
         result = True
-        if (
-            cc is not None
-            and cc.on_off_mode is not None
-            and cc.on_off_mode.value == "off"
-        ):
+        if cc is None or cc.on_off_mode is None:
+            self._raise_service_validation_error("climate_power_unavailable")
+        if cc.on_off_mode.value == "off":
+            if not cc.on_off_mode.settable:
+                self._raise_service_validation_error("climate_power_unavailable")
             result &= await self._async_execute_climate_command(
                 lambda climate: climate.set_power(True)
             )
@@ -788,11 +805,11 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
         _LOGGER.debug("Device '%s' request to turn off", self._device.name)
         cc = self._climate_control()
         result = True
-        if (
-            cc is not None
-            and cc.on_off_mode is not None
-            and cc.on_off_mode.value == "on"
-        ):
+        if cc is None or cc.on_off_mode is None:
+            self._raise_service_validation_error("climate_power_unavailable")
+        if cc.on_off_mode.value == "on":
+            if not cc.on_off_mode.settable:
+                self._raise_service_validation_error("climate_power_unavailable")
             result &= await self._async_execute_climate_command(
                 lambda climate: climate.set_power(False)
             )
