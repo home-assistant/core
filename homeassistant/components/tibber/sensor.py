@@ -91,6 +91,7 @@ RT_SENSORS: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         key="power",
+        # pylint: disable-next=home-assistant-redundant-translation-key
         translation_key="power",
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -207,6 +208,7 @@ RT_SENSORS: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         key="signalStrength",
+        # pylint: disable-next=home-assistant-redundant-translation-key
         translation_key="signal_strength",
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
@@ -227,6 +229,7 @@ RT_SENSORS: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         key="powerFactor",
+        # pylint: disable-next=home-assistant-redundant-translation-key
         translation_key="power_factor",
         device_class=SensorDeviceClass.POWER_FACTOR,
         native_unit_of_measurement=PERCENTAGE,

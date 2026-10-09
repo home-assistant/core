@@ -645,6 +645,7 @@ class ProtectFobButtonEventEntity(ProtectFireOnceMixin, ProtectFobEntity, EventE
 EVENT_DESCRIPTIONS: tuple[ProtectEventEntityDescription, ...] = (
     ProtectEventEntityDescription(
         key="doorbell",
+        # pylint: disable-next=home-assistant-redundant-translation-key
         translation_key="doorbell",
         device_class=EventDeviceClass.DOORBELL,
         ufp_required_field="feature_flags.is_doorbell",

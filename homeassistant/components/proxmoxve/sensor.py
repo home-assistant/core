@@ -138,6 +138,7 @@ NODE_SENSORS: tuple[ProxmoxNodeSensorEntityDescription, ...] = (
     ),
     ProxmoxNodeSensorEntityDescription(
         key="node_uptime",
+        # pylint: disable-next=home-assistant-redundant-translation-key
         translation_key="node_uptime",
         value_fn=(
             lambda data: (
@@ -240,6 +241,7 @@ VM_SENSORS: tuple[ProxmoxVMSensorEntityDescription, ...] = (
     ),
     ProxmoxVMSensorEntityDescription(
         key="vm_uptime",
+        # pylint: disable-next=home-assistant-redundant-translation-key
         translation_key="vm_uptime",
         value_fn=(
             lambda data: (
@@ -360,6 +362,7 @@ CONTAINER_SENSORS: tuple[ProxmoxContainerSensorEntityDescription, ...] = (
     ),
     ProxmoxContainerSensorEntityDescription(
         key="container_uptime",
+        # pylint: disable-next=home-assistant-redundant-translation-key
         translation_key="container_uptime",
         value_fn=(
             lambda data: (
