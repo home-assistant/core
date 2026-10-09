@@ -68,7 +68,6 @@ async def test_form(hass: HomeAssistant) -> None:
             {CONF_PORT: "/dev/ttyUSB7", CONF_ADDRESS: 7},
         )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
 
     assert result2["data"] == {
@@ -79,6 +78,7 @@ async def test_form(hass: HomeAssistant) -> None:
         ATTR_SERIAL_NUMBER: "9876543",
         "title": "PhotoVoltaic Inverters",
     }
+    assert result2["result"].unique_id == "9876543"
     await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1

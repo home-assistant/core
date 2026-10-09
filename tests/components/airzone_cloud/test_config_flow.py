@@ -87,12 +87,12 @@ async def test_form(hass: HomeAssistant) -> None:
         entry = conf_entries[0]
         assert entry.state is ConfigEntryState.LOADED
 
-        # pylint: disable-next=home-assistant-tests-config-flow-unique-id
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == f"House {WS_ID} ({CONFIG[CONF_ID]})"
         assert result["data"][CONF_ID] == CONFIG[CONF_ID]
         assert result["data"][CONF_USERNAME] == CONFIG[CONF_USERNAME]
         assert result["data"][CONF_PASSWORD] == CONFIG[CONF_PASSWORD]
+        assert result["result"].unique_id == CONFIG[CONF_ID]
 
         assert len(mock_setup_entry.mock_calls) == 1
 

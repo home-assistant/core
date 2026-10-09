@@ -46,10 +46,10 @@ async def test_form_user(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == MOCK_NAME
     assert result2["data"] == {CONF_IP_ADDRESS: "127.0.0.1"}
+    assert result2["result"].unique_id == MOCK_UUID
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -114,10 +114,10 @@ async def test_zeroconf_discovery(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "My Fan"
     assert result2["data"] == {CONF_IP_ADDRESS: "127.0.0.1"}
+    assert result2["result"].unique_id == MOCK_UUID
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -200,8 +200,8 @@ async def test_user_flow_is_not_blocked_by_discovery(hass: HomeAssistant) -> Non
         )
         await hass.async_block_till_done()
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == MOCK_NAME
     assert result2["data"] == {CONF_IP_ADDRESS: "127.0.0.1"}
+    assert result2["result"].unique_id == MOCK_UUID
     assert len(mock_setup_entry.mock_calls) == 1

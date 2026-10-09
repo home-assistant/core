@@ -19,6 +19,7 @@ from .const import (
     TEST_DATA_ZEROCONF,
     TEST_DATA_ZEROCONF_IPV6,
     TEST_DATA_ZEROCONF_NOT_MOZART,
+    TEST_SERIAL_NUMBER,
 )
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
@@ -106,9 +107,9 @@ async def test_config_flow(hass: HomeAssistant, mock_mozart_client: AsyncMock) -
         user_input=TEST_DATA_USER,
     )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result_user["type"] is FlowResultType.CREATE_ENTRY
     assert result_user["data"] == TEST_DATA_CREATE_ENTRY
+    assert result_user["result"].unique_id == TEST_SERIAL_NUMBER
 
     assert mock_mozart_client.get_beolink_self.call_count == 1
 
@@ -132,9 +133,9 @@ async def test_config_flow_zeroconf(
         user_input=TEST_DATA_USER,
     )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result_confirm["type"] is FlowResultType.CREATE_ENTRY
     assert result_confirm["data"] == TEST_DATA_CREATE_ENTRY
+    assert result_confirm["result"].unique_id == TEST_SERIAL_NUMBER
 
     assert mock_mozart_client.get_beolink_self.call_count == 1
 

@@ -9,7 +9,7 @@ from homeassistant.components.azure_devops.const import CONF_ORG, CONF_PROJECT, 
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from . import FIXTURE_REAUTH_INPUT, FIXTURE_USER_INPUT
+from . import FIXTURE_REAUTH_INPUT, FIXTURE_USER_INPUT, UNIQUE_ID
 
 from tests.common import MockConfigEntry
 
@@ -235,7 +235,6 @@ async def test_full_flow_implementation(
     await hass.async_block_till_done()
     assert len(mock_setup_entry.mock_calls) == 1
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert (
         result2["title"]
@@ -243,3 +242,4 @@ async def test_full_flow_implementation(
     )
     assert result2["data"][CONF_ORG] == FIXTURE_USER_INPUT[CONF_ORG]
     assert result2["data"][CONF_PROJECT] == FIXTURE_USER_INPUT[CONF_PROJECT]
+    assert result2["result"].unique_id == UNIQUE_ID
