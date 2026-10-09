@@ -405,7 +405,6 @@ class OpenEVSEOptionsFlowHandler(OptionsFlowWithReload):
                                     domain=SENSOR_DOMAIN,
                                     device_class=[
                                         SensorDeviceClass.TIMESTAMP,
-                                        SensorDeviceClass.DATE,
                                         SensorDeviceClass.DURATION,
                                     ],
                                 ),

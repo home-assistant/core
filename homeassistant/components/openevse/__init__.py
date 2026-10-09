@@ -15,6 +15,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_USERNAME,
     Platform,
+    UnitOfElectricPotential,
     UnitOfPower,
     UnitOfTime,
 )
@@ -29,7 +30,11 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.util import dt as dt_util
-from homeassistant.util.unit_conversion import DurationConverter, PowerConverter
+from homeassistant.util.unit_conversion import (
+    DurationConverter,
+    ElectricPotentialConverter,
+    PowerConverter,
+)
 
 from .const import (
     CONF_GRID,
@@ -72,6 +77,29 @@ def _parse_power_state(state: State | None) -> int | None:
     if unit and unit != UnitOfPower.WATT:
         with contextlib.suppress(Exception):
             val = PowerConverter.convert(val, unit, UnitOfPower.WATT)
+
+    return round(val)
+
+
+def _parse_voltage_state(state: State | None) -> int | None:
+    """Parse voltage sensor state and convert to Volts if necessary."""
+    if not state or state.state in (None, "unavailable", "unknown", ""):
+        return None
+    try:
+        val = float(state.state)
+    except ValueError, TypeError:
+        return None
+
+    unit = state.attributes.get("unit_of_measurement")
+    if (
+        unit
+        and unit != UnitOfElectricPotential.VOLT
+        and unit in ElectricPotentialConverter.VALID_UNITS
+    ):
+        with contextlib.suppress(Exception):
+            val = ElectricPotentialConverter.convert(
+                val, unit, UnitOfElectricPotential.VOLT
+            )
 
     return round(val)
 
@@ -134,7 +162,7 @@ async def _handle_sensor_state_change(
             await charger.self_production(grid=None, solar=solar, invert=False)
 
         elif changed_entity == options.get(CONF_VOLTAGE):
-            voltage = _parse_int_state(hass.states.get(changed_entity))
+            voltage = _parse_voltage_state(hass.states.get(changed_entity))
             await charger.grid_voltage(voltage=voltage)
 
         elif changed_entity == options.get(CONF_SHAPER):

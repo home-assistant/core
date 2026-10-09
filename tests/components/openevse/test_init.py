@@ -162,6 +162,11 @@ async def test_sensor_state_change_pushes_data(
     await hass.async_block_till_done()
     mock_charger.grid_voltage.assert_called_with(voltage=240)
 
+    # Voltage update with kV conversion
+    hass.states.async_set("sensor.grid_voltage", "0.24", {"unit_of_measurement": "kV"})
+    await hass.async_block_till_done()
+    mock_charger.grid_voltage.assert_called_with(voltage=240)
+
     # Shaper power update
     hass.states.async_set("sensor.shaper_power", "5000", {"unit_of_measurement": "W"})
     await hass.async_block_till_done()
