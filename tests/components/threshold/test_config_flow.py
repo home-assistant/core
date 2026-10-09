@@ -1,5 +1,6 @@
 """Test the Threshold config flow."""
 
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -65,7 +66,9 @@ async def test_config_flow(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(("extra_input_data", "error"), [({}, "need_lower_upper")])
-async def test_fail(hass: HomeAssistant, extra_input_data, error) -> None:
+async def test_fail(
+    hass: HomeAssistant, extra_input_data: dict[str, Any], error: str
+) -> None:
     """Test not providing lower or upper limit fails."""
     input_sensor = "sensor.input"
 
@@ -85,8 +88,23 @@ async def test_fail(hass: HomeAssistant, extra_input_data, error) -> None:
     )
 
     assert result["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": error}
+
+    with patch(
+        "homeassistant.components.threshold.async_setup_entry",
+        return_value=True,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "entity_id": input_sensor,
+                "lower": -2,
+                "name": "My threshold sensor",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_options(hass: HomeAssistant) -> None:

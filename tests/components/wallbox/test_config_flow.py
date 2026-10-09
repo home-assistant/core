@@ -1,6 +1,6 @@
 """Test the Wallbox config flow."""
 
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 from homeassistant import config_entries
 from homeassistant.components.wallbox.const import (
@@ -70,8 +70,25 @@ async def test_form_cannot_authenticate(hass: HomeAssistant) -> None:
         )
 
         assert result2["type"] is FlowResultType.FORM
-        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result2["errors"] == {"base": "invalid_auth"}
+
+    with (
+        patch("homeassistant.components.wallbox.Wallbox.authenticate"),
+        patch(
+            "homeassistant.components.wallbox.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_STATION: "12345",
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
+            },
+        )
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_cannot_connect(hass: HomeAssistant) -> None:
@@ -99,8 +116,25 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
         )
 
         assert result2["type"] is FlowResultType.FORM
-        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result2["errors"] == {"base": "cannot_connect"}
+
+    with (
+        patch("homeassistant.components.wallbox.Wallbox.authenticate"),
+        patch(
+            "homeassistant.components.wallbox.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_STATION: "12345",
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
+            },
+        )
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_validate_input(
@@ -166,7 +200,7 @@ async def test_form_reauth(
 
 
 async def test_form_reauth_invalid(
-    hass: HomeAssistant, entry: MockConfigEntry, mock_wallbox
+    hass: HomeAssistant, entry: MockConfigEntry, mock_wallbox: MagicMock
 ) -> None:
     """Test we handle reauth invalid flow."""
     await setup_integration(hass, entry)
@@ -192,7 +226,19 @@ async def test_form_reauth_invalid(
         )
 
     assert result2["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "reauth_invalid"}
+
+    result3 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"],
+        {
+            CONF_STATION: "12345",
+            CONF_USERNAME: "test-username",
+            CONF_PASSWORD: "test-password",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.ABORT
+    assert result3["reason"] == "reauth_successful"
 
     await hass.config_entries.async_unload(entry.entry_id)
