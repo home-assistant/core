@@ -6,6 +6,7 @@ from unittest.mock import patch
 from infrared_protocols.codes.generic.led import (
     BaseGenericLEDCode,
     Generic10KeyCode,
+    Generic12KeyCode,
     Generic13KeyCode,
     Generic24KeyCode,
     Generic40KeyCode,
@@ -45,6 +46,7 @@ def button_only() -> Generator[None]:
     "config_entry",
     [
         LEDIrDeviceType.GENERIC_10_KEY,
+        LEDIrDeviceType.GENERIC_12_KEY,
         LEDIrDeviceType.GENERIC_13_KEY,
         LEDIrDeviceType.GENERIC_24_KEY,
         LEDIrDeviceType.GENERIC_40_KEY,
@@ -97,6 +99,16 @@ async def test_setup(
             LEDIrDeviceType.GENERIC_13_KEY,
             "timer",
             [Generic13KeyCode.TIMER],
+        ),
+        (
+            LEDIrDeviceType.GENERIC_12_KEY,
+            "timer_30m",
+            [Generic12KeyCode.TIMER_30M],
+        ),
+        (
+            LEDIrDeviceType.GENERIC_12_KEY,
+            "timer_60m",
+            [Generic12KeyCode.TIMER_60M],
         ),
         (
             LEDIrDeviceType.GENERIC_40_KEY,

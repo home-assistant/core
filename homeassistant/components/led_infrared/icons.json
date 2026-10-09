@@ -37,7 +37,13 @@
       "timer_2h": {
         "default": "mdi:timer"
       },
+      "timer_30m": {
+        "default": "mdi:timer"
+      },
       "timer_4h": {
+        "default": "mdi:timer"
+      },
+      "timer_60m": {
         "default": "mdi:timer"
       },
       "timer_6h": {

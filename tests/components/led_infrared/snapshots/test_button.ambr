@@ -299,6 +299,106 @@
     'state': 'unknown',
   })
 # ---
+# name: test_setup[generic_12_key][button.led_infrared_via_test_ir_emitter_timer_30m-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.led_infrared_via_test_ir_emitter_timer_30m',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Timer 30m',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Timer 30m',
+    'platform': 'led_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'timer_30m',
+    'unique_id': '1234567890_timer_30m',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[generic_12_key][button.led_infrared_via_test_ir_emitter_timer_30m-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LED Infrared via Test IR emitter Timer 30m',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.led_infrared_via_test_ir_emitter_timer_30m',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup[generic_12_key][button.led_infrared_via_test_ir_emitter_timer_60m-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.led_infrared_via_test_ir_emitter_timer_60m',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Timer 60m',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Timer 60m',
+    'platform': 'led_infrared',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'timer_60m',
+    'unique_id': '1234567890_timer_60m',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[generic_12_key][button.led_infrared_via_test_ir_emitter_timer_60m-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LED Infrared via Test IR emitter Timer 60m',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.led_infrared_via_test_ir_emitter_timer_60m',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_setup[generic_13_key][button.led_infrared_via_test_ir_emitter_brightness_down-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([

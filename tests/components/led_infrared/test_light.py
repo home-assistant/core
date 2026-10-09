@@ -6,6 +6,7 @@ from unittest.mock import patch
 from infrared_protocols.codes.generic.led import (
     BaseGenericLEDCode,
     Generic10KeyCode,
+    Generic12KeyCode,
     Generic13KeyCode,
     Generic24KeyCode,
     Generic40KeyCode,
@@ -50,6 +51,7 @@ def light_only() -> Generator[None]:
     "config_entry",
     [
         LEDIrDeviceType.GENERIC_10_KEY,
+        LEDIrDeviceType.GENERIC_12_KEY,
         LEDIrDeviceType.GENERIC_13_KEY,
         LEDIrDeviceType.GENERIC_24_KEY,
         LEDIrDeviceType.GENERIC_40_KEY,
@@ -209,6 +211,20 @@ async def test_setup(
             SERVICE_TURN_OFF,
             {},
             [Generic24KeyCode.OFF],
+        ),
+        (LEDIrDeviceType.GENERIC_12_KEY, SERVICE_TURN_ON, {}, [Generic12KeyCode.ON]),
+        (LEDIrDeviceType.GENERIC_12_KEY, SERVICE_TURN_OFF, {}, [Generic12KeyCode.OFF]),
+        (
+            LEDIrDeviceType.GENERIC_12_KEY,
+            SERVICE_TURN_ON,
+            {ATTR_EFFECT: "mode_1"},
+            [Generic12KeyCode.ON, Generic12KeyCode.MODE_1],
+        ),
+        (
+            LEDIrDeviceType.GENERIC_12_KEY,
+            SERVICE_TURN_ON,
+            {ATTR_EFFECT: "mode_8"},
+            [Generic12KeyCode.ON, Generic12KeyCode.MODE_8],
         ),
         (LEDIrDeviceType.GENERIC_13_KEY, SERVICE_TURN_ON, {}, [Generic13KeyCode.ON]),
         (LEDIrDeviceType.GENERIC_13_KEY, SERVICE_TURN_OFF, {}, [Generic13KeyCode.OFF]),

@@ -50,6 +50,7 @@ SUPPORTED_BUTTONS = {
         "timer_6h",
         "timer_8h",
     ],
+    LEDIrDeviceType.GENERIC_12_KEY: ["timer_30m", "timer_60m"],
 }
 
 

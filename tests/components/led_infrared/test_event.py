@@ -6,6 +6,7 @@ from unittest.mock import patch
 from infrared_protocols.codes.generic.led import (
     BaseGenericLEDCode,
     Generic10KeyCode,
+    Generic12KeyCode,
     Generic13KeyCode,
     Generic24KeyCode,
     Generic40KeyCode,
@@ -49,6 +50,7 @@ def event_only() -> Generator[None]:
     "config_entry",
     [
         LEDIrDeviceType.GENERIC_10_KEY,
+        LEDIrDeviceType.GENERIC_12_KEY,
         LEDIrDeviceType.GENERIC_13_KEY,
         LEDIrDeviceType.GENERIC_24_KEY,
         LEDIrDeviceType.GENERIC_40_KEY,
@@ -126,6 +128,22 @@ async def test_setup(
         (LEDIrDeviceType.GENERIC_24_KEY, Generic24KeyCode.YELLOW, "on", "yellow"),
         (LEDIrDeviceType.GENERIC_24_KEY, Generic24KeyCode.DARK_CYAN, "on", "dark_cyan"),
         (LEDIrDeviceType.GENERIC_24_KEY, Generic24KeyCode.PLUM, "on", "plum"),
+        (LEDIrDeviceType.GENERIC_12_KEY, Generic12KeyCode.ON, "on", None),
+        (LEDIrDeviceType.GENERIC_12_KEY, Generic12KeyCode.OFF, "off", None),
+        (LEDIrDeviceType.GENERIC_12_KEY, Generic12KeyCode.MODE_1, "on", "mode_1"),
+        (LEDIrDeviceType.GENERIC_12_KEY, Generic12KeyCode.MODE_8, "on", "mode_8"),
+        (
+            LEDIrDeviceType.GENERIC_12_KEY,
+            Generic12KeyCode.TIMER_30M,
+            STATE_UNKNOWN,
+            None,
+        ),
+        (
+            LEDIrDeviceType.GENERIC_12_KEY,
+            Generic12KeyCode.TIMER_60M,
+            STATE_UNKNOWN,
+            None,
+        ),
         (LEDIrDeviceType.GENERIC_13_KEY, Generic13KeyCode.ON, "on", None),
         (LEDIrDeviceType.GENERIC_13_KEY, Generic13KeyCode.OFF, "off", None),
         (LEDIrDeviceType.GENERIC_13_KEY, Generic13KeyCode.TIMER, STATE_UNKNOWN, None),

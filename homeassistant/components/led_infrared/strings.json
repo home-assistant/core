@@ -73,8 +73,14 @@
       "timer_2h": {
         "name": "[%key:component::led_infrared::entity::event::received_command::state_attributes::event_type::state::timer_2h%]"
       },
+      "timer_30m": {
+        "name": "[%key:component::led_infrared::entity::event::received_command::state_attributes::event_type::state::timer_30m%]"
+      },
       "timer_4h": {
         "name": "[%key:component::led_infrared::entity::event::received_command::state_attributes::event_type::state::timer_4h%]"
+      },
+      "timer_60m": {
+        "name": "[%key:component::led_infrared::entity::event::received_command::state_attributes::event_type::state::timer_60m%]"
       },
       "timer_6h": {
         "name": "[%key:component::led_infrared::entity::event::received_command::state_attributes::event_type::state::timer_6h%]"
@@ -172,7 +178,9 @@
               "strobe": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::strobe%]",
               "timer": "Timer",
               "timer_2h": "Timer 2h",
+              "timer_30m": "Timer 30m",
               "timer_4h": "Timer 4h",
+              "timer_60m": "Timer 60m",
               "timer_6h": "Timer 6h",
               "timer_8h": "Timer 8h",
               "tomato": "[%key:component::led_infrared::entity::light::light::state_attributes::effect::state::tomato%]",
@@ -258,6 +266,7 @@
     "device_type": {
       "options": {
         "generic_10_key": "10-key remote control",
+        "generic_12_key": "12-key remote control",
         "generic_13_key": "13-key remote control",
         "generic_24_key": "24-key remote control",
         "generic_40_key": "40-key remote control",

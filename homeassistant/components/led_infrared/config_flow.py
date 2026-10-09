@@ -29,6 +29,7 @@ from .const import (
 
 DEVICE_NAMES = {
     LEDIrDeviceType.GENERIC_10_KEY: "10-key remote",
+    LEDIrDeviceType.GENERIC_12_KEY: "12-key remote",
     LEDIrDeviceType.GENERIC_13_KEY: "13-key remote",
     LEDIrDeviceType.GENERIC_24_KEY: "24-key remote",
     LEDIrDeviceType.GENERIC_40_KEY: "40-key remote",

@@ -55,6 +55,16 @@ SUPPORTED_EFFECTS = {
         "diy6",
     ],
     LEDIrDeviceType.GENERIC_10_KEY: ["candle", "light"],
+    LEDIrDeviceType.GENERIC_12_KEY: [
+        "mode_1",
+        "mode_2",
+        "mode_3",
+        "mode_4",
+        "mode_5",
+        "mode_6",
+        "mode_7",
+        "mode_8",
+    ],
 }
 
 
