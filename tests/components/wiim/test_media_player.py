@@ -67,9 +67,10 @@ from homeassistant.const import (
     ATTR_ENTITY_PICTURE,
     CONF_HOST,
     EVENT_STATE_CHANGED,
+    EVENT_STATE_REPORTED,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, EventStateReportedData, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -1442,6 +1443,19 @@ async def test_group_members_follow_renamed_member(
     await setup_integration(hass, mock_config_entry)
     await setup_integration(hass, follower_config_entry)
     state_changes = async_capture_events(hass, EVENT_STATE_CHANGED)
+    state_reports: list[Event[EventStateReportedData]] = []
+
+    @callback
+    def _is_renamed(data: EventStateReportedData) -> bool:
+        return data["entity_id"] == "media_player.renamed"
+
+    @callback
+    def _capture_report(event: Event[EventStateReportedData]) -> None:
+        state_reports.append(event)
+
+    hass.bus.async_listen(
+        EVENT_STATE_REPORTED, _capture_report, event_filter=_is_renamed
+    )
 
     entity_registry.async_update_entity(
         renamed_entity_id, new_entity_id="media_player.renamed"
@@ -1455,12 +1469,14 @@ async def test_group_members_follow_renamed_member(
             leader_entity_id,
             follower_entity_id,
         ]
-    # The renamed player's state is written once under the new entity_id
+    # The renamed player's state is written once under the new entity_id; a
+    # repeated identical write would be a state report
     assert [
         event.data["old_state"]
         for event in state_changes
         if event.data["entity_id"] == "media_player.renamed"
     ] == [None]
+    assert not state_reports
 
 
 async def test_join_service_invalid_member_uses_translation(
