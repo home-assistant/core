@@ -18,6 +18,7 @@ from homeassistant.core import Event, HomeAssistant, async_get_hass, callback
 from homeassistant.loader import (
     Integration,
     async_get_config_flows,
+    async_get_custom_components,
     async_get_integrations,
 )
 from homeassistant.util.json import load_json
@@ -239,6 +240,18 @@ class _TranslationCache:
                 continue
             integrations[domain] = int_or_exc
 
+        if invalidated := components.intersection(self.generations):
+            # Loaded code retains its Integration object until restart. Translations
+            # must use the discovery metadata for the files currently installed.
+            custom = await async_get_custom_components(self.hass)
+            for domain in invalidated:
+                if integration := custom.get(domain):
+                    integrations[domain] = integration
+                elif (
+                    integration := integrations.get(domain)
+                ) and not integration.is_built_in:
+                    del integrations[domain]
+
         translation_by_language_strings = await _async_get_component_strings(
             self.hass, languages, components, integrations
         )
@@ -383,8 +396,8 @@ def async_invalidate_translations(
 ) -> None:
     """Invalidate cached translations after changing local integration resources.
 
-    Subsequent requests read the installed resources. This does not reload
-    integration code or metadata.
+    Subsequent requests use the current custom integration discovery metadata
+    and installed resources. This does not reload integration code.
     """
     _async_get_translations_cache(hass).async_invalidate(set(integrations))
 

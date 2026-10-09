@@ -1,5 +1,6 @@
 """Class for integration repositories."""
 
+from asyncio import CancelledError
 from collections.abc import Awaitable, Callable
 from functools import partial
 from pathlib import Path
@@ -191,11 +192,9 @@ class IntegrationRepository(Repository):
     @override
     async def async_post_installation(self) -> None:
         """Run post installation steps."""
-        if self.data.domain:
-            async_invalidate_translations(self.marketplace.hass, {self.data.domain})
         self.pending_restart = True
+        found = await self.reload_custom_components()
         if self.data.config_flow:
-            found = await self.reload_custom_components()
             # Code new to this run is found like any other integration, code
             # the loader already knows keeps running until a restart.
             self.pending_restart = (
@@ -248,10 +247,7 @@ class IntegrationRepository(Repository):
         # Code this run loaded keeps running until a restart, and so does
         # an integration only set up from YAML
         loaded = self._known_to_the_loader()
-        if self.data.config_flow:
-            await self.reload_custom_components()
-        if self.data.domain:
-            async_invalidate_translations(self.marketplace.hass, {self.data.domain})
+        await self.reload_custom_components()
         self.pending_restart = loaded or not self.data.config_flow
 
         if self.pending_restart:
@@ -411,10 +407,18 @@ class IntegrationRepository(Repository):
         self.logger.info("Reloading custom_component cache")
         # The loader mounts custom_components at startup, a first install
         # creates the folder after that
-        if PACKAGE_CUSTOM_COMPONENTS not in sys.modules:
-            async_mount_config_dir(self.marketplace.hass)
-        async_clear_custom_components_cache(self.marketplace.hass)
-        found = await async_get_custom_components(self.marketplace.hass)
+        try:
+            if PACKAGE_CUSTOM_COMPONENTS not in sys.modules:
+                async_mount_config_dir(self.marketplace.hass)
+            async_clear_custom_components_cache(self.marketplace.hass)
+            found = await async_get_custom_components(self.marketplace.hass)
+        except Exception, CancelledError:
+            # A failed scan can leave an unfinished future in the discovery cache.
+            async_clear_custom_components_cache(self.marketplace.hass)
+            raise
+        finally:
+            if self.data.domain:
+                async_invalidate_translations(self.marketplace.hass, {self.data.domain})
         self.logger.info("Custom_component cache reloaded")
         return set(found)
 
