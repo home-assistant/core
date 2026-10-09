@@ -1,8 +1,13 @@
 """Test the System Bridge integration."""
 
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
+from systembridgeconnector.exceptions import (
+    ConnectionErrorException,
+    DataMissingException,
+)
+from systembridgeconnector.models.modules import ModulesData
 
 from homeassistant.components.system_bridge.config_flow import SystemBridgeConfigFlow
 from homeassistant.components.system_bridge.const import DOMAIN
@@ -16,9 +21,11 @@ from . import FIXTURE_USER_INPUT, FIXTURE_UUID
 from tests.common import MockConfigEntry
 
 
-@pytest.mark.usefixtures("mock_version", "mock_websocket_client")
+@pytest.mark.usefixtures("mock_version")
 async def test_entry_setup_unload(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_websocket_client: MagicMock,
 ) -> None:
     """Test integration setup and unload."""
 
@@ -27,10 +34,13 @@ async def test_entry_setup_unload(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
+    mock_websocket_client.close.assert_not_awaited()
 
     assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+    mock_websocket_client.close.assert_awaited_once()
 
 
 async def test_migration_minor_1_to_2(hass: HomeAssistant) -> None:
@@ -178,56 +188,30 @@ async def test_setup_timeout(hass: HomeAssistant) -> None:
         assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_coordinator_get_data_timeout(hass: HomeAssistant) -> None:
-    """Test coordinator handling timeout during get_data."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=FIXTURE_UUID,
-        data=FIXTURE_USER_INPUT,
-        version=SystemBridgeConfigFlow.VERSION,
-        minor_version=SystemBridgeConfigFlow.MINOR_VERSION,
-    )
+@pytest.mark.parametrize(
+    ("side_effect", "return_value"),
+    [
+        pytest.param(TimeoutError, None, id="timeout"),
+        pytest.param(ConnectionErrorException, None, id="connection_error"),
+        pytest.param(DataMissingException, None, id="data_missing"),
+        pytest.param(None, ModulesData(), id="missing_system"),
+    ],
+)
+@pytest.mark.usefixtures("mock_version")
+async def test_get_data_failure_closes_websocket(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_websocket_client: MagicMock,
+    side_effect: type[Exception] | None,
+    return_value: ModulesData | None,
+) -> None:
+    """Test setup retries and closes the websocket when getting data fails."""
+    mock_websocket_client.get_data.side_effect = side_effect
+    mock_websocket_client.get_data.return_value = return_value
 
-    with (
-        patch(
-            "systembridgeconnector.version.Version.check_supported",
-            return_value=True,
-        ),
-        patch(
-            "homeassistant.components.system_bridge.coordinator.SystemBridgeDataUpdateCoordinator.async_get_data",
-            side_effect=TimeoutError,
-        ),
-    ):
-        config_entry.add_to_hass(hass)
-        result = await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
+    mock_config_entry.add_to_hass(hass)
+    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
-        assert result is False
-        assert config_entry.state is ConfigEntryState.SETUP_RETRY
-
-
-async def test_coordinator_get_data_missing_system(hass: HomeAssistant) -> None:
-    """Test setup retries when get_data returns without system data."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=FIXTURE_UUID,
-        data=FIXTURE_USER_INPUT,
-        version=SystemBridgeConfigFlow.VERSION,
-        minor_version=SystemBridgeConfigFlow.MINOR_VERSION,
-    )
-
-    with (
-        patch(
-            "systembridgeconnector.version.Version.check_supported",
-            return_value=True,
-        ),
-        patch(
-            "homeassistant.components.system_bridge.coordinator.SystemBridgeDataUpdateCoordinator.async_get_data",
-        ),
-    ):
-        config_entry.add_to_hass(hass)
-        result = await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-
-        assert result is False
-        assert config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    mock_websocket_client.close.assert_awaited_once()

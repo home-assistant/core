@@ -127,6 +127,7 @@ async def async_setup_entry(
         _LOGGER,
         entry=entry,
     )
+    entry.async_on_unload(coordinator.websocket_client.close)
 
     try:
         async with asyncio.timeout(DATA_WAIT_TIMEOUT):
@@ -205,8 +206,6 @@ async def async_unload_entry(
     if unload_ok:
         coordinator = entry.runtime_data
 
-        # Ensure disconnected and cleanup stop sub
-        await coordinator.websocket_client.close()
         if coordinator.unsub:
             coordinator.unsub()
 
