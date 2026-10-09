@@ -61,9 +61,9 @@ async def test_flow_works(
             result["flow_id"], user_input={"station": "My station - R12345"}
         )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "My station - R12345"
     assert result["data"] == {
         "station": "L12345",
     }
+    assert result["result"].unique_id == "L12345"

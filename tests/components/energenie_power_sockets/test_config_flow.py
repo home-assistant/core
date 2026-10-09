@@ -34,8 +34,8 @@ async def test_user_flow(
     result2 = await hass.config_entries.flow.async_configure(
         result1["flow_id"], user_input=demo_config_data
     )
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["result"].unique_id == demo_config_data[CONF_DEVICE_API_ID]
 
 
 async def test_user_flow_already_exists(

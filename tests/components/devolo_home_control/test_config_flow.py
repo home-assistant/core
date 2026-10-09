@@ -30,13 +30,13 @@ async def test_form(hass: HomeAssistant) -> None:
         result["flow_id"],
         {CONF_USERNAME: "test-username", CONF_PASSWORD: "test-password"},
     )
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "devolo Home Control"
     assert result["data"] == {
         CONF_USERNAME: "test-username",
         CONF_PASSWORD: "test-password",
     }
+    assert result["result"].unique_id == "123456"
 
 
 async def test_form_invalid_credentials_user(
@@ -99,13 +99,13 @@ async def test_form_zeroconf(hass: HomeAssistant) -> None:
         result["flow_id"],
         {CONF_USERNAME: "test-username", CONF_PASSWORD: "test-password"},
     )
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "devolo Home Control"
     assert result["data"] == {
         CONF_USERNAME: "test-username",
         CONF_PASSWORD: "test-password",
     }
+    assert result["result"].unique_id == "123456"
 
 
 async def test_form_invalid_credentials_zeroconf(

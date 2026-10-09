@@ -102,7 +102,6 @@ async def test_user_flow(hass: HomeAssistant, ssdp_scanner_mock: Mock) -> None:
     )
     await hass.async_block_till_done()
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == MOCK_DEVICE_NAME
     assert result["data"] == {
@@ -111,6 +110,7 @@ async def test_user_flow(hass: HomeAssistant, ssdp_scanner_mock: Mock) -> None:
         CONF_SOURCE_ID: MOCK_SOURCE_ID,
     }
     assert result["options"] == {}
+    assert result["result"].unique_id == MOCK_DEVICE_USN
 
 
 async def test_user_flow_no_devices(
@@ -149,7 +149,6 @@ async def test_ssdp_flow_success(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == MOCK_DEVICE_NAME
     assert result["data"] == {
@@ -158,6 +157,7 @@ async def test_ssdp_flow_success(hass: HomeAssistant) -> None:
         CONF_SOURCE_ID: MOCK_SOURCE_ID,
     }
     assert result["options"] == {}
+    assert result["result"].unique_id == MOCK_DEVICE_USN
 
 
 async def test_ssdp_flow_unavailable(
@@ -300,7 +300,6 @@ async def test_duplicate_name(
     )
     await hass.async_block_till_done()
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == MOCK_DEVICE_NAME
     assert result["data"] == {
@@ -309,6 +308,7 @@ async def test_duplicate_name(
         CONF_SOURCE_ID: f"{MOCK_SOURCE_ID}_2",
     }
     assert result["options"] == {}
+    assert result["result"].unique_id == new_device_usn
 
 
 async def test_ssdp_flow_upnp_udn(

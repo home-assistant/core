@@ -63,10 +63,10 @@ async def test_flow_user_works(hass: HomeAssistant, device_name: str) -> None:
         {"name": device.name},
     )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == device.name
     assert result["data"] == device.get_entry_data()
+    assert result["result"].unique_id == device.mac
 
     assert mock_hello.call_count == 1
     assert mock_api.auth.call_count == 1
@@ -410,10 +410,10 @@ async def test_flow_unlock_works(hass: HomeAssistant) -> None:
         {"name": device.name},
     )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == device.name
     assert result["data"] == device.get_entry_data()
+    assert result["result"].unique_id == device.mac
 
     assert mock_api.set_lock.call_args == call(False)
     assert mock_api.set_lock.call_count == 1
@@ -553,10 +553,10 @@ async def test_flow_do_not_unlock(hass: HomeAssistant) -> None:
         {"name": device.name},
     )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == device.name
     assert result["data"] == device.get_entry_data()
+    assert result["result"].unique_id == device.mac
 
     assert mock_api.set_lock.call_count == 0
 
@@ -582,12 +582,12 @@ async def test_flow_import_works(hass: HomeAssistant) -> None:
         {"name": device.name},
     )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == device.name
     assert result["data"]["host"] == device.host
     assert result["data"]["mac"] == device.mac
     assert result["data"]["type"] == device.devtype
+    assert result["result"].unique_id == device.mac
 
     assert mock_api.auth.call_count == 1
     assert mock_hello.call_count == 1
@@ -857,7 +857,6 @@ async def test_dhcp_can_finish(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Living Room"
     assert result2["data"] == {
@@ -866,6 +865,7 @@ async def test_dhcp_can_finish(hass: HomeAssistant) -> None:
         "timeout": 10,
         "type": 24374,
     }
+    assert result2["result"].unique_id == "34ea34b43b5a"
 
 
 async def test_dhcp_fails_to_connect(hass: HomeAssistant) -> None:

@@ -42,13 +42,13 @@ async def test_single_metering_point(
         )
         await hass.async_block_till_done()
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "1234"
     assert result["data"] == {
         CONF_API_TOKEN: TEST_API_TOKEN,
         CONF_METERING_POINT_ID: "1234",
     }
+    assert result["result"].unique_id == "1234"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -92,13 +92,13 @@ async def test_multiple_metering_points(
     )
     await hass.async_block_till_done()
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "5678"
     assert result["data"] == {
         CONF_API_TOKEN: TEST_API_TOKEN,
         CONF_METERING_POINT_ID: "5678",
     }
+    assert result["result"].unique_id == "5678"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
