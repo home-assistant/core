@@ -78,12 +78,7 @@ async def test_setup(
     await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
 
-# Every code the remote can send, with the light state and effect it leaves
-# behind. One entry replays a whole remote, so the codes are grouped in an order
-# that keeps each expectation independent of the presses before it: codes the
-# light ignores run first, while it is still unknown, then on and off, which must
-# not have an effect set yet, then the effect and colour codes, each of which
-# overwrites the previous effect.
+# Order commands so each state/effect expectation is independent of prior commands.
 _RECEIVED_COMMANDS: dict[
     LEDIrDeviceType, list[tuple[BaseGenericLEDCode, str, str | None]]
 ] = {
