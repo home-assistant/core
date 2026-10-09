@@ -10,11 +10,12 @@ from typing import Any, cast, override
 import attr
 import probatio
 
-from homeassistant.const import CONF_EXCLUDE, CONF_INCLUDE
+from homeassistant.const import CONF_EXCLUDE, CONF_INCLUDE, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.exceptions import ServiceNotFound
+from homeassistant.exceptions import HomeAssistantError, ServiceNotFound
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.selector import EntitySelector, EntitySelectorConfig
 from homeassistant.helpers.storage import Store
 
 from . import (
@@ -89,9 +90,18 @@ class NotifySetting:
     counter: int = attr.ib(factory=_generate_random)  # not persistent
     notify_service: str | None = attr.ib(default=None)
     target: str | None = attr.ib(default=None)
+    entity_ids: list[str] | None = attr.ib(default=None)
 
 
 type _UsersDict = dict[str, NotifySetting]
+
+
+def _filter_stored(attribute: attr.Attribute, value: Any) -> bool:
+    """Return whether an attribute of NotifySetting should be stored."""
+    if attribute.name in ("secret", "counter"):
+        return False
+    # Omitted when unset so older versions can still load the stored data
+    return attribute.name != "entity_ids" or value is not None
 
 
 @MULTI_FACTOR_AUTH_MODULES.register("notify")
@@ -140,13 +150,7 @@ class NotifyAuthModule(MultiFactorAuthModule):
         await self._user_store.async_save(
             {
                 STORAGE_USERS: {
-                    user_id: attr.asdict(
-                        notify_setting,
-                        filter=attr.filters.exclude(
-                            attr.fields(NotifySetting).secret,
-                            attr.fields(NotifySetting).counter,
-                        ),
-                    )
+                    user_id: attr.asdict(notify_setting, filter=_filter_stored)
                     for user_id, notify_setting in self._user_settings.items()
                 }
             }
@@ -158,13 +162,28 @@ class NotifyAuthModule(MultiFactorAuthModule):
         unordered_services = set()
 
         for service in self.hass.services.async_services_for_domain("notify"):
-            if service not in self._exclude:
+            # send_message targets notify entities, which are selected separately
+            if service != "send_message" and service not in self._exclude:
                 unordered_services.add(service)
 
         if self._include:
             unordered_services &= set(self._include)
 
         return sorted(unordered_services)
+
+    @callback
+    def async_get_available_notify_entities(self) -> list[str]:
+        """Return list of notify entities."""
+        unordered_entities = {
+            entity_id
+            for entity_id in self.hass.states.async_entity_ids("notify")
+            if entity_id not in self._exclude
+        }
+
+        if self._include:
+            unordered_entities &= set(self._include)
+
+        return sorted(unordered_entities)
 
     @override
     async def async_setup_flow(self, user_id: str) -> NotifySetupFlow:
@@ -173,7 +192,11 @@ class NotifyAuthModule(MultiFactorAuthModule):
         Mfa module should extend SetupFlow
         """
         return NotifySetupFlow(
-            self, self.input_schema, user_id, self.aync_get_available_notify_services()
+            self,
+            self.input_schema,
+            user_id,
+            self.aync_get_available_notify_services(),
+            self.async_get_available_notify_entities(),
         )
 
     @override
@@ -186,6 +209,7 @@ class NotifyAuthModule(MultiFactorAuthModule):
         self._user_settings[user_id] = NotifySetting(
             notify_service=setup_data.get("notify_service"),
             target=setup_data.get("target"),
+            entity_ids=setup_data.get("entity_ids"),
         )
 
         await self._async_save()
@@ -260,11 +284,41 @@ class NotifyAuthModule(MultiFactorAuthModule):
             _LOGGER.error("Cannot find user %s", user_id)
             return
 
-        await self.async_notify(
+        await self.async_send_code(
             code,
-            notify_setting.notify_service,  # type: ignore[arg-type]
+            notify_setting.notify_service,
             notify_setting.target,
+            notify_setting.entity_ids,
         )
+
+    async def async_send_code(
+        self,
+        code: str,
+        notify_service: str | None,
+        target: str | None,
+        entity_ids: list[str] | None,
+    ) -> None:
+        """Send code by notify service and notify entities.
+
+        Raises if the code could not be sent to any of them.
+        """
+        sent = False
+        if notify_service is not None:
+            try:
+                await self.async_notify(code, notify_service, target)
+            except ServiceNotFound:
+                _LOGGER.warning("Notify service %s not found", notify_service)
+            else:
+                sent = True
+        if entity_ids is not None:
+            try:
+                await self.async_notify_entities(code, entity_ids)
+            except HomeAssistantError as err:
+                _LOGGER.warning("Failed to notify %s: %s", entity_ids, err)
+            else:
+                sent = True
+        if not sent:
+            raise HomeAssistantError("Failed to send one-time password")
 
     async def async_notify(
         self, code: str, notify_service: str, target: str | None = None
@@ -276,6 +330,28 @@ class NotifyAuthModule(MultiFactorAuthModule):
 
         await self.hass.services.async_call("notify", notify_service, data)
 
+    async def async_notify_entities(self, code: str, entity_ids: list[str]) -> None:
+        """Send code by notify entities."""
+        # Entity services only warn about missing entities, so check explicitly
+        available_entity_ids = [
+            entity_id
+            for entity_id in entity_ids
+            if (state := self.hass.states.get(entity_id)) is not None
+            and state.state != STATE_UNAVAILABLE
+        ]
+        if not available_entity_ids:
+            raise HomeAssistantError(
+                f"None of the notify entities {entity_ids} are available"
+            )
+
+        await self.hass.services.async_call(
+            "notify",
+            "send_message",
+            {"message": self._message_template.format(code)},
+            blocking=True,
+            target={"entity_id": available_entity_ids},
+        )
+
 
 class NotifySetupFlow(SetupFlow[NotifyAuthModule]):
     """Handler for the setup flow."""
@@ -286,42 +362,63 @@ class NotifySetupFlow(SetupFlow[NotifyAuthModule]):
         setup_schema: probatio.Schema,
         user_id: str,
         available_notify_services: list[str],
+        available_notify_entities: list[str],
     ) -> None:
         """Initialize the setup flow."""
         super().__init__(auth_module, setup_schema, user_id)
         self._available_notify_services = available_notify_services
+        self._available_notify_entities = available_notify_entities
         self._secret: str | None = None
         self._count: int | None = None
         self._notify_service: str | None = None
         self._target: str | None = None
+        self._entity_ids: list[str] | None = None
 
     @override
     async def async_step_init(
-        self, user_input: dict[str, str] | None = None
+        self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Let user select available notify services."""
         errors: dict[str, str] = {}
 
         hass = self._auth_module.hass
-        if user_input:
-            self._notify_service = user_input["notify_service"]
-            self._target = user_input.get("target")
-            self._secret = await hass.async_add_executor_job(_generate_secret)
-            self._count = await hass.async_add_executor_job(_generate_random)
+        if user_input is not None:
+            notify_service = user_input.get("notify_service")
+            entity_ids = user_input.get("entity_ids") or None
+            if notify_service is None and entity_ids is None:
+                errors["base"] = "select_service_or_entity"
+            else:
+                self._notify_service = notify_service
+                self._entity_ids = entity_ids
+                if notify_service is not None:
+                    self._target = user_input.get("target")
+                self._secret = await hass.async_add_executor_job(_generate_secret)
+                self._count = await hass.async_add_executor_job(_generate_random)
 
-            return await self.async_step_setup()
+                return await self.async_step_setup()
 
-        if not self._available_notify_services:
+        if not self._available_notify_services and not self._available_notify_entities:
             return self.async_abort(reason="no_available_service")
 
-        schema = probatio.Schema(
-            {
-                probatio.Required("notify_service"): probatio.In(
-                    self._available_notify_services
-                ),
-                probatio.Optional("target"): str,
-            }
+        # A field is only required when it is the only one shown
+        key = (
+            probatio.Optional
+            if self._available_notify_services and self._available_notify_entities
+            else probatio.Required
         )
+        fields: dict[probatio.Marker, Any] = {}
+        if self._available_notify_entities:
+            fields[key("entity_ids")] = EntitySelector(
+                EntitySelectorConfig(
+                    domain="notify",
+                    include_entities=self._available_notify_entities,
+                    multiple=True,
+                )
+            )
+        if self._available_notify_services:
+            fields[key("notify_service")] = probatio.In(self._available_notify_services)
+            fields[probatio.Optional("target")] = str
+        schema = probatio.Schema(fields)
 
         return self.async_show_form(step_id="init", data_schema=schema, errors=errors)
 
@@ -340,7 +437,11 @@ class NotifySetupFlow(SetupFlow[NotifyAuthModule]):
             if verified:
                 await self._auth_module.async_setup_user(
                     self._user_id,
-                    {"notify_service": self._notify_service, "target": self._target},
+                    {
+                        "notify_service": self._notify_service,
+                        "target": self._target,
+                        "entity_ids": self._entity_ids,
+                    },
                 )
                 return self.async_create_entry(data={})
 
@@ -351,17 +452,20 @@ class NotifySetupFlow(SetupFlow[NotifyAuthModule]):
             _generate_otp, self._secret, self._count
         )
 
-        assert self._notify_service
         try:
-            await self._auth_module.async_notify(
-                code, self._notify_service, self._target
+            await self._auth_module.async_send_code(
+                code, self._notify_service, self._target, self._entity_ids
             )
-        except ServiceNotFound:
-            return self.async_abort(reason="notify_service_not_exist")
+        except HomeAssistantError:
+            return self.async_abort(reason="notify_failed")
+
+        notify_targets = list(self._entity_ids or [])
+        if self._notify_service is not None:
+            notify_targets.append(f"notify.{self._notify_service}")
 
         return self.async_show_form(
             step_id="setup",
             data_schema=self._setup_schema,
-            description_placeholders={"notify_service": self._notify_service},
+            description_placeholders={"notify_target": ", ".join(notify_targets)},
             errors=errors,
         )

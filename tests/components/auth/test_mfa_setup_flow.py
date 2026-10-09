@@ -1,12 +1,20 @@
 """Tests for the mfa setup flow."""
 
+from unittest.mock import patch
+
 from homeassistant.auth import auth_manager_from_config
 from homeassistant.components.auth import DOMAIN
+from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.setup import async_setup_component
 
-from tests.common import CLIENT_ID, MockUser, ensure_auth_manager_loaded
+from tests.common import (
+    CLIENT_ID,
+    MockUser,
+    async_mock_service,
+    ensure_auth_manager_loaded,
+)
 from tests.typing import WebSocketGenerator
 
 
@@ -125,3 +133,63 @@ async def test_ws_setup_depose_mfa(
     assert result["id"] == 14
     assert result["success"]
     assert result["result"] == "done"
+
+
+async def test_ws_setup_mfa_selector(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test mfa setup flow serializes and validates selectors."""
+    hass.auth = await auth_manager_from_config(
+        hass,
+        provider_configs=[{"type": "insecure_example", "users": []}],
+        module_configs=[{"type": "notify"}],
+    )
+    ensure_auth_manager_loaded(hass.auth)
+    await async_setup_component(hass, DOMAIN, {"http": {}})
+    notify_calls = async_mock_service(hass, "notify", "send_message")
+    hass.states.async_set("notify.phone", STATE_UNKNOWN)
+
+    user = MockUser(id="mock-user").add_to_hass(hass)
+    refresh_token = await hass.auth.async_create_refresh_token(user, CLIENT_ID)
+    access_token = hass.auth.async_create_access_token(refresh_token)
+
+    client = await hass_ws_client(hass, access_token)
+
+    await client.send_json(
+        {"id": 10, "type": "auth/setup_mfa", "mfa_module_id": "notify"}
+    )
+
+    result = await client.receive_json()
+    assert result["success"]
+    flow = result["result"]
+    assert flow["step_id"] == "init"
+    assert flow["data_schema"] == [
+        {
+            "name": "entity_ids",
+            "required": True,
+            "selector": {
+                "entity": {
+                    "domain": ["notify"],
+                    "include_entities": ["notify.phone"],
+                    "multiple": True,
+                    "reorder": False,
+                }
+            },
+        },
+    ]
+
+    with patch("pyotp.HOTP.at", return_value="123456"):
+        await client.send_json(
+            {
+                "id": 11,
+                "type": "auth/setup_mfa",
+                "flow_id": flow["flow_id"],
+                "user_input": {"entity_ids": ["notify.phone"]},
+            }
+        )
+        result = await client.receive_json()
+
+    assert result["success"]
+    assert result["result"]["step_id"] == "setup"
+    assert len(notify_calls) == 1
+    assert notify_calls[0].data["entity_id"] == ["notify.phone"]

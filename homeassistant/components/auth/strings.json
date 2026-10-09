@@ -13,21 +13,28 @@
   "mfa_setup": {
     "notify": {
       "abort": {
-        "no_available_service": "No notification services available."
+        "no_available_service": "No notification services available.",
+        "notify_failed": "Failed to send the one-time password with the selected notify entities or notification service."
       },
       "error": {
-        "invalid_code": "Invalid code, please try again."
+        "invalid_code": "Invalid code, please try again.",
+        "select_service_or_entity": "Select notify entities, a notification service, or both."
       },
       "step": {
         "init": {
-          "description": "Please select one of the notification services:",
+          "data": {
+            "entity_ids": "Notify entities",
+            "notify_service": "Notification service",
+            "target": "Target"
+          },
+          "description": "Please select notify entities, a notification service, or both:",
           "title": "Set up one-time password delivered by notify component"
         },
         "setup": {
           "data": {
             "code": "Code"
           },
-          "description": "A one-time password has been sent via **notify.{notify_service}**. Please enter it below:",
+          "description": "A one-time password has been sent via **{notify_target}**. Please enter it below:",
           "title": "Verify setup"
         }
       },
