@@ -55,6 +55,13 @@ async def _validate_connection(
     return await api.get_data()
 
 
+def _config_entry_title(
+    lhm_data: LibreHardwareMonitorData, host: str, port: int
+) -> str:
+    """Build the config entry title."""
+    return f"{lhm_data.computer_name} ({host}:{port})"
+
+
 class LibreHardwareMonitorConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for LibreHardwareMonitor."""
 
@@ -93,10 +100,8 @@ class LibreHardwareMonitorConfigFlow(ConfigFlow, domain=DOMAIN):
                     errors["base"] = "deprecated_version"
                 else:
                     return self.async_create_entry(
-                        title=(
-                            f"{lhm_data.computer_name}"
-                            f" ({user_input[CONF_HOST]}"
-                            f":{user_input[CONF_PORT]})"
+                        title=_config_entry_title(
+                            lhm_data, user_input[CONF_HOST], user_input[CONF_PORT]
                         ),
                         data=user_input,
                     )
@@ -142,16 +147,22 @@ class LibreHardwareMonitorConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 if lhm_data.is_deprecated_version:
                     errors["base"] = "deprecated_version"
-                elif self.source in (SOURCE_REAUTH, SOURCE_RECONFIGURE):
+                elif self.source == SOURCE_REAUTH:
                     return self.async_update_reload_and_abort(
                         entry=reauth_entry,  # type: ignore[arg-type]
+                        data_updates=data,
+                    )
+                elif self.source == SOURCE_RECONFIGURE:
+                    return self.async_update_reload_and_abort(
+                        entry=reauth_entry,  # type: ignore[arg-type]
+                        title=_config_entry_title(lhm_data, self._host, self._port),  # type: ignore[arg-type]
                         data_updates=data,
                     )
                 else:
                     # the initial connection was unauthorized,
                     # now we can create the config entry
                     return self.async_create_entry(
-                        title=f"{lhm_data.computer_name} ({self._host}:{self._port})",
+                        title=_config_entry_title(lhm_data, self._host, self._port),  # type: ignore[arg-type]
                         data=data,
                     )
 
@@ -195,6 +206,9 @@ class LibreHardwareMonitorConfigFlow(ConfigFlow, domain=DOMAIN):
                 else:
                     return self.async_update_reload_and_abort(
                         reconfig_entry,
+                        title=_config_entry_title(
+                            lhm_data, user_input[CONF_HOST], user_input[CONF_PORT]
+                        ),
                         data_updates=user_input,
                     )
 

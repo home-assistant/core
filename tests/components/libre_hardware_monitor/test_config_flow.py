@@ -20,6 +20,7 @@ from .conftest import (
     AUTH_INPUT,
     REAUTH_INPUT,
     RECONFIGURE_INPUT,
+    RECONFIGURED_TITLE,
     VALID_CONFIG,
     VALID_CONFIG_WITH_AUTH,
 )
@@ -361,6 +362,7 @@ async def test_reconfigure(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert mock_config_entry.data == RECONFIGURE_INPUT
+    assert mock_config_entry.title == RECONFIGURED_TITLE
     assert len(hass.config_entries.async_entries()) == 1
 
 
@@ -397,6 +399,7 @@ async def test_reconfigure_with_auth(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert mock_auth_config_entry.data == {**RECONFIGURE_INPUT, **REAUTH_INPUT}
+    assert mock_auth_config_entry.title == RECONFIGURED_TITLE
 
 
 @pytest.mark.parametrize(
