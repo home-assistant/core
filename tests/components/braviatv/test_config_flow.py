@@ -205,8 +205,28 @@ async def test_user_invalid_host(hass: HomeAssistant) -> None:
         result["flow_id"], user_input={CONF_HOST: "invalid/host"}
     )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {CONF_HOST: "invalid_host"}
+
+    with (
+        patch("pybravia.BraviaClient.connect"),
+        patch("pybravia.BraviaClient.pair"),
+        patch("pybravia.BraviaClient.set_wol_mode"),
+        patch(
+            "pybravia.BraviaClient.get_system_info",
+            return_value=BRAVIA_SYSTEM_INFO,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_HOST: "bravia-host"}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_USE_PSK: False, CONF_USE_SSL: False}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_PIN: "1234"}
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.parametrize(
@@ -217,13 +237,15 @@ async def test_user_invalid_host(hass: HomeAssistant) -> None:
         (BraviaConnectionError, "cannot_connect"),
     ],
 )
-async def test_pin_form_error(hass: HomeAssistant, side_effect, error_message) -> None:
+async def test_pin_form_error(
+    hass: HomeAssistant, side_effect: type[Exception], error_message: str
+) -> None:
     """Test that PIN form errors are correct."""
     with (
         patch(
             "pybravia.BraviaClient.connect",
             side_effect=side_effect,
-        ),
+        ) as mock_connect,
         patch("pybravia.BraviaClient.pair"),
     ):
         result = await hass.config_entries.flow.async_init(
@@ -242,8 +264,21 @@ async def test_pin_form_error(hass: HomeAssistant, side_effect, error_message) -
             result["flow_id"], user_input={CONF_PIN: "1234"}
         )
 
-        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"] == {"base": error_message}
+
+        mock_connect.side_effect = None
+        with (
+            patch("pybravia.BraviaClient.set_wol_mode"),
+            patch(
+                "pybravia.BraviaClient.get_system_info",
+                return_value=BRAVIA_SYSTEM_INFO,
+            ),
+        ):
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"], user_input={CONF_PIN: "1234"}
+            )
+
+        assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.parametrize(
@@ -254,12 +289,14 @@ async def test_pin_form_error(hass: HomeAssistant, side_effect, error_message) -
         (BraviaConnectionError, "cannot_connect"),
     ],
 )
-async def test_psk_form_error(hass: HomeAssistant, side_effect, error_message) -> None:
+async def test_psk_form_error(
+    hass: HomeAssistant, side_effect: type[Exception], error_message: str
+) -> None:
     """Test that PSK form errors are correct."""
     with patch(
         "pybravia.BraviaClient.connect",
         side_effect=side_effect,
-    ):
+    ) as mock_connect:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
         )
@@ -276,8 +313,21 @@ async def test_psk_form_error(hass: HomeAssistant, side_effect, error_message) -
             result["flow_id"], user_input={CONF_PIN: "mypsk"}
         )
 
-        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"] == {"base": error_message}
+
+        mock_connect.side_effect = None
+        with (
+            patch("pybravia.BraviaClient.set_wol_mode"),
+            patch(
+                "pybravia.BraviaClient.get_system_info",
+                return_value=BRAVIA_SYSTEM_INFO,
+            ),
+        ):
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"], user_input={CONF_PIN: "mypsk"}
+            )
+
+        assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_no_ip_control(hass: HomeAssistant) -> None:

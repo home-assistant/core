@@ -370,7 +370,7 @@ async def test_aborted_flow_removes_listener(
     hass: HomeAssistant,
     mock_shared_listener: FakeListener,
 ) -> None:
-    """Test listener is stopped after an aborted config flow."""
+    """Test listener is stopped after a failed attempt and the flow recovers."""
     with patch_config_flow_connectivity(
         USER_HOST,
         deliver_mac=False,
@@ -388,10 +388,19 @@ async def test_aborted_flow_removes_listener(
         )
 
     assert result["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "timeout_connect"}
     mock_shared_listener.stop.assert_awaited_once()
     assert not async_get_listener_registry(hass).has_listener(DEFAULT_PORT)
+
+    with patch_config_flow_connectivity(USER_HOST):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: USER_HOST,
+            },
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_invalid_mac_from_other_host_is_ignored(
@@ -484,8 +493,17 @@ async def test_invalid_mac_does_not_fail_other_flow(
     assert first_result["type"] is FlowResultType.CREATE_ENTRY
     assert first_result["result"].unique_id == TEST_DEVICE_MAC
     assert second_result["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert second_result["errors"] == {"base": "invalid_mac"}
+
+    with patch_config_flow_connectivity(ZEROCONF_HOST, mac_address=SECOND_DEVICE_MAC):
+        second_result = await hass.config_entries.flow.async_configure(
+            second_result["flow_id"],
+            {
+                CONF_HOST: ZEROCONF_HOST,
+            },
+        )
+
+    assert second_result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_concurrent_flow_same_host_aborts(hass: HomeAssistant) -> None:
