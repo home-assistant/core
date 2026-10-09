@@ -286,6 +286,7 @@ post:
                 text:
                   multiline: true
             focus_x:
+              default: 0
               selector:
                 number:
                   min: -1
@@ -293,6 +294,7 @@ post:
                   step: 0.01
                   mode: slider
             focus_y:
+              default: 0
               selector:
                 number:
                   min: -1
