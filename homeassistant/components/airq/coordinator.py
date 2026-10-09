@@ -2,11 +2,10 @@
 
 from datetime import timedelta
 import logging
-from typing import override
+from typing import TYPE_CHECKING, override
 
 from aioairq.core import AirQ, identify_warming_up_sensors
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
@@ -15,20 +14,21 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN, MANUFACTURER, UPDATE_INTERVAL
 
+if TYPE_CHECKING:
+    from . import AirQConfigEntry
+
 _LOGGER = logging.getLogger(__name__)
 
 
 class AirQCoordinator(DataUpdateCoordinator):
     """Coordinator is responsible for querying the device at a specified route."""
 
-    # pylint: disable-next=home-assistant-coordinator-untyped-config-entry
-    config_entry: ConfigEntry
+    config_entry: AirQConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        # pylint: disable-next=home-assistant-coordinator-untyped-config-entry
-        entry: ConfigEntry,
+        entry: AirQConfigEntry,
         clip_negative: bool = True,
         return_average: bool = True,
     ) -> None:
