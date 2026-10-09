@@ -21,9 +21,13 @@ MAX_FETCH_BYTES = 10240
 
 
 async def verify_redirect_uri(
-    hass: HomeAssistant, client_id: str, redirect_uri: str
+    hass: HomeAssistant,
+    client_id: str,
+    redirect_uri: str,
+    *,
+    allow_loopback_port_change: bool = False,
 ) -> bool:
-    """Verify that the client and redirect uri match."""
+    """Verify the redirect URI, allowing loopback port changes only with PKCE."""
     try:
         client_id_parts = _parse_client_id(client_id)
     except ValueError:
@@ -63,10 +67,14 @@ async def verify_redirect_uri(
     redirect_uris = await fetch_redirect_uris(hass, client_id)
     if redirect_uri in redirect_uris:
         return True
-    # RFC 8252 allows native clients to choose their loopback callback port.
-    if (loopback_uri := _without_loopback_port(redirect_uri)) is not None and any(
-        _without_loopback_port(registered_uri) == loopback_uri
-        for registered_uri in redirect_uris
+    # RFC 8252 requires PKCE for native clients choosing a loopback callback port.
+    if (
+        allow_loopback_port_change
+        and (loopback_uri := _without_loopback_port(redirect_uri)) is not None
+        and any(
+            _without_loopback_port(registered_uri) == loopback_uri
+            for registered_uri in redirect_uris
+        )
     ):
         return True
     _LOGGER.debug(

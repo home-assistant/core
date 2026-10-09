@@ -466,7 +466,10 @@ async def test_verify_redirect_uri_metadata_loopback(
         json={"client_id": client_id, "redirect_uris": [registered_uri]},
     )
 
-    assert await indieauth.verify_redirect_uri(hass, client_id, redirect_uri)
+    assert not await indieauth.verify_redirect_uri(hass, client_id, redirect_uri)
+    assert await indieauth.verify_redirect_uri(
+        hass, client_id, redirect_uri, allow_loopback_port_change=True
+    )
 
 
 @pytest.mark.parametrize(
@@ -594,7 +597,9 @@ async def test_verify_redirect_uri_metadata_loopback_rejected(
         json={"client_id": client_id, "redirect_uris": [registered_uri]},
     )
 
-    assert not await indieauth.verify_redirect_uri(hass, client_id, redirect_uri)
+    assert not await indieauth.verify_redirect_uri(
+        hass, client_id, redirect_uri, allow_loopback_port_change=True
+    )
 
 
 async def test_fetch_redirect_uris_metadata_document_invalid_utf8(
