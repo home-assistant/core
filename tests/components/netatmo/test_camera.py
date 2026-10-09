@@ -138,6 +138,19 @@ async def test_monitoring_component(
     assert hass.states.get(camera_entity).state == "idle"
     assert hass.states.get(camera_entity).attributes.get("monitoring") is False
 
+    # Change mocked status (sync optimistic off) to simulate camera status change after the service call
+    mock_state["timestamp"] = int(dt_util.utcnow().timestamp())
+    mock_state["module_id"] = camera_id
+    mock_state["attributes"] = {
+        "monitoring": "off",
+    }
+
+    # Trigger some polling cycle to let status change be picked up
+    await advance_time(hass, freezer, polling_cycles, polling_delta)
+
+    assert hass.states.get(camera_entity).state == "idle"
+    assert hass.states.get(camera_entity).attributes.get("monitoring") is False
+
     # Test on camera event
     response = {
         "event_type": "on",
@@ -147,6 +160,19 @@ async def test_monitoring_component(
         "push_type": f"{camera_type}-on",
     }
     await simulate_webhook(hass, webhook_id, response)
+
+    assert hass.states.get(camera_entity).state == "idle"
+    assert hass.states.get(camera_entity).attributes.get("monitoring") is True
+
+    # Change mocked status (sync optimistic on) to simulate camera status change after the service call
+    mock_state["timestamp"] = int(dt_util.utcnow().timestamp())
+    mock_state["module_id"] = camera_id
+    mock_state["attributes"] = {
+        "monitoring": "on",
+    }
+
+    # Trigger some polling cycle to let status change be picked up
+    await advance_time(hass, freezer, polling_cycles, polling_delta)
 
     assert hass.states.get(camera_entity).state == "idle"
     assert hass.states.get(camera_entity).attributes.get("monitoring") is True
@@ -168,6 +194,7 @@ async def test_monitoring_component(
             }
         )
     assert hass.states.get(camera_entity).state == "idle"
+    assert hass.states.get(camera_entity).attributes.get("monitoring") is False
 
     # Change mocked status (sync optimistic off) to simulate camera status change after the service call
     mock_state["timestamp"] = int(dt_util.utcnow().timestamp())
@@ -207,6 +234,7 @@ async def test_monitoring_component(
             }
         )
     assert hass.states.get(camera_entity).state == "idle"
+    assert hass.states.get(camera_entity).attributes.get("monitoring") is True
 
     # Change mocked status (sync optimistic on) to simulate camera status change after the service call
     mock_state["timestamp"] = int(dt_util.utcnow().timestamp())
@@ -713,7 +741,7 @@ async def test_camera_reconnect_webhook(
         await simulate_webhook(hass, webhook_id, response)
         await hass.async_block_till_done()
 
-        assert fake_post_hits == 8
+        assert fake_post_hits == 7
 
         # Fake camera reconnect (incomplete event should not change anything)
         response = {
@@ -905,7 +933,7 @@ async def test_doorbell_reconnect_webhook(
         await simulate_webhook(hass, webhook_id, response)
         await hass.async_block_till_done()
 
-        assert fake_post_hits == 8
+        assert fake_post_hits == 7
 
         # Fake doorbell reconnect (incomplete event should not change anything)
         response = {
@@ -1033,7 +1061,7 @@ async def test_camera_webhook_consistency(
         await simulate_webhook(hass, webhook_id, response)
         await hass.async_block_till_done()
 
-        assert fake_post_hits == 8
+        assert fake_post_hits == 7
 
         calls = fake_post_hits
 
@@ -1148,7 +1176,7 @@ async def test_setup_component_no_devices(
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-        assert fake_post_hits == 8
+        assert fake_post_hits == 7
 
 
 async def test_camera_image_raises_exception(
@@ -1198,7 +1226,7 @@ async def test_camera_image_raises_exception(
         await camera.async_get_image(hass, camera_entity_indoor)
 
     assert excinfo.value.args == ("Unable to get image",)
-    assert fake_post_hits == 9
+    assert fake_post_hits == 8
 
 
 @pytest.mark.parametrize(
