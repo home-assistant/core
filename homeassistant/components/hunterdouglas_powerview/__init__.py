@@ -190,11 +190,8 @@ async def _migrate_unique_ids(hass: HomeAssistant, entry: PowerviewConfigEntry) 
 async def async_remove_config_entry_device(
     hass: HomeAssistant, entry: PowerviewConfigEntry, device_entry: AnyDeviceEntry
 ) -> bool:
-    """Remove a config entry from a device.
+    """Remove a config entry from a device."""
 
-    This function is called when a user attempts to remove a device from the UI.
-    We should return True if the device can be removed, False otherwise.
-    """
     if TYPE_CHECKING:
         assert isinstance(device_entry, dr.DeviceEntry)
     if entry.state is not ConfigEntryState.LOADED:
