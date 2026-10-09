@@ -38,6 +38,7 @@ async def test_invalid_path_setup(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert config_entry.reason == f"Folder {path} is not valid or allowed"
     assert len(issue_registry.issues) == 1
 
 

@@ -194,6 +194,7 @@ class OpenAITTSEntity(TextToSpeechEntity, OpenAIBaseLLMEntity):
                 async for chunk in response.iter_bytes():
                     response_data.extend(chunk)
         except OpenAIError as exc:
+            # pylint: disable-next=home-assistant-log-and-raise
             _LOGGER.exception("Error during TTS")
             raise HomeAssistantError(exc) from exc
 

@@ -117,6 +117,7 @@ async def test_manual_flow_success(hass: HomeAssistant) -> None:
         CONF_MAC: TEST_MAC_ADDRESS,
         CONF_SN: TEST_SERIAL_NUMBER,
     }
+    assert result["result"].unique_id == str(TEST_DEVICE_ID)
 
 
 async def test_manual_flow_duplicate_unique_id(hass: HomeAssistant) -> None:
@@ -586,6 +587,7 @@ async def test_auto_flow_cloud_device_info_overrides_name_and_subtype(
     assert result["data"][CONF_SUBTYPE] == 3
     assert result["data"][CONF_TOKEN] == TEST_TOKEN
     assert result["data"][CONF_KEY] == TEST_KEY
+    assert result["result"].unique_id == str(TEST_DEVICE_ID)
 
 
 async def test_auto_flow_v3_preset_phase1_cloud_keys_success(
@@ -657,6 +659,7 @@ async def test_auto_flow_v3_preset_phase1_cloud_keys_success(
     assert result["data"][CONF_DEVICE_ID] == TEST_DEVICE_ID
     assert result["data"][CONF_TOKEN] == TEST_TOKEN
     assert result["data"][CONF_KEY] == TEST_KEY
+    assert result["result"].unique_id == str(TEST_DEVICE_ID)
 
 
 async def test_auto_flow_v3_preset_phase1_default_key_success(
@@ -726,6 +729,7 @@ async def test_auto_flow_v3_preset_phase1_default_key_success(
     assert result["data"][CONF_DEVICE_ID] == TEST_DEVICE_ID
     assert result["data"][CONF_TOKEN] == TEST_TOKEN
     assert result["data"][CONF_KEY] == TEST_KEY
+    assert result["result"].unique_id == str(TEST_DEVICE_ID)
 
 
 async def test_auto_flow_v3_default_key_success_after_cloud_error(
@@ -1146,6 +1150,7 @@ async def test_auto_flow_v3_phase2_success_after_phase1_failure(
     assert result["data"][CONF_DEVICE_ID] == TEST_DEVICE_ID
     assert result["data"][CONF_TOKEN] == TEST_TOKEN
     assert result["data"][CONF_KEY] == TEST_KEY
+    assert result["result"].unique_id == str(TEST_DEVICE_ID)
     assert cloud.login.call_count == 2
     assert cloud.get_cloud_keys.call_count == 2
 
@@ -1999,6 +2004,7 @@ async def test_manually_flow_success(hass: HomeAssistant) -> None:
     assert result["data"][CONF_IP_ADDRESS] == TEST_IP_ADDRESS
     assert result["data"][CONF_TOKEN] == TEST_TOKEN
     assert result["data"][CONF_KEY] == TEST_KEY
+    assert result["result"].unique_id == str(TEST_DEVICE_ID)
 
 
 async def test_manually_flow_unsupported_device_type(hass: HomeAssistant) -> None:
@@ -2088,6 +2094,7 @@ async def test_manually_flow_builds_concrete_device_subclass(
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == str(TEST_DEVICE_ID)
     dm = mock_connect.call_args.args[0]
     assert type(dm) is not MideaDevice
     assert isinstance(dm.build_query(), list)
@@ -2145,6 +2152,7 @@ async def test_manually_flow_runs_device_selector_in_executor(
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == str(TEST_DEVICE_ID)
     dispatched_funcs = [call.args[0] for call in mock_executor_job.call_args_list]
     assert any(
         isinstance(func, partial) and func.func is _select_and_connect
@@ -2289,6 +2297,7 @@ async def test_login_credentials_step_success_resumes_auto_flow(
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_DEVICE_ID] == TEST_DEVICE_ID
+    assert result["result"].unique_id == str(TEST_DEVICE_ID)
 
 
 async def test_auth_method_account_mode_redirects_to_login_credentials(

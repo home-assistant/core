@@ -41,6 +41,11 @@
       }
     }
   },
+  "exceptions": {
+    "authentication_failed": {
+      "message": "Authentication with the Crownstone cloud failed"
+    }
+  },
   "options": {
     "step": {
       "init": {

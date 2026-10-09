@@ -147,6 +147,7 @@ class DucoBypassSupplyTemperatureTargetNumber(DucoEntity, NumberEntity):
                 },
             ) from err
         except DucoRateLimitError as err:
+            # pylint: disable-next=home-assistant-log-and-raise
             _LOGGER.warning(
                 "Duco write rate limit exceeded for bypass target zone %s",
                 self._zone_id,

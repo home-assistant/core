@@ -39,6 +39,11 @@
       }
     }
   },
+  "exceptions": {
+    "account_error": {
+      "message": "Failed to log in to Dexcom, the account credentials are invalid"
+    }
+  },
   "options": {
     "step": {
       "init": {

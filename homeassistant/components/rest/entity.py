@@ -62,6 +62,7 @@ async def async_get_config_rest_data_and_coordinator(
     if rest.data is None:
         if rest.last_exception:
             if isinstance(rest.last_exception, ssl.SSLError):
+                # pylint: disable-next=home-assistant-log-and-raise
                 _LOGGER.error(
                     "Error connecting %s failed with %s",
                     rest.url,

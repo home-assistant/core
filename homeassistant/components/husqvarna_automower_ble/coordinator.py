@@ -101,6 +101,7 @@ class HusqvarnaCoordinator(DataUpdateCoordinator[dict[str, str | int]]):
                 raise UpdateFailed("Error getting data from device")
 
         except (BleakError, TimeoutError) as err:
+            # pylint: disable-next=home-assistant-log-and-raise
             LOGGER.error("Error getting data from device")
             await self._async_find_device()
             raise UpdateFailed("Error getting data from device") from err

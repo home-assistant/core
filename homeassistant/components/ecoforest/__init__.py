@@ -11,8 +11,9 @@ from pyecoforest.exceptions import (
 
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 
+from .const import DOMAIN
 from .coordinator import EcoforestConfigEntry, EcoforestCoordinator
 
 PLATFORMS: list[Platform] = [Platform.NUMBER, Platform.SENSOR, Platform.SWITCH]
@@ -30,10 +31,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: EcoforestConfigEntry) ->
     try:
         device = await api.get()
         _LOGGER.debug("Ecoforest: %s", device)
-    except EcoforestAuthenticationRequired:
-        _LOGGER.error("Authentication on device %s failed", host)
-        return False
+    except EcoforestAuthenticationRequired as err:
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="authentication_failed",
+            translation_placeholders={"host": host},
+        ) from err
     except EcoforestConnectionError as err:
+        # pylint: disable-next=home-assistant-log-and-raise
         _LOGGER.error("Error communicating with device %s", host)
         raise ConfigEntryNotReady from err
 

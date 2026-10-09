@@ -2,7 +2,12 @@
 
 from unittest.mock import AsyncMock, patch
 
-from python_open_router import OpenRouterError
+import pytest
+from python_open_router import (
+    OpenRouterAuthenticationError,
+    OpenRouterConnectionError,
+    OpenRouterError,
+)
 
 from homeassistant.components.open_router.const import (
     CONF_OUTPUT_MODALITIES,
@@ -281,12 +286,38 @@ async def test_migrate_entry_v1_3_to_v1_4_keeps_existing_modalities(
     ]
 
 
+@pytest.mark.parametrize(
+    ("side_effect", "state", "reason"),
+    [
+        pytest.param(
+            OpenRouterAuthenticationError("boom"),
+            ConfigEntryState.MIGRATION_ERROR,
+            "Invalid API key",
+            id="authentication_error",
+        ),
+        pytest.param(
+            OpenRouterConnectionError("boom"),
+            ConfigEntryState.SETUP_RETRY,
+            "Unable to connect to OpenRouter",
+            id="connection_error",
+        ),
+        pytest.param(
+            OpenRouterError("boom"),
+            ConfigEntryState.MIGRATION_ERROR,
+            "Failed to fetch the models from OpenRouter",
+            id="error",
+        ),
+    ],
+)
 async def test_migrate_entry_v1_3_to_v1_4_api_error(
     hass: HomeAssistant,
     mock_open_router_client_setup: AsyncMock,
+    side_effect: Exception,
+    state: ConfigEntryState,
+    reason: str,
 ) -> None:
-    """Test migration retries when the model list cannot be fetched."""
-    mock_open_router_client_setup.get_models.side_effect = OpenRouterError("boom")
+    """Test migration errors when the model list cannot be fetched."""
+    mock_open_router_client_setup.get_models.side_effect = side_effect
 
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -313,7 +344,8 @@ async def test_migrate_entry_v1_3_to_v1_4_api_error(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entry.state is ConfigEntryState.MIGRATION_ERROR
+    assert entry.state is state
+    assert entry.reason == reason
     assert entry.minor_version == 3
     assert CONF_OUTPUT_MODALITIES not in entry.subentries["ai_task_subentry"].data
 

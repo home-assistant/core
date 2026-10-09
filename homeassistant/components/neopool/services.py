@@ -96,6 +96,7 @@ async def _async_get_device_time(call: ServiceCall) -> ServiceResponse:
     try:
         regs = await coordinator.client.async_read_register(DEVICE_TIME_REGISTER, 2)
     except (NeoPoolError, OSError, ValueError) as err:
+        # pylint: disable-next=home-assistant-log-and-raise
         _LOGGER.error("Failed to read device time: %s (%s)", err, type(err).__name__)
         raise HomeAssistantError(
             translation_domain=DOMAIN,
@@ -136,6 +137,7 @@ async def _async_set_device_time(call: ServiceCall) -> None:
     try:
         result = await coordinator.client.async_sync_device_time(timestamp)
     except (NeoPoolError, OSError) as err:
+        # pylint: disable-next=home-assistant-log-and-raise
         _LOGGER.error("Failed to set device time: %s (%s)", err, type(err).__name__)
         raise HomeAssistantError(
             translation_domain=DOMAIN,

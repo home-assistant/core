@@ -63,6 +63,7 @@ async def test_flow_discovery(hass: HomeAssistant) -> None:
         CONF_IP_ADDRESS: "1.1.1.1",
         CONF_PORT: 80,
     }
+    assert result2["result"].unique_id == "00:c0:33:01:01:01"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -126,6 +127,7 @@ async def test_flow_replace_ignored(hass: HomeAssistant) -> None:
         CONF_IP_ADDRESS: "1.1.1.1",
         CONF_PORT: 80,
     }
+    assert result2["result"].unique_id == "00:c0:33:01:01:01"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -213,6 +215,7 @@ async def test_dhcp(hass: HomeAssistant) -> None:
         CONF_IP_ADDRESS: "1.1.1.1",
         CONF_PORT: 80,
     }
+    assert result3["result"].unique_id == "00:c0:33:01:01:01"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -271,6 +274,7 @@ async def test_form_manual_entry(hass: HomeAssistant) -> None:
         CONF_IP_ADDRESS: "1.1.1.1",
         CONF_PORT: 80,
     }
+    assert result3["result"].unique_id == "00:c0:33:01:01:01"
     assert len(mock_setup_entry.mock_calls) == 1
 
 

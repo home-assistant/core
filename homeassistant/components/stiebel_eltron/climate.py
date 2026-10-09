@@ -136,6 +136,7 @@ class StiebelEltron(StiebelEltronEntity, ClimateEntity):
         try:
             await self.coordinator.api_client.set_operation(new_mode)
         except ModbusError as e:
+            # pylint: disable-next=home-assistant-log-and-raise
             _LOGGER.error("Error setting HVAC mode: %s", e)
             raise HomeAssistantError("Failed to set HVAC mode") from e
         await self.coordinator.async_request_refresh()
@@ -148,6 +149,7 @@ class StiebelEltron(StiebelEltronEntity, ClimateEntity):
         try:
             await self.coordinator.api_client.set_target_temp(target_temperature)
         except ModbusError as e:
+            # pylint: disable-next=home-assistant-log-and-raise
             _LOGGER.error("Error setting target temperature: %s", e)
             raise HomeAssistantError("Failed to set target temperature") from e
         await self.coordinator.async_request_refresh()
@@ -162,6 +164,7 @@ class StiebelEltron(StiebelEltronEntity, ClimateEntity):
         try:
             await self.coordinator.api_client.set_operation(new_preset)
         except ModbusError as e:
+            # pylint: disable-next=home-assistant-log-and-raise
             _LOGGER.error("Error setting preset mode: %s", e)
             raise HomeAssistantError("Failed to set preset mode") from e
         await self.coordinator.async_request_refresh()

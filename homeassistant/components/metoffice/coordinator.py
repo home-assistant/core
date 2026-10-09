@@ -38,12 +38,12 @@ class MetOfficeRuntimeData:
 class MetOfficeUpdateCoordinator(TimestampDataUpdateCoordinator[Forecast]):
     """Coordinator for Met Office forecast data."""
 
-    config_entry: ConfigEntry
+    config_entry: MetOfficeConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        entry: ConfigEntry,
+        entry: MetOfficeConfigEntry,
         name: str,
         connection: Manager,
         latitude: float,
@@ -87,6 +87,7 @@ def fetch_data(
             latitude, longitude, frequency, convert_weather_code=False
         )
     except (ValueError, APIException) as err:
+        # pylint: disable-next=home-assistant-log-and-raise
         _LOGGER.error("Check Met Office connection: %s", err.args)
         raise UpdateFailed from err
     except HTTPError as err:

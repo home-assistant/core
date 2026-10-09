@@ -62,6 +62,7 @@ async def test_user_connection_successful(
 
     assert len(mock_entry_setup.mock_calls) == 1
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].data == {
         "host": "123.123.123.123",

@@ -314,6 +314,11 @@
       }
     }
   },
+  "exceptions": {
+    "unsupported_model": {
+      "message": "Unsupported Xiaomi Miio device model: {model}"
+    }
+  },
   "options": {
     "error": {
       "cloud_credentials_incomplete": "[%key:component::xiaomi_miio::config::error::cloud_credentials_incomplete%]"

@@ -348,7 +348,6 @@
     },
     "event": {
       "doorbell": {
-        "name": "[%key:component::event::entity_component::doorbell::name%]",
         "state_attributes": {
           "event_type": {
             "state": {

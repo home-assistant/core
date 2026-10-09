@@ -9,11 +9,16 @@ from wiffi import WiffiTcpServer
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PORT, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 
-from .const import CHECK_ENTITIES_SIGNAL, CREATE_ENTITY_SIGNAL, UPDATE_ENTITY_SIGNAL
+from .const import (
+    CHECK_ENTITIES_SIGNAL,
+    CREATE_ENTITY_SIGNAL,
+    DOMAIN,
+    UPDATE_ENTITY_SIGNAL,
+)
 from .entity import generate_unique_id
 
 _LOGGER = logging.getLogger(__name__)
@@ -38,8 +43,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: WiffiConfigEntry) -> boo
         await api.server.start_server()
     except OSError as exc:
         if exc.errno != errno.EADDRINUSE:
-            _LOGGER.error("Start_server failed, errno: %d", exc.errno)
-            return False
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="start_server_failed",
+                translation_placeholders={"port": str(entry.data[CONF_PORT])},
+            ) from exc
+        # pylint: disable-next=home-assistant-log-and-raise
         _LOGGER.error("Port %s already in use", entry.data[CONF_PORT])
         raise ConfigEntryNotReady from exc
 

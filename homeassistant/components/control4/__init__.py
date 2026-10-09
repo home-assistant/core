@@ -19,7 +19,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, device_registry as dr
 
 from .const import (
@@ -66,6 +66,7 @@ async def call_c4_api_retry(func, *func_args):
             )
             exc = exception
 
+    # pylint: disable-next=home-assistant-log-and-raise
     _LOGGER.error(
         "Failed to connect to Control4 account API after %d attempts: %s",
         API_RETRY_TIMES,
@@ -85,19 +86,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: Control4ConfigEntry) -> 
     try:
         await account.get_account_bearer_token()
     except client_exceptions.ClientError as exception:
+        # pylint: disable-next=home-assistant-log-and-raise
         _LOGGER.error("Error connecting to Control4 account API: %s", exception)
         raise ConfigEntryNotReady(
             "Error connecting to Control4 account API to get bearer token"
         ) from exception
     except BadCredentials as exception:
-        _LOGGER.error(
-            (
-                "Error authenticating with Control4 account API, incorrect username or"
-                " password: %s"
-            ),
-            exception,
-        )
-        return False
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="invalid_credentials",
+        ) from exception
 
     controller_unique_id: str = config[CONF_CONTROLLER_UNIQUE_ID]
 
@@ -133,6 +131,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: Control4ConfigEntry) -> 
     try:
         director_all_items: list[dict[str, Any]] = await director.get_all_item_info()
     except (TimeoutError, client_exceptions.ClientError) as err:
+        # pylint: disable-next=home-assistant-log-and-raise
         _LOGGER.error(
             "Timeout connecting to Control4 controller at %s",
             config[CONF_HOST],
@@ -147,6 +146,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: Control4ConfigEntry) -> 
         try:
             ui_configuration = await director.get_ui_configuration()
         except (TimeoutError, client_exceptions.ClientError) as err:
+            # pylint: disable-next=home-assistant-log-and-raise
             _LOGGER.error(
                 "Timeout getting UI configuration from Control4 controller at %s",
                 config[CONF_HOST],

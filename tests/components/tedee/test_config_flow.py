@@ -50,6 +50,7 @@ async def test_flow(hass: HomeAssistant, mock_tedee: MagicMock) -> None:
             CONF_LOCAL_ACCESS_TOKEN: "token",
             CONF_WEBHOOK_ID: WEBHOOK_ID,
         }
+        assert result2["result"].unique_id == "0000-0000"
 
 
 async def test_flow_already_configured(
