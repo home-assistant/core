@@ -70,7 +70,6 @@ async def test_setup(
     await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
 
-# Button key and the codes the emitter is expected to send when it is pressed.
 _BUTTON_PRESSES: dict[LEDIrDeviceType, list[tuple[str, list[BaseGenericLEDCode]]]] = {
     LEDIrDeviceType.GENERIC_10_KEY: [
         ("brightness_up", [Generic10KeyCode.BRIGHTNESS_UP]),

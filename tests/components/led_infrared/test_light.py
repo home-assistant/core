@@ -77,7 +77,6 @@ async def test_setup(
     await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
 
-# Action, action data and the codes the emitter is expected to send for it.
 _LIGHT_ACTIONS: dict[
     LEDIrDeviceType, list[tuple[str, dict[str, str], list[BaseGenericLEDCode]]]
 ] = {
