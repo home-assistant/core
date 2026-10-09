@@ -148,9 +148,9 @@ async def test_dhcp_flow_simple(
     assert result["step_id"] == "dhcp_confirm"
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {"host": "192.168.1.12"}
+    assert result["result"].unique_id == "00:04:a3:de:ad:ff"
 
     config_entry: ConfigEntry = result["result"]
     entry_id = config_entry.entry_id

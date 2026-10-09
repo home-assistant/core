@@ -187,7 +187,6 @@ async def test_create_entry_user_with_pick_lock(
         )
         await hass.async_block_till_done()
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == second_lock["name"]
     assert result["data"] == {
@@ -201,6 +200,7 @@ async def test_create_entry_user_with_pick_lock(
         CONF_WEBHOOK_ID: webhook_id,
         CONF_API_TOKEN: TEST_API_TOKEN,
     }
+    assert result["result"].unique_id == TEST_UNIQUE_ID
     mock_lock.getWebhooks.assert_awaited()
 
 
@@ -288,8 +288,8 @@ async def test_zeroconf_aborts_for_entry_created_by_user_flow(
         )
         await hass.async_block_till_done()
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == TEST_UNIQUE_ID
 
     result = await _async_init_zeroconf_flow(hass)
 

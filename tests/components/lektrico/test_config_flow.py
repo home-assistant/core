@@ -130,7 +130,6 @@ async def test_discovered_zeroconf(hass: HomeAssistant, mock_device) -> None:
     assert result.get("step_id") == "confirm"
 
     result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["data"] == {
         CONF_HOST: MOCKED_DEVICE_IP_ADDRESS,
@@ -139,6 +138,7 @@ async def test_discovered_zeroconf(hass: HomeAssistant, mock_device) -> None:
         ATTR_HW_VERSION: MOCKED_DEVICE_BOARD_REV,
     }
     assert result2["title"] == f"{MOCKED_DEVICE_TYPE}_{MOCKED_DEVICE_SERIAL_NUMBER}"
+    assert result2["result"].unique_id == MOCKED_DEVICE_SERIAL_NUMBER
 
 
 async def test_zeroconf_setup_already_exists(

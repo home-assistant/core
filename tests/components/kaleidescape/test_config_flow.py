@@ -11,7 +11,7 @@ from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from . import MOCK_HOST, MOCK_SSDP_DISCOVERY_INFO
+from . import MOCK_HOST, MOCK_SERIAL, MOCK_SSDP_DISCOVERY_INFO
 
 
 @pytest.mark.usefixtures("mock_device")
@@ -28,10 +28,10 @@ async def test_user_config_flow_success(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert "data" in result
     assert result["data"][CONF_HOST] == MOCK_HOST
+    assert result["result"].unique_id == MOCK_SERIAL
 
 
 async def test_user_config_flow_bad_connect_errors(
@@ -113,10 +113,10 @@ async def test_ssdp_config_flow_success(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert "data" in result
     assert result["data"][CONF_HOST] == MOCK_HOST
+    assert result["result"].unique_id == MOCK_SERIAL
 
 
 async def test_ssdp_config_flow_bad_connect_aborts(

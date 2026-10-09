@@ -124,10 +124,10 @@ async def test_step_user(
         },
     )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2.get("type") is FlowResultType.CREATE_ENTRY
     assert result2.get("title") == "12345"
     assert result2.get("data") == {
         CONF_SENSOR_ID: 12345,
         CONF_SHOW_ON_MAP: True,
     }
+    assert result2["result"].unique_id == "12345"

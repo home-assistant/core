@@ -767,9 +767,9 @@ async def test_manual_hostname_is_stored_as_an_address(
         )
 
     find_by_ip.assert_awaited_once_with(IP_ADDRESS)
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {CONF_HOST: IP_ADDRESS, CONF_SERIAL: SERIAL}
+    assert result["result"].unique_id == SERIAL
 
 
 @pytest.mark.parametrize(
@@ -892,9 +892,9 @@ async def test_manual_host_while_discovery_is_pending(
             result["flow_id"], {CONF_HOST: IP_ADDRESS}
         )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {CONF_HOST: IP_ADDRESS, CONF_SERIAL: SERIAL}
+    assert result["result"].unique_id == SERIAL
 
 
 @pytest.mark.parametrize(
@@ -990,9 +990,9 @@ async def test_pick_broadcast_discovered_device(
             result["flow_id"], {CONF_DEVICE: SERIAL}
         )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {CONF_HOST: IP_ADDRESS, CONF_SERIAL: SERIAL}
+    assert result["result"].unique_id == SERIAL
 
 
 async def test_pick_device_without_discovery_results(hass: HomeAssistant) -> None:
