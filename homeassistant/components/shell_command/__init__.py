@@ -95,6 +95,7 @@ def _make_handler(
             async with asyncio.timeout(COMMAND_TIMEOUT):
                 stdout_data, stderr_data = await process.communicate()
         except TimeoutError as err:
+            # pylint: disable-next=home-assistant-log-and-raise
             _LOGGER.error(
                 "Timed out running command: `%s`, after: %ss", cmd, COMMAND_TIMEOUT
             )
@@ -145,6 +146,7 @@ def _make_handler(
                 if stderr_data:
                     service_response["stderr"] = stderr_data.decode("utf-8").strip()
             except UnicodeDecodeError as err:
+                # pylint: disable-next=home-assistant-log-and-raise
                 _LOGGER.exception(
                     "Unable to handle non-utf8 output of command: `%s`", cmd
                 )

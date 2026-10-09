@@ -34,6 +34,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SurePetcareConfigEntry) 
     try:
         coordinator = SurePetcareDataCoordinator(hass, entry)
     except SurePetcareAuthenticationError as error:
+        # pylint: disable-next=home-assistant-log-and-raise
         _LOGGER.error("Unable to connect to surepetcare.io: Wrong credentials!")
         raise ConfigEntryAuthFailed from error
     except SurePetcareError as error:

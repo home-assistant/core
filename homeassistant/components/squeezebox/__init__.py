@@ -116,6 +116,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SqueezeboxConfigEntry) -
                 "serverstatus", "-", "-", "prefs:libraryname"
             )
     except TimeoutError as err:  # Specifically catch timeout
+        # pylint: disable-next=home-assistant-log-and-raise
         _LOGGER.warning("Timeout connecting to LMS %s: %s", host, err)
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
@@ -130,6 +131,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SqueezeboxConfigEntry) -
         # including HTTP errors where it sets lms.http_status.
 
         if lms.http_status == HTTPStatus.UNAUTHORIZED:
+            # pylint: disable-next=home-assistant-log-and-raise
             _LOGGER.warning("Authentication failed for Squeezebox server %s", host)
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
@@ -141,6 +143,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SqueezeboxConfigEntry) -
 
         # For other errors where status is None
         # (e.g., server error, connection refused by server)
+        # pylint: disable-next=home-assistant-log-and-raise
         _LOGGER.warning(
             "LMS %s returned no status or an error (HTTP status: %s). Retrying setup",
             host,
@@ -160,6 +163,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SqueezeboxConfigEntry) -
 
     # Check for essential keys in status before using them
     if STATUS_QUERY_UUID not in status:
+        # pylint: disable-next=home-assistant-log-and-raise
         _LOGGER.error("LMS %s status response missing UUID", host)
         # This is a non-recoverable error with the current server response
         raise ConfigEntryError(

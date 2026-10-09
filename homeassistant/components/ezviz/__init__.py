@@ -96,6 +96,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: EzvizConfigEntry) -> boo
             raise ConfigEntryAuthFailed from error
 
         except (InvalidURL, HTTPError, PyEzvizError) as error:
+            # pylint: disable-next=home-assistant-log-and-raise
             _LOGGER.error("Unable to connect to Ezviz service: %s", str(error))
             raise ConfigEntryNotReady from error
 

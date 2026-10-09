@@ -403,6 +403,7 @@ class HoneywellUSThermostat(ClimateEntity):
             ) from err
 
         except SomeComfortError as err:
+            # pylint: disable-next=home-assistant-log-and-raise
             LOGGER.error("Invalid temperature %.1f: %s", temperature, err)
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
@@ -428,6 +429,7 @@ class HoneywellUSThermostat(ClimateEntity):
                 ) from err
 
             except SomeComfortError as err:
+                # pylint: disable-next=home-assistant-log-and-raise
                 LOGGER.error("Invalid temperature %.1f: %s", temperature, err)
                 raise ServiceValidationError(
                     translation_domain=DOMAIN,
@@ -484,6 +486,7 @@ class HoneywellUSThermostat(ClimateEntity):
             ) from err
 
         except SomeComfortError as err:
+            # pylint: disable-next=home-assistant-log-and-raise
             LOGGER.error(
                 "Temperature out of range. Mode: %s,"
                 " Heat Temperature:  %.1f,"
@@ -516,12 +519,14 @@ class HoneywellUSThermostat(ClimateEntity):
                     await self._device.set_hold_heat(True)
 
             except SomeComfortError as err:
+                # pylint: disable-next=home-assistant-log-and-raise
                 LOGGER.error("Couldn't set permanent hold")
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
                     translation_key="set_hold_failed",
                 ) from err
         else:
+            # pylint: disable-next=home-assistant-log-and-raise
             LOGGER.error("Invalid system mode returned: %s", mode)
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
@@ -538,6 +543,7 @@ class HoneywellUSThermostat(ClimateEntity):
             await self._device.set_hold_heat(False)
 
         except SomeComfortError as err:
+            # pylint: disable-next=home-assistant-log-and-raise
             LOGGER.error("Can not stop hold mode")
             raise HomeAssistantError(
                 translation_domain=DOMAIN,

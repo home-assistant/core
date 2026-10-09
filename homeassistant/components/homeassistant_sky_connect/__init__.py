@@ -252,6 +252,7 @@ async def async_migrate_entry(
                 # a migration that removes this duplicate, so remove it here. The
                 # entry can't remove itself while its setup lock is held, so
                 # schedule the removal instead.
+                # pylint: disable-next=home-assistant-log-and-raise
                 _LOGGER.warning(
                     "Removing duplicate config entry %s for serial %s in favor of %s",
                     config_entry.entry_id,

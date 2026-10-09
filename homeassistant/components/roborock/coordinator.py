@@ -393,6 +393,7 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState | None]):
         try:
             return await self.properties_api.routines.get_routines()
         except RoborockException as err:
+            # pylint: disable-next=home-assistant-log-and-raise
             _LOGGER.error("Failed to get routines %s", err)
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
@@ -407,6 +408,7 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState | None]):
         try:
             await self.properties_api.routines.execute_routine(routine_id)
         except RoborockException as err:
+            # pylint: disable-next=home-assistant-log-and-raise
             _LOGGER.error("Failed to execute routines %s %s", routine_id, err)
             raise HomeAssistantError(
                 translation_domain=DOMAIN,

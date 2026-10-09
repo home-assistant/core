@@ -40,6 +40,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: DynaliteConfigEntry) -> 
     bridge = DynaliteBridge(hass, convert_config(entry.data))
 
     if not await bridge.async_setup():
+        # pylint: disable-next=home-assistant-log-and-raise
         LOGGER.error("Could not set up bridge for entry %s", entry.data)
         raise ConfigEntryNotReady
 

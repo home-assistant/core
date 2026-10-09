@@ -52,6 +52,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: WhirlpoolConfigEntry) ->
         ) from ex
 
     if not auth.is_access_token_valid():
+        # pylint: disable-next=home-assistant-log-and-raise
         _LOGGER.error("Authentication failed")
         raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN, translation_key="invalid_auth"

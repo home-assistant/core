@@ -108,9 +108,11 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
             # assume previous session has expired and re-login.
             await self.api.async_login()
         except (InvalidAuth, MfaChallenge) as err:
+            # pylint: disable-next=home-assistant-log-and-raise
             _LOGGER.error("Error during login: %s", err)
             raise ConfigEntryAuthFailed from err
         except CannotConnect as err:
+            # pylint: disable-next=home-assistant-log-and-raise
             _LOGGER.error("Error during login: %s", err)
             raise UpdateFailed(
                 translation_domain=DOMAIN,

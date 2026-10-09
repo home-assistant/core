@@ -93,6 +93,7 @@ class YoLinkCoordinator(DataUpdateCoordinator[dict]):
         except YoLinkAuthFailError as yl_auth_err:
             raise ConfigEntryAuthFailed from yl_auth_err
         except YoLinkClientError as yl_client_err:
+            # pylint: disable-next=home-assistant-log-and-raise
             _LOGGER.error(
                 "Failed to obtain device status, device: %s, error: %s ",
                 self.device.device_id,

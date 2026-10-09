@@ -69,6 +69,7 @@ async def async_setup_entry(
     try:
         await ambient.ws_connect()
     except WebsocketError as err:
+        # pylint: disable-next=home-assistant-log-and-raise
         LOGGER.error("Config entry failed: %s", err)
         raise ConfigEntryNotReady from err
 

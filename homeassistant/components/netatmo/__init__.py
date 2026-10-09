@@ -58,6 +58,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NetatmoConfigEntry) -> b
 
     required_scopes = api.get_api_scopes(entry.data["auth_implementation"])
     if not (set(session.token["scope"]) & set(required_scopes)):
+        # pylint: disable-next=home-assistant-log-and-raise
         _LOGGER.warning(
             "Session is missing scopes: %s",
             set(required_scopes) - set(session.token["scope"]),

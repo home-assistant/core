@@ -43,11 +43,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ProsegurConfigEntry) -> 
         await auth.login()
 
     except ConnectionRefusedError as error:
+        # pylint: disable-next=home-assistant-log-and-raise
         _LOGGER.error("Configured credential are invalid, %s", error)
 
         raise ConfigEntryAuthFailed from error
 
     except ConnectionError as error:
+        # pylint: disable-next=home-assistant-log-and-raise
         _LOGGER.error("Could not connect with Prosegur backend: %s", error)
         raise ConfigEntryNotReady from error
 

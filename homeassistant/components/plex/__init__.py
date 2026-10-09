@@ -161,6 +161,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 "Token not accepted, please reauthenticate Plex server"
                 f" '{entry.data[CONF_SERVER]}'"
             ) from error
+        # pylint: disable-next=home-assistant-log-and-raise
         _LOGGER.error(
             "Login to %s failed, verify token and SSL settings: [%s]",
             entry.data[CONF_SERVER],

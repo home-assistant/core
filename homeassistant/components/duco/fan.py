@@ -132,6 +132,7 @@ class DucoVentilationFanEntity(DucoEntity, FanEntity):
         try:
             await self.coordinator.async_set_ventilation_state(self._node_id, state)
         except DucoRateLimitError as err:
+            # pylint: disable-next=home-assistant-log-and-raise
             _LOGGER.warning("Duco write rate limit exceeded for node %s", self._node_id)
             raise HomeAssistantError(
                 translation_domain=DOMAIN,

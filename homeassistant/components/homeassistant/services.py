@@ -140,6 +140,7 @@ async def _async_handle_core_service(call: ServiceCall) -> None:
     stop_handler: Callable[[HomeAssistant, bool], Coroutine[Any, Any, None]]
 
     if call.service in SHUTDOWN_SERVICES and recorder.async_migration_in_progress(hass):
+        # pylint: disable-next=home-assistant-log-and-raise
         _LOGGER.error(
             "The system cannot %s while a database upgrade is in progress",
             call.service,
@@ -156,6 +157,7 @@ async def _async_handle_core_service(call: ServiceCall) -> None:
     errors = await conf_util.async_check_ha_config_file(hass)
 
     if errors:
+        # pylint: disable-next=home-assistant-log-and-raise
         _LOGGER.error(
             "The system cannot %s because the configuration is not valid: %s",
             call.service,
@@ -283,6 +285,7 @@ async def _async_handle_reload_all(call: ServiceCall) -> None:
     hass = call.hass
 
     if errors := await conf_util.async_check_ha_config_file(hass):
+        # pylint: disable-next=home-assistant-log-and-raise
         _LOGGER.error(
             "The system cannot reload because the configuration is not valid: %s",
             errors,
