@@ -12,7 +12,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import Event, HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.typing import ConfigType
 
@@ -42,9 +42,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: PushbulletConfigEntry) -
         pushbullet = await hass.async_add_executor_job(
             PushBullet, entry.data[CONF_API_KEY]
         )
-    except InvalidKeyError:
-        _LOGGER.error("Invalid API key for Pushbullet")
-        return False
+    except InvalidKeyError as err:
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="invalid_api_key",
+        ) from err
     except PushbulletError as err:
         raise ConfigEntryNotReady from err
 

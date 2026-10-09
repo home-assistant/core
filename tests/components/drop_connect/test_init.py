@@ -61,6 +61,8 @@ async def test_no_mqtt(hass: HomeAssistant) -> None:
     entry = config_entry_hub()
     entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(entry.entry_id) is False
+    assert entry.state is ConfigEntryState.SETUP_ERROR
+    assert entry.reason == "MQTT integration is not available"
 
     protect_mode_select_name = "select.hub_drop_1_c0ffee_protect_mode"
     assert hass.states.get(protect_mode_select_name) is None

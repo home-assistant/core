@@ -1,0 +1,11 @@
+{
+  "domain": "theben_conexa",
+  "name": "Theben Conexa Smart Meter Gateway",
+  "codeowners": ["@mdluhosch"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/theben_conexa",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "quality_scale": "bronze",
+  "requirements": ["theben-conexa-smgw==0.4.2"]
+}

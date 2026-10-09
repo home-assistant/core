@@ -178,7 +178,7 @@ class SolarEdgeConfigFlow(ConfigFlow, domain=DOMAIN):
                     probatio.Schema(
                         {
                             probatio.Optional(
-                                CONF_API_KEY,
+                                probatio.Secret(CONF_API_KEY),
                                 default=user_input.get(CONF_SECTION_API_AUTH, {}).get(
                                     CONF_API_KEY, ""
                                 ),
@@ -198,7 +198,7 @@ class SolarEdgeConfigFlow(ConfigFlow, domain=DOMAIN):
                                 ),
                             ): str,
                             probatio.Inclusive(
-                                CONF_PASSWORD,
+                                probatio.Secret(CONF_PASSWORD),
                                 "web_account",
                                 default=user_input.get(CONF_SECTION_WEB_AUTH, {}).get(
                                     CONF_PASSWORD, ""

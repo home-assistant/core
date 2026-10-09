@@ -132,10 +132,12 @@ async def async_setup_entry(
         client = hass.data[DOMAIN]
         async_add_entities([TelldusLiveSensor(client, device_id)])
 
-    async_dispatcher_connect(
-        hass,
-        TELLDUS_DISCOVERY_NEW.format(sensor.DOMAIN, DOMAIN),
-        async_discover_sensor,
+    config_entry.async_on_unload(
+        async_dispatcher_connect(
+            hass,
+            TELLDUS_DISCOVERY_NEW.format(sensor.DOMAIN, DOMAIN),
+            async_discover_sensor,
+        )
     )
 
 

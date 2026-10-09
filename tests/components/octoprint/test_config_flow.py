@@ -74,6 +74,7 @@ async def test_form(hass: HomeAssistant) -> None:
         "path": "/",
         "verify_ssl": True,
     }
+    assert result2["result"].unique_id == "uuid"
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -127,6 +128,34 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["errors"]["base"] == "cannot_connect"
 
+    with (
+        patch(
+            "pyoctoprintapi.OctoprintClient.get_discovery_info",
+            return_value=DiscoverySettings({"upnpUuid": "uuid"}),
+        ),
+        patch("homeassistant.components.octoprint.async_setup", return_value=True),
+        patch(
+            "homeassistant.components.octoprint.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "username": "testuser",
+                "host": "1.1.1.1",
+                "name": "Printer",
+                "port": 81,
+                "ssl": True,
+                "verify_ssl": True,
+                "path": "/",
+                "api_key": "test-key",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_form_unknown_exception(hass: HomeAssistant) -> None:
     """Test we handle a random error."""
@@ -176,6 +205,34 @@ async def test_form_unknown_exception(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"]["base"] == "unknown"
+
+    with (
+        patch(
+            "pyoctoprintapi.OctoprintClient.get_discovery_info",
+            return_value=DiscoverySettings({"upnpUuid": "uuid"}),
+        ),
+        patch("homeassistant.components.octoprint.async_setup", return_value=True),
+        patch(
+            "homeassistant.components.octoprint.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "username": "testuser",
+                "host": "1.1.1.1",
+                "name": "Printer",
+                "port": 81,
+                "ssl": True,
+                "path": "/",
+                "api_key": "test-key",
+                "verify_ssl": True,
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_show_zerconf_form(hass: HomeAssistant) -> None:
@@ -245,6 +302,7 @@ async def test_show_zerconf_form(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "uuid"
 
 
 async def test_show_ssdp_form(hass: HomeAssistant) -> None:
@@ -314,6 +372,7 @@ async def test_show_ssdp_form(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "uuid"
 
 
 async def test_import_yaml(hass: HomeAssistant) -> None:
@@ -350,6 +409,7 @@ async def test_import_yaml(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "uuid"
     assert "errors" not in result
 
 

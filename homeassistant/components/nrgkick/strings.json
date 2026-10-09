@@ -264,9 +264,6 @@
       "n_current": {
         "name": "Neutral current"
       },
-      "network_rssi": {
-        "name": "Signal strength"
-      },
       "network_ssid": {
         "name": "SSID"
       },

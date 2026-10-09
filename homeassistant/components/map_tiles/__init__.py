@@ -38,8 +38,7 @@ CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Map tiles integration."""
-    # Leaflet asks for raster tiles with an <img>, which can carry no header, so
-    # the token has to live in the URL.
+    # Two live at a time, so a URL minted just before a rotation still loads.
     access_tokens: deque[str] = deque([secrets.token_hex(TOKEN_SIZE)], maxlen=2)
     hass.data[DATA_ACCESS_TOKENS] = access_tokens
 

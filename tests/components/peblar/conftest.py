@@ -8,6 +8,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from peblar import (
     PeblarEVInterface,
     PeblarMeter,
+    PeblarMeterHistory,
+    PeblarRfidToken,
     PeblarSystem,
     PeblarSystemInformation,
     PeblarUserConfiguration,
@@ -80,6 +82,19 @@ def mock_peblar(request: pytest.FixtureRequest) -> Generator[MagicMock]:
         peblar.system_information.return_value = PeblarSystemInformation.from_dict(
             system_information
         )
+        peblar.meter_history.return_value = PeblarMeterHistory.from_json(
+            load_fixture("meter_history.json", DOMAIN)
+        )
+        peblar.rfid_tokens.return_value = [
+            PeblarRfidToken(
+                rfid_token_uid="1D0A0B0C0D0E03",
+                rfid_token_description="Frenck",
+            ),
+            PeblarRfidToken(
+                rfid_token_uid="1D0102030405D3",
+                rfid_token_description="Spare",
+            ),
+        ]
 
         # The event stream parks here until the entry unloads, the way a
         # real one waits on the charger rather than returning.

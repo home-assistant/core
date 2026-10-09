@@ -128,7 +128,7 @@ OPTION_KEYS = [desc.key for desc in SENSOR_TYPES]
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         probatio.Required(CONF_DISPLAY_OPTIONS, default=[]): probatio.All(
-            cv.ensure_list, [probatio.In(OPTION_KEYS)]
+            probatio.EnsureList(), [probatio.In(OPTION_KEYS)]
         ),
         probatio.Optional(CONF_CURRENCY, default=DEFAULT_CURRENCY): cv.string,
     }

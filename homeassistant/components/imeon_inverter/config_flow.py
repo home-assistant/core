@@ -85,7 +85,7 @@ class ImeonInverterConfigFlow(ConfigFlow, domain=DOMAIN):
                 {
                     **host_schema,
                     probatio.Required(CONF_USERNAME): str,
-                    probatio.Required(CONF_PASSWORD): str,
+                    probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
                 }
             ),
             errors=errors,

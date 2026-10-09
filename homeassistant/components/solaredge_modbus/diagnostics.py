@@ -3,6 +3,7 @@
 from typing import Any
 
 from modbus_connection.model import Component, RegisterField
+from solaredged import SolarEdge
 
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.core import HomeAssistant
@@ -31,6 +32,29 @@ def _component_data(component: Component) -> dict[str, Any]:
     return {name: getattr(component, name) for name in sorted(names)}
 
 
+def _optional_component_data(component: Component | None) -> dict[str, Any] | None:
+    """A component's data, or None for a block this device does not have."""
+    if component is None:
+        return None
+    return _component_data(component)
+
+
+def _sunspec_models(solaredge: SolarEdge) -> list[dict[str, int]] | None:
+    """The device's SunSpec model chain, in the order it serves them.
+
+    What the inverter says it carries and where, which is the only account of
+    it that survives a block not being found: everything else here describes
+    what was read, not what was looked for.
+    """
+    if solaredge.sunspec_models is None:
+        return None
+
+    return [
+        {"model_id": model.model_id, "address": model.address, "length": model.length}
+        for model in solaredge.sunspec_models.chain
+    ]
+
+
 def _poll_data(coordinator: SolarEdgeModbusDataUpdateCoordinator) -> dict[str, Any]:
     """What a coordinator's most recent poll got out of the device."""
     return {
@@ -54,7 +78,10 @@ async def async_get_config_entry_diagnostics(
     solaredge = runtime_data.solaredge
 
     data: dict[str, Any] = {
-        "polls": {"readings": _poll_data(runtime_data.readings)},
+        "polls": {
+            "readings": _poll_data(runtime_data.readings),
+            "settings": _poll_data(runtime_data.settings),
+        },
         "common": _component_data(solaredge.common),
         "inverter": _component_data(solaredge.inverter),
         "mmppt": (
@@ -64,6 +91,13 @@ async def async_get_config_entry_diagnostics(
         ),
         "meters": [_component_data(meter) for meter in solaredge.meters],
         "batteries": [_component_data(battery) for battery in solaredge.batteries],
+        "storage_control": _optional_component_data(solaredge.storage_control),
+        "export_control": _optional_component_data(solaredge.export_control),
+        "power_control": _optional_component_data(solaredge.power_control),
+        "advanced_power_control": _optional_component_data(
+            solaredge.advanced_power_control
+        ),
+        "sunspec_models": _sunspec_models(solaredge),
         "unresponsive_blocks": sorted(solaredge.unresponsive_blocks),
     }
 

@@ -303,8 +303,10 @@ class Plant(Entity):
             )
             self.async_write_ha_state()
 
-        async_track_state_change_event(
-            self.hass, list(self._sensormap), self._state_changed_event
+        self.async_on_remove(
+            async_track_state_change_event(
+                self.hass, list(self._sensormap), self._state_changed_event
+            )
         )
 
         for entity_id in self._sensormap:

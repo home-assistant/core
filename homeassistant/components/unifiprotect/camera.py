@@ -2,7 +2,7 @@
 
 from collections.abc import Iterable
 import logging
-from typing import cast, override
+from typing import override
 
 from uiprotect.data import (
     Camera as UFPCamera,
@@ -17,6 +17,7 @@ from uiprotect.data import (
 from uiprotect.data.public_devices import PublicCamera
 
 from homeassistant.components.camera import Camera, CameraEntityFeature
+from homeassistant.const import CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_platform, issue_registry as ir
@@ -266,11 +267,13 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
         self._last_image: bytes | None = None
         # The base tracks the private device in hybrid (unchanged behaviour) and
         # the public device in public-only, so it always has a mac to key on.
-        super().__init__(data, cast(ProtectDeviceType, private or public))
+        super().__init__(data, private or public)
         self._attr_unique_id = f"{self.device.mac}_{self._channel_id}"
         self._attr_name = get_camera_base_name(quality)
         # only the default (first active) quality channel is enabled by default
         self._attr_entity_registry_enabled_default = is_default
+        # RTSPS uses a self-signed certificate on the console IP
+        self.stream_options[CONF_VERIFY_SSL] = False
         # Set the stream source before finishing the init
         # because async_added_to_hass is too late and camera
         # integration uses async_internal_added_to_hass to access
@@ -392,11 +395,7 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
             self._public_missing = False
         else:
             self._public_missing = True
-        device = (
-            self._private
-            if self._private is not None
-            else cast(ProtectDeviceType, self._public)
-        )
+        device = self._private if self._private is not None else self._public
         self._async_updated_event(device)
 
     @override

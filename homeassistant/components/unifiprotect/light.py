@@ -1,7 +1,7 @@
 """Component providing Lights for UniFi Protect."""
 
 import logging
-from typing import Any, cast, override
+from typing import TYPE_CHECKING, Any, cast, override
 
 from uiprotect.data import (
     Light,
@@ -36,9 +36,7 @@ async def async_setup_entry(
 
     @callback
     def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
-        if device.model is ModelType.LIGHT and device.can_write(
-            data.api.bootstrap.auth_user
-        ):
+        if device.model is ModelType.LIGHT:
             light = cast(Light, device)
             public = data.async_get_public_device(light)
             async_add_entities(
@@ -70,8 +68,9 @@ async def async_setup_entry(
                 entities.append(ProtectLight(data, public, None))
             continue
         # Created even without a public mirror; unavailable until one arrives.
-        if private.can_write(data.api.bootstrap.auth_user):
-            entities.append(ProtectLight(data, public, private))
+        # It writes through the API key, so the local user's permission does
+        # not gate it.
+        entities.append(ProtectLight(data, public, private))
     async_add_entities(entities)
 
 
@@ -88,7 +87,7 @@ def hass_to_unifi_brightness(value: int) -> int:
 class ProtectLight(ProtectDeviceEntity, LightEntity):
     """A Ubiquiti UniFi Protect Light Entity."""
 
-    device: Light
+    device: Light | PublicLight
 
     _attr_icon = "mdi:spotlight-beam"
     _attr_color_mode = ColorMode.BRIGHTNESS
@@ -108,7 +107,11 @@ class ProtectLight(ProtectDeviceEntity, LightEntity):
         self._ufp_public_obj = public
         # unique_id and device info derive from the base device, so hybrid must
         # keep the private one to leave existing entities unchanged.
-        super().__init__(data, cast(ProtectDeviceType, private or public))
+        device = private or public
+        if TYPE_CHECKING:
+            # The platform only builds a light when at least one side exists.
+            assert device is not None
+        super().__init__(data, device)
 
     @callback
     @override
