@@ -2,13 +2,18 @@
 
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant.components.netgear_lte.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_SOURCE
+from homeassistant.const import CONF_SOURCE, CONTENT_TYPE_JSON
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .conftest import CONF_DATA
+from .conftest import CONF_DATA, HOST
+
+from tests.common import async_load_fixture
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 def _patch_setup():
@@ -52,8 +57,9 @@ async def test_flow_already_configured(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("cannot_connect")
 async def test_flow_user_cannot_connect(
-    hass: HomeAssistant, cannot_connect: None
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test connection error."""
     result = await hass.config_entries.flow.async_init(
@@ -64,5 +70,22 @@ async def test_flow_user_cannot_connect(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"]["base"] == "cannot_connect"
+
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(
+        f"http://{HOST}/model.json",
+        text=await async_load_fixture(hass, "model.json", DOMAIN),
+        headers={"Content-Type": CONTENT_TYPE_JSON},
+    )
+    aioclient_mock.post(
+        f"http://{HOST}/Forms/config",
+        headers={"Content-Type": CONTENT_TYPE_JSON},
+    )
+
+    with _patch_setup():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=CONF_DATA,
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY

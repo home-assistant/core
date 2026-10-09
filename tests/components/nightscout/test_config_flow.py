@@ -62,8 +62,19 @@ async def test_user_form_cannot_connect(hass: HomeAssistant) -> None:
         )
 
     assert result2["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "cannot_connect"}
+
+    with (
+        _patch_glucose_readings(),
+        _patch_server_status(),
+        _patch_async_setup_entry(),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_URL: "https://some.url:1234"},
+        )
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_user_form_api_key_required(hass: HomeAssistant) -> None:
@@ -88,8 +99,19 @@ async def test_user_form_api_key_required(hass: HomeAssistant) -> None:
         )
 
     assert result2["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "invalid_auth"}
+
+    with (
+        _patch_glucose_readings(),
+        _patch_server_status(),
+        _patch_async_setup_entry(),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_URL: "https://some.url:1234"},
+        )
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_user_form_unexpected_exception(hass: HomeAssistant) -> None:
@@ -108,8 +130,19 @@ async def test_user_form_unexpected_exception(hass: HomeAssistant) -> None:
         )
 
     assert result2["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "unknown"}
+
+    with (
+        _patch_glucose_readings(),
+        _patch_server_status(),
+        _patch_async_setup_entry(),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_URL: "https://some.url:1234"},
+        )
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_user_form_duplicate(hass: HomeAssistant) -> None:

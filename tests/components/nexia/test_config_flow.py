@@ -1,5 +1,7 @@
 """Test the nexia config flow."""
 
+from collections.abc import Generator
+from contextlib import contextmanager
 from unittest.mock import MagicMock, patch
 
 import aiohttp
@@ -11,6 +13,26 @@ from homeassistant.components.nexia.const import CONF_BRAND, DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+
+USER_INPUT = {
+    CONF_BRAND: BRAND_NEXIA,
+    CONF_USERNAME: "username",
+    CONF_PASSWORD: "password",
+}
+
+
+@contextmanager
+def _patch_success() -> Generator[None]:
+    """Patch a successful login and entry setup."""
+    with (
+        patch(
+            "homeassistant.components.nexia.config_flow.NexiaHome.get_name",
+            return_value="myhouse",
+        ),
+        patch("homeassistant.components.nexia.config_flow.NexiaHome.login"),
+        patch("homeassistant.components.nexia.async_setup_entry", return_value=True),
+    ):
+        yield
 
 
 @pytest.mark.parametrize("brand", [BRAND_ASAIR, BRAND_NEXIA])
@@ -79,8 +101,14 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
         )
 
     assert result2["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "invalid_auth"}
+
+    with _patch_success():
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], USER_INPUT
+        )
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_cannot_connect(hass: HomeAssistant) -> None:
@@ -103,8 +131,14 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
         )
 
     assert result2["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "cannot_connect"}
+
+    with _patch_success():
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], USER_INPUT
+        )
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_invalid_auth_http_401(hass: HomeAssistant) -> None:
@@ -129,8 +163,14 @@ async def test_form_invalid_auth_http_401(hass: HomeAssistant) -> None:
         )
 
     assert result2["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "invalid_auth"}
+
+    with _patch_success():
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], USER_INPUT
+        )
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_cannot_connect_not_found(hass: HomeAssistant) -> None:
@@ -155,8 +195,14 @@ async def test_form_cannot_connect_not_found(hass: HomeAssistant) -> None:
         )
 
     assert result2["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "cannot_connect"}
+
+    with _patch_success():
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], USER_INPUT
+        )
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_broad_exception(hass: HomeAssistant) -> None:
@@ -179,5 +225,11 @@ async def test_form_broad_exception(hass: HomeAssistant) -> None:
         )
 
     assert result2["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "unknown"}
+
+    with _patch_success():
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], USER_INPUT
+        )
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
