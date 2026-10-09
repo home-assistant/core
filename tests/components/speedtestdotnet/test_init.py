@@ -3,11 +3,13 @@
 from datetime import timedelta
 from unittest.mock import MagicMock
 
+from freezegun.api import FrozenDateTimeFactory
 import speedtest
 
 from homeassistant.components.speedtestdotnet.const import (
     CONF_SERVER_ID,
     CONF_SERVER_NAME,
+    DEFAULT_SCAN_INTERVAL,
     DOMAIN,
 )
 from homeassistant.components.speedtestdotnet.coordinator import (
@@ -84,7 +86,9 @@ async def test_server_not_found(hass: HomeAssistant, mock_api: MagicMock) -> Non
     assert state.state == STATE_UNAVAILABLE
 
 
-async def test_get_best_server_error(hass: HomeAssistant, mock_api: MagicMock) -> None:
+async def test_get_best_server_error(
+    hass: HomeAssistant, mock_api: MagicMock, freezer: FrozenDateTimeFactory
+) -> None:
     """Test configured server id is not found."""
 
     entry = MockConfigEntry(
@@ -103,9 +107,9 @@ async def test_get_best_server_error(hass: HomeAssistant, mock_api: MagicMock) -
             "Unable to connect to servers to test latency."
         )
     )
-    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
-    await entry.runtime_data.async_refresh()
-    await hass.async_block_till_done()
+    freezer.tick(timedelta(minutes=DEFAULT_SCAN_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
     state = hass.states.get("sensor.speedtest_ping")
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
