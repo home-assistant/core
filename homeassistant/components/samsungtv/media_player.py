@@ -377,8 +377,6 @@ class SamsungTVDevice(SamsungTVEntity, MediaPlayerEntity):
         try:
             cv.positive_int(media_id)
         except probatio.Invalid as err:
-            # pylint: disable-next=home-assistant-log-and-raise
-            LOGGER.error("Media ID must be positive integer")
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="media_id_invalid",

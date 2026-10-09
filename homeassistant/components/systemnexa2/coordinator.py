@@ -98,13 +98,6 @@ class SystemNexa2DataUpdateCoordinator(DataUpdateCoordinator[SystemNexa2Data]):
             )
 
         except DeviceInitializationError as e:
-            # pylint: disable-next=home-assistant-log-and-raise
-            _LOGGER.error(
-                "Failed to initialize device with IP/Hostname"
-                " %s, please verify that the device is powered"
-                " on and reachable on port 3000",
-                self.config_entry.data[CONF_HOST],
-            )
             raise ConfigEntryNotReady(
                 translation_domain=DOMAIN,
                 translation_key="failed_to_initiate_connection",
