@@ -58,7 +58,6 @@ async def test_user_step_success(
         result["flow_id"],
         {CONF_USERNAME: MOCK_USERNAME, CONF_PASSWORD: MOCK_PASSWORD},
     )
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == f"Mitsubishi Comfort ({MOCK_USERNAME})"
     # Per-device credentials from discovery are persisted so setup can skip the
@@ -74,6 +73,7 @@ async def test_user_step_success(
             }
         },
     }
+    assert result["result"].unique_id == "user-12345"
     mock_setup_entry.assert_called_once()
 
 
@@ -117,7 +117,6 @@ async def test_user_step_persists_partial_records(
         {CONF_USERNAME: MOCK_USERNAME, CONF_PASSWORD: MOCK_PASSWORD},
     )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_CREDENTIALS] == {
         MOCK_SERIAL: {
@@ -131,6 +130,7 @@ async def test_user_step_persists_partial_records(
             "mac": "11:22:33:44:55:66",
         },
     }
+    assert result["result"].unique_id == "user-12345"
 
 
 def _partial_device_info() -> DeviceInfo:

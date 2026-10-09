@@ -496,7 +496,6 @@ async def test_discovery(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "hostname"
     assert result["data"] == {
@@ -507,6 +506,7 @@ async def test_discovery(hass: HomeAssistant) -> None:
         "name": "hostname",
         "timeout": DEFAULT_TIMEOUT,
     }
+    assert result["result"].unique_id == UUID
 
     assert len(mock_setup_entry.mock_calls) == 1
 

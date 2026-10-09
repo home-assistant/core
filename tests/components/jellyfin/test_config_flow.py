@@ -53,7 +53,6 @@ async def test_form(
     )
     await hass.async_block_till_done()
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "JELLYFIN-SERVER"
     assert result2["data"] == {
@@ -62,6 +61,7 @@ async def test_form(
         CONF_USERNAME: TEST_USERNAME,
         CONF_PASSWORD: TEST_PASSWORD,
     }
+    assert result2["result"].unique_id == "USER-UUID"
 
     assert len(mock_client.auth.connect_to_address.mock_calls) == 1
     assert len(mock_client.auth.login.mock_calls) == 1
@@ -91,8 +91,8 @@ async def test_form_strips_trailing_slash_from_url(
     )
     await hass.async_block_till_done()
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["result"].unique_id == "USER-UUID"
     # The persisted URL has no trailing slash...
     assert result2["data"][CONF_URL] == TEST_URL
     # ...and the connection was attempted against the normalized URL.

@@ -539,7 +539,6 @@ async def test_zeroconf(hass: HomeAssistant, source, tmp_path: Path) -> None:
         )
         await hass.async_block_till_done()
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "abc"
     assert result2["data"] == {
@@ -548,5 +547,6 @@ async def test_zeroconf(hass: HomeAssistant, source, tmp_path: Path) -> None:
         CONF_CERTFILE: "lutron_caseta-abc-cert.pem",
         CONF_CA_CERTS: "lutron_caseta-abc-ca.pem",
     }
+    assert result2["result"].unique_id == "abc"
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1

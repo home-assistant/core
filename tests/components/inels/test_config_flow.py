@@ -50,10 +50,10 @@ async def test_mqtt_setup(hass: HomeAssistant, mqtt_mock: MqttMockHAClient) -> N
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TITLE
     assert result["result"].data == {}
+    assert result["result"].unique_id == DOMAIN
     mock_setup_entry.assert_called_once()
 
 
@@ -134,10 +134,10 @@ async def test_user_setup(hass: HomeAssistant, mqtt_mock: MqttMockHAClient) -> N
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TITLE
     assert result["result"].data == {}
+    assert result["result"].unique_id == DOMAIN
     mock_setup_entry.assert_called_once()
 
 

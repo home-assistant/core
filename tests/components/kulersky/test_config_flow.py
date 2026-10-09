@@ -57,12 +57,12 @@ async def test_bluetooth_discovery(hass: HomeAssistant) -> None:
         )
     await hass.async_block_till_done()
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "KulerLight (EEFF)"
     assert result["data"] == {
         CONF_ADDRESS: "AA:BB:CC:DD:EE:FF",
     }
+    assert result["result"].unique_id == "AA:BB:CC:DD:EE:FF"
 
 
 async def test_integration_discovery(hass: HomeAssistant) -> None:
@@ -77,12 +77,12 @@ async def test_integration_discovery(hass: HomeAssistant) -> None:
             data={CONF_ADDRESS: "AA:BB:CC:DD:EE:FF"},
         )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "KulerLight (EEFF)"
     assert result["data"] == {
         CONF_ADDRESS: "AA:BB:CC:DD:EE:FF",
     }
+    assert result["result"].unique_id == "AA:BB:CC:DD:EE:FF"
 
 
 async def test_integration_discovery_no_last_service_info(hass: HomeAssistant) -> None:
@@ -93,12 +93,12 @@ async def test_integration_discovery_no_last_service_info(hass: HomeAssistant) -
         data={CONF_ADDRESS: "AA:BB:CC:DD:EE:FF"},
     )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "AA:BB:CC:DD:EE:FF"
     assert result["data"] == {
         CONF_ADDRESS: "AA:BB:CC:DD:EE:FF",
     }
+    assert result["result"].unique_id == "AA:BB:CC:DD:EE:FF"
 
 
 async def test_user_setup(hass: HomeAssistant) -> None:
@@ -124,12 +124,12 @@ async def test_user_setup(hass: HomeAssistant) -> None:
         )
     await hass.async_block_till_done()
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "KulerLight (EEFF)"
     assert result["data"] == {
         CONF_ADDRESS: "AA:BB:CC:DD:EE:FF",
     }
+    assert result["result"].unique_id == "AA:BB:CC:DD:EE:FF"
 
 
 async def test_user_setup_no_devices(hass: HomeAssistant) -> None:
