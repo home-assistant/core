@@ -296,6 +296,9 @@ class InputNumber(collection.CollectionEntity, RestoreNumber):
     async def async_update_config(self, config: ConfigType) -> None:
         """Handle when the config is updated."""
         self._update_config_attributes(config)
+        if self.registry_entry:
+            # Drop a display unit that no longer fits the device class or native unit
+            self.async_registry_entry_updated()
         # just in case min/max values changed
         if self._attr_native_value is None:
             return

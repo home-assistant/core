@@ -849,6 +849,72 @@ async def test_ws_create_unit_conversion(
     assert state.attributes["max"] == 40
 
 
+@pytest.mark.parametrize(
+    ("updated_settings", "expected_unit"),
+    [
+        pytest.param({"unit_of_measurement": "°C"}, "°C", id="remove_device_class"),
+        pytest.param(
+            {"device_class": "pressure", "unit_of_measurement": "hPa"},
+            "hPa",
+            id="change_device_class",
+        ),
+    ],
+)
+async def test_ws_update_drops_incompatible_display_unit(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    hass_ws_client: WebSocketGenerator,
+    storage_setup: Callable[..., Awaitable[bool]],
+    updated_settings: dict[str, Any],
+    expected_unit: str,
+) -> None:
+    """Test a display unit from the entity settings is dropped when it no longer fits."""
+    settings = {
+        "name": "from storage",
+        "min": 0,
+        "max": 40,
+        "step": 1,
+        "mode": "slider",
+    }
+    assert await storage_setup(
+        [
+            {"id": "from_storage"}
+            | settings
+            | {"device_class": "temperature", "unit_of_measurement": "°C"}
+        ]
+    )
+    input_entity_id = f"{DOMAIN}.from_storage"
+
+    entity_registry.async_update_entity_options(
+        input_entity_id, "number", {"unit_of_measurement": "°F"}
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get(input_entity_id)
+    assert float(state.state) == 32
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "°F"
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {
+            "type": f"{DOMAIN}/update",
+            f"{DOMAIN}_id": "from_storage",
+            **settings,
+            **updated_settings,
+        }
+    )
+    resp = await client.receive_json()
+    assert resp["success"]
+
+    state = hass.states.get(input_entity_id)
+    assert float(state.state) == 0
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == expected_unit
+
+    # The native unit is used again, so setting a value needs no conversion
+    await set_value(hass, input_entity_id, "10")
+    state = hass.states.get(input_entity_id)
+    assert float(state.state) == 10
+
+
 async def test_ws_create(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
