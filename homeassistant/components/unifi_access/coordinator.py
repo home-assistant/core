@@ -593,7 +593,7 @@ class UnifiAccessCoordinator(DataUpdateCoordinator[UnifiAccessData]):
             source.event.type,
             source.event.published,
             source.event.result,
-            source.authentication.issuer,
+            source.authentication.issuer or "",
             source.actor.display_name,
             door_id,
         ):

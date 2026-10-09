@@ -1520,6 +1520,47 @@ async def test_unusable_logs_copy_does_not_suppress_insights(
     assert len(events) == 1
 
 
+async def test_null_issuer_still_suppressed(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test a logs.add event without an issuer still matches its insights copy."""
+    handlers = _get_ws_handlers(mock_client)
+    await _populate_device_mapping(handlers)
+
+    events: list[DoorEvent] = []
+    coordinator: UnifiAccessCoordinator = init_integration.runtime_data
+    coordinator.async_subscribe_door_events(events.append)
+
+    issuerless_logs = LogAdd(
+        event="access.logs.add",
+        event_object_id="hub-001",
+        data=LogAddData(
+            source=LogSource(
+                target=[
+                    LogTarget(
+                        type="device_config",
+                        id="hub-device-001",
+                        display_name="UA Hub Door",
+                    ),
+                ],
+                actor=LogActor(display_name="John Doe"),
+                event=LogEvent(
+                    type="access.door.unlock", result="ACCESS", published=1700000000
+                ),
+                authentication=LogAuthentication(credential_provider="FACE"),
+            ),
+        ),
+    )
+
+    await handlers["access.logs.insights.add"](_make_insights_add(auth_id=""))
+    await handlers["access.logs.add"](issuerless_logs)
+    await hass.async_block_till_done()
+
+    assert len(events) == 1
+
+
 async def test_missing_published_not_suppressed(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
