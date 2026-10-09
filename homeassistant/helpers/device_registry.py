@@ -4,7 +4,7 @@ import asyncio
 from collections import defaultdict
 from collections.abc import Collection, Iterable, Iterator, Mapping, Set as AbstractSet
 import copy
-from dataclasses import KW_ONLY, Field, InitVar, dataclass, fields as dataclass_fields
+from dataclasses import KW_ONLY, Field, dataclass, fields as dataclass_fields
 from datetime import datetime
 from enum import StrEnum
 from functools import lru_cache
@@ -172,16 +172,9 @@ class _DeviceInfoMapping:
         # Set by the @dataclass decorator, declared for _device_info_fields
         __dataclass_fields__: ClassVar[dict[str, Field[Any]]]
 
-    def __post_init__(self, initial: _DeviceInfoLike | None) -> None:
-        """Apply the fields of a mapping passed to the constructor."""
+    def __post_init__(self) -> None:
+        """Start without keys which are not fields."""
         self._extra = None
-        # Integrations build a device info from a mapping: `DeviceInfo({...})`
-        if initial is not None:
-            _report_device_info_usage(
-                f"builds a {type(self).__name__} from a mapping instead of passing "
-                "its fields as keyword arguments"
-            )
-            self.update(initial)
 
     def __getitem__(self, key: str) -> Any:
         """Return the value of a set field."""
@@ -346,7 +339,6 @@ def _device_info_fields[_DeviceInfoT: _DeviceInfoMapping](
 class DeviceInfo(_DeviceInfoMapping):
     """Entity device information for device registry."""
 
-    initial: InitVar[_DeviceInfoLike | None] = None
     _: KW_ONLY
     configuration_url: str | URL | UndefinedType | None = UNDEFINED
     connections: set[tuple[str, str]] | UndefinedType = UNDEFINED
@@ -387,7 +379,6 @@ class ChildDeviceInfo(_DeviceInfoMapping):
     entry, and must belong to the same config subentry.
     """
 
-    initial: InitVar[_DeviceInfoLike | None] = None
     _: KW_ONLY
     identifiers: set[tuple[str, str]]
     name: str | UndefinedType | None = UNDEFINED
