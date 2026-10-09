@@ -3,7 +3,7 @@
 import asyncio
 from datetime import timedelta
 import logging
-from typing import override
+from typing import override, TYPE_CHECKING
 
 from aiopvapi.helpers.aiorequest import PvApiMaintenance
 from aiopvapi.hub import Hub
