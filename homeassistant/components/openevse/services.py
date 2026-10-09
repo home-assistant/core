@@ -97,14 +97,14 @@ def async_setup_services(hass: HomeAssistant) -> None:
         entries = await _async_get_entries(call)
         time_limit = call.data.get(ATTR_TIME_LIMIT)
         time_limit_seconds: int | None = (
-            int(cv.positive_time_period(time_limit).total_seconds())
+            max(1, round(cv.positive_time_period(time_limit).total_seconds()))
             if time_limit is not None
             else None
         )
 
         for entry in entries:
             coordinator = entry.runtime_data
-            with openevse_exception_handler():
+            with openevse_exception_handler(call.data):
                 await coordinator.charger.set_override(
                     state=call.data.get(ATTR_STATE),
                     charge_current=call.data.get(ATTR_CHARGE_CURRENT),
@@ -120,16 +120,21 @@ def async_setup_services(hass: HomeAssistant) -> None:
         entries = await _async_get_entries(call)
         for entry in entries:
             coordinator = entry.runtime_data
-            with openevse_exception_handler():
+            with openevse_exception_handler(call.data):
                 await coordinator.charger.clear_override()
             await coordinator.async_request_refresh()
 
     async def async_get_override(call: ServiceCall) -> ServiceResponse:
         """Get manual override details."""
         entries = await _async_get_entries(call)
+        if len(entries) > 1:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="multiple_target_entries",
+            )
         coordinator = entries[0].runtime_data
 
-        with openevse_exception_handler():
+        with openevse_exception_handler(call.data):
             override_data: Any = await coordinator.charger.get_override()
 
         if isinstance(override_data, dict):

@@ -12,7 +12,7 @@ from openevsehttp.exceptions import (
 import pytest
 
 from homeassistant.components.openevse.const import DOMAIN
-from homeassistant.const import ATTR_DEVICE_ID, ATTR_ENTITY_ID
+from homeassistant.const import ATTR_DEVICE_ID, ATTR_ENTITY_ID, CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
@@ -275,9 +275,6 @@ async def test_service_unknown_entity(
     ("raised", "expected"),
     [
         pytest.param(
-            ValueError("invalid value"), ServiceValidationError, id="value_error"
-        ),
-        pytest.param(
             AuthenticationError("auth failed"), ConfigEntryAuthFailed, id="auth_error"
         ),
         pytest.param(TimeoutError("timeout"), HomeAssistantError, id="timeout_error"),
@@ -318,3 +315,89 @@ async def test_service_exceptions(
             {ATTR_DEVICE_ID: device_entry.id},
             blocking=True,
         )
+
+
+async def test_service_value_error(
+    hass: HomeAssistant,
+    mock_charger: MagicMock,
+    device_entry: dr.DeviceEntry,
+) -> None:
+    """Test ValueError is translated to ServiceValidationError with value placeholder."""
+    mock_charger.set_override.side_effect = ValueError("invalid value")
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_OVERRIDE,
+            {ATTR_DEVICE_ID: device_entry.id},
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_placeholders is not None
+    assert (
+        exc_info.value.translation_placeholders.get("value")
+        == f"{{'{ATTR_DEVICE_ID}': ['{device_entry.id}']}}"
+    )
+
+
+async def test_set_override_subsecond_duration(
+    hass: HomeAssistant,
+    mock_charger: MagicMock,
+    device_entry: dr.DeviceEntry,
+) -> None:
+    """Test calling set_override with sub-second duration preserves at least 1s."""
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_OVERRIDE,
+        {
+            ATTR_DEVICE_ID: device_entry.id,
+            "time_limit": {"milliseconds": 500},
+        },
+        blocking=True,
+    )
+
+    mock_charger.set_override.assert_called_once_with(
+        state=None,
+        charge_current=None,
+        max_current=None,
+        energy_limit=None,
+        time_limit=1,
+        auto_release=None,
+    )
+
+
+async def test_get_override_multiple_targets(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    device_entry: dr.DeviceEntry,
+    device_registry: dr.DeviceRegistry,
+    mock_charger: MagicMock,
+) -> None:
+    """Test calling get_override with multiple targets raises ServiceValidationError."""
+    second_entry = MockConfigEntry(
+        title="openevse_mock_config_2",
+        domain=DOMAIN,
+        data={CONF_HOST: "192.168.1.101"},
+        entry_id="FAKE_2",
+        unique_id="deadbeeffeed2",
+    )
+    second_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(second_entry.entry_id)
+    await hass.async_block_till_done()
+
+    second_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "deadbeeffeed2"), second_entry.entry_id
+    )
+    assert second_device is not None
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_GET_OVERRIDE,
+            {ATTR_DEVICE_ID: [device_entry.id, second_device.id]},
+            blocking=True,
+            return_response=True,
+        )
+
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "multiple_target_entries"

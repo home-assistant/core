@@ -249,6 +249,9 @@
     "invalid_value": {
       "message": "Value {value} is invalid for the charger."
     },
+    "multiple_target_entries": {
+      "message": "Only a single OpenEVSE charger can be targeted for this action."
+    },
     "no_matching_target_entries": {
       "message": "No matching OpenEVSE chargers found for the specified target."
     },
