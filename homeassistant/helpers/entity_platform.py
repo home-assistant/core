@@ -1024,15 +1024,19 @@ class EntityPlatform:
 
             device: dr.AnyDeviceEntry | None
             if self.config_entry:
+                device_info = entity.device_info
+                device_info_fields: dict[str, Any]
+                if device_info is None:
+                    device_info_fields = {}
+                elif isinstance(device_info, dr.DeviceInfo | dr.ChildDeviceInfo):
+                    device_info_fields = device_info.as_dict()
+                else:
+                    # An integration can still describe its device with a plain
+                    # mapping, which its type does not allow. To be deprecated.
+                    device_info_fields = dict(device_info)  # type: ignore[unreachable]
                 # A device info without any field means no device
-                if device_info := entity.device_info:
+                if device_info_fields:
                     dev_reg = dr.async_get(self.hass)
-                    if isinstance(device_info, dr.DeviceInfo | dr.ChildDeviceInfo):
-                        device_info_fields = device_info.as_dict()
-                    else:
-                        # An integration can still describe its device with a plain
-                        # mapping, which its type does not allow. To be deprecated.
-                        device_info_fields = dict(device_info)  # type: ignore[unreachable]
                     # An explicit parent_device_id of None, as a dynamically built
                     # device info may carry, means a main device
                     parent_device_id = device_info_fields.pop("parent_device_id", None)
