@@ -2196,6 +2196,31 @@
       }),
       dict({
         'default': None,
+        'name': 'device_class',
+        'optional': True,
+        'required': False,
+        'selector': dict({
+          'device_class': dict({
+            'domain': 'sensor',
+            'multiple': False,
+          }),
+        }),
+        'type': 'ha_selector',
+      }),
+      dict({
+        'default': None,
+        'name': 'state_class',
+        'optional': True,
+        'required': False,
+        'selector': dict({
+          'state_class': dict({
+            'multiple': False,
+          }),
+        }),
+        'type': 'ha_selector',
+      }),
+      dict({
+        'default': None,
         'name': 'unit_of_measurement',
         'optional': True,
         'required': False,
@@ -2385,31 +2410,6 @@
             ]),
             'sort': False,
             'translation_key': 'component.knx.selector.sensor_unit_of_measurement',
-          }),
-        }),
-        'type': 'ha_selector',
-      }),
-      dict({
-        'default': None,
-        'name': 'device_class',
-        'optional': True,
-        'required': False,
-        'selector': dict({
-          'device_class': dict({
-            'domain': 'sensor',
-            'multiple': False,
-          }),
-        }),
-        'type': 'ha_selector',
-      }),
-      dict({
-        'default': None,
-        'name': 'state_class',
-        'optional': True,
-        'required': False,
-        'selector': dict({
-          'state_class': dict({
-            'multiple': False,
           }),
         }),
         'type': 'ha_selector',

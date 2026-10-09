@@ -973,6 +973,17 @@ class SensorKnxConfig:
     section_advanced_options: Annotated[
         None, Key(remove=True), KNXSectionFlat(collapsible=True)
     ] = None
+    device_class: Annotated[
+        str | None,
+        probatio.Maybe(
+            selector.DeviceClassSelector(
+                selector.DeviceClassSelectorConfig(domain=Platform.SENSOR)
+            )
+        ),
+    ] = None
+    state_class: Annotated[
+        str | None, probatio.Maybe(selector.StateClassSelector())
+    ] = None
     unit_of_measurement: Annotated[
         str | None,
         probatio.Maybe(
@@ -992,17 +1003,6 @@ class SensorKnxConfig:
                 ),
             )
         ),
-    ] = None
-    device_class: Annotated[
-        str | None,
-        probatio.Maybe(
-            selector.DeviceClassSelector(
-                selector.DeviceClassSelectorConfig(domain=Platform.SENSOR)
-            )
-        ),
-    ] = None
-    state_class: Annotated[
-        str | None, probatio.Maybe(selector.StateClassSelector())
     ] = None
     always_callback: Annotated[bool, selector.BooleanSelector()] = False
     sync_state: Annotated[SyncStateAllowFalse, Key(required=True)] = True
