@@ -14,6 +14,7 @@ async def test_remove_shade_device_via_websocket(
 ) -> None:
     """Test removing a shade device through the supported WebSocket command structure."""
     config_entry = MockConfigEntry(domain=DOMAIN, unique_id="hub_123")
+    config_entry.supports_remove_device = True
     config_entry.add_to_hass(hass)
 
     hub_device = device_registry.async_get_or_create(
