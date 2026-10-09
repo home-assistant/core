@@ -171,6 +171,7 @@ async def test_user_http(
 
 
 @pytest.mark.parametrize("config", [CONFIG_SCHEMA_TELNET, CONFIG_SCHEMA_HTTP])
+@pytest.mark.usefixtures("connect_http", "patch_setup_entry")
 async def test_error_pwd_required(hass: HomeAssistant, config) -> None:
     """Test we abort for missing password."""
     config_data = {k: v for k, v in config.items() if k != CONF_PASSWORD}
@@ -187,10 +188,16 @@ async def test_error_pwd_required(hass: HomeAssistant, config) -> None:
     )
 
     assert result["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {CONF_BASE: "pwd_required"}
 
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=CONFIG_SCHEMA_HTTP,
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
+
+@pytest.mark.usefixtures("connect_legacy", "patch_setup_entry")
 async def test_error_no_password_ssh(hass: HomeAssistant) -> None:
     """Test we abort for wrong password and ssh file combination."""
     config_data = {k: v for k, v in CONFIG_SCHEMA_SSH.items() if k != CONF_PASSWORD}
@@ -207,10 +214,22 @@ async def test_error_no_password_ssh(hass: HomeAssistant) -> None:
     )
 
     assert result["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {CONF_BASE: "pwd_or_ssh"}
 
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=CONFIG_SCHEMA_SSH,
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "legacy"
 
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_MODE: MODE_AP}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+@pytest.mark.usefixtures("connect_legacy", "patch_setup_entry")
 async def test_error_password_and_ssh(hass: HomeAssistant) -> None:
     """Test we abort for both password and ssh file combination."""
     config_data = {**CONFIG_SCHEMA_SSH, CONF_MORE_OPTIONS: {CONF_SSH_KEY: SSH_KEY}}
@@ -227,10 +246,22 @@ async def test_error_password_and_ssh(hass: HomeAssistant) -> None:
     )
 
     assert result["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {CONF_BASE: "pwd_and_ssh"}
 
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=CONFIG_SCHEMA_SSH,
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "legacy"
 
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_MODE: MODE_AP}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+@pytest.mark.usefixtures("connect_legacy", "patch_setup_entry")
 async def test_error_invalid_ssh(hass: HomeAssistant, patch_is_file) -> None:
     """Test we abort if invalid ssh file is provided."""
     config_data = {k: v for k, v in CONFIG_SCHEMA_SSH.items() if k != CONF_PASSWORD}
@@ -255,10 +286,24 @@ async def test_error_invalid_ssh(hass: HomeAssistant, patch_is_file) -> None:
     )
 
     assert result["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {CONF_BASE: "ssh_not_file"}
 
+    patch_is_file.side_effect = None
+    with patch(f"{ASUSWRT_BASE}.config_flow.os.access", return_value=True):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=config_data,
+        )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "legacy"
 
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_MODE: MODE_AP}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+@pytest.mark.usefixtures("connect_legacy", "patch_setup_entry")
 async def test_error_invalid_host(hass: HomeAssistant, patch_get_host) -> None:
     """Test we abort if host name is invalid."""
     patch_get_host.side_effect = gaierror
@@ -275,8 +320,20 @@ async def test_error_invalid_host(hass: HomeAssistant, patch_get_host) -> None:
     )
 
     assert result["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {CONF_BASE: "invalid_host"}
+
+    patch_get_host.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=CONFIG_SCHEMA_TELNET,
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "legacy"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_MODE: MODE_AP}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_abort_if_not_unique_id_setup(hass: HomeAssistant) -> None:
@@ -359,6 +416,7 @@ async def test_abort_invalid_unique_id(hass: HomeAssistant, connect_legacy) -> N
         (None, "cannot_connect"),
     ],
 )
+@pytest.mark.usefixtures("patch_setup_entry")
 async def test_on_connect_legacy_failed(
     hass: HomeAssistant, connect_legacy, side_effect, error
 ) -> None:
@@ -378,8 +436,20 @@ async def test_on_connect_legacy_failed(
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {CONF_BASE: error}
+
+    connect_legacy.return_value.is_connected = True
+    connect_legacy.return_value.connection.async_connect.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=CONFIG_SCHEMA_TELNET
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "legacy"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_MODE: MODE_AP}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.parametrize(
@@ -390,6 +460,7 @@ async def test_on_connect_legacy_failed(
         (None, "cannot_connect"),
     ],
 )
+@pytest.mark.usefixtures("patch_setup_entry")
 async def test_on_connect_http_failed(
     hass: HomeAssistant, connect_http, side_effect, error
 ) -> None:
@@ -408,8 +479,14 @@ async def test_on_connect_http_failed(
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {CONF_BASE: error}
+
+    connect_http.return_value.connected = True
+    connect_http.return_value.async_connect.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=CONFIG_SCHEMA_HTTP
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_options_flow_ap(hass: HomeAssistant, patch_setup_entry) -> None:

@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, patch
 
 from anthemav.device_error import DeviceError
+import pytest
 
 from homeassistant.components.anthemav.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -48,6 +49,7 @@ async def test_form_with_valid_connection(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("mock_connection_create")
 async def test_form_device_info_error(hass: HomeAssistant) -> None:
     """Test we handle DeviceError from library."""
     result = await hass.config_entries.flow.async_init(
@@ -69,10 +71,25 @@ async def test_form_device_info_error(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "cannot_receive_deviceinfo"}
 
+    with patch(
+        "homeassistant.components.anthemav.async_setup_entry",
+        return_value=True,
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "host": "1.1.1.1",
+                "port": 14999,
+            },
+        )
+        await hass.async_block_till_done()
 
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+
+
+@pytest.mark.usefixtures("mock_connection_create")
 async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
@@ -94,8 +111,22 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "cannot_connect"}
+
+    with patch(
+        "homeassistant.components.anthemav.async_setup_entry",
+        return_value=True,
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "host": "1.1.1.1",
+                "port": 14999,
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_device_already_configured(
