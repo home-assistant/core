@@ -35,7 +35,13 @@ from .entity_store_validation import (
     validate_entity_data,
 )
 from .expose_controller import KNXExposeStoreConfigModel, KNXExposeStoreModel
-from .knx_selector import GroupAddressSelector, TypedGroupSelect, knx_selector_in
+from .knx_selector import (
+    GroupAddressSelector,
+    KnxPayloadSelector,
+    KnxSelectOptionsSelector,
+    TypedGroupSelect,
+    knx_selector_in,
+)
 from .time_server import KNXTimeServerStoreModel
 
 _LOGGER = logging.getLogger(__name__)
@@ -90,8 +96,8 @@ _STORAGE_ENCODERS: dict[type, _StorageEncoders] = {}
 def _storage_encoders(config_type: type) -> _StorageEncoders:
     """Return a storage encoder per field of a typed config.
 
-    Section fields are dropped, group addresses are rendered by their selector
-    and group select options by their own encoders.
+    Section fields are dropped, group addresses and payloads are rendered by
+    their selector and group select options by their own encoders.
     """
     if (cached := _STORAGE_ENCODERS.get(config_type)) is not None:
         return cached
@@ -104,7 +110,10 @@ def _storage_encoders(config_type: type) -> _StorageEncoders:
             continue
         field_selector = knx_selector_in(metadata)
         encode: Callable[[Any], Any]
-        if isinstance(field_selector, GroupAddressSelector):
+        if isinstance(
+            field_selector,
+            (GroupAddressSelector, KnxPayloadSelector, KnxSelectOptionsSelector),
+        ):
             encode = field_selector.to_storage
         elif isinstance(field_selector, TypedGroupSelect):
             encode = _group_select_to_storage
