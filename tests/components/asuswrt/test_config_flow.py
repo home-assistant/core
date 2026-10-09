@@ -124,6 +124,7 @@ async def test_user_legacy(
     )
     await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == HOST
     assert result["data"] == {**CONFIG_DATA_TELNET, CONF_MODE: MODE_AP}
@@ -154,6 +155,7 @@ async def test_user_http(
     )
     await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == HOST
     assert result["data"] == CONFIG_DATA_HTTP
@@ -304,6 +306,7 @@ async def test_update_uniqueid_exist(
     )
     await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == HOST
     assert result["data"] == CONFIG_DATA_HTTP

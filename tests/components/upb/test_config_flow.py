@@ -77,6 +77,7 @@ async def test_full_upb_flow_with_serial_port(hass: HomeAssistant) -> None:
 
     assert flow["type"] is FlowResultType.FORM
     assert flow["errors"] == {}
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "UPB"
     assert result["data"] == {
@@ -89,6 +90,7 @@ async def test_full_upb_flow_with_serial_port(hass: HomeAssistant) -> None:
 async def test_form_user_with_tcp_upb(hass: HomeAssistant) -> None:
     """Test we can setup a TCP upb."""
     result = await valid_flow(hass, device="socket://1.2.3.4:2101")
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         "device": "socket://1.2.3.4:2101",

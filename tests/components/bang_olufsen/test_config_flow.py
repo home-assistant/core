@@ -106,6 +106,7 @@ async def test_config_flow(hass: HomeAssistant, mock_mozart_client: AsyncMock) -
         user_input=TEST_DATA_USER,
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result_user["type"] is FlowResultType.CREATE_ENTRY
     assert result_user["data"] == TEST_DATA_CREATE_ENTRY
 
@@ -131,6 +132,7 @@ async def test_config_flow_zeroconf(
         user_input=TEST_DATA_USER,
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result_confirm["type"] is FlowResultType.CREATE_ENTRY
     assert result_confirm["data"] == TEST_DATA_CREATE_ENTRY
 

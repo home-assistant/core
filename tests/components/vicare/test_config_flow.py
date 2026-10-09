@@ -75,6 +75,7 @@ async def test_full_flow(
 
     result = await _do_oauth_flow(hass, hass_client_no_auth, aioclient_mock, result)
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "ViCare"
     assert result["data"]["auth_implementation"] == DOMAIN
@@ -146,6 +147,7 @@ async def test_dhcp_flow(
 
     result = await _do_oauth_flow(hass, hass_client_no_auth, aioclient_mock, result)
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "ViCare"
 

@@ -140,6 +140,7 @@ async def test_user_flow_with_no_2fa(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == USERNAME
     assert result["data"] == {
@@ -241,6 +242,7 @@ async def test_user_flow_2fa(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == USERNAME
     assert result["data"] == {
@@ -666,6 +668,7 @@ async def test_user_flow_2fa_send_new_code(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == USERNAME
     assert result["data"] == {

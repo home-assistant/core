@@ -42,6 +42,7 @@ async def test_manual_setup(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {CONF_HOST: IP_ADDRESS}
     assert result["title"] == DEFAULT_ENTRY_TITLE
@@ -132,6 +133,7 @@ async def test_discovered_zeroconf(hass: HomeAssistant) -> None:
         result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["data"] == {CONF_HOST: IP_ADDRESS}
     assert result2["title"] == DEFAULT_ENTRY_TITLE

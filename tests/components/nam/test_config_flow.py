@@ -60,6 +60,7 @@ async def test_form_create_entry_without_auth(
         )
         await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "10.10.2.3"
     assert result["data"]["host"] == "10.10.2.3"
@@ -300,6 +301,7 @@ async def test_zeroconf(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> Non
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "10.10.2.3"
     assert result["data"] == {"host": "10.10.2.3"}

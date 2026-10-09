@@ -293,6 +293,7 @@ async def test_user_sets_unique_id(hass: HomeAssistant) -> None:
         discovery_result["flow_id"],
         {},
     )
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert discovery_result["type"] is FlowResultType.CREATE_ENTRY
     assert discovery_result["data"] == {
         CONF_HOST: "192.168.43.183",
@@ -403,6 +404,7 @@ async def test_user_causes_zeroconf_to_abort(hass: HomeAssistant) -> None:
         result["flow_id"],
         {CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
     )
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         CONF_HOST: "127.0.0.1",
@@ -517,6 +519,7 @@ async def test_user_with_password(
         result["flow_id"], user_input={CONF_PASSWORD: "password1"}
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         CONF_HOST: "127.0.0.1",
@@ -3277,6 +3280,7 @@ async def test_user_flow_starts_zwave_discovery(
         )
 
     # Verify the entry was created
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "test-zwave-device"
     assert result["data"] == {
@@ -3344,6 +3348,7 @@ async def test_user_flow_no_zwave_discovery_without_home_id(
         )
 
     # Verify the ESPHome entry was created
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "test-zwave-device-no-id"
     assert result["data"] == {
@@ -3394,6 +3399,7 @@ async def test_user_flow_no_zwave_discovery_without_capabilities(
         )
 
     # Verify the entry was created
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "test-regular-device"
 
@@ -3446,6 +3452,7 @@ async def test_user_flow_zwave_discovery_aborts(
         )
 
     # Verify the ESPHome entry was still created despite Z-Wave flow aborting
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "test-zwave-device"
     assert result["data"] == {

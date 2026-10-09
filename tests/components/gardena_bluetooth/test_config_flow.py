@@ -84,6 +84,7 @@ async def test_user_selection_replaces_ignored(hass: HomeAssistant) -> None:
         user_input={},
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 

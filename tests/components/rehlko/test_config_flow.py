@@ -200,6 +200,7 @@ async def test_dhcp_discovery(hass: HomeAssistant, mock_rehlko: AsyncMock) -> No
         },
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 

@@ -493,6 +493,7 @@ async def test_form(
             {CONF_HOST: "1.1.1.1", CONF_PORT: port},
         )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Test name"
     assert result["data"] == {
@@ -533,6 +534,7 @@ async def test_form_https_verify_ssl_disabled_by_default(
             {CONF_HOST: "1.1.1.1", CONF_PORT: DEFAULT_HTTPS_PORT},
         )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         CONF_HOST: "1.1.1.1",
@@ -578,6 +580,7 @@ async def test_form_https_verify_ssl_enabled(
             },
         )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         CONF_HOST: "1.1.1.1",
@@ -627,6 +630,7 @@ async def test_form_enhanced_security(
             {CONF_HOST: "1.1.1.1", CONF_PORT: DEFAULT_HTTP_PORT},
         )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         CONF_HOST: "1.1.1.1",
@@ -665,6 +669,7 @@ async def test_form_enhanced_security_older_firmware(
             {CONF_HOST: "1.1.1.1", CONF_PORT: DEFAULT_HTTP_PORT},
         )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         CONF_HOST: "1.1.1.1",
@@ -704,6 +709,7 @@ async def test_form_enhanced_security_with_https_port(
             {CONF_HOST: "1.1.1.1", CONF_PORT: DEFAULT_HTTPS_PORT},
         )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         CONF_HOST: "1.1.1.1",
@@ -887,6 +893,7 @@ async def test_form_auth(
         result["flow_id"], user_input
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Test name"
     assert result["data"] == {
@@ -1145,6 +1152,7 @@ async def test_user_setup_ignored_device(
             {CONF_HOST: "1.1.1.1"},
         )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
     # Test config entry got updated with latest IP
@@ -1183,6 +1191,7 @@ async def test_user_flow_no_devices_discovered(
             {CONF_HOST: "1.1.1.1", CONF_PORT: DEFAULT_HTTP_PORT},
         )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Test name"
 
@@ -1279,6 +1288,7 @@ async def test_user_flow_select_zeroconf_device(
             {CONF_DEVICE: "AABBCCDDEEFF"},  # Select by MAC
         )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Test name"
     assert result["data"][CONF_HOST] == "192.168.1.100"
@@ -1329,6 +1339,7 @@ async def test_user_flow_select_manual_entry(
             {CONF_HOST: "192.168.1.200", CONF_PORT: DEFAULT_HTTP_PORT},
         )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_HOST] == "192.168.1.200"
 
@@ -1385,6 +1396,7 @@ async def test_user_flow_both_ble_and_zeroconf_prefers_zeroconf(
             {CONF_DEVICE: "CCBA97C2D670"},
         )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     # Verify it used Zeroconf host (192.168.1.100) not BLE provisioning
     assert result["data"][CONF_HOST] == "192.168.1.100"
@@ -1567,6 +1579,7 @@ async def test_user_flow_filters_already_configured_devices(
             {CONF_DEVICE: "112233445566"},
         )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Test Device"
     assert result["data"][CONF_HOST] == "192.168.1.101"
@@ -1627,6 +1640,7 @@ async def test_user_flow_includes_ignored_devices(
             {CONF_DEVICE: "AABBCCDDEEFF"},
         )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Test Ignored Device"
 
@@ -1801,6 +1815,7 @@ async def test_user_flow_zeroconf_device_requires_auth(
             {CONF_USERNAME: "admin", CONF_PASSWORD: "password"},
         )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Test name"
 
@@ -1850,6 +1865,7 @@ async def test_user_flow_zeroconf_invalid_mac_filtered(
             {CONF_HOST: "192.168.1.100", CONF_PORT: 80},
         )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Manual Entry Device"
 
@@ -1899,6 +1915,7 @@ async def test_user_flow_zeroconf_no_ipv4_filtered(
             {CONF_HOST: "192.168.1.101", CONF_PORT: 80},
         )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Manual IPv4 Device"
 
@@ -1963,6 +1980,7 @@ async def test_user_flow_ble_device_without_rpc_over_ble_filtered(
             {CONF_HOST: "192.168.1.102", CONF_PORT: 80},
         )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Manual BLE Device"
 
@@ -2211,6 +2229,7 @@ async def test_user_flow_filters_devices_with_active_discovery_flows(
             {CONF_HOST: "10.10.10.10"},
         )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Test name"
     assert result["data"] == {
@@ -2410,6 +2429,7 @@ async def test_zeroconf(
         {},
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Test name"
     assert result["data"] == {
@@ -2474,6 +2494,7 @@ async def test_zeroconf_enhanced_security(
         {},
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Test name"
     assert result["data"] == {
@@ -2526,6 +2547,7 @@ async def test_zeroconf_enhanced_security_with_https_port(
         {},
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Test name"
     assert result["data"] == {
@@ -2581,6 +2603,7 @@ async def test_zeroconf_sleeping_device(
         {},
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Test name"
     assert result["data"] == {
@@ -2793,6 +2816,7 @@ async def test_zeroconf_require_auth(
         {CONF_USERNAME: "test username", CONF_PASSWORD: "test password"},
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Test name"
     assert result["data"] == {
@@ -3524,6 +3548,7 @@ async def test_sleeping_device_gen2_with_new_firmware(
             {CONF_HOST: "1.1.1.1"},
         )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         CONF_HOST: "1.1.1.1",
@@ -5088,6 +5113,7 @@ async def test_bluetooth_provision_timeout_ble_fallback_succeeds(
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     # Should create entry successfully with IP from BLE
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Test name"
     assert result["data"][CONF_HOST] == "192.168.1.100"
@@ -5280,6 +5306,7 @@ async def test_bluetooth_provision_secure_device_both_enabled(
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     # Verify entry created
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
     # Verify security calls were made
@@ -5331,6 +5358,7 @@ async def test_bluetooth_provision_secure_device_both_disabled(
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     # Verify entry created (secure device call is skipped when both disabled)
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
@@ -5383,6 +5411,7 @@ async def test_bluetooth_provision_secure_device_only_ap_disabled(
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     # Verify entry created
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
     # Verify only wifi_setconfig was called
@@ -5439,6 +5468,7 @@ async def test_bluetooth_provision_secure_device_only_ble_disabled(
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     # Verify entry created
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
     # Verify only ble_setconfig was called
@@ -5496,6 +5526,7 @@ async def test_bluetooth_provision_secure_device_with_restart_required(
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     # Verify entry created
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
     # Verify restart was triggered and shutdown called

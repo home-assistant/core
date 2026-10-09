@@ -168,6 +168,7 @@ async def test_full_flow_application_creds(
             flow_id=result["flow_id"]
         )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result.get("type") is FlowResultType.CREATE_ENTRY
     assert result.get("title") == EMAIL_ADDRESS
     assert "data" in result
@@ -320,6 +321,7 @@ async def test_exchange_error(
             flow_id=result["flow_id"]
         )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result.get("type") is FlowResultType.CREATE_ENTRY
     assert result.get("title") == EMAIL_ADDRESS
     assert "data" in result
@@ -427,6 +429,7 @@ async def test_multiple_config_entries(
         result = await hass.config_entries.flow.async_configure(
             flow_id=result["flow_id"]
         )
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result.get("type") is FlowResultType.CREATE_ENTRY
     assert result.get("title") == "another-email@example.com"
     assert len(mock_setup.mock_calls) == 1

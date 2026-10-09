@@ -150,6 +150,7 @@ async def test_user_network_succes(
         {},
     )
     assert result
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result.get("type") is FlowResultType.CREATE_ENTRY
     data = result.get("data")
     assert data
@@ -246,6 +247,7 @@ async def test_user_usb_success(hass: HomeAssistant) -> None:
         {},
     )
     assert result
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result.get("type") is FlowResultType.CREATE_ENTRY
     assert result.get("title") == "Velbus USB"
     data = result.get("data")
@@ -351,6 +353,7 @@ async def test_vlp_step_success(
         )
         await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result.get("type") is FlowResultType.CREATE_ENTRY
     assert len(mock_setup_entry.mock_calls) == 1
 

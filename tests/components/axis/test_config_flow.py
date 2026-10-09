@@ -64,6 +64,7 @@ async def test_flow_manual_configuration(hass: HomeAssistant) -> None:
         },
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == f"M1065-LW - {dr.format_mac(MAC)}"
     assert result["data"] == {
@@ -196,6 +197,7 @@ async def test_flow_succeeds_with_basic_device_info(
         },
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == f"M1065-LW - {dr.format_mac(MAC)}"
     assert result["data"][CONF_HOST] == "1.2.3.4"
@@ -237,6 +239,7 @@ async def test_flow_create_entry_multiple_existing_entries_of_same_model(
         },
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == f"M1065-LW - {dr.format_mac(MAC)}"
     assert result["data"] == {
@@ -422,6 +425,7 @@ async def test_discovery_flow(
         },
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == expected_title
     assert result["data"] == {

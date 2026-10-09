@@ -91,6 +91,7 @@ async def test_ssdp(hass: HomeAssistant) -> None:
     assert result["step_id"] == "confirm"
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == f"Arcam FMJ ({MOCK_HOST})"
     assert result["data"] == MOCK_CONFIG_ENTRY

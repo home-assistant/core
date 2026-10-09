@@ -138,6 +138,7 @@ async def test_create_entry(
         result["flow_id"], user_input=VALID_CONFIG
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Test location"
     assert result["data"][CONF_LATITUDE] == 55.55

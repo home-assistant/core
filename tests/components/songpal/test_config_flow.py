@@ -109,6 +109,7 @@ async def test_flow_user(hass: HomeAssistant) -> None:
             result["flow_id"],
             user_input={CONF_ENDPOINT: ENDPOINT},
         )
+        # pylint: disable-next=home-assistant-tests-config-flow-unique-id
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == MODEL
         assert result["data"] == {
@@ -128,6 +129,7 @@ async def test_flow_import(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_IMPORT}, data=CONF_DATA
         )
+        # pylint: disable-next=home-assistant-tests-config-flow-unique-id
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == FRIENDLY_NAME
         assert result["data"] == CONF_DATA
@@ -144,6 +146,7 @@ async def test_flow_import_without_name(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_IMPORT}, data={CONF_ENDPOINT: ENDPOINT}
         )
+        # pylint: disable-next=home-assistant-tests-config-flow-unique-id
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == MODEL
         assert result["data"] == {CONF_NAME: MODEL, CONF_ENDPOINT: ENDPOINT}

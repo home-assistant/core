@@ -40,6 +40,7 @@ async def test_user_flow(hass: HomeAssistant, mock_client: MagicMock) -> None:
         },
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "UniFi Access"
     assert result["data"] == {
@@ -139,6 +140,7 @@ async def test_user_flow_different_host(
         },
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
@@ -598,6 +600,7 @@ async def test_discovery_confirm_success(
         },
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "UniFi Access"
     assert result["data"] == {

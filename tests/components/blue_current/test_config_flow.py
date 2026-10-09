@@ -60,6 +60,7 @@ async def test_user(hass: HomeAssistant) -> None:
 
     assert result2["title"] == "test@email.com"
     assert result2["data"] == {"api_token": "123"}
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
 
 

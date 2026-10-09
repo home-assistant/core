@@ -168,6 +168,7 @@ async def test_ssdp(hass: HomeAssistant) -> None:
         result["flow_id"], user_input
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == f"Imeon {TEST_SERIAL}"
     assert result["data"] == TEST_USER_INPUT

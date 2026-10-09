@@ -508,6 +508,7 @@ async def test_supervisor_discovery(
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TITLE
     assert result["data"] == {
@@ -615,6 +616,7 @@ async def test_clean_discovery_on_user_create(
         await hass.async_block_till_done()
 
     assert len(hass.config_entries.flow.async_progress()) == 0
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TITLE
     assert result["data"] == {
@@ -831,6 +833,7 @@ async def test_usb_discovery(
 
     assert start_addon.call_args == call("core_zwave_js")
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TITLE
     assert result["data"] == {
@@ -944,6 +947,7 @@ async def test_usb_discovery_addon_not_running(
 
     assert start_addon.call_args == call("core_zwave_js")
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TITLE
     assert result["data"] == {
@@ -2296,6 +2300,7 @@ async def test_discovery_addon_not_running(
 
     assert start_addon.call_args == call("core_zwave_js")
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TITLE
     assert result["data"] == {
@@ -2416,6 +2421,7 @@ async def test_discovery_addon_not_installed(
 
     assert start_addon.call_args == call("core_zwave_js")
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TITLE
     assert result["data"] == {
@@ -2835,6 +2841,7 @@ async def test_concurrent_flow_during_addon_config_write(
                 result_manual["flow_id"], {"url": "ws://localhost:3000"}
             )
 
+        # pylint: disable-next=home-assistant-tests-config-flow-unique-id
         assert result_manual["type"] is FlowResultType.CREATE_ENTRY
         assert any(
             flow["flow_id"] == result_a["flow_id"]
@@ -2963,6 +2970,7 @@ async def test_not_addon(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TITLE
     assert result["data"] == {
@@ -3112,6 +3120,7 @@ async def test_addon_running(
         )
         await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TITLE
     assert result["data"] == {
@@ -3382,6 +3391,7 @@ async def test_addon_installed(
 
     assert start_addon.call_args == call("core_zwave_js")
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TITLE
     assert result["data"] == {
@@ -3944,6 +3954,7 @@ async def test_addon_not_installed(
 
     assert start_addon.call_args == call("core_zwave_js")
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TITLE
     assert result["data"] == {
@@ -5361,6 +5372,7 @@ async def test_zeroconf(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TITLE
     assert result["data"] == {
@@ -6227,6 +6239,7 @@ async def test_create_entry_spares_migration_flow(
         )
         await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
     # The migration flow is still in progress.
@@ -6816,6 +6829,7 @@ async def test_intent_recommended_user(
 
     assert start_addon.call_args == call("core_zwave_js")
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TITLE
     assert result["data"] == {
@@ -6906,6 +6920,7 @@ async def test_intent_recommended_preserves_existing_keys(
 
     assert start_addon.call_args == call("core_zwave_js")
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         "url": "ws://host1:3001",
@@ -7014,6 +7029,7 @@ async def test_recommended_usb_discovery(
 
     assert start_addon.call_args == call("core_zwave_js")
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TITLE
     assert result["data"] == {
@@ -7117,6 +7133,7 @@ async def test_addon_rf_region_new_network(
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
     await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert start_addon.call_count == 1
     assert start_addon.call_args == call("core_zwave_js")
@@ -7314,6 +7331,7 @@ async def test_addon_skip_rf_region(
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
     await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert start_addon.call_count == 1
     assert start_addon.call_args == call("core_zwave_js")

@@ -38,6 +38,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
         },
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "uptime.example.org"
     assert result["data"] == {
@@ -348,6 +349,7 @@ async def test_hassio_addon_discovery_confirm_only(
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "a0d7b954_uptime-kuma"
     assert result["data"] == {
