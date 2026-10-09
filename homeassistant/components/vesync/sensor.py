@@ -6,7 +6,11 @@ import logging
 from typing import override
 
 from pyvesync.base_devices.vesyncbasedevice import VeSyncBaseDevice
-from pyvesync.const import TemperatureUnits, ThermostatHoldOptions, ThermostatScheduleOrHoldOptions
+from pyvesync.const import (
+    TemperatureUnits,
+    ThermostatHoldOptions,
+    ThermostatScheduleOrHoldOptions,
+)
 from pyvesync.device_container import DeviceContainer
 
 from homeassistant.components.sensor import (
@@ -30,7 +34,14 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .common import is_air_fryer, is_humidifier, is_outlet, is_purifier, is_thermostat, rgetattr
+from .common import (
+    is_air_fryer,
+    is_humidifier,
+    is_outlet,
+    is_purifier,
+    is_thermostat,
+    rgetattr,
+)
 from .const import AIR_FRYER_MODE_MAP, VS_DEVICES, VS_DISCOVERY
 from .coordinator import VesyncConfigEntry, VeSyncDataCoordinator
 from .entity import VeSyncBaseEntity
@@ -190,7 +201,7 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda device: device.state.humidity,
-        exists_fn=is_humidifier,
+        exists_fn=lambda device: is_humidifier(device) or is_thermostat(device),
     ),
     VeSyncSensorEntityDescription(
         key="temperature",
