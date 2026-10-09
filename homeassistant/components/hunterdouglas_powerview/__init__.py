@@ -19,7 +19,7 @@ from homeassistant.helpers.device_registry import AnyDeviceEntry
 from .const import DOMAIN, HUB_EXCEPTIONS, MANUFACTURER
 from .coordinator import PowerviewShadeUpdateCoordinator
 from .model import PowerviewConfigEntry, PowerviewEntryData
-from .util import async_connect_hub
+from .util import async_connect_hub, get_shade_ids
 
 PARALLEL_UPDATES = 1
 
@@ -188,13 +188,15 @@ async def _migrate_unique_ids(hass: HomeAssistant, entry: PowerviewConfigEntry) 
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, entry: PowerviewConfigEntry, device_entry: dr.DeviceEntry
+    hass: HomeAssistant, entry: PowerviewConfigEntry, device_entry: AnyDeviceEntry
 ) -> bool:
     """Remove a config entry from a device.
 
     This function is called when a user attempts to remove a device from the UI.
     We should return True if the device can be removed, False otherwise.
     """
+    if TYPE_CHECKING:
+        assert isinstance(device_entry, dr.DeviceEntry)
     if entry.state is not ConfigEntryState.LOADED:
         return False
     if device_entry.via_device_id is None:
