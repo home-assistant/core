@@ -42,7 +42,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.device_registry import format_mac
 
-from .conftest import DEFAULT_HOST, DEFAULT_PORT, NETWORK_API_URL, NETWORK_SITE_ID
+from .conftest import (
+    DEFAULT_HOST,
+    DEFAULT_PORT,
+    NETWORK_API_URL,
+    NETWORK_SITE_ID,
+    mock_network_api_lists,
+)
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -1118,6 +1124,20 @@ async def test_api_key_flow_site_request_fails(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "api_key"
     assert result["errors"] == errors
+
+    aioclient_mock.clear_requests()
+    mock_network_api_lists(aioclient_mock)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: DEFAULT_HOST,
+            CONF_API_KEY: "api-key",
+            CONF_PORT: DEFAULT_PORT,
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == NETWORK_SITE_ID
 
 
 @pytest.mark.usefixtures("mock_network_api_requests")

@@ -89,7 +89,7 @@ async def test_coordinators_preserve_handler_update_sources(
 
 
 async def test_network_api_coordinators_keep_polling_when_empty(
-    network_api_config_entry_setup: MockConfigEntry,
+    hass: HomeAssistant, network_api_config_entry_setup: MockConfigEntry
 ) -> None:
     """Ensure Integration API handlers poll at full rate even while empty.
 
@@ -98,14 +98,21 @@ async def test_network_api_coordinators_keep_polling_when_empty(
     """
     loader = network_api_config_entry_setup.runtime_data.entity_loader
     network = network_api_config_entry_setup.runtime_data.api.network
+    coordinators = [
+        loader.get_data_update_coordinator(handler)
+        for handler in (network.clients, network.devices)
+    ]
 
-    for handler in (network.clients, network.devices):
-        assert not handler.items()
-        coordinator = loader.get_data_update_coordinator(handler)
+    for coordinator in coordinators:
+        assert not coordinator.handler.items()
         assert coordinator.update_interval == POLL_INTERVAL
 
-        await coordinator.async_refresh()
+    async_fire_time_changed(hass, dt_util.utcnow() + POLL_INTERVAL)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
+    for coordinator in coordinators:
+        assert coordinator.last_update_success
+        assert not coordinator.handler.items()
         assert coordinator.update_interval == POLL_INTERVAL
 
 
