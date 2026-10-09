@@ -37,6 +37,7 @@ from .const import (
     DISCOVERY_SUBSYSTEMS,
     DOMAIN,
     LOGGER,
+    READ_TIMEOUT,
     SCAN_INTERVAL,
     SETTINGS_SCAN_INTERVAL,
     SUBSYSTEM_BATTERIES,
@@ -105,6 +106,9 @@ async def async_setup_entry(
             translation_domain=DOMAIN,
             translation_key="no_solaredge_device",
         ) from err
+
+    # Only now: the probe gives up on a silent block after the link's default.
+    unit.require_timeout(READ_TIMEOUT)
 
     readings = SolarEdgeModbusDataUpdateCoordinator(
         hass,
