@@ -597,23 +597,19 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
     @callback
     @override
     def async_entity_id_changed(self, old_entity_id: str) -> None:
-        """Update the logger, which is named after the entity_id."""
-        super().async_entity_id_changed(old_entity_id)
-        self._async_update_logger()
-
-    @callback
-    @override
-    def async_entity_id_change_finished(self, old_entity_id: str) -> None:
-        """Re-attach the triggers, their variables captured `this`.
+        """Update the logger and re-attach the triggers, they captured `this`.
 
         Running actions continue.
         """
-        super().async_entity_id_change_finished(old_entity_id)
+        super().async_entity_id_changed(old_entity_id)
+        self._async_update_logger()
         if (detach_triggers := self._async_detach_triggers) is None:
             # Not attached, or an attach in progress retries with the new entity_id
             return
         self._async_detach_triggers = None
         detach_triggers()
+        # The triggers render `this`, it must exist under the new entity_id
+        self.async_write_ha_state()
         self.hass.async_create_task(
             self._async_attach_triggers_for_entity_id(),
             f"automation {self.entity_id} reattach",
