@@ -121,6 +121,7 @@ class WellKnownOAuthInfoView(HomeAssistantView):
     """View to host the OAuth2 information."""
 
     requires_auth = False
+    cors_allowed = True
     url = "/.well-known/oauth-authorization-server"
     name = "well-known/oauth-authorization-server"
 
@@ -138,6 +139,9 @@ class WellKnownOAuthInfoView(HomeAssistantView):
             "authorization_endpoint": f"{url_prefix}/auth/authorize",
             "token_endpoint": f"{url_prefix}/auth/token",
             "revocation_endpoint": f"{url_prefix}/auth/revoke",
+            "grant_types_supported": ["authorization_code", "refresh_token"],
+            "token_endpoint_auth_methods_supported": ["none"],
+            "revocation_endpoint_auth_methods_supported": ["none"],
             # Home Assistant accepts URL-based client_ids via IndieAuth without
             # prior registration, and discovers allowed redirect URIs from link
             # tags or a Client ID Metadata Document served at the client_id URL.
@@ -162,6 +166,7 @@ class WellKnownProtectedResourceView(HomeAssistantView):
     """View to host the OAuth2 Protected Resource Metadata per RFC9728."""
 
     requires_auth = False
+    cors_allowed = True
     url = "/.well-known/oauth-protected-resource"
     name = "well-known/oauth-protected-resource"
 
@@ -360,6 +365,7 @@ class LoginFlowIndexView(LoginFlowBaseView):
                     r"^[A-Za-z0-9_-]{43}\Z"
                 ),
                 probatio.Optional("code_challenge_method"): str,
+                probatio.Optional("response_type"): str,
                 probatio.Optional(
                     "type", default="authorize"
                 ): str,  # not used, kept for backwards compatibility
@@ -374,6 +380,11 @@ class LoginFlowIndexView(LoginFlowBaseView):
 
         if not indieauth.verify_client_id(client_id):
             return self.json_message("Invalid client id", HTTPStatus.BAD_REQUEST)
+
+        if data.get("response_type", "code") != "code":
+            return self.json_message(
+                "Response type not supported", HTTPStatus.BAD_REQUEST
+            )
 
         code_challenge = data.get("code_challenge")
         code_challenge_method = data.get("code_challenge_method")

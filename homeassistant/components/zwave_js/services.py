@@ -30,6 +30,7 @@ from zwave_js_server.util.node import (
 )
 
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import ATTR_AREA_ID, ATTR_DEVICE_ID, ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -71,6 +72,17 @@ TARGET_VALIDATORS: VolDictType = {
 def async_setup_services(hass: HomeAssistant) -> None:
     """Register integration services."""
     _async_register_credential_services(hass)
+    async_register_platform_entity_service(
+        hass,
+        const.DOMAIN,
+        const.SERVICE_RESET_METER,
+        entity_domain=SENSOR_DOMAIN,
+        schema={
+            probatio.Optional(const.ATTR_METER_TYPE): probatio.Coerce(int),
+            probatio.Optional(const.ATTR_VALUE): probatio.Coerce(int),
+        },
+        func="async_reset_meter",
+    )
     services = ZWaveServices(hass, er.async_get(hass), dr.async_get(hass))
     services.async_register()
 

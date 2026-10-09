@@ -16,5 +16,10 @@
         }
       }
     }
+  },
+  "exceptions": {
+    "invalid_auth": {
+      "message": "Username or password was not accepted"
+    }
   }
 }

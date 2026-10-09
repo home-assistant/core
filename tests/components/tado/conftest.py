@@ -3,6 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 from PyTado.http import DeviceActivationStatus
 import pytest
 import requests_mock
@@ -10,7 +11,12 @@ import requests_mock
 from homeassistant.components.tado import CONF_REFRESH_TOKEN, DOMAIN
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry, async_load_fixture, load_json_object_fixture
+from tests.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_load_fixture,
+    load_json_object_fixture,
+)
 
 
 @pytest.fixture
@@ -57,7 +63,7 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-async def init_integration(hass: HomeAssistant):
+async def init_integration(hass: HomeAssistant, freezer: FrozenDateTimeFactory):
     """Set up the tado integration in Home Assistant."""
 
     token_fixture = "token.json"
@@ -260,8 +266,10 @@ async def init_integration(hass: HomeAssistant):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-        # For a first refresh
-        await entry.runtime_data.async_refresh()
-        await hass.async_block_till_done()
+        # Some data, like the child lock, is only filled by a later poll. The
+        # interval depends on the rate limit and the time of day.
+        freezer.tick(entry.runtime_data.update_interval)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         yield

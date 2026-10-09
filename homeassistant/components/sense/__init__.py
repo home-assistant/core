@@ -95,6 +95,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: SenseConfigEntry) -> boo
         raise ConfigEntryNotReady(
             str(err) or "API error retrieving realtime data"
         ) from err
+    except SenseAuthenticationException as err:
+        # We just authenticated, sense_energy also raises this for a 404 while
+        # the monitor is reconnecting
+        raise ConfigEntryNotReady(
+            str(err) or "Monitor not available for realtime data"
+        ) from err
 
     trends_coordinator = SenseTrendCoordinator(hass, entry, gateway)
     realtime_coordinator = SenseRealtimeCoordinator(hass, entry, gateway)

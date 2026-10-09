@@ -26,6 +26,9 @@ from .const import (
 )
 from .coordinator import VerisureConfigEntry
 
+# Observed on the Danish My Pages site, other countries may differ.
+MAX_PASSWORD_LENGTH = 30
+
 
 class VerisureConfigFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Verisure."""
@@ -90,7 +93,11 @@ class VerisureConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                         return await self.async_step_mfa()
                 else:
                     LOGGER.debug("Could not log in to Verisure, %s", ex)
-                    errors["base"] = "invalid_auth"
+                    errors["base"] = (
+                        "invalid_auth_password_too_long"
+                        if len(self.password) > MAX_PASSWORD_LENGTH
+                        else "invalid_auth"
+                    )
             except VerisureRateLimitError as ex:
                 LOGGER.debug("Verisure rate limited during login, %s", ex)
                 errors["base"] = "mfa_rate_limited"
@@ -233,7 +240,11 @@ class VerisureConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                         return await self.async_step_reauth_mfa()
                 else:
                     LOGGER.debug("Could not log in to Verisure, %s", ex)
-                    errors["base"] = "invalid_auth"
+                    errors["base"] = (
+                        "invalid_auth_password_too_long"
+                        if len(self.password) > MAX_PASSWORD_LENGTH
+                        else "invalid_auth"
+                    )
             except VerisureRateLimitError as ex:
                 LOGGER.debug("Verisure rate limited during reauth login, %s", ex)
                 errors["base"] = "mfa_rate_limited"

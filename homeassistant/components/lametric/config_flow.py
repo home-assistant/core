@@ -216,6 +216,8 @@ class LaMetricFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
                 )
             except AbortFlow:
                 raise
+            except LaMetricAuthenticationError:
+                errors["base"] = "invalid_auth"
             except LaMetricConnectionError as ex:
                 LOGGER.error("Error connecting to LaMetric: %s", ex)
                 errors["base"] = "cannot_connect"
@@ -398,6 +400,8 @@ class LaMetricFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
                 )
             except AbortFlow:
                 raise
+            except LaMetricAuthenticationError:
+                errors["base"] = "invalid_auth"
             except LaMetricConnectionError as ex:
                 LOGGER.error("Error connecting to LaMetric: %s", ex)
                 errors["base"] = "cannot_connect"

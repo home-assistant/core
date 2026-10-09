@@ -567,6 +567,7 @@ async def test_cloud_abort_no_devices(
 @pytest.mark.parametrize(
     ("side_effect", "reason"),
     [
+        (LaMetricAuthenticationError, "invalid_auth"),
         (LaMetricConnectionTimeoutError, "cannot_connect"),
         (LaMetricConnectionError, "cannot_connect"),
         (LaMetricError, "unknown"),
@@ -627,6 +628,7 @@ async def test_manual_errors(
 @pytest.mark.parametrize(
     ("side_effect", "reason"),
     [
+        (LaMetricAuthenticationError, "invalid_auth"),
         (LaMetricConnectionTimeoutError, "cannot_connect"),
         (LaMetricConnectionError, "cannot_connect"),
         (LaMetricError, "unknown"),

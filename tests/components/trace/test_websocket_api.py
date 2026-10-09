@@ -1665,6 +1665,37 @@ async def test_trace_blueprint_automation(
     assert trace.get("trigger", UNDEFINED) == "event 'blueprint_event'"
 
 
+async def test_automation_without_id_does_not_store_trace(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Automations without an id do not create an invalid trace."""
+    await _setup_automation_or_script(
+        hass,
+        "automation",
+        [
+            {
+                "triggers": {
+                    "platform": "event",
+                    "event_type": "test_event",
+                },
+                "actions": {"event": "automation_ran"},
+            }
+        ],
+    )
+
+    hass.bus.async_fire("test_event")
+    await hass.async_block_till_done()
+
+    client = await hass_ws_client()
+    await client.send_json({"id": 1, "type": "trace/list", "domain": "automation"})
+    response = await client.receive_json()
+
+    assert response["success"]
+    assert response["result"] == []
+    assert "automation.None" not in hass.data[DATA_TRACE]
+
+
 class _DiagnosticActionTrace(ActionTrace):
     """Automation-domain trace used to exercise not-triggered serialization."""
 
