@@ -66,10 +66,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: NASwebConfigEntry) -> bo
                 translation_placeholders={"support_email": SUPPORT_EMAIL},
             )
         if entry.unique_id != webio_serial:
-            # pylint: disable-next=home-assistant-log-and-raise
-            _LOGGER.error(
-                "[%s] Serial number doesn't match config entry", entry.data[CONF_HOST]
-            )
             raise ConfigEntryError(
                 translation_domain=DOMAIN,
                 translation_key="config_entry_error_serial_mismatch",
@@ -91,8 +87,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: NASwebConfigEntry) -> bo
                 translation_placeholders={"support_email": SUPPORT_EMAIL},
             )
         if not await nasweb_data.notify_coordinator.check_connection(webio_serial):
-            # pylint: disable-next=home-assistant-log-and-raise
-            _LOGGER.error("Did not receive status from device")
             raise ConfigEntryError(
                 translation_domain=DOMAIN,
                 translation_key="config_entry_error_no_status_update",
