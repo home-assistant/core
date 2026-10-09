@@ -49,11 +49,11 @@ class MetEireannWeatherData:
 class MetEireannUpdateCoordinator(DataUpdateCoordinator[MetEireannWeatherData]):
     """Coordinator for Met Éireann weather data."""
 
-    # pylint: disable-next=home-assistant-coordinator-untyped-config-entry
-    config_entry: ConfigEntry
+    config_entry: MetEireannConfigEntry
 
-    # pylint: disable-next=home-assistant-coordinator-untyped-config-entry
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    def __init__(
+        self, hass: HomeAssistant, config_entry: MetEireannConfigEntry
+    ) -> None:
         """Initialize the coordinator."""
         super().__init__(
             hass,
