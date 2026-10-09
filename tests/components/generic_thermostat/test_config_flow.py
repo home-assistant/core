@@ -1,6 +1,6 @@
 """Test the generic hygrostat config flow."""
 
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -33,6 +33,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.schema_config_entry_flow import SchemaFlowError
+from homeassistant.util.unit_system import (
+    METRIC_SYSTEM,
+    US_CUSTOMARY_SYSTEM,
+    UnitSystem,
+)
 
 from tests.common import MockConfigEntry
 
@@ -271,21 +276,47 @@ async def test_validate_config_min_max_duration() -> None:
 
 
 @pytest.mark.parametrize(
-    "user_input",
+    ("units", "user_input"),
     [
-        pytest.param({CONF_MIN_TEMP: 15, CONF_MAX_TEMP: 28}, id="min_below_max"),
-        pytest.param({CONF_MIN_TEMP: 20, CONF_MAX_TEMP: 20}, id="min_equals_max"),
-        pytest.param({CONF_MIN_TEMP: 28}, id="only_min"),
-        pytest.param({CONF_MAX_TEMP: 15}, id="only_max"),
+        pytest.param(
+            METRIC_SYSTEM, {CONF_MIN_TEMP: 15, CONF_MAX_TEMP: 28}, id="min_below_max"
+        ),
+        pytest.param(
+            METRIC_SYSTEM, {CONF_MIN_TEMP: 20, CONF_MAX_TEMP: 20}, id="min_equals_max"
+        ),
+        pytest.param(METRIC_SYSTEM, {CONF_MIN_TEMP: 20}, id="only_min"),
+        pytest.param(METRIC_SYSTEM, {CONF_MAX_TEMP: 30}, id="only_max"),
+        pytest.param(
+            US_CUSTOMARY_SYSTEM, {CONF_MIN_TEMP: 50}, id="only_min_fahrenheit"
+        ),
     ],
 )
-async def test_validate_config_min_max_temp_valid(user_input: dict[str, float]) -> None:
+async def test_validate_config_min_max_temp_valid(
+    hass: HomeAssistant, units: UnitSystem, user_input: dict[str, float]
+) -> None:
     """Test _validate_config accepts a minimum temperature up to the maximum."""
-    assert await _validate_config(None, user_input) == user_input
+    hass.config.units = units
+    handler = MagicMock()
+    handler.parent_handler.hass = hass
+
+    assert await _validate_config(handler, user_input) == user_input
 
 
-async def test_validate_config_min_temp_above_max_temp() -> None:
+@pytest.mark.parametrize(
+    "user_input",
+    [
+        pytest.param({CONF_MIN_TEMP: 28, CONF_MAX_TEMP: 15}, id="min_above_max"),
+        pytest.param({CONF_MIN_TEMP: 40}, id="min_above_default_max"),
+        pytest.param({CONF_MAX_TEMP: 0}, id="max_below_default_min"),
+    ],
+)
+async def test_validate_config_min_temp_above_max_temp(
+    hass: HomeAssistant, user_input: dict[str, float]
+) -> None:
     """Test _validate_config rejects a minimum temperature above the maximum."""
+    handler = MagicMock()
+    handler.parent_handler.hass = hass
+
     with pytest.raises(SchemaFlowError) as exc_info:
-        await _validate_config(None, {CONF_MIN_TEMP: 28, CONF_MAX_TEMP: 15})
+        await _validate_config(handler, user_input)
     assert str(exc_info.value) == "min_max_temp"
