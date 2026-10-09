@@ -62,11 +62,7 @@ class DaikinBinarySensor(DaikinManagementPointEntity, BinarySensorEntity):
         """Initialize the binary sensor from a device characteristic."""
         super().__init__(device, coordinator, embedded_id)
         self._value = value
-        # Preserve the custom integration's ID shape for migration compatibility.
-        # ``None`` identifies a scalar characteristic rather than sensory data.
-        self._attr_unique_id = (
-            f"{self._device.id}_{self._embedded_id}_None_{self._value}"
-        )
+        self._attr_unique_id = f"{self._device.id}_{self._embedded_id}_{self._value}"
         self.entity_description = BINARY_SENSOR_DESCRIPTIONS.get(
             value, BinarySensorEntityDescription(key=value)
         )

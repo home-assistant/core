@@ -34,7 +34,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'isfirmwareupdatesupported',
-        'unique_id': '7edb544e-2c53-405b-98bc-3d9392f4d1f9_gateway_None_isFirmwareUpdateSupported',
+        'unique_id': '7edb544e-2c53-405b-98bc-3d9392f4d1f9_gateway_isFirmwareUpdateSupported',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -82,7 +82,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'isholidaymodeactive',
-        'unique_id': '7edb544e-2c53-405b-98bc-3d9392f4d1f9_climateControl_None_isHolidayModeActive',
+        'unique_id': '7edb544e-2c53-405b-98bc-3d9392f4d1f9_climateControl_isHolidayModeActive',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -130,7 +130,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'isinerrorstate',
-        'unique_id': '7edb544e-2c53-405b-98bc-3d9392f4d1f9_climateControl_None_isInErrorState',
+        'unique_id': '7edb544e-2c53-405b-98bc-3d9392f4d1f9_climateControl_isInErrorState',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -179,7 +179,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'ispowerfulmodeactive',
-        'unique_id': '7edb544e-2c53-405b-98bc-3d9392f4d1f9_climateControl_None_isPowerfulModeActive',
+        'unique_id': '7edb544e-2c53-405b-98bc-3d9392f4d1f9_climateControl_isPowerfulModeActive',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -433,7 +433,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'errorcode',
-        'unique_id': '7edb544e-2c53-405b-98bc-3d9392f4d1f9_climateControl_None_errorCode',
+        'unique_id': '7edb544e-2c53-405b-98bc-3d9392f4d1f9_climateControl_errorCode',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -481,7 +481,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'ipaddress',
-        'unique_id': '7edb544e-2c53-405b-98bc-3d9392f4d1f9_gateway_None_ipAddress',
+        'unique_id': '7edb544e-2c53-405b-98bc-3d9392f4d1f9_gateway_ipAddress',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -531,7 +531,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'ratelimitremainingday',
-        'unique_id': '7edb544e-2c53-405b-98bc-3d9392f4d1f9_limitsensor_remaining_day',
+        'unique_id': '7edb544e-2c53-405b-98bc-3d9392f4d1f9_rate_limit_remaining_day',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -585,7 +585,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'roomtemperature',
-        'unique_id': '7edb544e-2c53-405b-98bc-3d9392f4d1f9_climateControl_sensoryData_roomTemperature',
+        'unique_id': '7edb544e-2c53-405b-98bc-3d9392f4d1f9_climateControl_sensory_data_roomTemperature',
         'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
       }),
       'state': StateSnapshot({

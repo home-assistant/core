@@ -34,7 +34,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'isholidaymodeactive',
-        'unique_id': '7edb544e-2c53-405b-98bc-3d9392f4d1f9_1_None_isHolidayModeActive',
+        'unique_id': '7edb544e-2c53-405b-98bc-3d9392f4d1f9_1_isHolidayModeActive',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -82,7 +82,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'ispowerfulmodeactive',
-        'unique_id': '7edb544e-2c53-405b-98bc-3d9392f4d1f9_1_None_isPowerfulModeActive',
+        'unique_id': '7edb544e-2c53-405b-98bc-3d9392f4d1f9_1_isPowerfulModeActive',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -475,7 +475,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'controlmode',
-        'unique_id': '7edb544e-2c53-405b-98bc-3d9392f4d1f9_1_None_controlMode',
+        'unique_id': '7edb544e-2c53-405b-98bc-3d9392f4d1f9_1_controlMode',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -971,7 +971,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'heatupmode',
-        'unique_id': '7edb544e-2c53-405b-98bc-3d9392f4d1f9_1_None_heatupMode',
+        'unique_id': '7edb544e-2c53-405b-98bc-3d9392f4d1f9_1_heatupMode',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -1467,7 +1467,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'ipaddress',
-        'unique_id': '7edb544e-2c53-405b-98bc-3d9392f4d1f9_0_None_ipAddress',
+        'unique_id': '7edb544e-2c53-405b-98bc-3d9392f4d1f9_0_ipAddress',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -1520,7 +1520,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'leavingwatertemperature',
-        'unique_id': '7edb544e-2c53-405b-98bc-3d9392f4d1f9_1_sensoryData_leavingWaterTemperature',
+        'unique_id': '7edb544e-2c53-405b-98bc-3d9392f4d1f9_1_sensory_data_leavingWaterTemperature',
         'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
       }),
       'state': StateSnapshot({
@@ -1576,7 +1576,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'outdoortemperature',
-        'unique_id': '7edb544e-2c53-405b-98bc-3d9392f4d1f9_1_sensoryData_outdoorTemperature',
+        'unique_id': '7edb544e-2c53-405b-98bc-3d9392f4d1f9_1_sensory_data_outdoorTemperature',
         'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
       }),
       'state': StateSnapshot({
@@ -1629,7 +1629,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'ratelimitremainingday',
-        'unique_id': '7edb544e-2c53-405b-98bc-3d9392f4d1f9_limitsensor_remaining_day',
+        'unique_id': '7edb544e-2c53-405b-98bc-3d9392f4d1f9_rate_limit_remaining_day',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -1683,7 +1683,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'roomtemperature',
-        'unique_id': '7edb544e-2c53-405b-98bc-3d9392f4d1f9_1_sensoryData_roomTemperature',
+        'unique_id': '7edb544e-2c53-405b-98bc-3d9392f4d1f9_1_sensory_data_roomTemperature',
         'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
       }),
       'state': StateSnapshot({
@@ -1734,7 +1734,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'setpointmode',
-        'unique_id': '7edb544e-2c53-405b-98bc-3d9392f4d1f9_1_None_setpointMode',
+        'unique_id': '7edb544e-2c53-405b-98bc-3d9392f4d1f9_1_setpointMode',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -1787,7 +1787,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'tanktemperature',
-        'unique_id': '7edb544e-2c53-405b-98bc-3d9392f4d1f9_2_sensoryData_tankTemperature',
+        'unique_id': '7edb544e-2c53-405b-98bc-3d9392f4d1f9_2_sensory_data_tankTemperature',
         'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
       }),
       'state': StateSnapshot({

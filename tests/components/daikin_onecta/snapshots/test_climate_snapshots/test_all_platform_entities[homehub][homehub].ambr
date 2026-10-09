@@ -84,7 +84,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'ratelimitremainingday',
-        'unique_id': '6a84eb95-60ea-4c21-8376-a10b3886437f_limitsensor_remaining_day',
+        'unique_id': '6a84eb95-60ea-4c21-8376-a10b3886437f_rate_limit_remaining_day',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({

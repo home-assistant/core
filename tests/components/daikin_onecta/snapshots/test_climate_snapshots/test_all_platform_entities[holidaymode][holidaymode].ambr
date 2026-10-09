@@ -34,7 +34,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'isfirmwareupdatesupported',
-        'unique_id': '13995b32-fc6e-43ed-918e-5d2b01095ccb_0_None_isFirmwareUpdateSupported',
+        'unique_id': '13995b32-fc6e-43ed-918e-5d2b01095ccb_0_isFirmwareUpdateSupported',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -82,7 +82,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'isholidaymodeactive',
-        'unique_id': '13995b32-fc6e-43ed-918e-5d2b01095ccb_1_None_isHolidayModeActive',
+        'unique_id': '13995b32-fc6e-43ed-918e-5d2b01095ccb_1_isHolidayModeActive',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -130,7 +130,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'isholidaymodeactive',
-        'unique_id': '13995b32-fc6e-43ed-918e-5d2b01095ccb_2_None_isHolidayModeActive',
+        'unique_id': '13995b32-fc6e-43ed-918e-5d2b01095ccb_2_isHolidayModeActive',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -178,7 +178,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'isinerrorstate',
-        'unique_id': '13995b32-fc6e-43ed-918e-5d2b01095ccb_0_None_isInErrorState',
+        'unique_id': '13995b32-fc6e-43ed-918e-5d2b01095ccb_0_isInErrorState',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -227,7 +227,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'isinerrorstate',
-        'unique_id': '13995b32-fc6e-43ed-918e-5d2b01095ccb_1_None_isInErrorState',
+        'unique_id': '13995b32-fc6e-43ed-918e-5d2b01095ccb_1_isInErrorState',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -276,7 +276,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'isinerrorstate',
-        'unique_id': '13995b32-fc6e-43ed-918e-5d2b01095ccb_2_None_isInErrorState',
+        'unique_id': '13995b32-fc6e-43ed-918e-5d2b01095ccb_2_isInErrorState',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -325,7 +325,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'isinwarningstate',
-        'unique_id': '13995b32-fc6e-43ed-918e-5d2b01095ccb_1_None_isInWarningState',
+        'unique_id': '13995b32-fc6e-43ed-918e-5d2b01095ccb_1_isInWarningState',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -374,7 +374,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'isinwarningstate',
-        'unique_id': '13995b32-fc6e-43ed-918e-5d2b01095ccb_2_None_isInWarningState',
+        'unique_id': '13995b32-fc6e-43ed-918e-5d2b01095ccb_2_isInWarningState',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -603,7 +603,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'controlmode',
-        'unique_id': '13995b32-fc6e-43ed-918e-5d2b01095ccb_1_None_controlMode',
+        'unique_id': '13995b32-fc6e-43ed-918e-5d2b01095ccb_1_controlMode',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -651,7 +651,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'errorcode',
-        'unique_id': '13995b32-fc6e-43ed-918e-5d2b01095ccb_0_None_errorCode',
+        'unique_id': '13995b32-fc6e-43ed-918e-5d2b01095ccb_0_errorCode',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -699,7 +699,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'errorcode',
-        'unique_id': '13995b32-fc6e-43ed-918e-5d2b01095ccb_1_None_errorCode',
+        'unique_id': '13995b32-fc6e-43ed-918e-5d2b01095ccb_1_errorCode',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -747,7 +747,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'errorcode',
-        'unique_id': '13995b32-fc6e-43ed-918e-5d2b01095ccb_2_None_errorCode',
+        'unique_id': '13995b32-fc6e-43ed-918e-5d2b01095ccb_2_errorCode',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -795,7 +795,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'ipaddress',
-        'unique_id': '13995b32-fc6e-43ed-918e-5d2b01095ccb_0_None_ipAddress',
+        'unique_id': '13995b32-fc6e-43ed-918e-5d2b01095ccb_0_ipAddress',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -843,7 +843,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'onoffmode',
-        'unique_id': '13995b32-fc6e-43ed-918e-5d2b01095ccb_1_None_onOffMode',
+        'unique_id': '13995b32-fc6e-43ed-918e-5d2b01095ccb_1_onOffMode',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -891,7 +891,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'onoffmode',
-        'unique_id': '13995b32-fc6e-43ed-918e-5d2b01095ccb_2_None_onOffMode',
+        'unique_id': '13995b32-fc6e-43ed-918e-5d2b01095ccb_2_onOffMode',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -941,7 +941,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'ratelimitremainingday',
-        'unique_id': '13995b32-fc6e-43ed-918e-5d2b01095ccb_limitsensor_remaining_day',
+        'unique_id': '13995b32-fc6e-43ed-918e-5d2b01095ccb_rate_limit_remaining_day',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -995,7 +995,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'roomtemperature',
-        'unique_id': '13995b32-fc6e-43ed-918e-5d2b01095ccb_1_sensoryData_roomTemperature',
+        'unique_id': '13995b32-fc6e-43ed-918e-5d2b01095ccb_1_sensory_data_roomTemperature',
         'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
       }),
       'state': StateSnapshot({

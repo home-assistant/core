@@ -34,7 +34,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'isfirmwareupdatesupported',
-        'unique_id': 'b84e8af3-310a-4e6e-8e52-295573423485_gateway_None_isFirmwareUpdateSupported',
+        'unique_id': 'b84e8af3-310a-4e6e-8e52-295573423485_gateway_isFirmwareUpdateSupported',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -82,7 +82,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'isholidaymodeactive',
-        'unique_id': 'b84e8af3-310a-4e6e-8e52-295573423485_climateControlMainZone_None_isHolidayModeActive',
+        'unique_id': 'b84e8af3-310a-4e6e-8e52-295573423485_climateControlMainZone_isHolidayModeActive',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -130,7 +130,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'isholidaymodeactive',
-        'unique_id': 'b84e8af3-310a-4e6e-8e52-295573423485_domesticHotWaterTank_None_isHolidayModeActive',
+        'unique_id': 'b84e8af3-310a-4e6e-8e52-295573423485_domesticHotWaterTank_isHolidayModeActive',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -178,7 +178,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'isinemergencystate',
-        'unique_id': 'b84e8af3-310a-4e6e-8e52-295573423485_climateControlMainZone_None_isInEmergencyState',
+        'unique_id': 'b84e8af3-310a-4e6e-8e52-295573423485_climateControlMainZone_isInEmergencyState',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -227,7 +227,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'isinerrorstate',
-        'unique_id': 'b84e8af3-310a-4e6e-8e52-295573423485_climateControlMainZone_None_isInErrorState',
+        'unique_id': 'b84e8af3-310a-4e6e-8e52-295573423485_climateControlMainZone_isInErrorState',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -276,7 +276,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'isinerrorstate',
-        'unique_id': 'b84e8af3-310a-4e6e-8e52-295573423485_domesticHotWaterTank_None_isInErrorState',
+        'unique_id': 'b84e8af3-310a-4e6e-8e52-295573423485_domesticHotWaterTank_isInErrorState',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -325,7 +325,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'isininstallerstate',
-        'unique_id': 'b84e8af3-310a-4e6e-8e52-295573423485_climateControlMainZone_None_isInInstallerState',
+        'unique_id': 'b84e8af3-310a-4e6e-8e52-295573423485_climateControlMainZone_isInInstallerState',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -373,7 +373,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'isininstallerstate',
-        'unique_id': 'b84e8af3-310a-4e6e-8e52-295573423485_domesticHotWaterTank_None_isInInstallerState',
+        'unique_id': 'b84e8af3-310a-4e6e-8e52-295573423485_domesticHotWaterTank_isInInstallerState',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -608,7 +608,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'controlmode',
-        'unique_id': 'b84e8af3-310a-4e6e-8e52-295573423485_climateControlMainZone_None_controlMode',
+        'unique_id': 'b84e8af3-310a-4e6e-8e52-295573423485_climateControlMainZone_controlMode',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -880,7 +880,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'heatupmode',
-        'unique_id': 'b84e8af3-310a-4e6e-8e52-295573423485_domesticHotWaterTank_None_heatupMode',
+        'unique_id': 'b84e8af3-310a-4e6e-8e52-295573423485_domesticHotWaterTank_heatupMode',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -1376,7 +1376,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'ipaddress',
-        'unique_id': 'b84e8af3-310a-4e6e-8e52-295573423485_gateway_None_ipAddress',
+        'unique_id': 'b84e8af3-310a-4e6e-8e52-295573423485_gateway_ipAddress',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -1429,7 +1429,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'leavingwatertemperature',
-        'unique_id': 'b84e8af3-310a-4e6e-8e52-295573423485_climateControlMainZone_sensoryData_leavingWaterTemperature',
+        'unique_id': 'b84e8af3-310a-4e6e-8e52-295573423485_climateControlMainZone_sensory_data_leavingWaterTemperature',
         'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
       }),
       'state': StateSnapshot({
@@ -1485,7 +1485,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'outdoortemperature',
-        'unique_id': 'b84e8af3-310a-4e6e-8e52-295573423485_climateControlMainZone_sensoryData_outdoorTemperature',
+        'unique_id': 'b84e8af3-310a-4e6e-8e52-295573423485_climateControlMainZone_sensory_data_outdoorTemperature',
         'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
       }),
       'state': StateSnapshot({
@@ -1538,7 +1538,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'ratelimitremainingday',
-        'unique_id': 'b84e8af3-310a-4e6e-8e52-295573423485_limitsensor_remaining_day',
+        'unique_id': 'b84e8af3-310a-4e6e-8e52-295573423485_rate_limit_remaining_day',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -1592,7 +1592,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'roomtemperature',
-        'unique_id': 'b84e8af3-310a-4e6e-8e52-295573423485_climateControlMainZone_sensoryData_roomTemperature',
+        'unique_id': 'b84e8af3-310a-4e6e-8e52-295573423485_climateControlMainZone_sensory_data_roomTemperature',
         'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
       }),
       'state': StateSnapshot({
@@ -1643,7 +1643,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'setpointmode',
-        'unique_id': 'b84e8af3-310a-4e6e-8e52-295573423485_climateControlMainZone_None_setpointMode',
+        'unique_id': 'b84e8af3-310a-4e6e-8e52-295573423485_climateControlMainZone_setpointMode',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -1691,7 +1691,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'setpointmode',
-        'unique_id': 'b84e8af3-310a-4e6e-8e52-295573423485_domesticHotWaterTank_None_setpointMode',
+        'unique_id': 'b84e8af3-310a-4e6e-8e52-295573423485_domesticHotWaterTank_setpointMode',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -1744,7 +1744,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'tanktemperature',
-        'unique_id': 'b84e8af3-310a-4e6e-8e52-295573423485_domesticHotWaterTank_sensoryData_tankTemperature',
+        'unique_id': 'b84e8af3-310a-4e6e-8e52-295573423485_domesticHotWaterTank_sensory_data_tankTemperature',
         'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
       }),
       'state': StateSnapshot({

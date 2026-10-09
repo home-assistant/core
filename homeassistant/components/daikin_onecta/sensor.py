@@ -201,6 +201,20 @@ def _energy_sensor_unique_id(device_id: str, details: EnergySensorDetails) -> st
     )
 
 
+def _value_sensor_unique_id(
+    device_id: str, embedded_id: str, sub_type: str | None, value: str
+) -> str:
+    """Return a stable unique ID for a scalar or sensory-data value."""
+    if sub_type == "sensoryData":
+        return f"{device_id}_{embedded_id}_sensory_data_{value}"
+    return f"{device_id}_{embedded_id}_{value}"
+
+
+def _rate_limit_sensor_unique_id(device_id: str, limit_key: str) -> str:
+    """Return a stable unique ID for a rate-limit sensor."""
+    return f"{device_id}_rate_limit_{limit_key}"
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: DaikinOnectaConfigEntry,
@@ -302,10 +316,11 @@ class DaikinValueSensor(DaikinManagementPointEntity, SensorEntity):
         self._sub_type = details.sub_type
         self._value = details.value
         self.entity_description = SENSOR_DESCRIPTIONS[details.value]
-        # Preserve the custom integration's ID shape for migration compatibility.
-        # The subtype also prevents scalar and sensory-data IDs from colliding.
-        self._attr_unique_id = (
-            f"{self._device.id}_{details.embedded_id}_{self._sub_type}_{self._value}"
+        self._attr_unique_id = _value_sensor_unique_id(
+            self._device.id,
+            details.embedded_id,
+            self._sub_type,
+            self._value,
         )
         self.update_state()
 
@@ -344,7 +359,9 @@ class DaikinLimitSensor(DaikinEntity, SensorEntity):
         """Initialize a rate-limit sensor."""
         super().__init__(device, coordinator, device.gateway_embedded_id or "gateway")
         self._limit_key = limit_key
-        self._attr_unique_id = f"{self._device.id}_limitsensor_{self._limit_key}"
+        self._attr_unique_id = _rate_limit_sensor_unique_id(
+            self._device.id, self._limit_key
+        )
         self.entity_description = SENSOR_DESCRIPTIONS["RatelimitRemainingDay"]
         self.update_state()
 

@@ -34,7 +34,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'daylightsavingtimeenabled',
-        'unique_id': '0e621e8c-0a79-4cda-b387-9ff79f9ba61a_gateway_None_daylightSavingTimeEnabled',
+        'unique_id': '0e621e8c-0a79-4cda-b387-9ff79f9ba61a_gateway_daylightSavingTimeEnabled',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -82,7 +82,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'isfirmwareupdatesupported',
-        'unique_id': '0e621e8c-0a79-4cda-b387-9ff79f9ba61a_gateway_None_isFirmwareUpdateSupported',
+        'unique_id': '0e621e8c-0a79-4cda-b387-9ff79f9ba61a_gateway_isFirmwareUpdateSupported',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -130,7 +130,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'isholidaymodeactive',
-        'unique_id': '0e621e8c-0a79-4cda-b387-9ff79f9ba61a_climateControl_None_isHolidayModeActive',
+        'unique_id': '0e621e8c-0a79-4cda-b387-9ff79f9ba61a_climateControl_isHolidayModeActive',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -178,7 +178,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'isinerrorstate',
-        'unique_id': '0e621e8c-0a79-4cda-b387-9ff79f9ba61a_climateControl_None_isInErrorState',
+        'unique_id': '0e621e8c-0a79-4cda-b387-9ff79f9ba61a_climateControl_isInErrorState',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -227,7 +227,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'isinmodeconflict',
-        'unique_id': '0e621e8c-0a79-4cda-b387-9ff79f9ba61a_climateControl_None_isInModeConflict',
+        'unique_id': '0e621e8c-0a79-4cda-b387-9ff79f9ba61a_climateControl_isInModeConflict',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -276,7 +276,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'ispowerfulmodeactive',
-        'unique_id': '0e621e8c-0a79-4cda-b387-9ff79f9ba61a_climateControl_None_isPowerfulModeActive',
+        'unique_id': '0e621e8c-0a79-4cda-b387-9ff79f9ba61a_climateControl_isPowerfulModeActive',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -324,7 +324,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'ledenabled',
-        'unique_id': '0e621e8c-0a79-4cda-b387-9ff79f9ba61a_gateway_None_ledEnabled',
+        'unique_id': '0e621e8c-0a79-4cda-b387-9ff79f9ba61a_gateway_ledEnabled',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -372,7 +372,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'daylightsavingtimeenabled',
-        'unique_id': '1200abf5-59e3-4173-a5fd-5e0560aead8d_gateway_None_daylightSavingTimeEnabled',
+        'unique_id': '1200abf5-59e3-4173-a5fd-5e0560aead8d_gateway_daylightSavingTimeEnabled',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -420,7 +420,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'isfirmwareupdatesupported',
-        'unique_id': '1200abf5-59e3-4173-a5fd-5e0560aead8d_gateway_None_isFirmwareUpdateSupported',
+        'unique_id': '1200abf5-59e3-4173-a5fd-5e0560aead8d_gateway_isFirmwareUpdateSupported',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -468,7 +468,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'isholidaymodeactive',
-        'unique_id': '1200abf5-59e3-4173-a5fd-5e0560aead8d_climateControl_None_isHolidayModeActive',
+        'unique_id': '1200abf5-59e3-4173-a5fd-5e0560aead8d_climateControl_isHolidayModeActive',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -516,7 +516,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'isinerrorstate',
-        'unique_id': '1200abf5-59e3-4173-a5fd-5e0560aead8d_climateControl_None_isInErrorState',
+        'unique_id': '1200abf5-59e3-4173-a5fd-5e0560aead8d_climateControl_isInErrorState',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -565,7 +565,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'isinmodeconflict',
-        'unique_id': '1200abf5-59e3-4173-a5fd-5e0560aead8d_climateControl_None_isInModeConflict',
+        'unique_id': '1200abf5-59e3-4173-a5fd-5e0560aead8d_climateControl_isInModeConflict',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -614,7 +614,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'ispowerfulmodeactive',
-        'unique_id': '1200abf5-59e3-4173-a5fd-5e0560aead8d_climateControl_None_isPowerfulModeActive',
+        'unique_id': '1200abf5-59e3-4173-a5fd-5e0560aead8d_climateControl_isPowerfulModeActive',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -662,7 +662,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'ledenabled',
-        'unique_id': '1200abf5-59e3-4173-a5fd-5e0560aead8d_gateway_None_ledEnabled',
+        'unique_id': '1200abf5-59e3-4173-a5fd-5e0560aead8d_gateway_ledEnabled',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -710,7 +710,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'daylightsavingtimeenabled',
-        'unique_id': '7596a914-2a79-49ca-9901-53897e03ee4c_gateway_None_daylightSavingTimeEnabled',
+        'unique_id': '7596a914-2a79-49ca-9901-53897e03ee4c_gateway_daylightSavingTimeEnabled',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -758,7 +758,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'isfirmwareupdatesupported',
-        'unique_id': '7596a914-2a79-49ca-9901-53897e03ee4c_gateway_None_isFirmwareUpdateSupported',
+        'unique_id': '7596a914-2a79-49ca-9901-53897e03ee4c_gateway_isFirmwareUpdateSupported',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -806,7 +806,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'isholidaymodeactive',
-        'unique_id': '7596a914-2a79-49ca-9901-53897e03ee4c_climateControl_None_isHolidayModeActive',
+        'unique_id': '7596a914-2a79-49ca-9901-53897e03ee4c_climateControl_isHolidayModeActive',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -854,7 +854,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'isinerrorstate',
-        'unique_id': '7596a914-2a79-49ca-9901-53897e03ee4c_climateControl_None_isInErrorState',
+        'unique_id': '7596a914-2a79-49ca-9901-53897e03ee4c_climateControl_isInErrorState',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -903,7 +903,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'isinmodeconflict',
-        'unique_id': '7596a914-2a79-49ca-9901-53897e03ee4c_climateControl_None_isInModeConflict',
+        'unique_id': '7596a914-2a79-49ca-9901-53897e03ee4c_climateControl_isInModeConflict',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -952,7 +952,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'ispowerfulmodeactive',
-        'unique_id': '7596a914-2a79-49ca-9901-53897e03ee4c_climateControl_None_isPowerfulModeActive',
+        'unique_id': '7596a914-2a79-49ca-9901-53897e03ee4c_climateControl_isPowerfulModeActive',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -1000,7 +1000,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'ledenabled',
-        'unique_id': '7596a914-2a79-49ca-9901-53897e03ee4c_gateway_None_ledEnabled',
+        'unique_id': '7596a914-2a79-49ca-9901-53897e03ee4c_gateway_ledEnabled',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -1895,7 +1895,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'currentpowerconsumption',
-        'unique_id': '0e621e8c-0a79-4cda-b387-9ff79f9ba61a_outdoorUnit_None_currentPowerConsumption',
+        'unique_id': '0e621e8c-0a79-4cda-b387-9ff79f9ba61a_outdoorUnit_currentPowerConsumption',
         'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
       }),
       'state': StateSnapshot({
@@ -1951,7 +1951,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'currentthermaloutput',
-        'unique_id': '0e621e8c-0a79-4cda-b387-9ff79f9ba61a_outdoorUnit_None_currentHeatProduction',
+        'unique_id': '0e621e8c-0a79-4cda-b387-9ff79f9ba61a_outdoorUnit_currentHeatProduction',
         'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
       }),
       'state': StateSnapshot({
@@ -2002,7 +2002,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'errorcode',
-        'unique_id': '0e621e8c-0a79-4cda-b387-9ff79f9ba61a_climateControl_None_errorCode',
+        'unique_id': '0e621e8c-0a79-4cda-b387-9ff79f9ba61a_climateControl_errorCode',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -2274,7 +2274,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'ipaddress',
-        'unique_id': '0e621e8c-0a79-4cda-b387-9ff79f9ba61a_gateway_None_ipAddress',
+        'unique_id': '0e621e8c-0a79-4cda-b387-9ff79f9ba61a_gateway_ipAddress',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -2327,7 +2327,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'outdoortemperature',
-        'unique_id': '0e621e8c-0a79-4cda-b387-9ff79f9ba61a_climateControl_sensoryData_outdoorTemperature',
+        'unique_id': '0e621e8c-0a79-4cda-b387-9ff79f9ba61a_climateControl_sensory_data_outdoorTemperature',
         'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
       }),
       'state': StateSnapshot({
@@ -2380,7 +2380,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'ratelimitremainingday',
-        'unique_id': '0e621e8c-0a79-4cda-b387-9ff79f9ba61a_limitsensor_remaining_day',
+        'unique_id': '0e621e8c-0a79-4cda-b387-9ff79f9ba61a_rate_limit_remaining_day',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -2429,7 +2429,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'regioncode',
-        'unique_id': '0e621e8c-0a79-4cda-b387-9ff79f9ba61a_gateway_None_regionCode',
+        'unique_id': '0e621e8c-0a79-4cda-b387-9ff79f9ba61a_gateway_regionCode',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -2482,7 +2482,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'roomtemperature',
-        'unique_id': '0e621e8c-0a79-4cda-b387-9ff79f9ba61a_climateControl_sensoryData_roomTemperature',
+        'unique_id': '0e621e8c-0a79-4cda-b387-9ff79f9ba61a_climateControl_sensory_data_roomTemperature',
         'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
       }),
       'state': StateSnapshot({
@@ -2533,7 +2533,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'ssid',
-        'unique_id': '0e621e8c-0a79-4cda-b387-9ff79f9ba61a_gateway_None_ssid',
+        'unique_id': '0e621e8c-0a79-4cda-b387-9ff79f9ba61a_gateway_ssid',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -2581,7 +2581,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'timezone',
-        'unique_id': '0e621e8c-0a79-4cda-b387-9ff79f9ba61a_gateway_None_timeZone',
+        'unique_id': '0e621e8c-0a79-4cda-b387-9ff79f9ba61a_gateway_timeZone',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -2629,7 +2629,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'wificonnectionssid',
-        'unique_id': '0e621e8c-0a79-4cda-b387-9ff79f9ba61a_gateway_None_wifiConnectionSSID',
+        'unique_id': '0e621e8c-0a79-4cda-b387-9ff79f9ba61a_gateway_wifiConnectionSSID',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -2679,7 +2679,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'wificonnectionstrength',
-        'unique_id': '0e621e8c-0a79-4cda-b387-9ff79f9ba61a_gateway_None_wifiConnectionStrength',
+        'unique_id': '0e621e8c-0a79-4cda-b387-9ff79f9ba61a_gateway_wifiConnectionStrength',
         'unit_of_measurement': 'dBm',
       }),
       'state': StateSnapshot({
@@ -2959,7 +2959,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'currentpowerconsumption',
-        'unique_id': '1200abf5-59e3-4173-a5fd-5e0560aead8d_outdoorUnit_None_currentPowerConsumption',
+        'unique_id': '1200abf5-59e3-4173-a5fd-5e0560aead8d_outdoorUnit_currentPowerConsumption',
         'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
       }),
       'state': StateSnapshot({
@@ -3015,7 +3015,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'currentthermaloutput',
-        'unique_id': '1200abf5-59e3-4173-a5fd-5e0560aead8d_outdoorUnit_None_currentHeatProduction',
+        'unique_id': '1200abf5-59e3-4173-a5fd-5e0560aead8d_outdoorUnit_currentHeatProduction',
         'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
       }),
       'state': StateSnapshot({
@@ -3066,7 +3066,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'errorcode',
-        'unique_id': '1200abf5-59e3-4173-a5fd-5e0560aead8d_climateControl_None_errorCode',
+        'unique_id': '1200abf5-59e3-4173-a5fd-5e0560aead8d_climateControl_errorCode',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -3338,7 +3338,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'ipaddress',
-        'unique_id': '1200abf5-59e3-4173-a5fd-5e0560aead8d_gateway_None_ipAddress',
+        'unique_id': '1200abf5-59e3-4173-a5fd-5e0560aead8d_gateway_ipAddress',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -3388,7 +3388,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'ratelimitremainingday',
-        'unique_id': '1200abf5-59e3-4173-a5fd-5e0560aead8d_limitsensor_remaining_day',
+        'unique_id': '1200abf5-59e3-4173-a5fd-5e0560aead8d_rate_limit_remaining_day',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -3437,7 +3437,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'regioncode',
-        'unique_id': '1200abf5-59e3-4173-a5fd-5e0560aead8d_gateway_None_regionCode',
+        'unique_id': '1200abf5-59e3-4173-a5fd-5e0560aead8d_gateway_regionCode',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -3490,7 +3490,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'roomtemperature',
-        'unique_id': '1200abf5-59e3-4173-a5fd-5e0560aead8d_climateControl_sensoryData_roomTemperature',
+        'unique_id': '1200abf5-59e3-4173-a5fd-5e0560aead8d_climateControl_sensory_data_roomTemperature',
         'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
       }),
       'state': StateSnapshot({
@@ -3541,7 +3541,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'ssid',
-        'unique_id': '1200abf5-59e3-4173-a5fd-5e0560aead8d_gateway_None_ssid',
+        'unique_id': '1200abf5-59e3-4173-a5fd-5e0560aead8d_gateway_ssid',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -3589,7 +3589,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'timezone',
-        'unique_id': '1200abf5-59e3-4173-a5fd-5e0560aead8d_gateway_None_timeZone',
+        'unique_id': '1200abf5-59e3-4173-a5fd-5e0560aead8d_gateway_timeZone',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -3637,7 +3637,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'wificonnectionssid',
-        'unique_id': '1200abf5-59e3-4173-a5fd-5e0560aead8d_gateway_None_wifiConnectionSSID',
+        'unique_id': '1200abf5-59e3-4173-a5fd-5e0560aead8d_gateway_wifiConnectionSSID',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -3687,7 +3687,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'wificonnectionstrength',
-        'unique_id': '1200abf5-59e3-4173-a5fd-5e0560aead8d_gateway_None_wifiConnectionStrength',
+        'unique_id': '1200abf5-59e3-4173-a5fd-5e0560aead8d_gateway_wifiConnectionStrength',
         'unit_of_measurement': 'dBm',
       }),
       'state': StateSnapshot({
@@ -3967,7 +3967,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'currentpowerconsumption',
-        'unique_id': '7596a914-2a79-49ca-9901-53897e03ee4c_outdoorUnit_None_currentPowerConsumption',
+        'unique_id': '7596a914-2a79-49ca-9901-53897e03ee4c_outdoorUnit_currentPowerConsumption',
         'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
       }),
       'state': StateSnapshot({
@@ -4023,7 +4023,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'currentthermaloutput',
-        'unique_id': '7596a914-2a79-49ca-9901-53897e03ee4c_outdoorUnit_None_currentHeatProduction',
+        'unique_id': '7596a914-2a79-49ca-9901-53897e03ee4c_outdoorUnit_currentHeatProduction',
         'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
       }),
       'state': StateSnapshot({
@@ -4074,7 +4074,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'errorcode',
-        'unique_id': '7596a914-2a79-49ca-9901-53897e03ee4c_climateControl_None_errorCode',
+        'unique_id': '7596a914-2a79-49ca-9901-53897e03ee4c_climateControl_errorCode',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -4346,7 +4346,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'ipaddress',
-        'unique_id': '7596a914-2a79-49ca-9901-53897e03ee4c_gateway_None_ipAddress',
+        'unique_id': '7596a914-2a79-49ca-9901-53897e03ee4c_gateway_ipAddress',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -4396,7 +4396,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'ratelimitremainingday',
-        'unique_id': '7596a914-2a79-49ca-9901-53897e03ee4c_limitsensor_remaining_day',
+        'unique_id': '7596a914-2a79-49ca-9901-53897e03ee4c_rate_limit_remaining_day',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -4445,7 +4445,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'regioncode',
-        'unique_id': '7596a914-2a79-49ca-9901-53897e03ee4c_gateway_None_regionCode',
+        'unique_id': '7596a914-2a79-49ca-9901-53897e03ee4c_gateway_regionCode',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -4498,7 +4498,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'roomtemperature',
-        'unique_id': '7596a914-2a79-49ca-9901-53897e03ee4c_climateControl_sensoryData_roomTemperature',
+        'unique_id': '7596a914-2a79-49ca-9901-53897e03ee4c_climateControl_sensory_data_roomTemperature',
         'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
       }),
       'state': StateSnapshot({
@@ -4549,7 +4549,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'ssid',
-        'unique_id': '7596a914-2a79-49ca-9901-53897e03ee4c_gateway_None_ssid',
+        'unique_id': '7596a914-2a79-49ca-9901-53897e03ee4c_gateway_ssid',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -4597,7 +4597,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'timezone',
-        'unique_id': '7596a914-2a79-49ca-9901-53897e03ee4c_gateway_None_timeZone',
+        'unique_id': '7596a914-2a79-49ca-9901-53897e03ee4c_gateway_timeZone',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -4645,7 +4645,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'wificonnectionssid',
-        'unique_id': '7596a914-2a79-49ca-9901-53897e03ee4c_gateway_None_wifiConnectionSSID',
+        'unique_id': '7596a914-2a79-49ca-9901-53897e03ee4c_gateway_wifiConnectionSSID',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
@@ -4695,7 +4695,7 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'wificonnectionstrength',
-        'unique_id': '7596a914-2a79-49ca-9901-53897e03ee4c_gateway_None_wifiConnectionStrength',
+        'unique_id': '7596a914-2a79-49ca-9901-53897e03ee4c_gateway_wifiConnectionStrength',
         'unit_of_measurement': 'dBm',
       }),
       'state': StateSnapshot({
