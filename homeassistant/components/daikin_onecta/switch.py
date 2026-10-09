@@ -82,7 +82,7 @@ class DaikinSwitch(DaikinManagementPointEntity, SwitchEntity):
         value: str,
     ) -> None:
         """Initialize the switch from a device characteristic."""
-        _LOGGER.info("DaikinSwitch '%s'", value)
+        _LOGGER.debug("DaikinSwitch '%s'", value)
         super().__init__(device, coordinator, embedded_id)
         self._value = value
         self.entity_description = SWITCH_DESCRIPTIONS.get(
@@ -90,7 +90,7 @@ class DaikinSwitch(DaikinManagementPointEntity, SwitchEntity):
         )
         self._attr_unique_id = f"{self._device.id}_{self._embedded_id}_{self._value}"
         self.update_state()
-        _LOGGER.info(
+        _LOGGER.debug(
             "Device '%s:%s' supports sensor '%s'",
             device.name,
             self._embedded_id,

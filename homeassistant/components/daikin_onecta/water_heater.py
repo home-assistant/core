@@ -67,7 +67,7 @@ class DaikinWaterTank(DaikinManagementPointEntity, WaterHeaterEntity):
         embedded_id: str,
     ) -> None:
         """Initialize the Water device."""
-        _LOGGER.info("Initializing Daiking Altherma HotWaterTank")
+        _LOGGER.debug("Initializing Daikin Altherma hot water tank")
         super().__init__(device, coordinator, embedded_id)
         self._attr_native_temperature_unit = UnitOfTemperature.CELSIUS
         self._attr_unique_id = f"{self._device.id}_{self._embedded_id}"

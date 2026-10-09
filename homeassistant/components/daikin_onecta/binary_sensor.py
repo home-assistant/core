@@ -63,7 +63,7 @@ class DaikinBinarySensor(DaikinManagementPointEntity, BinarySensorEntity):
         value: str,
     ) -> None:
         """Initialize the binary sensor from a device characteristic."""
-        _LOGGER.info("DaikinBinarySensor '%s'", value)
+        _LOGGER.debug("DaikinBinarySensor '%s'", value)
         super().__init__(device, coordinator, embedded_id)
         self._value = value
         # Preserve the custom integration's ID shape for migration compatibility.
@@ -75,7 +75,7 @@ class DaikinBinarySensor(DaikinManagementPointEntity, BinarySensorEntity):
             value, BinarySensorEntityDescription(key=value)
         )
         self.update_state()
-        _LOGGER.info(
+        _LOGGER.debug(
             "Device '%s:%s' supports binary sensor '%s'",
             device.name,
             self._embedded_id,

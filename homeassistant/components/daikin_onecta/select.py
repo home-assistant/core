@@ -34,7 +34,7 @@ async def async_setup_entry(
     for device in (coordinator.data or {}).values():
         for management_point in device.device.management_points:
             if management_point.schedule_state is not None:
-                _LOGGER.info("Device '%s' provides schedule", device.name)
+                _LOGGER.debug("Device '%s' provides schedule", device.name)
                 sensors.append(
                     DaikinScheduleSelect(
                         device,
@@ -58,13 +58,13 @@ class DaikinScheduleSelect(DaikinManagementPointEntity, SelectEntity):
         value: str,
     ) -> None:
         """Initialize a schedule selection entity."""
-        _LOGGER.info("DaikinScheduleSelect '%s'", value)
+        _LOGGER.debug("DaikinScheduleSelect '%s'", value)
         super().__init__(device, coordinator, embedded_id)
         self._value = value
         self._attr_unique_id = f"{self._device.id}_{self._embedded_id}_{self._value}"
         self.entity_description = SELECT_DESCRIPTIONS[value]
         self.update_state()
-        _LOGGER.info(
+        _LOGGER.debug(
             "Device '%s:%s' supports sensor '%s'",
             device.name,
             self._embedded_id,

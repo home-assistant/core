@@ -49,7 +49,7 @@ class DaikinRefreshButton(DaikinEntity, ButtonEntity):
         self.entity_description = BUTTON_DESCRIPTIONS["refresh"]
         self._config_entry = config_entry
 
-        _LOGGER.info("Device '%s' has refresh button", self._device.name)
+        _LOGGER.debug("Device '%s' has refresh button", self._device.name)
 
     @property
     @override
