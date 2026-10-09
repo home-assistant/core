@@ -15,7 +15,9 @@ from homeassistant.components.generic_thermostat.const import (
     CONF_HOT_TOLERANCE,
     CONF_KEEP_ALIVE,
     CONF_MAX_DUR,
+    CONF_MAX_TEMP,
     CONF_MIN_DUR,
+    CONF_MIN_TEMP,
     CONF_PRESETS,
     CONF_SENSOR,
     DOMAIN,
@@ -266,3 +268,24 @@ async def test_validate_config_min_max_duration() -> None:
     }
     result = await _validate_config(None, user_input_partial)
     assert result == user_input_partial
+
+
+@pytest.mark.parametrize(
+    "user_input",
+    [
+        pytest.param({CONF_MIN_TEMP: 15, CONF_MAX_TEMP: 28}, id="min_below_max"),
+        pytest.param({CONF_MIN_TEMP: 20, CONF_MAX_TEMP: 20}, id="min_equals_max"),
+        pytest.param({CONF_MIN_TEMP: 28}, id="only_min"),
+        pytest.param({CONF_MAX_TEMP: 15}, id="only_max"),
+    ],
+)
+async def test_validate_config_min_max_temp_valid(user_input: dict[str, float]) -> None:
+    """Test _validate_config accepts a minimum temperature up to the maximum."""
+    assert await _validate_config(None, user_input) == user_input
+
+
+async def test_validate_config_min_temp_above_max_temp() -> None:
+    """Test _validate_config rejects a minimum temperature above the maximum."""
+    with pytest.raises(SchemaFlowError) as exc_info:
+        await _validate_config(None, {CONF_MIN_TEMP: 28, CONF_MAX_TEMP: 15})
+    assert str(exc_info.value) == "min_max_temp"

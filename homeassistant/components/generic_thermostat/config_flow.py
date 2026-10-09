@@ -113,6 +113,11 @@ async def _validate_config(
         if min_cycle >= max_cycle:
             raise SchemaFlowError("min_max_runtime")
 
+    if all(x in user_input for x in (CONF_MIN_TEMP, CONF_MAX_TEMP)) and (
+        user_input[CONF_MIN_TEMP] > user_input[CONF_MAX_TEMP]
+    ):
+        raise SchemaFlowError("min_max_temp")
+
     return user_input
 
 
