@@ -300,12 +300,21 @@ async def async_migrate_entry(hass: HomeAssistant, entry: PortainerConfigEntry) 
                     if not entity.unique_id.startswith(legacy_prefix):
                         continue
 
+                    new_unique_id = (
+                        f"{entry_id_prefix}{endpoint_id}_{container_name}_"
+                        f"{entity.unique_id.removeprefix(legacy_prefix)}"
+                    )
+                    if existing_entity_id := entity_registry.async_get_entity_id(
+                        entity.domain, DOMAIN, new_unique_id
+                    ):
+                        # Preserve the canonical row created by the v4 migration.
+                        if existing_entity_id != entity.entity_id:
+                            entity_registry.async_remove(entity.entity_id)
+                        break
+
                     entity_registry.async_update_entity(
                         entity_id=entity.entity_id,
-                        new_unique_id=(
-                            f"{entry_id_prefix}{endpoint_id}_{container_name}_"
-                            f"{entity.unique_id.removeprefix(legacy_prefix)}"
-                        ),
+                        new_unique_id=new_unique_id,
                     )
                     break
 

@@ -128,9 +128,13 @@ async def test_migrations(
 
 
 @pytest.mark.parametrize(
-    ("container_id", "expected_result"),
-    [("1", False), ("5", True)],
-    ids=("Present container", "Stale container"),
+    ("identifier", "expected_result"),
+    [
+        pytest.param("1", False, id="present_endpoint"),
+        pytest.param("1_practical_morse", False, id="present_container"),
+        pytest.param("1_missing", True, id="stale_container"),
+        pytest.param("5", True, id="stale_endpoint"),
+    ],
 )
 async def test_remove_config_entry_device(
     hass: HomeAssistant,
@@ -138,7 +142,7 @@ async def test_remove_config_entry_device(
     mock_config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
     hass_ws_client: WebSocketGenerator,
-    container_id: str,
+    identifier: str,
     expected_result: bool,
 ) -> None:
     """Test manually removing a stale device."""
@@ -149,7 +153,7 @@ async def test_remove_config_entry_device(
 
     device_entry = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
-        identifiers={(DOMAIN, f"{mock_config_entry.entry_id}_{container_id}")},
+        identifiers={(DOMAIN, f"{mock_config_entry.entry_id}_{identifier}")},
     )
 
     ws_client = await hass_ws_client(hass)
@@ -310,7 +314,15 @@ async def test_migration_v5_preserves_legacy_entity_owner(
         via_device_id=endpoint_device.id,
         name="alloy",
     )
-    legacy_entity = entity_registry.async_get_or_create(
+    endpoint_aware_entity = entity_registry.async_get_or_create(
+        domain=Platform.SWITCH,
+        platform=DOMAIN,
+        unique_id=f"{entry.entry_id}_3_alloy_container",
+        config_entry=entry,
+        device_id=container_device.id,
+        original_name="Migrated container",
+    )
+    legacy_duplicate = entity_registry.async_get_or_create(
         domain=Platform.SWITCH,
         platform=DOMAIN,
         unique_id=f"{entry.entry_id}_alloy_container",
@@ -329,8 +341,9 @@ async def test_migration_v5_preserves_legacy_entity_owner(
             DOMAIN,
             f"{entry.entry_id}_3_alloy_container",
         )
-        == legacy_entity.entity_id
+        == endpoint_aware_entity.entity_id
     )
+    assert entity_registry.async_get(legacy_duplicate.entity_id) is None
     assert (
         entity_registry.async_get_entity_id(
             Platform.SWITCH,
