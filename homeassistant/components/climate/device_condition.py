@@ -24,7 +24,8 @@ from homeassistant.helpers.config_validation import DEVICE_CONDITION_BASE_SCHEMA
 from homeassistant.helpers.entity import get_capability, get_supported_features
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
-from . import DOMAIN, const
+from . import const
+from .const import DOMAIN
 
 CONDITION_TYPES = {"is_hvac_mode", "is_preset_mode"}
 

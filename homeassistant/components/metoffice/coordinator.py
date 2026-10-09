@@ -38,12 +38,12 @@ class MetOfficeRuntimeData:
 class MetOfficeUpdateCoordinator(TimestampDataUpdateCoordinator[Forecast]):
     """Coordinator for Met Office forecast data."""
 
-    config_entry: ConfigEntry
+    config_entry: MetOfficeConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        entry: ConfigEntry,
+        entry: MetOfficeConfigEntry,
         name: str,
         connection: Manager,
         latitude: float,

@@ -128,6 +128,11 @@
       }
     }
   },
+  "exceptions": {
+    "write_failed": {
+      "message": "Error writing to {device_file}"
+    }
+  },
   "options": {
     "abort": {
       "no_configurable_devices": "No configurable devices found"

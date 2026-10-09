@@ -11,6 +11,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 from zwave_js_server.model.node import Node
 
+from homeassistant.components.zwave_js.const import DOMAIN
 from homeassistant.components.zwave_js.helpers import get_device_id
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -24,52 +25,53 @@ def _snapshot_device_tree(
 ) -> dict:
     """Build a stable, snapshot-friendly representation of a node's device tree.
 
-    Returns a dict with the node device name, its identifier suffixes, all
-    entities on the node device, and a list of child devices (if any), each
-    with their name, identifiers, and entities.  The snapshot is stable across
-    runs because raw device UUIDs are not included.
+    Returns a nested dict keyed by the stable Z-Wave device id, where the node
+    device maps to its name, its entities (an ``entity_id -> original_name``
+    mapping) and its child devices (a dict keyed by child device id, each with
+    the same name and entities).  The snapshot is stable across runs because raw
+    device UUIDs are not included.
     """
 
-    def _stable_identifiers(device: dr.DeviceEntry) -> list[str]:
-        return sorted(
-            f"{domain}:{identifier}" for domain, identifier in device.identifiers
+    def _zwave_device_id(device: dr.AnyDeviceEntry) -> str:
+        """Return the stable Z-Wave base device id from a device's identifiers.
+
+        A node device can carry both the base ``{home_id}-{node_id}`` identifier
+        and a longer extended ``{home_id}-{node_id}-{mfr}:{type}:{id}`` one; the
+        base is always the shortest, so pick the shortest by length.
+        """
+        return min(
+            (
+                identifier
+                for domain, identifier in device.identifiers
+                if domain == DOMAIN
+            ),
+            key=len,
         )
 
-    def _entities_for_device(device_id: str) -> list[dict]:
-        entries = er.async_entries_for_device(
-            entity_registry, device_id, include_disabled_entities=True
-        )
-        return sorted(
-            [
-                {
-                    "entity_id": entry.entity_id,
-                    "original_name": entry.original_name,
-                    "disabled_by": str(entry.disabled_by),
-                }
-                for entry in entries
-            ],
-            key=lambda e: e["entity_id"],
-        )
-
-    child_devices = sorted(
-        dr.async_entries_for_parent_device(device_registry, node_device.id),
-        key=_stable_identifiers,
-    )
+    def _device_entity_names(device_id: str) -> dict[str, str | None]:
+        # Syrupy sorts mapping keys on output, so the entity_id keys end up
+        # ordered in the snapshot regardless of insertion order here.
+        return {
+            entry.entity_id: entry.original_name
+            for entry in er.async_entries_for_device(
+                entity_registry, device_id, include_disabled_entities=True
+            )
+        }
 
     return {
-        "node_device": {
+        _zwave_device_id(node_device): {
             "name": node_device.name,
-            "identifiers": _stable_identifiers(node_device),
-            "entities": _entities_for_device(node_device.id),
-        },
-        "child_devices": [
-            {
-                "name": child.name,
-                "identifiers": _stable_identifiers(child),
-                "entities": _entities_for_device(child.id),
-            }
-            for child in child_devices
-        ],
+            "entities": _device_entity_names(node_device.id),
+            "children": {
+                _zwave_device_id(child): {
+                    "name": child.name,
+                    "entities": _device_entity_names(child.id),
+                }
+                for child in dr.async_entries_for_parent_device(
+                    device_registry, node_device.id
+                )
+            },
+        }
     }
 
 
@@ -90,9 +92,9 @@ def node(request: pytest.FixtureRequest) -> Node:
         # Fibaro FGR-223 Roller Shutter 3: single motor output controlling a roller
         # or venetian shutter. Endpoint 1 is the primary shutter control
         # (SWITCH_MULTILEVEL for position). Endpoint 2 exposes slat/tilt control for
-        # venetian mode; it produces a secondary cover entity disabled by the
-        # integration by default (disabled_by: integration), so a registry entry
-        # exists but the entity is off unless the user enables it.
+        # venetian mode; it produces a secondary cover entity that the integration
+        # disables by default, so a registry entry exists (and is included in the
+        # snapshot) but the entity is off unless the user enables it.
         pytest.param("fibaro_fgr223_shutter", id="fibaro_fgr223"),
         # Shelly/Qubino QNSH-001P10 Wave Shutter: one bi-directional motor (O1 up,
         # O2 down), same topology as the FGR-223. Endpoint 1 is shutter position;

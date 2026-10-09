@@ -55,7 +55,7 @@ _TRIGGER_SCHEMA = probatio.Schema(
 
 # Legacy trigger used top-level entity_id/device_id options
 _LEGACY_OPTIONS_SCHEMA_DICT: dict[probatio.Marker, Any] = {
-    probatio.Optional(ATTR_DEVICE_ID): probatio.All(cv.ensure_list, [cv.string]),
+    probatio.Optional(ATTR_DEVICE_ID): probatio.All(probatio.EnsureList(), [cv.string]),
     probatio.Optional(ATTR_ENTITY_ID): cv.entity_ids,
 }
 
@@ -63,7 +63,7 @@ _LEGACY_TRIGGER_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_OPTIONS): probatio.All(
             _LEGACY_OPTIONS_SCHEMA_DICT,
-            cv.has_at_least_one_key(ATTR_ENTITY_ID, ATTR_DEVICE_ID),
+            probatio.AtLeastOne(ATTR_ENTITY_ID, ATTR_DEVICE_ID),
         )
     }
 )

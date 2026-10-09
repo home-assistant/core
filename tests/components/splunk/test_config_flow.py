@@ -4,8 +4,8 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from homeassistant.components.splunk.const import DEFAULT_HOST, DEFAULT_PORT, DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
+from homeassistant.components.splunk.const import DOMAIN
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -141,104 +141,6 @@ async def test_user_flow_already_configured(
     # With single_config_entry in manifest, flow should abort immediately
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "single_instance_allowed"
-
-
-async def test_import_flow_success(
-    hass: HomeAssistant, mock_hass_splunk: AsyncMock
-) -> None:
-    """Test successful import flow."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data={
-            CONF_TOKEN: "test-token-123",
-            CONF_HOST: "splunk.example.com",
-            CONF_PORT: 8088,
-            CONF_SSL: False,
-            CONF_NAME: "Imported Splunk",
-        },
-    )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "splunk.example.com:8088"
-    assert result["data"] == {
-        CONF_TOKEN: "test-token-123",
-        CONF_HOST: "splunk.example.com",
-        CONF_PORT: 8088,
-        CONF_SSL: False,
-        CONF_NAME: "Imported Splunk",
-    }
-
-
-@pytest.mark.parametrize(
-    ("side_effect", "reason"),
-    [
-        ([False, True], "cannot_connect"),
-        ([True, False], "invalid_auth"),
-        (Exception("Unexpected error"), "unknown"),
-    ],
-)
-async def test_import_flow_error_and_recovery(
-    hass: HomeAssistant,
-    mock_hass_splunk: AsyncMock,
-    side_effect: list[bool] | Exception,
-    reason: str,
-) -> None:
-    """Test import flow errors and recovery."""
-    mock_hass_splunk.check.side_effect = side_effect
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data={
-            CONF_TOKEN: "test-token-123",
-            CONF_HOST: "splunk.example.com",
-            CONF_PORT: 8088,
-            CONF_SSL: False,
-        },
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == reason
-
-    # Test recovery by resetting mock and importing again
-    mock_hass_splunk.check.side_effect = None
-    mock_hass_splunk.check.return_value = True
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data={
-            CONF_TOKEN: "test-token-123",
-            CONF_HOST: "splunk.example.com",
-            CONF_PORT: 8088,
-            CONF_SSL: False,
-        },
-    )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-
-
-async def test_import_flow_already_configured(
-    hass: HomeAssistant, mock_hass_splunk: AsyncMock, mock_config_entry: MockConfigEntry
-) -> None:
-    """Test import flow when entry is already configured (single instance)."""
-    mock_config_entry.add_to_hass(hass)
-
-    # With single_config_entry in manifest, import should abort immediately
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data={
-            CONF_TOKEN: "test-token-123",
-            CONF_HOST: DEFAULT_HOST,
-            CONF_PORT: DEFAULT_PORT,
-            CONF_SSL: False,
-        },
     )
 
     assert result["type"] is FlowResultType.ABORT

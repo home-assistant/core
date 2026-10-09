@@ -5,6 +5,7 @@ from unittest.mock import MagicMock
 from homeassistant.components.tellduslive import NEW_CLIENT_TASK
 from homeassistant.components.tellduslive.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
@@ -38,8 +39,12 @@ async def test_device_via_device_links(
     )
     assert child_device is not None
     assert child_device.via_device_id == hub_device.id
+    assert hass.states.async_all("switch")
 
     assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    assert all(
+        state.state == STATE_UNAVAILABLE for state in hass.states.async_all("switch")
+    )
 
 
 async def test_device_added_without_hub(
@@ -72,3 +77,19 @@ async def test_device_added_without_hub(
     assert child_device.via_device_id is None
 
     assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+
+
+async def test_setup_not_authorized(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_tellduslive: MagicMock,
+) -> None:
+    """Test setup fails when the session is not authorized."""
+    mock_tellduslive.is_authorized = False
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.reason == "Authentication with Telldus Live failed"

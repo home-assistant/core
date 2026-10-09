@@ -23,7 +23,8 @@ from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
-from . import DOMAIN, const
+from . import const
+from .const import DOMAIN
 
 TRIGGER_TYPES = {
     "current_temperature_changed",
@@ -52,7 +53,7 @@ CURRENT_TRIGGER_SCHEMA = probatio.All(
             probatio.Optional(CONF_FOR): cv.positive_time_period_dict,
         }
     ),
-    cv.has_at_least_one_key(CONF_BELOW, CONF_ABOVE),
+    probatio.AtLeastOne(CONF_BELOW, CONF_ABOVE),
 )
 
 TRIGGER_SCHEMA = probatio.Any(HVAC_MODE_TRIGGER_SCHEMA, CURRENT_TRIGGER_SCHEMA)

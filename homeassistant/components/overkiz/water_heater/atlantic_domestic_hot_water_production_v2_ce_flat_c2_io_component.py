@@ -75,7 +75,7 @@ class AtlanticDomesticHotWaterProductionV2CEFLATC2IOComponent(
 ):
     """Representation of io:AtlanticDomesticHotWaterProductionV2_CE_FLAT_C2_IOComponent."""
 
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_translation_key = DOMAIN
     _attr_supported_features = (
         WaterHeaterEntityFeature.TARGET_TEMPERATURE
@@ -106,7 +106,7 @@ class AtlanticDomesticHotWaterProductionV2CEFLATC2IOComponent(
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         if current_temp := self.device.states.get(
             OverkizState.IO_MIDDLE_WATER_TEMPERATURE
@@ -116,7 +116,7 @@ class AtlanticDomesticHotWaterProductionV2CEFLATC2IOComponent(
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the target temperature."""
         if target_temp := self.device.states.get(
             OverkizState.CORE_WATER_TARGET_TEMPERATURE

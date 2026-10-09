@@ -38,11 +38,13 @@ SERVICE_SCHEMA_SEND_MESSAGE = probatio.Schema(
             probatio.Optional(ATTR_FORMAT, default=DEFAULT_MESSAGE_FORMAT): probatio.In(
                 MESSAGE_FORMATS
             ),
-            probatio.Optional(ATTR_IMAGES): probatio.All(cv.ensure_list, [cv.string]),
+            probatio.Optional(ATTR_IMAGES): probatio.All(
+                probatio.EnsureList(), [cv.string]
+            ),
             probatio.Optional(ATTR_THREAD_ID): cv.string,
         },
         probatio.Required(ATTR_TARGET): probatio.All(
-            cv.ensure_list, [cv.matches_regex(CONF_ROOMS_REGEX)]
+            probatio.EnsureList(), [cv.matches_regex(CONF_ROOMS_REGEX)]
         ),
     }
 )

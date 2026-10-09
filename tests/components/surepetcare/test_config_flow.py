@@ -47,6 +47,7 @@ async def test_form(hass: HomeAssistant, surepetcare: NonCallableMagicMock) -> N
         "password": "test-password",
         "token": "token",
     }
+    assert result2["result"].unique_id == "test-username"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -129,15 +130,21 @@ async def test_flow_entry_already_exists(
         unique_id="test-username",
     )
     first_entry.add_to_hass(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
 
     with patch(
         "homeassistant.components.surepetcare.async_setup_entry",
         return_value=True,
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-            data={
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
                 "username": "test-username",
                 "password": "test-password",
             },

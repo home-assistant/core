@@ -1,6 +1,5 @@
 """Sensor platform for Ista EcoTrend integration."""
 
-import asyncio
 from dataclasses import dataclass
 import datetime
 from enum import StrEnum
@@ -132,6 +131,7 @@ SENSOR_DESCRIPTIONS: tuple[IstaSensorEntityDescription, ...] = (
     ),
     IstaSensorEntityDescription(
         key=IstaSensorEntity.WATER,
+        # pylint: disable-next=home-assistant-redundant-translation-key
         translation_key=IstaSensorEntity.WATER,
         device_class=SensorDeviceClass.WATER,
         native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
@@ -223,7 +223,9 @@ class IstaSensor(CoordinatorEntity[IstaCoordinator], SensorEntity):
     @override
     def _handle_coordinator_update(self) -> None:
         """Handle coordinator update."""
-        asyncio.run_coroutine_threadsafe(self.update_statistics(), self.hass.loop)
+        self.coordinator.config_entry.async_create_task(
+            self.hass, self.update_statistics()
+        )
 
     async def update_statistics(self) -> None:
         """Import ista EcoTrend historical statistics."""

@@ -286,11 +286,19 @@ _TARGET_HELPER_MODULES = frozenset(
 )
 
 
+def _is_helper_module(module: str) -> bool:
+    """Return True for a trigger/condition helper module or one of its submodules."""
+    return any(
+        module == helper or module.startswith(f"{helper}.")
+        for helper in _TARGET_HELPER_MODULES
+    )
+
+
 def _foreign_names(cls: type) -> set[str]:
     """Return names defined by MRO classes outside the trigger/condition helpers."""
     names: set[str] = set()
     for klass in cls.__mro__:
-        if klass.__module__ in _TARGET_HELPER_MODULES:
+        if _is_helper_module(klass.__module__):
             continue
         names.update(vars(klass))
     return names
@@ -315,7 +323,7 @@ def _target_slot_validator(cls: type) -> object | None:
 def _init_hygiene_violation(cls: type, key: str, config_cls_name: str) -> str | None:
     """Return an error if an __init__ override rewrites the config or target."""
     for klass in cls.__mro__:
-        if klass.__module__ in _TARGET_HELPER_MODULES:
+        if _is_helper_module(klass.__module__):
             return None
         if "__init__" not in vars(klass):
             continue
@@ -340,7 +348,7 @@ def _init_hygiene_violation(cls: type, key: str, config_cls_name: str) -> str | 
 def _entity_filter_hygiene_violation(cls: type, key: str) -> str | None:
     """Return an error if an entity_filter override does not narrow the base."""
     for klass in cls.__mro__:
-        if klass.__module__ in _TARGET_HELPER_MODULES:
+        if _is_helper_module(klass.__module__):
             return None
         if "entity_filter" not in vars(klass):
             continue
@@ -2865,23 +2873,24 @@ async def assert_numerical_condition_unit_conversion(
 async def assert_availability_follows_source_entity(
     hass: HomeAssistant,
     entity_id: str,
-    source_entity_id: str,
+    source_entity_ids: list[str],
 ) -> None:
-    """Check that entity becomes unavailable when source entity is unavailable."""
+    """Check that the entity is available only when all source entities are available."""
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state != STATE_UNAVAILABLE
 
-    hass.states.async_set(source_entity_id, STATE_UNAVAILABLE)
-    await hass.async_block_till_done()
+    for source_states in itertools.product(
+        (STATE_UNAVAILABLE, STATE_UNKNOWN), repeat=len(source_entity_ids)
+    ):
+        for source_entity_id, source_state in zip(
+            source_entity_ids, source_states, strict=True
+        ):
+            hass.states.async_set(source_entity_id, source_state)
+        await hass.async_block_till_done()
 
-    state = hass.states.get(entity_id)
-    assert state is not None
-    assert state.state == STATE_UNAVAILABLE
-
-    hass.states.async_set(source_entity_id, STATE_UNKNOWN)
-    await hass.async_block_till_done()
-
-    state = hass.states.get(entity_id)
-    assert state is not None
-    assert state.state != STATE_UNAVAILABLE
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert (state.state != STATE_UNAVAILABLE) == all(
+            source_state != STATE_UNAVAILABLE for source_state in source_states
+        )

@@ -40,6 +40,7 @@ async def test_form(hass: HomeAssistant) -> None:
         assert result2["type"] is FlowResultType.CREATE_ENTRY
         assert result2["title"] == TEST_USER_ID
         assert result2["data"] == {"username": TEST_USER_ID, "password": TEST_PASSWORD}
+        assert result2["result"].unique_id == TEST_USER_ID
         await hass.async_block_till_done()
         assert len(mock_setup_entry.mock_calls) == 1
 
@@ -115,6 +116,7 @@ async def test_form_sso_after_legacy_failure(
             "password": TEST_PASSWORD,
             CONF_USE_SSO: True,
         }
+        assert result2["result"].unique_id == TEST_USER_ID
         await hass.async_block_till_done()
         assert len(mock_setup_entry.mock_calls) == 1
 

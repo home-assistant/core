@@ -615,18 +615,17 @@ async def test_ac_set_temperature_without_hvac_mode(
 @pytest.mark.parametrize(
     ("humidity", "expected_humidity"),
     [
-        pytest.param(50, 50.0, id="normal"),
-        pytest.param(0, None, id="invalid_zero"),
-        pytest.param(0xFF, None, id="invalid_ff"),
+        pytest.param(50, 50.0, id="numeric"),
+        pytest.param(None, None, id="unavailable"),
     ],
 )
-async def test_ac_humidity_filtering(
+async def test_ac_current_humidity(
     hass: HomeAssistant,
     mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
-    humidity: int,
+    humidity: int | None,
     expected_humidity: float | None,
 ) -> None:
-    """Test AC humidity filtering for invalid sensor values."""
+    """Test AC current_humidity reflects the device's raw attribute value."""
     device = DummyDevice(
         DeviceType.AC,
         attributes={

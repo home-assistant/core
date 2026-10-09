@@ -59,6 +59,7 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result2["data"] == {
         "host": "1.2.3.4",
     }
+    assert result2["result"].unique_id == "aa:bb:cc:dd:ee:ff"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -140,6 +141,7 @@ async def test_dhcp_can_confirm(hass: HomeAssistant) -> None:
     assert result2["data"] == {
         "host": "1.2.3.4",
     }
+    assert result2["result"].unique_id == "aa:bb:cc:dd:ee:ff"
     assert len(mock_setup_entry.mock_calls) == 1
 
 

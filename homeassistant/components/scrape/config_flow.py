@@ -15,7 +15,7 @@ from homeassistant.components.rest.schema import (  # pylint: disable=home-assis
     DEFAULT_METHOD,
     METHODS,
 )
-from homeassistant.components.sensor import CONF_STATE_CLASS
+from homeassistant.components.sensor import CONF_STATE_CLASS, DEVICE_CLASS_UNITS
 from homeassistant.config_entries import (
     SOURCE_USER,
     ConfigEntry,
@@ -45,7 +45,6 @@ from homeassistant.const import (
     HTTP_BASIC_AUTHENTICATION,
     HTTP_DIGEST_AUTHENTICATION,
     Platform,
-    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.selector import (
@@ -108,7 +107,7 @@ RESOURCE_SETUP = probatio.Schema(
                             type=TextSelectorType.TEXT, autocomplete="username"
                         )
                     ),
-                    probatio.Optional(CONF_PASSWORD): TextSelector(
+                    probatio.Optional(probatio.Secret(CONF_PASSWORD)): TextSelector(
                         TextSelectorConfig(
                             type=TextSelectorType.PASSWORD,
                             autocomplete="current-password",
@@ -161,10 +160,16 @@ SENSOR_SETTINGS = probatio.Schema(
                     probatio.Optional(CONF_STATE_CLASS): StateClassSelector(),
                     probatio.Optional(CONF_UNIT_OF_MEASUREMENT): SelectSelector(
                         SelectSelectorConfig(
-                            options=[cls.value for cls in UnitOfTemperature],
-                            custom_value=True,
+                            options=list(
+                                {
+                                    str(unit)
+                                    for units in DEVICE_CLASS_UNITS.values()
+                                    for unit in units
+                                    if unit is not None
+                                }
+                            ),
                             mode=SelectSelectorMode.DROPDOWN,
-                            translation_key="unit_of_measurement",
+                            custom_value=True,
                             sort=True,
                         )
                     ),

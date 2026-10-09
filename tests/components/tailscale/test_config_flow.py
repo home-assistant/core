@@ -40,6 +40,7 @@ async def test_full_user_flow(
         CONF_TAILNET: "homeassistant.github",
         CONF_API_KEY: "tskey-FAKE",
     }
+    assert result2["result"].unique_id == "homeassistant.github"
 
     assert len(mock_setup_entry.mock_calls) == 1
     assert len(mock_tailscale_config_flow.devices.mock_calls) == 1

@@ -1,5 +1,6 @@
 """Support for functionality to download files."""
 
+from enum import StrEnum
 from http import HTTPStatus
 import os
 import re
@@ -14,18 +15,28 @@ from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.util import raise_if_invalid_filename, raise_if_invalid_path
 
 from .const import (
-    ATTR_FILENAME,
-    ATTR_HEADERS,
-    ATTR_OVERWRITE,
-    ATTR_SUBDIR,
-    ATTR_URL,
     CONF_DOWNLOAD_DIR,
     DOMAIN,
     DOWNLOAD_COMPLETED_EVENT,
     DOWNLOAD_FAILED_EVENT,
     LOGGER,
-    SERVICE_DOWNLOAD_FILE,
 )
+
+
+class DownloaderService(StrEnum):
+    """Store keys for Downloader services."""
+
+    DOWNLOAD_FILE = "download_file"
+
+
+class DownloaderServiceArgument(StrEnum):
+    """Store keys for Downloader service arguments."""
+
+    FILENAME = "filename"
+    HEADERS = "headers"
+    OVERWRITE = "overwrite"
+    SUBDIR = "subdir"
+    URL = "url"
 
 
 async def download_file(service: ServiceCall) -> None:
@@ -33,11 +44,11 @@ async def download_file(service: ServiceCall) -> None:
 
     entry = service.hass.config_entries.async_loaded_entries(DOMAIN)[0]
     download_path = entry.data[CONF_DOWNLOAD_DIR]
-    url: str = service.data[ATTR_URL]
-    subdir: str | None = service.data.get(ATTR_SUBDIR)
-    target_filename: str | None = service.data.get(ATTR_FILENAME)
-    overwrite: bool = service.data[ATTR_OVERWRITE]
-    headers: dict[str, str] = service.data[ATTR_HEADERS]
+    url: str = service.data[DownloaderServiceArgument.URL]
+    subdir: str | None = service.data.get(DownloaderServiceArgument.SUBDIR)
+    target_filename: str | None = service.data.get(DownloaderServiceArgument.FILENAME)
+    overwrite: bool = service.data[DownloaderServiceArgument.OVERWRITE]
+    headers: dict[str, str] = service.data[DownloaderServiceArgument.HEADERS]
 
     if subdir:
         # Check the path
@@ -163,17 +174,19 @@ def async_setup_services(hass: HomeAssistant) -> None:
     async_register_admin_service(
         hass,
         DOMAIN,
-        SERVICE_DOWNLOAD_FILE,
+        DownloaderService.DOWNLOAD_FILE,
         download_file,
         schema=probatio.Schema(
             {
-                probatio.Optional(ATTR_FILENAME): cv.string,
-                probatio.Optional(ATTR_SUBDIR): cv.string,
-                probatio.Required(ATTR_URL): cv.url,
-                probatio.Optional(ATTR_OVERWRITE, default=False): cv.boolean,
-                probatio.Optional(ATTR_HEADERS, default=dict): probatio.Schema(
-                    {cv.string: cv.string}
-                ),
+                probatio.Optional(DownloaderServiceArgument.FILENAME): cv.string,
+                probatio.Optional(DownloaderServiceArgument.SUBDIR): cv.string,
+                probatio.Required(DownloaderServiceArgument.URL): cv.url,
+                probatio.Optional(
+                    DownloaderServiceArgument.OVERWRITE, default=False
+                ): cv.boolean,
+                probatio.Optional(
+                    DownloaderServiceArgument.HEADERS, default=dict
+                ): probatio.Schema({cv.string: cv.string}),
             }
         ),
     )

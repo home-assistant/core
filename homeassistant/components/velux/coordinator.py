@@ -30,6 +30,7 @@ class VeluxLimitationCoordinator(DataUpdateCoordinator[VeluxLimitationData | Non
     def __init__(
         self,
         hass: HomeAssistant,
+        # pylint: disable-next=home-assistant-coordinator-untyped-config-entry
         config_entry: ConfigEntry,
         node: OpeningDevice,
     ) -> None:

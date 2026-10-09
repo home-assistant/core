@@ -55,7 +55,6 @@ TEST_OPTIONS = {
 }
 
 TEST_ADVANCED_OPTIONS = {
-    "scan_interval": 10,
     "concurrency": 3,
 }
 
@@ -99,6 +98,7 @@ async def test_cloud_form(hass: HomeAssistant) -> None:
     assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == TEST_SITE_NAME
     assert result3["data"] == TEST_CLOUD_DATA
+    assert result3["result"].unique_id == TEST_CLOUD_DATA["username"]
     assert len(mock_setup_entry.mock_calls) == 1
     mock_close.assert_awaited_once()
 
@@ -277,6 +277,7 @@ async def test_local_form(hass: HomeAssistant) -> None:
     assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["title"] == TEST_SITE_NAME
     assert result3["data"] == expected_data
+    assert result3["result"].unique_id == TEST_SITE_NAME
     assert len(mock_setup_entry.mock_calls) == 1
     mock_close.assert_awaited_once()
 
@@ -384,7 +385,6 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert entry.options == {
         **TEST_OPTIONS,
-        "scan_interval": 30,
         "concurrency": 4,
         "risco_states_to_ha": TEST_RISCO_TO_HA,
         "ha_states_to_risco": TEST_HA_TO_RISCO,

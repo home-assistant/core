@@ -40,7 +40,7 @@ CONFIG_SCHEMA = probatio.Schema(
             CLIMATE_DOMAIN: probatio.Schema(
                 {
                     probatio.Optional(CONF_IP_ADDRESS, default=[]): probatio.All(
-                        cv.ensure_list, [probatio.All(cv.string, coerce_ip)]
+                        probatio.EnsureList(), [probatio.All(cv.string, coerce_ip)]
                     )
                 }
             )

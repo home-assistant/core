@@ -47,8 +47,11 @@ async def async_setup_entry(
     known_entities: set[tuple[str, int]] = set()
 
     @callback
-    def _async_add_new_entities() -> None:
+    def _add_new_entities() -> None:
         """Add number entities for discovered bypass temperature targets."""
+        if (box_node := coordinator.data.nodes.get(BOX_NODE_ID)) is None:
+            return
+
         new_entities = []
         targets = coordinator.data.bypass_supply_temperature_targets
         for description in NUMBER_DESCRIPTIONS:
@@ -60,7 +63,7 @@ async def async_setup_entry(
                 new_entities.append(
                     DucoBypassSupplyTemperatureTargetNumber(
                         coordinator,
-                        coordinator.data.nodes[BOX_NODE_ID],
+                        box_node,
                         description,
                         zone_id,
                         target.minimum,
@@ -72,8 +75,8 @@ async def async_setup_entry(
         if new_entities:
             async_add_entities(new_entities)
 
-    entry.async_on_unload(coordinator.async_add_listener(_async_add_new_entities))
-    _async_add_new_entities()
+    entry.async_on_unload(coordinator.async_add_listener(_add_new_entities))
+    _add_new_entities()
 
 
 class DucoBypassSupplyTemperatureTargetNumber(DucoEntity, NumberEntity):

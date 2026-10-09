@@ -41,6 +41,7 @@ async def test_form(hass: HomeAssistant) -> None:
         assert result2["type"] is FlowResultType.CREATE_ENTRY
         assert result2["title"] == SERVER_STATUS.name  # pylint: disable=maybe-no-member
         assert result2["data"] == CONFIG
+        assert result2["result"].unique_id == hash_from_url(CONFIG[CONF_URL])
         await hass.async_block_till_done()
         assert len(mock_setup_entry.mock_calls) == 1
 
