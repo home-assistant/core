@@ -60,6 +60,7 @@ async def async_setup_entry(
         async_unsubscribe_topics(hass, sub_state)
 
     if not await mqtt.async_wait_for_mqtt_client(hass):
+        # pylint: disable-next=home-assistant-log-and-raise
         LOGGER.error("MQTT integration not available")
         raise ConfigEntryNotReady("MQTT integration not available")
 

@@ -147,6 +147,7 @@ Every check has a code following the
 | `W7442` | [`home-assistant-redundant-translation-key`](#w7442-home-assistant-redundant-translation-key) | `translation_key` only repeats the name the `device_class` already provides |
 | `W7447` | [`home-assistant-coordinator-untyped-config-entry`](#w7447-home-assistant-coordinator-untyped-config-entry) | Coordinator should use the integration's typed config entry instead of `ConfigEntry` |
 | `W7448` | [`home-assistant-coordinator-redundant-config-entry`](#w7448-home-assistant-coordinator-redundant-config-entry) | Coordinator assigns `self.config_entry` that `DataUpdateCoordinator.__init__` already sets |
+| `W7450` | [`home-assistant-log-and-raise`](#w7450-home-assistant-log-and-raise) | Don't log an error that is raised to Home Assistant, which already reports it |
 
 
 ## `home_assistant_logger` checker
@@ -345,6 +346,32 @@ When the alias lives in `__init__.py`, import it in the coordinator under
 coordinator that passes `config_entry` to `super().__init__` doesn't need to
 assign `self.config_entry` itself. To narrow its type, annotate it on the
 class instead.
+
+
+## `home_assistant_log_and_raise` checker
+
+Checks for errors that are logged and then raised to Home Assistant.
+
+### `W7450`: `home-assistant-log-and-raise`
+
+Home Assistant already reports the exceptions an integration raises to it:
+config entry setup logs `ConfigEntryNotReady`, `ConfigEntryAuthFailed` and
+`ConfigEntryError`, a coordinator logs `UpdateFailed`, and a failing action
+returns `HomeAssistantError` or `ServiceValidationError` to the caller.
+Logging the error at warning level or higher before raising it reports it
+twice, and for `ConfigEntryNotReady` on every retry:
+
+```python
+except MyDeviceError as err:
+    raise UpdateFailed(
+        translation_domain=DOMAIN,
+        translation_key="update_failed",
+    ) from err
+```
+
+Put the details in the exception or log them at debug level. Exceptions that
+an integration defines itself, such as a config flow's `CannotConnect`, are
+not checked.
 
 
 ## `home_assistant_async_load_fixtures` checker

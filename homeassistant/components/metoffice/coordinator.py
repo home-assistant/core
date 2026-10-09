@@ -89,6 +89,7 @@ def fetch_data(
             latitude, longitude, frequency, convert_weather_code=False
         )
     except (ValueError, APIException) as err:
+        # pylint: disable-next=home-assistant-log-and-raise
         _LOGGER.error("Check Met Office connection: %s", err.args)
         raise UpdateFailed from err
     except HTTPError as err:

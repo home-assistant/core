@@ -142,6 +142,7 @@ class IcloudAccount:
             PyiCloudNoDevicesException,
             PyiCloudServiceUnavailable,
         ) as err:
+            # pylint: disable-next=home-assistant-log-and-raise
             _LOGGER.error("No iCloud device found")
             raise ConfigEntryNotReady from err
 

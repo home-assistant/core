@@ -37,6 +37,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: OVOEnergyConfigEntry) ->
 
         await client.bootstrap_accounts()
     except aiohttp.ClientError as exception:
+        # pylint: disable-next=home-assistant-log-and-raise
         _LOGGER.warning(exception)
         raise ConfigEntryNotReady from exception
 

@@ -53,6 +53,7 @@ async def async_fetch_airos_data(
         await airos_device.login()
         return await update_method()
     except AirOSConnectionAuthenticationError as err:
+        # pylint: disable-next=home-assistant-log-and-raise
         _LOGGER.exception("Error authenticating with airOS device")
         raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN, translation_key="invalid_auth"
@@ -62,12 +63,14 @@ async def async_fetch_airos_data(
         AirOSDeviceConnectionError,
         TimeoutError,
     ) as err:
+        # pylint: disable-next=home-assistant-log-and-raise
         _LOGGER.error("Error connecting to airOS device: %s", err)
         raise UpdateFailed(
             translation_domain=DOMAIN,
             translation_key="cannot_connect",
         ) from err
     except AirOSDataMissingError as err:
+        # pylint: disable-next=home-assistant-log-and-raise
         _LOGGER.error("Expected data not returned by airOS device: %s", err)
         raise UpdateFailed(
             translation_domain=DOMAIN,

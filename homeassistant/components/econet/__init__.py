@@ -56,6 +56,7 @@ async def async_setup_entry(
             translation_key="invalid_credentials",
         ) from err
     except (ClientError, PyeconetError) as err:
+        # pylint: disable-next=home-assistant-log-and-raise
         _LOGGER.error("Config entry failed: %s", err)
         raise ConfigEntryNotReady from err
 

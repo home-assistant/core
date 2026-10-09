@@ -48,6 +48,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: WiffiConfigEntry) -> boo
                 translation_key="start_server_failed",
                 translation_placeholders={"port": str(entry.data[CONF_PORT])},
             ) from exc
+        # pylint: disable-next=home-assistant-log-and-raise
         _LOGGER.error("Port %s already in use", entry.data[CONF_PORT])
         raise ConfigEntryNotReady from exc
 

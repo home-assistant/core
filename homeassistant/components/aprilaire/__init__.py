@@ -49,6 +49,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AprilaireConfigEntry) ->
                 hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_close)
             )
         else:
+            # pylint: disable-next=home-assistant-log-and-raise
             _LOGGER.error("Failed to wait for ready")
 
             coordinator.stop_listen()

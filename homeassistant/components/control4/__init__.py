@@ -66,6 +66,7 @@ async def call_c4_api_retry(func, *func_args):
             )
             exc = exception
 
+    # pylint: disable-next=home-assistant-log-and-raise
     _LOGGER.error(
         "Failed to connect to Control4 account API after %d attempts: %s",
         API_RETRY_TIMES,
@@ -85,6 +86,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: Control4ConfigEntry) -> 
     try:
         await account.get_account_bearer_token()
     except client_exceptions.ClientError as exception:
+        # pylint: disable-next=home-assistant-log-and-raise
         _LOGGER.error("Error connecting to Control4 account API: %s", exception)
         raise ConfigEntryNotReady(
             "Error connecting to Control4 account API to get bearer token"
@@ -129,6 +131,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: Control4ConfigEntry) -> 
     try:
         director_all_items: list[dict[str, Any]] = await director.get_all_item_info()
     except (TimeoutError, client_exceptions.ClientError) as err:
+        # pylint: disable-next=home-assistant-log-and-raise
         _LOGGER.error(
             "Timeout connecting to Control4 controller at %s",
             config[CONF_HOST],
@@ -143,6 +146,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: Control4ConfigEntry) -> 
         try:
             ui_configuration = await director.get_ui_configuration()
         except (TimeoutError, client_exceptions.ClientError) as err:
+            # pylint: disable-next=home-assistant-log-and-raise
             _LOGGER.error(
                 "Timeout getting UI configuration from Control4 controller at %s",
                 config[CONF_HOST],

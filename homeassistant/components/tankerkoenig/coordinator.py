@@ -141,6 +141,7 @@ class TankerkoenigDataUpdateCoordinator(DataUpdateCoordinator[dict[str, PriceInf
                     translation_key="invalid_api_key",
                 ) from err
             except TankerkoenigRateLimitError as err:
+                # pylint: disable-next=home-assistant-log-and-raise
                 _LOGGER.warning(
                     "API rate limit reached, consider to increase polling interval"
                 )

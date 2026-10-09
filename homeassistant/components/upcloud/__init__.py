@@ -32,6 +32,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: UpCloudConfigEntry) -> b
             translation_key="authentication_failed",
         ) from err
     except requests.exceptions.RequestException as err:
+        # pylint: disable-next=home-assistant-log-and-raise
         _LOGGER.exception("Failed to connect")
         raise ConfigEntryNotReady from err
 

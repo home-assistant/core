@@ -50,5 +50,6 @@ class PoolSenseDataUpdateCoordinator(DataUpdateCoordinator[dict[str, StateType]]
             try:
                 return await self.poolsense.get_poolsense_data()
             except PoolSenseError as error:
+                # pylint: disable-next=home-assistant-log-and-raise
                 _LOGGER.error("PoolSense query did not complete")
                 raise UpdateFailed(error) from error

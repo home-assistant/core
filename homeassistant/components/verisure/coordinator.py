@@ -129,6 +129,7 @@ class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
     def _raise_rate_limited(self, exc: VerisureRateLimitError, context: str) -> None:
         """Log rate limiting and defer the next poll."""
         retry_after = self._rate_limit_retry_seconds()
+        # pylint: disable-next=home-assistant-log-and-raise
         LOGGER.warning(
             "Verisure rate limited during %s, %s; backing off %s seconds",
             context,
@@ -163,6 +164,7 @@ class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
         except VerisureRateLimitError as ex:
             self._raise_rate_limited(ex, "cookie refresh")
         except (VerisureRequestError, VerisureResponseError) as ex:
+            # pylint: disable-next=home-assistant-log-and-raise
             LOGGER.warning(
                 "Verisure unreachable or server error during cookie refresh, %s", ex
             )
@@ -190,6 +192,7 @@ class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
                 )
                 return False
         except VerisureLoginError as ex:
+            # pylint: disable-next=home-assistant-log-and-raise
             LOGGER.error("Credentials expired for Verisure, %s", ex)
             raise ConfigEntryAuthFailed("Credentials expired for Verisure") from ex
         except (
@@ -228,6 +231,7 @@ class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
                 self.verisure.smartplugs(),
             )
         except VerisureError as err:
+            # pylint: disable-next=home-assistant-log-and-raise
             LOGGER.error("Could not read overview, %s", err)
             raise UpdateFailed("Could not read overview") from err
 

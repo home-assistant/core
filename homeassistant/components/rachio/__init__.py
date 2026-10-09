@@ -91,6 +91,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: RachioConfigEntry) -> bo
             translation_key="authentication_failed",
         ) from error
     except ConnectTimeout as error:
+        # pylint: disable-next=home-assistant-log-and-raise
         _LOGGER.error("Could not reach the Rachio API: %s", error)
         raise ConfigEntryNotReady from error
 

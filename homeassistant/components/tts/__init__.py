@@ -405,6 +405,7 @@ async def _async_convert_audio(
         if retcode != 0:
             assert process.stderr
             stderr_data = await process.stderr.read()
+            # pylint: disable-next=home-assistant-log-and-raise
             _LOGGER.error(stderr_data.decode())
             raise HomeAssistantError(
                 f"Unexpected error while running ffmpeg with arguments: {command}. "

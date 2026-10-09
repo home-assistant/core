@@ -140,6 +140,7 @@ class MelCloudDeviceUpdateCoordinator(DataUpdateCoordinator[None]):
             if ex.status in (401, 403):
                 raise ConfigEntryAuthFailed from ex
             if ex.status == 429:
+                # pylint: disable-next=home-assistant-log-and-raise
                 _LOGGER.error(
                     "MELCloud rate limit exceeded for %s. Your account may be "
                     "temporarily blocked",
@@ -177,6 +178,7 @@ class MelCloudDeviceUpdateCoordinator(DataUpdateCoordinator[None]):
             self.update_interval = timedelta(seconds=RETRY_INTERVAL_SECONDS)
         else:
             # Threshold reached - mark unavailable and restore normal interval
+            # pylint: disable-next=home-assistant-log-and-raise
             _LOGGER.warning(
                 "%s (attempt %d/%d, marking unavailable)",
                 message,

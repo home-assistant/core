@@ -49,6 +49,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HiveConfigEntry) -> bool
     try:
         devices = await hive.session.startSession(hive_config)
     except HTTPException as error:
+        # pylint: disable-next=home-assistant-log-and-raise
         _LOGGER.error("Could not connect to the internet: %s", error)
         raise ConfigEntryNotReady from error
     except HiveReauthRequired as err:
