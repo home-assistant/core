@@ -553,8 +553,8 @@ async def test_rpc_ircode_button_no_custom_name(
     config_entry = await init_integration(hass, 4)
 
     # With no custom name:
-    # translated name -> IR code 300
-    # device fallback name -> IR Device 20
+    # translated name -> IR code 20
+    # device fallback name -> IR Device 30
     entity_id = "button.ir_device_30_ir_code_20"
 
     assert (state := hass.states.get(entity_id))
