@@ -35,7 +35,7 @@ async def test_setup_not_primary_hub(hass: HomeAssistant) -> None:
 async def test_remove_shade_device_via_websocket_allowed_when_offline(
     hass: HomeAssistant, 
     device_registry: dr.DeviceRegistry, 
-    hass_ws_client: WebSocketGenerator
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test removing a shade device is successful if it is missing from the physical hub."""
     config_entry = MockConfigEntry(domain=DOMAIN, unique_id="hub_123")
@@ -56,8 +56,8 @@ async def test_remove_shade_device_via_websocket_allowed_when_offline(
     # Mock runtime data structures to show the shade is GONE from the hub
     mock_coordinator = MagicMock()
     # Emulate coordinator.data.shades being empty or at least missing ID 999
-    mock_coordinator.data.shades = {} 
-    
+    mock_coordinator.data.shades = {}
+
     mock_runtime_data = MagicMock(coordinator=mock_coordinator)
     config_entry.runtime_data = mock_runtime_data
 
@@ -82,7 +82,7 @@ async def test_remove_shade_device_via_websocket_allowed_when_offline(
 async def test_remove_shade_device_via_websocket_blocked_when_online(
     hass: HomeAssistant, 
     device_registry: dr.DeviceRegistry, 
-    hass_ws_client: WebSocketGenerator
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test that removing a shade device fails if it is still reported as online by the hub."""
     config_entry = MockConfigEntry(domain=DOMAIN, unique_id="hub_123")
@@ -126,11 +126,10 @@ async def test_remove_shade_device_via_websocket_blocked_when_online(
     assert msg["error"]["code"] == "home_assistant_error"
     assert device_registry.async_get(shade_device.id) is not None
 
-
 async def test_remove_hub_device_via_websocket_is_blocked(
     hass: HomeAssistant, 
     device_registry: dr.DeviceRegistry, 
-    hass_ws_client: WebSocketGenerator
+    hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test that attempting to remove the root Hub device fails and is explicitly blocked."""
     config_entry = MockConfigEntry(domain=DOMAIN, unique_id="hub_123")
