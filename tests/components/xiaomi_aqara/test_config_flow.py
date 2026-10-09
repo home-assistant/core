@@ -119,6 +119,7 @@ async def test_config_flow_user_success(hass: HomeAssistant) -> None:
         const.CONF_KEY: TEST_KEY,
         const.CONF_SID: TEST_SID,
     }
+    assert result["result"].unique_id == TEST_MAC
 
 
 async def test_config_flow_user_multiple_success(hass: HomeAssistant) -> None:
@@ -171,6 +172,7 @@ async def test_config_flow_user_multiple_success(hass: HomeAssistant) -> None:
         const.CONF_KEY: TEST_KEY,
         const.CONF_SID: TEST_SID,
     }
+    assert result["result"].unique_id == TEST_MAC
 
 
 async def test_config_flow_user_no_key_success(hass: HomeAssistant) -> None:
@@ -208,6 +210,7 @@ async def test_config_flow_user_no_key_success(hass: HomeAssistant) -> None:
         const.CONF_KEY: None,
         const.CONF_SID: TEST_SID,
     }
+    assert result["result"].unique_id == TEST_MAC
 
 
 async def test_config_flow_user_host_mac_success(hass: HomeAssistant) -> None:
@@ -255,6 +258,7 @@ async def test_config_flow_user_host_mac_success(hass: HomeAssistant) -> None:
         const.CONF_KEY: None,
         const.CONF_SID: TEST_SID,
     }
+    assert result["result"].unique_id == TEST_MAC
 
 
 async def test_config_flow_user_discovery_error(hass: HomeAssistant) -> None:
@@ -449,6 +453,7 @@ async def test_zeroconf_success(hass: HomeAssistant) -> None:
         const.CONF_KEY: TEST_KEY,
         const.CONF_SID: TEST_SID,
     }
+    assert result["result"].unique_id == TEST_MAC
 
 
 async def test_zeroconf_missing_data(hass: HomeAssistant) -> None:

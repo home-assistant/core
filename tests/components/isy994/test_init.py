@@ -64,6 +64,29 @@ async def test_migrate_minor_version_drops_tls(
     assert entry.data[CONF_VERIFY_SSL] is False
 
 
+async def test_setup_invalid_host(hass: HomeAssistant) -> None:
+    """Test setup fails when the host has an unsupported scheme."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        version=1,
+        minor_version=2,
+        data={
+            CONF_HOST: "ftp://1.1.1.1",
+            CONF_USERNAME: "user",
+            CONF_PASSWORD: "pass",
+            CONF_VERIFY_SSL: True,
+        },
+        unique_id=MOCK_UUID,
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_ERROR
+    assert entry.reason == "The ISY/IoX host value in configuration is invalid"
+
+
 @pytest.mark.parametrize("verify_ssl", [True, False])
 async def test_setup_forwards_verify_ssl_to_pyisy(
     hass: HomeAssistant,

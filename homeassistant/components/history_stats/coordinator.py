@@ -32,6 +32,7 @@ class HistoryStatsUpdateCoordinator(DataUpdateCoordinator[HistoryStatsState]):
         self,
         hass: HomeAssistant,
         history_stats: HistoryStats,
+        # pylint: disable-next=home-assistant-coordinator-untyped-config-entry
         config_entry: ConfigEntry | None,
         name: str,
         preview: bool = False,

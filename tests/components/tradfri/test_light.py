@@ -50,6 +50,12 @@ def bulb_cws() -> str:
     return load_fixture("bulb_cws.json", DOMAIN)
 
 
+@pytest.fixture(scope="module")
+def bulb_cws_color_temp() -> str:
+    """Return a color bulb that also reports a color temperature."""
+    return load_fixture("bulb_cws_color_temp.json", DOMAIN)
+
+
 @pytest.mark.parametrize(
     ("device", "entity_id", "state_attributes"),
     [
@@ -81,6 +87,16 @@ def bulb_cws() -> str:
                 ATTR_BRIGHTNESS: 250,
                 ATTR_HS_COLOR: (29.812, 65.252),
                 ATTR_SUPPORTED_COLOR_MODES: [ColorMode.HS],
+                ATTR_COLOR_MODE: ColorMode.HS,
+            },
+        ),
+        (
+            "bulb_cws_color_temp",
+            "light.test_cws_color_temp",
+            {
+                ATTR_BRIGHTNESS: 250,
+                ATTR_HS_COLOR: (29.812, 65.252),
+                ATTR_SUPPORTED_COLOR_MODES: [ColorMode.COLOR_TEMP, ColorMode.HS],
                 ATTR_COLOR_MODE: ColorMode.HS,
             },
         ),
@@ -190,6 +206,13 @@ async def test_light_available(
             {"hs_color": [300, 100]},
             {"hs_color": [300, 100]},
         ),
+        # hs_color on a color bulb that also reports a color temperature
+        (
+            "bulb_cws_color_temp",
+            "light.test_cws_color_temp",
+            {"hs_color": [300, 100]},
+            {"hs_color": [300, 100]},
+        ),
         # ct + brightness
         (
             "bulb_ws",
@@ -229,6 +252,7 @@ async def test_light_available(
         "color_temp_kelvin > 4000",
         "color_temp_kelvin < 2202",
         "hs_color",
+        "hs_color (color bulb with color temp)",
         "ct + brightness",
         "ct + brightness (no temp support)",
         "ct + brightness (no temp or color support)",

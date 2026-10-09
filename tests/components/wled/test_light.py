@@ -547,6 +547,7 @@ async def test_color_mode_changes_with_the_device(
     hass: HomeAssistant,
     mock_wled: MagicMock,
     mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the color mode follows a color change on the device."""
     await _async_load_segment(hass, mock_wled, mock_config_entry, 7, [0, 0, 0, 255])
@@ -556,8 +557,9 @@ async def test_color_mode_changes_with_the_device(
     data = await async_load_json_object_fixture(hass, "cct.json", DOMAIN)
     data["state"]["seg"][0]["col"] = [[255, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]
     mock_wled.update.return_value = WLEDDevice.from_dict(data)
-    await mock_config_entry.runtime_data.async_refresh()
-    await hass.async_block_till_done()
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert (state := hass.states.get("light.wled_cct_light"))
     assert state.attributes[ATTR_COLOR_MODE] == ColorMode.RGBW
@@ -740,6 +742,7 @@ async def test_no_rgbww_light(
 
 async def _async_refresh_with(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     mock_wled: MagicMock,
     mock_config_entry: MockConfigEntry,
     light_capabilities: int,
@@ -754,8 +757,9 @@ async def _async_refresh_with(
 
     # The library updates the device object in place, like the real one does.
     mock_wled.update.return_value.update_from_dict(data)
-    await mock_config_entry.runtime_data.async_refresh()
-    await hass.async_block_till_done()
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
 
 @pytest.mark.parametrize("device_fixture", ["cct"])
@@ -763,6 +767,7 @@ async def test_color_modes_follow_led_type_change(
     hass: HomeAssistant,
     mock_wled: MagicMock,
     mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the color modes follow a change of the LED type."""
     sk6812 = {"cct": True, "ins": [{"start": 0, "len": 178, "type": 30}]}
@@ -772,7 +777,7 @@ async def test_color_modes_follow_led_type_change(
     assert (state := hass.states.get("light.wled_cct_light"))
     assert ColorMode.RGBW in state.attributes[ATTR_SUPPORTED_COLOR_MODES]
 
-    await _async_refresh_with(hass, mock_wled, mock_config_entry, 7, WS2805)
+    await _async_refresh_with(hass, freezer, mock_wled, mock_config_entry, 7, WS2805)
 
     assert (state := hass.states.get("light.wled_cct_light"))
     assert ColorMode.RGBWW in state.attributes[ATTR_SUPPORTED_COLOR_MODES]
@@ -783,13 +788,14 @@ async def test_color_modes_follow_light_capabilities_change(
     hass: HomeAssistant,
     mock_wled: MagicMock,
     mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the color modes follow a change of a segment's capabilities."""
     await _async_load_segment(hass, mock_wled, mock_config_entry, 1, [255, 0, 0])
     assert (state := hass.states.get("light.wled_cct_light"))
     assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.RGB]
 
-    await _async_refresh_with(hass, mock_wled, mock_config_entry, 7, None)
+    await _async_refresh_with(hass, freezer, mock_wled, mock_config_entry, 7, None)
 
     assert (state := hass.states.get("light.wled_cct_light"))
     assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [
@@ -803,15 +809,18 @@ async def test_color_modes_kept_when_led_setup_not_known(
     hass: HomeAssistant,
     mock_wled: MagicMock,
     mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test an LED setup that can't be fetched for a moment changes nothing."""
     await _async_load_segment(
         hass, mock_wled, mock_config_entry, 7, [255, 0, 0, 255], WS2805
     )
 
+    updates = mock_wled.update.call_count
     with patch.object(hass.config_entries, "async_schedule_reload") as reload:
-        await _async_refresh_with(hass, mock_wled, mock_config_entry, 7, None)
+        await _async_refresh_with(hass, freezer, mock_wled, mock_config_entry, 7, None)
 
+    assert mock_wled.update.call_count > updates
     reload.assert_not_called()
     assert (state := hass.states.get("light.wled_cct_light"))
     assert ColorMode.RGBWW in state.attributes[ATTR_SUPPORTED_COLOR_MODES]
@@ -822,13 +831,14 @@ async def test_color_modes_once_led_setup_is_known(
     hass: HomeAssistant,
     mock_wled: MagicMock,
     mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test an LED setup not known at setup is picked up once it is."""
     await _async_load_segment(hass, mock_wled, mock_config_entry, 7, [255, 0, 0, 255])
     assert (state := hass.states.get("light.wled_cct_light"))
     assert ColorMode.RGBW in state.attributes[ATTR_SUPPORTED_COLOR_MODES]
 
-    await _async_refresh_with(hass, mock_wled, mock_config_entry, 7, WS2805)
+    await _async_refresh_with(hass, freezer, mock_wled, mock_config_entry, 7, WS2805)
 
     assert (state := hass.states.get("light.wled_cct_light"))
     assert ColorMode.RGBWW in state.attributes[ATTR_SUPPORTED_COLOR_MODES]
@@ -838,6 +848,7 @@ async def test_color_modes_follow_segment_coming_back(
     hass: HomeAssistant,
     mock_wled: MagicMock,
     mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test a segment that comes back with other capabilities sets up again."""
     data = await async_load_json_object_fixture(hass, "rgb.json", DOMAIN)
@@ -848,14 +859,17 @@ async def test_color_modes_follow_segment_coming_back(
     removed["state"]["seg"] = removed["state"]["seg"][:1]
     removed["info"]["leds"]["seglc"] = [1]
     device.update_from_dict(removed)
-    await mock_config_entry.runtime_data.async_refresh()
-    await hass.async_block_till_done()
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     # It comes back on an RGBW output.
     data["info"]["leds"]["seglc"] = [1, 3]
     device.update_from_dict(data)
     with patch.object(hass.config_entries, "async_schedule_reload") as reload:
-        await mock_config_entry.runtime_data.async_refresh()
+        freezer.tick(SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     reload.assert_called_once_with(mock_config_entry.entry_id)
 
@@ -865,6 +879,7 @@ async def test_color_modes_follow_segment_moving_to_other_leds(
     hass: HomeAssistant,
     mock_wled: MagicMock,
     mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test a segment growing onto other kinds of LEDs sets up again."""
     led_config = {
@@ -891,6 +906,8 @@ async def test_color_modes_follow_segment_moving_to_other_leds(
     data["state"]["seg"][0]["stop"] = 178
     device.update_from_dict(data)
     with patch.object(hass.config_entries, "async_schedule_reload") as reload:
-        await mock_config_entry.runtime_data.async_refresh()
+        freezer.tick(SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     reload.assert_called_once_with(mock_config_entry.entry_id)

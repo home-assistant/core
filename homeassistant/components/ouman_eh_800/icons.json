@@ -2,7 +2,12 @@
   "entity": {
     "sensor": {
       "valve_position": {
-        "default": "mdi:pipe-valve"
+        "default": "mdi:valve-open",
+        "range": {
+          "0": "mdi:valve-closed",
+          "1": "mdi:valve",
+          "100": "mdi:valve-open"
+        }
       }
     }
   }

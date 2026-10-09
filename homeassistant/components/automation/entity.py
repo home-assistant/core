@@ -147,6 +147,7 @@ class UnavailableAutomationEntity(BaseAutomationEntity):
         automation_id: str | None,
         name: str,
         raw_config: ConfigType | None,
+        raw_blueprint_inputs: ConfigType | None,
         validation_error: str,
         validation_status: ValidationStatus,
     ) -> None:
@@ -154,6 +155,7 @@ class UnavailableAutomationEntity(BaseAutomationEntity):
         self._attr_name = name
         self._attr_unique_id = automation_id
         self.raw_config = raw_config
+        self._raw_blueprint_inputs = raw_blueprint_inputs
         self._validation_error = validation_error
         self._validation_status = validation_status
 
@@ -179,6 +181,15 @@ class UnavailableAutomationEntity(BaseAutomationEntity):
     @override
     def referenced_blueprint(self) -> str | None:
         """Return referenced blueprint or None."""
+        # The config is invalid, but it can still point at its blueprint. Once
+        # the blueprint was applied, only its inputs hold that reference.
+        for config in (self._raw_blueprint_inputs, self.raw_config):
+            if (
+                config is not None
+                and isinstance(blueprint := config.get(CONF_USE_BLUEPRINT), dict)
+                and isinstance(path := blueprint.get(CONF_PATH), str)
+            ):
+                return path
         return None
 
     @cached_property

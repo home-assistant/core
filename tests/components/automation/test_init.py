@@ -1138,7 +1138,8 @@ async def test_reload_moved_automation_without_alias(
 ) -> None:
     """Test that changing the order of automations without alias triggers reload."""
     with patch(
-        "homeassistant.components.automation.AutomationEntity", wraps=AutomationEntity
+        "homeassistant.components.automation.util.AutomationEntity",
+        wraps=AutomationEntity,
     ) as automation_entity_init:
         config = {
             automation.DOMAIN: [
@@ -1193,7 +1194,8 @@ async def test_reload_identical_automations_without_id(
 ) -> None:
     """Test reloading of identical automations without id."""
     with patch(
-        "homeassistant.components.automation.AutomationEntity", wraps=AutomationEntity
+        "homeassistant.components.automation.util.AutomationEntity",
+        wraps=AutomationEntity,
     ) as automation_entity_init:
         config = {
             automation.DOMAIN: [
@@ -1368,7 +1370,8 @@ async def test_reload_unchanged_automation(
 ) -> None:
     """Test an unmodified automation is not reloaded."""
     with patch(
-        "homeassistant.components.automation.AutomationEntity", wraps=AutomationEntity
+        "homeassistant.components.automation.util.AutomationEntity",
+        wraps=AutomationEntity,
     ) as automation_entity_init:
         config = {automation.DOMAIN: [automation_config]}
         assert await async_setup_component(hass, automation.DOMAIN, config)
@@ -1403,7 +1406,8 @@ async def test_reload_automation_when_blueprint_changes(
 ) -> None:
     """Test an automation is updated at reload if the blueprint has changed."""
     with patch(
-        "homeassistant.components.automation.AutomationEntity", wraps=AutomationEntity
+        "homeassistant.components.automation.util.AutomationEntity",
+        wraps=AutomationEntity,
     ) as automation_entity_init:
         config = {
             automation.DOMAIN: [
@@ -3346,6 +3350,11 @@ async def test_blueprint_automation_bad_config(
         "name": "automation 0",
     }
     assert issues[0]["translation_placeholders"]["error"].startswith(details)
+
+    # The automation is broken, but still listed under its blueprint
+    assert automation.automations_with_blueprint(hass, "test_event_service.yaml") == [
+        "automation.automation_0"
+    ]
 
 
 async def test_blueprint_automation_fails_substitution(

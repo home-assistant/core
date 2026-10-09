@@ -189,6 +189,7 @@
         'type': 'knx_group_address',
       }),
       dict({
+        'default': None,
         'name': 'ga_humidity_current',
         'optional': True,
         'options': dict({
@@ -394,6 +395,7 @@
         'type': 'knx_section_flat',
       }),
       dict({
+        'default': None,
         'name': 'ga_active',
         'optional': True,
         'options': dict({
@@ -413,6 +415,7 @@
         'type': 'knx_group_address',
       }),
       dict({
+        'default': None,
         'name': 'ga_valve',
         'optional': True,
         'options': dict({
@@ -438,6 +441,7 @@
         'type': 'knx_section_flat',
       }),
       dict({
+        'default': None,
         'name': 'ga_operation_mode',
         'optional': True,
         'options': dict({
@@ -459,6 +463,7 @@
         'type': 'knx_group_address',
       }),
       dict({
+        'default': False,
         'name': 'ignore_auto_mode',
         'optional': True,
         'required': False,
@@ -475,6 +480,7 @@
         'type': 'knx_section_flat',
       }),
       dict({
+        'default': None,
         'name': 'ga_operation_mode_comfort',
         'optional': True,
         'options': dict({
@@ -494,6 +500,7 @@
         'type': 'knx_group_address',
       }),
       dict({
+        'default': None,
         'name': 'ga_operation_mode_economy',
         'optional': True,
         'options': dict({
@@ -513,6 +520,7 @@
         'type': 'knx_group_address',
       }),
       dict({
+        'default': None,
         'name': 'ga_operation_mode_standby',
         'optional': True,
         'options': dict({
@@ -532,6 +540,7 @@
         'type': 'knx_group_address',
       }),
       dict({
+        'default': None,
         'name': 'ga_operation_mode_protection',
         'optional': True,
         'options': dict({
@@ -557,6 +566,7 @@
         'type': 'knx_section_flat',
       }),
       dict({
+        'default': None,
         'name': 'ga_heat_cool',
         'optional': True,
         'options': dict({
@@ -584,6 +594,7 @@
         'type': 'knx_section_flat',
       }),
       dict({
+        'default': None,
         'name': 'ga_on_off',
         'optional': True,
         'options': dict({
@@ -605,6 +616,7 @@
         'type': 'knx_group_address',
       }),
       dict({
+        'default': False,
         'name': 'on_off_invert',
         'optional': True,
         'required': False,
@@ -621,6 +633,7 @@
         'type': 'knx_section_flat',
       }),
       dict({
+        'default': None,
         'name': 'ga_controller_mode',
         'optional': True,
         'options': dict({
@@ -642,6 +655,7 @@
         'type': 'knx_group_address',
       }),
       dict({
+        'default': None,
         'name': 'ga_controller_status',
         'optional': True,
         'options': dict({
@@ -684,6 +698,7 @@
         'type': 'knx_section_flat',
       }),
       dict({
+        'default': None,
         'name': 'ga_fan_speed',
         'optional': True,
         'options': dict({
@@ -749,6 +764,7 @@
         'type': 'ha_selector',
       }),
       dict({
+        'default': None,
         'name': 'ga_fan_swing',
         'optional': True,
         'options': dict({
@@ -770,6 +786,7 @@
         'type': 'knx_group_address',
       }),
       dict({
+        'default': None,
         'name': 'ga_fan_swing_horizontal',
         'optional': True,
         'options': dict({
@@ -1124,6 +1141,7 @@
     'id': 1,
     'result': list([
       dict({
+        'default': None,
         'name': 'ga_switch',
         'optional': True,
         'options': dict({
@@ -1146,6 +1164,7 @@
       }),
       dict({
         'collapsible': False,
+        'default': None,
         'name': 'speed',
         'optional': True,
         'required': False,
@@ -1220,6 +1239,7 @@
         'type': 'knx_group_select',
       }),
       dict({
+        'default': None,
         'name': 'ga_oscillation',
         'optional': True,
         'options': dict({
@@ -1258,6 +1278,7 @@
     'id': 1,
     'result': list([
       dict({
+        'default': None,
         'name': 'ga_switch',
         'optional': True,
         'options': dict({
@@ -1279,6 +1300,7 @@
         'type': 'knx_group_address',
       }),
       dict({
+        'default': None,
         'name': 'ga_brightness',
         'optional': True,
         'options': dict({
@@ -1306,6 +1328,7 @@
         'type': 'knx_section_flat',
       }),
       dict({
+        'default': None,
         'name': 'ga_color_temp',
         'optional': True,
         'options': dict({
@@ -1378,6 +1401,7 @@
       }),
       dict({
         'collapsible': True,
+        'default': None,
         'name': 'color',
         'optional': True,
         'required': False,
@@ -1385,6 +1409,7 @@
           dict({
             'schema': list([
               dict({
+                'default': None,
                 'name': 'ga_color',
                 'optional': True,
                 'options': dict({
@@ -1432,6 +1457,7 @@
           dict({
             'schema': list([
               dict({
+                'default': None,
                 'name': 'ga_red_switch',
                 'optional': True,
                 'options': dict({
@@ -1473,6 +1499,7 @@
                 'type': 'knx_group_address',
               }),
               dict({
+                'default': None,
                 'name': 'ga_green_switch',
                 'optional': True,
                 'options': dict({
@@ -1514,6 +1541,7 @@
                 'type': 'knx_group_address',
               }),
               dict({
+                'default': None,
                 'name': 'ga_blue_switch',
                 'optional': True,
                 'options': dict({
@@ -1555,6 +1583,7 @@
                 'type': 'knx_group_address',
               }),
               dict({
+                'default': None,
                 'name': 'ga_white_switch',
                 'optional': True,
                 'options': dict({
@@ -1576,6 +1605,7 @@
                 'type': 'knx_group_address',
               }),
               dict({
+                'default': None,
                 'name': 'ga_white_brightness',
                 'optional': True,
                 'options': dict({

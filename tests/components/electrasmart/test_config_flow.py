@@ -98,6 +98,7 @@ async def test_one_time_password(hass: HomeAssistant) -> None:
             result["flow_id"], {CONF_OTP: "1234"}
         )
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "0521234567"
 
 
 async def test_one_time_password_api_error(hass: HomeAssistant) -> None:

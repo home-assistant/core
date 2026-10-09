@@ -35,7 +35,7 @@ from .entity_store_validation import (
     validate_entity_data,
 )
 from .expose_controller import KNXExposeStoreConfigModel, KNXExposeStoreModel
-from .knx_selector import GroupAddressSelector, knx_selector_in
+from .knx_selector import GroupAddressSelector, TypedGroupSelect, knx_selector_in
 from .time_server import KNXTimeServerStoreModel
 
 _LOGGER = logging.getLogger(__name__)
@@ -79,6 +79,10 @@ def _unchanged(value: Any) -> Any:
     return value
 
 
+def _group_select_to_storage(value: Any) -> dict[str, Any] | None:
+    return None if value is None else _knx_to_storage(value)
+
+
 type _StorageEncoders = tuple[tuple[str, Callable[[Any], Any]], ...]
 _STORAGE_ENCODERS: dict[type, _StorageEncoders] = {}
 
@@ -86,7 +90,8 @@ _STORAGE_ENCODERS: dict[type, _StorageEncoders] = {}
 def _storage_encoders(config_type: type) -> _StorageEncoders:
     """Return a storage encoder per field of a typed config.
 
-    Section fields are dropped, group addresses are rendered by their selector.
+    Section fields are dropped, group addresses are rendered by their selector
+    and group select options by their own encoders.
     """
     if (cached := _STORAGE_ENCODERS.get(config_type)) is not None:
         return cached
@@ -98,11 +103,13 @@ def _storage_encoders(config_type: type) -> _StorageEncoders:
         if any(isinstance(item, Key) and item.remove for item in metadata):
             continue
         field_selector = knx_selector_in(metadata)
-        encode = (
-            field_selector.to_storage
-            if isinstance(field_selector, GroupAddressSelector)
-            else _unchanged
-        )
+        encode: Callable[[Any], Any]
+        if isinstance(field_selector, GroupAddressSelector):
+            encode = field_selector.to_storage
+        elif isinstance(field_selector, TypedGroupSelect):
+            encode = _group_select_to_storage
+        else:
+            encode = _unchanged
         encoders.append((dc_field.name, encode))
     _STORAGE_ENCODERS[config_type] = tuple(encoders)
     return _STORAGE_ENCODERS[config_type]
