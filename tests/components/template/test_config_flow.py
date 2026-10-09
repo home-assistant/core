@@ -3,6 +3,7 @@
 from typing import Any
 from unittest.mock import patch
 
+import probatio
 import pytest
 from pytest_unordered import unordered
 
@@ -12,7 +13,11 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    selector,
+)
 
 from tests.common import MockConfigEntry, get_schema_suggested_value
 from tests.typing import WebSocketGenerator
@@ -1079,6 +1084,79 @@ async def test_options_remove_device_class(
         **extra_options,
     }
     assert "device_class" not in config_entry.options
+
+
+def _assert_number_unit_of_measurement_context(data_schema: probatio.Schema) -> None:
+    """Assert the unit of measurement selector is filtered by the device class."""
+    # Serialize the form the way it is sent to the frontend
+    fields = {
+        field["name"]: field
+        for field in probatio.to_field_list(
+            data_schema, custom_serializer=cv.custom_serializer
+        )
+    }
+    assert fields["unit_of_measurement"]["selector"]["unit_of_measurement"][
+        "context"
+    ] == {"filter_device_class": "device_class"}
+    # The frontend reads the context value from a sibling field in the same form
+    assert (
+        next(iter(fields["device_class"]["selector"]))
+        in selector.UnitOfMeasurementSelector().allowed_context_keys[
+            "filter_device_class"
+        ]
+    )
+
+
+async def test_config_flow_number_unit_of_measurement_context(
+    hass: HomeAssistant,
+) -> None:
+    """Test the number unit of measurement selector context in the config flow."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"next_step_id": "number"},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "number"
+
+    _assert_number_unit_of_measurement_context(result["data_schema"])
+
+
+async def test_options_number_unit_of_measurement_context(
+    hass: HomeAssistant,
+) -> None:
+    """Test the number unit of measurement selector context in the options flow."""
+    config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            "name": "My template",
+            "template_type": "number",
+            "state": "{{ 10 }}",
+            "min": 0,
+            "max": 100,
+            "step": 0.1,
+            "device_class": "distance",
+            "unit_of_measurement": "cm",
+            "set_value": {
+                "action": "input_number.set_value",
+                "target": {"entity_id": "input_number.test"},
+                "data": {"value": "{{ value }}"},
+            },
+        },
+        title="My template",
+    )
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "number"
+
+    _assert_number_unit_of_measurement_context(result["data_schema"])
 
 
 @pytest.mark.parametrize(
