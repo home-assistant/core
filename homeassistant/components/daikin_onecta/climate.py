@@ -765,18 +765,18 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
 
     def _get_preset_modes(self) -> list[str]:
         """Return supported preset modes."""
-        supported = [PRESET_NONE]
-        supported.extend(
-            mode
-            for mode in PRESET_MODES
-            if (
-                (preset := self._preset_characteristic(HA_PRESET_TO_DAIKIN[mode]))
-                is not None
-                and preset.settable
-            )
-        )
-        supported.sort()
-        return supported
+        return [
+            PRESET_NONE,
+            *sorted(
+                mode
+                for mode in PRESET_MODES
+                if (
+                    (preset := self._preset_characteristic(HA_PRESET_TO_DAIKIN[mode]))
+                    is not None
+                    and preset.settable
+                )
+            ),
+        ]
 
     @override
     async def async_turn_on(self) -> None:

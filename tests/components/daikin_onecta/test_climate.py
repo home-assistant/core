@@ -1106,6 +1106,22 @@ def test_preset_modes_require_writable_characteristics() -> None:
     assert entity._get_preset_modes() == [PRESET_NONE]
 
 
+def test_preset_modes_start_with_none() -> None:
+    """Keep the neutral preset before the alphabetically ordered presets."""
+    entity = object.__new__(DaikinClimate)
+    entity._preset_characteristic = MagicMock(
+        return_value=SimpleNamespace(settable=True)
+    )
+
+    assert entity._get_preset_modes() == [
+        PRESET_NONE,
+        PRESET_AWAY,
+        PRESET_BOOST,
+        PRESET_COMFORT,
+        PRESET_ECO,
+    ]
+
+
 async def test_set_preset_mode_publishes_successful_disable() -> None:
     """Publish a successful preset disable before a replacement fails."""
     entity = object.__new__(DaikinClimate)

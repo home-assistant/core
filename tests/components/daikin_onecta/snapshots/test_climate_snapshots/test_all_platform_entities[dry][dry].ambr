@@ -3426,8 +3426,8 @@
           <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
           <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
           <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
-            'away',
             'none',
+            'away',
           ]),
         }),
         'config_entry_id': <ANY>,
@@ -3473,8 +3473,8 @@
           <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
           <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'none',
           <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
-            'away',
             'none',
+            'away',
           ]),
           <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 400>,
           <ClimateEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
@@ -3503,8 +3503,8 @@
           <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
           <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
           <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
-            'away',
             'none',
+            'away',
           ]),
         }),
         'config_entry_id': <ANY>,
@@ -3550,8 +3550,8 @@
           <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
           <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'none',
           <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
-            'away',
             'none',
+            'away',
           ]),
           <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 400>,
           <ClimateEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
@@ -3581,8 +3581,8 @@
           <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
           <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
           <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
-            'away',
             'none',
+            'away',
           ]),
           <ClimateEntityCapabilityAttribute.SWING_MODES: 'swing_modes'>: list([
             'swing',
@@ -3633,8 +3633,8 @@
           <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
           <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'none',
           <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
-            'away',
             'none',
+            'away',
           ]),
           <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 432>,
           <ClimateEntityStateAttribute.SWING_MODE: 'swing_mode'>: 'fixed',
@@ -3668,8 +3668,8 @@
           <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
           <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
           <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
-            'away',
             'none',
+            'away',
           ]),
         }),
         'config_entry_id': <ANY>,
@@ -3715,8 +3715,8 @@
           <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
           <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'none',
           <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
-            'away',
             'none',
+            'away',
           ]),
           <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 400>,
           <ClimateEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
@@ -3745,8 +3745,8 @@
           <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
           <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
           <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
-            'away',
             'none',
+            'away',
           ]),
         }),
         'config_entry_id': <ANY>,
@@ -3792,8 +3792,8 @@
           <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
           <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'none',
           <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
-            'away',
             'none',
+            'away',
           ]),
           <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 400>,
           <ClimateEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
@@ -3822,8 +3822,8 @@
           <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
           <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
           <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
-            'away',
             'none',
+            'away',
           ]),
         }),
         'config_entry_id': <ANY>,
@@ -3869,8 +3869,8 @@
           <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
           <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'none',
           <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
-            'away',
             'none',
+            'away',
           ]),
           <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 400>,
           <ClimateEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
@@ -3899,8 +3899,8 @@
           <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
           <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
           <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
-            'away',
             'none',
+            'away',
           ]),
         }),
         'config_entry_id': <ANY>,
@@ -3946,8 +3946,8 @@
           <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
           <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'none',
           <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
-            'away',
             'none',
+            'away',
           ]),
           <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 400>,
           <ClimateEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,

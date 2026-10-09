@@ -3511,8 +3511,8 @@
           <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 35,
           <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
           <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
-            'away',
             'none',
+            'away',
           ]),
         }),
         'config_entry_id': <ANY>,
@@ -3558,8 +3558,8 @@
           <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
           <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'none',
           <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
-            'away',
             'none',
+            'away',
           ]),
           <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 400>,
           <ClimateEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
@@ -3588,8 +3588,8 @@
           <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 20,
           <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 18,
           <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
-            'away',
             'none',
+            'away',
           ]),
           <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1,
         }),
@@ -3636,8 +3636,8 @@
           <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 18,
           <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'none',
           <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
-            'away',
             'none',
+            'away',
           ]),
           <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
           <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1,
@@ -3668,8 +3668,8 @@
           <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 28,
           <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 23,
           <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
-            'away',
             'none',
+            'away',
           ]),
           <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.5,
         }),
@@ -3716,8 +3716,8 @@
           <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 23,
           <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'none',
           <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
-            'away',
             'none',
+            'away',
           ]),
           <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
           <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.5,
@@ -3759,10 +3759,10 @@
           <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 33,
           <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 18,
           <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
+            'none',
             'away',
             'boost',
             'eco',
-            'none',
           ]),
           <ClimateEntityCapabilityAttribute.SWING_HORIZONTAL_MODES: 'swing_horizontal_modes'>: list([
             'stop',
@@ -3830,10 +3830,10 @@
           <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 18,
           <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'eco',
           <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
+            'none',
             'away',
             'boost',
             'eco',
-            'none',
           ]),
           <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 953>,
           <ClimateEntityStateAttribute.SWING_HORIZONTAL_MODE: 'swing_horizontal_mode'>: 'stop',
@@ -3886,10 +3886,10 @@
           <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 33,
           <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 18,
           <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
+            'none',
             'away',
             'boost',
             'eco',
-            'none',
           ]),
           <ClimateEntityCapabilityAttribute.SWING_HORIZONTAL_MODES: 'swing_horizontal_modes'>: list([
             'stop',
@@ -3957,10 +3957,10 @@
           <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 18,
           <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'none',
           <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
+            'none',
             'away',
             'boost',
             'eco',
-            'none',
           ]),
           <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 953>,
           <ClimateEntityStateAttribute.SWING_HORIZONTAL_MODE: 'swing_horizontal_mode'>: 'stop',
@@ -4013,10 +4013,10 @@
           <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 33,
           <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 18,
           <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
+            'none',
             'away',
             'boost',
             'eco',
-            'none',
           ]),
           <ClimateEntityCapabilityAttribute.SWING_HORIZONTAL_MODES: 'swing_horizontal_modes'>: list([
             'stop',
@@ -4084,10 +4084,10 @@
           <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 18,
           <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'none',
           <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
+            'none',
             'away',
             'boost',
             'eco',
-            'none',
           ]),
           <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 953>,
           <ClimateEntityStateAttribute.SWING_HORIZONTAL_MODE: 'swing_horizontal_mode'>: 'stop',
@@ -4140,10 +4140,10 @@
           <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 33,
           <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 18,
           <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
+            'none',
             'away',
             'boost',
             'eco',
-            'none',
           ]),
           <ClimateEntityCapabilityAttribute.SWING_HORIZONTAL_MODES: 'swing_horizontal_modes'>: list([
             'stop',
@@ -4211,10 +4211,10 @@
           <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 18,
           <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'none',
           <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
+            'none',
             'away',
             'boost',
             'eco',
-            'none',
           ]),
           <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 953>,
           <ClimateEntityStateAttribute.SWING_HORIZONTAL_MODE: 'swing_horizontal_mode'>: 'stop',

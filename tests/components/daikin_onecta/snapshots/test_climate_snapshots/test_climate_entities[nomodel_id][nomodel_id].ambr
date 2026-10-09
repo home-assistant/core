@@ -15,8 +15,8 @@
           <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 10,
           <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: -10,
           <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
-            'away',
             'none',
+            'away',
           ]),
           <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1,
         }),
@@ -61,8 +61,8 @@
           <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: -10,
           <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'none',
           <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
-            'away',
             'none',
+            'away',
           ]),
           <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
           <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1,
@@ -91,8 +91,8 @@
           <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 26,
           <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 16,
           <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
-            'away',
             'none',
+            'away',
           ]),
           <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.5,
         }),
@@ -137,8 +137,8 @@
           <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 16,
           <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'none',
           <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
-            'away',
             'none',
+            'away',
           ]),
           <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 401>,
           <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 0.5,
