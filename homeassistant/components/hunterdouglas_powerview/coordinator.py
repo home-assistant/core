@@ -38,9 +38,6 @@ class PowerviewShadeUpdateCoordinator(DataUpdateCoordinator[PowerviewShadeData])
         self.shades = shades
         self.hub = hub
 
-        # Add tracking of known shades
-        self._previous_shade_ids: set[int] = set()
-        
         # The hub tends to crash if there are multiple radio operations at the same time
         # but it seems to handle all other requests that do not use RF without issue
         # so we have a lock to prevent multiple radio operations at the same time
