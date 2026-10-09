@@ -1245,6 +1245,13 @@ async def load_data(
                 if retry_num < num_retries:
                     # Add a sleep to allow other async operations to proceed
                     await asyncio.sleep(_RETRY_DELAY)
+
+            # A 200 with data returns early, so a final 200 means an empty body
+            if response.status_code == 200:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="failed_to_load_url_empty",
+                )
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="failed_to_load_url_status",

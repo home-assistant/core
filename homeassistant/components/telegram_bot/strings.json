@@ -198,6 +198,9 @@
     "failed_to_load_url": {
       "message": "Failed to load URL: {error}"
     },
+    "failed_to_load_url_empty": {
+      "message": "Failed to load URL: the server returned no data."
+    },
     "failed_to_load_url_status": {
       "message": "Failed to load URL: the server responded with status code {status_code}."
     },
