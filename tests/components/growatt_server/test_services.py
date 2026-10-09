@@ -1910,8 +1910,8 @@ async def test_write_ac_times_classic_auth_invalid_settings(
 ) -> None:
     """Test a partial write aborts when the device returns an unparsable value.
 
-    _format_time maps a bad time to 00:00, which the read-merge-write would
-    then write over the period the caller never mentioned.
+    A bad time or number would otherwise be written back by the read-merge-write
+    over a setting the caller never mentioned.
     """
     await _setup_mix_integration(
         hass, mock_config_entry_classic, mock_growatt_classic_api
