@@ -10,10 +10,10 @@ from typing import Any, cast
 from unittest.mock import Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
+import probatio
 import pytest
 from sqlalchemy.exc import DatabaseError, OperationalError, SQLAlchemyError
 from sqlalchemy.pool import QueuePool
-import voluptuous as vol
 
 from homeassistant.components import recorder
 from homeassistant.components.lock import LockState
@@ -907,7 +907,7 @@ def test_invalid_event_data_filter_config(
     filter_type: str, event_data_filter: dict[str, object]
 ) -> None:
     """Test invalid event data filters are rejected by the configuration schema."""
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         CONFIG_SCHEMA({DOMAIN: {filter_type: event_data_filter}})
 
 
@@ -3038,3 +3038,27 @@ async def test_setting_up_recorder_fails_entity_registry_listener(
         "The recorder entity registry listener must be installed before "
         "async_track_entity_registry_updated_event is called" in caplog.text
     )
+
+
+async def test_setup_connection_after_connection_closed(
+    hass: HomeAssistant, setup_recorder: None
+) -> None:
+    """Test the connect listener does not raise once the engine is gone.
+
+    _close_connection disposes the engine and drops our reference to it, but dispose()
+    only empties the pool: the engine stays usable, so anything still holding a
+    reference to it can check out a fresh DBAPI connection. That fires the connect
+    listener, which is still registered, with self.engine already set to None.
+    """
+    instance = recorder.get_instance(hass)
+    assert instance.engine is not None
+
+    def _setup_connection_without_an_engine() -> None:
+        with instance.engine.connect() as connection:
+            dbapi_connection = connection._dbapi_connection
+            with patch.object(instance, "engine", None):
+                # There is no engine of ours left to configure the connection for,
+                # which is not a reason to raise into whatever caused the checkout
+                instance._setup_recorder_connection(dbapi_connection, Mock())
+
+    await instance.async_add_executor_job(_setup_connection_without_an_engine)

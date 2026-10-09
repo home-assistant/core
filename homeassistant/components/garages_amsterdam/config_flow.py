@@ -5,7 +5,7 @@ from typing import Any, override
 
 from aiohttp import ClientResponseError
 from odp_amsterdam import ODPAmsterdam, VehicleType
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.helpers import aiohttp_client
@@ -51,7 +51,7 @@ class GaragesAmsterdamConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
-                {vol.Required("garage_name"): vol.In(self._options)}
+            data_schema=probatio.Schema(
+                {probatio.Required("garage_name"): probatio.In(self._options)}
             ),
         )

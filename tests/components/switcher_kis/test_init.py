@@ -215,7 +215,7 @@ async def test_remove_device(
         (DOMAIN, live_device_id), entry_id
     )
     client = await hass_ws_client(hass)
-    response = await client.remove_device(device.id, entry_id)
+    response = await client.remove_device(device.id)
     assert not response["success"]
     assert len(dr.async_entries_for_config_entry(device_registry, entry_id)) == 3
     assert (
@@ -229,7 +229,7 @@ async def test_remove_device(
     device = device_registry.async_get_device_by_identifier(
         (DOMAIN, dead_device_id), entry_id
     )
-    response = await client.remove_device(device.id, entry_id)
+    response = await client.remove_device(device.id)
     assert response["success"]
     assert len(dr.async_entries_for_config_entry(device_registry, entry_id)) == 2
     assert (
@@ -279,7 +279,7 @@ async def test_remove_device_token_needed(
         (DOMAIN, live_device_id), entry_id
     )
     client = await hass_ws_client(hass)
-    response = await client.remove_device(device.id, entry_id)
+    response = await client.remove_device(device.id)
     assert not response["success"]
     assert len(dr.async_entries_for_config_entry(device_registry, entry_id)) == 2
     assert (
@@ -293,7 +293,7 @@ async def test_remove_device_token_needed(
     device = device_registry.async_get_device_by_identifier(
         (DOMAIN, dead_device_id), entry_id
     )
-    response = await client.remove_device(device.id, entry_id)
+    response = await client.remove_device(device.id)
     assert response["success"]
     assert len(dr.async_entries_for_config_entry(device_registry, entry_id)) == 1
     assert (

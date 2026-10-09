@@ -17,5 +17,5 @@
   "documentation": "https://www.home-assistant.io/integrations/rapt_ble",
   "integration_type": "device",
   "iot_class": "local_push",
-  "requirements": ["rapt-ble==0.1.2"]
+  "requirements": ["rapt-ble==2.0.0"]
 }

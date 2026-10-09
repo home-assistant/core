@@ -9,11 +9,15 @@ from aiohomekit import AccessoryNotFoundError
 from aiohomekit.model import Accessory, Transport
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import Service, ServicesTypes
-from aiohomekit.testing import FakePairing
+from aiohomekit.testing import FakeController, FakePairing
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.homekit_controller.const import DOMAIN, ENTITY_MAP
+from homeassistant.components.homekit_controller.const import (
+    DEBOUNCE_COOLDOWN,
+    DOMAIN,
+    ENTITY_MAP,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, STATE_OFF, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
@@ -102,20 +106,19 @@ async def test_device_remove_devices(
         hass, get_next_aid(), create_alive_service
     )
     config_entry = helper.config_entry
-    entry_id = config_entry.entry_id
 
     entity = entity_registry.entities[ALIVE_DEVICE_ENTITY_ID]
 
     live_device_entry = device_registry.async_get(entity.device_id)
     client = await hass_ws_client(hass)
-    response = await client.remove_device(live_device_entry.id, entry_id)
+    response = await client.remove_device(live_device_entry.id)
     assert not response["success"]
 
     dead_device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         identifiers={("homekit_controller:accessory-id", "E9:88:E7:B8:B4:40:aid:1")},
     )
-    response = await client.remove_device(dead_device_entry.id, entry_id)
+    response = await client.remove_device(dead_device_entry.id)
     assert response["success"]
 
 
@@ -244,7 +247,10 @@ async def test_ble_device_only_checks_is_available(
 
 @pytest.mark.usefixtures("fake_ble_discovery", "fake_ble_pairing")
 async def test_ble_device_populates_connections(
-    hass: HomeAssistant, get_next_aid: Callable[[], int], controller
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    get_next_aid: Callable[[], int],
+    controller,
 ) -> None:
     """Test a BLE device populates connections in the device registry."""
     aid = get_next_aid()
@@ -261,9 +267,8 @@ async def test_ble_device_populates_connections(
     await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.LOADED
-    dev_reg = dr.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     assert (
-        dev_reg.async_get_device_by_connection(
+        device_registry.async_get_device_by_connection(
             ("bluetooth", "AA:BB:CC:DD:EE:FF"), config_entry.entry_id
         )
         is not None
@@ -317,3 +322,36 @@ async def test_snapshots(
         devices.append({"device": device, "entities": entities})
 
     assert snapshot == devices
+
+
+@pytest.mark.usefixtures("fake_ble_discovery", "fake_ble_pairing")
+async def test_ble_device_polls_after_reload(
+    hass: HomeAssistant, controller: FakeController
+) -> None:
+    """Test a BLE device is polled again after its entry is reloaded."""
+    accessory = Accessory.create_with_info(
+        1, "TestDevice", "example.com", "Test", "0001", "0.1"
+    )
+    create_alive_service(accessory)
+    await async_setup_component(hass, DOMAIN, {})
+    config_entry, pairing = await setup_test_accessories_with_controller(
+        hass, [accessory], controller
+    )
+
+    assert await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    with patch.object(
+        pairing, "get_characteristics", wraps=pairing.get_characteristics
+    ) as mock_get_characteristics:
+        # The poll requests a debounced update, which runs after its cooldown
+        async_fire_time_changed(hass, utcnow() + pairing.poll_interval)
+        await hass.async_block_till_done()
+        async_fire_time_changed(
+            hass,
+            utcnow() + pairing.poll_interval + timedelta(seconds=DEBOUNCE_COOLDOWN),
+        )
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    mock_get_characteristics.assert_called()

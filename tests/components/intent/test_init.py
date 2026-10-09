@@ -177,7 +177,10 @@ async def test_http_handle_intent_match_failure(
     assert resp.status == 200
     data = await resp.json()
 
-    assert "DUPLICATE_NAME" in data["speech"]["plain"]["speech"]
+    # The API speaks the failure, so it must be a sentence and not a repr
+    assert data["speech"]["plain"]["speech"] == (
+        "Multiple entities share the name (given name 'Garage Door')"
+    )
 
 
 async def test_http_assistant(

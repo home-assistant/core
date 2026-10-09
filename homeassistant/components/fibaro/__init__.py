@@ -22,7 +22,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.device_registry import DeviceEntry, DeviceInfo
+from homeassistant.helpers.device_registry import AnyDeviceEntry, DeviceInfo
 from homeassistant.util import slugify
 
 from .const import CONF_IMPORT_PLUGINS, DOMAIN
@@ -353,7 +353,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: FibaroConfigEntry) -> b
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, config_entry: FibaroConfigEntry, device_entry: DeviceEntry
+    hass: HomeAssistant, config_entry: FibaroConfigEntry, device_entry: AnyDeviceEntry
 ) -> bool:
     """Remove a device entry from fibaro integration.
 

@@ -16,6 +16,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -23,7 +24,7 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
-from .services import setup_service_functions
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,7 +49,7 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Genius Hub services."""
-    setup_service_functions(hass)
+    async_setup_services(hass)
     return True
 
 
@@ -86,8 +87,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: GeniusHubConfigEntry) ->
     try:
         await client.update()
     except aiohttp.ClientResponseError as err:
-        _LOGGER.error("Setup failed, check your configuration, %s", err)
-        return False
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="setup_failed",
+        ) from err
     broker.make_debug_log_entries()
 
     async_track_time_interval(hass, broker.async_update, SCAN_INTERVAL)

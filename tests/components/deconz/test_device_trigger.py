@@ -18,7 +18,10 @@ from homeassistant.components.binary_sensor.device_trigger import (
 from homeassistant.components.deconz import device_trigger
 from homeassistant.components.deconz.const import DOMAIN
 from homeassistant.components.deconz.device_trigger import CONF_SUBTYPE
-from homeassistant.components.device_automation import DeviceAutomationType
+from homeassistant.components.device_automation import (
+    DeviceAutomationType,
+    InvalidDeviceAutomationConfig,
+)
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
@@ -507,3 +510,39 @@ async def test_attach_trigger_no_matching_event(
         name="mock-name",
         log_cb=Mock(),
     )
+
+
+async def test_child_device_id_resolves_cleanly(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    config_entry_setup: MockConfigEntry,
+) -> None:
+    """Test a child device id is handled cleanly at both trigger sites.
+
+    A child device id is not in the main device dict, so bare dict access would
+    raise KeyError. Both async_get_triggers and async_attach_trigger must instead
+    resolve it as not-found.
+    """
+    parent = device_registry.async_get_or_create(
+        config_entry_id=config_entry_setup.entry_id,
+        identifiers={(DOMAIN, "parent_device")},
+        name="Parent",
+    )
+    child = device_registry.async_get_or_create_child(
+        config_entry_id=config_entry_setup.entry_id,
+        identifiers={(DOMAIN, "child_device")},
+        parent_device_id=parent.id,
+        name="Child",
+    )
+
+    assert await device_trigger.async_get_triggers(hass, child.id) == []
+
+    trigger_config = {
+        CONF_PLATFORM: "device",
+        CONF_DOMAIN: DOMAIN,
+        CONF_DEVICE_ID: child.id,
+        CONF_TYPE: device_trigger.CONF_SHORT_PRESS,
+        CONF_SUBTYPE: device_trigger.CONF_TURN_ON,
+    }
+    with pytest.raises(InvalidDeviceAutomationConfig):
+        await device_trigger.async_attach_trigger(hass, trigger_config, Mock(), Mock())

@@ -1,7 +1,6 @@
 """The Matter integration."""
 
 import asyncio
-from functools import cache
 from typing import TYPE_CHECKING
 
 from aiohasupervisor.models import InterfaceMethod
@@ -63,7 +62,6 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 @callback
-@cache
 def get_matter_device_info(
     hass: HomeAssistant, device_id: str
 ) -> MatterDeviceInfo | None:
@@ -123,6 +121,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: MatterConfigEntry) -> bo
         raise ConfigEntryNotReady(f"Invalid server version: {err}") from err
 
     except Exception as err:
+        # pylint: disable-next=home-assistant-log-and-raise
         LOGGER.exception("Failed to connect to matter server")
         raise ConfigEntryNotReady(
             "Unknown error connecting to the Matter server"
@@ -398,9 +397,14 @@ def _remove_via_devices(
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, config_entry: MatterConfigEntry, device_entry: dr.DeviceEntry
+    hass: HomeAssistant,
+    config_entry: MatterConfigEntry,
+    device_entry: dr.AnyDeviceEntry,
 ) -> bool:
     """Remove a config entry from a device."""
+    if not isinstance(device_entry, dr.DeviceEntry):
+        # This integration does not create child devices.
+        return False
     node = get_node_from_device_entry(hass, device_entry)
 
     if node is None:

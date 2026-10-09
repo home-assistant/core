@@ -4,7 +4,7 @@ from collections.abc import Mapping
 from random import getrandbits
 from typing import Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA,
@@ -25,8 +25,8 @@ DEFAULT_NAME = "Random binary sensor"
 
 PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
     }
 )
 

@@ -291,6 +291,7 @@ async def test_discovery_flow_edit_discovered_success(
     assert result["data"][CONF_HOST] == "1.1.1.1"
     assert result["data"][CONF_USERNAME] == "admin"
     assert result["data"][CONF_PASSWORD] == "password"
+    assert result["result"].unique_id == TEST_UUID
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -337,6 +338,14 @@ async def test_discovery_flow_edit_discovered_errors(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"]["base"] == expected_error
+
+    mock_server.http_status = HTTPStatus.OK
+    mock_server.async_query.side_effect = [False, {"uuid": TEST_UUID}]
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_USERNAME: "admin", CONF_PASSWORD: "password"}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -496,12 +505,14 @@ async def test_dhcp_unknown_player(
 
 
 async def test_dhcp_known_player(
-    hass: HomeAssistant, dhcp_info: dict[str, Any], mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    dhcp_info: dict[str, Any],
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test DHCP discovery aborts if player is already registered."""
     mock_config_entry.add_to_hass(hass)
 
-    entity_registry = er.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     entity_registry.async_get_or_create(
         MP_DOMAIN, DOMAIN, "aa:bb:cc:dd:ee:ff", config_entry=mock_config_entry
     )

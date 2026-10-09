@@ -69,6 +69,12 @@ async def test_form_fails(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": message}
 
+    mock_api.return_value.get_ha_sensor_data.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=MOCK_USER_INPUT
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_form_already_configured(hass: HomeAssistant) -> None:
     """Test host is already configured."""

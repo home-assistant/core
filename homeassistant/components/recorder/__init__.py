@@ -3,7 +3,7 @@
 import logging
 from typing import Any, cast
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import (
     CONF_EVENT_DATA,
@@ -79,38 +79,42 @@ def _validate_event_data_value(value: Any) -> str | bool | int | float:
         return str(value)
     if type(value) in (bool, int, float):
         return cast(str | bool | int | float, value)
-    raise vol.Invalid("expected a string, boolean, integer, or float")
+    raise probatio.Invalid("expected a string, boolean, integer, or float")
 
 
-EVENT_DATA_FILTER_SCHEMA = vol.All(
+EVENT_DATA_FILTER_SCHEMA = probatio.All(
     dict,
-    vol.Length(min=1),
+    probatio.Length(min=1),
     {cv.string: _validate_event_data_value},
 )
 
 EVENT_DATA_RULE_SCHEMA = {
-    vol.Required(CONF_EVENT_TYPE): vol.All(cv.string, vol.NotIn([EVENT_STATE_CHANGED])),
-    vol.Required(CONF_MATCH): EVENT_DATA_FILTER_SCHEMA,
+    probatio.Required(CONF_EVENT_TYPE): probatio.All(
+        cv.string, probatio.NotIn([EVENT_STATE_CHANGED])
+    ),
+    probatio.Required(CONF_MATCH): EVENT_DATA_FILTER_SCHEMA,
 }
 
 INCLUDE_SCHEMA = INCLUDE_EXCLUDE_FILTER_SCHEMA_INNER.extend(
     {
-        vol.Optional(CONF_EVENT_DATA): vol.All(
-            cv.ensure_list, [EVENT_DATA_RULE_SCHEMA]
+        probatio.Optional(CONF_EVENT_DATA): probatio.All(
+            probatio.EnsureList(), [EVENT_DATA_RULE_SCHEMA]
         ),
     }
 )
 
 EXCLUDE_SCHEMA = INCLUDE_SCHEMA.extend(
     {
-        vol.Optional(CONF_EVENT_TYPES): vol.All(cv.ensure_list, [cv.string]),
+        probatio.Optional(CONF_EVENT_TYPES): probatio.All(
+            probatio.EnsureList(), [cv.string]
+        ),
     }
 )
 
 FILTER_SCHEMA = INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA.extend(
     {
-        vol.Optional(CONF_EXCLUDE, default=EXCLUDE_SCHEMA({})): EXCLUDE_SCHEMA,
-        vol.Optional(CONF_INCLUDE, default=INCLUDE_SCHEMA({})): INCLUDE_SCHEMA,
+        probatio.Optional(CONF_EXCLUDE, default=EXCLUDE_SCHEMA({})): EXCLUDE_SCHEMA,
+        probatio.Optional(CONF_INCLUDE, default=INCLUDE_SCHEMA({})): INCLUDE_SCHEMA,
     }
 )
 
@@ -125,42 +129,44 @@ def validate_db_url(db_url: str) -> Any:
         db_url == SQLITE_URL_PREFIX
         or (db_url.startswith(SQLITE_URL_PREFIX) and ":memory:" in db_url)
     ) and not ALLOW_IN_MEMORY_DB:
-        raise vol.Invalid("In-memory SQLite database is not supported")
+        raise probatio.Invalid("In-memory SQLite database is not supported")
 
     return db_url
 
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        vol.Optional(DOMAIN, default=dict): vol.All(
+        probatio.Optional(DOMAIN, default=dict): probatio.All(
             cv.deprecated(CONF_PURGE_INTERVAL),
             cv.deprecated(CONF_DB_INTEGRITY_CHECK),
             FILTER_SCHEMA.extend(
                 {
-                    vol.Optional(CONF_AUTO_PURGE, default=True): cv.boolean,
-                    vol.Optional(CONF_AUTO_REPACK, default=True): cv.boolean,
-                    vol.Optional(CONF_PURGE_KEEP_DAYS, default=10): vol.All(
-                        vol.Coerce(int), vol.Range(min=1)
+                    probatio.Optional(CONF_AUTO_PURGE, default=True): cv.boolean,
+                    probatio.Optional(CONF_AUTO_REPACK, default=True): cv.boolean,
+                    probatio.Optional(CONF_PURGE_KEEP_DAYS, default=10): probatio.All(
+                        probatio.Coerce(int), probatio.Range(min=1)
                     ),
-                    vol.Optional(CONF_PURGE_INTERVAL, default=1): cv.positive_int,
-                    vol.Optional(CONF_DB_URL): vol.All(cv.string, validate_db_url),
-                    vol.Optional(
+                    probatio.Optional(CONF_PURGE_INTERVAL, default=1): cv.positive_int,
+                    probatio.Optional(CONF_DB_URL): probatio.All(
+                        cv.string, validate_db_url
+                    ),
+                    probatio.Optional(
                         CONF_COMMIT_INTERVAL, default=DEFAULT_COMMIT_INTERVAL
                     ): cv.positive_int,
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_DB_MAX_RETRIES, default=DEFAULT_DB_MAX_RETRIES
                     ): cv.positive_int,
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_DB_RETRY_WAIT, default=DEFAULT_DB_RETRY_WAIT
                     ): cv.positive_int,
-                    vol.Optional(
+                    probatio.Optional(
                         CONF_DB_INTEGRITY_CHECK, default=DEFAULT_DB_INTEGRITY_CHECK
                     ): cv.boolean,
                 }
             ),
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 

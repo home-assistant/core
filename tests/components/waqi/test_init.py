@@ -118,10 +118,8 @@ async def test_migration_from_v1(
     )
     assert device.identifiers == {(DOMAIN, "4584")}
     assert device.id == device_1.id
-    assert device.config_entries == {mock_config_entry.entry_id}
-    assert device.config_entries_subentries == {
-        mock_config_entry.entry_id: {subentry.subentry_id}
-    }
+    assert device.config_entry_id == mock_config_entry.entry_id
+    assert device.config_subentry_id == subentry.subentry_id
 
     subentry = list(entry.subentries.values())[1]
     assert subentry.subentry_type == "station"
@@ -140,10 +138,8 @@ async def test_migration_from_v1(
     )
     assert device.identifiers == {(DOMAIN, "4585")}
     assert device.id == device_2.id
-    assert device.config_entries == {mock_config_entry.entry_id}
-    assert device.config_entries_subentries == {
-        mock_config_entry.entry_id: {subentry.subentry_id}
-    }
+    assert device.config_entry_id == mock_config_entry.entry_id
+    assert device.config_subentry_id == subentry.subentry_id
 
 
 @pytest.mark.parametrize(
@@ -263,7 +259,7 @@ async def test_migration_from_v1_disabled(
     # validates it against the config entry's disabled state; write it
     # directly to simulate existing storage.
     device_1 = attr.evolve(device_1, disabled_by=DeviceEntryDisabler.CONFIG_ENTRY)
-    device_registry.devices[device_1.id] = device_1
+    device_registry._devices[device_1.id] = device_1
     entity_registry.async_get_or_create(
         "sensor",
         DOMAIN,
@@ -284,7 +280,7 @@ async def test_migration_from_v1_disabled(
     # API; clear the flag directly to simulate existing storage with a stale
     # enabled device.
     device_2 = attr.evolve(device_2, disabled_by=None)
-    device_registry.devices[device_2.id] = device_2
+    device_registry._devices[device_2.id] = device_2
     entity_registry.async_get_or_create(
         "sensor",
         DOMAIN,
@@ -346,10 +342,6 @@ async def test_migration_from_v1_disabled(
         )
         assert device.identifiers == {(DOMAIN, subentry.unique_id)}
         assert device.id == devices[subentry_data["device"]].id
-        assert device.config_entries == {
-            mock_config_entries[main_config_entry].entry_id
-        }
-        assert device.config_entries_subentries == {
-            mock_config_entries[main_config_entry].entry_id: {subentry.subentry_id}
-        }
+        assert device.config_entry_id == mock_config_entries[main_config_entry].entry_id
+        assert device.config_subentry_id == subentry.subentry_id
         assert device.disabled_by is subentry_data["device_disabled_by"]

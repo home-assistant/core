@@ -10,10 +10,11 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 
 from .const import DOMAIN, ID_TYPE_DEVICE_ID, ID_TYPE_SERIAL, LOGGER
 from .discovery import async_discover_entities
-from .helpers import MatterConfigEntry, get_device_id
+from .helpers import MatterConfigEntry, get_device_endpoint, get_device_id
 
 if TYPE_CHECKING:
     from matter_server.client import MatterClient
@@ -73,7 +74,11 @@ class MatterAdapter:
             endpoint = node.endpoints[data["endpoint_id"]]
             # Ensure the bridge device (endpoint 0) is registered before a
             # bridged child endpoint resolves it as its via_device.
-            if endpoint.is_bridged_device and node.endpoints[0] != endpoint:
+            device_endpoint = get_device_endpoint(endpoint)
+            if (
+                device_endpoint.is_bridged_device
+                and node.endpoints[0] != device_endpoint
+            ):
                 self._setup_endpoint(node.endpoints[0])
             self._setup_endpoint(endpoint)
 
@@ -88,10 +93,11 @@ class MatterAdapter:
             endpoint = node.endpoints.get(data["endpoint_id"])
             if not endpoint:
                 return  # race condition
-            node_device_id = get_device_id(
-                server_info,
-                node.endpoints[data["endpoint_id"]],
-            )
+            if get_device_endpoint(endpoint) != endpoint:
+                # A composed device is represented by a single HA device, which is
+                # only removed once its compose parent endpoint is removed.
+                return
+            node_device_id = get_device_id(server_info, endpoint)
             identifier = (DOMAIN, f"{ID_TYPE_DEVICE_ID}_{node_device_id}")
             if device := device_registry.async_get_device_by_identifier(
                 identifier, self.config_entry.entry_id
@@ -163,6 +169,10 @@ class MatterAdapter:
         """Create a device registry entry for a MatterNode."""
         server_info = cast(ServerInfoMessage, self.matter_client.server_info)
 
+        # All endpoints of a composed device share a single device registry entry,
+        # so derive that entry from the compose parent for every one of them.
+        endpoint = get_device_endpoint(endpoint)
+
         basic_info = endpoint.device_info
         # use (first) DeviceType of the endpoint as fallback product name
         device_type = next(
@@ -183,7 +193,7 @@ class MatterAdapter:
         device_registry = dr.async_get(self.hass)
 
         # handle bridged devices
-        via_device_id: str | None = None
+        via_device_id: str | UndefinedType = UNDEFINED
         if endpoint.is_bridged_device and endpoint.node.endpoints[0] != endpoint:
             bridge_device_id = get_device_id(
                 server_info,
@@ -199,15 +209,35 @@ class MatterAdapter:
             server_info,
             endpoint,
         )
-        identifiers = {(DOMAIN, f"{ID_TYPE_DEVICE_ID}_{node_device_id}")}
+        node_device_identifier = (DOMAIN, f"{ID_TYPE_DEVICE_ID}_{node_device_id}")
+        identifiers = {node_device_identifier}
         serial_number: str | None = None
-        # if available, we also add the serialnumber as identifier
+        # if available, we also add the serial number as identifier
         if (
-            basic_info_serial_number := basic_info.serialNumber
-        ) and "test" not in basic_info_serial_number.lower():
+            (basic_info_serial_number := basic_info.serialNumber)
+            and "test" not in basic_info_serial_number.lower()
+            # some bridges report their own serial number for the devices they bridge,
+            # which would make the identifier resolve to the bridge's device
+            and not (
+                isinstance(basic_info, clusters.BridgedDeviceBasicInformation)
+                and basic_info_serial_number == endpoint.node.device_info.serialNumber
+            )
+        ):
             # prefix identifier with 'serial_' to be able to filter it
             identifiers.add((DOMAIN, f"{ID_TYPE_SERIAL}_{basic_info_serial_number}"))
             serial_number = basic_info_serial_number
+
+        # the bridge's device entry keeps every identifier that was ever merged onto
+        # it, so a bridged device can still resolve to it through one left behind
+        if (
+            via_device_id is not UNDEFINED
+            and (via_device := device_registry.async_get(via_device_id))
+            and (stale_identifiers := via_device.identifiers & identifiers)
+        ):
+            device_registry.async_update_device(
+                via_device.id,
+                new_identifiers=via_device.identifiers - stale_identifiers,
+            )
 
         # Model name is the human readable name of the model/product name
         model_name = (
@@ -216,9 +246,7 @@ class MatterAdapter:
             # alternative is the productName (e.g. LCT001)
             or get_clean_name(basic_info.productName)
             # if no product name, use the device type name
-            or device_type.__name__
-            if device_type
-            else None
+            or (device_type.__name__ if device_type else None)
         )
         # Model ID is the non-human readable product ID
         # we prefer the matter product ID so we can look it up in Matter DCL

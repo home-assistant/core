@@ -742,16 +742,15 @@ async def test_setup_reuses_cached_api_from_migration(
     assert mock_config_entry.entry_id not in _CACHED_APIS
 
 
-async def test_migrate_failure_returns_false(
+async def test_migrate_failure_retries(
     hass: HomeAssistant,
     mock_growatt_classic_api,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test migration returns False on API failure to allow retry.
+    """Test migration is retried on API failure.
 
     When migration fails due to API errors (network issues, etc.),
-    it should return False and NOT bump the version. This allows Home Assistant
-    to retry the migration on the next restart.
+    it should raise ConfigEntryNotReady and NOT bump the version, so
+    Home Assistant retries the migration.
     """
     # Create a version 1.0 config entry with DEFAULT_PLANT_ID
     mock_config_entry = MockConfigEntry(
@@ -778,8 +777,11 @@ async def test_migrate_failure_returns_false(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # Verify migration failed (entry is in migration error state)
-    assert mock_config_entry.state is ConfigEntryState.MIGRATION_ERROR
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert (
+        mock_config_entry.reason
+        == "Failed to resolve the plant ID from the Growatt API"
+    )
 
     # Verify version was NOT bumped (remains 1.0)
     assert mock_config_entry.version == 1
@@ -788,9 +790,73 @@ async def test_migrate_failure_returns_false(
     # Verify plant_id was NOT changed (remains DEFAULT_PLANT_ID)
     assert mock_config_entry.data[CONF_PLANT_ID] == DEFAULT_PLANT_ID
 
-    # Verify error was logged
-    assert "Failed to resolve plant_id during migration" in caplog.text
-    assert "Migration will retry on next restart" in caplog.text
+
+@pytest.mark.parametrize(
+    ("data", "plant_list", "reason"),
+    [
+        pytest.param(
+            {
+                CONF_AUTH_TYPE: AUTH_API_TOKEN,
+                CONF_TOKEN: "test_token",
+                CONF_PLANT_ID: DEFAULT_PLANT_ID,
+            },
+            None,
+            "The configuration contains an invalid plant ID, reconfigure the"
+            " integration",
+            id="v1_api_default_plant_id",
+        ),
+        pytest.param(
+            {
+                CONF_AUTH_TYPE: AUTH_PASSWORD,
+                CONF_USERNAME: "test_user",
+                CONF_PLANT_ID: DEFAULT_PLANT_ID,
+            },
+            None,
+            "The configuration is missing the username or password, reconfigure"
+            " the integration",
+            id="missing_credentials",
+        ),
+        pytest.param(
+            {
+                CONF_AUTH_TYPE: AUTH_PASSWORD,
+                CONF_USERNAME: "test_user",
+                CONF_PASSWORD: "test_password",
+                CONF_PLANT_ID: DEFAULT_PLANT_ID,
+            },
+            {"data": []},
+            "No plants found for Growatt account test_user",
+            id="no_plants",
+        ),
+    ],
+)
+async def test_migrate_error(
+    hass: HomeAssistant,
+    mock_growatt_classic_api,
+    data: dict[str, str],
+    plant_list: dict[str, list] | None,
+    reason: str,
+) -> None:
+    """Test migration errors that cannot be recovered without user action."""
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=data,
+        unique_id="plant_default",
+        version=1,
+        minor_version=0,
+    )
+    mock_growatt_classic_api.login.return_value = {
+        "success": True,
+        "user": {"id": 123456},
+    }
+    mock_growatt_classic_api.plant_list.return_value = plant_list
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.MIGRATION_ERROR
+    assert mock_config_entry.reason == reason
+    assert mock_config_entry.minor_version == 0
 
 
 @pytest.mark.usefixtures("mock_growatt_classic_api")
@@ -834,6 +900,7 @@ async def test_dynamic_device_added(
     mock_growatt_v1_api,
     mock_config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that new devices are dynamically added when discovered during a scan."""
@@ -881,7 +948,6 @@ async def test_dynamic_device_added(
     # Verify multiple entity types to confirm end-to-end dynamic device support
     assert hass.states.get("switch.new456789_charge_from_grid") is not None
     # Additional check: verify entities exist in the entity registry
-    entity_registry = er.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     new_device_entry = device_registry.async_get_device_by_identifier(
         (DOMAIN, "NEW456789"), mock_config_entry.entry_id
     )

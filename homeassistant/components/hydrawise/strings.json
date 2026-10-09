@@ -1,8 +1,7 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -72,6 +71,14 @@
       "manual_watering": {
         "name": "Manual watering"
       }
+    }
+  },
+  "exceptions": {
+    "api_error": {
+      "message": "Error communicating with the Hydrawise API"
+    },
+    "invalid_auth": {
+      "message": "Authentication with the Hydrawise API failed"
     }
   },
   "services": {

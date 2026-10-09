@@ -3,6 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
+from aio_ownet.exceptions import OWServerConnectionError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -12,11 +13,14 @@ from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TOGGLE,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_owproxy_mock_devices
@@ -110,3 +114,30 @@ async def test_switch_toggle(
     )
     await hass.async_block_till_done()
     assert hass.states.get(entity_id).state == STATE_ON
+
+
+@pytest.mark.parametrize("device_id", ["05.111111111111"])
+@pytest.mark.parametrize("service", [SERVICE_TURN_ON, SERVICE_TURN_OFF])
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_switch_write_failure(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    owproxy: MagicMock,
+    device_id: str,
+    service: str,
+) -> None:
+    """Test 1-Wire switch action raises on write failure."""
+    setup_owproxy_mock_devices(owproxy, [device_id])
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    owproxy.return_value.write.side_effect = OWServerConnectionError
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            service,
+            {ATTR_ENTITY_ID: "switch.05_111111111111_programmed_input_output"},
+            blocking=True,
+        )
+    assert exc_info.value.translation_key == "write_failed"
+    assert str(exc_info.value) == "Error writing to /05.111111111111/PIO"

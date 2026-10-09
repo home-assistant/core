@@ -125,14 +125,14 @@ async def test_remove_device(
     assert device_entry
 
     client = await hass_ws_client(hass)
-    response = await client.remove_device(device_entry.id, config_entry.entry_id)
+    response = await client.remove_device(device_entry.id)
     assert not response["success"]
 
     await hass.async_block_till_done()
     assert device_registry.async_get(device_entry.id)
 
     with patch_discovered_devices([]):
-        response = await client.remove_device(device_entry.id, config_entry.entry_id)
+        response = await client.remove_device(device_entry.id)
         assert response["success"]
 
         await hass.async_block_till_done()

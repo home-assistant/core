@@ -14,6 +14,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_API_TOKEN
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN, LOGGER
 
@@ -37,7 +38,7 @@ class ActronAirConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         if self._api is None:
             LOGGER.debug("Initiating device authorization")
-            self._api = ActronAirAPI()
+            self._api = ActronAirAPI(session=async_get_clientsession(self.hass))
             try:
                 device_code_response = await self._api.request_device_code()
             except ActronAirAuthError as err:

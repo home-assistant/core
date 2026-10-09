@@ -17,6 +17,13 @@ ELEVATION_CIVIL: Final[float] = -astral.Depression.CIVIL.value
 ELEVATION_NAUTICAL: Final[float] = -astral.Depression.NAUTICAL.value
 ELEVATION_ASTRONOMICAL: Final[float] = -astral.Depression.ASTRONOMICAL.value
 
+# Sun elevation, in degrees, at the golden and blue hour boundaries. Golden hour
+# spans -4° to 6°; blue hour spans -6° to -4° (the two share the -4° boundary).
+ELEVATION_GOLDEN_HOUR_LOW: Final[float] = -4.0
+ELEVATION_GOLDEN_HOUR_HIGH: Final[float] = 6.0
+ELEVATION_BLUE_HOUR_LOW: Final[float] = -6.0
+ELEVATION_BLUE_HOUR_HIGH: Final[float] = -4.0
+
 SIGNAL_POSITION_CHANGED = f"{DOMAIN}_position_changed"
 SIGNAL_EVENTS_CHANGED = f"{DOMAIN}_events_changed"
 

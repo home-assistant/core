@@ -135,6 +135,7 @@ async def test_load_entry_fails_due_to_generic_exception(
 
     assert hmip_config_entry.runtime_data
     assert hmip_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert hmip_config_entry.reason == "Error connecting with HomematicIP Cloud"
 
 
 async def test_unload_entry(hass: HomeAssistant) -> None:
@@ -198,7 +199,7 @@ async def test_setup_services(hass: HomeAssistant) -> None:
 
     # Check services are created
     hmipc_services = hass.services.async_services()[DOMAIN]
-    assert len(hmipc_services) == 9
+    assert len(hmipc_services) == 10
 
     config_entries = hass.config_entries.async_entries(DOMAIN)
     assert len(config_entries) == 1

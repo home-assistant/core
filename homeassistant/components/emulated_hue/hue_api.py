@@ -26,15 +26,24 @@ from homeassistant.components import (
 from homeassistant.components.climate import (
     SERVICE_SET_TEMPERATURE,
     ClimateEntityFeature,
+    ClimateEntityStateAttribute,
 )
 from homeassistant.components.cover import (
-    ATTR_CURRENT_POSITION,
     ATTR_POSITION,
     CoverEntityFeature,
+    CoverEntityStateAttribute,
 )
-from homeassistant.components.fan import ATTR_PERCENTAGE, FanEntityFeature
+from homeassistant.components.fan import (
+    ATTR_PERCENTAGE,
+    FanEntityFeature,
+    FanEntityStateAttribute,
+)
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
-from homeassistant.components.humidifier import ATTR_HUMIDITY, SERVICE_SET_HUMIDITY
+from homeassistant.components.humidifier import (
+    ATTR_HUMIDITY,
+    SERVICE_SET_HUMIDITY,
+    HumidifierEntityStateAttribute,
+)
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP_KELVIN,
@@ -42,11 +51,14 @@ from homeassistant.components.light import (
     ATTR_TRANSITION,
     ATTR_XY_COLOR,
     ColorMode,
+    LightEntityCapabilityAttribute,
     LightEntityFeature,
+    LightEntityStateAttribute,
 )
 from homeassistant.components.media_player import (
     ATTR_MEDIA_VOLUME_LEVEL,
     MediaPlayerEntityFeature,
+    MediaPlayerEntityStateAttribute,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -388,7 +400,7 @@ class HueOneLightChangeView(HomeAssistantView):
         if entity.domain == light.DOMAIN:
             color_modes = (
                 entity.attributes.get(
-                    light.LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES
+                    LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES
                 )
                 or []
             )
@@ -704,9 +716,9 @@ def _build_entity_state_dict(entity: State) -> dict[str, Any]:
     attributes = entity.attributes
     if is_on:
         data[STATE_BRIGHTNESS] = hass_to_hue_brightness(
-            attributes.get(ATTR_BRIGHTNESS) or 0
+            attributes.get(LightEntityStateAttribute.BRIGHTNESS) or 0
         )
-        if (hue_sat := attributes.get(ATTR_HS_COLOR)) is not None:
+        if (hue_sat := attributes.get(LightEntityStateAttribute.HS_COLOR)) is not None:
             hue = hue_sat[0]
             sat = hue_sat[1]
             # Convert hass hs values back to hue hs values
@@ -715,7 +727,7 @@ def _build_entity_state_dict(entity: State) -> dict[str, Any]:
         else:
             data[STATE_HUE] = HUE_API_STATE_HUE_MIN
             data[STATE_SATURATION] = HUE_API_STATE_SAT_MIN
-        kelvin = attributes.get(ATTR_COLOR_TEMP_KELVIN)
+        kelvin = attributes.get(LightEntityStateAttribute.COLOR_TEMP_KELVIN)
         data[STATE_COLOR_TEMP] = (
             color_util.color_temperature_kelvin_to_mired(kelvin)
             if kelvin is not None
@@ -729,23 +741,26 @@ def _build_entity_state_dict(entity: State) -> dict[str, Any]:
         data[STATE_COLOR_TEMP] = 0
 
     if entity.domain == climate.DOMAIN:
-        temperature = attributes.get(ATTR_TEMPERATURE, 0)
+        temperature = attributes.get(ClimateEntityStateAttribute.TARGET_TEMPERATURE, 0)
         # Convert 0-100 to 0-254
         data[STATE_BRIGHTNESS] = round(temperature * HUE_API_STATE_BRI_MAX / 100)
     elif entity.domain == humidifier.DOMAIN:
-        humidity = attributes.get(ATTR_HUMIDITY, 0)
+        humidity = attributes.get(HumidifierEntityStateAttribute.HUMIDITY, 0)
         # Convert 0-100 to 0-254
         data[STATE_BRIGHTNESS] = round(humidity * HUE_API_STATE_BRI_MAX / 100)
     elif entity.domain == media_player.DOMAIN:
-        level = attributes.get(ATTR_MEDIA_VOLUME_LEVEL, 1.0 if is_on else 0.0)
+        level = attributes.get(
+            MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL,
+            1.0 if is_on else 0.0,
+        )
         # Convert 0.0-1.0 to 0-254
         data[STATE_BRIGHTNESS] = round(min(1.0, level) * HUE_API_STATE_BRI_MAX)
     elif entity.domain == fan.DOMAIN:
-        percentage = attributes.get(ATTR_PERCENTAGE) or 0
+        percentage = attributes.get(FanEntityStateAttribute.PERCENTAGE) or 0
         # Convert 0-100 to 0-254
         data[STATE_BRIGHTNESS] = round(percentage * HUE_API_STATE_BRI_MAX / 100)
     elif entity.domain == cover.DOMAIN:
-        level = attributes.get(ATTR_CURRENT_POSITION, 0)
+        level = attributes.get(CoverEntityStateAttribute.CURRENT_POSITION, 0)
         data[STATE_BRIGHTNESS] = round(level / 100 * HUE_API_STATE_BRI_MAX)
     _clamp_values(data)
     return data
@@ -777,8 +792,7 @@ def _entity_unique_id(entity_id: str) -> str:
 def state_to_json(config: Config, state: State) -> dict[str, Any]:
     """Convert an entity to its Hue bridge JSON representation."""
     color_modes = (
-        state.attributes.get(light.LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES)
-        or []
+        state.attributes.get(LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES) or []
     )
     unique_id = _entity_unique_id(state.entity_id)
     state_dict = get_entity_state_dict(config, state)

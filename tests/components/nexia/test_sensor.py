@@ -1,11 +1,28 @@
 """Tests for the nexia sensor platform."""
 
-from nexia.home import NexiaHome
+from datetime import timedelta
+import inspect
+from unittest.mock import NonCallableMock
 
+from freezegun.api import FrozenDateTimeFactory
+from nexia.home import NexiaHome
+from nexia.sensor import NexiaSensor
+import pytest
+
+from homeassistant.components.nexia.coordinator import (
+    DEFAULT_UPDATE_RATE as COORDINATOR_UPDATE_RATE,
+)
+from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import PERCENTAGE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.device_registry import DeviceRegistry
+from homeassistant.helpers.entity_registry import EntityRegistry
 
 from .conftest import setup_integration
+
+from tests.common import async_fire_time_changed
 
 
 async def test_create_sensors(hass: HomeAssistant, patch_nexia_home: NexiaHome) -> None:
@@ -145,3 +162,190 @@ async def test_create_sensors(hass: HomeAssistant, patch_nexia_home: NexiaHome) 
     assert all(
         state.attributes[key] == value for key, value in expected_attributes.items()
     )
+
+
+async def test_room_iq_sensor_disabled_by_default(
+    hass: HomeAssistant, patch_nexia_home: NonCallableMock[NexiaHome]
+) -> None:
+    """Test NexiaRoomIQSensor is disabled by default."""
+
+    await setup_integration(hass, patch_nexia_home)
+
+    assert patch_nexia_home.any_room_iq_monitors() is False
+    assert patch_nexia_home.update.await_count == 1
+    state = hass.states.get("sensor.zone3_zone3_roomiq_temperature")
+    assert state is None
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_room_iq_sensors(
+    hass: HomeAssistant,
+    patch_nexia_home: NonCallableMock[NexiaHome],
+    entity_registry: EntityRegistry,
+    device_registry: DeviceRegistry,
+) -> None:
+    """Test NexiaRoomIQSensor."""
+
+    await setup_integration(hass, patch_nexia_home)
+
+    assert patch_nexia_home.any_room_iq_monitors() is True
+    assert patch_nexia_home.update.await_count == 2
+    state = hass.states.get("sensor.zone3_zone3_roomiq_temperature")
+    assert state is not None
+
+    entry = entity_registry.async_get(state.entity_id)
+    device = device_registry.async_get(entry.device_id)
+    assert device is not None
+    assert device.model == "XL1050"
+    assert device.sw_version == "5.9.1"
+
+    assert state.state == "25.0"
+    assert state.attributes["device_class"] == SensorDeviceClass.TEMPERATURE
+    assert state.attributes["friendly_name"] == "Zone3 RoomIQ temperature"
+    assert state.attributes["unit_of_measurement"] == UnitOfTemperature.CELSIUS
+
+    state = hass.states.get("sensor.zone3_zone3_roomiq_humidity")
+    assert state is not None
+    assert state.state == "45"
+    assert state.attributes["device_class"] == SensorDeviceClass.HUMIDITY
+    assert state.attributes["friendly_name"] == "Zone3 RoomIQ humidity"
+    assert state.attributes["unit_of_measurement"] == PERCENTAGE
+
+    state = hass.states.get("sensor.zone3_zone3_roomiq_battery")
+    assert state is None
+
+    state = hass.states.get("sensor.upstairs_upstairs_roomiq_temperature")
+    assert state is not None
+
+    entry = entity_registry.async_get(state.entity_id)
+    device = device_registry.async_get(entry.device_id)
+    assert device is not None
+    assert device.model is None
+    assert device.sw_version is None
+
+    assert state.state == "22.5"
+    assert state.attributes["device_class"] == SensorDeviceClass.TEMPERATURE
+    assert state.attributes["friendly_name"] == "Upstairs RoomIQ temperature"
+    assert state.attributes["unit_of_measurement"] == UnitOfTemperature.CELSIUS
+
+    state = hass.states.get("sensor.upstairs_upstairs_roomiq_humidity")
+    assert state is not None
+    assert state.state == "45"
+    assert state.attributes["device_class"] == SensorDeviceClass.HUMIDITY
+    assert state.attributes["friendly_name"] == "Upstairs RoomIQ humidity"
+    assert state.attributes["unit_of_measurement"] == PERCENTAGE
+
+    state = hass.states.get("sensor.upstairs_upstairs_roomiq_battery")
+    assert state is not None
+    assert state.state == "93"
+    assert state.attributes["device_class"] == SensorDeviceClass.BATTERY
+    assert state.attributes["friendly_name"] == "Upstairs RoomIQ battery"
+    assert state.attributes["unit_of_measurement"] == PERCENTAGE
+
+    state = hass.states.get("sensor.downstairs_downstairs_roomiq_temperature")
+    assert state is not None
+    assert state.state == "unavailable"
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_any_room_iq_monitors(
+    hass: HomeAssistant, patch_nexia_home: NexiaHome
+) -> None:
+    """Test any_room_iq_monitors after unload."""
+
+    config_entry = await setup_integration(hass, patch_nexia_home)
+
+    assert patch_nexia_home.any_room_iq_monitors() is True
+
+    await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
+    assert patch_nexia_home.any_room_iq_monitors() is False
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_room_iq_monitors_removed_after_rename(
+    hass: HomeAssistant, patch_nexia_home: NexiaHome, entity_registry: EntityRegistry
+) -> None:
+    """Test RoomIQ monitors are unregistered on unload after renaming entities."""
+    zone = patch_nexia_home.get_thermostat_by_id(2000004).get_zone_by_id(500)
+    config_entry = await setup_integration(hass, patch_nexia_home)
+
+    room_iq_entity_ids = [
+        entity_entry.entity_id
+        for entity_entry in er.async_entries_for_config_entry(
+            entity_registry, config_entry.entry_id
+        )
+        if "roomiq" in entity_entry.entity_id
+    ]
+    assert room_iq_entity_ids
+    add_calls = zone.add_room_iq_monitor.call_count
+    for entity_id in room_iq_entity_ids:
+        entity_registry.async_update_entity(
+            entity_id, new_entity_id=f"{entity_id}_renamed"
+        )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.upstairs_upstairs_roomiq_temperature_renamed")
+    assert state is not None
+    assert state.state == "22.5"
+    # The monitors are not registered again
+    assert zone.add_room_iq_monitor.call_count == add_calls
+
+    await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
+    # The monitors are unregistered with the ids they were registered with
+    assert sorted(zone.remove_room_iq_monitor.call_args_list) == sorted(
+        zone.add_room_iq_monitor.call_args_list
+    )
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_room_iq_sensor_no_longer_present(
+    hass: HomeAssistant, patch_nexia_home: NexiaHome, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test RoomIQ sensor no longer present."""
+    zone = patch_nexia_home.get_thermostat_by_id(2000004).get_zone_by_id(500)
+    get_item = zone.get_sensor_by_id.side_effect
+    zone.get_sensor_by_id.side_effect = KeyError
+
+    await setup_integration(hass, patch_nexia_home)
+
+    state = hass.states.get("sensor.upstairs_upstairs_roomiq_humidity")
+    assert state is not None
+    assert state.state == "unavailable"
+
+    def get_sensor_raise_from_native_value(sensor_id: int) -> NexiaSensor:
+        for caller_frame in inspect.stack():
+            if caller_frame.function == "native_value":
+                raise KeyError
+
+        return get_item(sensor_id)
+
+    # The state machine won't call NexiaRoomIQSensor.native_value() when unavailable, so only
+    # raise when called from native_value() & return something new to coordinator so it updates
+    zone.get_sensor_by_id.side_effect = get_sensor_raise_from_native_value
+    patch_nexia_home.update.return_value = {"key": "different value"}
+
+    freezer.tick(timedelta(seconds=COORDINATOR_UPDATE_RATE))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.upstairs_upstairs_roomiq_humidity")
+    assert state is not None
+    assert state.state == "unknown"
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_1_room_iq_sensor(
+    hass: HomeAssistant, patch_nexia_home: NexiaHome
+) -> None:
+    """Test one-RoomIQ sensor case."""
+    zone = patch_nexia_home.get_thermostat_by_id(2000003).get_zone_by_id(400)
+    assert len(zone.get_sensors()) == 1
+
+    await setup_integration(hass, patch_nexia_home)
+
+    state = hass.states.get("sensor.kitchen_kitchen_roomiq_temperature")
+    assert state is None

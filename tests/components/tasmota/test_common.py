@@ -22,7 +22,7 @@ from hatasmota.utils import (
 )
 import pytest
 
-from homeassistant.components.tasmota.const import DEFAULT_PREFIX, DOMAIN
+from homeassistant.components.tasmota.const import DEFAULT_PREFIX
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -117,13 +117,10 @@ async def remove_device(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     device_id: str,
-    config_entry_id: str | None = None,
 ) -> None:
-    """Remove config entry from a device."""
-    if config_entry_id is None:
-        config_entry_id = hass.config_entries.async_entries(DOMAIN)[0].entry_id
+    """Remove a device."""
     ws_client = await hass_ws_client(hass)
-    response = await ws_client.remove_device(device_id, config_entry_id)
+    response = await ws_client.remove_device(device_id)
     assert response["success"]
 
 
@@ -683,7 +680,7 @@ async def help_test_entity_id_update_subscriptions(
     sensor_config: dict[str, Any] | None = None,
     object_id: str = "tasmota_test",
 ) -> None:
-    """Test MQTT subscriptions are managed when entity_id is updated."""
+    """Test MQTT subscriptions are kept when entity_id is updated."""
     entity_reg = er.async_get(hass)
 
     config = copy.deepcopy(config)
@@ -717,13 +714,21 @@ async def help_test_entity_id_update_subscriptions(
     )
     await hass.async_block_till_done()
 
-    state = hass.states.get(f"{domain}.{object_id}")
-    assert state is None
+    # The entity is not re-added, so its subscriptions are kept
+    mqtt_mock.async_subscribe.assert_not_called()
+    assert hass.states.get(f"{domain}.{object_id}") is None
 
+    availability_topic = get_topic_tele_will(config)
+    async_fire_mqtt_message(hass, availability_topic, config_get_state_online(config))
+    await hass.async_block_till_done()
     state = hass.states.get(f"{domain}.milk")
-    assert state is not None
-    for topic in topics:
-        mqtt_mock.async_subscribe.assert_any_call(topic, ANY, ANY, ANY, ANY)
+    assert state and state.state != STATE_UNAVAILABLE
+
+    async_fire_mqtt_message(hass, availability_topic, config_get_state_offline(config))
+    await hass.async_block_till_done()
+    state = hass.states.get(f"{domain}.milk")
+    assert state and state.state == STATE_UNAVAILABLE
+    assert hass.states.get(f"{domain}.{object_id}") is None
 
 
 async def help_test_entity_id_update_discovery_update(

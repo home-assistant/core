@@ -104,9 +104,6 @@ async def test_remove_device_valid(
         list_commands_return_value=[],
     )
 
-    device_registry = dr.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
-    assert device_registry is not None
-
     device_entry = device_registry.async_get_device_by_identifier(
         (DOMAIN, mock_serial_number), config_entry.entry_id
     )
@@ -115,7 +112,7 @@ async def test_remove_device_valid(
     assert device_entry.serial_number == mock_serial_number
 
     client = await hass_ws_client(hass)
-    response = await client.remove_device(device_entry.id, config_entry.entry_id)
+    response = await client.remove_device(device_entry.id)
     assert not response["success"]
 
 
@@ -137,9 +134,6 @@ async def test_remove_device_stale(
         list_commands_return_value=[],
     )
 
-    device_registry = dr.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
-    assert device_registry is not None
-
     device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         identifiers={(DOMAIN, "remove-device-id")},
@@ -148,7 +142,7 @@ async def test_remove_device_stale(
     assert device_entry is not None
 
     client = await hass_ws_client(hass)
-    response = await client.remove_device(device_entry.id, config_entry.entry_id)
+    response = await client.remove_device(device_entry.id)
     assert response["success"]
 
     # Verify that device entry is removed

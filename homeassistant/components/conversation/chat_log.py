@@ -10,7 +10,7 @@ import logging
 from pathlib import Path
 from typing import Any, Literal, TypedDict, cast
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, TemplateError
@@ -20,7 +20,7 @@ from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import JsonObjectType
 
 from . import trace
-from .const import ChatLogEventType
+from .const import DOMAIN, ChatLogEventType
 from .models import ConversationInput, ConversationResult
 
 DATA_CHAT_LOGS: HassKey[dict[str, ChatLog]] = HassKey("conversation_chat_logs")
@@ -276,7 +276,7 @@ class AssistantContent:
             "agent_id": self.agent_id,
             "created": self.created,
         }
-        if self.content:
+        if self.content is not None:
             result["content"] = self.content
         if self.thinking_content:
             result["thinking_content"] = self.thinking_content
@@ -293,8 +293,26 @@ class ToolResultContent:
     agent_id: str
     tool_call_id: str
     tool_name: str
-    tool_result: JsonObjectType
+    result: llm.ToolResult
     created: datetime = field(init=False, default_factory=utcnow)
+
+    @property
+    def tool_result(self) -> JsonObjectType:
+        """Return the data of the result.
+
+        Deprecated compatibility shim: the result is available as `result`.
+        It can be removed in HA Core 2027.11.
+        """
+        frame.report_usage(
+            "accesses `ToolResultContent.tool_result`, which is deprecated; "
+            "use `ToolResultContent.result` instead",
+            breaks_in_ha_version="2027.11.0",
+            core_behavior=frame.ReportBehavior.ERROR,
+            core_integration_behavior=frame.ReportBehavior.ERROR,
+            custom_integration_behavior=frame.ReportBehavior.LOG,
+            exclude_integrations={DOMAIN},
+        )
+        return self.result.data
 
     def as_dict(self) -> dict[str, Any]:
         """Return a dictionary representation of the content."""
@@ -303,7 +321,9 @@ class ToolResultContent:
             "agent_id": self.agent_id,
             "tool_call_id": self.tool_call_id,
             "tool_name": self.tool_name,
-            "tool_result": self.tool_result,
+            "result": asdict(self.result),
+            # Deprecated, can be removed in HA Core 2027.11.
+            "tool_result": self.result.data,
             "created": self.created,
         }
 
@@ -327,6 +347,7 @@ class ToolResultContentDeltaDict(TypedDict, total=False):
     role: Literal["tool_result"]
     tool_call_id: str
     tool_name: str
+    result: llm.ToolResult
     tool_result: JsonObjectType
 
 
@@ -459,17 +480,18 @@ class ChatLog:
 
             try:
                 tool_result = await tool_call_tasks[tool_input.id]
-            except (HomeAssistantError, vol.Invalid) as e:
-                tool_result = {"error": type(e).__name__}
+            except (HomeAssistantError, probatio.Invalid) as e:
+                error_data: JsonObjectType = {"error": type(e).__name__}
                 if str(e):
-                    tool_result["error_text"] = str(e)
+                    error_data["error_text"] = str(e)
+                tool_result = llm.ToolResult(data=error_data, error=True)
             LOGGER.debug("Tool response: %s", tool_result)
 
             response_content = ToolResultContent(
                 agent_id=content.agent_id,
                 tool_call_id=tool_input.id,
                 tool_name=tool_input.tool_name,
-                tool_result=tool_result,
+                result=tool_result,
             )
             self.content.append(response_content)
             _async_notify_subscribers(
@@ -500,8 +522,10 @@ class ChatLog:
 
         The keys content and tool_calls will be concatenated
         if they appear multiple times.
+
+        An explicit empty content string is preserved as a silent response.
         """
-        current_content = ""
+        current_content: str | None = None
         current_thinking_content = ""
         current_native: Any = None
         current_tool_calls: list[llm.ToolInput] = []
@@ -514,8 +538,8 @@ class ChatLog:
             if "role" not in delta:
                 # ToolResultContentDeltaDict will always have a role
                 assistant_delta = cast(AssistantContentDeltaDict, delta)
-                if delta_content := assistant_delta.get("content"):
-                    current_content += delta_content
+                if (delta_content := assistant_delta.get("content")) is not None:
+                    current_content = (current_content or "") + delta_content
                 if delta_thinking_content := assistant_delta.get("thinking_content"):
                     current_thinking_content += delta_thinking_content
                 if delta_native := assistant_delta.get("native"):
@@ -549,14 +573,14 @@ class ChatLog:
             # Starting a new message
             # Yield the previous message if it has content
             if (
-                current_content
+                current_content is not None
                 or current_thinking_content
                 or current_tool_calls
                 or current_native
             ):
                 content: AssistantContent | ToolResultContent = AssistantContent(
                     agent_id=agent_id,
-                    content=current_content or None,
+                    content=current_content,
                     thinking_content=current_thinking_content or None,
                     tool_calls=current_tool_calls or None,
                     native=current_native,
@@ -567,14 +591,14 @@ class ChatLog:
                 ):
                     yield tool_result
                     if self.delta_listener:
-                        self.delta_listener(self, asdict(tool_result))
-                current_content = ""
+                        self.delta_listener(self, tool_result.as_dict())
+                current_content = None
                 current_thinking_content = ""
                 current_native = None
                 current_tool_calls = []
 
             if delta["role"] == "assistant":
-                current_content = delta.get("content") or ""
+                current_content = delta.get("content")
                 current_thinking_content = delta.get("thinking_content") or ""
                 current_tool_calls = delta.get("tool_calls") or []
                 current_native = delta.get("native")
@@ -585,15 +609,26 @@ class ChatLog:
                     }:
                         self.delta_listener(self, filtered_delta)
             elif delta["role"] == "tool_result":
+                if (result := delta.get("result")) is None:
+                    frame.report_usage(
+                        "sets `tool_result` on a tool result delta, which is "
+                        "deprecated; set `result` to a ToolResult instead",
+                        breaks_in_ha_version="2027.11.0",
+                        core_behavior=frame.ReportBehavior.ERROR,
+                        core_integration_behavior=frame.ReportBehavior.ERROR,
+                        custom_integration_behavior=frame.ReportBehavior.LOG,
+                        exclude_integrations={DOMAIN},
+                    )
+                    result = llm.ToolResult(data=delta["tool_result"])
                 content = ToolResultContent(
                     agent_id=agent_id,
                     tool_call_id=delta["tool_call_id"],
                     tool_name=delta["tool_name"],
-                    tool_result=delta["tool_result"],
+                    result=result,
                 )
                 yield content
                 if self.delta_listener:
-                    self.delta_listener(self, asdict(content))
+                    self.delta_listener(self, content.as_dict())
                 self.async_add_assistant_content_without_tools(content)
             else:
                 raise ValueError(
@@ -602,14 +637,14 @@ class ChatLog:
                 )
 
         if (
-            current_content
+            current_content is not None
             or current_thinking_content
             or current_tool_calls
             or current_native
         ):
             content = AssistantContent(
                 agent_id=agent_id,
-                content=current_content or None,
+                content=current_content,
                 thinking_content=current_thinking_content or None,
                 tool_calls=current_tool_calls or None,
                 native=current_native,
@@ -620,7 +655,7 @@ class ChatLog:
             ):
                 yield tool_result
                 if self.delta_listener:
-                    self.delta_listener(self, asdict(tool_result))
+                    self.delta_listener(self, tool_result.as_dict())
 
     async def _async_expand_prompt_template(
         self,

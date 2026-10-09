@@ -18,10 +18,15 @@ from homeassistant.config_entries import (
     ConfigEntryState,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.setup import async_setup_component
 
-from .const import MOCK_ACCOUNT_ID, MOCK_LOGIN_TOKEN
+from .const import (
+    FORBIDDEN_EXCEPTION,
+    MOCK_ACCOUNT_ID,
+    MOCK_LOGIN_TOKEN,
+    OTHER_ACCOUNT_ID,
+)
 
 from tests.common import MockConfigEntry
 from tests.typing import WebSocketGenerator
@@ -197,6 +202,84 @@ async def test_setup_entry_kamereon_exception(
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
+@pytest.mark.usefixtures("patch_renault_account", "patch_get_api_accounts")
+@pytest.mark.parametrize(
+    ("account_ids", "expected_issues"),
+    [
+        pytest.param([MOCK_ACCOUNT_ID], set(), id="account_listed"),
+        pytest.param(
+            [OTHER_ACCOUNT_ID],
+            {(DOMAIN, "account_not_found_123456")},
+            id="account_not_listed",
+        ),
+    ],
+)
+async def test_setup_entry_forbidden(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    issue_registry: ir.IssueRegistry,
+    expected_issues: set[tuple[str, str]],
+) -> None:
+    """Test a forbidden Kamereon account fails setup without retrying."""
+    with patch(
+        "renault_api.renault_account.RenaultAccount.get_vehicles",
+        side_effect=FORBIDDEN_EXCEPTION,
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert set(issue_registry.issues) == expected_issues
+
+
+@pytest.mark.usefixtures(
+    "patch_renault_account", "patch_get_api_accounts", "patch_get_vehicles"
+)
+@pytest.mark.parametrize("vehicle_type", ["zoe_40"], indirect=True)
+@pytest.mark.parametrize("account_ids", [[OTHER_ACCOUNT_ID]])
+async def test_account_not_found_issue_deleted_on_setup(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test the issue is deleted once the account loads again."""
+    with patch(
+        "renault_api.renault_account.RenaultAccount.get_vehicles",
+        side_effect=FORBIDDEN_EXCEPTION,
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+    assert len(issue_registry.issues) == 1
+
+    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert len(issue_registry.issues) == 0
+
+
+@pytest.mark.usefixtures("patch_renault_account", "patch_get_api_accounts")
+@pytest.mark.parametrize("account_ids", [[OTHER_ACCOUNT_ID]])
+async def test_account_not_found_issue_deleted_on_removal(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test the issue is deleted when the config entry is removed."""
+    with patch(
+        "renault_api.renault_account.RenaultAccount.get_vehicles",
+        side_effect=FORBIDDEN_EXCEPTION,
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+    assert len(issue_registry.issues) == 1
+
+    await hass.config_entries.async_remove(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert len(issue_registry.issues) == 0
+
+
 @pytest.mark.usefixtures("patch_renault_account", "patch_get_vehicles")
 @pytest.mark.parametrize("vehicle_type", ["missing_details"], indirect=True)
 async def test_setup_entry_missing_vehicle_details(
@@ -262,7 +345,7 @@ async def test_registry_cleanup(
     # Try to remove "VF1ZOE40VIN" - fails as it is live
     device = device_registry.async_get_device_by_identifier((DOMAIN, live_id), entry_id)
     client = await hass_ws_client(hass)
-    response = await client.remove_device(device.id, entry_id)
+    response = await client.remove_device(device.id)
     assert not response["success"]
     assert len(dr.async_entries_for_config_entry(device_registry, entry_id)) == 2
     assert (
@@ -272,7 +355,7 @@ async def test_registry_cleanup(
 
     # Try to remove "VF1AAAAA555777888" - succeeds as it is dead
     device = device_registry.async_get_device_by_identifier((DOMAIN, dead_id), entry_id)
-    response = await client.remove_device(device.id, entry_id)
+    response = await client.remove_device(device.id)
     assert response["success"]
     assert len(dr.async_entries_for_config_entry(device_registry, entry_id)) == 1
     assert (
