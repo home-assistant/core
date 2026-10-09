@@ -4,15 +4,8 @@ rules:
   appropriate-polling: done
   brands: done
   common-modules: done
-  config-flow:
-    status: todo
-    comment: The username and password fields are missing a data_description.
-  config-flow-test-coverage:
-    status: todo
-    comment: |
-      Missing tests for aborting on an already configured account and for
-      reauthenticating with a different account. A ClientError raised while
-      checking the credentials is not handled.
+  config-flow: done
+  config-flow-test-coverage: done
   dependency-transparency: done
   docs-actions: todo
   docs-conditions:
