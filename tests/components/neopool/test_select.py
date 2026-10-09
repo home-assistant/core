@@ -58,7 +58,7 @@ async def _poll(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
     """Advance past the scan interval so the coordinator polls the device."""
     freezer.tick(timedelta(seconds=DEFAULT_SCAN_INTERVAL))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
 
 async def test_filt_mode_select_writes_register(
