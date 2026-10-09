@@ -41,9 +41,11 @@ class EpionCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 self.epion_api.get_current
             )
         except EpionAuthenticationError as err:
+            # pylint: disable-next=home-assistant-log-and-raise
             _LOGGER.error("Authentication error with Epion API")
             raise ConfigEntryAuthFailed from err
         except EpionConnectionError as err:
+            # pylint: disable-next=home-assistant-log-and-raise
             _LOGGER.error("Epion API connection problem")
             raise UpdateFailed(f"Error communicating with API: {err}") from err
         device_data = {}

@@ -23,6 +23,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: DenonRS232ConfigEntry) -
         await receiver.connect()
         await receiver.query_state()
     except (ConnectionError, OSError, TimeoutError) as err:
+        # pylint: disable-next=home-assistant-log-and-raise
         LOGGER.error("Error connecting to Denon receiver at %s: %s", port, err)
         if receiver.connected:
             await receiver.disconnect()

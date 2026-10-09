@@ -88,6 +88,7 @@ class DeviceDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
             # Under normal conditions GREE units timeout every once in a while
             if self.last_update_success and self._error_count >= MAX_ERRORS:
+                # pylint: disable-next=home-assistant-log-and-raise
                 _LOGGER.warning(
                     "Device %s is unavailable: %s", self.name, self.device.device_info
                 )

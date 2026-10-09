@@ -115,6 +115,7 @@ class PowerwallDataManager:
             except (TimeoutError, PowerwallUnreachableError) as err:
                 raise UpdateFailed("Unable to fetch data from powerwall") from err
             except MissingAttributeError as err:
+                # pylint: disable-next=home-assistant-log-and-raise
                 _LOGGER.error("The powerwall api has changed: %s", str(err))
                 # The error might include some important information
                 # about what exactly changed.

@@ -62,6 +62,7 @@ async def test_show_form(
         assert result["data"][CONF_USERNAME] == ACCNT_USERNAME
         assert result["data"][CONF_PASSWORD] == ACCNT_PASSWORD
         assert result["data"][CONF_IS_TOU] == ACCNT_IS_TOU
+        assert result["result"].unique_id == ACCNT_ID
 
         captured = capsys.readouterr()
         assert "myaccount.srpnet.com" not in captured.err
@@ -179,6 +180,7 @@ async def test_flow_multiple_configs(
     assert result["data"][CONF_USERNAME] == ACCNT_USERNAME
     assert result["data"][CONF_PASSWORD] == ACCNT_PASSWORD
     assert result["data"][CONF_IS_TOU] == ACCNT_IS_TOU
+    assert result["result"].unique_id == ACCNT_ID_2
 
     # Verify multiple configs
     entries = hass.config_entries.async_entries()

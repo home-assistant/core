@@ -107,10 +107,8 @@ SERVICE_MUTE_ACCOUNT_SCHEMA = probatio.Schema(
         probatio.Required(ATTR_CONFIG_ENTRY_ID): str,
         probatio.Required(ATTR_ACCOUNT_NAME): str,
         probatio.Optional(ATTR_DURATION): probatio.All(
-            cv.time_period,
-            probatio.Range(
-                min=timedelta(seconds=1), max=timedelta(seconds=MAX_DURATION_SECONDS)
-            ),
+            cv.positive_time_period,
+            probatio.Range(max=timedelta(seconds=MAX_DURATION_SECONDS)),
         ),
         probatio.Optional(ATTR_HIDE_NOTIFICATIONS, default=True): bool,
     }
@@ -144,13 +142,17 @@ SERVICE_POST_SCHEMA = probatio.Schema(
     {
         probatio.Required(ATTR_CONFIG_ENTRY_ID): str,
         probatio.Required(ATTR_STATUS): str,
-        probatio.Optional(ATTR_VISIBILITY): probatio.In(
-            [x.lower() for x in StatusVisibility]
+        probatio.Optional(ATTR_VISIBILITY): probatio.All(
+            probatio.In([x.lower() for x in StatusVisibility]),
+            probatio.Coerce(StatusVisibility),
         ),
-        probatio.Optional(ATTR_QUOTE_APPROVAL_POLICY): probatio.In(
-            [x.lower() for x in QuoteApprovalPolicy]
+        probatio.Optional(ATTR_QUOTE_APPROVAL_POLICY): probatio.All(
+            probatio.In([x.lower() for x in QuoteApprovalPolicy]),
+            probatio.Coerce(QuoteApprovalPolicy),
         ),
-        probatio.Optional(ATTR_IDEMPOTENCY_KEY): str,
+        probatio.Optional(ATTR_IDEMPOTENCY_KEY): probatio.All(
+            str, probatio.Length(min=4)
+        ),
         probatio.Optional(ATTR_CONTENT_WARNING): str,
         probatio.Optional(ATTR_LANGUAGE): str,
         probatio.Optional(ATTR_MEDIA): probatio.Any(
@@ -343,16 +345,8 @@ async def _async_post(call: ServiceCall) -> ServiceResponse:
 
     status: str = call.data[ATTR_STATUS]
 
-    visibility: str | None = (
-        StatusVisibility(call.data[ATTR_VISIBILITY])
-        if ATTR_VISIBILITY in call.data
-        else None
-    )
-    quote_approval_policy: str | None = (
-        QuoteApprovalPolicy(call.data[ATTR_QUOTE_APPROVAL_POLICY])
-        if ATTR_QUOTE_APPROVAL_POLICY in call.data
-        else None
-    )
+    visibility: str | None = call.data.get(ATTR_VISIBILITY)
+    quote_approval_policy: str | None = call.data.get(ATTR_QUOTE_APPROVAL_POLICY)
     idempotency_key: str | None = call.data.get(ATTR_IDEMPOTENCY_KEY)
     spoiler_text: str | None = call.data.get(ATTR_CONTENT_WARNING)
     language: str | None = call.data.get(ATTR_LANGUAGE)
@@ -414,12 +408,6 @@ async def _async_post(call: ServiceCall) -> ServiceResponse:
     media_warning: str | None = call.data.get(ATTR_MEDIA_WARNING)
     in_reply_to: str | None = call.data.get(ATTR_IN_REPLY_TO)
     quoted_status: str | None = call.data.get(ATTR_QUOTED_STATUS)
-
-    if idempotency_key and len(idempotency_key) < 4:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="idempotency_key_too_short",
-        )
 
     response = await call.hass.async_add_executor_job(
         partial(

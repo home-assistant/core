@@ -105,11 +105,8 @@ class LunatoneDevicesDataUpdateCoordinator(
                 "Unable to retrieve devices data from Lunatone REST API"
             ) from ex
 
-        if self.devices_api.data is None:
-            raise UpdateFailed("Did not receive devices data from Lunatone REST API")
-
         data: dict[int, dict[int, Device]] = defaultdict(dict)
-        for device in self.devices_api.devices:
+        for device in self.devices_api.devices.values():
             data[device.data.line].update({device.data.id: device})
         return dict(data)
 
@@ -146,10 +143,7 @@ class LunatoneSensorsDataUpdateCoordinator(DataUpdateCoordinator[dict[int, Senso
             raise UpdateFailed(
                 "Unable to retrieve sensors data from Lunatone REST API"
             ) from ex
-
-        if self.sensors_api.data is None:
-            raise UpdateFailed("Did not receive sensors data from Lunatone REST API")
-        return {sensor.data.id: sensor for sensor in self.sensors_api.sensors}
+        return self.sensors_api.sensors
 
 
 class LunatoneScanDataUpdateCoordinator(DataUpdateCoordinator[ScanData]):
@@ -184,9 +178,6 @@ class LunatoneScanDataUpdateCoordinator(DataUpdateCoordinator[ScanData]):
             raise UpdateFailed(
                 "Unable to retrieve scan data from Lunatone REST API"
             ) from ex
-
-        if self.dali_scan_api.data is None:
-            raise UpdateFailed("Did not receive scan data from Lunatone REST API")
 
         update_interval = DEFAULT_SCAN_UPDATE_INTERVAL
         if self.dali_scan_api.data.busy:

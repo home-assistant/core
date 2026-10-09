@@ -183,6 +183,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
             entry.data[CONF_TOKEN][CONF_INSTALLED_APP_ID],
         )
     except (SmartThingsConnectionError, SmartThingsSinkError) as err:
+        # pylint: disable-next=home-assistant-log-and-raise
         _LOGGER.exception("Couldn't create a new subscription")
         raise ConfigEntryNotReady from err
     subscription_id = subscription.subscription_id

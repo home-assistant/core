@@ -94,6 +94,7 @@ class NextBusDataUpdateCoordinator(
                 try:
                     prediction_results = self.client.predictions_for_stop(stop_id)
                 except NextBusHTTPError as ex:
+                    # pylint: disable-next=home-assistant-log-and-raise
                     self.logger.error(
                         "Error updating %s (executor): %s %s",
                         str(stop_id),

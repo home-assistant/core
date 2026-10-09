@@ -9,23 +9,17 @@ from typing import Any
 import probatio
 
 from homeassistant.components import frontend, onboarding, websocket_api
-from homeassistant.config import (
-    async_hass_config_yaml,
-    async_process_component_and_handle_errors,
-)
 from homeassistant.const import CONF_FILENAME, CONF_MODE, CONF_RESOURCES
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     collection,
     config_validation as cv,
     issue_registry as ir,
 )
-from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.translation import async_get_translations
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import async_get_integration
 from homeassistant.util import slugify
 
 from . import dashboard, resources, websocket
@@ -53,6 +47,7 @@ from .const import (  # noqa: F401
     STORAGE_DASHBOARD_CREATE_FIELDS,
     STORAGE_DASHBOARD_UPDATE_FIELDS,
 )
+from .services import async_setup_services
 from .system_health import system_health_info  # noqa: F401
 
 _LOGGER = logging.getLogger(__name__)
@@ -123,30 +118,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     # Deprecated - Remove mode fallback in 2026.8
     resource_mode = config[DOMAIN].get(CONF_RESOURCE_MODE, mode)
 
-    async def reload_resources_service_handler(service_call: ServiceCall) -> None:
-        """Reload yaml resources."""
-        try:
-            conf = await async_hass_config_yaml(hass)
-        except HomeAssistantError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="failed_to_reload",
-            ) from err
-
-        integration = await async_get_integration(hass, DOMAIN)
-
-        config = await async_process_component_and_handle_errors(
-            hass, conf, integration
-        )
-
-        if config is None:
-            raise HomeAssistantError("Config validation failed")
-
-        resource_collection = await resources.create_yaml_resource_col(
-            hass, config[DOMAIN].get(CONF_RESOURCES)
-        )
-        hass.data[LOVELACE_DATA].resources = resource_collection
-
     resource_collection: (
         resources.ResourceYAMLCollection | resources.ResourceStorageCollection
     )
@@ -158,13 +129,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             hass, yaml_resources
         )
 
-        async_register_admin_service(
-            hass,
-            DOMAIN,
-            SERVICE_RELOAD_RESOURCES,
-            reload_resources_service_handler,
-            schema=RESOURCE_RELOAD_SERVICE_SCHEMA,
-        )
         # Register lovelace/resources for backwards compatibility, remove in
         # Home Assistant Core 2025.1
         for command in ("lovelace/resources", "lovelace/resources/list"):
@@ -233,6 +197,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         resources=resource_collection,
         yaml_dashboards=yaml_dashboards,
     )
+
+    async_setup_services(hass)
 
     if hass.config.recovery_mode:
         return True

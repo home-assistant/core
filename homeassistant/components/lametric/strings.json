@@ -125,6 +125,9 @@
     "invalid_response": {
       "message": "Invalid response from the LaMetric device"
     },
+    "invalid_sound_url": {
+      "message": "Invalid sound URL: {url}"
+    },
     "notification_failed": {
       "message": "Could not send the notification to the LaMetric device: {error}"
     },
@@ -230,6 +233,10 @@
         "sound": {
           "description": "The notification sound to play.",
           "name": "Sound"
+        },
+        "sound_url": {
+          "description": "An MP3 file to play instead of a built-in sound: pick one from your media, or enter its URL. When a sound is selected as well, it plays when the file cannot be fetched.",
+          "name": "Custom sound"
         }
       },
       "name": "Display a chart"
@@ -264,6 +271,10 @@
         "sound": {
           "description": "[%key:component::lametric::services::chart::fields::sound::description%]",
           "name": "[%key:component::lametric::services::chart::fields::sound::name%]"
+        },
+        "sound_url": {
+          "description": "[%key:component::lametric::services::chart::fields::sound_url::description%]",
+          "name": "[%key:component::lametric::services::chart::fields::sound_url::name%]"
         }
       },
       "name": "Display a message"

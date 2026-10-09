@@ -57,6 +57,7 @@ async def test_form(hass: HomeAssistant) -> None:
         "username": "test-username",
         "password": "test-password",
     }
+    assert form_result["result"].unique_id == "test-id"
     assert len(mock_authenticate.mock_calls) == 1
     assert len(mock_customer_overview.mock_calls) == 1
     assert len(mock_get_user_id.mock_calls) == 1

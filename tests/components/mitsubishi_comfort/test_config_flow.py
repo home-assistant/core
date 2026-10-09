@@ -73,6 +73,7 @@ async def test_user_step_success(
             }
         },
     }
+    assert result["result"].unique_id == "user-12345"
     mock_setup_entry.assert_called_once()
 
 
@@ -129,6 +130,7 @@ async def test_user_step_persists_partial_records(
             "mac": "11:22:33:44:55:66",
         },
     }
+    assert result["result"].unique_id == "user-12345"
 
 
 def _partial_device_info() -> DeviceInfo:

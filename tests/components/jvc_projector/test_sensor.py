@@ -2,14 +2,16 @@
 
 from unittest.mock import MagicMock
 
+from freezegun.api import FrozenDateTimeFactory
 from jvcprojector import Command, JvcProjectorTimeoutError, command as cmd
 import pytest
 
+from homeassistant.components.jvc_projector.coordinator import INTERVAL_SLOW
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 POWER_ID = "sensor.jvc_projector_status"
 HDR_ENTITY_ID = "sensor.jvc_projector_hdr"
@@ -28,6 +30,7 @@ async def test_diagnostic_sensor_state(
     entity_registry: er.EntityRegistry,
     mock_device: MagicMock,
     mock_integration: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
     entity_id: str,
     expected_state: str,
 ) -> None:
@@ -39,9 +42,9 @@ async def test_diagnostic_sensor_state(
     entity_registry.async_update_entity(entity_id, disabled_by=None)
     await hass.config_entries.async_reload(mock_integration.entry_id)
     await hass.async_block_till_done()
-    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
-    await mock_integration.runtime_data.async_refresh()
-    await hass.async_block_till_done()
+    freezer.tick(INTERVAL_SLOW)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(entity_id)
     assert state is not None
@@ -66,6 +69,7 @@ async def test_diagnostic_sensor_timeout_is_unknown(
     entity_registry: er.EntityRegistry,
     mock_device: MagicMock,
     mock_integration: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test optional diagnostic sensor timeouts do not make entities unavailable."""
     entity_ids = (
@@ -78,9 +82,9 @@ async def test_diagnostic_sensor_timeout_is_unknown(
 
     await hass.config_entries.async_reload(mock_integration.entry_id)
     await hass.async_block_till_done()
-    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
-    await mock_integration.runtime_data.async_refresh()
-    await hass.async_block_till_done()
+    freezer.tick(INTERVAL_SLOW)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     for entity_id in entity_ids:
         state = hass.states.get(entity_id)

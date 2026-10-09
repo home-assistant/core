@@ -44,6 +44,7 @@ async def async_setup_entry(
     except FritzConnectionException as ex:
         raise ConfigEntryAuthFailed from ex
     except RequestsConnectionError as ex:
+        # pylint: disable-next=home-assistant-log-and-raise
         _LOGGER.error("Unable to connect to FRITZ!Box call monitor: %s", ex)
         raise ConfigEntryNotReady from ex
 

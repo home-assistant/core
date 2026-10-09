@@ -85,6 +85,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         try:
             await async_connect(**entry.data)
         except ConnectionError as exception:
+            # pylint: disable-next=home-assistant-log-and-raise
             _LOGGER.error("Could not connect to Insteon modem")
             raise ConfigEntryNotReady from exception
 

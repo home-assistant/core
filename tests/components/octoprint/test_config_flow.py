@@ -74,6 +74,7 @@ async def test_form(hass: HomeAssistant) -> None:
         "path": "/",
         "verify_ssl": True,
     }
+    assert result2["result"].unique_id == "uuid"
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -245,6 +246,7 @@ async def test_show_zerconf_form(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "uuid"
 
 
 async def test_show_ssdp_form(hass: HomeAssistant) -> None:
@@ -314,6 +316,7 @@ async def test_show_ssdp_form(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "uuid"
 
 
 async def test_import_yaml(hass: HomeAssistant) -> None:
@@ -350,6 +353,7 @@ async def test_import_yaml(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "uuid"
     assert "errors" not in result
 
 

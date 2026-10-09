@@ -101,9 +101,6 @@
     "failed_to_connect": {
       "message": "Failed to connect."
     },
-    "idempotency_key_too_short": {
-      "message": "Idempotency key must be at least 4 characters long."
-    },
     "media_not_allowed_with_other_media": {
       "message": "Audio or video media is not allowed with other media."
     },

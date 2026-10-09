@@ -170,6 +170,7 @@ async def test_flow_discovered_devices(hass: HomeAssistant) -> None:
             config_flow.CONF_USERNAME: USERNAME,
             config_flow.CONF_PASSWORD: PASSWORD,
         }
+        assert result["result"].unique_id == MAC
 
 
 async def test_flow_discovered_devices_ignore_configured_manual_input(
@@ -366,6 +367,7 @@ async def test_flow_manual_entry(hass: HomeAssistant) -> None:
             config_flow.CONF_USERNAME: USERNAME,
             config_flow.CONF_PASSWORD: PASSWORD,
         }
+        assert result["result"].unique_id == MAC
 
 
 async def test_flow_manual_entry_multiple_interfaces(hass: HomeAssistant) -> None:
