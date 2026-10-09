@@ -275,8 +275,6 @@ BATTERY_SENSOR_TYPES = [
     SolarEdgeSensorEntityDescription(
         key="battery_power",
         json_key="power",
-        # pylint: disable-next=home-assistant-redundant-translation-key
-        translation_key="battery_power",
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.WATT,
