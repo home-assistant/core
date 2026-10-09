@@ -240,9 +240,7 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
 
     def _get_supported_features(self) -> ClimateEntityFeature:
         """Return the features supported by this climate entity."""
-        supported_features = (
-            ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
-        )
+        supported_features = ClimateEntityFeature(0)
         setpointdict = self._get_setpoint()
         if setpointdict is not None and setpointdict.settable:
             supported_features |= ClimateEntityFeature.TARGET_TEMPERATURE
@@ -250,6 +248,10 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
             supported_features |= ClimateEntityFeature.PRESET_MODE
         cc = self._climate_control()
         if cc is not None:
+            if cc.on_off_mode is not None and cc.on_off_mode.settable:
+                supported_features |= (
+                    ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
+                )
             fan_operation = self._fan_operation()
             if fan_operation is not None:
                 if fan_operation.fan_speed is not None:
@@ -739,6 +741,8 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
         _LOGGER.debug(
             "Device '%s' request set preset mode %s", self._device.name, preset_mode
         )
+        if preset_mode == self.preset_mode:
+            return
         if (current_preset := self.preset_mode) not in (None, PRESET_NONE):
             if not await self._async_disable_preset_mode(current_preset):
                 self._raise_command_failed("set_preset_mode_failed")
@@ -757,7 +761,11 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
         supported.extend(
             mode
             for mode in PRESET_MODES
-            if self._preset_characteristic(HA_PRESET_TO_DAIKIN[mode]) is not None
+            if (
+                (preset := self._preset_characteristic(HA_PRESET_TO_DAIKIN[mode]))
+                is not None
+                and preset.settable
+            )
         )
         supported.sort()
         return supported

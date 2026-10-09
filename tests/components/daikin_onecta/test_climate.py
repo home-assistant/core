@@ -16,12 +16,14 @@ from homeassistant.components.climate import (
     PRESET_BOOST,
     PRESET_COMFORT,
     PRESET_ECO,
+    PRESET_NONE,
     SERVICE_SET_FAN_MODE,
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_PRESET_MODE,
     SERVICE_SET_SWING_MODE,
     SERVICE_SET_TEMPERATURE,
     ClimateEntity,
+    ClimateEntityFeature,
     HVACMode,
 )
 from homeassistant.components.daikin_onecta.climate import (
@@ -938,6 +940,49 @@ async def test_set_preset_mode_stops_after_failed_disable() -> None:
     coordinator.async_update_listeners.assert_not_called()
 
 
+async def test_set_preset_mode_ignores_active_preset() -> None:
+    """Avoid cloud commands when the requested preset is already active."""
+    entity = object.__new__(DaikinClimate)
+    object.__setattr__(entity, "_device", MagicMock(name="Device"))
+    object.__setattr__(entity, "_attr_preset_mode", PRESET_BOOST)
+    entity._async_disable_preset_mode = AsyncMock()
+    entity._async_enable_preset_mode = AsyncMock()
+
+    await entity.async_set_preset_mode(PRESET_BOOST)
+
+    entity._async_disable_preset_mode.assert_not_awaited()
+    entity._async_enable_preset_mode.assert_not_awaited()
+
+
+@pytest.mark.parametrize("power_settable", [False, True])
+def test_supported_features_require_writable_controls(power_settable: bool) -> None:
+    """Only advertise controls that Daikin reports as writable."""
+    entity = object.__new__(DaikinClimate)
+    entity._get_setpoint = MagicMock(return_value=None)
+    entity._get_preset_modes = MagicMock(return_value=[PRESET_NONE])
+    entity._climate_control = MagicMock(
+        return_value=SimpleNamespace(
+            on_off_mode=SimpleNamespace(settable=power_settable)
+        )
+    )
+    entity._fan_operation = MagicMock(return_value=None)
+
+    features = entity._get_supported_features()
+
+    assert bool(features & ClimateEntityFeature.TURN_ON) is power_settable
+    assert bool(features & ClimateEntityFeature.TURN_OFF) is power_settable
+
+
+def test_preset_modes_require_writable_characteristics() -> None:
+    """Do not advertise a read-only Daikin preset control."""
+    entity = object.__new__(DaikinClimate)
+    entity._preset_characteristic = MagicMock(
+        return_value=SimpleNamespace(settable=False)
+    )
+
+    assert entity._get_preset_modes() == [PRESET_NONE]
+
+
 async def test_set_preset_mode_publishes_successful_disable() -> None:
     """Publish a successful preset disable before a replacement fails."""
     entity = object.__new__(DaikinClimate)
@@ -983,7 +1028,7 @@ async def test_climate_service_updates_entity_state(
         )
     )
     climate_control.operation_mode = operation_mode
-    climate_control.on_off_mode = SimpleNamespace(value="on")
+    climate_control.on_off_mode = SimpleNamespace(value="on", settable=True)
     climate_control.fan_control = None
     climate_control.holiday_mode = None
     climate_control.sensory_data = None
@@ -1097,16 +1142,16 @@ async def test_climate_platform_services_and_management_points(
             ),
         )
         presets = {
-            "powerfulMode": SimpleNamespace(value="off"),
-            "comfortMode": SimpleNamespace(value="off"),
-            "econoMode": SimpleNamespace(value="off"),
+            "powerfulMode": SimpleNamespace(value="off", settable=True),
+            "comfortMode": SimpleNamespace(value="off", settable=True),
+            "econoMode": SimpleNamespace(value="off", settable=True),
         }
         control = SimpleNamespace(
             embedded_id=embedded_id,
             operation_mode=SimpleNamespace(
                 value="heating", values=["heating", "cooling"], settable=True
             ),
-            on_off_mode=SimpleNamespace(value="on"),
+            on_off_mode=SimpleNamespace(value="on", settable=True),
             holiday_mode=SimpleNamespace(value=SimpleNamespace(enabled=False)),
         )
         control.climate_control = control
