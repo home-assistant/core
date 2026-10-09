@@ -76,5 +76,24 @@ async def test_form_error(
         )
 
     assert result2["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": error}
+
+    with (
+        patch(
+            "mutesync.authenticate",
+            return_value="bla",
+        ),
+        patch(
+            "homeassistant.components.mutesync.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "host": "1.1.1.1",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY

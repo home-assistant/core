@@ -32,6 +32,13 @@ GATEWAY_TYPE_TO_STEP = {
     CONF_GATEWAY_TYPE_SERIAL: "gw_serial",
     CONF_GATEWAY_TYPE_MQTT: "gw_mqtt",
 }
+VALID_INPUT = {
+    CONF_DEVICE: "127.0.0.1",
+    CONF_PERSISTENCE_FILE: "asdf.json",
+    CONF_TOPIC_IN_PREFIX: "bla",
+    CONF_TOPIC_OUT_PREFIX: "blub",
+    CONF_VERSION: "2.4",
+}
 
 
 async def get_form(
@@ -222,9 +229,31 @@ async def test_fail_to_connect(hass: HomeAssistant) -> None:
     assert "errors" in result
     errors = result["errors"]
     assert errors
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert errors.get("base") == "cannot_connect"
     assert len(mock_setup_entry.mock_calls) == 0
+
+    with (
+        patch(
+            "homeassistant.components.mysensors.config_flow.try_connect",
+            return_value=True,
+        ),
+        patch("homeassistant.components.mysensors.gateway.socket.getaddrinfo"),
+        patch(
+            "homeassistant.components.mysensors.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            flow_id,
+            {
+                CONF_TCP_PORT: 5003,
+                CONF_DEVICE: "127.0.0.1",
+                CONF_VERSION: "2.4",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.parametrize(
@@ -347,9 +376,9 @@ async def test_fail_to_connect(hass: HomeAssistant) -> None:
         ),
     ],
 )
+@pytest.mark.usefixtures("mqtt")
 async def test_config_invalid(
     hass: HomeAssistant,
-    mqtt: None,
     gateway_type: ConfGatewayType,
     expected_step_id: str,
     user_input: dict[str, Any],
@@ -385,9 +414,27 @@ async def test_config_invalid(
     errors = result["errors"]
     assert errors
     assert err_field in errors
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert errors[err_field] == err_string
     assert len(mock_setup_entry.mock_calls) == 0
+
+    with (
+        patch(
+            "homeassistant.components.mysensors.config_flow.try_connect",
+            return_value=True,
+        ),
+        patch("homeassistant.components.mysensors.gateway.socket.getaddrinfo"),
+        patch(
+            "homeassistant.components.mysensors.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            flow_id,
+            user_input | {err_field: VALID_INPUT[err_field]},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.parametrize(

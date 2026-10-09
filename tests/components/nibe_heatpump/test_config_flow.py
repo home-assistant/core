@@ -117,8 +117,14 @@ async def test_modbus_invalid_url(
     )
 
     assert result2["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"modbus_url": "url"}
+
+    mock_connection_construct.side_effect = None
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], MOCK_FLOW_MODBUS_USERDATA
+    )
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_nibegw_address_inuse(hass: HomeAssistant, mock_connection: Mock) -> None:
@@ -142,8 +148,15 @@ async def test_nibegw_address_inuse(hass: HomeAssistant, mock_connection: Mock) 
     )
 
     assert result2["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "unknown"}
+
+    mock_connection.start.side_effect = None
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], MOCK_FLOW_NIBEGW_USERDATA
+    )
+
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.parametrize(
@@ -164,8 +177,13 @@ async def test_read_timeout(
     result2 = await hass.config_entries.flow.async_configure(result["flow_id"], data)
 
     assert result2["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "read"}
+
+    mock_connection.verify_connectivity.side_effect = None
+
+    result3 = await hass.config_entries.flow.async_configure(result["flow_id"], data)
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.parametrize(
@@ -186,8 +204,13 @@ async def test_write_timeout(
     result2 = await hass.config_entries.flow.async_configure(result["flow_id"], data)
 
     assert result2["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "write"}
+
+    mock_connection.verify_connectivity.side_effect = None
+
+    result3 = await hass.config_entries.flow.async_configure(result["flow_id"], data)
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.parametrize(
@@ -208,8 +231,13 @@ async def test_unexpected_exception(
     result2 = await hass.config_entries.flow.async_configure(result["flow_id"], data)
 
     assert result2["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "unknown"}
+
+    mock_connection.verify_connectivity.side_effect = None
+
+    result3 = await hass.config_entries.flow.async_configure(result["flow_id"], data)
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.parametrize(
@@ -233,8 +261,13 @@ async def test_nibegw_invalid_host(
     if connection_type == "nibegw":
         assert result2["errors"] == {"ip_address": "address"}
     else:
-        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result2["errors"] == {"modbus_url": "address"}
+
+    mock_connection.verify_connectivity.side_effect = None
+
+    result3 = await hass.config_entries.flow.async_configure(result["flow_id"], data)
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.parametrize(
@@ -255,5 +288,10 @@ async def test_model_missing_coil(
     result2 = await hass.config_entries.flow.async_configure(result["flow_id"], data)
 
     assert result2["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "model"}
+
+    mock_connection.verify_connectivity.side_effect = None
+
+    result3 = await hass.config_entries.flow.async_configure(result["flow_id"], data)
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
