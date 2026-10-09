@@ -232,3 +232,26 @@ async def test_token_stored(
     await hass.async_block_till_done()
 
     assert config_entry.data[CONF_TOKEN] == "new-token"
+
+
+async def test_token_stored_on_failure(hass: HomeAssistant) -> None:
+    """Test a new token is stored, even when the request after the login fails."""
+    config_entry = mock_config_entry(unique_id="id_123_token_stored_on_failure")
+    config_entry.add_to_hass(hass)
+    client = mock_client([mock_diffuser("lot123")])
+
+    def login_then_fail() -> None:
+        client.token = "new-token"
+        raise RitualsGenieConnectionError
+
+    client.hubs.side_effect = login_then_fail
+
+    with patch(
+        "homeassistant.components.rituals_perfume_genie.RitualsGenie",
+        return_value=client,
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert config_entry.data[CONF_TOKEN] == "new-token"
