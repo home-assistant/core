@@ -161,7 +161,6 @@ async def test_flow_discovered_devices(hass: HomeAssistant) -> None:
             await hass.async_block_till_done()
             assert len(mock_setup_entry.mock_calls) == 1
 
-        # pylint: disable-next=home-assistant-tests-config-flow-unique-id
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == f"{URN} - {MAC}"
         assert result["data"] == {
@@ -171,6 +170,7 @@ async def test_flow_discovered_devices(hass: HomeAssistant) -> None:
             config_flow.CONF_USERNAME: USERNAME,
             config_flow.CONF_PASSWORD: PASSWORD,
         }
+        assert result["result"].unique_id == MAC
 
 
 async def test_flow_discovered_devices_ignore_configured_manual_input(
@@ -358,7 +358,6 @@ async def test_flow_manual_entry(hass: HomeAssistant) -> None:
             await hass.async_block_till_done()
             assert len(mock_setup_entry.mock_calls) == 1
 
-        # pylint: disable-next=home-assistant-tests-config-flow-unique-id
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == f"{NAME} - {MAC}"
         assert result["data"] == {
@@ -368,6 +367,7 @@ async def test_flow_manual_entry(hass: HomeAssistant) -> None:
             config_flow.CONF_USERNAME: USERNAME,
             config_flow.CONF_PASSWORD: PASSWORD,
         }
+        assert result["result"].unique_id == MAC
 
 
 async def test_flow_manual_entry_multiple_interfaces(hass: HomeAssistant) -> None:

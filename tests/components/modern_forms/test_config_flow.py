@@ -48,10 +48,10 @@ async def test_full_user_flow_implementation(
 
     assert result2.get("title") == "ModernFormsFan"
     assert "data" in result2
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2.get("type") is FlowResultType.CREATE_ENTRY
     assert result2["data"][CONF_HOST] == "192.168.1.123"
     assert result2["data"][CONF_MAC] == "AA:BB:CC:DD:EE:FF"
+    assert result2["result"].unique_id == "AA:BB:CC:DD:EE:FF"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -95,12 +95,12 @@ async def test_full_zeroconf_flow_implementation(
     )
 
     assert result2.get("title") == "example"
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2.get("type") is FlowResultType.CREATE_ENTRY
 
     assert "data" in result2
     assert result2["data"][CONF_HOST] == "192.168.1.123"
     assert result2["data"][CONF_MAC] == "AA:BB:CC:DD:EE:FF"
+    assert result2["result"].unique_id == "AA:BB:CC:DD:EE:FF"
 
 
 @patch(

@@ -1038,8 +1038,8 @@ async def test_hassio_discovery_flow_new_port_other_addon(hass: HomeAssistant) -
     )
 
     # Another entry will be created
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == HASSIO_DATA.uuid
 
     # Make sure the data of the existing entry was not updated
     expected_data = {

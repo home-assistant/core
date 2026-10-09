@@ -400,13 +400,13 @@ async def test_import_discovery_integration(
         )
         await hass.async_block_till_done()
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TEST_NAME
     assert result["data"] == {
         CONF_HOST: TEST_HOST,
         CONF_TOKEN: TEST_TOKEN,
     }
+    assert result["result"].unique_id == TEST_NAME
 
     if remove_config:
         mock_save_json.assert_not_called()
@@ -456,13 +456,13 @@ async def test_ssdp_discovery(hass: HomeAssistant) -> None:
         result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         await hass.async_block_till_done()
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == TEST_NAME
     assert result2["data"] == {
         CONF_HOST: TEST_HOST,
         CONF_TOKEN: TEST_TOKEN,
     }
+    assert result2["result"].unique_id == TEST_NAME
 
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -517,8 +517,8 @@ async def test_abort_discovery_flow_with_user_flow(hass: HomeAssistant) -> None:
         assert result["step_id"] == "link"
 
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-        # pylint: disable-next=home-assistant-tests-config-flow-unique-id
         assert result["type"] is FlowResultType.CREATE_ENTRY
+        assert result["result"].unique_id == TEST_NAME
 
         # Verify the discovery flow was aborted
         assert not hass.config_entries.flow.async_progress(DOMAIN)

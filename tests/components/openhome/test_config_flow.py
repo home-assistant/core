@@ -143,10 +143,10 @@ async def test_ssdp_udn_as_list(hass: HomeAssistant) -> None:
     assert result["description_placeholders"] == {CONF_NAME: MOCK_FRIENDLY_NAME}
 
     result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == MOCK_FRIENDLY_NAME
     assert result2["data"] == {CONF_HOST: MOCK_SSDP_LOCATION}
+    assert result2["result"].unique_id == MOCK_UDN
 
 
 async def test_ssdp_udn_as_empty_list(hass: HomeAssistant) -> None:

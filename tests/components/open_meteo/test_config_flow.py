@@ -30,10 +30,10 @@ async def test_full_user_flow(hass: HomeAssistant, mock_open_meteo: MagicMock) -
         user_input={CONF_ZONE: ENTITY_ID_HOME},
     )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2.get("type") is FlowResultType.CREATE_ENTRY
     assert result2.get("title") == "test home"
     assert result2.get("data") == {CONF_ZONE: ENTITY_ID_HOME}
+    assert result2["result"].unique_id == ENTITY_ID_HOME
 
     assert len(mock_open_meteo.forecast.mock_calls) == 1
     _, _, kwargs = mock_open_meteo.forecast.mock_calls[0]
