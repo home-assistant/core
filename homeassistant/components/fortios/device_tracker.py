@@ -12,12 +12,7 @@ from homeassistant.components.device_tracker import (
 )
 from homeassistant.components.homeassistant import DOMAIN as HOMEASSISTANT_DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_SCAN_INTERVAL,
-    CONF_TOKEN,
-    CONF_VERIFY_SSL,
-)
+from homeassistant.const import CONF_HOST, CONF_TOKEN, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
@@ -48,8 +43,6 @@ async def async_setup_scanner(
     """Import an existing YAML configuration into a config entry."""
     data = {key: config[key] for key in (CONF_HOST, CONF_TOKEN, CONF_VERIFY_SSL)}
     data[CONF_CONSIDER_HOME] = config[CONF_CONSIDER_HOME].total_seconds()
-    if CONF_SCAN_INTERVAL in config:
-        data[CONF_SCAN_INTERVAL] = config[CONF_SCAN_INTERVAL].total_seconds()
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_IMPORT}, data=data
     )
@@ -113,6 +106,12 @@ class FortiOSTracker(CoordinatorEntity[FortiOSCoordinator], ScannerEntity):
         self._mac = mac
         self._attr_unique_id = f"{coordinator.client.serial}_{mac}"
         self._attr_name = coordinator.data[mac].hostname or mac.replace(":", "_")
+
+    @property
+    @override
+    def unique_id(self) -> str:
+        """Identify this client within its FortiGate device."""
+        return self._attr_unique_id
 
     @property
     @override

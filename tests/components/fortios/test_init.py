@@ -95,15 +95,18 @@ async def test_legacy_conflict(
     assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
 
 
-@pytest.mark.usefixtures("mock_device_tracker_conf", "mock_setup_entry", "mock_client")
+@pytest.mark.usefixtures("mock_device_tracker_conf")
 async def test_yaml_import_success(
-    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mock_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Successful YAML import preserves polling and grace settings."""
+    """Import the grace period and use integration-owned polling."""
     config = {
         CONF_PLATFORM: DOMAIN,
         "consider_home": 300,
-        "scan_interval": 60,
+        "interval_seconds": 60,
     } | USER_INPUT
     assert await async_setup_component(
         hass, "device_tracker", {"device_tracker": config}
@@ -111,7 +114,14 @@ async def test_yaml_import_success(
     await hass.async_block_till_done()
     entry = hass.config_entries.async_entries(DOMAIN)[0]
     assert entry.data["consider_home"] == 300
-    assert entry.data["scan_interval"] == 60
+    assert "scan_interval" not in entry.data
+    assert "interval_seconds" not in entry.data
+    assert entry.runtime_data.consider_home == 300
+    assert mock_client.update.call_count == 1
+    freezer.tick(timedelta(seconds=12))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert mock_client.update.call_count == 2
     assert (
         issue_registry.async_get_issue("homeassistant", f"deprecated_yaml_{DOMAIN}")
         is not None
@@ -163,3 +173,23 @@ async def test_late_legacy_conflict(
         )
         is not None
     )
+
+
+async def test_fixed_polling_interval(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Ignore a scan interval stored by an earlier migration implementation."""
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry, data=mock_config_entry.data | {"scan_interval": 60}
+    )
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert mock_client.update.call_count == 1
+    freezer.tick(timedelta(seconds=12))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert mock_client.update.call_count == 2

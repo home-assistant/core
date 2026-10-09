@@ -1,6 +1,6 @@
 """Shared polling for FortiOS trackers."""
 
-from datetime import datetime, timedelta
+from datetime import datetime
 import logging
 from typing import override
 
@@ -11,7 +11,6 @@ from homeassistant.components.device_tracker import (
     DEFAULT_CONSIDER_HOME,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -36,11 +35,7 @@ class FortiOSCoordinator(DataUpdateCoordinator[dict[str, FortiOSDevice]]):
             _LOGGER,
             config_entry=entry,
             name=DOMAIN,
-            update_interval=timedelta(
-                seconds=entry.data.get(
-                    CONF_SCAN_INTERVAL, UPDATE_INTERVAL.total_seconds()
-                )
-            ),
+            update_interval=UPDATE_INTERVAL,
         )
         self.client = client
         self.last_seen: dict[str, datetime] = {}
