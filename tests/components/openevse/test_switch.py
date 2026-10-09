@@ -102,6 +102,33 @@ async def test_switch_turn_on_off(
     getattr(mock_charger, method_name).assert_called_once_with(*args)
 
 
+async def test_manual_override_switch_uses_current_state(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_charger: MagicMock,
+) -> None:
+    """Test the manual override checks the charger state before toggling."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    mock_charger.update.reset_mock()
+
+    async def _override_enabled_on_charger(force_status: bool = False) -> None:
+        mock_charger.manual_override = True
+
+    # The cached state still says off, while the charger already has it on
+    mock_charger.update.side_effect = _override_enabled_on_charger
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "switch.openevse_mock_config_manual_override"},
+        blocking=True,
+    )
+
+    mock_charger.update.assert_awaited_once_with(force_status=True)
+    mock_charger.toggle_override.assert_not_called()
+
+
 @pytest.mark.parametrize(
     ("manual_override", "service", "toggled"),
     [

@@ -14,7 +14,8 @@ from .coordinator import OpenEVSEConfigEntry
 from .entity import OpenEVSEEntity
 from .helpers import openevse_exception_handler
 
-PARALLEL_UPDATES = 0
+# Serialized, so a manual override toggle is done before the next state check
+PARALLEL_UPDATES = 1
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -28,7 +29,9 @@ class OpenEVSESwitchDescription(SwitchEntityDescription):
 
 async def _set_manual_override(charger: OpenEVSE, enable: bool) -> None:
     """Toggle the manual override, unless it is already in the requested state."""
-    # Toggling is the only override command that works on every firmware
+    # Toggling is the only override command that works on every firmware, and
+    # the cached status is not updated by a toggle, so fetch the current state.
+    await charger.update(force_status=True)
     if charger.manual_override != enable:
         await charger.toggle_override()
 
