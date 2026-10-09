@@ -34,6 +34,7 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
     issue_registry as ir,
+    service,
 )
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.script import (
@@ -2061,3 +2062,39 @@ async def test_remove_script_entity_unloads_script(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     script_unload.assert_called_once()
+
+
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
+async def test_permission_check_script_entity(
+    hass: HomeAssistant,
+    hass_read_only_user: MockUser,
+) -> None:
+    """Test script entity with permission_check: false."""
+    calls = []
+
+    async def mock_service(call: ServiceCall) -> None:
+        calls.append(call)
+
+    service.async_register_admin_service(hass, "test", "admin_action", mock_service)
+
+    assert await async_setup_component(
+        hass,
+        script.DOMAIN,
+        {
+            script.DOMAIN: {
+                "test_script": {
+                    "permission_check": False,
+                    "sequence": [{"action": "test.admin_action"}],
+                }
+            }
+        },
+    )
+
+    user_context = Context(user_id=hass_read_only_user.id)
+    await hass.services.async_call(
+        script.DOMAIN, "test_script", blocking=True, context=user_context
+    )
+
+    assert len(calls) == 1
+    assert calls[0].context.user_id is None
+    assert calls[0].context.parent_id == user_context.id
