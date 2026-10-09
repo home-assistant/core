@@ -222,6 +222,7 @@ async def test_fail_to_connect(hass: HomeAssistant) -> None:
     assert "errors" in result
     errors = result["errors"]
     assert errors
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert errors.get("base") == "cannot_connect"
     assert len(mock_setup_entry.mock_calls) == 0
 
@@ -384,6 +385,7 @@ async def test_config_invalid(
     errors = result["errors"]
     assert errors
     assert err_field in errors
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert errors[err_field] == err_string
     assert len(mock_setup_entry.mock_calls) == 0
 

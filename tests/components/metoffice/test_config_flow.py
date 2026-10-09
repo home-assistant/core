@@ -17,6 +17,7 @@ from homeassistant.helpers import device_registry as dr
 from .const import (
     METOFFICE_CONFIG_WAVERTREE,
     TEST_API_KEY,
+    TEST_COORDINATES_WAVERTREE,
     TEST_LATITUDE_WAVERTREE,
     TEST_LONGITUDE_WAVERTREE,
     TEST_SITE_NAME_WAVERTREE,
@@ -61,6 +62,7 @@ async def test_form(hass: HomeAssistant, requests_mock: requests_mock.Mocker) ->
         "longitude": TEST_LONGITUDE_WAVERTREE,
         "name": TEST_SITE_NAME_WAVERTREE,
     }
+    assert result2["result"].unique_id == TEST_COORDINATES_WAVERTREE
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -126,6 +128,7 @@ async def test_form_cannot_connect(
     )
 
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
@@ -146,6 +149,7 @@ async def test_form_unknown_error(
     )
 
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "unknown"}
 
 

@@ -344,6 +344,7 @@ async def test_reconfigure_flow_error(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure_folder"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "folder_rename_error"}
 
     # clear side effect

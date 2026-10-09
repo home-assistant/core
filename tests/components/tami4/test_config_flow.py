@@ -50,6 +50,7 @@ async def test_step_user_invalid_number(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "invalid_phone"}
 
 
@@ -77,6 +78,7 @@ async def test_step_user_exception(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": expected_error}
 
 
@@ -183,4 +185,5 @@ async def test_step_otp_exception(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "otp"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": expected_error}

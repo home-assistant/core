@@ -65,6 +65,7 @@ async def test_form(hass: HomeAssistant) -> None:
         CONF_PASSWORD: TEST_DATA["password"],
         CONNECTION_TYPE: CLOUD,
     }
+    assert result3["result"].unique_id == str(TEST_DATA["account_id"])
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -91,6 +92,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
             TEST_DATA,
         )
     assert result3["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result3["errors"] == {"base": "cannot_connect"}
 
 
@@ -265,6 +267,7 @@ async def test_local_connection_error(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
 
 

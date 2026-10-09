@@ -156,6 +156,7 @@ async def test_setup_fails_when_no_thermostats(hass: HomeAssistant) -> None:
 
     assert await _setup_with_mock(hass, entry, ecobee) is False
     assert entry.state is ConfigEntryState.SETUP_ERROR
+    assert entry.reason == "No ecobee devices found to set up"
 
 
 async def test_setup_triggers_reauth_on_mfa_required(hass: HomeAssistant) -> None:

@@ -214,6 +214,7 @@ async def test_discovery_disabled_api(
     )
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "api_not_enabled"}
 
 
@@ -417,6 +418,7 @@ async def test_manual_flow_ignores_pending_discovery_for_same_device(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_IP_ADDRESS] == "2.2.2.2"
+    assert result["result"].unique_id == "HWE-P1_5c2fafabcdef"
 
     # The stale discovery flow is cleaned up once the manual flow succeeds
     assert len(hass.config_entries.flow.async_progress()) == 0
@@ -528,6 +530,7 @@ async def test_reauth_error(
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "api_not_enabled"}
 
 

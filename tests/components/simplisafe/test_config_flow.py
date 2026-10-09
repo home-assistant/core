@@ -13,6 +13,8 @@ from homeassistant.const import CONF_CODE, CONF_TOKEN, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from .common import USER_ID
+
 from tests.common import MockConfigEntry
 
 VALID_AUTH_CODE = "code12345123451234512345123451234512345123451"
@@ -50,6 +52,7 @@ async def test_invalid_auth_code_length(hass: HomeAssistant) -> None:
         result["flow_id"], user_input={CONF_AUTH_CODE: "too_short_code"}
     )
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {CONF_AUTH_CODE: "invalid_auth_code_length"}
 
 
@@ -70,6 +73,7 @@ async def test_invalid_credentials(hass: HomeAssistant) -> None:
             user_input={CONF_AUTH_CODE: VALID_AUTH_CODE},
         )
         assert result["type"] is FlowResultType.FORM
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"] == {CONF_AUTH_CODE: "invalid_auth"}
 
 
@@ -175,6 +179,7 @@ async def test_step_user(
             result["flow_id"], user_input={CONF_AUTH_CODE: auth_code}
         )
         assert result["type"] is FlowResultType.CREATE_ENTRY
+        assert result["result"].unique_id == USER_ID
 
     if log_statement:
         assert any(m for m in caplog.messages if log_statement in m)
@@ -200,4 +205,5 @@ async def test_unknown_error(hass: HomeAssistant, setup_simplisafe) -> None:
             result["flow_id"], user_input={CONF_AUTH_CODE: VALID_AUTH_CODE}
         )
         assert result["type"] is FlowResultType.FORM
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"] == {"base": "unknown"}

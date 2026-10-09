@@ -449,6 +449,7 @@ async def test_user_device_not_found(hass: HomeAssistant) -> None:
         )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -503,6 +504,7 @@ async def test_failed_reauth(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -537,16 +539,26 @@ async def test_duplicate_entry(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.parametrize(
+    "probe_side_effect",
+    [
+        pytest.param(BleakError, id="bleak_error"),
+        # The library returns None for the values it failed to read
+        pytest.param([(None, "Automower", "305")], id="no_manufacturer"),
+        pytest.param([("Husqvarna", None, "305")], id="no_device_type"),
+    ],
+)
 async def test_exception_probe(
     hass: HomeAssistant,
     mock_automower_client: Mock,
+    probe_side_effect: type[Exception] | list[tuple[str | None, str | None, str]],
 ) -> None:
-    """Test we can select a device."""
+    """Test a failing probe shows an error."""
 
     inject_bluetooth_service_info(hass, AUTOMOWER_UNNAMED_SERVICE_INFO)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    mock_automower_client.probe_gatts.side_effect = BleakError
+    mock_automower_client.probe_gatts.side_effect = probe_side_effect
 
     result = hass.config_entries.flow.async_progress_by_handler(DOMAIN)[0]
     assert result["step_id"] == "bluetooth_confirm"
@@ -556,6 +568,7 @@ async def test_exception_probe(
         user_input={CONF_PIN: "1234"},
     )
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
 
 

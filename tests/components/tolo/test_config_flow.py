@@ -72,6 +72,7 @@ async def test_user_with_timed_out_host(hass: HomeAssistant, toloclient: Mock) -
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
 
 

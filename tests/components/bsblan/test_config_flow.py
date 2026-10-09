@@ -269,6 +269,7 @@ async def test_connection_error(
         },
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     _assert_form_result(result, "user", {"base": "cannot_connect"})
 
 
@@ -297,6 +298,7 @@ async def test_authentication_error(
     )
 
     assert result.get("type") is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result.get("errors") == {"base": "invalid_auth"}
     assert result.get("step_id") == "user"
 
@@ -369,6 +371,7 @@ async def test_authentication_error_vs_connection_error(
         },
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     _assert_form_result(result, "user", {"base": "invalid_auth"})
 
 
@@ -560,6 +563,7 @@ async def test_zeroconf_discovery_connection_error(
         },
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     _assert_form_result(result, "discovery_confirm", {"base": "cannot_connect"})
 
 
@@ -855,6 +859,7 @@ async def test_reauth_flow_auth_error(
         },
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     _assert_form_result(result, "reauth_confirm", {"base": "invalid_auth"})
 
     # Verify that user input is preserved in the form after error
@@ -906,6 +911,7 @@ async def test_reauth_flow_connection_error(
         },
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     _assert_form_result(result, "reauth_confirm", {"base": "cannot_connect"})
 
 
@@ -1175,6 +1181,7 @@ async def test_zeroconf_discovery_auth_error_during_confirm(
     )
 
     # Should show the discovery_confirm form again with auth error
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     _assert_form_result(result, "discovery_confirm", {"base": "invalid_auth"})
 
 

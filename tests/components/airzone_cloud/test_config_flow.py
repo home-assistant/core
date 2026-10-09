@@ -92,6 +92,7 @@ async def test_form(hass: HomeAssistant) -> None:
         assert result["data"][CONF_ID] == CONFIG[CONF_ID]
         assert result["data"][CONF_USERNAME] == CONFIG[CONF_USERNAME]
         assert result["data"][CONF_PASSWORD] == CONFIG[CONF_PASSWORD]
+        assert result["result"].unique_id == CONFIG[CONF_ID]
 
         assert len(mock_setup_entry.mock_calls) == 1
 
@@ -143,6 +144,7 @@ async def test_installations_list_error(hass: HomeAssistant) -> None:
 
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -168,4 +170,5 @@ async def test_login_error(hass: HomeAssistant) -> None:
             },
         )
 
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"] == {"base": "cannot_connect"}

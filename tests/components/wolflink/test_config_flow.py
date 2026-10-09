@@ -2,7 +2,7 @@
 
 from unittest.mock import patch
 
-from httpx import RequestError
+from httpx2 import RequestError
 import pytest
 from wolf_comm.models import Device
 from wolf_comm.token_auth import InvalidAuth
@@ -88,6 +88,7 @@ async def test_user_flow_errors(
         )
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": expected_error}
 
 

@@ -16,7 +16,7 @@ CONFIG_SCHEMA = probatio.Schema(
         # Name field is no longer allowed in config flow schemas
         # pylint: disable-next=home-assistant-config-flow-name-field
         probatio.Optional(CONF_NAME, default=DEFAULT_NAME): selector.TextSelector(),
-        probatio.Required(CONF_API_KEY): selector.TextSelector(),
+        probatio.Required(probatio.Secret(CONF_API_KEY)): selector.TextSelector(),
     }
 )
 

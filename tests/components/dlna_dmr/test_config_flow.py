@@ -134,6 +134,7 @@ async def test_user_flow_undiscovered_manual(hass: HomeAssistant) -> None:
         CONF_TYPE: MOCK_DEVICE_TYPE,
         CONF_MAC: MOCK_MAC_ADDRESS,
     }
+    assert result["result"].unique_id == MOCK_DEVICE_UDN
     assert result["options"] == {CONF_POLL_AVAILABILITY: True}
 
 
@@ -174,6 +175,7 @@ async def test_user_flow_discovered_manual(
         CONF_TYPE: MOCK_DEVICE_TYPE,
         CONF_MAC: MOCK_MAC_ADDRESS,
     }
+    assert result["result"].unique_id == MOCK_DEVICE_UDN
     assert result["options"] == {CONF_POLL_AVAILABILITY: True}
 
 
@@ -204,6 +206,7 @@ async def test_user_flow_selected(hass: HomeAssistant, ssdp_scanner_mock: Mock) 
         CONF_TYPE: MOCK_DEVICE_TYPE,
         CONF_MAC: MOCK_MAC_ADDRESS,
     }
+    assert result["result"].unique_id == MOCK_DEVICE_UDN
     assert result["options"] == {}
 
 
@@ -226,6 +229,7 @@ async def test_user_flow_uncontactable(
     )
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
     assert result["step_id"] == "manual"
 
@@ -268,6 +272,7 @@ async def test_user_flow_embedded_st(
         CONF_TYPE: MOCK_DEVICE_TYPE,
         CONF_MAC: MOCK_MAC_ADDRESS,
     }
+    assert result["result"].unique_id == MOCK_DEVICE_UDN
     assert result["options"] == {CONF_POLL_AVAILABILITY: True}
 
 
@@ -289,6 +294,7 @@ async def test_user_flow_wrong_st(hass: HomeAssistant, domain_data_mock: Mock) -
     )
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "not_dmr"}
     assert result["step_id"] == "manual"
 
@@ -319,6 +325,7 @@ async def test_ssdp_flow_success(hass: HomeAssistant) -> None:
         CONF_TYPE: MOCK_DEVICE_TYPE,
         CONF_MAC: MOCK_MAC_ADDRESS,
     }
+    assert result["result"].unique_id == MOCK_DEVICE_UDN
     assert result["options"] == {}
 
 
@@ -649,6 +656,7 @@ async def test_ignore_flow(hass: HomeAssistant, ssdp_scanner_mock: Mock) -> None
         CONF_TYPE: MOCK_DEVICE_TYPE,
         CONF_MAC: MOCK_MAC_ADDRESS,
     }
+    assert result["result"].unique_id == MOCK_DEVICE_UDN
 
 
 async def test_ignore_flow_no_ssdp(
@@ -673,6 +681,7 @@ async def test_ignore_flow_no_ssdp(
         CONF_TYPE: None,
         CONF_MAC: None,
     }
+    assert result["result"].unique_id == MOCK_DEVICE_UDN
 
 
 async def test_get_mac_address_ipv4(

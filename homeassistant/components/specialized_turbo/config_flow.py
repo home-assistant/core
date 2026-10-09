@@ -260,7 +260,7 @@ class SpecializedTurboConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=probatio.Schema(
                 {
                     probatio.Required(CONF_EMAIL): str,
-                    probatio.Required(CONF_PASSWORD): str,
+                    probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
                 }
             ),
             errors=errors,
@@ -299,7 +299,9 @@ class SpecializedTurboConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="manual_key",
-            data_schema=probatio.Schema({probatio.Required(CONF_WRAPPED_KEY): str}),
+            data_schema=probatio.Schema(
+                {probatio.Required(probatio.Secret(CONF_WRAPPED_KEY)): str}
+            ),
             errors=errors,
         )
 

@@ -175,7 +175,8 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                         CONF_NAME, default=user_input.get(CONF_NAME, "")
                     ): cv.string,
                     probatio.Required(
-                        CONF_API_KEY, default=user_input.get(CONF_API_KEY, "")
+                        probatio.Secret(CONF_API_KEY),
+                        default=user_input.get(CONF_API_KEY, ""),
                     ): cv.string,
                     probatio.Required(
                         CONF_LOCATION,
@@ -214,7 +215,8 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             data_schema=probatio.Schema(
                 {
                     probatio.Required(
-                        CONF_API_KEY, default=user_input.get(CONF_API_KEY, "")
+                        probatio.Secret(CONF_API_KEY),
+                        default=user_input.get(CONF_API_KEY, ""),
                     ): cv.string,
                 }
             ),

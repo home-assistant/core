@@ -72,9 +72,13 @@ async def test_abort_if_already_setup(hass: HomeAssistant) -> None:
     ).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-        data={CONF_HOST: HOST, CONF_PORT: PORT},
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_HOST: HOST, CONF_PORT: PORT}
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
@@ -124,6 +128,7 @@ async def test_abort_on_socket_failed(hass: HomeAssistant) -> None:
             result["flow_id"], user_input={CONF_HOST: HOST}
         )
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {CONF_HOST: "connection_reset"}
 
 

@@ -45,10 +45,11 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from tests.common import MockConfigEntry, mock_restore_cache, snapshot_platform
 from tests.components.common import assert_availability_follows_source_entity
-from tests.components.infrared import EMITTER_ENTITY_ID
+from tests.components.infrared import EMITTER_ENTITY_ID, RECEIVER_ENTITY_ID
 from tests.components.infrared.common import (
     MockInfraredEmitterEntity,
     MockInfraredReceiverEntity,
@@ -86,15 +87,48 @@ async def test_entities(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
+@pytest.mark.parametrize(
+    ("has_receiver", "source_entity_ids"),
+    [
+        pytest.param(False, [EMITTER_ENTITY_ID], id="emitter"),
+        pytest.param(
+            True, [EMITTER_ENTITY_ID, RECEIVER_ENTITY_ID], id="emitter_and_receiver"
+        ),
+    ],
+)
 @pytest.mark.usefixtures("init_integration")
-async def test_availability_follows_emitter(
+async def test_availability_follows_sources(
     hass: HomeAssistant,
-    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+    source_entity_ids: list[str],
 ) -> None:
-    """Test climate entity availability follows the infrared emitter."""
+    """Test climate entity availability follows all configured infrared entities."""
     await assert_availability_follows_source_entity(
-        hass, _CLIMATE_ENTITY_ID, EMITTER_ENTITY_ID
+        hass, _CLIMATE_ENTITY_ID, source_entity_ids
     )
+
+
+@pytest.mark.parametrize("has_receiver", [True])
+@pytest.mark.parametrize(
+    "unavailable_entity_id",
+    [
+        pytest.param(EMITTER_ENTITY_ID, id="emitter"),
+        pytest.param(RECEIVER_ENTITY_ID, id="receiver"),
+    ],
+)
+@pytest.mark.usefixtures("init_integration")
+async def test_initial_availability_requires_emitter_and_receiver(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    unavailable_entity_id: str,
+) -> None:
+    """Test the entity starts unavailable if either emitter or receiver is."""
+    hass.states.async_set(unavailable_entity_id, STATE_UNAVAILABLE)
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(_CLIMATE_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -258,6 +292,44 @@ async def test_set_temperature_sends_command_when_active(
     state = hass.states.get(_CLIMATE_ENTITY_ID)
     assert state is not None
     assert float(state.attributes["temperature"]) == 26.0
+
+
+@pytest.mark.parametrize(
+    ("fahrenheit", "celsius"),
+    [(61, 16), (62, 17), (63, 17), (64, 18)],
+)
+@pytest.mark.usefixtures("init_integration")
+async def test_set_temperature_fahrenheit_rounds(
+    hass: HomeAssistant,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+    fahrenheit: int,
+    celsius: int,
+) -> None:
+    """Test a Fahrenheit target is rounded to the nearest Celsius degree."""
+    hass.config.units = US_CUSTOMARY_SYSTEM
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": HVACMode.COOL},
+        blocking=True,
+    )
+    mock_infrared_emitter_entity.send_command_calls.clear()
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, ATTR_TEMPERATURE: fahrenheit},
+        blocking=True,
+    )
+
+    assert len(mock_infrared_emitter_entity.send_command_calls) == 1
+    timings = mock_infrared_emitter_entity.send_command_calls[0].get_raw_timings()
+    assert (
+        timings
+        == LgAcCommand(
+            mode=LgAcMode.COOL, temperature=celsius, fan=LgAcFanSpeed.AUTO
+        ).get_raw_timings()
+    )
 
 
 @pytest.mark.usefixtures("init_integration")

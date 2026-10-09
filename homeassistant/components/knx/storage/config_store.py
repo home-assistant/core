@@ -9,7 +9,6 @@ from typing import (
     Any,
     Final,
     TypedDict,
-    cast,
     get_args,
     get_origin,
     get_type_hints,
@@ -30,12 +29,13 @@ from ..const import DOMAIN, KNX_MODULE_KEY
 from ..repairs import async_create_entity_validation_issue
 from . import migration
 from .const import CONF_DATA, CONF_ENTITY
+from .entity_store_schema import KnxEntityData
 from .entity_store_validation import (
     EntityStoreValidationException,
     validate_entity_data,
 )
 from .expose_controller import KNXExposeStoreConfigModel, KNXExposeStoreModel
-from .knx_selector import GroupAddressSelector, knx_selector_in
+from .knx_selector import GroupAddressSelector, TypedGroupSelect, knx_selector_in
 from .time_server import KNXTimeServerStoreModel
 
 _LOGGER = logging.getLogger(__name__)
@@ -58,29 +58,29 @@ class KNXConfigStoreModel(TypedDict):
     time_server: KNXTimeServerStoreModel
 
 
-class KnxEntityData[KnxT](TypedDict):
-    """Validated entity data: the common `entity` and the platform `knx` part."""
-
-    entity: dict[str, Any]
-    knx: KnxT
-
-
 def to_storage_dict(data: KnxEntityData[Any]) -> dict[str, Any]:
     """Render validated entity data to its JSON serializable storage form."""
-    knx_config = data[DOMAIN]
-    if isinstance(knx_config, dict):
-        return cast(dict[str, Any], data)  # platform not yet migrated to a typed config
     return {
-        CONF_ENTITY: data[CONF_ENTITY],
-        DOMAIN: {
-            name: encode(getattr(knx_config, name))
-            for name, encode in _storage_encoders(type(knx_config))
-        },
+        CONF_ENTITY: dataclasses.asdict(data.entity),
+        DOMAIN: _knx_to_storage(data.knx),
+    }
+
+
+def _knx_to_storage(knx_config: Any) -> dict[str, Any]:
+    if isinstance(knx_config, dict):
+        return knx_config  # platform not yet migrated to a typed config
+    return {
+        name: encode(getattr(knx_config, name))
+        for name, encode in _storage_encoders(type(knx_config))
     }
 
 
 def _unchanged(value: Any) -> Any:
     return value
+
+
+def _group_select_to_storage(value: Any) -> dict[str, Any] | None:
+    return None if value is None else _knx_to_storage(value)
 
 
 type _StorageEncoders = tuple[tuple[str, Callable[[Any], Any]], ...]
@@ -90,7 +90,8 @@ _STORAGE_ENCODERS: dict[type, _StorageEncoders] = {}
 def _storage_encoders(config_type: type) -> _StorageEncoders:
     """Return a storage encoder per field of a typed config.
 
-    Section fields are dropped, group addresses are rendered by their selector.
+    Section fields are dropped, group addresses are rendered by their selector
+    and group select options by their own encoders.
     """
     if (cached := _STORAGE_ENCODERS.get(config_type)) is not None:
         return cached
@@ -102,11 +103,13 @@ def _storage_encoders(config_type: type) -> _StorageEncoders:
         if any(isinstance(item, Key) and item.remove for item in metadata):
             continue
         field_selector = knx_selector_in(metadata)
-        encode = (
-            field_selector.to_storage
-            if isinstance(field_selector, GroupAddressSelector)
-            else _unchanged
-        )
+        encode: Callable[[Any], Any]
+        if isinstance(field_selector, GroupAddressSelector):
+            encode = field_selector.to_storage
+        elif isinstance(field_selector, TypedGroupSelect):
+            encode = _group_select_to_storage
+        else:
+            encode = _unchanged
         encoders.append((dc_field.name, encode))
     _STORAGE_ENCODERS[config_type] = tuple(encoders)
     return _STORAGE_ENCODERS[config_type]
@@ -227,9 +230,9 @@ class KNXConfigStore:
                 invalid.append(unique_id)
                 continue
             data: KnxEntityData[Any] = result[CONF_DATA]
-            if config_type is not None and not isinstance(data[DOMAIN], config_type):
+            if config_type is not None and not isinstance(data.knx, config_type):
                 raise TypeError(
-                    f"{platform} schema yields {type(data[DOMAIN]).__name__},"
+                    f"{platform} schema yields {type(data.knx).__name__},"
                     f" not {config_type.__name__}"
                 )
             validated[unique_id] = data

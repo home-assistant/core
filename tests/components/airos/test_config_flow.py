@@ -619,6 +619,7 @@ async def test_discover_flow_one_device_found(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == MOCK_DISC_DEV1[HOSTNAME]
     assert result["data"][CONF_HOST] == MOCK_DISC_DEV1[IP_ADDRESS]
+    assert result["result"].unique_id == MOCK_DISC_DEV1[MAC_ADDRESS]
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -697,6 +698,7 @@ async def test_discover_flow_multiple_devices_found(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == MOCK_DISC_DEV1[HOSTNAME]
     assert result["data"][CONF_HOST] == MOCK_DISC_DEV1[IP_ADDRESS]
+    assert result["result"].unique_id == MOCK_DISC_DEV1[MAC_ADDRESS]
 
 
 async def test_discover_flow_with_existing_device(
@@ -809,6 +811,7 @@ async def test_configure_device_flow_exceptions(
         )
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -968,6 +971,7 @@ async def test_validate_raise_on_attempted_legacy(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "manual"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
     assert mock_async_get_firmware_data.await_count == 2
     mock_client_session.assert_called_once()

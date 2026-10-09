@@ -12,8 +12,8 @@ from tests.common import MockConfigEntry
 
 mock_value_step_user = {
     "title": "1R & 1IN Board",
-    "relays": 1,
-    "inputs": 1,
+    "relays": [1],
+    "inputs": [1],
     "temps": False,
 }
 
@@ -80,6 +80,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
@@ -128,4 +129,5 @@ async def test_form_user_exception(hass: HomeAssistant) -> None:
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "unknown"}

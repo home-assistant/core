@@ -48,6 +48,7 @@ async def test_form(hass: HomeAssistant, client: MagicMock) -> None:
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["data"] == TEST_DATA
+    assert result2["result"].unique_id == TEST_MAC
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -67,6 +68,7 @@ async def test_form_cannot_connect(hass: HomeAssistant, client: MagicMock) -> No
         )
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -86,6 +88,7 @@ async def test_form_spa_not_configured(hass: HomeAssistant, client: MagicMock) -
         )
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -106,6 +109,7 @@ async def test_unknown_error(hass: HomeAssistant, client: MagicMock) -> None:
         )
 
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "unknown"}
 
 
@@ -273,3 +277,4 @@ async def test_dhcp_discovery_manual_user_setup(
 
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["data"] == TEST_DATA
+        assert result["result"].unique_id == TEST_MAC

@@ -379,6 +379,7 @@ async def test_manual_errors(hass: HomeAssistant, url: str, error: str) -> None:
     )
 
     assert result["step_id"] == "manual"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": error}
 
 
@@ -432,6 +433,7 @@ async def test_reconfigure_manual_errors(
     )
 
     assert result["step_id"] == "manual_reconfigure"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": error}
 
 
@@ -523,6 +525,7 @@ async def test_supervisor_discovery(
         "use_addon": True,
         "integration_created_addon": False,
     }
+    assert result["result"].unique_id == "1234"
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -630,6 +633,7 @@ async def test_clean_discovery_on_user_create(
         "use_addon": False,
         "integration_created_addon": False,
     }
+    assert result["result"].unique_id == "1234"
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -846,6 +850,7 @@ async def test_usb_discovery(
         "use_addon": True,
         "integration_created_addon": True,
     }
+    assert result["result"].unique_id == "1234"
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -959,6 +964,7 @@ async def test_usb_discovery_addon_not_running(
         "use_addon": True,
         "integration_created_addon": False,
     }
+    assert result["result"].unique_id == "1234"
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -2188,6 +2194,7 @@ async def test_configure_addon_usb_socket_validation(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "configure_addon_user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "usb_and_socket_path"}
 
     # Exactly one provided.
@@ -2311,6 +2318,7 @@ async def test_discovery_addon_not_running(
         "use_addon": True,
         "integration_created_addon": False,
     }
+    assert result["result"].unique_id == "1234"
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -2431,6 +2439,7 @@ async def test_discovery_addon_not_installed(
         "use_addon": True,
         "integration_created_addon": True,
     }
+    assert result["result"].unique_id == "1234"
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -2836,6 +2845,7 @@ async def test_concurrent_flow_during_addon_config_write(
             )
 
         assert result_manual["type"] is FlowResultType.CREATE_ENTRY
+        assert result_manual["result"].unique_id == "1234"
         assert any(
             flow["flow_id"] == result_a["flow_id"]
             for flow in hass.config_entries.flow.async_progress()
@@ -2978,6 +2988,7 @@ async def test_not_addon(hass: HomeAssistant) -> None:
         "use_addon": False,
         "integration_created_addon": False,
     }
+    assert result["result"].unique_id == "1234"
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -3127,6 +3138,7 @@ async def test_addon_running(
         "use_addon": True,
         "integration_created_addon": False,
     }
+    assert result["result"].unique_id == "1234"
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -3397,6 +3409,7 @@ async def test_addon_installed(
         "use_addon": True,
         "integration_created_addon": False,
     }
+    assert result["result"].unique_id == "1234"
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -3959,6 +3972,7 @@ async def test_addon_not_installed(
         "use_addon": True,
         "integration_created_addon": True,
     }
+    assert result["result"].unique_id == "1234"
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -5376,6 +5390,7 @@ async def test_zeroconf(hass: HomeAssistant) -> None:
         "use_addon": False,
         "integration_created_addon": False,
     }
+    assert result["result"].unique_id == "1234"
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -6228,6 +6243,7 @@ async def test_create_entry_spares_migration_flow(
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "1234"
 
     # The migration flow is still in progress.
     assert any(
@@ -6831,6 +6847,7 @@ async def test_intent_recommended_user(
         "use_addon": True,
         "integration_created_addon": True,
     }
+    assert result["result"].unique_id == "1234"
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -6920,6 +6937,7 @@ async def test_intent_recommended_preserves_existing_keys(
         "use_addon": True,
         "integration_created_addon": False,
     }
+    assert result["result"].unique_id == "1234"
 
 
 @pytest.mark.usefixtures("supervisor", "addon_info")
@@ -7029,6 +7047,7 @@ async def test_recommended_usb_discovery(
         "use_addon": True,
         "integration_created_addon": True,
     }
+    assert result["result"].unique_id == "1234"
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -7118,6 +7137,7 @@ async def test_addon_rf_region_new_network(
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "1234"
     assert start_addon.call_count == 1
     assert start_addon.call_args == call("core_zwave_js")
     assert setup_entry.call_count == 1
@@ -7315,6 +7335,7 @@ async def test_addon_skip_rf_region(
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "1234"
     assert start_addon.call_count == 1
     assert start_addon.call_args == call("core_zwave_js")
     assert setup_entry.call_count == 1

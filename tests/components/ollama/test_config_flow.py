@@ -3,7 +3,7 @@
 import asyncio
 from unittest.mock import ANY, AsyncMock, patch
 
-from httpx import HTTPError
+from httpx2 import HTTPError
 from ollama import ResponseError
 import pytest
 
@@ -458,6 +458,7 @@ async def test_form_errors(hass: HomeAssistant, side_effect, error) -> None:
         )
 
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": error}
 
 
@@ -513,6 +514,7 @@ async def test_form_invalid_url(hass: HomeAssistant) -> None:
     )
 
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "invalid_url"}
 
 
@@ -865,6 +867,7 @@ async def test_user_step_errors(
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result.get("errors") == {"base": error}
 
 

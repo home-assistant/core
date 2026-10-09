@@ -8,10 +8,13 @@ from pyopenweathermap import create_owm_client
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_LANGUAGE, CONF_MODE
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
-from .const import CONFIG_FLOW_VERSION, DEFAULT_OWM_MODE, OWM_MODES, PLATFORMS
+from .const import CONFIG_FLOW_VERSION, DEFAULT_OWM_MODE, DOMAIN, OWM_MODES, PLATFORMS
 from .coordinator import OWMUpdateCoordinator, get_owm_update_coordinator
 from .repairs import async_create_issue, async_delete_issue
+from .services import async_setup_services
 from .utils import build_data_and_options
 
 _LOGGER = logging.getLogger(__name__)
@@ -25,6 +28,15 @@ class OpenweathermapData:
 
     mode: str
     coordinator: OWMUpdateCoordinator
+
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the OpenWeatherMap integration."""
+    async_setup_services(hass)
+    return True
 
 
 async def async_setup_entry(

@@ -64,6 +64,7 @@ async def test_user_form(hass: HomeAssistant, doorbird_api: DoorBird) -> None:
     assert result2["options"] == {
         CONF_EVENTS: [DEFAULT_DOORBELL_EVENT, DEFAULT_MOTION_EVENT]
     }
+    assert result2["result"].unique_id == "1234ABCD"
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -315,6 +316,7 @@ async def test_form_zeroconf_correct_oui(
         "password": "password",
         "username": "friend",
     }
+    assert result2["result"].unique_id == "1234ABCD"
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -375,6 +377,7 @@ async def test_form_user_cannot_connect(hass: HomeAssistant) -> None:
         )
 
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
@@ -396,6 +399,7 @@ async def test_form_user_invalid_auth(hass: HomeAssistant) -> None:
         )
 
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "invalid_auth"}
 
 

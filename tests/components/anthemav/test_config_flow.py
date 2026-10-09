@@ -44,6 +44,7 @@ async def test_form_with_valid_connection(
         "mac": "00:00:00:00:00:01",
         "model": "MRX 520",
     }
+    assert result2["result"].unique_id == "00:00:00:00:00:01"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -68,6 +69,7 @@ async def test_form_device_info_error(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "cannot_receive_deviceinfo"}
 
 
@@ -92,6 +94,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "cannot_connect"}
 
 

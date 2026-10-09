@@ -41,12 +41,14 @@ NUMBERS: dict[DeviceCategory, tuple[TuyaNumberEntityDescription, ...]] = {
     DeviceCategory.BH: (
         TuyaNumberEntityDescription(
             key=DPCode.TEMP_SET,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="temperature",
             device_class=NumberDeviceClass.TEMPERATURE,
             entity_category=EntityCategory.CONFIG,
         ),
         TuyaNumberEntityDescription(
             key=DPCode.TEMP_SET_F,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="temperature",
             device_class=NumberDeviceClass.TEMPERATURE,
             entity_category=EntityCategory.CONFIG,
@@ -122,6 +124,7 @@ NUMBERS: dict[DeviceCategory, tuple[TuyaNumberEntityDescription, ...]] = {
     DeviceCategory.FS: (
         TuyaNumberEntityDescription(
             key=DPCode.TEMP,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="temperature",
             device_class=NumberDeviceClass.TEMPERATURE,
         ),
@@ -150,14 +153,23 @@ NUMBERS: dict[DeviceCategory, tuple[TuyaNumberEntityDescription, ...]] = {
             device_class=NumberDeviceClass.DISTANCE,
         ),
     ),
+    DeviceCategory.HWSB: (
+        TuyaNumberEntityDescription(
+            key=DPCode.SPEED_SET,
+            translation_key="speed",
+            native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
+        ),
+    ),
     DeviceCategory.JSQ: (
         TuyaNumberEntityDescription(
             key=DPCode.TEMP_SET,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="temperature",
             device_class=NumberDeviceClass.TEMPERATURE,
         ),
         TuyaNumberEntityDescription(
             key=DPCode.TEMP_SET_F,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="temperature",
             device_class=NumberDeviceClass.TEMPERATURE,
         ),
@@ -170,6 +182,7 @@ NUMBERS: dict[DeviceCategory, tuple[TuyaNumberEntityDescription, ...]] = {
         ),
         TuyaNumberEntityDescription(
             key=DPCode.TEMP_SET,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="temperature",
             device_class=NumberDeviceClass.TEMPERATURE,
             entity_category=EntityCategory.CONFIG,
@@ -269,61 +282,15 @@ NUMBERS: dict[DeviceCategory, tuple[TuyaNumberEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
         # Controls the irrigation duration for indexed water valves
-        TuyaNumberEntityDescription(
-            key=DPCode.COUNTDOWN_1,
-            translation_key="indexed_irrigation_duration",
-            translation_placeholders={"index": "1"},
-            device_class=NumberDeviceClass.DURATION,
-            entity_category=EntityCategory.CONFIG,
-        ),
-        TuyaNumberEntityDescription(
-            key=DPCode.COUNTDOWN_2,
-            translation_key="indexed_irrigation_duration",
-            translation_placeholders={"index": "2"},
-            device_class=NumberDeviceClass.DURATION,
-            entity_category=EntityCategory.CONFIG,
-        ),
-        TuyaNumberEntityDescription(
-            key=DPCode.COUNTDOWN_3,
-            translation_key="indexed_irrigation_duration",
-            translation_placeholders={"index": "3"},
-            device_class=NumberDeviceClass.DURATION,
-            entity_category=EntityCategory.CONFIG,
-        ),
-        TuyaNumberEntityDescription(
-            key=DPCode.COUNTDOWN_4,
-            translation_key="indexed_irrigation_duration",
-            translation_placeholders={"index": "4"},
-            device_class=NumberDeviceClass.DURATION,
-            entity_category=EntityCategory.CONFIG,
-        ),
-        TuyaNumberEntityDescription(
-            key=DPCode.COUNTDOWN_5,
-            translation_key="indexed_irrigation_duration",
-            translation_placeholders={"index": "5"},
-            device_class=NumberDeviceClass.DURATION,
-            entity_category=EntityCategory.CONFIG,
-        ),
-        TuyaNumberEntityDescription(
-            key=DPCode.COUNTDOWN_6,
-            translation_key="indexed_irrigation_duration",
-            translation_placeholders={"index": "6"},
-            device_class=NumberDeviceClass.DURATION,
-            entity_category=EntityCategory.CONFIG,
-        ),
-        TuyaNumberEntityDescription(
-            key=DPCode.COUNTDOWN_7,
-            translation_key="indexed_irrigation_duration",
-            translation_placeholders={"index": "7"},
-            device_class=NumberDeviceClass.DURATION,
-            entity_category=EntityCategory.CONFIG,
-        ),
-        TuyaNumberEntityDescription(
-            key=DPCode.COUNTDOWN_8,
-            translation_key="indexed_irrigation_duration",
-            translation_placeholders={"index": "8"},
-            device_class=NumberDeviceClass.DURATION,
-            entity_category=EntityCategory.CONFIG,
+        *(
+            TuyaNumberEntityDescription(
+                key=DPCode(f"countdown_{channel}"),
+                translation_key="indexed_irrigation_duration",
+                translation_placeholders={"index": str(channel)},
+                device_class=NumberDeviceClass.DURATION,
+                entity_category=EntityCategory.CONFIG,
+            )
+            for channel in range(1, 9)
         ),
     ),
     DeviceCategory.SGBJ: (
@@ -514,6 +481,7 @@ NUMBERS: dict[DeviceCategory, tuple[TuyaNumberEntityDescription, ...]] = {
     DeviceCategory.ZNRB: (
         TuyaNumberEntityDescription(
             key=DPCode.TEMP_SET,
+            # pylint: disable-next=home-assistant-redundant-translation-key
             translation_key="temperature",
             device_class=NumberDeviceClass.TEMPERATURE,
         ),

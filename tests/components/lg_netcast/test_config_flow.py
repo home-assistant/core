@@ -50,6 +50,7 @@ async def test_user_invalid_host(hass: HomeAssistant) -> None:
             user_input={CONF_HOST: "invalid/host"},
         )
 
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"] == {CONF_HOST: "invalid_host"}
 
 
@@ -197,6 +198,7 @@ async def test_invalid_session_id(hass: HomeAssistant) -> None:
         assert result2["type"] is data_entry_flow.FlowResultType.FORM
         assert result2["step_id"] == "authorize"
         assert result2["errors"] is not None
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result2["errors"]["base"] == "cannot_connect"
 
 

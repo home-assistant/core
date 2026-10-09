@@ -83,6 +83,7 @@ async def test_meter_value_error(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"phone_number": "invalid_phone_number"}
 
 
@@ -128,6 +129,7 @@ async def test_unresponsive_meter_error(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"phone_number": "unresponsive_meter"}
 
 
@@ -151,6 +153,7 @@ async def test_meter_http_error(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"phone_number": "http_error"}
 
 

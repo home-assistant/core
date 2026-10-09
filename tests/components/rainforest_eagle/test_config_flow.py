@@ -107,6 +107,7 @@ async def test_form_eagle_200_meters_none_connected(hass: HomeAssistant) -> None
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "no_meters_connected"}
 
 
@@ -138,6 +139,7 @@ async def test_form_eagle_200_no_meters(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "no_meters_connected"}
 
 
@@ -233,6 +235,7 @@ async def test_form_unknown_device_type(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "unknown_device_type"}
 
 
@@ -259,6 +262,7 @@ async def test_form_unsupported_device_type(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "unsupported_device_type"}
 
 
@@ -285,6 +289,7 @@ async def test_form_unexpected_exception(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "unknown"}
 
 
@@ -308,6 +313,7 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "invalid_auth"}
 
 
@@ -331,4 +337,5 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}

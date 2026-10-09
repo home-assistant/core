@@ -35,7 +35,7 @@ CREATE_FIELDS: VolDictType = {
 }
 
 UPDATE_FIELDS: VolDictType = {
-    probatio.Optional("name"): probatio.All(str, probatio.Length(min=1)),
+    probatio.Optional("name"): probatio.All(str, probatio.NonEmpty()),
 }
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)

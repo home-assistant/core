@@ -130,6 +130,7 @@ async def test_import_flow_with_name(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "My Vinyl"
     assert result["data"] == {CONF_TOKEN: MOCK_TOKEN}
+    assert result["result"].unique_id == str(MOCK_USER_ID)
 
 
 @pytest.mark.usefixtures("mock_setup_entry")

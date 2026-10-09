@@ -1,5 +1,6 @@
 """PyTest fixtures and test helpers."""
 
+from collections.abc import Generator
 from typing import Any
 from unittest import mock
 from unittest.mock import AsyncMock, PropertyMock, patch
@@ -99,6 +100,15 @@ def mock_config(ip_address="172.100.123.4", unique_id="abcd0123ef5678"):
 def config_entry_fixture() -> MockConfigEntry:
     """Return a MockConfigEntry for blebox."""
     return mock_config()
+
+
+@pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Mock setting up a config entry."""
+    with patch(
+        "homeassistant.components.blebox.async_setup_entry", return_value=True
+    ) as mock_setup:
+        yield mock_setup
 
 
 @pytest.fixture(name="config")

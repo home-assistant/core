@@ -45,6 +45,7 @@ PTZ_MOVE_DURATION_MS = 500
 UPDATE_TIMEOUT = 300
 
 PLATFORMS = [
+    Platform.ALARM_CONTROL_PANEL,
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.CAMERA,

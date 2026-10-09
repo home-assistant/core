@@ -49,6 +49,7 @@ async def test_user_step_errors(
     )
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"]["base"] == expected_error
     mock_redgtech_api.login.assert_called_once_with(TEST_EMAIL, TEST_PASSWORD)
 

@@ -675,6 +675,7 @@ async def test_subentry_options_switching(
 
     else:
         assert options["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert options.get("errors", None) == errors
 
 
@@ -711,6 +712,7 @@ async def test_form_errors(hass: HomeAssistant, side_effect, error) -> None:
         )
 
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": error}
 
 
@@ -768,11 +770,17 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("current_llm_apis", "suggested_llm_apis", "expected_options"),
     [
-        ("assist", ["assist"], ["assist"]),
-        (["assist"], ["assist"], ["assist"]),
-        ("non-existent", [], ["assist"]),
-        (["non-existent"], [], ["assist"]),
-        (["assist", "non-existent"], ["assist"], ["assist"]),
+        ("assist", ["assist"], ["assist", "homeassistant"]),
+        (["assist"], ["assist"], ["assist", "homeassistant"]),
+        ("non-existent", [], ["assist", "homeassistant"]),
+        (["non-existent"], [], ["assist", "homeassistant"]),
+        (["assist", "non-existent"], ["assist"], ["assist", "homeassistant"]),
+        pytest.param(
+            ["homeassistant"],
+            ["homeassistant"],
+            ["assist", "homeassistant"],
+            id="homeassistant_list",
+        ),
     ],
 )
 async def test_reconfigure_conversation_subentry_llm_api_schema(
