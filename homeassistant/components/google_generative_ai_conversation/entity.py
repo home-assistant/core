@@ -110,6 +110,12 @@ def _is_gemini_3_model(model: str) -> bool:
     return name.startswith("gemini-3")
 
 
+def _is_gemma_4_model(model: str) -> bool:
+    """Check if the model is a Gemma 4 series model."""
+    name = model.removeprefix("models/")
+    return name.startswith("gemma-4")
+
+
 def _create_thinking_config(
     model: str,
     thinking_budget: int,
@@ -123,10 +129,21 @@ def _create_thinking_config(
             -1 = automatic (default behavior),
             0 = disable thinking,
             >0 = custom token budget (Gemini 2.5 only).
-        thinking_level: The user-configured thinking level for Gemini 3 models:
-            "auto" = automatic (default), "minimal", "low", "medium", "high".
+        thinking_level: The user-configured thinking level for Gemini 3 and
+            Gemma 4 models: "auto" = automatic (default), "minimal", "low",
+            "medium", "high".
 
     """
+    if _is_gemma_4_model(model):
+        # Gemma 4 only supports the minimal and high thinking levels
+        gemma_level_map: dict[str, ThinkingLevel] = {
+            "minimal": ThinkingLevel.MINIMAL,
+            "high": ThinkingLevel.HIGH,
+        }
+        if thinking_level and thinking_level in gemma_level_map:
+            return ThinkingConfig(thinking_level=gemma_level_map[thinking_level])
+        return None
+
     if not _is_thinking_model(model):
         return None
 
@@ -467,6 +484,7 @@ async def _transform_stream(
                 and candidate.finish_reason != "STOP"
             ):
                 # The message ended due to a content error as explained in: https://ai.google.dev/api/generate-content#FinishReason
+                # pylint: disable-next=home-assistant-log-and-raise
                 LOGGER.error(
                     "Error in Google Generative AI response: %s, see: https://ai.google.dev/api/generate-content#FinishReason",
                     candidate.finish_reason,
@@ -541,6 +559,7 @@ async def _transform_stream(
         APIError,
         ValueError,
     ) as err:
+        # pylint: disable-next=home-assistant-log-and-raise
         LOGGER.error("Error sending message: %s %s", type(err), err)
         if isinstance(err, APIError):
             message = err.message
@@ -711,6 +730,7 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
                 ClientError,
                 ValueError,
             ) as err:
+                # pylint: disable-next=home-assistant-log-and-raise
                 LOGGER.error("Error sending message: %s %s", type(err), err)
                 error = ERROR_GETTING_RESPONSE
                 raise HomeAssistantError(error) from err

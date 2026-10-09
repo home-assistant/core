@@ -64,6 +64,7 @@ async def test_form_timeout(hass: HomeAssistant) -> None:
             result["flow_id"], {"host": "0.0.0.1"}
         )
         assert result2["type"] is FlowResultType.FORM
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result2["errors"] == {"base": "cannot_connect"}
 
 
@@ -83,6 +84,7 @@ async def test_form_library_error_message(hass: HomeAssistant) -> None:
             result["flow_id"], {"host": "0.0.0.1"}
         )
         assert result2["type"] is FlowResultType.FORM
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result2["errors"] == {"base": "cannot_connect"}
 
 
@@ -102,6 +104,7 @@ async def test_form_connection_refused(hass: HomeAssistant) -> None:
             result["flow_id"], {"host": "0.0.0.1"}
         )
         assert result2["type"] is FlowResultType.FORM
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result2["errors"] == {"base": "cannot_connect"}
 
 
@@ -126,4 +129,5 @@ async def test_form_no_units(hass: HomeAssistant) -> None:
         )
 
         assert result2["type"] is FlowResultType.FORM
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result2["errors"] == {"base": "no_units"}

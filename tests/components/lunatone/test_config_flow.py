@@ -18,10 +18,10 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from . import (
     BASE_IP,
     BASE_URL,
-    INFO_DATA,
-    LEGACY_INFO_DATA,
     MANUFACTURER,
+    SERIAL_NUMBER,
     UUID,
+    build_info_data,
     setup_integration,
 )
 
@@ -44,13 +44,22 @@ ZEROCONF_DISCOVERY = ZeroconfServiceInfo(
 )
 
 
-@pytest.mark.parametrize(("info_data"), [INFO_DATA, LEGACY_INFO_DATA])
+@pytest.mark.parametrize(
+    ("info_data", "expected_unique_id"),
+    [
+        (build_info_data(include_uuid=True), UUID.replace("-", "")),
+        (build_info_data(include_uuid=False), str(SERIAL_NUMBER)),
+    ],
+)
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_full_flow(
-    hass: HomeAssistant, mock_lunatone_info: AsyncMock, info_data: InfoData
+    hass: HomeAssistant,
+    mock_lunatone_info: AsyncMock,
+    info_data: InfoData,
+    expected_unique_id: str,
 ) -> None:
     """Test full user flow."""
-    mock_lunatone_info.set_data(info_data)
+    mock_lunatone_info.data = info_data
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -66,6 +75,7 @@ async def test_full_flow(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == BASE_URL
     assert result["data"] == {CONF_URL: BASE_URL}
+    assert result["result"].unique_id == expected_unique_id
 
 
 async def test_full_flow_fail_because_of_missing_device_infos(
@@ -86,6 +96,7 @@ async def test_full_flow_fail_because_of_missing_device_infos(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "missing_device_info"}
 
 

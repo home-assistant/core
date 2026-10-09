@@ -67,6 +67,7 @@ async def test_user_flow(
         )
         await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == entry_data["host"]
     assert result["data"] == entry_data
@@ -136,6 +137,7 @@ async def test_errors(
         )
 
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": error}
 
 
@@ -220,6 +222,7 @@ async def test_reauth_errors(
         )
 
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": error}
 
 
@@ -261,6 +264,7 @@ async def test_hassio_flow(hass: HomeAssistant) -> None:
         assert result2["type"] is FlowResultType.CREATE_ENTRY
         assert result2["title"] == test_data.config["name"]
         assert result2["data"] == test_data.config
+        assert result2["result"].unique_id == "hassio"
         assert len(mock_setup_entry.mock_calls) == 1
 
 

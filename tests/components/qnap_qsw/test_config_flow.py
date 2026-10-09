@@ -27,6 +27,7 @@ DHCP_SERVICE_INFO = DhcpServiceInfo(
 TEST_PASSWORD = "test-password"
 TEST_URL = f"http://{DHCP_SERVICE_INFO.ip}"
 TEST_USERNAME = "test-username"
+SYSTEM_BOARD_UNIQUE_ID = format_mac(SYSTEM_BOARD_MOCK[API_RESULT][API_MAC_ADDR])
 
 
 async def test_form(hass: HomeAssistant) -> None:
@@ -76,6 +77,7 @@ async def test_form(hass: HomeAssistant) -> None:
         assert result["data"][CONF_URL] == CONFIG[CONF_URL]
         assert result["data"][CONF_USERNAME] == CONFIG[CONF_USERNAME]
         assert result["data"][CONF_PASSWORD] == CONFIG[CONF_PASSWORD]
+        assert result["result"].unique_id == SYSTEM_BOARD_UNIQUE_ID
 
         assert len(mock_setup_entry.mock_calls) == 1
 
@@ -160,6 +162,7 @@ async def test_connection_error(hass: HomeAssistant) -> None:
             user_input=CONFIG,
         )
 
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"] == {CONF_URL: "cannot_connect"}
 
 
@@ -182,6 +185,7 @@ async def test_login_error(hass: HomeAssistant) -> None:
             user_input=CONFIG,
         )
 
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"] == {CONF_PASSWORD: "invalid_auth"}
 
 
@@ -232,6 +236,7 @@ async def test_dhcp_flow(hass: HomeAssistant) -> None:
         CONF_PASSWORD: TEST_PASSWORD,
         CONF_URL: TEST_URL,
     }
+    assert result2["result"].unique_id == format_mac(DHCP_SERVICE_INFO.macaddress)
 
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -281,6 +286,7 @@ async def test_dhcp_connection_error(hass: HomeAssistant) -> None:
             },
         )
 
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -312,4 +318,5 @@ async def test_dhcp_login_error(hass: HomeAssistant) -> None:
             },
         )
 
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"] == {CONF_PASSWORD: "invalid_auth"}

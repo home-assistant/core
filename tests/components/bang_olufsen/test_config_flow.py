@@ -19,6 +19,7 @@ from .const import (
     TEST_DATA_ZEROCONF,
     TEST_DATA_ZEROCONF_IPV6,
     TEST_DATA_ZEROCONF_NOT_MOZART,
+    TEST_SERIAL_NUMBER,
 )
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
@@ -36,6 +37,7 @@ async def test_config_flow_timeout_error(
         data=TEST_DATA_USER,
     )
     assert result_user["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result_user["errors"] == {"base": "timeout_error"}
 
     assert mock_mozart_client.get_beolink_self.call_count == 1
@@ -55,6 +57,7 @@ async def test_config_flow_client_connector_error(
         data=TEST_DATA_USER,
     )
     assert result_user["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result_user["errors"] == {"base": "client_connector_error"}
 
     assert mock_mozart_client.get_beolink_self.call_count == 1
@@ -69,6 +72,7 @@ async def test_config_flow_invalid_ip(hass: HomeAssistant) -> None:
         data=TEST_DATA_USER_INVALID,
     )
     assert result_user["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result_user["errors"] == {"base": "invalid_ip"}
 
 
@@ -84,6 +88,7 @@ async def test_config_flow_api_exception(
         data=TEST_DATA_USER,
     )
     assert result_user["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result_user["errors"] == {"base": "api_exception"}
 
     assert mock_mozart_client.get_beolink_self.call_count == 1
@@ -108,6 +113,7 @@ async def test_config_flow(hass: HomeAssistant, mock_mozart_client: AsyncMock) -
 
     assert result_user["type"] is FlowResultType.CREATE_ENTRY
     assert result_user["data"] == TEST_DATA_CREATE_ENTRY
+    assert result_user["result"].unique_id == TEST_SERIAL_NUMBER
 
     assert mock_mozart_client.get_beolink_self.call_count == 1
 
@@ -133,6 +139,7 @@ async def test_config_flow_zeroconf(
 
     assert result_confirm["type"] is FlowResultType.CREATE_ENTRY
     assert result_confirm["data"] == TEST_DATA_CREATE_ENTRY
+    assert result_confirm["result"].unique_id == TEST_SERIAL_NUMBER
 
     assert mock_mozart_client.get_beolink_self.call_count == 1
 

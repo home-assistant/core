@@ -64,6 +64,7 @@ async def test_user_flow_missing_file(
     )
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "invalid_file"}
     assert len(mock_setup_entry.mock_calls) == 0
 
@@ -88,6 +89,7 @@ async def test_user_flow_invalid_file(
     )
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "invalid_file"}
     mock_process_uploaded_file.assert_called_with(hass, uploaded_file)
     assert len(mock_setup_entry.mock_calls) == 0

@@ -388,6 +388,7 @@ async def test_aborted_flow_removes_listener(
         )
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "timeout_connect"}
     mock_shared_listener.stop.assert_awaited_once()
     assert not async_get_listener_registry(hass).has_listener(DEFAULT_PORT)
@@ -483,6 +484,7 @@ async def test_invalid_mac_does_not_fail_other_flow(
     assert first_result["type"] is FlowResultType.CREATE_ENTRY
     assert first_result["result"].unique_id == TEST_DEVICE_MAC
     assert second_result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert second_result["errors"] == {"base": "invalid_mac"}
 
 
@@ -611,3 +613,4 @@ async def test_user_form_port_bind_check(
 
     assert mock_verify.await_count == expected_awaits
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == kwargs["mac_address"]

@@ -62,6 +62,7 @@ async def test_bluetooth_discovery(hass: HomeAssistant) -> None:
     assert result["data"] == {
         CONF_ADDRESS: "AA:BB:CC:DD:EE:FF",
     }
+    assert result["result"].unique_id == "AA:BB:CC:DD:EE:FF"
 
 
 async def test_integration_discovery(hass: HomeAssistant) -> None:
@@ -81,6 +82,7 @@ async def test_integration_discovery(hass: HomeAssistant) -> None:
     assert result["data"] == {
         CONF_ADDRESS: "AA:BB:CC:DD:EE:FF",
     }
+    assert result["result"].unique_id == "AA:BB:CC:DD:EE:FF"
 
 
 async def test_integration_discovery_no_last_service_info(hass: HomeAssistant) -> None:
@@ -96,6 +98,7 @@ async def test_integration_discovery_no_last_service_info(hass: HomeAssistant) -
     assert result["data"] == {
         CONF_ADDRESS: "AA:BB:CC:DD:EE:FF",
     }
+    assert result["result"].unique_id == "AA:BB:CC:DD:EE:FF"
 
 
 async def test_user_setup(hass: HomeAssistant) -> None:
@@ -126,6 +129,7 @@ async def test_user_setup(hass: HomeAssistant) -> None:
     assert result["data"] == {
         CONF_ADDRESS: "AA:BB:CC:DD:EE:FF",
     }
+    assert result["result"].unique_id == "AA:BB:CC:DD:EE:FF"
 
 
 async def test_user_setup_no_devices(hass: HomeAssistant) -> None:
@@ -160,6 +164,7 @@ async def test_connection_error(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"]["base"] == "cannot_connect"
 
 
@@ -181,6 +186,7 @@ async def test_unexpected_error(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"]["base"] == "unknown"
 
 

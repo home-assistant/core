@@ -78,6 +78,7 @@ async def test_connection_error(
 
     assert result["step_id"] == "user"
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -133,6 +134,7 @@ async def test_user_connection_upgrade_required(
 
     assert result["step_id"] == "user"
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "connection_upgrade"}
 
 

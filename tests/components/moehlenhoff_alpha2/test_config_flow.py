@@ -86,6 +86,7 @@ async def test_form_cannot_connect_error(hass: HomeAssistant) -> None:
         )
 
         assert result2["type"] is FlowResultType.FORM
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result2["errors"] == {"base": "cannot_connect"}
 
 
@@ -101,4 +102,5 @@ async def test_form_unexpected_error(hass: HomeAssistant) -> None:
         )
 
         assert result2["type"] is FlowResultType.FORM
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result2["errors"] == {"base": "unknown"}

@@ -38,6 +38,7 @@ async def test_flow_user(hass: HomeAssistant, requests_mock_fixture) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "pushbullet"
     assert result["data"] == MOCK_CONFIG
+    assert result["result"].unique_id == "ujpah72o0"
 
 
 async def test_flow_user_already_configured(
@@ -108,6 +109,7 @@ async def test_flow_invalid_key(hass: HomeAssistant) -> None:
         )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {CONF_API_KEY: "invalid_api_key"}
 
 
@@ -130,4 +132,5 @@ async def test_flow_conn_error(hass: HomeAssistant) -> None:
         )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}

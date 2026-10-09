@@ -146,6 +146,7 @@ async def test_flow_user_invalid(hass: HomeAssistant) -> None:
         )
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"] == {"api_key": "invalid_auth"}
 
 
@@ -168,6 +169,7 @@ async def test_flow_user_invalid_v6(hass: HomeAssistant) -> None:
         )
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"] == {"api_key": "invalid_auth"}
 
 
@@ -216,6 +218,7 @@ async def test_flow_user_invalid_host(hass: HomeAssistant) -> None:
         )
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -237,4 +240,5 @@ async def test_flow_error_response(hass: HomeAssistant) -> None:
         assert mocked_hole.instances[-1].data == FTL_ERROR
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"] == {"base": "cannot_connect"}

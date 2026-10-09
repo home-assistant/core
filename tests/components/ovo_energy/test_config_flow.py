@@ -57,6 +57,7 @@ async def test_authorization_error(hass: HomeAssistant) -> None:
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
@@ -80,6 +81,7 @@ async def test_connection_error(hass: HomeAssistant) -> None:
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
@@ -118,6 +120,7 @@ async def test_full_flow_implementation(hass: HomeAssistant) -> None:
     assert result2["data"][CONF_USERNAME] == FIXTURE_USER_INPUT[CONF_USERNAME]
     assert result2["data"][CONF_PASSWORD] == FIXTURE_USER_INPUT[CONF_PASSWORD]
     assert result2["data"][CONF_ACCOUNT] == FIXTURE_USER_INPUT[CONF_ACCOUNT]
+    assert result2["result"].unique_id == UNIQUE_ID
 
 
 async def test_reauth_authorization_error(hass: HomeAssistant) -> None:
@@ -142,6 +145,7 @@ async def test_reauth_authorization_error(hass: HomeAssistant) -> None:
 
         assert result2["type"] is FlowResultType.FORM
         assert result2["step_id"] == "reauth_confirm"
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result2["errors"] == {"base": "authorization_error"}
 
 
@@ -169,6 +173,7 @@ async def test_reauth_connection_error(hass: HomeAssistant) -> None:
 
         assert result2["type"] is FlowResultType.FORM
         assert result2["step_id"] == "reauth_confirm"
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result2["errors"] == {"base": "connection_error"}
 
 

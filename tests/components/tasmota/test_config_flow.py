@@ -124,6 +124,7 @@ async def test_mqtt_setup(hass: HomeAssistant, mqtt_mock: MqttMockHAClient) -> N
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].data == {"discovery_prefix": "tasmota/discovery"}
+    assert result["result"].unique_id == DOMAIN
 
 
 @pytest.mark.parametrize(
@@ -159,6 +160,7 @@ async def test_user_setup(
         result["flow_id"], user_input
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].data == {"discovery_prefix": expected_prefix}
 
@@ -178,6 +180,7 @@ async def test_user_setup_invalid_topic_prefix(
     )
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"]["base"] == "invalid_discovery_topic"
 
 

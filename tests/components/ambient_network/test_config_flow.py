@@ -54,6 +54,7 @@ async def test_happy_path(
     assert stations_result["type"] is FlowResultType.CREATE_ENTRY
     assert stations_result["title"] == config_entry.title
     assert stations_result["data"] == config_entry.data
+    assert stations_result["result"].unique_id == "AA:AA:AA:AA:AA:AA"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -82,4 +83,5 @@ async def test_no_station_found(
 
     assert user_result["type"] is FlowResultType.FORM
     assert user_result["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert user_result["errors"] == {"base": "no_stations_found"}

@@ -470,6 +470,7 @@ async def test_multi_numeric_state_observation(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
         assert result["step_id"] == current_step
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"] == {"base": "above_below"}
 
         # This should work
@@ -867,6 +868,7 @@ async def test_reconfiguring_observations(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
     assert result["step_id"] == current_step
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "equal_probabilities"}
 
     # This should work
@@ -1211,4 +1213,5 @@ async def test_invalid_configs(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
         assert result["step_id"] == current_step
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"] == {"base": "equal_probabilities"}

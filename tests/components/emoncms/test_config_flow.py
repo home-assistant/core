@@ -90,6 +90,7 @@ async def test_reconfigure_api_error(
     )
     await hass.async_block_till_done()
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "api_error"}
     assert result["description_placeholders"]["details"] == "failure"
     assert result["step_id"] == "reconfigure"
@@ -108,6 +109,7 @@ async def test_user_flow_failure(
         result["flow_id"],
         USER_INPUT,
     )
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"]["base"] == "api_error"
     assert result["description_placeholders"]["details"] == "failure"
     assert result["type"] is FlowResultType.FORM
@@ -139,6 +141,7 @@ async def test_user_flow_manual_mode(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == SENSOR_NAME
     assert result["data"] == {**USER_INPUT, CONF_ONLY_INCLUDE_FEEDID: ["1"]}
+    assert result["result"].unique_id == UNIQUE_ID
     # assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -162,6 +165,7 @@ async def test_user_flow_auto_mode(
         **USER_INPUT,
         CONF_ONLY_INCLUDE_FEEDID: FLOW_RESULT[CONF_ONLY_INCLUDE_FEEDID],
     }
+    assert result["result"].unique_id == UNIQUE_ID
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -197,6 +201,7 @@ async def test_options_flow_failure(
     emoncms_client.async_request.return_value = EMONCMS_FAILURE
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     await hass.async_block_till_done()
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"]["base"] == "api_error"
     assert result["description_placeholders"]["details"] == "failure"
     assert result["type"] is FlowResultType.FORM

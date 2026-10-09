@@ -63,6 +63,7 @@ async def test_form_create_entry_without_auth(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "10.10.2.3"
     assert result["data"]["host"] == "10.10.2.3"
+    assert result["result"].unique_id == "aa:bb:cc:dd:ee:ff"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -195,6 +196,7 @@ async def test_form_with_auth_errors(hass: HomeAssistant, error) -> None:
             VALID_AUTH,
         )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": base_error}
 
 
@@ -224,6 +226,7 @@ async def test_form_errors(hass: HomeAssistant, error) -> None:
             user_input=VALID_CONFIG,
         )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": base_error}
 
 
@@ -303,6 +306,7 @@ async def test_zeroconf(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> Non
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "10.10.2.3"
     assert result["data"] == {"host": "10.10.2.3"}
+    assert result["result"].unique_id == "aa:bb:cc:dd:ee:ff"
     assert len(mock_setup_entry.mock_calls) == 1
 
 

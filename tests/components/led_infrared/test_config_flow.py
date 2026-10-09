@@ -120,6 +120,7 @@ async def test_user_flow_requires_emitter_or_receiver(
     )
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "missing_infrared_entity"}
 
 
@@ -182,6 +183,7 @@ async def test_reconfigure_flow_requires_emitter(
     )
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "missing_infrared_entity"}
 
 

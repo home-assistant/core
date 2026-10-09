@@ -9,7 +9,7 @@ from homeassistant.components.azure_devops.const import CONF_ORG, CONF_PROJECT, 
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from . import FIXTURE_REAUTH_INPUT, FIXTURE_USER_INPUT
+from . import FIXTURE_REAUTH_INPUT, FIXTURE_USER_INPUT, UNIQUE_ID
 
 from tests.common import MockConfigEntry
 
@@ -48,6 +48,7 @@ async def test_authorization_error(
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
@@ -73,6 +74,7 @@ async def test_reauth_authorization_error(
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "reauth_confirm"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
@@ -100,6 +102,7 @@ async def test_connection_error(
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
@@ -126,6 +129,7 @@ async def test_reauth_connection_error(
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "reauth_confirm"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
@@ -154,6 +158,7 @@ async def test_project_error(
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "project_error"}
 
 
@@ -182,6 +187,7 @@ async def test_reauth_project_error(
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "reauth_confirm"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "project_error"}
 
 
@@ -242,3 +248,4 @@ async def test_full_flow_implementation(
     )
     assert result2["data"][CONF_ORG] == FIXTURE_USER_INPUT[CONF_ORG]
     assert result2["data"][CONF_PROJECT] == FIXTURE_USER_INPUT[CONF_PROJECT]
+    assert result2["result"].unique_id == UNIQUE_ID

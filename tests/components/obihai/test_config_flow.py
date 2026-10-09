@@ -41,6 +41,7 @@ async def test_user_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> No
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "10.10.10.30"
     assert result["data"] == {**USER_INPUT}
+    assert result["result"].unique_id == "9c:ad:ef:00:00:00"
 
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -63,6 +64,7 @@ async def test_auth_failure(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"]["base"] == "invalid_auth"
 
 
@@ -81,6 +83,7 @@ async def test_connect_failure(hass: HomeAssistant, mock_gaierror: Generator) ->
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"]["base"] == "cannot_connect"
 
 
@@ -121,6 +124,7 @@ async def test_dhcp_flow(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "9c:ad:ef:00:00:00"
 
 
 async def test_dhcp_flow_auth_failure(hass: HomeAssistant) -> None:
@@ -157,5 +161,6 @@ async def test_dhcp_flow_auth_failure(hass: HomeAssistant) -> None:
             },
         )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"]["base"] == "invalid_auth"
     assert result["step_id"] == "user"

@@ -138,6 +138,7 @@ async def test_flow_with_connection_failure(
             result["flow_id"],
             user_input={config_flow.CONF_HOST: "172.2.3.4", config_flow.CONF_PORT: 80},
         )
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -157,6 +158,7 @@ async def test_flow_with_api_failure(hass: HomeAssistant, product_class_mock) ->
             result["flow_id"],
             user_input={config_flow.CONF_HOST: "172.2.3.4", config_flow.CONF_PORT: 80},
         )
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -175,6 +177,7 @@ async def test_flow_with_unknown_failure(
             result["flow_id"],
             user_input={config_flow.CONF_HOST: "172.2.3.4", config_flow.CONF_PORT: 80},
         )
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"] == {"base": "unknown"}
 
 
@@ -196,6 +199,7 @@ async def test_flow_with_unsupported_version(
             result["flow_id"],
             user_input={config_flow.CONF_HOST: "172.2.3.4", config_flow.CONF_PORT: 80},
         )
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"] == {"base": "unsupported_version"}
 
 
@@ -215,6 +219,7 @@ async def test_flow_with_auth_failure(hass: HomeAssistant, product_class_mock) -
             result["flow_id"],
             user_input={config_flow.CONF_HOST: "172.2.3.4", config_flow.CONF_PORT: 80},
         )
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"] == {"base": "invalid_auth"}
 
 
@@ -382,7 +387,10 @@ def create_product_mock(unique_id: str = "abcd0123ef5678"):
 
 
 async def test_reconfigure_flow_works(
-    hass: HomeAssistant, config_entry: MockConfigEntry, product_class_mock
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    product_class_mock,
+    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test that reconfigure flow updates host and port."""
 
@@ -406,12 +414,15 @@ async def test_reconfigure_flow_works(
             },
         )
 
+    await hass.async_block_till_done()
+
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert config_entry.data[config_flow.CONF_HOST] == "172.2.3.5"
     assert config_entry.data[config_flow.CONF_PORT] == 80
     assert config_entry.data[config_flow.CONF_USERNAME] == "admin"
     assert config_entry.data[config_flow.CONF_PASSWORD] == "secret"
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_reconfigure_flow_unique_id_mismatch(
@@ -548,6 +559,7 @@ async def test_reconfigure_flow_recovers_after_error(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     product_class_mock,
+    mock_setup_entry: AsyncMock,
     exception: type[Exception],
     expected_error: str,
 ) -> None:
@@ -576,12 +588,18 @@ async def test_reconfigure_flow_recovers_after_error(
             {config_flow.CONF_HOST: "172.2.3.5", config_flow.CONF_PORT: 80},
         )
 
+    await hass.async_block_till_done()
+
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_reauth_flow_works(
-    hass: HomeAssistant, config_entry: MockConfigEntry, product_class_mock
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    product_class_mock,
+    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test that reauth flow updates credentials and reloads."""
     config_entry.add_to_hass(hass)
@@ -599,14 +617,17 @@ async def test_reauth_flow_works(
             {config_flow.CONF_USERNAME: "admin", config_flow.CONF_PASSWORD: "secret"},
         )
 
+    await hass.async_block_till_done()
+
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert config_entry.data[config_flow.CONF_USERNAME] == "admin"
     assert config_entry.data[config_flow.CONF_PASSWORD] == "secret"
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_reauth_flow_works_without_credentials(
-    hass: HomeAssistant, product_class_mock
+    hass: HomeAssistant, product_class_mock, mock_setup_entry: AsyncMock
 ) -> None:
     """Test that reauth flow clears credentials when submitted without them."""
     config_entry = MockConfigEntry(
@@ -632,10 +653,13 @@ async def test_reauth_flow_works_without_credentials(
             {},
         )
 
+    await hass.async_block_till_done()
+
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert config_entry.data[config_flow.CONF_USERNAME] is None
     assert config_entry.data[config_flow.CONF_PASSWORD] is None
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 @pytest.mark.parametrize(
@@ -652,6 +676,7 @@ async def test_reauth_flow_recovers_after_error(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     product_class_mock,
+    mock_setup_entry: AsyncMock,
     exception: type[Exception],
     expected_error: str,
 ) -> None:
@@ -680,5 +705,8 @@ async def test_reauth_flow_recovers_after_error(
             {config_flow.CONF_USERNAME: "admin", config_flow.CONF_PASSWORD: "secret"},
         )
 
+    await hass.async_block_till_done()
+
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
+    assert len(mock_setup_entry.mock_calls) == 1

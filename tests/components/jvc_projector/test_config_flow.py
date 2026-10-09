@@ -12,7 +12,7 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from . import MOCK_HOST, MOCK_PASSWORD, MOCK_PORT
+from . import MOCK_HOST, MOCK_MAC_FORMATED, MOCK_PASSWORD, MOCK_PORT
 
 from tests.common import MockConfigEntry
 
@@ -55,6 +55,7 @@ async def test_user_config_flow_success(
     assert result["data"][CONF_HOST] == MOCK_HOST
     assert result["data"][CONF_PORT] == MOCK_PORT
     assert result["data"][CONF_PASSWORD] == MOCK_PASSWORD
+    assert result["result"].unique_id == MOCK_MAC_FORMATED
 
 
 @pytest.mark.parametrize("mock_device", [{"target": TARGET}], indirect=True)
@@ -82,6 +83,7 @@ async def test_user_config_flow_bad_connect_errors(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
 
     # Finish flow with success
@@ -154,6 +156,7 @@ async def test_user_config_flow_bad_host_errors(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "invalid_host"}
 
     # Finish flow with success
@@ -206,6 +209,7 @@ async def test_user_config_flow_bad_auth_errors(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "invalid_auth"}
 
     # Finish flow with success

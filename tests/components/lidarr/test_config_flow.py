@@ -39,6 +39,7 @@ async def test_flow_user_invalid_auth(hass: HomeAssistant, invalid_auth) -> None
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"]["base"] == "invalid_auth"
 
 
@@ -52,6 +53,7 @@ async def test_flow_user_cannot_connect(hass: HomeAssistant, cannot_connect) -> 
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"]["base"] == "cannot_connect"
 
 
@@ -65,6 +67,7 @@ async def test_wrong_app(hass: HomeAssistant, wrong_app) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"]["base"] == "wrong_app"
 
 
@@ -78,6 +81,7 @@ async def test_zeroconf_failed(hass: HomeAssistant, zeroconf_failed) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"]["base"] == "zeroconf_failed"
 
 
@@ -93,6 +97,7 @@ async def test_flow_user_unknown_error(hass: HomeAssistant, unknown) -> None:
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"]["base"] == "unknown"
 
 

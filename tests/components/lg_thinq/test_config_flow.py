@@ -44,6 +44,7 @@ async def test_config_flow(
         CONF_COUNTRY: MOCK_COUNTRY,
         CONF_CONNECT_CLIENT_ID: MOCK_CONNECT_CLIENT_ID,
     }
+    assert result["result"].unique_id == MOCK_PAT
 
     mock_config_thinq_api.async_get_device_list.assert_called_once()
 
@@ -64,6 +65,7 @@ async def test_config_flow_invalid_pat(
         user_input={CONF_ACCESS_TOKEN: MOCK_PAT, CONF_COUNTRY: MOCK_COUNTRY},
     )
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"]
     mock_invalid_thinq_api.async_get_device_list.assert_called_once()
 
@@ -112,6 +114,7 @@ async def test_dhcp_config_flow(
         CONF_COUNTRY: MOCK_COUNTRY,
         CONF_CONNECT_CLIENT_ID: MOCK_CONNECT_CLIENT_ID,
     }
+    assert result["result"].unique_id == MOCK_PAT
 
     mock_config_thinq_api.async_get_device_list.assert_called_once()
 

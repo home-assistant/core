@@ -320,5 +320,6 @@ async def test_reauth_deprecated_version_is_rejected(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "deprecated_version"}
     assert mock_config_entry.data == VALID_CONFIG

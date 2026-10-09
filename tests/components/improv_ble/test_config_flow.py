@@ -884,6 +884,7 @@ async def test_provision_retry(hass: HomeAssistant, exc, error) -> None:
     result = await hass.config_entries.flow.async_configure(flow_id)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "provision"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": error}
 
 

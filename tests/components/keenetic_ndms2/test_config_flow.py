@@ -76,6 +76,7 @@ async def test_flow_works(hass: HomeAssistant, connect) -> None:
         )
         await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == MOCK_NAME
     assert result2["data"] == MOCK_DATA
@@ -176,6 +177,7 @@ async def test_connection_error(hass: HomeAssistant, connect_error) -> None:
         result["flow_id"], user_input=MOCK_DATA
     )
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -271,6 +273,7 @@ async def test_ssdp_works(hass: HomeAssistant, connect) -> None:
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == MOCK_NAME
     assert result2["data"] == MOCK_DATA
+    assert result2["result"].unique_id == MOCK_SSDP_DISCOVERY_INFO.upnp[ATTR_UPNP_UDN]
     assert len(mock_setup_entry.mock_calls) == 1
 
 

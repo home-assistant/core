@@ -7,7 +7,7 @@ from homeassistant.components.slack.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from . import CONF_DATA, CONF_INPUT, TEAM_NAME, create_entry, mock_connection
+from . import CONF_DATA, CONF_INPUT, TEAM_ID, TEAM_NAME, create_entry, mock_connection
 
 from tests.test_util.aiohttp import AiohttpClientMocker
 
@@ -28,6 +28,7 @@ async def test_flow_user(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TEAM_NAME
     assert result["data"] == CONF_DATA
+    assert result["result"].unique_id == TEAM_ID
 
 
 async def test_flow_user_already_configured(
@@ -65,6 +66,7 @@ async def test_flow_user_invalid_auth(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "invalid_auth"}
 
 
@@ -85,6 +87,7 @@ async def test_flow_user_cannot_connect(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -106,4 +109,5 @@ async def test_flow_user_unknown_error(hass: HomeAssistant) -> None:
         )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "unknown"}

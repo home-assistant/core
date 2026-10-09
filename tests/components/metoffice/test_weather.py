@@ -185,7 +185,9 @@ async def test_one_weather_site_running(
 
     assert weather.state == "rainy"
     assert weather.attributes.get("temperature") == 9.3
+    assert weather.attributes.get("apparent_temperature") == 5.8
     assert weather.attributes.get("wind_speed") == 28.33
+    assert weather.attributes.get("wind_gust_speed") == 55.55
     assert weather.attributes.get("wind_bearing") == 176.0
     assert weather.attributes.get("humidity") == 95
 

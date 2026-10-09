@@ -85,6 +85,7 @@ async def test_user_input_device_not_found(hass: HomeAssistant) -> None:
     )
 
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "no_devices_found"}
 
 
@@ -103,6 +104,7 @@ async def test_user_input_unexpected_error(
     )
 
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "unknown"}
 
 
@@ -153,6 +155,7 @@ async def test_user_adds_full_device(hass: HomeAssistant) -> None:
         "identifiers": ["mrpid", "dmapid", "airplayid"],
         "name": "MRP Device",
     }
+    assert result6["result"].unique_id == "mrpid"
 
 
 @pytest.mark.usefixtures("mrp_device")
@@ -176,6 +179,35 @@ async def test_user_pair_leading_zero_pin(
     )
     assert pairing.handler.pin_code == "0123"
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "mrpid"
+
+
+@pytest.mark.usefixtures("mrp_device", "pairing")
+async def test_user_adds_previously_ignored_device(hass: HomeAssistant) -> None:
+    """Test adding a device that was ignored before creates an entry."""
+    MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="mrpid",
+        source=config_entries.SOURCE_IGNORE,
+    ).add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"device_input": "MRP Device"},
+    )
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"pin": "1111"}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "mrpid"
+
+    entries = hass.config_entries.async_entries(DOMAIN, include_ignore=True)
+    assert len(entries) == 1
+    assert entries[0].source == config_entries.SOURCE_USER
 
 
 @pytest.mark.usefixtures("mrp_device")
@@ -239,6 +271,7 @@ async def test_user_adds_dmap_device(hass: HomeAssistant) -> None:
         "identifiers": ["dmapid"],
         "name": "DMAP Device",
     }
+    assert result6["result"].unique_id == "dmapid"
 
 
 @pytest.mark.usefixtures("dmap_device", "dmap_pin")
@@ -337,6 +370,7 @@ async def test_user_adds_existing_device(hass: HomeAssistant) -> None:
         {"device_input": "127.0.0.1"},
     )
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "already_configured"}
 
 
@@ -495,6 +529,7 @@ async def test_user_pair_invalid_pin(
         {"pin": 1111},
     )
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
@@ -524,6 +559,7 @@ async def test_user_pair_unexpected_error(
         {"pin": 1111},
     )
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "unknown"}
 
 
@@ -609,6 +645,7 @@ async def test_ignores_disabled_service(hass: HomeAssistant) -> None:
         "identifiers": ["mrpid", "airplayid"],
         "name": "AirPlay Device",
     }
+    assert result3["result"].unique_id == "mrpid"
 
 
 # Zeroconf
@@ -687,6 +724,7 @@ async def test_zeroconf_add_mrp_device(hass: HomeAssistant) -> None:
         "identifiers": ["mrpid"],
         "name": "MRP Device",
     }
+    assert result3["result"].unique_id == "mrpid"
 
 
 @pytest.mark.usefixtures("dmap_device", "dmap_pin", "pairing")
@@ -716,6 +754,7 @@ async def test_zeroconf_add_dmap_device(hass: HomeAssistant) -> None:
         "identifiers": ["dmapid"],
         "name": "DMAP Device",
     }
+    assert result3["result"].unique_id == "dmapid"
 
 
 async def test_zeroconf_ip_change(hass: HomeAssistant, mock_scan: AsyncMock) -> None:
@@ -1193,6 +1232,7 @@ async def test_zeroconf_pair_additionally_found_protocols(
         {"pin": 1234},
     )
     assert result5["type"] is FlowResultType.CREATE_ENTRY
+    assert result5["result"].unique_id == "mrpid"
 
 
 @pytest.mark.usefixtures("pairing", "mock_zeroconf")

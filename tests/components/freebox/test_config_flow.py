@@ -143,6 +143,7 @@ async def test_link_bridge_mode_error(hass: HomeAssistant) -> None:
         result["flow_id"], user_input={}
     )
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -210,6 +211,7 @@ async def test_on_link_failed(
             result["flow_id"], user_input={}
         )
         assert result["type"] is FlowResultType.FORM
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"] == {"base": error_msg}
 
 
@@ -242,6 +244,7 @@ async def test_on_link_failed_forgets_registration_on_invalid_token(
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         assert result["type"] is FlowResultType.FORM
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"] == {"base": "register_failed"}
         mock_forget_registration.assert_awaited_once_with(hass, MOCK_HOST)
 
@@ -276,6 +279,7 @@ async def test_on_link_failed_keeps_registration_on_other_authorization_error(
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         assert result["type"] is FlowResultType.FORM
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"] == {"base": "register_failed"}
         mock_forget_registration.assert_not_awaited()
 

@@ -59,6 +59,7 @@ class NetatmoScheduleSelect(NetatmoBaseEntity, SelectEntity):
             identifiers={(DOMAIN, self.home.entity_id)},
         )
 
+        # Legacy format, kept as migrating existing unique IDs is not worth the risk
         self._attr_unique_id = f"{self.home.entity_id}-schedule-select"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
 
         schedule = self.home.get_selected_schedule()

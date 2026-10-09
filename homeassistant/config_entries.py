@@ -240,9 +240,6 @@ class ConfigEntryDisabler(StrEnum):
     USER = "user"
 
 
-# DISABLED_* is deprecated, to be removed in 2022.3
-DISABLED_USER = ConfigEntryDisabler.USER.value
-
 RELOAD_AFTER_UPDATE_DELAY = 30
 
 # Deprecated: Connection classes
@@ -346,7 +343,6 @@ class FlowType(StrEnum):
 def _validate_item(*, disabled_by: ConfigEntryDisabler | Any | None = None) -> None:
     """Validate config entry item."""
 
-    # Deprecated in 2022.1, stopped working in 2024.10
     if disabled_by is not None and not isinstance(disabled_by, ConfigEntryDisabler):
         raise TypeError(
             f"disabled_by must be a ConfigEntryDisabler value, got {disabled_by}"
@@ -2429,8 +2425,22 @@ class ConfigEntries:
             return
 
         entries: ConfigEntryItems = ConfigEntryItems(self.hass)
+        migrated_domains: set[str] = set()
         for entry in config["entries"]:
             entry_id = entry["entry_id"]
+            entry_domain = entry["domain"]
+
+            # A custom integration that a built-in integration took over keeps its
+            # entries, they belong to the built-in domain from now on. Recovery
+            # and safe mode change nothing, they are often the way back to an
+            # older version that still knows the custom integration.
+            if (
+                (replacement := loader.MIGRATED_CUSTOM_INTEGRATIONS.get(entry_domain))
+                and not self.hass.config.recovery_mode
+                and not self.hass.config.safe_mode
+            ):
+                migrated_domains.add(entry_domain)
+                entry_domain = replacement
 
             config_entry = ConfigEntry(
                 created_at=datetime.fromisoformat(entry["created_at"]),
@@ -2442,7 +2452,7 @@ class ConfigEntries:
                         for domain, keys in entry["discovery_keys"].items()
                     }
                 ),
-                domain=entry["domain"],
+                domain=entry_domain,
                 entry_id=entry_id,
                 minor_version=entry["minor_version"],
                 modified_at=datetime.fromisoformat(entry["modified_at"]),
@@ -2458,6 +2468,17 @@ class ConfigEntries:
             entries[entry_id] = config_entry
 
         self._entries = entries
+
+        if migrated_domains:
+            _LOGGER.info(
+                "Migrated config entries of %s",
+                ", ".join(
+                    f"'{domain}' to '{loader.MIGRATED_CUSTOM_INTEGRATIONS[domain]}'"
+                    for domain in sorted(migrated_domains)
+                ),
+            )
+            self._async_schedule_save()
+
         self.async_update_issues()
 
         if not self.hass.config.recovery_mode and not self.hass.config.safe_mode:

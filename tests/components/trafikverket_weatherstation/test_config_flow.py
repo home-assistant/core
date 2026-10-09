@@ -100,6 +100,7 @@ async def test_flow_fails(
             },
         )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result4["errors"] == {"base": base_error}
 
 
@@ -189,6 +190,7 @@ async def test_reauth_flow_fails(
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": base_error}
 
 

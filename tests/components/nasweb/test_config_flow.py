@@ -77,6 +77,7 @@ async def test_form_cannot_connect(
         )
 
     assert result2.get("type") is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2.get("errors") == {"base": "cannot_connect"}
 
 
@@ -98,6 +99,7 @@ async def test_form_invalid_auth(
         )
 
     assert result2.get("type") is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2.get("errors") == {"base": "invalid_auth"}
 
 
@@ -117,6 +119,7 @@ async def test_form_missing_internal_url(
             result["flow_id"], TEST_USER_INPUT
         )
         assert result2.get("type") is FlowResultType.FORM
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result2.get("errors") == {"base": "missing_internal_url"}
 
 
@@ -143,6 +146,7 @@ async def test_form_missing_nasweb_data(
             result["flow_id"], TEST_USER_INPUT
         )
         assert result2.get("type") is FlowResultType.FORM
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result2.get("errors") == {"base": "missing_nasweb_data"}
 
 
@@ -163,6 +167,7 @@ async def test_missing_status(
             result["flow_id"], TEST_USER_INPUT
         )
         assert result2.get("type") is FlowResultType.FORM
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result2.get("errors") == {"base": "missing_status"}
 
 
@@ -183,6 +188,7 @@ async def test_form_exception(
             result["flow_id"], TEST_USER_INPUT
         )
         assert result2.get("type") is FlowResultType.FORM
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result2.get("errors") == {"base": "unknown"}
 
 

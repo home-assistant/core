@@ -1052,6 +1052,7 @@ async def test_reauth_flow_cannot_connect(
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
 
     mock_api.async_get_name_and_mac.assert_not_called()

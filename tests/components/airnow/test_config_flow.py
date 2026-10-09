@@ -33,6 +33,7 @@ async def test_form(
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["data"] == config
     assert result2["options"] == options
+    assert result2["result"].unique_id == "34.053718--118.244842"
 
 
 @pytest.mark.parametrize("mock_api_get", [AsyncMock(side_effect=InvalidKeyError)])
@@ -44,6 +45,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, config: dict[str, Any]) ->
     )
     result2 = await hass.config_entries.flow.async_configure(result["flow_id"], config)
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
@@ -58,6 +60,7 @@ async def test_form_invalid_location(
     )
     result2 = await hass.config_entries.flow.async_configure(result["flow_id"], config)
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "invalid_location"}
 
 
@@ -70,6 +73,7 @@ async def test_form_cannot_connect(hass: HomeAssistant, config: dict[str, Any]) 
     )
     result2 = await hass.config_entries.flow.async_configure(result["flow_id"], config)
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
@@ -82,6 +86,7 @@ async def test_form_empty_result(hass: HomeAssistant, config: dict[str, Any]) ->
     )
     result2 = await hass.config_entries.flow.async_configure(result["flow_id"], config)
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "invalid_location"}
 
 
@@ -94,6 +99,7 @@ async def test_form_unexpected(hass: HomeAssistant, config: dict[str, Any]) -> N
     )
     result2 = await hass.config_entries.flow.async_configure(result["flow_id"], config)
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "unknown"}
 
 

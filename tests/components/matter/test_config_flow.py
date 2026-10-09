@@ -177,6 +177,7 @@ async def test_manual_errors(
 
     assert client_connect.call_count == 1
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": error}
 
 

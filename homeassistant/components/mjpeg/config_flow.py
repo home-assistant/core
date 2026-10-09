@@ -46,7 +46,7 @@ def async_get_schema(
             description={"suggested_value": defaults.get(CONF_USERNAME)},
         ): str,
         probatio.Optional(
-            CONF_PASSWORD,
+            probatio.Secret(CONF_PASSWORD),
             default=defaults.get(CONF_PASSWORD, ""),
         ): str,
         probatio.Optional(

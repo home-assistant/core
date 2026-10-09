@@ -53,6 +53,7 @@ async def test_user_flow_success(mock_heat_meter, hass: HomeAssistant) -> None:
         "model": "LUGCUH50",
         "device_number": "123456789",
     }
+    assert result["result"].unique_id == "123456789"
 
 
 @patch(API_HEAT_METER_SERVICE)
@@ -76,6 +77,7 @@ async def test_user_flow_cannot_connect_oserror(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -100,6 +102,7 @@ async def test_user_flow_cannot_connect_serial_exception(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
 
 

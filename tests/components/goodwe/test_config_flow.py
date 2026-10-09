@@ -49,6 +49,7 @@ async def test_manual_setup(hass: HomeAssistant, mock_inverter: MagicMock) -> No
         CONF_PORT: TEST_PORT,
         CONF_MODEL_FAMILY: "MagicMock",
     }
+    assert result["result"].unique_id == TEST_SERIAL
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -98,4 +99,5 @@ async def test_manual_setup_device_offline(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {CONF_HOST: "connection_error"}

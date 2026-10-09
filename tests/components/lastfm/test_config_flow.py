@@ -132,6 +132,7 @@ async def test_flow_hidden_recent_tracks(
         )
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"]["base"] == "hidden_recent_tracks"
 
     with patch("pylast.User", return_value=default_user), patch_setup_entry():
@@ -312,6 +313,7 @@ async def test_options_flow_hidden_recent_tracks(
 
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "init"
+        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"]["base"] == "hidden_recent_tracks"
 
 
