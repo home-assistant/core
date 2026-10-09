@@ -143,6 +143,7 @@ SAVE_DELAY = 1
 DISCOVERY_COOLDOWN = 1
 
 SETUP_RETRY_MAX_WAIT = 600  # 10 minutes
+SETUP_RETRY_AFTER_MAX_WAIT = 86400  # 1 day
 
 ISSUE_UNIQUE_ID_COLLISION = "config_entry_unique_id_collision"
 UNIQUE_ID_COLLISION_TITLE_LIMIT = 5
@@ -238,9 +239,6 @@ class ConfigEntryDisabler(StrEnum):
 
     USER = "user"
 
-
-# DISABLED_* is deprecated, to be removed in 2022.3
-DISABLED_USER = ConfigEntryDisabler.USER.value
 
 RELOAD_AFTER_UPDATE_DELAY = 30
 
@@ -345,7 +343,6 @@ class FlowType(StrEnum):
 def _validate_item(*, disabled_by: ConfigEntryDisabler | Any | None = None) -> None:
     """Validate config entry item."""
 
-    # Deprecated in 2022.1, stopped working in 2024.10
     if disabled_by is not None and not isinstance(disabled_by, ConfigEntryDisabler):
         raise TypeError(
             f"disabled_by must be a ConfigEntryDisabler value, got {disabled_by}"
@@ -806,7 +803,14 @@ class ConfigEntry[_DataT = Any]:
                 reason.translation_placeholders,
                 reason.translation_domain,
             )
-            wait_time = min(2**self._tries * 5, SETUP_RETRY_MAX_WAIT) + (
+            wait_time = min(2**self._tries * 5, SETUP_RETRY_MAX_WAIT)
+            if exc.retry_after is not None:
+                # The backoff stays the floor, so a delay that has already
+                # passed does not retry immediately.
+                wait_time = max(
+                    wait_time, min(exc.retry_after, SETUP_RETRY_AFTER_MAX_WAIT)
+                )
+            wait_time += (
                 randint(RANDOM_MICROSECOND_MIN, RANDOM_MICROSECOND_MAX) / 1000000
             )
             self._tries += 1

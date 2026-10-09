@@ -78,6 +78,7 @@ async def test_form(hass: HomeAssistant) -> None:
         ATTR_SERIAL_NUMBER: "9876543",
         "title": "PhotoVoltaic Inverters",
     }
+    assert result2["result"].unique_id == "9876543"
     await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
@@ -173,3 +174,35 @@ async def test_form_invalid_com_ports(hass: HomeAssistant) -> None:
         )
     assert result2["errors"] == {"base": "cannot_connect"}
     assert len(mock_clientclose.mock_calls) == 1
+
+    with (
+        patch(
+            "aurorapy.client.AuroraSerialClient.connect",
+            return_value=None,
+        ),
+        patch(
+            "aurorapy.client.AuroraSerialClient.serial_number",
+            return_value="9876543",
+        ),
+        patch(
+            "aurorapy.client.AuroraSerialClient.version",
+            return_value="9.8.7.6",
+        ),
+        patch(
+            "aurorapy.client.AuroraSerialClient.pn",
+            return_value="A.B.C",
+        ),
+        patch(
+            "aurorapy.client.AuroraSerialClient.firmware",
+            return_value="1.234",
+        ),
+        patch(
+            "homeassistant.components.aurora_abb_powerone.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_PORT: "/dev/ttyUSB7", CONF_ADDRESS: 7},
+        )
+    assert result3["type"] is FlowResultType.CREATE_ENTRY

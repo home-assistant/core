@@ -83,13 +83,14 @@ async def test_restart_required_fix_flow_for_an_unknown_repository(
         is_fixable=True,
         severity=ir.IssueSeverity.WARNING,
         translation_key="restart_required",
+        translation_placeholders={"name": "Unknown integration"},
     )
 
     client = await hass_client()
     data = await start_repair_fix_flow(client, DOMAIN, issue_id)
 
     assert data["step_id"] == "confirm_restart"
-    assert data["description_placeholders"] == {"name": ""}
+    assert data["description_placeholders"] == {"name": "Unknown integration"}
 
 
 async def test_restart_required_fix_flow_while_unloaded(

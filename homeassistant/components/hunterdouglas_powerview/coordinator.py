@@ -3,7 +3,7 @@
 import asyncio
 from datetime import timedelta
 import logging
-from typing import override, TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from aiopvapi.helpers.aiorequest import PvApiMaintenance
 from aiopvapi.hub import Hub
@@ -15,6 +15,9 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import HUB_EXCEPTIONS, DOMAIN
+
+if TYPE_CHECKING:
+    from .model import PowerviewConfigEntry
 
 if TYPE_CHECKING:
     from .model import PowerviewConfigEntry
