@@ -45,6 +45,9 @@
     "authentication_failed": {
       "message": "Authentication with the Rachio API failed"
     },
+    "cannot_connect": {
+      "message": "Could not reach the Rachio API"
+    },
     "no_devices_found": {
       "message": "No Rachio devices found in the account"
     }

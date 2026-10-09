@@ -1,7 +1,5 @@
 """Support for OVO Energy."""
 
-import logging
-
 import aiohttp
 from ovoenergy import OVOEnergy
 
@@ -12,8 +10,6 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_ACCOUNT
 from .coordinator import OVOEnergyConfigEntry, OVOEnergyDataUpdateCoordinator
-
-_LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.SENSOR]
 
@@ -37,9 +33,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: OVOEnergyConfigEntry) ->
 
         await client.bootstrap_accounts()
     except aiohttp.ClientError as exception:
-        # pylint: disable-next=home-assistant-log-and-raise
-        _LOGGER.warning(exception)
-        raise ConfigEntryNotReady from exception
+        raise ConfigEntryNotReady(
+            f"Error connecting to OVO Energy: {exception}"
+        ) from exception
 
     coordinator = OVOEnergyDataUpdateCoordinator(hass, entry, client)
 

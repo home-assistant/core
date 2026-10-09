@@ -33,8 +33,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenRouterConfigEntry) -
         async for _ in client.with_options(timeout=10.0).models.list():
             break
     except AuthenticationError as err:
-        # pylint: disable-next=home-assistant-log-and-raise
-        LOGGER.error("Invalid API key: %s", err)
         raise ConfigEntryError("Invalid API key") from err
     except OpenAIError as err:
         raise ConfigEntryNotReady(err) from err
