@@ -74,7 +74,7 @@ class PowerviewShadeUpdateCoordinator(DataUpdateCoordinator[PowerviewShadeData])
         self.data.store_group_data(shade_entries)
 
         # Clean up stale devices
-        current_shade_ids = set(self.data.shades.keys())
+        current_shade_ids = set(shade_entries.processed.keys())
         
         # Pull all currently tracked HA devices for this integration to check against
         device_registry = dr.async_get(self.hass)
