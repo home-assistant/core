@@ -49,6 +49,9 @@ class OmniLogicUpdateCoordinator(DataUpdateCoordinator[dict[tuple, dict[str, Any
             data = await self.api.get_telemetry_data()
 
         except OmniLogicException as error:
+            # The library only logs in again without a token, so drop a
+            # possibly rejected one to have the next update log in again.
+            self.api.token = None
             raise UpdateFailed(f"Error updating from OmniLogic: {error}") from error
 
         parsed_data = {}
