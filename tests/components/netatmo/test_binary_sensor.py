@@ -49,7 +49,6 @@ async def test_doortag_setup(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     netatmo_auth: AsyncMock,
-    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test doortag setup."""
     fake_post_hits = 0

@@ -264,7 +264,6 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
     @override
     async def async_turn_off(self) -> None:
         """Turn off camera."""
-        # Return early if camera is already off or unavailable (None).
         if self.is_on is not True:
             return
         try:
@@ -282,7 +281,6 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
     @override
     async def async_turn_on(self) -> None:
         """Turn on camera."""
-        # Return early if camera is already on or unavailable (None) or uncapable to monitor.
         if (
             self.is_on is not False
             or self.device.alim_status != NETATMO_ALIM_STATUS_ONLINE
