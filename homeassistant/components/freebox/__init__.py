@@ -38,11 +38,12 @@ async def async_migrate_entry(hass: HomeAssistant, entry: FreeboxConfigEntry) ->
         try:
             await api.open(entry.data[CONF_HOST], entry.data[CONF_PORT])
             freebox_config = await api.system.get_config()
-        except HttpRequestError:
-            _LOGGER.warning(
-                "Unable to migrate Freebox entry to version 2: cannot reach the router"
-            )
-            return False
+        except HttpRequestError as err:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+                translation_placeholders={"host": entry.data[CONF_HOST]},
+            ) from err
         finally:
             await api.close()
 

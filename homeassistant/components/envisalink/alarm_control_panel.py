@@ -3,7 +3,6 @@
 import logging
 from typing import Any, override
 
-import probatio
 from pyenvisalink import EnvisalinkAlarmPanel
 
 from homeassistant.components.alarm_control_panel import (
@@ -12,9 +11,8 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelState,
     CodeFormat,
 )
-from homeassistant.const import ATTR_ENTITY_ID, CONF_CODE
-from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.helpers import config_validation as cv
+from homeassistant.const import CONF_CODE
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -25,22 +23,12 @@ from .const import (
     CONF_PARTITIONNAME,
     CONF_PARTITIONS,
     DATA_EVL,
-    DOMAIN,
     SIGNAL_KEYPAD_UPDATE,
     SIGNAL_PARTITION_UPDATE,
 )
 from .entity import EnvisalinkEntity
 
 _LOGGER = logging.getLogger(__name__)
-
-SERVICE_ALARM_KEYPRESS = "alarm_keypress"
-ATTR_KEYPRESS = "keypress"
-ALARM_KEYPRESS_SCHEMA = probatio.Schema(
-    {
-        probatio.Required(ATTR_ENTITY_ID): cv.entity_ids,
-        probatio.Required(ATTR_KEYPRESS): cv.string,
-    }
-)
 
 
 async def async_setup_platform(
@@ -70,26 +58,6 @@ async def async_setup_platform(
         entities.append(entity)
 
     async_add_entities(entities)
-
-    @callback
-    def async_alarm_keypress_handler(service: ServiceCall) -> None:
-        """Map services to methods on Alarm."""
-        entity_ids = service.data[ATTR_ENTITY_ID]
-        keypress = service.data[ATTR_KEYPRESS]
-
-        target_entities = [
-            entity for entity in entities if entity.entity_id in entity_ids
-        ]
-
-        for entity in target_entities:
-            entity.async_alarm_keypress(keypress)
-
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_ALARM_KEYPRESS,
-        async_alarm_keypress_handler,
-        schema=ALARM_KEYPRESS_SCHEMA,
-    )
 
 
 class EnvisalinkAlarm(EnvisalinkEntity, AlarmControlPanelEntity):

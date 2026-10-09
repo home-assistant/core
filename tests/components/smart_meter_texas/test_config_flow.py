@@ -1,5 +1,7 @@
 """Test the Smart Meter Texas config flow."""
 
+from collections.abc import Generator
+from contextlib import contextmanager
 from unittest.mock import patch
 
 from aiohttp import ClientError
@@ -18,6 +20,19 @@ from homeassistant.data_entry_flow import FlowResultType
 from tests.common import MockConfigEntry
 
 TEST_LOGIN = {CONF_USERNAME: "test-username", CONF_PASSWORD: "test-password"}
+
+
+@contextmanager
+def _patch_success() -> Generator[None]:
+    """Patch a successful login and the entry setup."""
+    with (
+        patch("smart_meter_texas.Client.authenticate", return_value=True),
+        patch(
+            "homeassistant.components.smart_meter_texas.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        yield
 
 
 async def test_form(hass: HomeAssistant) -> None:
@@ -44,6 +59,7 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == TEST_LOGIN[CONF_USERNAME]
     assert result2["data"] == TEST_LOGIN
+    assert result2["result"].unique_id == TEST_LOGIN[CONF_USERNAME]
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -65,11 +81,19 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_auth"}
 
+    with _patch_success():
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], TEST_LOGIN
+        )
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+
 
 @pytest.mark.parametrize(
     "side_effect", [TimeoutError, ClientError, SmartMeterTexasAPIError]
 )
-async def test_form_cannot_connect(hass: HomeAssistant, side_effect) -> None:
+async def test_form_cannot_connect(
+    hass: HomeAssistant, side_effect: type[Exception]
+) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -85,6 +109,12 @@ async def test_form_cannot_connect(hass: HomeAssistant, side_effect) -> None:
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
+
+    with _patch_success():
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], TEST_LOGIN
+        )
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_unknown_exception(hass: HomeAssistant) -> None:
@@ -104,6 +134,12 @@ async def test_form_unknown_exception(hass: HomeAssistant) -> None:
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
+
+    with _patch_success():
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], TEST_LOGIN
+        )
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_duplicate_account(hass: HomeAssistant) -> None:

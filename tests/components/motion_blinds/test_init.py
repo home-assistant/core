@@ -1,18 +1,24 @@
 """Test the Motionblinds setup."""
 
 from collections.abc import Generator
+from datetime import timedelta
 from unittest.mock import AsyncMock, Mock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 from motionblinds import DEVICE_TYPES_GATEWAY, DEVICE_TYPES_WIFI, BlindType
 from motionblinds.motion_blinds import DEVICE_TYPE_BLIND
 import pytest
 
-from homeassistant.components.motion_blinds.const import DEFAULT_INTERFACE, DOMAIN
-from homeassistant.const import CONF_API_KEY, CONF_HOST
+from homeassistant.components.motion_blinds.const import (
+    DEFAULT_INTERFACE,
+    DOMAIN,
+    UPDATE_INTERVAL,
+)
+from homeassistant.const import CONF_API_KEY, CONF_HOST, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 TEST_HOST = "1.2.3.4"
 TEST_API_KEY = "12ab345c-d67e-8f"
@@ -110,3 +116,51 @@ async def test_sub_blind_links_to_gateway_device(
     assert gateway_device is not None
     assert blind_device is not None
     assert blind_device.via_device_id == gateway_device.id
+
+
+@pytest.mark.parametrize(
+    "entity_id",
+    [
+        pytest.param("cover.rollerblind_0001", id="cover"),
+        pytest.param("sensor.rollerblind_0001_signal_strength", id="sensor"),
+    ],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_entity_unavailable_on_update_failure(
+    hass: HomeAssistant,
+    mock_gateway: Mock,
+    freezer: FrozenDateTimeFactory,
+    entity_id: str,
+) -> None:
+    """Test entities become unavailable when a coordinator update fails."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=TEST_GATEWAY_MAC,
+        data={CONF_HOST: TEST_HOST, CONF_API_KEY: TEST_API_KEY},
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE
+
+    mock_gateway.Update.side_effect = OSError("Network unreachable")
+    freezer.tick(timedelta(seconds=UPDATE_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+    mock_gateway.Update.side_effect = None
+    freezer.tick(timedelta(seconds=UPDATE_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE

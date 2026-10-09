@@ -6,6 +6,7 @@ import probatio
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_NAME, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.typing import ConfigType
 
@@ -128,7 +129,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: GoogleConfigEntry) -> bo
         # if project was changed, remove entry a new will be setup
         if config[CONF_PROJECT_ID] != entry.data[CONF_PROJECT_ID]:
             hass.async_create_task(hass.config_entries.async_remove(entry.entry_id))
-            return False
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="project_id_changed",
+            )
 
     config.update(entry.data)
 

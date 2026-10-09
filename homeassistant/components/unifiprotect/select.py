@@ -298,7 +298,6 @@ LIGHT_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
         ufp_options=MOTION_MODE_TO_LIGHT_MODE,
         ufp_public_value_fn=async_get_light_motion_current_public,
         ufp_set_method_fn=_set_light_mode,
-        ufp_perm=PermRequired.WRITE,
     ),
     ProtectSelectEntityDescription[Light](
         key="paired_camera",

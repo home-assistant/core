@@ -79,6 +79,10 @@
     }
   },
   "issues": {
+    "deprecated_action": {
+      "description": "The `{action}` action is deprecated and will be removed in a future release. Use the `{replacement}` action on your Remember The Milk to-do list entities instead, and update any automations or scripts that use `{action}`.",
+      "title": "The `{action}` action is being removed"
+    },
     "deprecated_yaml_import_issue_cannot_connect": {
       "description": "Configuring {integration_title} via YAML is deprecated and will be removed in a future release. While importing your configuration, a connection error occurred. Please restart Home Assistant to try again, or remove the {domain} configuration from your YAML and set the integration up via the UI.",
       "title": "The {integration_title} YAML configuration is being removed"

@@ -51,6 +51,7 @@ async def test_full_user_flow_implementation(
     assert result2.get("type") is FlowResultType.CREATE_ENTRY
     assert result2["data"][CONF_HOST] == "192.168.1.123"
     assert result2["data"][CONF_MAC] == "AA:BB:CC:DD:EE:FF"
+    assert result2["result"].unique_id == "AA:BB:CC:DD:EE:FF"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -99,6 +100,7 @@ async def test_full_zeroconf_flow_implementation(
     assert "data" in result2
     assert result2["data"][CONF_HOST] == "192.168.1.123"
     assert result2["data"][CONF_MAC] == "AA:BB:CC:DD:EE:FF"
+    assert result2["result"].unique_id == "AA:BB:CC:DD:EE:FF"
 
 
 @patch(
@@ -124,6 +126,20 @@ async def test_connection_error(
     assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "user"
     assert result.get("errors") == {"base": "cannot_connect"}
+
+    update_mock.side_effect = None
+    update_mock.return_value.info.mac_address = "AA:BB:CC:DD:EE:FF"
+    update_mock.return_value.info.device_name = "ModernFormsFan"
+    with patch(
+        "homeassistant.components.modern_forms.async_setup_entry",
+        return_value=True,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_HOST: "example.com"},
+        )
+
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
 
 
 @patch(
