@@ -159,32 +159,21 @@ class _DeviceInfoMapping:
     once integrations read and write the fields directly.
     """
 
-    # The mapping passed to the constructor, dropped once applied, and the keys
-    # which are not fields. Declared here for the mixin methods.
-    __slots__ = ("_extra", "initial")
+    # The keys which are not fields, set by integrations
+    __slots__ = ("_extra",)
 
     if TYPE_CHECKING:
         # The mapping keys, in field declaration order, set by _device_info_fields
         _field_names: ClassVar[tuple[str, ...]]
 
-        initial: _DeviceInfoLike | None
         _extra: dict[str, Any] | None
 
         # Set by the @attr.s decorator, declared for _device_info_fields
         __attrs_attrs__: ClassVar[tuple[attr.Attribute[Any], ...]]
 
     def __attrs_post_init__(self) -> None:
-        """Apply the fields of a mapping passed to the constructor."""
+        """Start without keys which are not fields."""
         self._extra = None
-        # Integrations build a device info from a mapping: `DeviceInfo({...})`
-        if (initial := self.initial) is not None:
-            _report_device_info_usage(
-                f"builds a {type(self).__name__} from a mapping instead of passing "
-                "its fields as keyword arguments"
-            )
-            # Dropped once applied, it is not one of the mapping keys
-            self.initial = None
-            self.update(initial)
 
     def __getitem__(self, key: str) -> Any:
         """Return the value of a set field."""
@@ -341,18 +330,22 @@ def _device_info_fields[_DeviceInfoT: _DeviceInfoMapping](
     cls: type[_DeviceInfoT],
 ) -> type[_DeviceInfoT]:
     """Cache the field names a device info exposes as mapping keys."""
-    cls._field_names = tuple(
-        field.name for field in cls.__attrs_attrs__ if field.name != "initial"
-    )
+    cls._field_names = tuple(field.name for field in cls.__attrs_attrs__)
     return cls
 
 
 @_device_info_fields
-@attr.s(auto_attribs=True, eq=False, repr=False, slots=True, weakref_slot=False)
+@attr.s(
+    auto_attribs=True,
+    eq=False,
+    kw_only=True,
+    repr=False,
+    slots=True,
+    weakref_slot=False,
+)
 class DeviceInfo(_DeviceInfoMapping):
     """Entity device information for device registry."""
 
-    initial: _DeviceInfoLike | None = None
     configuration_url: str | URL | UndefinedType | None = UNDEFINED
     connections: set[tuple[str, str]] | UndefinedType = UNDEFINED
     entry_type: DeviceEntryType | UndefinedType | None = UNDEFINED
@@ -383,7 +376,14 @@ class DeviceInfo(_DeviceInfoMapping):
 
 
 @_device_info_fields
-@attr.s(auto_attribs=True, eq=False, repr=False, slots=True, weakref_slot=False)
+@attr.s(
+    auto_attribs=True,
+    eq=False,
+    kw_only=True,
+    repr=False,
+    slots=True,
+    weakref_slot=False,
+)
 class ChildDeviceInfo(_DeviceInfoMapping):
     """Entity device information for a child device in the device registry.
 
@@ -392,10 +392,9 @@ class ChildDeviceInfo(_DeviceInfoMapping):
     entry, and must belong to the same config subentry.
     """
 
-    initial: _DeviceInfoLike | None = None
-    identifiers: set[tuple[str, str]] = attr.ib(kw_only=True)
+    identifiers: set[tuple[str, str]]
     name: str | UndefinedType | None = UNDEFINED
-    parent_device_id: str = attr.ib(kw_only=True)
+    parent_device_id: str
     suggested_area: str | UndefinedType | None = UNDEFINED
     translation_key: str | UndefinedType | None = UNDEFINED
     translation_placeholders: Mapping[str, str] | UndefinedType | None = UNDEFINED
