@@ -1023,6 +1023,99 @@ async def test_custom_version_is_newer(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
+    ("installed_version", "latest_version", "expected"),
+    [
+        pytest.param(None, "1.0.1", False, id="unknown-installed-version"),
+        pytest.param("1.0.0", None, False, id="unknown-latest-version"),
+        pytest.param("1.0.0", "1.0.0", False, id="same-version"),
+        pytest.param("1.0.0", "1.0.1", True, id="newer-version"),
+        pytest.param("1.0.0", "0.9.0", False, id="older-version"),
+        pytest.param("1.0.0", "awesome_update", True, id="incomparable-version"),
+    ],
+)
+def test_has_update(
+    installed_version: str | None,
+    latest_version: str | None,
+    expected: bool,
+) -> None:
+    """Test the default update availability check."""
+    update = UpdateEntity()
+    update._attr_installed_version = installed_version
+    update._attr_latest_version = latest_version
+
+    assert update.has_update() is expected
+
+
+@pytest.mark.parametrize(
+    ("update_available", "expected_state"),
+    [
+        pytest.param(True, STATE_ON, id="available"),
+        pytest.param(False, STATE_OFF, id="unavailable"),
+    ],
+)
+def test_custom_has_update(update_available: bool, expected_state: str) -> None:
+    """Test UpdateEntity with an overridden has_update method."""
+
+    class MockUpdateEntity(UpdateEntity):
+        def has_update(self) -> bool:
+            """Return whether an update is available."""
+            return update_available
+
+        def version_is_newer(self, latest_version: str, installed_version: str) -> bool:
+            """Fail if version comparison is used."""
+            raise AssertionError
+
+    update = MockUpdateEntity()
+    update._attr_installed_version = "1.0.0"
+    update._attr_latest_version = "1.0.1"
+
+    assert update.state == expected_state
+
+
+def test_custom_version_is_newer_incomparable() -> None:
+    """Test an incomparable version from an overridden comparison method."""
+
+    class MockUpdateEntity(UpdateEntity):
+        def version_is_newer(self, latest_version: str, installed_version: str) -> bool:
+            """Compare versions."""
+            return AwesomeVersion(latest_version) > AwesomeVersion(installed_version)
+
+    update = MockUpdateEntity()
+    update._attr_installed_version = "1.0.0"
+    update._attr_latest_version = "awesome_update"
+
+    assert update.has_update() is True
+    assert update.state == STATE_ON
+
+
+@pytest.mark.parametrize(
+    ("installed_version", "latest_version", "expected_state"),
+    [
+        pytest.param(None, "1.0.1", None, id="unknown-installed-version"),
+        pytest.param("1.0.0", None, None, id="unknown-latest-version"),
+        pytest.param("1.0.0", "1.0.0", STATE_OFF, id="same-version"),
+    ],
+)
+def test_custom_has_update_state_precedence(
+    installed_version: str | None,
+    latest_version: str | None,
+    expected_state: str | None,
+) -> None:
+    """Test version state checks take precedence over custom availability."""
+
+    class MockUpdateEntity(UpdateEntity):
+        def has_update(self) -> bool:
+            """Fail if update availability is checked."""
+            raise AssertionError
+
+    update = MockUpdateEntity()
+    update._attr_installed_version = installed_version
+    update._attr_latest_version = latest_version
+
+    assert update.state is expected_state
+
+
+@pytest.mark.parametrize(
     ("supported_features", "extra_expected_attributes"),
     [
         (
