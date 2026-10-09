@@ -44,7 +44,9 @@ SENSOR_TYPES_ELECTRICITY: tuple[OVOEnergySensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        value=lambda usage: usage.electricity[-1].consumption,
+        value=lambda usage: (
+            usage.electricity[-1].consumption if usage.electricity else None
+        ),
     ),
     OVOEnergySensorEntityDescription(
         key=KEY_LAST_ELECTRICITY_COST,
@@ -53,7 +55,7 @@ SENSOR_TYPES_ELECTRICITY: tuple[OVOEnergySensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL,
         value=lambda usage: (
             usage.electricity[-1].cost.amount
-            if usage.electricity[-1].cost is not None
+            if usage.electricity and usage.electricity[-1].cost is not None
             else None
         ),
     ),
@@ -62,14 +64,22 @@ SENSOR_TYPES_ELECTRICITY: tuple[OVOEnergySensorEntityDescription, ...] = (
         translation_key="last_electricity_start_time",
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.TIMESTAMP,
-        value=lambda usage: dt_util.as_utc(usage.electricity[-1].interval.start),
+        value=lambda usage: (
+            dt_util.as_utc(usage.electricity[-1].interval.start)
+            if usage.electricity
+            else None
+        ),
     ),
     OVOEnergySensorEntityDescription(
         key="last_electricity_end_time",
         translation_key="last_electricity_end_time",
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.TIMESTAMP,
-        value=lambda usage: dt_util.as_utc(usage.electricity[-1].interval.end),
+        value=lambda usage: (
+            dt_util.as_utc(usage.electricity[-1].interval.end)
+            if usage.electricity
+            else None
+        ),
     ),
 )
 
@@ -80,7 +90,7 @@ SENSOR_TYPES_GAS: tuple[OVOEnergySensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        value=lambda usage: usage.gas[-1].consumption,
+        value=lambda usage: usage.gas[-1].consumption if usage.gas else None,
     ),
     OVOEnergySensorEntityDescription(
         key=KEY_LAST_GAS_COST,
@@ -88,7 +98,9 @@ SENSOR_TYPES_GAS: tuple[OVOEnergySensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.MONETARY,
         state_class=SensorStateClass.TOTAL,
         value=lambda usage: (
-            usage.gas[-1].cost.amount if usage.gas[-1].cost is not None else None
+            usage.gas[-1].cost.amount
+            if usage.gas and usage.gas[-1].cost is not None
+            else None
         ),
     ),
     OVOEnergySensorEntityDescription(
@@ -96,14 +108,18 @@ SENSOR_TYPES_GAS: tuple[OVOEnergySensorEntityDescription, ...] = (
         translation_key="last_gas_start_time",
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.TIMESTAMP,
-        value=lambda usage: dt_util.as_utc(usage.gas[-1].interval.start),
+        value=lambda usage: (
+            dt_util.as_utc(usage.gas[-1].interval.start) if usage.gas else None
+        ),
     ),
     OVOEnergySensorEntityDescription(
         key="last_gas_end_time",
         translation_key="last_gas_end_time",
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.TIMESTAMP,
-        value=lambda usage: dt_util.as_utc(usage.gas[-1].interval.end),
+        value=lambda usage: (
+            dt_util.as_utc(usage.gas[-1].interval.end) if usage.gas else None
+        ),
     ),
 )
 
