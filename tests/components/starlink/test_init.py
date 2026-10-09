@@ -115,11 +115,13 @@ async def test_restore_cache_with_accumulation(hass: HomeAssistant) -> None:
 
         assert hass.states.get(entity_id).state == str(1 + 0.00786231368489)
 
+        # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
         await entry.runtime_data.async_refresh()
 
         assert hass.states.get(entity_id).state == str(1 + 0.00786231368489)
 
         with patch.object(entry.runtime_data, "always_update", return_value=True):
+            # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
             await entry.runtime_data.async_refresh()
 
         assert hass.states.get(entity_id).state == str(1 + 0.01572462736977)

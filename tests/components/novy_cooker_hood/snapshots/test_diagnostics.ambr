@@ -42,6 +42,7 @@
         'labels': list([
         ]),
         'name': None,
+        'next_name_part': 'device',
         'options': dict({
         }),
         'original_device_class': None,
@@ -73,6 +74,7 @@
         'labels': list([
         ]),
         'name': None,
+        'next_name_part': 'device',
         'options': dict({
         }),
         'original_device_class': None,

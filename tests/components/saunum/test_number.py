@@ -128,6 +128,7 @@ async def test_set_value_while_session_active(
 
     # Trigger coordinator update
     coordinator = mock_config_entry.runtime_data
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
     await coordinator.async_refresh()
     await hass.async_block_till_done()
 

@@ -24,7 +24,7 @@ def user_form_schema(user_input: dict[str, Any] | None) -> probatio.Schema:
     user_input = user_input or {}
     return probatio.Schema(
         {
-            probatio.Required(CONF_PASSWORD): str,
+            probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
             probatio.Optional(
                 CONF_HOST, default=user_input.get(CONF_HOST, "localhost")
             ): str,
@@ -35,7 +35,9 @@ def user_form_schema(user_input: dict[str, Any] | None) -> probatio.Schema:
     )
 
 
-STEP_REAUTH_DATA_SCHEMA = probatio.Schema({probatio.Required(CONF_PASSWORD): str})
+STEP_REAUTH_DATA_SCHEMA = probatio.Schema(
+    {probatio.Required(probatio.Secret(CONF_PASSWORD)): str}
+)
 
 
 async def vlc_connect(vlc: Client) -> None:

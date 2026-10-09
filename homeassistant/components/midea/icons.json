@@ -73,6 +73,9 @@
       },
       "target_indoor_fan_speed": {
         "default": "mdi:fan-clock"
+      },
+      "time_remaining": {
+        "default": "mdi:progress-clock"
       }
     },
     "switch": {
@@ -99,6 +102,9 @@
       },
       "pump": {
         "default": "mdi:water-pump"
+      },
+      "running": {
+        "default": "mdi:play"
       },
       "screen_display": {
         "default": "mdi:monitor"

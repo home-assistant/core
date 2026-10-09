@@ -6,8 +6,8 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.eurotronic_cometblue import DOMAIN
-from homeassistant.components.number import ServiceValidationError
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.util import dt as dt_util
 
 from .conftest import setup_with_selected_platforms
@@ -233,6 +233,7 @@ async def test_set_holiday(
         },
         blocking=True,
     )
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
     await mock_config_entry.runtime_data.async_refresh()
 
     # Testing against device data as holiday is not directly exposed as entity state

@@ -5,6 +5,7 @@ from typing import Any
 import probatio
 from pyisy.constants import COMMAND_FRIENDLY_NAME
 
+from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
 from homeassistant.const import (
     CONF_ADDRESS,
     CONF_CODE,
@@ -16,7 +17,10 @@ from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import async_get_platforms
-from homeassistant.helpers.service import entity_service_call
+from homeassistant.helpers.service import (
+    async_register_platform_entity_service,
+    entity_service_call,
+)
 from homeassistant.helpers.typing import VolDictType
 
 from .const import DOMAIN, LOGGER
@@ -120,7 +124,7 @@ SERVICE_DELETE_USER_CODE_SCHEMA: VolDictType = {
 }
 
 SERVICE_SEND_PROGRAM_COMMAND_SCHEMA = probatio.All(
-    cv.has_at_least_one_key(CONF_ADDRESS, CONF_NAME),
+    probatio.AtLeastOne(CONF_ADDRESS, CONF_NAME),
     probatio.Schema(
         {
             probatio.Exclusive(CONF_NAME, SCHEMA_GROUP): cv.string,
@@ -231,4 +235,21 @@ def async_setup_services(hass: HomeAssistant) -> None:
         service=SERVICE_RENAME_NODE,
         schema=cv.make_entity_service_schema(SERVICE_RENAME_NODE_SCHEMA),
         service_func=_async_rename_node,
+    )
+
+    async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        SERVICE_SET_ZWAVE_LOCK_USER_CODE,
+        entity_domain=LOCK_DOMAIN,
+        func="async_set_zwave_lock_user_code",
+        schema=SERVICE_SET_USER_CODE_SCHEMA,
+    )
+    async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        SERVICE_DELETE_ZWAVE_LOCK_USER_CODE,
+        entity_domain=LOCK_DOMAIN,
+        func="async_delete_zwave_lock_user_code",
+        schema=SERVICE_DELETE_USER_CODE_SCHEMA,
     )

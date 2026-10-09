@@ -118,9 +118,10 @@ class MobileAppEntity(RestoreEntity):
         # pylint: disable-next=home-assistant-use-runtime-data
         pending_updates = self.hass.data[DOMAIN][DATA_PENDING_UPDATES][entity_type]
         if update := pending_updates.pop(self._attr_unique_id, None):
+            # The unique_id is prefixed with the webhook ID, so log the entity_id
             _LOGGER.debug(
                 "Applying pending update for %s: %s",
-                self._attr_unique_id,
+                self.entity_id,
                 update,
             )
             # Apply the pending update

@@ -27,6 +27,11 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import callback
+from homeassistant.helpers.selector import (
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
+)
 from homeassistant.helpers.service_info.ssdp import (
     ATTR_UPNP_FRIENDLY_NAME,
     ATTR_UPNP_MODEL_NAME,
@@ -230,10 +235,17 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=probatio.Schema(
                 {
-                    probatio.Optional(CONF_HOST, default=DEFAULT_HOST): str,
+                    probatio.Optional(CONF_HOST, default=DEFAULT_HOST): TextSelector(),
                     probatio.Optional(CONF_PORT): probatio.Coerce(int),
-                    probatio.Required(CONF_USERNAME): str,
-                    probatio.Required(CONF_PASSWORD): str,
+                    probatio.Required(CONF_USERNAME): TextSelector(
+                        TextSelectorConfig(autocomplete="username")
+                    ),
+                    probatio.Required(probatio.Secret(CONF_PASSWORD)): TextSelector(
+                        TextSelectorConfig(
+                            type=TextSelectorType.PASSWORD,
+                            autocomplete="current-password",
+                        )
+                    ),
                     probatio.Optional(CONF_SSL, default=DEFAULT_SSL): bool,
                     probatio.Required(
                         CONF_FEATURE_DEVICE_TRACKING,
@@ -252,8 +264,15 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="confirm",
             data_schema=probatio.Schema(
                 {
-                    probatio.Required(CONF_USERNAME): str,
-                    probatio.Required(CONF_PASSWORD): str,
+                    probatio.Required(CONF_USERNAME): TextSelector(
+                        TextSelectorConfig(autocomplete="username")
+                    ),
+                    probatio.Required(probatio.Secret(CONF_PASSWORD)): TextSelector(
+                        TextSelectorConfig(
+                            type=TextSelectorType.PASSWORD,
+                            autocomplete="current-password",
+                        )
+                    ),
                     probatio.Optional(CONF_SSL, default=DEFAULT_SSL): bool,
                     probatio.Required(
                         CONF_FEATURE_DEVICE_TRACKING,
@@ -312,8 +331,15 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="reauth_confirm",
             data_schema=probatio.Schema(
                 {
-                    probatio.Required(CONF_USERNAME, default=default_username): str,
-                    probatio.Required(CONF_PASSWORD): str,
+                    probatio.Required(
+                        CONF_USERNAME, default=default_username
+                    ): TextSelector(TextSelectorConfig(autocomplete="username")),
+                    probatio.Required(probatio.Secret(CONF_PASSWORD)): TextSelector(
+                        TextSelectorConfig(
+                            type=TextSelectorType.PASSWORD,
+                            autocomplete="current-password",
+                        )
+                    ),
                 }
             ),
             description_placeholders={"host": self._host},
@@ -356,7 +382,9 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="reconfigure",
             data_schema=probatio.Schema(
                 {
-                    probatio.Required(CONF_HOST, default=user_input[CONF_HOST]): str,
+                    probatio.Required(
+                        CONF_HOST, default=user_input[CONF_HOST]
+                    ): TextSelector(),
                     probatio.Optional(
                         CONF_PORT, default=user_input[CONF_PORT]
                     ): probatio.Coerce(int),

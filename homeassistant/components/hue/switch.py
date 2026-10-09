@@ -28,12 +28,12 @@ from homeassistant.components.switch import (
 from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .bridge import HueBridge, HueConfigEntry
 from .const import DOMAIN
 from .v2.entity import HueBaseEntity
+from .v2.helpers import get_motion_area_device_info
 
 
 async def async_setup_entry(
@@ -229,11 +229,8 @@ class HueMotionAreaConfigurationEnabledEntity(HueResourceEnabledEntity):
     ) -> None:
         """Initialize the switch."""
         super().__init__(bridge, controller, resource)
-        # link the switch to the group the MotionAware zone is associated with
-        self.hue_group = controller.get_group(resource.id)
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self.hue_group.id)},
-        )
+        # link the switch to the room or zone the MotionAware zone is associated with
+        self._attr_device_info = get_motion_area_device_info(bridge.api, resource)
 
 
 class HueMotionSensorEnabledEntity(HueResourceEnabledEntity):

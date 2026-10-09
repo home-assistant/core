@@ -3,10 +3,19 @@
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from homeassistant.components.hive.const import DOMAIN
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+import pytest
+
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass
+from homeassistant.components.hive.const import (
+    DOMAIN,
+    SERVICE_BOOST_HEATING_OFF,
+    SERVICE_BOOST_HEATING_ON,
+    SERVICE_BOOST_HOT_WATER,
+)
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import ATTR_DEVICE_CLASS, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import MockConfigEntry
 
@@ -48,6 +57,23 @@ _CHILD_BINARY_SENSOR = {
         "online": True,
     },
     "status": {"state": True},
+}
+
+_GLASS_BREAK_BINARY_SENSOR = {
+    "device_id": "hive-glass-break-id",
+    "hiveID": "hive-glass-break-id",
+    "hiveName": "Glass Break",
+    "haName": "Glass Break",
+    "device_name": "Glass Break Sensor",
+    "hiveType": "GLASS_BREAK",
+    "parentDevice": "hive-hub-id",
+    "deviceData": {
+        "model": "Glass Break Sensor",
+        "version": "1.2.3",
+        "manufacturer": "Hive",
+        "online": True,
+    },
+    "status": {"state": False},
 }
 
 # The hub's own diagnostic sensor reports the hub as its own parent
@@ -195,3 +221,65 @@ async def test_hub_diagnostic_sensor_not_linked_to_itself(
     )
     assert hub_device is not None
     assert hub_device.via_device_id is None
+
+
+async def test_glass_break_device_class(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the glass break binary sensor device class."""
+    entry = MockConfigEntry(domain=DOMAIN, data=_ENTRY_DATA)
+    entry.add_to_hass(hass)
+
+    mock_hive = _make_mock_hive(
+        {"macAddress": "00:1C:2B:1C:2E:68"},
+        {"binary_sensor": [_GLASS_BREAK_BINARY_SENSOR], "sensor": []},
+    )
+    mock_hive.session.updateData = AsyncMock()
+    mock_hive.sensor.getSensor = AsyncMock(side_effect=lambda device: device)
+
+    with patch(
+        "homeassistant.components.hive.Hive",
+        return_value=mock_hive,
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    entity_id = entity_registry.async_get_entity_id(
+        "binary_sensor", DOMAIN, "hive-glass-break-id-GLASS_BREAK"
+    )
+    assert entity_id
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes[ATTR_DEVICE_CLASS] == BinarySensorDeviceClass.GLASS_BREAK
+
+
+async def test_all_platforms_forwarded_without_devices(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """All platforms are set up and the entry reloads on a device-less account."""
+    entry = MockConfigEntry(domain=DOMAIN, data=_ENTRY_DATA)
+    entry.add_to_hass(hass)
+
+    mock_hive = _make_mock_hive({})
+
+    with patch(
+        "homeassistant.components.hive.Hive",
+        return_value=mock_hive,
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert entry.state is ConfigEntryState.LOADED
+        # Entity services must not depend on device discovery.
+        assert hass.services.has_service(DOMAIN, SERVICE_BOOST_HOT_WATER)
+        assert hass.services.has_service(DOMAIN, SERVICE_BOOST_HEATING_ON)
+        assert hass.services.has_service(DOMAIN, SERVICE_BOOST_HEATING_OFF)
+
+        await hass.config_entries.async_reload(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert "Error setting up entry" not in caplog.text
+    assert "Error unloading entry" not in caplog.text

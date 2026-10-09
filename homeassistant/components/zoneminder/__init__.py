@@ -36,7 +36,7 @@ DEFAULT_VERIFY_SSL = True
 HOST_CONFIG_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_HOST): cv.string,
-        probatio.Optional(CONF_PASSWORD): cv.string,
+        probatio.Optional(probatio.Secret(CONF_PASSWORD)): cv.string,
         probatio.Optional(CONF_PATH, default=DEFAULT_PATH): cv.string,
         probatio.Optional(CONF_PATH_ZMS, default=DEFAULT_PATH_ZMS): cv.string,
         probatio.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
@@ -46,7 +46,7 @@ HOST_CONFIG_SCHEMA = probatio.Schema(
 )
 
 CONFIG_SCHEMA = probatio.Schema(
-    {DOMAIN: probatio.All(cv.ensure_list, [HOST_CONFIG_SCHEMA])},
+    {DOMAIN: probatio.All(probatio.EnsureList(), [HOST_CONFIG_SCHEMA])},
     extra=probatio.ALLOW_EXTRA,
 )
 
