@@ -185,6 +185,7 @@ async def _migrate_unique_ids(hass: HomeAssistant, entry: PowerviewConfigEntry) 
                 new_unique_id=f"{entry.unique_id}_{reg_entry.unique_id}",
             )
 
+
 async def async_remove_config_entry_device(
     hass: HomeAssistant, entry: PowerviewConfigEntry, device: AnyDeviceEntry
 ) -> bool:
@@ -195,14 +196,14 @@ async def async_remove_config_entry_device(
     """
     if not isinstance(device, dr.DeviceEntry):
         return False
-    
+
     # Prevent removing the hub device itself
     # The hub device is the one without a via_device_id (it's not a child of another device)
     if device.via_device_id is None:
         # This is the hub device, don't allow removal
         _LOGGER.warning(
             "Cannot remove PowerView hub device %s. Remove the integration instead",
-            device.name
+            device.name,
         )
         return False
 
@@ -217,8 +218,8 @@ async def async_remove_config_entry_device(
     # Fetch the running coordinator data
     coordinator = entry.runtime_data.coordinator
     if (
-        shade_id is not None 
-        and coordinator.data 
+        shade_id is not None
+        and coordinator.data
         and shade_id in coordinator.data.get_all_raw_data()
     ):
         _LOGGER.warning(
