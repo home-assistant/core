@@ -4327,6 +4327,47 @@ async def test_automation_changed_entity_id(
     assert len(calls) == 4
 
 
+async def test_automation_changed_entity_id_enables_trigger(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    calls: list[ServiceCall],
+) -> None:
+    """Test a trigger disabled by `this` is attached after an entity_id change."""
+    entry = entity_registry.async_get_or_create(
+        "automation", "automation", "test_automation"
+    )
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "id": "test_automation",
+                "trigger": {
+                    "platform": "event",
+                    "event_type": "test_event",
+                    "enabled": "{{ this.entity_id == 'automation.enabled' }}",
+                },
+                "action": {"action": "test.automation"},
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    # No trigger is attached
+    hass.bus.async_fire("test_event")
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    entity_registry.async_update_entity(
+        entry.entity_id, new_entity_id="automation.enabled"
+    )
+    await hass.async_block_till_done()
+
+    hass.bus.async_fire("test_event")
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+
 async def _turn_off_automation(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:

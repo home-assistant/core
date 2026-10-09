@@ -630,7 +630,8 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
                     detach()
                 return
             if self.entity_id == entity_id:
-                self._async_detach_triggers = detach
+                # Not None when nothing was attached, so a rename still re-attaches
+                self._async_detach_triggers = detach or (lambda: None)
                 return
             # Changed again while attaching, `this` is stale
             if detach is not None:
