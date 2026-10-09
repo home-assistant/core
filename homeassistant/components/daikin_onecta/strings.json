@@ -112,18 +112,6 @@
       "message": "Failed to turn on {device}"
     }
   },
-  "options": {
-    "step": {
-      "init": {
-        "data": {
-          "homekit_fan_mode_aliases": "Expose HomeKit compatible fan speed aliases"
-        },
-        "data_description": {
-          "homekit_fan_mode_aliases": "Add HomeKit-compatible names for supported fan speeds."
-        }
-      }
-    }
-  },
   "system_health": {
     "info": {
       "api_status": "API server",

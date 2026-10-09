@@ -12,7 +12,6 @@ from homeassistant.components.application_credentials import (
     async_import_client_credential,
 )
 from homeassistant.components.daikin_onecta.const import (
-    CONF_HOMEKIT_FAN_MODE_ALIASES,
     DOMAIN,
     OAUTH2_AUTHORIZE,
     OAUTH2_TOKEN,
@@ -98,27 +97,6 @@ async def test_full_flow(
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert len(mock_setup.mock_calls) == 1
-
-
-async def test_options_flow_homekit_fan_mode_aliases_default(
-    hass: HomeAssistant,
-) -> None:
-    """Test HomeKit fan mode aliases option defaults to disabled."""
-    config_entry = MockConfigEntry(domain=DOMAIN, data={})
-    config_entry.add_to_hass(hass)
-
-    result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    assert result["type"] == "form"
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        {
-            CONF_HOMEKIT_FAN_MODE_ALIASES: False,
-        },
-    )
-
-    assert result["type"] == "create_entry"
-    assert result["data"][CONF_HOMEKIT_FAN_MODE_ALIASES] is False
 
 
 ZEROCONF_DISCOVERY = ZeroconfServiceInfo(

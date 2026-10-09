@@ -57,9 +57,6 @@ async def async_setup_entry(
     )
 
     await config_entry.runtime_data.async_config_entry_first_refresh()
-    config_entry.async_on_unload(
-        config_entry.add_update_listener(_async_update_listener)
-    )
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
@@ -72,12 +69,3 @@ async def async_unload_entry(
     """Unload a config entry."""
     _LOGGER.debug("Unloading integration")
     return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
-
-
-async def _async_update_listener(
-    hass: HomeAssistant, config_entry: DaikinOnectaConfigEntry
-) -> None:
-    """Handle options update."""
-    coordinator = config_entry.runtime_data
-    if coordinator.update_settings(config_entry):
-        coordinator.async_update_listeners()
