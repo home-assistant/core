@@ -733,8 +733,8 @@ values are not flagged.
 
 ## `home_assistant_redundant_translation_key` checker
 
-Detects entity descriptions whose `translation_key` only repeats the name
-the `device_class` already provides.
+Detects entity descriptions and entity classes whose `translation_key` only
+repeats the name the `device_class` already provides.
 
 ### `W7442`: `home-assistant-redundant-translation-key`
 
@@ -754,6 +754,9 @@ SensorEntityDescription(
     device_class=SensorDeviceClass.POWER,
 )
 ```
+
+The same goes for an entity class that sets `_attr_translation_key` and
+`_attr_device_class` in its body.
 
 When the key is used for nothing else, remove it and its `strings.json`
 entry. When it also holds states, state attributes or icons, or the

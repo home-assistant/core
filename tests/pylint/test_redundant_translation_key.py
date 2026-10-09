@@ -186,6 +186,17 @@ build(translation_key="power", device_class="power")
             "sensor",
             id="not_an_entity_description",
         ),
+        pytest.param(
+            """
+from homeassistant.components.sensor import SensorEntity
+
+class PowerSensor(SensorEntity):
+    _attr_translation_key = "power"
+""",
+            {"sensor": {"power": {"name": "Power"}}},
+            "sensor",
+            id="entity_without_device_class",
+        ),
     ],
 )
 def test_no_warning(
@@ -251,6 +262,39 @@ SensorEntityDescription(key="power", translation_key="power", device_class="powe
             None,
             ("power", "power", "Power", _REMOVE_KEY),
             id="string_device_class",
+        ),
+        pytest.param(
+            """
+from enum import StrEnum
+
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntityDescription
+
+class MySensor(StrEnum):
+    POWER = "power"
+
+SensorEntityDescription(
+    key=MySensor.POWER,
+    translation_key=MySensor.POWER,
+    device_class=SensorDeviceClass.POWER,
+)
+""",
+            {"sensor": {"power": {"name": "Power"}}},
+            None,
+            ("power", "power", "Power", _REMOVE_KEY),
+            id="enum_translation_key",
+        ),
+        pytest.param(
+            """
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+
+class PowerSensor(SensorEntity):
+    _attr_translation_key = "power"
+    _attr_device_class = SensorDeviceClass.POWER
+""",
+            {"sensor": {"power": {"name": "Power"}}},
+            None,
+            ("power", "power", "Power", _REMOVE_KEY),
+            id="entity_class_attributes",
         ),
         pytest.param(
             """

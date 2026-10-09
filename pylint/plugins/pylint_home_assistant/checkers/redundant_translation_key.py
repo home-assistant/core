@@ -4,8 +4,9 @@ Entities on some platforms, such as sensors, are named after their device
 class when they have no name of their own. The name comes from
 ``entity_component.<device_class>.name`` in the platform's ``strings.json``.
 
-An ``EntityDescription`` that sets both ``device_class`` and a
-``translation_key`` whose name translates to that same string adds nothing.
+An ``EntityDescription``, or an entity class through ``_attr_device_class``
+and ``_attr_translation_key``, that sets both a device class and a
+translation key whose name translates to that same string adds nothing.
 When the translation key is used for nothing else, remove it. When it also
 holds states, state attributes or icons, or the integration's code reads it,
 remove only its name.
@@ -64,26 +65,9 @@ def _code_reads_translation_key(integration_dir: Path) -> bool:
 
 
 def _resolve_string(node: nodes.NodeNG) -> str | None:
-    """Return the string *node* holds or infers to."""
-    match node:
-        case nodes.Const(value=str() as value):
-            return value
+    """Return the string *node* holds or infers to.
 
-    try:
-        for inferred in node.infer():
-            match inferred:
-                case nodes.Const(value=str() as value):
-                    return value
-    except astroid.exceptions.InferenceError:
-        pass
-
-    return None
-
-
-def _resolve_device_class(node: nodes.NodeNG) -> str | None:
-    """Return the value of a ``device_class`` argument.
-
-    ``SensorDeviceClass.POWER`` resolves through the enum member's value.
+    Enum members, such as ``SensorDeviceClass.POWER``, resolve to their value.
     """
     match node:
         case nodes.Const(value=str() as value):
@@ -118,11 +102,11 @@ class RedundantTranslationKeyChecker(BaseChecker):
             ),
             "home-assistant-redundant-translation-key",
             (
-                "Used when an entity description sets a translation_key whose "
-                "name is the same as the name its device class already "
-                "provides. Remove the translation_key, or only its name when "
-                "the key is also used for states, state attributes, icons or "
-                "in code."
+                "Used when an entity description or entity class sets a "
+                "translation_key whose name is the same as the name its device "
+                "class already provides. Remove the translation_key, or only "
+                "its name when the key is also used for states, state "
+                "attributes, icons or in code."
             ),
         ),
     }
@@ -151,25 +135,68 @@ class RedundantTranslationKeyChecker(BaseChecker):
         keywords = {keyword.arg: keyword for keyword in node.keywords}
         translation_key_keyword = keywords.get("translation_key")
         device_class_keyword = keywords.get("device_class")
-        if translation_key_keyword is None or device_class_keyword is None:
+        if (
+            translation_key_keyword is None
+            or device_class_keyword is None
+            or resolve_entity_description_class(node) is None
+        ):
             return
 
-        translation_key = _resolve_string(translation_key_keyword.value)
-        device_class = _resolve_device_class(device_class_keyword.value)
+        self._check(
+            translation_key_keyword,
+            translation_key_keyword.value,
+            device_class_keyword.value,
+        )
+
+    def visit_classdef(self, node: nodes.ClassDef) -> None:
+        """Check entity classes that set a device class and translation key."""
+        if self._platform is None or self._module is None:
+            return
+
+        values: dict[str, nodes.Assign] = {}
+        for item in node.body:
+            match item:
+                case nodes.Assign(
+                    targets=[
+                        nodes.AssignName(
+                            name="_attr_translation_key" | "_attr_device_class" as name
+                        )
+                    ]
+                ):
+                    values[name] = item
+        if (translation_key_assign := values.get("_attr_translation_key")) is None or (
+            device_class_assign := values.get("_attr_device_class")
+        ) is None:
+            return
+
+        self._check(
+            translation_key_assign,
+            translation_key_assign.value,
+            device_class_assign.value,
+        )
+
+    def _check(
+        self,
+        report_node: nodes.NodeNG,
+        translation_key_node: nodes.NodeNG,
+        device_class_node: nodes.NodeNG,
+    ) -> None:
+        """Flag *report_node* if the translation key repeats the device class name."""
+        translation_key = _resolve_string(translation_key_node)
+        device_class = _resolve_string(device_class_node)
         if (
             translation_key is None
             or device_class is None
             or (
                 self._platform == "sensor" and device_class == _SENSOR_ENUM_DEVICE_CLASS
             )
-            or resolve_entity_description_class(node) is None
         ):
             return
 
         if (name := self._redundant_name(translation_key, device_class)) is not None:
             self.add_message(
                 "home-assistant-redundant-translation-key",
-                node=translation_key_keyword,
+                node=report_node,
                 args=(
                     translation_key,
                     device_class,
