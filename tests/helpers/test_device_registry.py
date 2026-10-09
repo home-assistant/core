@@ -4643,6 +4643,17 @@ def test_device_info_deprecated_parameters(parameter: str, value: Any) -> None:
     assert dict(device_info) == {parameter: value}
 
 
+def test_device_info_membership() -> None:
+    """Test `in` reports the set fields, while a device info is not iterable."""
+    device_info = dr.DeviceInfo(name="name")
+
+    assert "name" in device_info
+    assert "model" not in device_info
+    assert "unknown" not in device_info
+    with pytest.raises(TypeError):
+        list(device_info)
+
+
 def test_device_info_rejects_unknown_key() -> None:
     """Test a device info rejects setting a key which is not a field."""
     device_info = dr.DeviceInfo(name="name")

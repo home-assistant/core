@@ -173,15 +173,17 @@ class _DeviceInfoMapping:
             raise KeyError(f"'{key}' is not a valid {type(self).__name__} field")
         setattr(self, key, value)
 
-    def __iter__(self) -> Iterator[str]:
-        """Iterate over the set fields."""
-        # Also backs `in`, there being no __contains__ to fall back on
-        return (key for key in self._field_names if getattr(self, key) is not UNDEFINED)
+    # Not iterable, so that a loop fails rather than calling __getitem__ with indexes
+    __iter__ = None
 
-    def __len__(self) -> int:
-        """Return the number of set fields."""
-        # A device info without any field must be falsy, as an empty dict was
-        return sum(getattr(self, key) is not UNDEFINED for key in self._field_names)
+    def __contains__(self, key: object) -> bool:
+        """Return if a field is set."""
+        # Integrations test for a field: `"name" in device_info`
+        return (
+            isinstance(key, str)
+            and key in self._field_names
+            and getattr(self, key) is not UNDEFINED
+        )
 
     @override
     def __eq__(self, other: object) -> bool:
@@ -206,11 +208,13 @@ class _DeviceInfoMapping:
     def keys(self) -> tuple[str, ...]:
         """Return the names of the set fields."""
         # Required, together with __getitem__, for `**device_info` unpacking
-        return tuple(self)
+        return tuple(
+            key for key in self._field_names if getattr(self, key) is not UNDEFINED
+        )
 
     def items(self) -> tuple[tuple[str, Any], ...]:
         """Return the set fields as key-value pairs."""
-        return tuple((key, getattr(self, key)) for key in self)
+        return tuple(self.as_dict().items())
 
     def as_dict(self) -> dict[str, Any]:
         """Return the set fields.
