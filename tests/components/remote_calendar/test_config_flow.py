@@ -212,7 +212,11 @@ async def test_form_invalid_url(
     ],
 )
 async def test_unsupported_inputs(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, url: str, log_message: str
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    ics_content: str,
+    url: str,
+    log_message: str,
 ) -> None:
     """Test that an unsupported inputs results in a form error."""
     result = await hass.config_entries.flow.async_init(
@@ -236,9 +240,24 @@ async def test_unsupported_inputs(
     )
     assert get_schema_suggested_value(result2["data_schema"].schema, CONF_URL) == url
     assert log_message in caplog.text
-    ## It's not possible to test a successful config flow because,
-    ## we need to mock httpx2.get here and then the exception isn't
-    ## raised anymore.
+
+    with respx.mock:
+        respx.get(CALENDER_URL).mock(
+            return_value=Response(
+                status_code=200,
+                text=ics_content,
+            )
+        )
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_CALENDAR_NAME: CALENDAR_NAME,
+                CONF_URL: CALENDER_URL,
+                CONF_VERIFY_SSL: True,
+            },
+        )
+        await hass.async_block_till_done()
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.parametrize(
