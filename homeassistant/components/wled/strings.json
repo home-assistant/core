@@ -38,6 +38,11 @@
         "name": "Firmware"
       }
     },
+    "button": {
+      "next_playlist_entry": {
+        "name": "Next playlist entry"
+      }
+    },
     "light": {
       "main": {
         "name": "Main"
@@ -151,6 +156,9 @@
     },
     "mac_address_mismatch": {
       "message": "MAC address does not match the configured device. Expected to connect to device with MAC: {expected_mac}, but connected to device with MAC: {actual_mac}."
+    },
+    "no_playlist_running": {
+      "message": "No playlist is running on the WLED device."
     },
     "unsupported_version": {
       "message": "The WLED device's firmware version is not supported: {error}"
