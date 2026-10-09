@@ -148,6 +148,7 @@ Every check has a code following the
 | `W7447` | [`home-assistant-coordinator-untyped-config-entry`](#w7447-home-assistant-coordinator-untyped-config-entry) | Coordinator should use the integration's typed config entry instead of `ConfigEntry` |
 | `W7448` | [`home-assistant-coordinator-redundant-config-entry`](#w7448-home-assistant-coordinator-redundant-config-entry) | Coordinator assigns `self.config_entry` that `DataUpdateCoordinator.__init__` already sets |
 | `W7450` | [`home-assistant-log-and-raise`](#w7450-home-assistant-log-and-raise) | Don't log an error that is raised to Home Assistant, which already reports it |
+| `W7451` | [`home-assistant-coordinator-entity-async-update`](#w7451-home-assistant-coordinator-entity-async-update) | `CoordinatorEntity` overrides `async_update` without calling `super().async_update()` |
 
 
 ## `home_assistant_logger` checker
@@ -372,6 +373,31 @@ except MyDeviceError as err:
 Put the details in the exception or log them at debug level. Exceptions that
 an integration defines itself, such as a config flow's `CannotConnect`, are
 not checked.
+
+
+## `home_assistant_coordinator_entity_async_update` checker
+
+Checks `async_update` overrides on coordinator entities.
+
+### `W7451`: `home-assistant-coordinator-entity-async-update`
+
+Coordinator entities don't poll, so `async_update` normally only runs for the
+`homeassistant.update_entity` action (and for `update_before_add` or
+`async_schedule_update_ha_state(True)`). `CoordinatorEntity.async_update` asks
+the coordinator for a refresh. An override that fetches data itself
+bypasses the coordinator: the other entities don't get the data, and the
+coordinator's error handling and debouncing are skipped. Fetch the data in the
+coordinator, or call the parent when the entity has more to refresh:
+
+```python
+async def async_update(self) -> None:
+    await super().async_update()
+    await self.firmware_coordinator.async_request_refresh()
+```
+
+Overrides that do nothing (entities of a push coordinator, which can't refresh
+on request) are not flagged, and neither are entities that turn polling back
+on with `should_poll` or `_attr_should_poll = True`.
 
 
 ## `home_assistant_async_load_fixtures` checker

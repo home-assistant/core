@@ -250,6 +250,7 @@ class RingCam(RingEntity[RingDoorBell], Camera):
         self._device.sync_close_webrtc_stream(session_id)
 
     @override
+    # pylint: disable-next=home-assistant-coordinator-entity-async-update
     async def async_update(self) -> None:
         """Update camera entity and refresh attributes."""
         if (
