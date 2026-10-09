@@ -14,7 +14,7 @@
           "city_id": "City"
         },
         "data_description": {
-          "city_id": "Choose the matching city after checking its region and weather code."
+          "city_id": "Choose the matching city after checking its region and city code."
         },
         "description": "Multiple cities match these coordinates. Select the city to use for weather data.",
         "title": "Choose a city"
