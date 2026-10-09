@@ -35,7 +35,7 @@ def _reported_exception(node: nodes.Raise) -> str | None:
     try:
         for inferred in exc.infer():
             if (
-                isinstance(inferred, nodes.ClassDef)
+                isinstance(inferred, (nodes.ClassDef, astroid.Instance))
                 and inferred.qname() in _REPORTED_EXCEPTIONS
             ):
                 return str(inferred.name)

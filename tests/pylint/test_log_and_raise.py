@@ -192,6 +192,21 @@ async def async_setup_entry(hass, entry):
         ),
         pytest.param(
             """
+from homeassistant.helpers.update_coordinator import UpdateFailed
+
+async def update():
+    try:
+        await fetch()
+    except OSError as err:
+        error = UpdateFailed("Fetching failed")
+        _LOGGER.error("Fetching failed: %s", err)
+        raise error from err
+""",
+            "UpdateFailed",
+            id="exception_instance",
+        ),
+        pytest.param(
+            """
 from homeassistant.exceptions import HomeAssistantError
 
 class MyEntity:
