@@ -7,12 +7,32 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.lacrosse_view.const import DOMAIN
+from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
+
+
+async def _finish_flow(hass: HomeAssistant, flow_id: str) -> ConfigFlowResult:
+    """Log in successfully and select the location."""
+    with (
+        patch("lacrosse_view.LaCrosse.login", return_value=True),
+        patch(
+            "lacrosse_view.LaCrosse.get_locations",
+            return_value=[Location(id="1", name="Test")],
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            flow_id, {"username": "test-username", "password": "test-password"}
+        )
+    assert result["step_id"] == "location"
+
+    result = await hass.config_entries.flow.async_configure(flow_id, {"location": "1"})
+    await hass.async_block_till_done()
+    return result
 
 
 async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
@@ -85,8 +105,10 @@ async def test_form_auth_false(hass: HomeAssistant) -> None:
         )
 
     assert result2["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "invalid_auth"}
+
+    result3 = await _finish_flow(hass, result2["flow_id"])
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_invalid_auth(hass: HomeAssistant) -> None:
@@ -105,8 +127,10 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
         )
 
     assert result2["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "invalid_auth"}
+
+    result3 = await _finish_flow(hass, result2["flow_id"])
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_login_first(hass: HomeAssistant) -> None:
@@ -128,8 +152,10 @@ async def test_form_login_first(hass: HomeAssistant) -> None:
         )
 
     assert result2["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "invalid_auth"}
+
+    result3 = await _finish_flow(hass, result2["flow_id"])
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_no_locations(hass: HomeAssistant) -> None:
@@ -154,8 +180,10 @@ async def test_form_no_locations(hass: HomeAssistant) -> None:
         )
 
     assert result2["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "no_locations"}
+
+    result3 = await _finish_flow(hass, result2["flow_id"])
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_unexpected_error(hass: HomeAssistant) -> None:
@@ -177,8 +205,10 @@ async def test_form_unexpected_error(hass: HomeAssistant) -> None:
         )
 
     assert result2["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "unknown"}
+
+    result3 = await _finish_flow(hass, result2["flow_id"])
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_already_configured_device(

@@ -1,6 +1,7 @@
 """Test the Kostal Plenticore Solar Inverter config flow."""
 
 from collections.abc import Generator
+from contextlib import contextmanager
 from unittest.mock import ANY, AsyncMock, MagicMock, patch
 
 from pykoplenti import ApiClient, AuthenticationException, SettingsData
@@ -34,6 +35,42 @@ def mock_apiclient_class(mock_apiclient) -> Generator[type[ApiClient]]:
     ) as mock_api_class:
         mock_api_class.return_value = mock_apiclient
         yield mock_api_class
+
+
+@contextmanager
+def _patch_apiclient_success() -> Generator[None]:
+    """Patch a reachable G1 inverter and the entry setup."""
+    with (
+        patch(
+            "homeassistant.components.kostal_plenticore.config_flow.ApiClient"
+        ) as mock_api_class,
+        patch(
+            "homeassistant.components.kostal_plenticore.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        mock_api_ctx = MagicMock()
+        mock_api_ctx.login = AsyncMock()
+        mock_api_ctx.get_settings = AsyncMock(
+            return_value={
+                "scb:network": [
+                    SettingsData(
+                        min="1",
+                        max="63",
+                        default=None,
+                        access="readwrite",
+                        unit=None,
+                        id="Hostname",
+                        type="string",
+                    ),
+                ]
+            }
+        )
+        mock_api_ctx.get_setting_values = AsyncMock(
+            return_value={"scb:network": {"Hostname": "scb"}}
+        )
+        mock_api_class.return_value.__aenter__.return_value = mock_api_ctx
+        yield
 
 
 async def test_form_g1(
@@ -269,8 +306,19 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"password": "invalid_auth"}
+
+    with _patch_apiclient_success():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "host": "1.1.1.1",
+                "password": "test-password",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_cannot_connect(hass: HomeAssistant) -> None:
@@ -304,8 +352,19 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"host": "cannot_connect"}
+
+    with _patch_apiclient_success():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "host": "1.1.1.1",
+                "password": "test-password",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_unexpected_error(hass: HomeAssistant) -> None:
@@ -339,8 +398,19 @@ async def test_form_unexpected_error(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "unknown"}
+
+    with _patch_apiclient_success():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "host": "1.1.1.1",
+                "password": "test-password",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_already_configured(hass: HomeAssistant) -> None:
@@ -465,8 +535,20 @@ async def test_reconfigure_invalid_auth(
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"password": "invalid_auth"}
+
+    with _patch_apiclient_success():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "host": "1.1.1.1",
+                "password": "test-password",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
 
 
 async def test_reconfigure_cannot_connect(
@@ -501,8 +583,20 @@ async def test_reconfigure_cannot_connect(
         )
 
     assert result["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"host": "cannot_connect"}
+
+    with _patch_apiclient_success():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "host": "1.1.1.1",
+                "password": "test-password",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
 
 
 async def test_reconfigure_unexpected_error(
@@ -537,8 +631,20 @@ async def test_reconfigure_unexpected_error(
         )
 
     assert result["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "unknown"}
+
+    with _patch_apiclient_success():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "host": "1.1.1.1",
+                "password": "test-password",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
 
 
 async def test_reconfigure_already_configured(
