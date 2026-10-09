@@ -88,7 +88,7 @@ class OumanEh800Coordinator(DataUpdateCoordinator[dict[OumanEndpoint, OumanValue
     def device_info(self, device: OumanDevice) -> DeviceInfo:
         """Return the device info for a logical device."""
         device_info = self._device_info[device]
-        if device is not OumanDevice.MAIN and "via_device_id" not in device_info:
+        if device is not OumanDevice.MAIN and device_info.get("via_device_id") is None:
             device_info["via_device_id"] = dr.async_get_device_id_by_identifier(
                 self.hass,
                 self._main_device_identifier,
