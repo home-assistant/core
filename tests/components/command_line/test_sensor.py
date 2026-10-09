@@ -1379,18 +1379,26 @@ async def test_template_quoted_executable_uses_exec(
     )
 
 
+@pytest.mark.parametrize(
+    "edited_command",
+    [
+        pytest.param("echo {{ 'clean' }}", id="template_without_shell_features"),
+        pytest.param("echo clean | cat", id="no_template"),
+    ],
+)
 async def test_template_issue_id_stable_across_command_edits(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
+    edited_command: str,
 ) -> None:
-    """Editing the command to remove shell features clears the original issue."""
+    """Editing the command to remove templated shell features clears the original issue."""
     # A shell feature creates the issue for this entity.
     render_template_args(hass, "echo {{ 'a|b' }}", "sensor", "Test")
     assert [iid for (dom, iid) in issue_registry.issues if dom == DOMAIN]
 
-    # The same entity with an edited, safe command clears it; a command-derived
+    # The same entity with an edited command clears it; a command-derived
     # id would instead leave the original issue behind.
-    render_template_args(hass, "echo {{ 'clean' }}", "sensor", "Test")
+    render_template_args(hass, edited_command, "sensor", "Test")
     assert not [iid for (dom, iid) in issue_registry.issues if dom == DOMAIN]
 
 
