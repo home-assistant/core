@@ -64,6 +64,7 @@ SENSOR_DESCRIPTIONS: tuple[TeleinfoSensorEntityDescription, ...] = (
     # ------------------------------------------------------------------
     TeleinfoSensorEntityDescription(
         key="PAPP",
+        # pylint: disable-next=home-assistant-redundant-translation-key
         translation_key="apparent_power",
         device_class=SensorDeviceClass.APPARENT_POWER,
         state_class=SensorStateClass.MEASUREMENT,
