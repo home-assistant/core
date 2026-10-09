@@ -2,7 +2,7 @@
 
 import datetime
 import json
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 import requests_mock
@@ -128,12 +128,28 @@ async def test_form_cannot_connect(
     )
 
     assert result2["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "cannot_connect"}
+
+    mock_json = await async_load_json_object_fixture(hass, "metoffice.json", DOMAIN)
+    requests_mock.get(
+        "https://data.hub.api.metoffice.gov.uk/sitespecific/v0/point/daily",
+        text=json.dumps(mock_json["wavertree_daily"]),
+    )
+    with patch(
+        "homeassistant.components.metoffice.async_setup_entry",
+        return_value=True,
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"api_key": TEST_API_KEY},
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_unknown_error(
-    hass: HomeAssistant, mock_simple_manager_fail
+    hass: HomeAssistant, mock_simple_manager_fail: MagicMock
 ) -> None:
     """Test we handle unknown error."""
     mock_instance = mock_simple_manager_fail.return_value
@@ -149,8 +165,21 @@ async def test_form_unknown_error(
     )
 
     assert result2["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "unknown"}
+
+    mock_instance.get_forecast = MagicMock()
+    mock_instance.get_forecast.return_value.name = TEST_SITE_NAME_WAVERTREE
+    with patch(
+        "homeassistant.components.metoffice.async_setup_entry",
+        return_value=True,
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"api_key": TEST_API_KEY},
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.freeze_time(datetime.datetime(2024, 11, 23, 12, tzinfo=datetime.UTC))
