@@ -24,6 +24,7 @@ from homeassistant.components.climate import (
     SWING_OFF,
     ClimateEntity,
     ClimateEntityFeature,
+    ClimateEntityStateAttribute,
     HVACMode,
 )
 from homeassistant.components.infrared import (
@@ -41,6 +42,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .const import (
     CONF_DEVICE_TYPE,
@@ -213,7 +215,17 @@ class LgAcClimateEntity(
         if (fan_mode := last_state.attributes.get(ATTR_FAN_MODE)) in _HA_FAN_TO_LIB:
             self._attr_fan_mode = fan_mode
         if (temperature := last_state.attributes.get(ATTR_TEMPERATURE)) is not None:
-            self._attr_native_target_temperature = float(temperature)
+            self._attr_native_target_temperature = float(
+                round(
+                    TemperatureConverter.convert(
+                        float(temperature),
+                        last_state.attributes[
+                            ClimateEntityStateAttribute.TEMPERATURE_UNIT
+                        ],
+                        self.native_temperature_unit,
+                    )
+                )
+            )
         if (swing := last_state.attributes.get(ATTR_SWING_MODE)) in _HA_SWING_TO_LIB:
             self._attr_swing_mode = swing
         if (

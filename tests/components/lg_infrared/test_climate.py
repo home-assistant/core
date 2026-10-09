@@ -41,11 +41,16 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
     STATE_UNAVAILABLE,
     Platform,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
-from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
+from homeassistant.util.unit_system import (
+    METRIC_SYSTEM,
+    US_CUSTOMARY_SYSTEM,
+    UnitSystem,
+)
 
 from tests.common import MockConfigEntry, mock_restore_cache, snapshot_platform
 from tests.components.common import assert_availability_follows_source_entity
@@ -552,6 +557,7 @@ async def test_target_temperature_feature_follows_configured_modes(
             {
                 "fan_mode": FAN_HIGH,
                 "temperature": 29.0,
+                "temperature_unit": UnitOfTemperature.CELSIUS,
                 ATTR_SWING_MODE: "high",
                 ATTR_SWING_HORIZONTAL_MODE: "left",
             },
@@ -566,7 +572,11 @@ async def test_target_temperature_feature_follows_configured_modes(
         ),
         pytest.param(
             HVACMode.HEAT,
-            {"fan_mode": FAN_HIGH, "temperature": 29.0},
+            {
+                "fan_mode": FAN_HIGH,
+                "temperature": 29.0,
+                "temperature_unit": UnitOfTemperature.CELSIUS,
+            },
             (HVACMode.OFF, FAN_HIGH, 29.0, "off", "off"),
             id="mode_no_longer_configured_is_ignored",
         ),
@@ -601,6 +611,72 @@ async def test_state_restored_on_restart(
     assert state.attributes["temperature"] == expected_temp
     assert state.attributes[ATTR_SWING_MODE] == expected_swing
     assert state.attributes[ATTR_SWING_HORIZONTAL_MODE] == expected_swing_h
+
+
+@pytest.mark.parametrize(
+    ("restored_temperature", "restored_unit"),
+    [
+        pytest.param(17, UnitOfTemperature.CELSIUS, id="restored_celsius"),
+        pytest.param(63, UnitOfTemperature.FAHRENHEIT, id="restored_fahrenheit"),
+    ],
+)
+@pytest.mark.parametrize(
+    ("unit_system", "expected_temperature"),
+    [
+        pytest.param(METRIC_SYSTEM, 17, id="current_celsius"),
+        pytest.param(US_CUSTOMARY_SYSTEM, 63, id="current_fahrenheit"),
+    ],
+)
+async def test_restore_temperature_unit(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+    platforms: list[Platform],
+    restored_temperature: int,
+    restored_unit: UnitOfTemperature,
+    unit_system: UnitSystem,
+    expected_temperature: int,
+) -> None:
+    """Test restored temperatures use their saved unit and round to Celsius degrees."""
+    hass.config.units = unit_system
+    mock_restore_cache(
+        hass,
+        [
+            State(
+                _CLIMATE_ENTITY_ID,
+                HVACMode.COOL,
+                {
+                    "temperature": restored_temperature,
+                    "temperature_unit": restored_unit,
+                },
+            )
+        ],
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.lg_infrared.PLATFORMS", platforms):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    state = hass.states.get(_CLIMATE_ENTITY_ID)
+    assert state is not None
+    assert state.attributes["temperature"] == expected_temperature
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: _CLIMATE_ENTITY_ID, "hvac_mode": HVACMode.COOL},
+        blocking=True,
+    )
+
+    assert len(mock_infrared_emitter_entity.send_command_calls) == 1
+    timings = mock_infrared_emitter_entity.send_command_calls[0].get_raw_timings()
+    assert (
+        timings
+        == LgAcCommand(
+            mode=LgAcMode.COOL, temperature=17, fan=LgAcFanSpeed.AUTO
+        ).get_raw_timings()
+    )
 
 
 @pytest.mark.usefixtures("init_integration")
