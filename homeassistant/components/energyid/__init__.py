@@ -1,6 +1,5 @@
 """The EnergyID integration."""
 
-from dataclasses import dataclass
 import datetime as dt
 from datetime import timedelta
 import functools
@@ -9,15 +8,13 @@ import logging
 from aiohttp import ClientError, ClientResponseError
 from energyid_webhooks.client_v2 import WebhookClient
 
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_DEVICE_ID, STATE_UNAVAILABLE, STATE_UNKNOWN
-from homeassistant.core import (
-    CALLBACK_TYPE,
-    Event,
-    EventStateChangedData,
-    HomeAssistant,
-    callback,
+from homeassistant.const import (
+    CONF_DEVICE_ID,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    Platform,
 )
+from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -36,23 +33,17 @@ from .const import (
     CONF_PROVISIONING_SECRET,
     DOMAIN,
 )
+from .coordinator import (
+    EnergyIDConfigEntry,
+    EnergyIDDirectiveCoordinator,
+    EnergyIDRuntimeData,
+    async_directives_enabled,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-type EnergyIDConfigEntry = ConfigEntry[EnergyIDRuntimeData]
-
 DEFAULT_UPLOAD_INTERVAL_SECONDS = 60
-
-
-@dataclass
-class EnergyIDRuntimeData:
-    """Runtime data for the EnergyID integration."""
-
-    client: WebhookClient
-    mappings: dict[str, str]
-    state_listener: CALLBACK_TYPE | None = None
-    registry_tracking_listener: CALLBACK_TYPE | None = None
-    unavailable_logged: bool = False
+PLATFORMS = [Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: EnergyIDConfigEntry) -> bool:
@@ -66,11 +57,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: EnergyIDConfigEntry) -> 
         session=session,
     )
 
-    entry.runtime_data = EnergyIDRuntimeData(
-        client=client,
-        mappings={},
-    )
-
     is_claimed = None
     try:
         is_claimed = await client.authenticate()
@@ -80,25 +66,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: EnergyIDConfigEntry) -> 
             translation_key="auth_timeout",
         ) from err
     except ClientResponseError as err:
-        # 401/403 = invalid credentials, trigger reauth
         if err.status in (401, 403):
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="invalid_credentials",
             ) from err
-        # Other HTTP errors are likely temporary
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="auth_http_error",
         ) from err
     except ClientError as err:
-        # Network/connection errors are temporary
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="auth_connection_error",
         ) from err
     except Exception as err:
-        # Unknown errors - log and retry (safer than forcing reauth)
         _LOGGER.exception("Unexpected error during EnergyID authentication")
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
@@ -106,13 +88,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: EnergyIDConfigEntry) -> 
         ) from err
 
     if not is_claimed:
-        # Device exists but not claimed = user needs to claim it = auth issue
         raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
             translation_key="device_not_claimed",
         )
 
     _LOGGER.debug("EnergyID device '%s' authenticated successfully", client.device_name)
+
+    directive_coordinator = EnergyIDDirectiveCoordinator(hass, entry, client)
+    entry.runtime_data = EnergyIDRuntimeData(
+        client=client,
+        directive_coordinator=directive_coordinator,
+        mappings={},
+    )
+    # Directives are optional, so a failed first fetch must not block the upload path.
+    await directive_coordinator.async_refresh()
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     async def _async_synchronize_sensors(now: dt.datetime | None = None) -> None:
         """Callback for periodically synchronizing sensor data."""
@@ -154,6 +145,11 @@ async def config_entry_update_listener(
     hass: HomeAssistant, entry: EnergyIDConfigEntry
 ) -> None:
     """Handle config entry updates, including subentry changes."""
+    if entry.runtime_data.directive_coordinator.directives_enabled != (
+        async_directives_enabled(entry)
+    ):
+        await hass.config_entries.async_reload(entry.entry_id)
+        return
     _LOGGER.debug("Config entry updated for %s, reloading listeners", entry.entry_id)
     update_listeners(hass, entry)
 
@@ -377,6 +373,9 @@ def _async_handle_state_change(
 async def async_unload_entry(hass: HomeAssistant, entry: EnergyIDConfigEntry) -> bool:
     """Unload a config entry."""
     _LOGGER.debug("Unloading EnergyID entry for %s", entry.title)
+
+    if not await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        return False
 
     try:
         # Unload subentries if present (guarded for test and reload scenarios)
