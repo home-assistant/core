@@ -183,7 +183,7 @@ async def async_setup_entry(
     )
 
     # The services are registered here for now because they need the account name.
-    # The services will be deprecated when a todo platform is added.
+    # The services are deprecated in favor of the todo platform.
     # pylint: disable=home-assistant-service-registered-in-setup-entry
     hass.services.async_register(
         DOMAIN,
