@@ -2,15 +2,17 @@
 
 The station is faked on the wire, not inside the library: the transport
 records every UDP command the integration sends and answers ``report N``
-requests with the datagrams from ``fixtures/p30.json``. Assertions are made on
+requests with the datagrams from a report corpus in ``fixtures/``. Assertions are made on
 what Home Assistant exposes and on the exact command strings, so they do not
 depend on how ``keba-kecontact`` is built internally.
 
-The report corpus holds raw datagrams captured from a KC-P30 (firmware
-P30 v 3.10.53), idle with the cable plugged in at the station. The serial is
-replaced with ``12345678`` and the RFID fields with zeros; everything else,
-whitespace included, is as received. A report a test has not changed is
-answered byte for byte.
+The corpora hold raw datagrams captured from a KC-P30 (firmware
+P30 v 3.10.53). ``p30.json`` (the default) is idle with the cable plugged in at
+the station only, ``p30_plugged.json`` is plugged into a car but not yet
+enabled, and ``p30_charging.json`` is charging. The serial is replaced with
+``12345678`` and the RFID fields with zeros; everything else, whitespace
+included, is as received. A report a test has not changed is answered byte for
+byte.
 """
 
 import asyncio
@@ -92,6 +94,14 @@ class FakeKebaStation:
             (HOST, UDP_PORT),
         )
 
+    def broadcast(self, data: bytes) -> None:
+        """Send a datagram the station was not asked for."""
+        asyncio.get_running_loop().call_soon(
+            self._protocol.datagram_received,  # type: ignore[union-attr]
+            data,
+            (HOST, UDP_PORT),
+        )
+
     def push(self, report_id: str, **changes: Any) -> None:
         """Change a report; the next poll picks it up."""
         self.reports[report_id] = {**self.reports[report_id], **changes}
@@ -146,9 +156,15 @@ async def _yield(delay: float, result: Any = None) -> Any:
 
 
 @pytest.fixture
-def raw_reports() -> dict[str, str]:
+def corpus() -> str:
+    """Return the fixture file of the report corpus."""
+    return "p30.json"
+
+
+@pytest.fixture
+def raw_reports(corpus: str) -> dict[str, str]:
     """Return the raw report datagrams the fake station answers with."""
-    return load_json_object_fixture("p30.json", DOMAIN)  # type: ignore[return-value]
+    return load_json_object_fixture(corpus, DOMAIN)  # type: ignore[return-value]
 
 
 @pytest.fixture
