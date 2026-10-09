@@ -44,4 +44,3 @@ async def test_stale_shade_devices_removed_on_refresh(
     assert {
         d.id for d in dr.async_entries_for_config_entry(device_registry, entry.entry_id)
     } == existing
-    
