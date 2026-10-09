@@ -54,10 +54,10 @@ async def test_user(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=MOCK_USER_DATA_STEP2
         )
-        # pylint: disable-next=home-assistant-tests-config-flow-unique-id
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["data"][CONF_STATION] == "70272185-xxxx-xxxx-xxxx-43bea330dcae"
         assert result["title"] == "DRESDEN ELBE"
+        assert result["result"].unique_id == MOCK_USER_DATA_STEP2[CONF_STATION]
 
         await hass.async_block_till_done()
 

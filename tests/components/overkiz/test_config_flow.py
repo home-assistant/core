@@ -215,7 +215,6 @@ async def test_form_local_happy_flow(
 
     await hass.async_block_till_done()
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "gateway-1234-5678-1234.local:8443"
     assert result["data"] == {
@@ -225,6 +224,7 @@ async def test_form_local_happy_flow(
         "hub": TEST_SERVER,
         "api_type": "local",
     }
+    assert result["result"].unique_id == TEST_GATEWAY_ID
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -636,7 +636,6 @@ async def test_cloud_allow_multiple_unique_entries(hass: HomeAssistant) -> None:
             {"username": TEST_EMAIL, "password": TEST_PASSWORD},
         )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TEST_EMAIL
     assert result["data"] == {
@@ -645,6 +644,7 @@ async def test_cloud_allow_multiple_unique_entries(hass: HomeAssistant) -> None:
         "password": TEST_PASSWORD,
         "hub": TEST_SERVER,
     }
+    assert result["result"].unique_id == TEST_GATEWAY_ID
 
 
 async def test_cloud_reauth_success(hass: HomeAssistant) -> None:
@@ -1159,7 +1159,6 @@ async def test_dhcp_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> No
             },
         )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TEST_EMAIL
     assert result["data"] == {
@@ -1168,6 +1167,7 @@ async def test_dhcp_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> No
         "hub": TEST_SERVER,
         "api_type": "cloud",
     }
+    assert result["result"].unique_id == TEST_GATEWAY_ID
 
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -1237,7 +1237,6 @@ async def test_zeroconf_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -
             {"username": TEST_EMAIL, "password": TEST_PASSWORD},
         )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TEST_EMAIL
     assert result["data"] == {
@@ -1246,6 +1245,7 @@ async def test_zeroconf_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -
         "hub": TEST_SERVER,
         "api_type": "cloud",
     }
+    assert result["result"].unique_id == TEST_GATEWAY_ID
 
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -1293,7 +1293,6 @@ async def test_local_zeroconf_flow(
             },
         )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "gateway-1234-5678-9123.local:8443"
 
@@ -1305,6 +1304,7 @@ async def test_local_zeroconf_flow(
         "hub": TEST_SERVER,
         "api_type": "local",
     }
+    assert result["result"].unique_id == TEST_GATEWAY_ID
     assert len(mock_setup_entry.mock_calls) == 1
 
 

@@ -12,7 +12,14 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
-from .mock import DHCP_FORMATTED_MAC, HOST, MOCK_INFO, NAME, setup_nuki_integration
+from .mock import (
+    DHCP_FORMATTED_MAC,
+    HOST,
+    ID_HEX,
+    MOCK_INFO,
+    NAME,
+    setup_nuki_integration,
+)
 
 
 async def test_form(hass: HomeAssistant) -> None:
@@ -44,7 +51,6 @@ async def test_form(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "BC614E"
     assert result2["data"] == {
@@ -52,6 +58,7 @@ async def test_form(hass: HomeAssistant) -> None:
         CONF_PORT: 8080,
         CONF_TOKEN: "test-token",
     }
+    assert result2["result"].unique_id == ID_HEX
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -178,7 +185,6 @@ async def test_dhcp_flow(hass: HomeAssistant) -> None:
             },
         )
 
-        # pylint: disable-next=home-assistant-tests-config-flow-unique-id
         assert result2["type"] is FlowResultType.CREATE_ENTRY
         assert result2["title"] == "BC614E"
         assert result2["data"] == {
@@ -186,6 +192,7 @@ async def test_dhcp_flow(hass: HomeAssistant) -> None:
             CONF_PORT: 8080,
             CONF_TOKEN: "test-token",
         }
+        assert result2["result"].unique_id == ID_HEX
 
         await hass.async_block_till_done()
         assert len(mock_setup_entry.mock_calls) == 1

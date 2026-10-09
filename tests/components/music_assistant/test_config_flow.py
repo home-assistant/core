@@ -1270,9 +1270,9 @@ async def test_app_installed_not_running(
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
     assert install_addon.call_count == 0
     assert start_addon.call_args == call(APP_SLUG)
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {CONF_URL: APP_URL, CONF_TOKEN: "test_token"}
+    assert result["result"].unique_id == "1234"
 
 
 async def test_app_running(
@@ -1697,8 +1697,8 @@ async def test_app_onboarding_poll_timeout(
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
     assert result["type"] is FlowResultType.EXTERNAL_STEP_DONE
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "1234"
 
 
 async def test_app_onboarding_url_without_request(

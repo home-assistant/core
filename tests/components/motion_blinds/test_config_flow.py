@@ -151,7 +151,6 @@ async def test_config_flow_manual_host_success(hass: HomeAssistant) -> None:
         {CONF_API_KEY: TEST_API_KEY},
     )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == DEFAULT_GATEWAY_NAME
     assert result["data"] == {
@@ -159,6 +158,7 @@ async def test_config_flow_manual_host_success(hass: HomeAssistant) -> None:
         CONF_API_KEY: TEST_API_KEY,
         const.CONF_INTERFACE: TEST_HOST_ANY,
     }
+    assert result["result"].unique_id == TEST_MAC
 
 
 async def test_config_flow_discovery_1_success(hass: HomeAssistant) -> None:

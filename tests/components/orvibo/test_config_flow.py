@@ -198,11 +198,11 @@ async def test_discovery_no_devices(
         {CONF_HOST: "192.168.1.10", CONF_MAC: "aa:bb:cc:dd:ee:ff"},
     )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == f"{DEFAULT_NAME} (192.168.1.10)"
     assert result["data"][CONF_HOST] == "192.168.1.10"
     assert result["data"][CONF_MAC] == "aa:bb:cc:dd:ee:ff"
+    assert result["result"].unique_id == "aa:bb:cc:dd:ee:ff"
 
 
 @pytest.mark.parametrize(
@@ -233,10 +233,10 @@ async def test_import_flow_success(
         DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=import_data
     )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "192.168.1.5"
     assert result["data"][CONF_MAC] == expected_mac
+    assert result["result"].unique_id == expected_mac
 
 
 @pytest.mark.parametrize(
