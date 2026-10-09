@@ -368,9 +368,6 @@
       "signal_noise": {
         "name": "Signal noise (channel {channel})"
       },
-      "signal_strength": {
-        "name": "Signal strength"
-      },
       "successful_commands": {
         "name": "Successful commands ({direction})"
       },
