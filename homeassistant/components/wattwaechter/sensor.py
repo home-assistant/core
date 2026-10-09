@@ -40,6 +40,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
+from .const import OBIS_GAS_POWER
 from .coordinator import WattwaechterConfigEntry, WattwaechterCoordinator
 from .entity import WattwaechterEntity
 
@@ -364,6 +365,14 @@ KNOWN_OBIS_CODES: dict[str, SensorEntityDescription] = {
         translation_key="gas_flow_rate",
         native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
         device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=3,
+    ),
+    OBIS_GAS_POWER: SensorEntityDescription(
+        key=OBIS_GAS_POWER,
+        translation_key="gas_power",
+        native_unit_of_measurement=UnitOfPower.KILO_WATT,
+        device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=3,
     ),
