@@ -21,6 +21,9 @@ from .conftest import Fixture, MockPyViCare
 
 from tests.common import MockConfigEntry, snapshot_platform
 
+GET_ACTIVE_MODE = (
+    "PyViCare.PyViCareVentilationDevice.VentilationDevice.getActiveVentilationMode"
+)
 GET_QUICKMODE = (
     "PyViCare.PyViCareVentilationDevice.VentilationDevice.getVentilationQuickmode"
 )
@@ -59,14 +62,12 @@ async def test_api_error_logged_on_the_edge(
 ) -> None:
     """Test that a lasting API error is logged once and again after it clears."""
     fixtures: list[Fixture] = [Fixture({"type:ventilation"}, "vicare/VitoPure.json")]
-    vicare_data = MockPyViCare(fixtures).as_vicare_data()
-    api = vicare_data.devices[0].api
 
     with (
         patch(
             "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
         ),
-        patch(f"{MODULE}._setup_vicare_api", return_value=vicare_data),
+        patch(f"{MODULE}.PyViCare", return_value=MockPyViCare(fixtures)),
         patch(f"{MODULE}.PLATFORMS", [Platform.FAN]),
     ):
         await setup_integration(hass, mock_config_entry)
@@ -85,13 +86,13 @@ async def test_api_error_logged_on_the_edge(
         ]
 
     caplog.clear()
-    with patch.object(api, "getActiveVentilationMode", side_effect=error):
+    with patch(GET_ACTIVE_MODE, side_effect=error):
         for _ in range(3):
             await async_update_entity(hass, entity_id)
     assert len(logged()) == 1
 
     await async_update_entity(hass, entity_id)
-    with patch.object(api, "getActiveVentilationMode", side_effect=error):
+    with patch(GET_ACTIVE_MODE, side_effect=error):
         await async_update_entity(hass, entity_id)
     assert len(logged()) == 2
 
