@@ -240,6 +240,11 @@ async def _handle_sensor_update(
 
             await charger.home_battery(soc=hb_soc, power=hb_power)
 
+    except AuthenticationError as err:
+        _LOGGER.debug(
+            "Authentication failed while pushing %s update: %s", changed_entity, err
+        )
+        entry.async_start_reauth(hass)
     except UnsupportedFeature:
         _LOGGER.debug(
             "Pushing %s data is unsupported by this OpenEVSE firmware", changed_entity
@@ -251,6 +256,7 @@ async def _handle_sensor_update(
         ParseJSONError,
         UnknownError,
         RuntimeError,
+        ValueError,
         OSError,
     ) as err:
         _LOGGER.debug(
