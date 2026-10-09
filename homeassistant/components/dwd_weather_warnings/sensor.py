@@ -155,7 +155,6 @@ class DwdWeatherWarningsSensor(
 
     @property
     @override
-    # pylint: disable-next=home-assistant-coordinator-entity-available
     def available(self) -> bool:
         """Could the device be accessed during the last update call."""
         return self.coordinator.api.data_valid

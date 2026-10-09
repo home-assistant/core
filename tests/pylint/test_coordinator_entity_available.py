@@ -100,7 +100,7 @@ class MyCoordinator(DataUpdateCoordinator[dict]):
 class MyEntity(CoordinatorEntity[MyCoordinator]):
     @property
     def available(self) -> bool:
-        return self.coordinator.client.connected
+        return self.key in self.coordinator.data
 """,
             _MODULE,
             id="push_coordinator",
@@ -127,10 +127,101 @@ class MyBaseEntity(CoordinatorEntity["MyBaseCoordinator"]):
 class MyEntity(MyBaseEntity):
     @property
     def available(self) -> bool:
-        return self.coordinator.client.connected
+        return self.key in self.coordinator.data
 """,
             _MODULE,
             id="push_coordinator_forward_reference",
+        ),
+        pytest.param(
+            """
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+class MyEntity(CoordinatorEntity):
+    @property
+    def available(self) -> bool:
+        return self.device.online
+""",
+            _MODULE,
+            id="own_source",
+        ),
+        pytest.param(
+            """
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+class MyEntity(CoordinatorEntity):
+    @property
+    def available(self) -> bool:
+        return self.websocket_alive and self.key in self.coordinator.data
+""",
+            _MODULE,
+            id="own_source_and_coordinator_data",
+        ),
+        pytest.param(
+            """
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+class MyEntity(CoordinatorEntity):
+    @property
+    def available(self) -> bool:
+        if self.device.connected:
+            return self.key in self.coordinator.data
+        return False
+""",
+            _MODULE,
+            id="own_source_in_condition",
+        ),
+        pytest.param(
+            """
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+class MyEntity(CoordinatorEntity):
+    @property
+    def available(self) -> bool:
+        return self._attr_available and self.key in self.coordinator.data
+""",
+            _MODULE,
+            id="attr_available",
+        ),
+        pytest.param(
+            """
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+class MyEntity(CoordinatorEntity):
+    @property
+    def available(self) -> bool:
+        return self.coordinator.client.is_available
+""",
+            _MODULE,
+            id="coordinator_attribute",
+        ),
+        pytest.param(
+            """
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+class MyEntity(CoordinatorEntity):
+    @property
+    def available(self) -> bool:
+        return self.entity_description.available_fn(self.coordinator)
+""",
+            _MODULE,
+            id="coordinator_passed_on",
+        ),
+        pytest.param(
+            """
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+class MyEntity(CoordinatorEntity):
+    def _vehicle(self):
+        if not super().available:
+            return None
+        return self.coordinator.data.get(self.key)
+
+    @property
+    def available(self) -> bool:
+        return self._vehicle() is not None
+""",
+            _MODULE,
+            id="super_available_in_helper",
         ),
         pytest.param(
             """
@@ -201,13 +292,100 @@ class MyEntity(CoordinatorEntity):
             """
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+class MyEntity(CoordinatorEntity):
+    @property
+    def data(self) -> dict | None:
+        return self.coordinator.data.get(self.key)
+
+    @property
+    def available(self) -> bool:
+        return self.data is not None
+""",
+            id="entity_property",
+        ),
+        pytest.param(
+            """
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
+
+class MyCoordinator(DataUpdateCoordinator[dict]):
+    def get_device(self, key: str) -> dict | None:
+        return self.data.get(key)
+
+class MyEntity(CoordinatorEntity[MyCoordinator]):
+    @property
+    def available(self) -> bool:
+        return self.coordinator.get_device(self.key) is not None
+""",
+            id="coordinator_method",
+        ),
+        pytest.param(
+            """
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+class MyEntity(CoordinatorEntity):
+    @property
+    def available(self) -> bool:
+        return self.entity_description.available_fn(self.coordinator.data)
+""",
+            id="description_callable",
+        ),
+        pytest.param(
+            """
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+class MyEntity(CoordinatorEntity):
+    @property
+    def available(self) -> bool:
+        return self.coordinator.data[self.device.mac]["available"]
+""",
+            id="own_attribute_as_key",
+        ),
+        pytest.param(
+            """
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+class MyEntity(CoordinatorEntity):
+    @property
+    def _device(self) -> dict | None:
+        if self._has_device:
+            return self.coordinator.data.get(self.key)
+        return None
+
+    @property
+    def _has_device(self) -> bool:
+        return self._device is not None or self.key in self.coordinator.data
+
+    @property
+    def available(self) -> bool:
+        return self._device is not None
+""",
+            id="recursive_properties",
+        ),
+        pytest.param(
+            """
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+class MyEntity(CoordinatorEntity):
+    @property
+    def available(self) -> bool:
+        return is_present(self.hass, self.coordinator.data["address"])
+""",
+            id="hass_argument",
+        ),
+        pytest.param(
+            """
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
 class MyBaseEntity(CoordinatorEntity):
     pass
 
 class MyEntity(MyBaseEntity):
     @property
     def available(self) -> bool:
-        return self.device.online
+        return self.key in self.coordinator.data
 """,
             id="indirect_coordinator_entity",
         ),
@@ -218,7 +396,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 class MyEntity(CoordinatorEntity):
     @property
     def available(self) -> bool:
-        return super()._attr_available and self.device.online
+        return super()._attr_available and self.key in self.coordinator.data
 """,
             id="super_attr_available",
         ),
@@ -229,7 +407,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 class MyEntity(CoordinatorEntity):
     @property
     def available(self) -> bool:
-        if self.device is None:
+        if self.coordinator.data is None:
             return False
         return True
 """,
@@ -242,7 +420,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 class MyEntity(CoordinatorEntity):
     @property
     def available(self) -> bool:
-        if self.device is not None:
+        if self.coordinator.data is not None:
             return True
 """,
             id="conditional_true_falls_through",
@@ -269,7 +447,7 @@ class MyCoordinator(DataUpdateCoordinator[dict]):
 class MyEntity(CoordinatorEntity[MyCoordinator]):
     @property
     def available(self) -> bool:
-        return self.device.online
+        return self.key in self.coordinator.data
 """,
             id="polling_coordinator",
         ),
@@ -292,7 +470,7 @@ class MyCoordinator(DataUpdateCoordinator[dict]):
 class MyEntity(CoordinatorEntity[MyCoordinator]):
     @property
     def available(self) -> bool:
-        return self.device.online
+        return self.key in self.coordinator.data
 """,
             id="interval_set_later",
         ),
@@ -310,7 +488,7 @@ class MyCoordinator(DataUpdateCoordinator[dict]):
 class MyEntity(CoordinatorEntity[MyCoordinator]):
     @property
     def available(self) -> bool:
-        return self.device.online
+        return self.key in self.coordinator.data
 """,
             id="interval_in_kwargs",
         ),
@@ -327,7 +505,7 @@ class MyCoordinator(DataUpdateCoordinator[dict]):
 class MyEntity(CoordinatorEntity[MyCoordinator]):
     @property
     def available(self) -> bool:
-        return self.device.online
+        return self.key in self.coordinator.data
 """,
             id="coordinator_without_init",
         ),
@@ -338,7 +516,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 class MyEntity(CoordinatorEntity[UnknownCoordinator]):
     @property
     def available(self) -> bool:
-        return self.device.online
+        return self.key in self.coordinator.data
 """,
             id="unknown_coordinator",
         ),

@@ -99,7 +99,6 @@ class AutomowerMessageEventEntity(AutomowerBaseEntity, EventEntity):
 
     @property
     @override
-    # pylint: disable-next=home-assistant-coordinator-entity-available
     def available(self) -> bool:
         """Return True if the entity is available."""
         return self.websocket_alive and self.mower_id in self.coordinator.data

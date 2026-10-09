@@ -147,7 +147,7 @@ Every check has a code following the
 | `W7442` | [`home-assistant-redundant-translation-key`](#w7442-home-assistant-redundant-translation-key) | `translation_key` only repeats the name the `device_class` already provides |
 | `W7447` | [`home-assistant-coordinator-untyped-config-entry`](#w7447-home-assistant-coordinator-untyped-config-entry) | Coordinator should use the integration's typed config entry instead of `ConfigEntry` |
 | `W7448` | [`home-assistant-coordinator-redundant-config-entry`](#w7448-home-assistant-coordinator-redundant-config-entry) | Coordinator assigns `self.config_entry` that `DataUpdateCoordinator.__init__` already sets |
-| `W7449` | [`home-assistant-coordinator-entity-available`](#w7449-home-assistant-coordinator-entity-available) | `CoordinatorEntity` overrides `available` without using `super().available` |
+| `W7449` | [`home-assistant-coordinator-entity-available`](#w7449-home-assistant-coordinator-entity-available) | `CoordinatorEntity` overrides `available` with only `coordinator.data` and without `super().available` |
 
 
 ## `home_assistant_logger` checker
@@ -355,8 +355,10 @@ Checks `available` overrides on coordinator entities.
 ### `W7449`: `home-assistant-coordinator-entity-available`
 
 `CoordinatorEntity.available` returns `coordinator.last_update_success`, so the
-entity becomes unavailable when an update fails. An override that doesn't use
-it keeps the entity available with the data of the last successful update:
+entity becomes unavailable when an update fails. An override that takes its
+availability only from `coordinator.data` keeps the entity available with the
+data of the last successful update, because the coordinator keeps that data
+when an update fails:
 
 ```python
 @property
@@ -364,11 +366,15 @@ def available(self) -> bool:
     return super().available and self.device_id in self.coordinator.data
 ```
 
-An override that only returns `True` is deliberate and not flagged. Neither
-are entities of a push coordinator, one that never sets an `update_interval`
-and gets its data through `async_set_updated_data`: its `last_update_success`
-doesn't show whether the device is reachable, so those entities use their own
-availability source.
+Properties and methods of the entity and the coordinator are followed, so
+`self.data` or `self.coordinator.get_device(...)` reading `coordinator.data`
+count as coordinator data.
+
+Overrides with a source of their own, such as a client, a device, a websocket
+or `_attr_available`, are not flagged. Neither are entities of a push
+coordinator, one that never sets an `update_interval` and gets its data
+through `async_set_updated_data`: its `last_update_success` doesn't show
+whether the device is reachable.
 
 
 ## `home_assistant_async_load_fixtures` checker

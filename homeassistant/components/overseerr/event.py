@@ -104,7 +104,6 @@ class OverseerrEvent(OverseerrEntity, EventEntity):
 
     @property
     @override
-    # pylint: disable-next=home-assistant-coordinator-entity-available
     def available(self) -> bool:
         """Return True if entity is available."""
         return self._attr_available and self.coordinator.push
