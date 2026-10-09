@@ -31,7 +31,7 @@ from .const import (
     NETATMO_CREATE_CAMERA,
     WEBHOOK_PUSH_TYPE,
 )
-from .coordinator import EVENT, HOME, SIGNAL_NAME, NetatmoConfigEntry, NetatmoDevice
+from .coordinator import EVENT, HOME, NetatmoConfigEntry, NetatmoDevice
 from .entity import NetatmoModuleEntity
 from .helper import device_type_to_str
 
@@ -84,25 +84,26 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
         )
         self._light_state = None
 
-        self._publishers.extend(
-            [
-                {
-                    "name": HOME,
-                    "home_id": self.home.entity_id,
-                    SIGNAL_NAME: f"{HOME}-{self.home.entity_id}",
-                },
-                {
-                    "name": EVENT,
-                    "home_id": self.home.entity_id,
-                    SIGNAL_NAME: f"{EVENT}-{self.home.entity_id}",
-                },
-            ]
-        )
-
     @override
     async def async_added_to_hass(self) -> None:
         """Entity created."""
         await super().async_added_to_hass()
+
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{HOME}-{self.home.entity_id}",
+                self.async_home_update_callback,
+            )
+        )
+
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{EVENT}-{self.home.entity_id}",
+                self.async_event_update_callback,
+            )
+        )
 
         for event_type in CAMERA_TRIGGERS:
             self.async_on_remove(
@@ -312,7 +313,13 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
     @callback
     @override
     def async_update_callback(self) -> None:
-        """Update the entity's state."""
+        """Update the entity's state (fallback/default callback)."""
+        # If anything calls the default update callback, treat it like a home update
+        self.async_home_update_callback()
+
+    @callback
+    def async_home_update_callback(self) -> None:
+        """Update the entity's state from a full HOME poll (/homedata)."""
 
         if self._webhook_connection is not None and (
             self.device.reachable or self._webhook_connection == self.device.reachable
@@ -325,6 +332,16 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
             and (self.device.reachable or self._webhook_on == self.device.monitoring)
         ):
             self._webhook_on = None
+
+        self.data_handler.events[self.device.entity_id] = self.process_events(
+            self.device.events
+        )
+
+        self.async_write_ha_state()
+
+    @callback
+    def async_event_update_callback(self) -> None:
+        """Update entity state from an EVENT poll (/getevents)."""
 
         self.data_handler.events[self.device.entity_id] = self.process_events(
             self.device.events
