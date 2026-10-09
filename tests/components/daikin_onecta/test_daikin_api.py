@@ -3,7 +3,12 @@
 from datetime import UTC, datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from daikin_onecta import OnectaApiError, OnectaConnectionError, OnectaRateLimitError
+from daikin_onecta import (
+    OnectaApiError,
+    OnectaConnectionError,
+    OnectaRateLimitError,
+    Site,
+)
 from daikin_onecta.rate_limit import RateLimit
 import pytest
 
@@ -63,6 +68,16 @@ async def test_get_device_details_rate_limit(
 
     with pytest.raises(OnectaRateLimitError):
         await api.get_cloud_device_details()
+
+
+async def test_get_sites(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
+    """Fetch sites without using the normal polling endpoint."""
+    api = DaikinApi(hass, config_entry, MagicMock())
+    sites = [Site(id="site-1", gateway_device_ids=["gateway-1"])]
+    api.client.get_sites = AsyncMock(return_value=sites)
+
+    assert await api.get_sites() == sites
+    api.client.get_sites.assert_awaited_once_with()
 
 
 async def test_get_device_details_respects_cooldown(

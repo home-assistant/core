@@ -12,7 +12,7 @@ from daikin_onecta.exceptions import (
     OnectaConnectionError,
     OnectaRateLimitError,
 )
-from daikin_onecta.models import GatewayDevice
+from daikin_onecta.models import GatewayDevice, Site
 
 from homeassistant import config_entries, core
 from homeassistant.helpers import config_entry_oauth2_flow
@@ -90,6 +90,11 @@ class DaikinApi:
             ):
                 return None
             return await self._client.get_gateway_devices()
+
+    async def get_sites(self) -> list[Site]:
+        """Return account sites for explicit, non-polling diagnostics."""
+        async with self._cloud_lock:
+            return await self._client.get_sites()
 
     async def async_execute_command(
         self, command: Callable[[OnectaClient], Awaitable[None]]
