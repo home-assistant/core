@@ -41,9 +41,9 @@ class UnifiConnectionManager:
     ) -> None:
         """Initialize the manager."""
         self.hass = hass
+        self.config_entry = config_entry
         self.api = api
         self.signal = signal
-        self.config_entry = config_entry
         self.available = True
 
         self._backoff = BackoffPolicy()
