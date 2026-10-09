@@ -1769,7 +1769,7 @@
       }
     },
     "elke27": {
-      "name": "Elk E27 Alarm Engine",
+      "name": "Elk E27 Alarm Engine Integration",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_push"
