@@ -1,19 +1,17 @@
 """Repairs for the recorder."""
 
-import logging
 from typing import Any, override
 
 from homeassistant.components.repairs import ConfirmRepairFlow, RepairsFlowResult
 from homeassistant.core import HomeAssistant
 
+from .const import LOGGER
 from .util import (
     CORRUPT_DATABASE_ISSUE_PREFIX,
     dburl_to_path,
     delete_corrupt_database_files,
     get_instance,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class CorruptDatabaseFilesRepairFlow(ConfirmRepairFlow):
@@ -34,7 +32,7 @@ class CorruptDatabaseFilesRepairFlow(ConfirmRepairFlow):
                 self.issue_id.removeprefix(f"{CORRUPT_DATABASE_ISSUE_PREFIX}_"),
             )
         except OSError:
-            _LOGGER.exception("Could not delete the corrupt database files")
+            LOGGER.exception("Could not delete the corrupt database files")
             return self.async_abort(reason="delete_failed")
         return self.async_create_entry(data={})
 
