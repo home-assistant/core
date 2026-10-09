@@ -197,7 +197,7 @@ class PassiveBluetoothDataUpdate[_T]:
         """Set the restored data from storage."""
         self.devices.update(
             {
-                key or None: DeviceInfo(device_info)
+                key or None: DeviceInfo(**device_info)
                 for key, device_info in restore_data["devices"].items()
             }
         )
