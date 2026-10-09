@@ -70,6 +70,14 @@ class DaikinOnectaEntity(CoordinatorEntity[OnectaDataUpdateCoordinator]):
             translation_placeholders={"device": self._device.name},
         )
 
+    def _raise_command_failed(self, translation_key: str) -> Never:
+        """Raise a translated command error for this device."""
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key=translation_key,
+            translation_placeholders={"device": self._device.name},
+        )
+
 
 class DaikinEntity(DaikinOnectaEntity):
     """Compatibility base for entities backed by a Daikin gateway."""
@@ -103,14 +111,6 @@ class DaikinEntity(DaikinOnectaEntity):
         """Execute a cloud command or raise a translated Home Assistant error."""
         if not await self.coordinator.api.async_execute_command(command):
             self._raise_command_failed(translation_key)
-
-    def _raise_command_failed(self, translation_key: str) -> Never:
-        """Raise a translated command error for this device."""
-        raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key=translation_key,
-            translation_placeholders={"device": self._device.name},
-        )
 
 
 class DaikinManagementPointEntity(DaikinEntity):

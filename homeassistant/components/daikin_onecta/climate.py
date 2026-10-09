@@ -27,11 +27,10 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN, FANMODE_FIXED
+from .const import FANMODE_FIXED
 from .coordinator import DaikinOnectaConfigEntry, OnectaDataUpdateCoordinator
 from .device import DaikinOnectaDevice
 from .entity import DaikinOnectaEntity
@@ -173,14 +172,6 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
         self._attr_swing_horizontal_mode = self._get_swing_horizontal_mode()
         self._attr_preset_mode = self._get_preset_mode()
         self._attr_fan_mode = self._get_fan_mode()
-
-    def _raise_command_failed(self, translation_key: str) -> None:
-        """Raise an error when Daikin rejects a command."""
-        raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key=translation_key,
-            translation_placeholders={"device": self._device.name},
-        )
 
     async def _async_execute_climate_command(
         self, command: Callable[[ClimateControlClient], Awaitable[None]]
