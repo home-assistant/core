@@ -19,6 +19,7 @@ def mock_config_entry() -> MockConfigEntry:
         title="Home",
         domain=DOMAIN,
         data={CONF_ZONE: "zone.home"},
+        minor_version=2,
     )
 
 

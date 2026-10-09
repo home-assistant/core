@@ -18,6 +18,7 @@ class OpenMeteoFlowHandler(ConfigFlow, domain=DOMAIN):
     """Config flow for OpenMeteo."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
     @override
     async def async_step_user(
