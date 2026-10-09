@@ -133,7 +133,7 @@ async def test_remove_hub_device_via_websocket_is_blocked(
 
     client = await hass_ws_client(hass)
 
-    msg = await client.remove_device(shade_device.id)
+    msg = await client.remove_device(hub_device.id)
 
     assert msg["success"] is False
     assert msg["error"]["code"] == "home_assistant_error"
