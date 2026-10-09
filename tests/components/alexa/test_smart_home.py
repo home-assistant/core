@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import Generator
+import logging
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
@@ -6054,8 +6055,11 @@ async def test_camera_discovery_webrtc_camera_off(hass: HomeAssistant) -> None:
     "mock_camera_capabilities", [{camera.StreamType.WEB_RTC}], indirect=True
 )
 @pytest.mark.usefixtures("mock_camera_capabilities")
-async def test_initiate_session_with_offer(hass: HomeAssistant) -> None:
+async def test_initiate_session_with_offer(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test InitiateSessionWithOffer returns an answer with gathered candidates."""
+    caplog.set_level(logging.DEBUG)
     request = get_new_request(
         "Alexa.RTCSessionController",
         "InitiateSessionWithOffer",
@@ -6120,6 +6124,16 @@ async def test_initiate_session_with_offer(hass: HomeAssistant) -> None:
         f"a={WEBRTC_CANDIDATE_AUDIO}\r\n"
         "a=end-of-candidates\r\n"
     )
+    assert (
+        f"Starting WebRTC session {RTC_SESSION_ID} for camera.demo_camera"
+        in caplog.text
+    )
+    assert (
+        f"WebRTC answer for session {RTC_SESSION_ID} includes ICE candidates: "
+        f"['{WEBRTC_CANDIDATE_IN_ANSWER}', '{WEBRTC_CANDIDATE_IPV4}', "
+        f"'{WEBRTC_CANDIDATE_RELAY}', '{WEBRTC_CANDIDATE_AUDIO}']"
+    ) in caplog.text
+    assert f"Generated WebRTC answer for session {RTC_SESSION_ID} in" in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -6127,9 +6141,10 @@ async def test_initiate_session_with_offer(hass: HomeAssistant) -> None:
 )
 @pytest.mark.usefixtures("mock_camera_capabilities")
 async def test_initiate_session_with_offer_candidate_timeout(
-    hass: HomeAssistant,
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test the answer is returned when no end of candidates is signalled."""
+    caplog.set_level(logging.DEBUG)
     request = get_new_request(
         "Alexa.RTCSessionController",
         "InitiateSessionWithOffer",
@@ -6167,6 +6182,10 @@ async def test_initiate_session_with_offer_candidate_timeout(
     answer = response["payload"]["answer"]["value"]
     assert f"a={WEBRTC_CANDIDATE_IPV4}\r\n" in answer
     assert answer.count("a=end-of-candidates") == 2
+    assert (
+        f"ICE candidate gathering for WebRTC session {RTC_SESSION_ID} "
+        "did not complete in time"
+    ) in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -6374,8 +6393,11 @@ async def test_initiate_session_with_offer_unknown_camera(
 
 
 @pytest.mark.usefixtures("mock_camera")
-async def test_rtc_session_connected(hass: HomeAssistant) -> None:
+async def test_rtc_session_connected(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test SessionConnected is acknowledged."""
+    caplog.set_level(logging.DEBUG)
     request = get_new_request(
         "Alexa.RTCSessionController", "SessionConnected", DEMO_CAMERA_ENDPOINT
     )
@@ -6388,12 +6410,19 @@ async def test_rtc_session_connected(hass: HomeAssistant) -> None:
     assert response["header"]["name"] == "SessionConnected"
     assert response["endpoint"]["endpointId"] == DEMO_CAMERA_ENDPOINT
     assert response["payload"] == {"sessionId": RTC_SESSION_ID}
+    assert (
+        f"WebRTC session {RTC_SESSION_ID} connected for camera.demo_camera"
+        in caplog.text
+    )
 
 
 @pytest.mark.parametrize("camera_on", [True, False])
 @pytest.mark.usefixtures("mock_camera")
-async def test_rtc_session_disconnected(hass: HomeAssistant, camera_on: bool) -> None:
+async def test_rtc_session_disconnected(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, camera_on: bool
+) -> None:
     """Test SessionDisconnected closes the WebRTC session, even for a camera that is off."""
+    caplog.set_level(logging.DEBUG)
     await hass.services.async_call(
         camera.DOMAIN,
         SERVICE_TURN_ON if camera_on else SERVICE_TURN_OFF,
@@ -6417,6 +6446,10 @@ async def test_rtc_session_disconnected(hass: HomeAssistant, camera_on: bool) ->
     assert response["header"]["namespace"] == "Alexa.RTCSessionController"
     assert response["header"]["name"] == "SessionDisconnected"
     assert response["payload"] == {"sessionId": RTC_SESSION_ID}
+    assert (
+        f"WebRTC session {RTC_SESSION_ID} disconnected for camera.demo_camera"
+        in caplog.text
+    )
 
 
 async def test_rtc_session_disconnected_unknown_camera(hass: HomeAssistant) -> None:

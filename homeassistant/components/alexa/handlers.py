@@ -2307,7 +2307,10 @@ async def _async_get_webrtc_answer(
         async with asyncio.timeout(RTC_CANDIDATE_GATHERING_TIMEOUT):
             await gathering_done.wait()
     except TimeoutError:
-        pass
+        _LOGGER.debug(
+            "ICE candidate gathering for WebRTC session %s did not complete in time",
+            session_id,
+        )
 
     if error is not None:
         camera_entity.close_webrtc_session(session_id)
@@ -2315,7 +2318,18 @@ async def _async_get_webrtc_answer(
             f"Failed to negotiate WebRTC session: {error}"
         )
 
-    return _embed_candidates(answer, candidates)
+    answer = _embed_candidates(answer, candidates)
+    if _LOGGER.isEnabledFor(logging.DEBUG):
+        _LOGGER.debug(
+            "WebRTC answer for session %s includes ICE candidates: %s",
+            session_id,
+            [
+                line.removeprefix("a=")
+                for line in answer.split("\r\n")
+                if line.startswith("a=candidate:")
+            ],
+        )
+    return answer
 
 
 def _get_webrtc_camera(hass: ha.HomeAssistant, entity_id: str) -> camera.Camera:
@@ -2345,8 +2359,17 @@ async def async_api_initiate_session_with_offer(
     camera_entity = _get_webrtc_camera(hass, directive.entity.entity_id)
     session_id: str = directive.payload["sessionId"]
     offer: str = directive.payload["offer"]["value"]
+    _LOGGER.debug(
+        "Starting WebRTC session %s for %s", session_id, camera_entity.entity_id
+    )
 
+    start = hass.loop.time()
     answer = await _async_get_webrtc_answer(hass, camera_entity, offer, session_id)
+    _LOGGER.debug(
+        "Generated WebRTC answer for session %s in %.2f s",
+        session_id,
+        hass.loop.time() - start,
+    )
 
     return directive.response(
         name="AnswerGeneratedForSession",
@@ -2363,10 +2386,12 @@ async def async_api_rtc_session_connected(
     context: ha.Context,
 ) -> AlexaResponse:
     """Process a SessionConnected request."""
+    session_id: str = directive.payload["sessionId"]
+    _LOGGER.debug("WebRTC session %s connected for %s", session_id, directive.entity_id)
     return directive.response(
         name="SessionConnected",
         namespace="Alexa.RTCSessionController",
-        payload={"sessionId": directive.payload["sessionId"]},
+        payload={"sessionId": session_id},
     )
 
 
@@ -2379,6 +2404,9 @@ async def async_api_rtc_session_disconnected(
 ) -> AlexaResponse:
     """Process a SessionDisconnected request."""
     session_id: str = directive.payload["sessionId"]
+    _LOGGER.debug(
+        "WebRTC session %s disconnected for %s", session_id, directive.entity_id
+    )
     if camera_entity := async_get_camera_entity(hass, directive.entity.entity_id):
         camera_entity.close_webrtc_session(session_id)
     else:
