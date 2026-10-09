@@ -34,7 +34,6 @@ async def async_setup_entry(
 class HuumSteamer(HuumBaseEntity, NumberEntity):
     """Representation of a steamer."""
 
-    # pylint: disable-next=home-assistant-redundant-translation-key
     _attr_translation_key = "humidity"
     _attr_device_class = NumberDeviceClass.HUMIDITY
     _attr_native_unit_of_measurement = "%"
