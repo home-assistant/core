@@ -59,6 +59,7 @@ async def test_user_form(hass: HomeAssistant) -> None:
         CONF_HOST: "some host",
         CONF_ACCESS_TOKEN: "test-token",
     }
+    assert result2["result"].unique_id == "ZXXX12345"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -303,6 +304,7 @@ async def test_zeroconf_form(hass: HomeAssistant) -> None:
         CONF_HOST: "127.0.0.1",
         CONF_ACCESS_TOKEN: "test-token",
     }
+    assert result2["result"].unique_id == "ZXXX12345"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -446,6 +448,7 @@ async def test_zeroconf_form_token_unavailable(hass: HomeAssistant) -> None:
         CONF_HOST: "127.0.0.1",
         CONF_ACCESS_TOKEN: "test-token",
     }
+    assert result2["result"].unique_id == "ZXXX12345"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -530,6 +533,7 @@ async def test_zeroconf_form_with_token_available(hass: HomeAssistant) -> None:
         CONF_HOST: "127.0.0.1",
         CONF_ACCESS_TOKEN: "discovered-token",
     }
+    assert result2["result"].unique_id == "ZXXX12345"
     assert len(mock_setup_entry.mock_calls) == 1
 
 

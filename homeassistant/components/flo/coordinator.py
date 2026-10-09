@@ -30,12 +30,14 @@ class FloRuntimeData:
 class FloDeviceDataUpdateCoordinator(DataUpdateCoordinator):
     """Flo device object."""
 
+    # pylint: disable-next=home-assistant-coordinator-untyped-config-entry
     config_entry: ConfigEntry
     _failure_count: int = 0
 
     def __init__(
         self,
         hass: HomeAssistant,
+        # pylint: disable-next=home-assistant-coordinator-untyped-config-entry
         config_entry: ConfigEntry,
         api_client: API,
         location_id: str,

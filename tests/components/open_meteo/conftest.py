@@ -40,9 +40,15 @@ def mock_open_meteo(request: pytest.FixtureRequest) -> Generator[MagicMock]:
         fixture = request.param
 
     forecast = Forecast.from_json(load_fixture(fixture, DOMAIN))
-    with patch(
-        "homeassistant.components.open_meteo.coordinator.OpenMeteo", autospec=True
-    ) as open_meteo_mock:
+    with (
+        patch(
+            "homeassistant.components.open_meteo.coordinator.OpenMeteo", autospec=True
+        ) as open_meteo_mock,
+        patch(
+            "homeassistant.components.open_meteo.config_flow.OpenMeteo",
+            new=open_meteo_mock,
+        ),
+    ):
         open_meteo = open_meteo_mock.return_value
         open_meteo.forecast.return_value = forecast
         yield open_meteo

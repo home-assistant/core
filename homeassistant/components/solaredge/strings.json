@@ -90,9 +90,6 @@
       "battery_discharge_energy": {
         "name": "Discharge energy today"
       },
-      "battery_power": {
-        "name": "Power"
-      },
       "battery_state_of_charge": {
         "name": "State of charge"
       },
@@ -176,6 +173,11 @@
       "storage_power": {
         "name": "Storage power"
       }
+    }
+  },
+  "exceptions": {
+    "site_not_active": {
+      "message": "The SolarEdge site is not active"
     }
   }
 }

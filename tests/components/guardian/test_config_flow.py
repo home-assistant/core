@@ -99,6 +99,7 @@ async def test_step_user(hass: HomeAssistant, config: dict[str, Any]) -> None:
         CONF_PORT: 7777,
         CONF_UID: "ABCDEF123456",
     }
+    assert result["result"].unique_id == "guardian_3456"
 
 
 @pytest.mark.usefixtures("setup_guardian")
@@ -130,6 +131,7 @@ async def test_step_zeroconf(hass: HomeAssistant) -> None:
         CONF_PORT: 7777,
         CONF_UID: "ABCDEF123456",
     }
+    assert result["result"].unique_id == "guardian_3456"
 
 
 async def test_step_zeroconf_already_in_progress(hass: HomeAssistant) -> None:
@@ -182,6 +184,7 @@ async def test_step_dhcp(hass: HomeAssistant) -> None:
         CONF_PORT: 7777,
         CONF_UID: "ABCDEF123456",
     }
+    assert result["result"].unique_id == "guardian_3456"
 
 
 async def test_step_dhcp_already_in_progress(hass: HomeAssistant) -> None:

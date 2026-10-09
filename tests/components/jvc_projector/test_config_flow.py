@@ -12,7 +12,7 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from . import MOCK_HOST, MOCK_PASSWORD, MOCK_PORT
+from . import MOCK_HOST, MOCK_MAC_FORMATED, MOCK_PASSWORD, MOCK_PORT
 
 from tests.common import MockConfigEntry
 
@@ -55,6 +55,7 @@ async def test_user_config_flow_success(
     assert result["data"][CONF_HOST] == MOCK_HOST
     assert result["data"][CONF_PORT] == MOCK_PORT
     assert result["data"][CONF_PASSWORD] == MOCK_PASSWORD
+    assert result["result"].unique_id == MOCK_MAC_FORMATED
 
 
 @pytest.mark.parametrize("mock_device", [{"target": TARGET}], indirect=True)

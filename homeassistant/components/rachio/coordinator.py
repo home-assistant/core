@@ -39,6 +39,7 @@ class RachioUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self,
         hass: HomeAssistant,
         rachio: Rachio,
+        # pylint: disable-next=home-assistant-coordinator-untyped-config-entry
         config_entry: ConfigEntry,
         base_station,
         base_count: int,
@@ -79,6 +80,7 @@ class RachioScheduleUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]
         self,
         hass: HomeAssistant,
         rachio: Rachio,
+        # pylint: disable-next=home-assistant-coordinator-untyped-config-entry
         config_entry: ConfigEntry,
         base_station,
     ) -> None:

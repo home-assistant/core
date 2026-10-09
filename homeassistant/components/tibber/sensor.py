@@ -997,6 +997,7 @@ class TibberRtDataCoordinator(DataUpdateCoordinator):  # pylint: disable=home-as
     def __init__(
         self,
         hass: HomeAssistant,
+        # pylint: disable-next=home-assistant-coordinator-untyped-config-entry
         config_entry: ConfigEntry,
         add_sensor_callback: Callable[[TibberRtDataCoordinator, Any], None],
         tibber_home: TibberHome,

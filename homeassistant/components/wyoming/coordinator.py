@@ -25,7 +25,12 @@ class WyomingInfoCoordinator(DataUpdateCoordinator[Info]):
     """
 
     def __init__(
-        self, hass: HomeAssistant, config_entry: ConfigEntry, host: str, port: int
+        self,
+        hass: HomeAssistant,
+        # pylint: disable-next=home-assistant-coordinator-untyped-config-entry
+        config_entry: ConfigEntry,
+        host: str,
+        port: int,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(

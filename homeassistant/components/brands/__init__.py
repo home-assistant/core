@@ -55,6 +55,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
 
     hass.http.register_view(BrandsIntegrationView(hass))
+    hass.http.register_view(BrandsMarketplaceView(hass))
     hass.http.register_view(BrandsHardwareView(hass))
     websocket_api.async_register_command(hass, ws_access_token)
     return True
@@ -281,6 +282,49 @@ class BrandsIntegrationView(_BrandsBaseView):
         return await self._serve_from_cache_or_cdn(
             cdn_path=f"brands/{domain}/{image}",
             cache_subpath=f"brands/{domain}/{image}",
+            fallback_placeholder=use_placeholder,
+        )
+
+
+class BrandsMarketplaceView(_BrandsBaseView):
+    """Serve brand images of integrations in the Marketplace."""
+
+    name = "api:brands:marketplace"
+    url = "/api/brands/marketplace/{domain}/{image}"
+
+    async def get(
+        self,
+        request: web.Request,
+        domain: str,
+        image: str,
+    ) -> web.Response:
+        """Handle GET request for a Marketplace integration brand image."""
+        self._authenticate(request)
+
+        if not valid_domain(domain) or image not in ALLOWED_IMAGES:
+            return web.Response(status=HTTPStatus.NOT_FOUND)
+
+        use_placeholder = request.query.get("placeholder") != "no"
+
+        if (
+            response := await self._serve_from_custom_integration(domain, image)
+        ) is not None:
+            return response
+
+        # Images in the brands repository win over the ones an integration
+        # ships itself, like they do on the CDN
+        if (
+            data := await self._get_image_data(
+                cdn_path=f"{domain}/{image}",
+                cache_subpath=f"integrations/{domain}/{image}",
+            )
+        ) is not None:
+            return self._build_response(data)
+
+        # The brand folder of an integration that is not installed yet
+        return await self._serve_from_cache_or_cdn(
+            cdn_path=f"marketplace/{domain}/{image}",
+            cache_subpath=f"marketplace/{domain}/{image}",
             fallback_placeholder=use_placeholder,
         )
 
