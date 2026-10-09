@@ -76,7 +76,6 @@ async def test_flow_discovered_bridges(
         result["flow_id"], user_input={}
     )
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == BRIDGE_ID
     assert result["data"] == {
@@ -84,6 +83,35 @@ async def test_flow_discovered_bridges(
         CONF_PORT: 80,
         CONF_API_KEY: API_KEY,
     }
+    assert result["result"].unique_id == BRIDGE_ID
+
+
+async def test_flow_discovered_bridge_already_configured(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    config_entry_setup: MockConfigEntry,
+) -> None:
+    """Test that a discovered bridge updates an existing config entry."""
+    aioclient_mock.get(
+        pydeconz.utils.URL_DISCOVER,
+        json=[{"id": BRIDGE_ID, "internalipaddress": "2.3.4.5", "internalport": 80}],
+        headers={"content-type": CONTENT_TYPE_JSON},
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_HOST: "2.3.4.5"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert config_entry_setup.data[CONF_HOST] == "2.3.4.5"
 
 
 async def test_flow_manual_configuration_decision(
