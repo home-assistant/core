@@ -869,6 +869,27 @@ class StrictRenamedEntity(Entity, cached_properties={"native_value"}):
         return self._attr_native_value
 
 
+def test_deprecated_entity_member_same_line(caplog: pytest.LogCaptureFixture) -> None:
+    """Test each deprecated member and action on a single line is reported."""
+
+    class LegacyEntity(MockRenamedEntity):
+        _attr_value = 1
+
+    entity = LegacyEntity()
+    caplog.clear()
+
+    assert (entity.value, entity._attr_value) == (1, 1)
+    # Reads, then writes, the deprecated member
+    entity._attr_value += 1
+
+    assert entity.native_value == 2
+    assert _count_records(caplog, "reads the deprecated LegacyEntity.value,") == 1
+    assert _count_records(caplog, "reads the deprecated LegacyEntity._attr_value,") == 2
+    assert (
+        _count_records(caplog, "writes the deprecated LegacyEntity._attr_value,") == 1
+    )
+
+
 def test_deprecated_entity_member_core_declaration_ignored(
     caplog: pytest.LogCaptureFixture,
 ) -> None:

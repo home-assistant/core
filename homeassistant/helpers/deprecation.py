@@ -514,9 +514,9 @@ class _DeprecatedEntityMember[_T]:
     def _report_usage(self, instance: object, action: str) -> None:
         cls = type(instance)
         # Finding the integration walks the stack, which is too slow for every
-        # access: report each call site once per entity class
+        # access: report each member and action once per call site and entity class
         caller = sys._getframe(2)  # noqa: SLF001
-        key = (cls, caller.f_code, caller.f_lineno)
+        key = (cls, self.name, action, caller.f_code, caller.f_lineno)
         if key in _REPORTED_DEPRECATED_ENTITY_USAGE:
             return
         self._report_usage_once(cls, action)
@@ -587,7 +587,7 @@ class DeprecatedEntityAttr[_T](_DeprecatedEntityMember[_T]):
         setattr(cls, self.name, self)
 
 
-_REPORTED_DEPRECATED_ENTITY_USAGE: set[tuple[type, CodeType, int]] = set()
+_REPORTED_DEPRECATED_ENTITY_USAGE: set[tuple[type, str, str, CodeType, int]] = set()
 _MISSING = object()
 
 
