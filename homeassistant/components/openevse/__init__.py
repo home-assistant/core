@@ -293,7 +293,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenEVSEConfigEntry) -> 
 
         @callback
         def _on_sensor_state_change(event: Event[EventStateChangedData]) -> None:
-            hass.async_create_task(_handle_sensor_state_change(hass, entry, event))
+            entry.async_create_task(
+                hass,
+                _handle_sensor_state_change(hass, entry, event),
+                "openevse_sensor_state_change",
+            )
 
         entry.async_on_unload(
             async_track_state_change_event(
