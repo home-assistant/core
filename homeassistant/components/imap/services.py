@@ -1,7 +1,7 @@
 """Support for the imap services."""
 
 import asyncio
-import contextlib
+from contextlib import asynccontextmanager, suppress
 from email.message import Message
 import logging
 from typing import Any
@@ -55,7 +55,7 @@ SERVICE_FETCH_PART_SCHEMA = _SERVICE_UID_SCHEMA.extend(
 )
 
 
-async def async_get_imap_client(hass: HomeAssistant, entry_id: str) -> IMAP4_SSL:
+async def _async_get_imap_client(hass: HomeAssistant, entry_id: str) -> IMAP4_SSL:
     """Get IMAP client and connect."""
     if (entry := hass.config_entries.async_get_entry(entry_id)) is None or (
         entry.state is not ConfigEntryState.LOADED
@@ -83,12 +83,22 @@ async def async_get_imap_client(hass: HomeAssistant, entry_id: str) -> IMAP4_SSL
     return client
 
 
+@asynccontextmanager
+async def async_get_imap_client(hass: HomeAssistant, entry_id: str) -> IMAP4_SSL:
+    """Get IMAP client and connect, as managed context."""
+    client = await _async_get_imap_client(hass, entry_id)
+    try:
+        yield client
+    finally:
+        await async_close_imap_client(client)
+
+
 async def async_close_imap_client(client: IMAP4_SSL) -> None:
-    """Close IMAP client, and the underlying connection."""
+    """Close IMAP client."""
     if client:
-        with contextlib.suppress(BaseException):
+        with suppress(BaseException):
             await client.close()
-        with contextlib.suppress(BaseException):
+        with suppress(BaseException):
             client.protocol.transport.close()
 
 
@@ -130,9 +140,7 @@ async def _async_seen(call: ServiceCall) -> None:
         uid,
         entry_id,
     )
-    client = None
-    try:
-        client = await async_get_imap_client(call.hass, entry_id)
+    async with async_get_imap_client(call.hass, entry_id) as client:
         try:
             response = await client.store(uid, "+FLAGS (\\Seen)")
         except (TimeoutError, AioImapException) as exc:
@@ -142,8 +150,6 @@ async def _async_seen(call: ServiceCall) -> None:
                 translation_placeholders={"error": str(exc)},
             ) from exc
         raise_on_error(response, "seen_failed")
-    finally:
-        await async_close_imap_client(client)
 
 
 async def _async_move(call: ServiceCall) -> None:
@@ -159,9 +165,7 @@ async def _async_move(call: ServiceCall) -> None:
         seen,
         entry_id,
     )
-    client = None
-    try:
-        client = await async_get_imap_client(call.hass, entry_id)
+    async with async_get_imap_client(call.hass, entry_id) as client:
         try:
             if seen:
                 response = await client.store(uid, "+FLAGS (\\Seen)")
@@ -180,8 +184,6 @@ async def _async_move(call: ServiceCall) -> None:
                 translation_key="imap_server_fail",
                 translation_placeholders={"error": str(exc)},
             ) from exc
-    finally:
-        await async_close_imap_client(client)
 
 
 async def _async_delete(call: ServiceCall) -> None:
@@ -193,9 +195,7 @@ async def _async_delete(call: ServiceCall) -> None:
         uid,
         entry_id,
     )
-    client = None
-    try:
-        client = await async_get_imap_client(call.hass, entry_id)
+    async with async_get_imap_client(call.hass, entry_id) as client:
         try:
             response = await client.store(uid, "+FLAGS (\\Deleted)")
             raise_on_error(response, "delete_failed")
@@ -209,8 +209,6 @@ async def _async_delete(call: ServiceCall) -> None:
                 translation_key="imap_server_fail",
                 translation_placeholders={"error": str(exc)},
             ) from exc
-    finally:
-        await async_close_imap_client(client)
 
 
 async def _async_fetch(call: ServiceCall) -> ServiceResponse:
@@ -222,9 +220,7 @@ async def _async_fetch(call: ServiceCall) -> ServiceResponse:
         uid,
         entry_id,
     )
-    client = None
-    try:
-        client = await async_get_imap_client(call.hass, entry_id)
+    async with async_get_imap_client(call.hass, entry_id) as client:
         try:
             response = await client.fetch(uid, "BODY.PEEK[]")
         except (TimeoutError, AioImapException) as exc:
@@ -236,8 +232,6 @@ async def _async_fetch(call: ServiceCall) -> ServiceResponse:
         raise_on_error(response, "fetch_failed")
         # Index 1 of of the response lines contains the bytearray with the message data
         message = ImapMessage(response.lines[1])
-    finally:
-        await async_close_imap_client(client)
     return {
         "text": message.text,
         "sender": message.sender,
@@ -259,9 +253,7 @@ async def _async_fetch_part(call: ServiceCall) -> ServiceResponse:
         uid,
         entry_id,
     )
-    client = None
-    try:
-        client = await async_get_imap_client(call.hass, entry_id)
+    async with async_get_imap_client(call.hass, entry_id) as client:
         try:
             response = await client.fetch(uid, "BODY.PEEK[]")
         except (TimeoutError, AioImapException) as exc:
@@ -273,8 +265,6 @@ async def _async_fetch_part(call: ServiceCall) -> ServiceResponse:
         raise_on_error(response, "fetch_failed")
         # Index 1 of of the response lines contains the bytearray with the message data
         message = ImapMessage(response.lines[1])
-    finally:
-        await async_close_imap_client(client)
     part_data = _get_message_part(message.email_message, part_key)
     part_data_content = part_data.get_payload(decode=False)
     try:
