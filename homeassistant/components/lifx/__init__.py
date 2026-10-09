@@ -117,7 +117,9 @@ async def async_migrate_entry(hass: HomeAssistant, entry: LIFXConfigEntry) -> bo
 
 async def async_setup_entry(hass: HomeAssistant, entry: LIFXConfigEntry) -> bool:
     """Set up LIFX from a config entry."""
-    assert entry.unique_id is not None
+    # The legacy shared entry is being removed by the migration
+    if entry.unique_id is None or entry.unique_id == DOMAIN:
+        return True
     host = entry.data[CONF_HOST]
     try:
         # An entry created before the migration to lifx-async can hold a
@@ -146,6 +148,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: LIFXConfigEntry) -> bool
 
 async def async_unload_entry(hass: HomeAssistant, entry: LIFXConfigEntry) -> bool:
     """Unload a config entry."""
+    # The legacy shared entry was never set up
+    if entry.unique_id is None or entry.unique_id == DOMAIN:
+        return True
     manager = hass.data[DATA_LIFX_MANAGER]
     try:
         # The device is about to be closed out from under any running effect
