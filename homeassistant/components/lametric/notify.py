@@ -19,7 +19,7 @@ from homeassistant.components.notify import (
     BaseNotificationService,
     NotifyEntity,
 )
-from homeassistant.const import CONF_ICON
+from homeassistant.const import CONF_ICON, CONF_REPEAT
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -32,6 +32,25 @@ from .entity import LaMetricEntity
 from .helpers import has_audio, lametric_exception_handler
 
 PARALLEL_UPDATES = 1
+
+
+def _coerce_repeat(repeat: Any) -> int:
+    """Coerce the sound repeat count, refusing invalid or negative values."""
+    try:
+        repeat_int = int(repeat)
+    except (TypeError, ValueError) as err:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="invalid_repeat",
+            translation_placeholders={"repeat": str(repeat)},
+        ) from err
+    if repeat_int < 0:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="invalid_repeat",
+            translation_placeholders={"repeat": str(repeat)},
+        )
+    return repeat_int
 
 
 async def async_setup_entry(
@@ -106,7 +125,11 @@ class LaMetricNotificationService(BaseNotificationService):
                     translation_key="unknown_sound",
                     translation_placeholders={"sound": str(data[CONF_SOUND])},
                 )
-            sound = Sound(sound=snd, category=None)
+            sound = Sound(
+                sound=snd,
+                category=None,
+                repeat=_coerce_repeat(data.get(CONF_REPEAT, 1)),
+            )
 
         # Leave the sound out for a device that cannot play it, rather than have
         # it refuse the whole notification.

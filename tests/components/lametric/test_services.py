@@ -1,5 +1,6 @@
 """Tests for the LaMetric services."""
 
+from typing import Any
 from unittest.mock import MagicMock
 
 from demetriek import (
@@ -12,6 +13,7 @@ from demetriek import (
     NotificationSoundCategory,
     Simple,
 )
+import probatio
 import pytest
 
 from homeassistant.components.lametric.const import (
@@ -25,7 +27,7 @@ from homeassistant.components.lametric.const import (
     SERVICE_CHART,
     SERVICE_MESSAGE,
 )
-from homeassistant.const import CONF_DEVICE_ID, CONF_ICON
+from homeassistant.const import CONF_DEVICE_ID, CONF_ICON, CONF_REPEAT
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -212,6 +214,82 @@ async def test_service_message(
         )
 
     assert len(mock_lametric.notify.mock_calls) == 3
+
+
+@pytest.mark.parametrize(
+    ("service", "payload"),
+    [
+        pytest.param(SERVICE_MESSAGE, {CONF_MESSAGE: "Meow!"}, id="message"),
+        pytest.param(SERVICE_CHART, {CONF_DATA: [1, 2, 3]}, id="chart"),
+    ],
+)
+@pytest.mark.parametrize("repeat", [0, 1, 5])
+async def test_service_sound_repeat(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_lametric: MagicMock,
+    service: str,
+    payload: dict[str, Any],
+    repeat: int,
+) -> None:
+    """Test the sound repeat count is passed to the device."""
+
+    entry = entity_registry.async_get("button.frenck_s_lametric_next_app")
+    assert entry
+    assert entry.device_id
+
+    await hass.services.async_call(
+        DOMAIN,
+        service,
+        {
+            CONF_DEVICE_ID: entry.device_id,
+            CONF_SOUND: "cat",
+            **payload,
+            CONF_REPEAT: repeat,
+        },
+        blocking=True,
+    )
+
+    notification: Notification = mock_lametric.notify.mock_calls[0][2]["notification"]
+    assert notification.model.sound is not None
+    assert notification.model.sound.sound is NotificationSound.CAT
+    assert notification.model.sound.repeat == repeat
+
+
+@pytest.mark.parametrize(
+    ("service", "payload"),
+    [
+        pytest.param(SERVICE_MESSAGE, {CONF_MESSAGE: "Meow!"}, id="message"),
+        pytest.param(SERVICE_CHART, {CONF_DATA: [1, 2, 3]}, id="chart"),
+    ],
+)
+async def test_service_sound_repeat_negative(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_lametric: MagicMock,
+    service: str,
+    payload: dict[str, Any],
+) -> None:
+    """Test a negative repeat count is rejected without calling the device."""
+
+    entry = entity_registry.async_get("button.frenck_s_lametric_next_app")
+    assert entry
+    assert entry.device_id
+
+    with pytest.raises(probatio.Invalid):
+        await hass.services.async_call(
+            DOMAIN,
+            service,
+            {
+                CONF_DEVICE_ID: entry.device_id,
+                CONF_SOUND: "cat",
+                **payload,
+                CONF_REPEAT: -1,
+            },
+            blocking=True,
+        )
+
+    mock_lametric.notify.assert_not_called()
 
 
 @pytest.mark.parametrize("device_fixture", ["device_sa5_bluetooth_unavailable"])

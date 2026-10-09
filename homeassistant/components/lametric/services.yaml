@@ -72,6 +72,15 @@ chart:
           min: 0
           max: 10
           mode: slider
+    repeat: &repeat
+      required: false
+      default: 1
+      example: 3
+      selector:
+        number:
+          min: 0
+          max: 10
+          mode: box
     icon_type: &icon_type
       required: false
       default: "none"
@@ -109,3 +118,4 @@ message:
     cycles: *cycles
     icon_type: *icon_type
     priority: *priority
+    repeat: *repeat
