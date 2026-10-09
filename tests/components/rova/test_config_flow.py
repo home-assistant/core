@@ -39,6 +39,7 @@ async def test_user(hass: HomeAssistant, mock_rova: MagicMock) -> None:
             CONF_HOUSE_NUMBER_SUFFIX: HOUSE_NUMBER_SUFFIX,
         },
     )
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result.get("type") is FlowResultType.CREATE_ENTRY
 
     data = result.get("data")

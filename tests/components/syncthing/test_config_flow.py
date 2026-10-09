@@ -45,6 +45,7 @@ async def test_flow_successful(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=MOCK_ENTRY
         )
+        # pylint: disable-next=home-assistant-tests-config-flow-unique-id
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == URL
         assert result["data"][CONF_URL] == URL

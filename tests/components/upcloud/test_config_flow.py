@@ -99,6 +99,7 @@ async def test_success(
         result["flow_id"], user_input=FIXTURE_USER_INPUT
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_USERNAME] == FIXTURE_USER_INPUT[CONF_USERNAME]
     assert result["data"][CONF_PASSWORD] == FIXTURE_USER_INPUT[CONF_PASSWORD]

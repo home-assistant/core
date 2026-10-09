@@ -75,6 +75,7 @@ async def test_user_selection_ignored(
         result["flow_id"],
         user_input={"address": TOGRILL_SERVICE_INFO.address},
     )
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 

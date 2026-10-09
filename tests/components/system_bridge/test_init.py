@@ -204,3 +204,30 @@ async def test_coordinator_get_data_timeout(hass: HomeAssistant) -> None:
 
         assert result is False
         assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_coordinator_get_data_missing_system(hass: HomeAssistant) -> None:
+    """Test setup retries when get_data returns without system data."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=FIXTURE_UUID,
+        data=FIXTURE_USER_INPUT,
+        version=SystemBridgeConfigFlow.VERSION,
+        minor_version=SystemBridgeConfigFlow.MINOR_VERSION,
+    )
+
+    with (
+        patch(
+            "systembridgeconnector.version.Version.check_supported",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.system_bridge.coordinator.SystemBridgeDataUpdateCoordinator.async_get_data",
+        ),
+    ):
+        config_entry.add_to_hass(hass)
+        result = await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert result is False
+        assert config_entry.state is ConfigEntryState.SETUP_RETRY

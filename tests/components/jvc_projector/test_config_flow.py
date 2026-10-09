@@ -50,6 +50,7 @@ async def test_user_config_flow_success(
     )
     await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert "data" in result
     assert result["data"][CONF_HOST] == MOCK_HOST

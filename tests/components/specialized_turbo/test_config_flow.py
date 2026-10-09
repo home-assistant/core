@@ -158,6 +158,7 @@ async def test_bluetooth_discovery_tcu1(
         user_input={},
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {CONF_ADDRESS: MOCK_TCU1_ADDRESS}
     bike_info = mock_library.connection_constructor.call_args.kwargs["bike_info"]
@@ -306,6 +307,7 @@ async def test_encrypted_account_setup_uses_managed_http_client(
             },
         )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         CONF_ADDRESS: MOCK_ADDRESS,
@@ -597,6 +599,7 @@ async def test_user_flow(
         user_input={CONF_ADDRESS: MOCK_ADDRESS},
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {CONF_ADDRESS: MOCK_ADDRESS}
     mock_library.connection.connect.assert_awaited_once()
@@ -627,6 +630,7 @@ async def test_user_flow_discovers_supported_variants(
         user_input={CONF_ADDRESS: service_info.address},
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == service_info.name
     mock_library.connection.connect.assert_awaited_once()
@@ -659,6 +663,7 @@ async def test_user_flow_selects_encryption_source_after_bike(
         user_input={CONF_WRAPPED_KEY: make_wrapped_key()},
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     mock_library.connection.connect.assert_awaited_once()
 

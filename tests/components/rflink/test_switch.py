@@ -670,3 +670,71 @@ async def test_removed_switch_unregisters_lookups(
 
     assert hass.states.get("switch.test") is None
     assert hass.states.get("switch.other").state == STATE_ON
+
+
+@pytest.mark.parametrize(
+    ("event_id", "command"),
+    [
+        pytest.param("protocol_0_0", "on", id="device_id"),
+        pytest.param("protocol_0_0", "allon", id="device_id_group"),
+        pytest.param("test_alias_0_0", "on", id="alias"),
+        pytest.param("test_alias_0_0", "allon", id="alias_group"),
+        pytest.param("test_group_0_0", "allon", id="group_alias"),
+        pytest.param("test_nogroup_0_0", "on", id="nogroup_alias"),
+    ],
+)
+async def test_renamed_switch_handles_events(
+    hass: HomeAssistant,
+    monkeypatch: pytest.MonkeyPatch,
+    entity_registry: er.EntityRegistry,
+    event_id: str,
+    command: str,
+) -> None:
+    """Test events are routed to the new entity_id after renaming a switch."""
+    config = {
+        "rflink": {
+            "port": "/dev/ttyABC0",
+            DOMAIN: {
+                "devices": {
+                    "protocol_0_0": {
+                        "name": "test",
+                        "aliases": ["test_alias_0_0"],
+                        "group_aliases": ["test_group_0_0"],
+                        "nogroup_aliases": ["test_nogroup_0_0"],
+                    }
+                },
+            },
+        },
+    }
+    event_callback, _, _, _ = await mock_rflink(hass, config, DOMAIN, monkeypatch)
+
+    entity_registry.async_update_entity(
+        f"{DOMAIN}.test", new_entity_id=f"{DOMAIN}.renamed"
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get(f"{DOMAIN}.test") is None
+    assert hass.states.get(f"{DOMAIN}.renamed").state == STATE_OFF
+    # The old entity_id is no longer routed to, so it can be reused
+    assert {
+        entity_id
+        for lookup in (
+            hass.data[DATA_ENTITY_LOOKUP],
+            hass.data[DATA_ENTITY_GROUP_LOOKUP],
+        )
+        for entity_ids_by_event_id in lookup.values()
+        for entity_ids in entity_ids_by_event_id.values()
+        for entity_id in entity_ids
+    } == {f"{DOMAIN}.renamed"}
+
+    event_callback({"id": event_id, "command": command})
+    await hass.async_block_till_done()
+
+    assert hass.states.get(f"{DOMAIN}.renamed").state == STATE_ON
+
+    # Removing the renamed switch unregisters it under its new entity_id
+    entity_registry.async_remove(f"{DOMAIN}.renamed")
+    await hass.async_block_till_done()
+
+    assert hass.data[DATA_ENTITY_LOOKUP][EVENT_KEY_COMMAND] == {}
+    assert hass.data[DATA_ENTITY_GROUP_LOOKUP][EVENT_KEY_COMMAND] == {}

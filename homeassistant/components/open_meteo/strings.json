@@ -3,10 +3,17 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
     },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "zone_not_found": "The selected zone does not exist."
+    },
     "step": {
       "user": {
         "data": {
           "zone": "Zone"
+        },
+        "data_description": {
+          "zone": "The zone to get the weather forecast for."
         },
         "description": "Select location to use for weather forecasting"
       }

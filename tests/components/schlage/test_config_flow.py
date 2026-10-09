@@ -47,6 +47,7 @@ async def test_form(
     await hass.async_block_till_done()
 
     mock_pyschlage_auth.authenticate.assert_called_once_with()
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "test-username"
     assert result2["data"] == {

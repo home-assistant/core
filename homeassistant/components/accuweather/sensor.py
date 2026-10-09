@@ -369,6 +369,7 @@ SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
         value_fn=lambda data: cast(float, data[ATTR_SPEED][API_METRIC][ATTR_VALUE]),
+        # pylint: disable-next=home-assistant-redundant-translation-key
         translation_key="wind_speed",
     ),
     AccuWeatherSensorDescription(

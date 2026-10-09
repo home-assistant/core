@@ -179,6 +179,7 @@ async def test_step_user(hass: HomeAssistant) -> None:
             CONF_PORT: 8080,
         },
     )
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "12345"
     assert result["data"] == {
@@ -294,6 +295,7 @@ async def test_step_homekit_zeroconf_new_controller_when_some_exist(
         )
         await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "12345"
     assert result2["data"] == {

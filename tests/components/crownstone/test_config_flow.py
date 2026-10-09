@@ -279,6 +279,7 @@ async def test_successful_login_no_usb(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={CONF_USB_PATH: DONT_USE_USB}
     )
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == entry_data_without_usb
     assert result["options"] == entry_options_without_usb
@@ -332,6 +333,7 @@ async def test_successful_login_with_usb(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={CONF_USB_SPHERE: "sphere_name_1"}
     )
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == entry_data_with_usb
     assert result["options"] == entry_options_with_usb
@@ -376,6 +378,7 @@ async def test_successful_login_with_manual_usb_path(
 
     # since we only have 1 sphere here, test that it's automatically selected and
     # creating entry without asking for user input
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == entry_data_with_manual_usb
     assert result["options"] == entry_options_with_manual_usb

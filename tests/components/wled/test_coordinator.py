@@ -3,7 +3,7 @@
 import asyncio
 from collections.abc import Callable
 from copy import deepcopy
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -15,7 +15,7 @@ from wled import (
     WLEDUnsupportedVersionError,
 )
 
-from homeassistant.components.wled.const import SCAN_INTERVAL
+from homeassistant.components.wled.const import DOMAIN, SCAN_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
@@ -25,7 +25,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_load_json_object_fixture,
+)
 
 
 async def test_not_supporting_websocket(
@@ -282,3 +286,39 @@ async def test_fail_when_unsupported_version(
         in mock_config_entry.reason
     )
     assert "0.14.0-b1" in mock_config_entry.reason
+
+
+@pytest.mark.parametrize("device_fixture", ["rgb_websocket"])
+async def test_websocket_update_with_other_led_setup(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_wled: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Ensure an LED setup change pushed over the WebSocket sets up again."""
+    connection_connected = asyncio.Future()
+    connection_finished = asyncio.Future()
+    push: Callable[[WLEDDevice], None] | None = None
+
+    async def connect(callback: Callable[[WLEDDevice], None]):
+        nonlocal push
+        push = callback
+        connection_connected.set_result(None)
+        await connection_finished
+
+    mock_wled.listen.side_effect = connect
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await connection_connected
+    assert push is not None
+
+    # The segment is now on an RGBW output; the library updates in place.
+    data = await async_load_json_object_fixture(hass, "rgb_websocket.json", DOMAIN)
+    data["info"]["leds"]["seglc"] = [3]
+    device = mock_wled.update.return_value
+    device.update_from_dict(data)
+    with patch.object(hass.config_entries, "async_schedule_reload") as reload:
+        push(device)
+
+    reload.assert_called_once_with(init_integration.entry_id)
+    connection_finished.set_result(None)

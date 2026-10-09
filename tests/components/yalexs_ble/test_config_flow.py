@@ -611,6 +611,7 @@ async def test_integration_discovery_prefers_address(hass: HomeAssistant) -> Non
         result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["data"][CONF_ADDRESS] == YALE_ACCESS_LOCK_DISCOVERY_INFO.address
 
@@ -756,6 +757,7 @@ async def test_bluetooth_discovery_with_cached_config(
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={}
         )
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Front Door"
     assert result["data"] == {

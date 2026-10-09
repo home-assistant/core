@@ -40,6 +40,7 @@ from homeassistant.const import (
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
+    ConfigEntryError,
     ConfigEntryNotReady,
     HomeAssistantError,
     Unauthorized,
@@ -243,7 +244,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: NestConfigEntry) -> bool
     """Set up Nest from a config entry with dispatch between old/new flows."""
     if DATA_SDM not in entry.data:
         hass.async_create_task(hass.config_entries.async_remove(entry.entry_id))
-        return False
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="legacy_entry",
+        )
 
     if entry.unique_id != entry.data[CONF_PROJECT_ID]:
         hass.config_entries.async_update_entry(
@@ -255,7 +259,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: NestConfigEntry) -> bool
 
     subscriber = await api.new_subscriber(hass, entry, auth)
     if not subscriber:
-        return False
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="subscriber_create_failed",
+        )
     # Keep media for last N events in memory
     subscriber.cache_policy.event_cache_size = EVENT_MEDIA_CACHE_SIZE
     subscriber.cache_policy.fetch = True
@@ -279,8 +286,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: NestConfigEntry) -> bool
             translation_key="reauth_required",
         ) from err
     except ConfigurationException as err:
-        _LOGGER.error("Configuration error: %s", err)
-        return False
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="subscriber_configuration_error",
+        ) from err
     except SubscriberTimeoutException as err:
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,

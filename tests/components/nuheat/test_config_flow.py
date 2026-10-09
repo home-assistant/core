@@ -48,6 +48,7 @@ async def test_form_user(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Master bathroom"
     assert result2["data"] == {

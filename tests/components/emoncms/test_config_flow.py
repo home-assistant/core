@@ -136,6 +136,7 @@ async def test_user_flow_manual_mode(
         {CONF_ONLY_INCLUDE_FEEDID: ["1"]},
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == SENSOR_NAME
     assert result["data"] == {**USER_INPUT, CONF_ONLY_INCLUDE_FEEDID: ["1"]}
@@ -156,6 +157,7 @@ async def test_user_flow_auto_mode(
         result["flow_id"],
         {**USER_INPUT, SYNC_MODE: SYNC_MODE_AUTO},
     )
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == SENSOR_NAME
     assert result["data"] == {

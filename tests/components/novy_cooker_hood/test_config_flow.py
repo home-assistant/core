@@ -110,6 +110,7 @@ async def test_user_flow_retry_picks_different_code(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={"next_step_id": "finish"}
     )
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_CODE] == 7
 
@@ -263,6 +264,7 @@ async def test_reconfigure_frees_old_unique_id(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={"next_step_id": "finish"}
     )
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_CODE] == 1
 

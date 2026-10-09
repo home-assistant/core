@@ -37,6 +37,7 @@ async def test_form(hass: HomeAssistant) -> None:
             result["flow_id"], {"username": TEST_USER_ID, "password": TEST_PASSWORD}
         )
 
+        # pylint: disable-next=home-assistant-tests-config-flow-unique-id
         assert result2["type"] is FlowResultType.CREATE_ENTRY
         assert result2["title"] == TEST_USER_ID
         assert result2["data"] == {"username": TEST_USER_ID, "password": TEST_PASSWORD}
@@ -109,6 +110,7 @@ async def test_form_sso_after_legacy_failure(
             result["flow_id"], {"username": TEST_USER_ID, "password": TEST_PASSWORD}
         )
 
+        # pylint: disable-next=home-assistant-tests-config-flow-unique-id
         assert result2["type"] is FlowResultType.CREATE_ENTRY
         assert result2["data"] == {
             "username": TEST_USER_ID,

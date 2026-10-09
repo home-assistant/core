@@ -34,6 +34,7 @@ TRYDAN_SENSORS = (
     ),
     V2CBinarySensorEntityDescription(
         key="charging",
+        # pylint: disable-next=home-assistant-redundant-translation-key
         translation_key="charging",
         device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
         value_fn=lambda evse: evse.charging,

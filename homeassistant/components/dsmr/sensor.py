@@ -538,6 +538,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     ),
     DSMRSensorEntityDescription(
         key="eon_hu_frequency",
+        # pylint: disable-next=home-assistant-redundant-translation-key
         translation_key="frequency",
         obis_reference="EON_HU_FREQUENCY",
         dsmr_versions={"5EONHU"},

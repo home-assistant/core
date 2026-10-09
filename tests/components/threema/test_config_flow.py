@@ -306,6 +306,7 @@ async def test_credentials_private_key_prefix_stripped(
         },
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert (
         result["data"][CONF_PRIVATE_KEY]
@@ -454,6 +455,7 @@ async def test_credentials_public_key_matches(
         },
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_PRIVATE_KEY] == private_key
     assert _CONF_PUBLIC_KEY not in result["data"]

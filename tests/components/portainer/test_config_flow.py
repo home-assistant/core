@@ -49,6 +49,7 @@ async def test_form(
         user_input=MOCK_USER_SETUP,
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "https://127.0.0.1:9000/"
     assert result["data"] == MOCK_TEST_CONFIG

@@ -31,6 +31,7 @@ async def test_config_flow_setup_(hass: HomeAssistant) -> None:
         {CONF_LATITUDE: TEST_LATITUDE, CONF_LONGITUDE: TEST_LONGITUDE},
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == f"{TEST_LATITUDE},{TEST_LONGITUDE}"
     assert result["data"] == {

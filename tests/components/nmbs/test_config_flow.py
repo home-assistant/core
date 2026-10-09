@@ -144,6 +144,7 @@ async def test_dont_abort_if_exists_when_vias_differs(
         },
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 

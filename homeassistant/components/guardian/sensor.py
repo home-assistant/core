@@ -80,6 +80,7 @@ PAIRED_SENSOR_DESCRIPTIONS = (
 VALVE_CONTROLLER_DESCRIPTIONS = (
     ValveControllerSensorDescription(
         key=SENSOR_KIND_AVG_CURRENT,
+        # pylint: disable-next=home-assistant-redundant-translation-key
         translation_key="current",
         device_class=SensorDeviceClass.CURRENT,
         entity_category=EntityCategory.DIAGNOSTIC,

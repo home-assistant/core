@@ -90,6 +90,7 @@ async def test_discovery_no_gateways_found(
         {"selected_gateway": mock_gateway.gw_sn},
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result.get("type") is FlowResultType.CREATE_ENTRY
 
 
@@ -196,6 +197,7 @@ async def test_discovery_duplicate_filtered(
         {"selected_gateway": mock_gateway.gw_sn},
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result.get("type") is FlowResultType.CREATE_ENTRY
 
 

@@ -64,6 +64,7 @@ async def test_successful_config_flow(
         USER_INPUT,
     )
     await hass.async_block_till_done()
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == DEFAULT_NAME
     assert result["data"][CONF_LATITUDE] == USER_INPUT[CONF_LOCATION][CONF_LATITUDE]

@@ -200,6 +200,7 @@ async def test_interfaces_step_with_tracker_interfaces(
         result["flow_id"],
         user_input={CONF_TRACKER_INTERFACES: ["LAN", "WAN"]},
     )
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_TRACKER_INTERFACES] == ["LAN", "WAN"]
 
@@ -216,6 +217,7 @@ async def test_import(hass: HomeAssistant, mock_opnsense_client: AsyncMock) -> N
         data=CONFIG_DATA_IMPORT,
     )
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result.get("type") is FlowResultType.CREATE_ENTRY
     assert result.get("title") == CONFIG_DATA_IMPORT[CONF_URL]
 
@@ -303,6 +305,7 @@ async def test_import_empty_tracker_interfaces(hass: HomeAssistant) -> None:
         context={"source": SOURCE_IMPORT},
         data={**CONFIG_DATA_IMPORT, CONF_TRACKER_INTERFACES: []},
     )
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert CONF_TRACKER_INTERFACES not in result["data"]
 

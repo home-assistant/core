@@ -52,6 +52,7 @@ async def test_full_flow(
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "home name"
     assert result["data"] == {CONF_REFRESH_TOKEN: "refresh"}
@@ -100,6 +101,7 @@ async def test_full_flow_reauth(hass: HomeAssistant, mock_tado_api: MagicMock) -
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "home name"
     assert result["data"] == {CONF_REFRESH_TOKEN: "refresh"}
@@ -293,6 +295,7 @@ async def test_show_progress_polling(
     await hass.async_block_till_done()
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
