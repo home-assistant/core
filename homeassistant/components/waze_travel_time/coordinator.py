@@ -1,10 +1,11 @@
 """The Waze Travel Time data coordinator."""
 
 import asyncio
-from collections.abc import Collection
+from collections.abc import Callable, Collection
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from math import ceil
 from typing import Literal, override
 
 import httpx
@@ -12,9 +13,10 @@ from pywaze.route_calculator import CalcRoutesResponse, WazeRouteCalculator, WRC
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfLength
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.location import find_coordinates
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.unit_conversion import DistanceConverter
 
 from .const import (
@@ -32,13 +34,19 @@ from .const import (
     CONF_VEHICLE_TYPE,
     DOMAIN,
     IMPERIAL_UNITS,
+    MIN_UPDATE_INTERVAL_MINUTES,
+    ROUTING_QUOTA_RESERVE,
+    ROUTING_QUOTA_WINDOW_MINUTES,
+    ROUTING_REQUEST_QUOTA,
     SEMAPHORE_KEY,
 )
 from .helpers import base_coordinates_to_tuple
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = timedelta(minutes=5)
+POLLING_COORDINATORS: HassKey[set[WazeTravelTimeCoordinator]] = HassKey(
+    f"{DOMAIN}_polling_coordinators"
+)
 
 SECONDS_BETWEEN_API_CALLS = 0.5
 
@@ -185,11 +193,71 @@ class WazeTravelTimeCoordinator(DataUpdateCoordinator[WazeTravelTimeData]):
             _LOGGER,
             name=DOMAIN,
             config_entry=config_entry,
-            update_interval=SCAN_INTERVAL,
+            update_interval=timedelta(minutes=MIN_UPDATE_INTERVAL_MINUTES),
         )
         self.client = client
         self._origin = config_entry.data[CONF_ORIGIN]
         self._destination = config_entry.data[CONF_DESTINATION]
+
+    @callback
+    @override
+    def async_add_listener(
+        self, update_callback: CALLBACK_TYPE, context: object = None
+    ) -> Callable[[], None]:
+        """Update intervals when this coordinator starts calling the API."""
+        remove_listener = super().async_add_listener(update_callback, context)
+        if not self.config_entry.pref_disable_polling:
+            coordinators = self.hass.data.setdefault(POLLING_COORDINATORS, set())
+            if self not in coordinators:
+                coordinators.add(self)
+                self._async_update_intervals()
+        return remove_listener
+
+    @callback
+    @override
+    def _unschedule_refresh(self) -> None:
+        """Update intervals when this coordinator stops calling the API."""
+        super()._unschedule_refresh()
+        self._async_remove_polling_coordinator()
+
+    @override
+    async def async_shutdown(self) -> None:
+        """Update intervals when the config_entry is unloaded or setup fails."""
+        await super().async_shutdown()
+        self._async_remove_polling_coordinator()
+
+    @callback
+    def _async_remove_polling_coordinator(self) -> None:
+        """Remove this coordinator from the interval calculation."""
+        if coordinators := self.hass.data.get(POLLING_COORDINATORS):
+            coordinators.discard(self)
+            self._async_update_intervals()
+
+    @callback
+    def _async_update_intervals(self) -> None:
+        """Apply the shared routing budget to all automatically polled routes.
+
+        Automatic polling reserves 10% of an empirically observed routing quota per
+        public IP. Each route update makes one routing request, including alternatives.
+        Manual refreshes, get_travel_times service calls, startup requests, and other
+        consumers sharing the public IP can still exhaust the quota. Dynamic intervals
+        are preventive and do not guarantee protection against 429 responses.
+        """
+        coordinators = self.hass.data[POLLING_COORDINATORS]
+        interval = timedelta(
+            minutes=max(
+                MIN_UPDATE_INTERVAL_MINUTES,
+                ceil(
+                    ROUTING_QUOTA_WINDOW_MINUTES
+                    * len(coordinators)
+                    / (ROUTING_REQUEST_QUOTA * (1 - ROUTING_QUOTA_RESERVE))
+                ),
+            )
+        )
+        for coordinator in coordinators:
+            if coordinator.update_interval != interval:
+                coordinator.update_interval = interval
+                coordinator._schedule_refresh()  # noqa: SLF001
 
     @override
     async def _async_update_data(self) -> WazeTravelTimeData:
