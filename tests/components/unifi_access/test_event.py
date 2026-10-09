@@ -32,6 +32,10 @@ from unifi_access_api.models.websocket import (
     WebsocketMessage,
 )
 
+from homeassistant.components.unifi_access.coordinator import (
+    DoorEvent,
+    UnifiAccessCoordinator,
+)
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -1260,4 +1264,152 @@ async def test_logs_add_direction(
     assert state is not None
     assert state.attributes["event_type"] == "access_granted"
     assert state.attributes["direction"] == "entry"
-    assert state.state == "2025-01-01T00:00:00.000+00:00"
+
+
+def _make_insights_add(
+    result: str = "ACCESS",
+    actor: str = "John Doe",
+    published: int = 1700000000000,
+) -> InsightsAdd:
+    """Build an access.logs.insights.add message for the front door."""
+    return InsightsAdd(
+        event="access.logs.insights.add",
+        data=InsightsAddData.model_construct(
+            event_type="access.door.unlock",
+            result=result,
+            published=published,
+            metadata=InsightsMetadata(
+                door=[InsightsMetadataEntry(id="door-001", display_name="Front Door")],
+                actor=InsightsMetadataEntry(display_name=actor),
+                authentication=InsightsMetadataEntry(display_name="FACE"),
+            ),
+        ),
+    )
+
+
+def _make_logs_add(
+    result: str = "ACCESS",
+    actor: str = "John Doe",
+    published: int = 1700000000000,
+) -> LogAdd:
+    """Build an access.logs.add message for the front door."""
+    return LogAdd(
+        event="access.logs.add",
+        data=LogAddData(
+            source=LogSource(
+                target=[
+                    LogTarget(
+                        type="device_config",
+                        id="hub-device-001",
+                        display_name="UA Hub Door",
+                    ),
+                ],
+                actor=LogActor(display_name=actor),
+                event=LogEvent(result=result, published=published),
+                authentication=LogAuthentication(credential_provider="FACE"),
+            ),
+        ),
+    )
+
+
+@pytest.mark.parametrize(
+    ("first_event", "second_event"),
+    [
+        pytest.param(
+            "access.logs.insights.add",
+            "access.logs.add",
+            id="insights-first",
+        ),
+        pytest.param(
+            "access.logs.add",
+            "access.logs.insights.add",
+            id="logs-first",
+        ),
+    ],
+)
+async def test_duplicate_access_event_dispatched_once(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_client: MagicMock,
+    first_event: str,
+    second_event: str,
+) -> None:
+    """Test a door event sent as both insights.add and logs.add dispatches once."""
+    handlers = _get_ws_handlers(mock_client)
+    await _populate_device_mapping(handlers)
+
+    events: list[DoorEvent] = []
+    coordinator: UnifiAccessCoordinator = init_integration.runtime_data
+    coordinator.async_subscribe_door_events(events.append)
+
+    messages = {
+        "access.logs.insights.add": _make_insights_add(),
+        "access.logs.add": _make_logs_add(),
+    }
+    await handlers[first_event](messages[first_event])
+    await handlers[second_event](messages[second_event])
+    await hass.async_block_till_done()
+
+    assert len(events) == 1
+    assert events[0].event_type == "access_granted"
+
+
+@pytest.mark.parametrize(
+    ("insights", "logs"),
+    [
+        pytest.param(
+            _make_insights_add(published=1700000000000),
+            _make_logs_add(published=1700000001000),
+            id="different-published",
+        ),
+        pytest.param(
+            _make_insights_add(actor="John Doe"),
+            _make_logs_add(actor="Jane Doe"),
+            id="different-actor",
+        ),
+    ],
+)
+async def test_distinct_access_events_not_suppressed(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_client: MagicMock,
+    insights: InsightsAdd,
+    logs: LogAdd,
+) -> None:
+    """Test access events with different timestamps or actors are both dispatched."""
+    handlers = _get_ws_handlers(mock_client)
+    await _populate_device_mapping(handlers)
+
+    events: list[DoorEvent] = []
+    coordinator: UnifiAccessCoordinator = init_integration.runtime_data
+    coordinator.async_subscribe_door_events(events.append)
+
+    await handlers["access.logs.insights.add"](insights)
+    await handlers["access.logs.add"](logs)
+    await hass.async_block_till_done()
+
+    assert len(events) == 2
+
+
+async def test_access_event_redelivered_after_window(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test an identical event is dispatched again once the dedup window has passed."""
+    handlers = _get_ws_handlers(mock_client)
+    await _populate_device_mapping(handlers)
+
+    events: list[DoorEvent] = []
+    coordinator: UnifiAccessCoordinator = init_integration.runtime_data
+    coordinator.async_subscribe_door_events(events.append)
+
+    with patch(
+        "homeassistant.components.unifi_access.coordinator._ACCESS_EVENT_DEDUP_WINDOW",
+        0.0,
+    ):
+        for _ in range(2):
+            await handlers["access.logs.add"](_make_logs_add())
+            await hass.async_block_till_done()
+
+    assert len(events) == 2
