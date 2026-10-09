@@ -36,7 +36,7 @@ async def test_lights(
     entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Every light type becomes a light with its own colour modes; others are not lights."""
+    """Every light type becomes a light with its own color modes; others are not lights."""
     await setup_integration(hass, entry)
 
     kitchen = hass.states.get(_entity_id(hass, "m:2"))

@@ -18,7 +18,7 @@ from .entity import PlexilentEntity, add_entities
 
 PARALLEL_UPDATES = 0
 
-# Device type -> colour modes. 5ch = colour + white, ct = white, dim, onoff.
+# Device type -> color modes. 5ch = color + white, ct = white, dim, onoff.
 MODES = {
     "5ch": {ColorMode.HS, ColorMode.COLOR_TEMP},
     "ct": {ColorMode.COLOR_TEMP},
@@ -38,10 +38,10 @@ async def async_setup_entry(
 
 
 class PlexilentLight(PlexilentEntity, LightEntity):
-    """A Plexilent light: colour + white, white, dimmable or on/off."""
+    """A Plexilent light: color + white, white, dimmable or on/off."""
 
     def __init__(self, coordinator: PlexilentCoordinator, device_id: str) -> None:
-        """Initialize the light with the colour modes of its type."""
+        """Initialize the light with the color modes of its type."""
         super().__init__(coordinator, device_id)
         device = self.device
         self._attr_supported_color_modes = MODES[device.type]
@@ -58,7 +58,7 @@ class PlexilentLight(PlexilentEntity, LightEntity):
     @property
     @override
     def color_mode(self) -> ColorMode:
-        """Return the colour mode: colour while a colour is set, else white."""
+        """Return the color mode: color while a color is set, else white."""
         modes = MODES[self.device.type]
         if len(modes) == 1:
             return next(iter(modes))
@@ -80,12 +80,12 @@ class PlexilentLight(PlexilentEntity, LightEntity):
     @property
     @override
     def hs_color(self) -> tuple[float, float] | None:
-        """Return the colour as hue and saturation."""
+        """Return the color as hue and saturation."""
         return self.device.hs
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn on, with brightness, white or colour if given."""
+        """Turn on, with brightness, white or color if given."""
         fields: dict[str, Any] = {"on": True}
         if ATTR_BRIGHTNESS in kwargs:
             # Never 0 %: the cloud treats 0 % as off.
