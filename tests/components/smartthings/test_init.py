@@ -180,7 +180,6 @@ async def test_create_subscription(
 
     devices.subscribe.assert_called_once_with(
         "397678e5-9995-4a39-9d9f-ae6ba310236c",
-        "5aaaa925-2be1-4e40-b257-e4ef59083324",
         Subscription.from_json(
             await async_load_fixture(hass, "subscription.json", DOMAIN)
         ),

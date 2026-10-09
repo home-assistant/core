@@ -20,6 +20,7 @@ from pysmartthings import (
     SmartThingsAuthenticationFailedError,
     SmartThingsConnectionError,
     SmartThingsError,
+    SmartThingsForbiddenError,
     SmartThingsSinkError,
     Status,
 )
@@ -68,6 +69,7 @@ from .const import (
     MAIN,
     OLD_DATA,
     SENSOR_ATTRIBUTES_TO_CAPABILITIES,
+    SMARTTHINGS_ACCOUNT_URL,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -120,6 +122,51 @@ PLATFORMS = [
     Platform.VALVE,
     Platform.WATER_HEATER,
 ]
+
+
+async def _async_fetch_devices(
+    client: SmartThings, entry: SmartThingsConfigEntry
+) -> tuple[dict[str, str], dict[str, FullDevice], dict[str, Scene]]:
+    """Fetch rooms, device status and scenes, translating setup failures."""
+    device_status: dict[str, FullDevice] = {}
+    try:
+        rooms = {
+            room.room_id: room.name
+            for room in await client.get_rooms(location_id=entry.data[CONF_LOCATION_ID])
+        }
+        devices = await client.get_devices()
+        for device in devices:
+            if (
+                (main_component := device.components.get(MAIN)) is not None
+                and main_component.manufacturer_category is Category.BLUETOOTH_TRACKER
+            ):
+                device_status[device.device_id] = FullDevice(
+                    device=device,
+                    status={},
+                    online=True,
+                )
+                continue
+            status = process_status(await client.get_device_status(device.device_id))
+            online = await client.get_device_health(device.device_id)
+            device_status[device.device_id] = FullDevice(
+                device=device, status=status, online=online.state == HealthStatus.ONLINE
+            )
+        scenes = {
+            scene.scene_id: scene
+            for scene in await client.get_scenes(
+                location_id=entry.data[CONF_LOCATION_ID]
+            )
+        }
+    except SmartThingsAuthenticationFailedError as err:
+        raise ConfigEntryAuthFailed from err
+    except SmartThingsConnectionError as err:
+        raise ConfigEntryNotReady from err
+    except SmartThingsForbiddenError as err:
+        # TODO: determine actual error for unentitled users  # pylint: disable=fixme
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN, translation_key="entitlement_required"
+        ) from err
+    return rooms, device_status, scenes
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) -> bool:
@@ -180,56 +227,31 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
     try:
         subscription = await client.create_subscription(
             entry.data[CONF_LOCATION_ID],
-            entry.data[CONF_TOKEN][CONF_INSTALLED_APP_ID],
         )
     except (SmartThingsConnectionError, SmartThingsSinkError) as err:
         raise ConfigEntryNotReady(f"Couldn't create a new subscription: {err}") from err
     subscription_id = subscription.subscription_id
     _handle_new_subscription_identifier(subscription_id)
 
+    async def _async_subscribe() -> None:
+        try:
+            await client.subscribe(
+                entry.data[CONF_LOCATION_ID],
+                subscription,
+            )
+        except (
+            SmartThingsForbiddenError,
+            SmartThingsAuthenticationFailedError,
+        ):
+            entry.async_start_reauth_if_available(hass)
+
     entry.async_create_background_task(
         hass,
-        client.subscribe(
-            entry.data[CONF_LOCATION_ID],
-            entry.data[CONF_TOKEN][CONF_INSTALLED_APP_ID],
-            subscription,
-        ),
+        _async_subscribe(),
         "smartthings_socket",
     )
 
-    device_status: dict[str, FullDevice] = {}
-    try:
-        rooms = {
-            room.room_id: room.name
-            for room in await client.get_rooms(location_id=entry.data[CONF_LOCATION_ID])
-        }
-        devices = await client.get_devices()
-        for device in devices:
-            if (
-                (main_component := device.components.get(MAIN)) is not None
-                and main_component.manufacturer_category is Category.BLUETOOTH_TRACKER
-            ):
-                device_status[device.device_id] = FullDevice(
-                    device=device,
-                    status={},
-                    online=True,
-                )
-                continue
-            status = process_status(await client.get_device_status(device.device_id))
-            online = await client.get_device_health(device.device_id)
-            device_status[device.device_id] = FullDevice(
-                device=device, status=status, online=online.state == HealthStatus.ONLINE
-            )
-        scenes = {
-            scene.scene_id: scene
-            for scene in await client.get_scenes(
-                location_id=entry.data[CONF_LOCATION_ID]
-            )
-        }
-    except SmartThingsAuthenticationFailedError as err:
-        raise ConfigEntryAuthFailed from err
-    except SmartThingsConnectionError as err:
-        raise ConfigEntryNotReady from err
+    rooms, device_status, scenes = await _async_fetch_devices(client, entry)
 
     device_registry = dr.async_get(hass)
     create_devices(device_registry, device_status, entry, rooms)
@@ -266,6 +288,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
             event.capability is Capability.BUTTON
             and event.attribute is Attribute.BUTTON
         ):
+            if event.device_id not in device_status:
+                hass.config_entries.async_schedule_reload(entry.entry_id)
+                return
+            if event.device_id not in entry.runtime_data.devices:
+                return
             hass.bus.async_fire(
                 EVENT_BUTTON,
                 {
@@ -597,7 +624,7 @@ def create_devices(
         created_devices[device.device.device_id] = device_registry.async_get_or_create(
             config_entry_id=entry.entry_id,
             identifiers={(DOMAIN, device.device.device_id)},
-            configuration_url="https://account.smartthings.com",
+            configuration_url=SMARTTHINGS_ACCOUNT_URL,
             name=device.device.label,
             **kwargs,
         )

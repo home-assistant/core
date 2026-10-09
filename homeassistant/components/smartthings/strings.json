@@ -2,14 +2,25 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
-      "cloud_not_enabled": "Please make sure you run Home Assistant with `{default_config}` enabled in your configuration.yaml.",
+      "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
       "missing_scopes": "Authentication failed. Please make sure you have granted all required permissions.",
+      "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
+      "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
+      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
+      "oauth_implementation_unavailable": "[%key:common::config_flow::abort::oauth2_implementation_unavailable%]",
+      "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
+      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
+      "quota_exceeded": "SmartThings quota exceeded. Visit the SmartThings Developer Center to manage your subscriptions: {manage_plans_url}",
       "reauth_account_mismatch": "Authenticated account does not match the account to be reauthenticated. Please log in with the correct account and pick the right location.",
       "reauth_location_mismatch": "Authenticated location does not match the location to be reauthenticated. Please log in with the correct account and pick the right location."
     },
     "error": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "entitlement_required": "SmartThings subscription required. Please subscribe before setting up this integration and ensure your Personal Access token has 'Applications' scopes enabled.",
+      "invalid_pat": "Invalid Personal Access Token. Please make sure you have entered it correctly and that it has not expired.",
+      "quota_exceeded": "[%key:component::smartthings::config::abort::quota_exceeded%]"
     },
     "initiate_flow": {
       "user": "[%key:common::config_flow::initiate_flow::account%]"
@@ -18,12 +29,22 @@
       "oauth_discovery": {
         "description": "Home Assistant has found a SmartThings device on your network. Press **Submit** to continue setting up SmartThings."
       },
+      "pat": {
+        "data": {
+          "pat_token": "Personal Access Token"
+        },
+        "data_description": {
+          "pat_token": "A Personal Access Token used to create your own SmartThings app."
+        },
+        "description": "Enter a Personal Access Token to set up your own SmartThings app. Generate one on the [SmartThings tokens page]({token_url}), making sure the 'Applications' scopes are selected. This requires an active [SmartThings API subscription]({manage_plans_url}).",
+        "title": "Connect SmartThings"
+      },
       "pick_implementation": {
         "data": {
           "implementation": "[%key:common::config_flow::data::implementation%]"
         },
         "data_description": {
-          "implementation": "[%key:common::config_flow::description::implementation%]"
+          "implementation": "Stored credentials or Personal Access Token for first time integrations"
         },
         "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
       },
@@ -1162,6 +1183,15 @@
     }
   },
   "exceptions": {
+    "entitlement_required": {
+      "message": "SmartThings subscription required. Reconnect your SmartThings account to restore access."
+    },
+    "oauth2_implementation_unavailable": {
+      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
+    },
+    "quota_exceeded": {
+      "message": "SmartThings quota exceeded. Visit the SmartThings Developer Center to manage your subscriptions: {manage_plans_url}"
+    },
     "remote_control_status": {
       "message": "Can only be changed when remote control is enabled"
     }

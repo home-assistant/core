@@ -1,10 +1,15 @@
 """Tests for the SmartThings config flow module."""
 
 from http import HTTPStatus
-from unittest.mock import AsyncMock
+from types import SimpleNamespace
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
+from homeassistant.components.application_credentials import (
+    ClientCredential,
+    async_import_client_credential,
+)
 from homeassistant.components.smartthings import OLD_DATA
 from homeassistant.components.smartthings.const import (
     CONF_LOCATION_ID,
@@ -27,6 +32,84 @@ from tests.typing import ClientSessionGenerator
 def use_cloud(hass: HomeAssistant) -> None:
     """Set up the cloud component."""
     hass.config.components.add("cloud")
+
+
+@pytest.fixture
+async def with_generic_credential(hass: HomeAssistant, setup_credentials: None) -> None:
+    """Import a generic, already-configured application credential."""
+    await async_import_client_credential(
+        hass,
+        DOMAIN,
+        ClientCredential("CLIENT_ID", "CLIENT_SECRET"),
+        DOMAIN,
+    )
+
+
+@pytest.mark.usefixtures("current_request_with_host", "with_generic_credential")
+async def test_pat_implementation_auto_selects_stored_credential(
+    hass: HomeAssistant,
+) -> None:
+    """Check a stored credential is used automatically, without prompting for a PAT.
+
+    With no cloud implementation available, the top-level picker is skipped
+    entirely, and since a credential is already stored, so is the PAT prompt.
+    """
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": "https://example.com/auth/external/callback",
+        },
+    )
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+    assert result["url"] == (
+        "https://api.smartthings.com/oauth/authorize"
+        "?response_type=code&client_id=CLIENT_ID"
+        "&redirect_uri=https://example.com/auth/external/callback"
+        f"&state={state}"
+        "&scope=r:devices:*+w:devices:*+x:devices:*+r:hubs:*+"
+        "r:locations:*+w:locations:*+x:locations:*+r:scenes:*+"
+        "x:scenes:*+r:rules:*+w:rules:*+sse+r:installedapps:*+"
+        "w:installedapps:*"
+    )
+
+
+@pytest.mark.usefixtures("current_request_with_host", "with_generic_credential")
+async def test_pick_implementation_only_offers_cloud_and_pat(
+    hass: HomeAssistant,
+) -> None:
+    """Check the top-level picker only offers cloud and a PAT option.
+
+    Stored credentials are surfaced one level down, under the PAT choice.
+    """
+    mock_implementations = {
+        DOMAIN: SimpleNamespace(name="Import from configuration.yaml"),
+        "cloud": SimpleNamespace(name="Nabu Casa Cloud"),
+    }
+    with patch(
+        "homeassistant.components.smartthings.config_flow.async_get_implementations",
+        return_value=mock_implementations,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "pick_implementation"
+        implementation_field = next(iter(result["data_schema"].schema))
+        assert implementation_field.default() == "pat"
+        selector = result["data_schema"].schema[implementation_field]
+        assert selector.config["mode"] == "list"
+        assert [
+            (option["value"], option["label"]) for option in selector.config["options"]
+        ] == [
+            ("cloud", "Nabu Casa Cloud"),
+            ("pat", "API Access App"),
+        ]
 
 
 @pytest.mark.usefixtures("current_request_with_host", "use_cloud", "mock_setup_entry")
@@ -57,8 +140,8 @@ async def test_full_flow(
         f"&state={state}"
         "&scope=r:devices:*+w:devices:*+x:devices:*+r:hubs:*+"
         "r:locations:*+w:locations:*+x:locations:*+r:scenes:*+"
-        "x:scenes:*+r:rules:*+w:rules:*+sse+r:installedapps+"
-        "w:installedapps"
+        "x:scenes:*+r:rules:*+w:rules:*+sse+r:installedapps:*+"
+        "w:installedapps:*"
     )
 
     client = await hass_client_no_auth()
@@ -128,8 +211,8 @@ async def test_not_enough_scopes(
         f"&state={state}"
         "&scope=r:devices:*+w:devices:*+x:devices:*+r:hubs:*+"
         "r:locations:*+w:locations:*+x:locations:*+r:scenes:*+"
-        "x:scenes:*+r:rules:*+w:rules:*+sse+r:installedapps+"
-        "w:installedapps"
+        "x:scenes:*+r:rules:*+w:rules:*+sse+r:installedapps:*+"
+        "w:installedapps:*"
     )
 
     client = await hass_client_no_auth()
@@ -148,7 +231,7 @@ async def test_not_enough_scopes(
             "scope": "r:devices:* w:devices:* x:devices:* r:hubs:* "
             "r:locations:* w:locations:* x:locations:* "
             "r:scenes:* x:scenes:* r:rules:* w:rules:* "
-            "r:installedapps w:installedapps",
+            "r:installedapps:* w:installedapps:*",
             "access_tier": 0,
             "installed_app_id": "5aaaa925-2be1-4e40-b257-e4ef59083324",
         },
@@ -190,8 +273,8 @@ async def test_duplicate_entry(
         f"&state={state}"
         "&scope=r:devices:*+w:devices:*+x:devices:*+r:hubs:*+"
         "r:locations:*+w:locations:*+x:locations:*+r:scenes:*+"
-        "x:scenes:*+r:rules:*+w:rules:*+sse+r:installedapps+"
-        "w:installedapps"
+        "x:scenes:*+r:rules:*+w:rules:*+sse+r:installedapps:*+"
+        "w:installedapps:*"
     )
 
     client = await hass_client_no_auth()
@@ -222,19 +305,20 @@ async def test_duplicate_entry(
 
 
 @pytest.mark.usefixtures("current_request_with_host", "mock_setup_entry")
-async def test_no_cloud(
+async def test_no_cloud_no_credential_prompts_for_pat(
     hass: HomeAssistant,
-    hass_client_no_auth: ClientSessionGenerator,
-    aioclient_mock: AiohttpClientMocker,
-    mock_smartthings: AsyncMock,
 ) -> None:
-    """Check we abort when cloud is not enabled."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
+    """Check the PAT form is shown when there is no cloud and no stored credential."""
+    with patch(
+        "homeassistant.components.smartthings.config_flow.async_get_implementations",
+        return_value={},
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
 
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "cloud_not_enabled"
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "pat"
 
 
 @pytest.mark.usefixtures("current_request_with_host", "use_cloud", "mock_setup_entry")
@@ -336,7 +420,7 @@ async def test_reauthentication_wrong_scopes(
             "scope": "r:devices:* w:devices:* x:devices:* r:hubs:* "
             "r:locations:* w:locations:* x:locations:* "
             "r:scenes:* x:scenes:* r:rules:* w:rules:* "
-            "r:installedapps w:installedapps",
+            "r:installedapps:* w:installedapps:*",
             "access_tier": 0,
             "installed_app_id": "5aaaa925-2be1-4e40-b257-e4ef59083324",
         },
@@ -399,14 +483,14 @@ async def test_reauth_account_mismatch(
 
 
 @pytest.mark.usefixtures("current_request_with_host", "mock_setup_entry")
-async def test_reauthentication_no_cloud(
+async def test_reauthentication_no_cloud_uses_stored_credential(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     mock_smartthings: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test SmartThings reauthentication without cloud."""
+    """Test SmartThings reauthentication without cloud uses the stored credential."""
     mock_config_entry.add_to_hass(hass)
 
     result = await mock_config_entry.start_reauth_flow(hass)
@@ -416,8 +500,7 @@ async def test_reauthentication_no_cloud(
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "cloud_not_enabled"
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
 
 
 @pytest.mark.usefixtures("current_request_with_host", "use_cloud")
@@ -586,7 +669,7 @@ async def test_migration_wrong_location(
 
 
 @pytest.mark.usefixtures("current_request_with_host")
-async def test_migration_no_cloud(
+async def test_migration_no_cloud_uses_stored_credential(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
@@ -605,8 +688,7 @@ async def test_migration_no_cloud(
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "cloud_not_enabled"
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
 
 
 @pytest.mark.usefixtures("current_request_with_host", "use_cloud", "mock_setup_entry")
@@ -646,8 +728,8 @@ async def test_dhcp_flow(
         f"&state={state}"
         "&scope=r:devices:*+w:devices:*+x:devices:*+r:hubs:*+"
         "r:locations:*+w:locations:*+x:locations:*+r:scenes:*+"
-        "x:scenes:*+r:rules:*+w:rules:*+sse+r:installedapps+"
-        "w:installedapps"
+        "x:scenes:*+r:rules:*+w:rules:*+sse+r:installedapps:*+"
+        "w:installedapps:*"
     )
 
     client = await hass_client_no_auth()
