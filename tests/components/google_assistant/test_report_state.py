@@ -292,3 +292,30 @@ async def test_report_notifications(
             "Unable to send notification with result code: 404, check log for more info"
             in caplog.text
         )
+
+
+async def test_report_state_disabled_during_initial_report(
+    hass: HomeAssistant,
+) -> None:
+    """Test disabling while the initial report is in flight stops reporting."""
+    hass.states.async_set("light.ceiling", "off")
+
+    with (
+        patch.object(
+            BASIC_CONFIG,
+            "async_report_state_all",
+            AsyncMock(side_effect=lambda *args: unsub()),
+        ) as mock_report,
+        patch.object(report_state, "INITIAL_REPORT_DELAY", 0),
+    ):
+        unsub = report_state.async_enable_report_state(hass, BASIC_CONFIG)
+        async_fire_time_changed(hass, utcnow())
+        await hass.async_block_till_done()
+
+        hass.states.async_set("light.ceiling", "on")
+        async_fire_time_changed(
+            hass, utcnow() + timedelta(seconds=report_state.REPORT_STATE_WINDOW)
+        )
+        await hass.async_block_till_done()
+
+    assert len(mock_report.mock_calls) == 1

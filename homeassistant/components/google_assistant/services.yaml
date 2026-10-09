@@ -3,3 +3,4 @@ request_sync:
     agent_user_id:
       selector:
         text:
+reload:
