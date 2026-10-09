@@ -105,9 +105,15 @@ async def test_connection_error(
     mock_tailscale_config_flow.devices.side_effect = TailscaleConnectionError
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
             CONF_TAILNET: "homeassistant.github",
             CONF_API_KEY: "tskey-FAKE",
         },

@@ -2,17 +2,16 @@
 
 from pycognito.exceptions import WarrantException
 import pyschlage
-import voluptuous as vol
 
-from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
-from homeassistant.core import HomeAssistant, SupportsResponse
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers import config_validation as cv, service
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, SERVICE_ADD_CODE, SERVICE_DELETE_CODE, SERVICE_GET_CODES
+from .const import DOMAIN
 from .coordinator import SchlageConfigEntry, SchlageDataUpdateCoordinator
+from .services import async_setup_services
 
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
@@ -27,39 +26,7 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Schlage component."""
-    service.async_register_platform_entity_service(
-        hass,
-        DOMAIN,
-        SERVICE_ADD_CODE,
-        entity_domain=LOCK_DOMAIN,
-        schema={
-            vol.Required("name"): cv.string,
-            vol.Required("code"): vol.All(cv.string, cv.matches_regex(r"^\d{4,8}$")),
-            vol.Optional("notify_on_use", default=True): cv.boolean,
-        },
-        func=SERVICE_ADD_CODE,
-    )
-
-    service.async_register_platform_entity_service(
-        hass,
-        DOMAIN,
-        SERVICE_DELETE_CODE,
-        entity_domain=LOCK_DOMAIN,
-        schema={
-            vol.Required("name"): cv.string,
-        },
-        func=SERVICE_DELETE_CODE,
-    )
-
-    service.async_register_platform_entity_service(
-        hass,
-        DOMAIN,
-        SERVICE_GET_CODES,
-        entity_domain=LOCK_DOMAIN,
-        schema=None,
-        func=SERVICE_GET_CODES,
-        supports_response=SupportsResponse.ONLY,
-    )
+    async_setup_services(hass)
 
     return True
 

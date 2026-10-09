@@ -1,28 +1,29 @@
-"""Polls the inverter's reading registers on a fixed interval."""
+"""Data update coordinator for Sofar devices."""
 
+from collections.abc import Awaitable, Callable, Mapping
+from dataclasses import dataclass, field
 from datetime import timedelta
 import logging
 from typing import override
 
-from modbus_connection import ModbusConnectionError, ModbusError
+from modbus_connection import ModbusConnectionError, ModbusError, ModbusTimeoutError
 from propcache.api import cached_property
 from sofar_modbus.model import UpdateReport
 from sofar_modbus.modern.device import SofarInverter
+from sofar_modbus.tuning import LinkTuner, TimedUnit
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import ATTR_MANUFACTURER, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = timedelta(seconds=5)
-
 
 class SofarDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
-    """Polls the inverter's reading registers on a fixed interval."""
+    """Class to manage fetching Sofar data."""
 
     config_entry: SofarConfigEntry
     device: SofarInverter
@@ -32,6 +33,9 @@ class SofarDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
         hass: HomeAssistant,
         entry: SofarConfigEntry,
         device: SofarInverter,
+        poll: Callable[[], Awaitable[UpdateReport]],
+        interval: timedelta,
+        tuner: LinkTuner,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
@@ -39,56 +43,65 @@ class SofarDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
             _LOGGER,
             config_entry=entry,
             name=entry.title,
-            update_interval=SCAN_INTERVAL,
+            update_interval=interval,
         )
         self.device = device
+        self._poll = poll
+        self._tuner = tuner
         self._consecutive_failures: dict[str, int] = {}
 
     @cached_property
-    def device_info(self) -> DeviceInfo:
-        """The one physical inverter every entity on this config entry belongs to."""
+    def device_info(self) -> dr.DeviceInfo:
+        """Return device information."""
         serial = self.device.serial_number
-        assert serial is not None
-        return DeviceInfo(
+        identity = self.device.identity
+        return dr.DeviceInfo(
             identifiers={(DOMAIN, serial)},
             manufacturer=ATTR_MANUFACTURER,
             model=self.device.model or None,
             serial_number=serial,
+            hw_version=identity.hardware_version or None,
+            sw_version=identity.software_version or None,
         )
-
-    @property
-    def served_components(self) -> frozenset[str]:
-        """Component names the inverter answered for on the last poll."""
-        return frozenset(self.data.updated | set(self.data.failed))
 
     @override
     async def _async_update_data(self) -> UpdateReport:
         try:
-            report = await self.device.async_update_readings()
-            report = await self._retry_failed(report)
+            report = await self._async_observed_poll()
             if not report.updated:
                 errors = list(report.failed.values())
-                if not errors:
-                    raise UpdateFailed(
-                        translation_domain=DOMAIN,
-                        translation_key="no_component_answered",
-                        translation_placeholders={"name": self.name},
-                    )
                 raise UpdateFailed(
                     translation_domain=DOMAIN,
                     translation_key="no_component_answered",
-                    translation_placeholders={"name": self.name},
-                ) from ExceptionGroup("all components failed to refresh", errors)
+                ) from (
+                    ExceptionGroup("all components failed to refresh", errors)
+                    if errors
+                    else None
+                )
         except ModbusError as err:
             # ModbusConnectionError (dead link) and ModbusTimeoutError reach
             # here; per-block failures once alive land in report.failed instead.
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="modbus_error",
-                translation_placeholders={"error": str(err)},
             ) from err
         else:
             return report
+
+    async def _async_observed_poll(self) -> UpdateReport:
+        """Poll once; a timeout either attempt hit must reach the tuner."""
+        attempted: dict[str, ModbusError] = {}
+        try:
+            report = await self._poll()
+            attempted = dict(report.failed)
+            report = await self._retry_failed(report)
+        except ModbusError as err:
+            self._tuner.observe_failure(_timed_out(attempted) or err)
+            raise
+        self._tuner.observe(
+            UpdateReport(report.updated, _both_attempts(attempted, report.failed))
+        )
+        return report
 
     async def _retry_failed(self, report: UpdateReport) -> UpdateReport:
         """Retry failures once; skip if none answered, to avoid doubling timeout."""
@@ -123,4 +136,55 @@ class SofarDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
         return report
 
 
-type SofarConfigEntry = ConfigEntry[SofarDataUpdateCoordinator]
+def _timed_out(failures: Mapping[str, ModbusError]) -> ModbusTimeoutError | None:
+    """Whichever of these failures timed out, if any of them did."""
+    return next(
+        (err for err in failures.values() if isinstance(err, ModbusTimeoutError)), None
+    )
+
+
+def _both_attempts(
+    attempted: Mapping[str, ModbusError], retried: Mapping[str, ModbusError]
+) -> dict[str, ModbusError]:
+    """Both attempts' failures, a timeout outranking any other error."""
+    failures = dict(attempted)
+    for name, err in retried.items():
+        if not isinstance(failures.get(name), ModbusTimeoutError):
+            failures[name] = err
+    return failures
+
+
+@dataclass
+class SofarRuntimeData:
+    """Class to hold runtime data."""
+
+    readings: SofarDataUpdateCoordinator
+    settings: SofarDataUpdateCoordinator
+    inverter_device_id: str
+    link: TimedUnit
+    tuner: LinkTuner
+    wired_packs: set[int] = field(default_factory=set)
+
+    @property
+    def served_components(self) -> frozenset[str]:
+        """Component names this inverter polls, answered or not."""
+        device = self.readings.device
+        return frozenset(device.readings_components) | frozenset(
+            device.settings_components
+        )
+
+    def pack_is_wired(self, number: int) -> bool:
+        """Whether a pack has answered, so it physically exists."""
+        string = self.readings.device.battery_string(number)
+        if string.component_name not in self.served_components:
+            return False
+        return bool(string.voltage)
+
+    def coordinator_for(self, component: str) -> SofarDataUpdateCoordinator:
+        """Which coordinator owns a given component's data."""
+        if component in self.readings.device.readings_components:
+            return self.readings
+        return self.settings
+
+
+type SofarConfigEntry = ConfigEntry[SofarRuntimeData]

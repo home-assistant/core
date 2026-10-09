@@ -6,7 +6,7 @@ from typing import Any, override
 
 import avea
 from bleak.exc import BleakError
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
@@ -178,17 +178,17 @@ class AveaConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if self._discovery_info:
             disc = self._discovery_info
-            data_schema = vol.Schema(
+            data_schema = probatio.Schema(
                 {
-                    vol.Required(CONF_ADDRESS, default=disc.address): vol.In(
+                    probatio.Required(CONF_ADDRESS, default=disc.address): probatio.In(
                         {disc.address: _discovery_label(disc)}
                     )
                 }
             )
         else:
-            data_schema = vol.Schema(
+            data_schema = probatio.Schema(
                 {
-                    vol.Required(CONF_ADDRESS): vol.In(
+                    probatio.Required(CONF_ADDRESS): probatio.In(
                         {
                             service_info.address: _discovery_label(service_info)
                             for service_info in self._discovered_devices.values()

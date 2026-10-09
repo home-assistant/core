@@ -2,14 +2,12 @@
 
 from unittest.mock import Mock, patch
 
+import probatio
 import pytest
-import voluptuous as vol
 import yaml
 
 from homeassistant import config, core as ha
 from homeassistant.components.homeassistant import (
-    ATTR_ENTRY_ID,
-    ATTR_SAFE_MODE,
     DOMAIN,
     SERVICE_CHECK_CONFIG,
     SERVICE_HOMEASSISTANT_RESTART,
@@ -18,6 +16,10 @@ from homeassistant.components.homeassistant import (
     SERVICE_RELOAD_CORE_CONFIG,
     SERVICE_RELOAD_CUSTOM_TEMPLATES,
     SERVICE_SET_LOCATION,
+)
+from homeassistant.components.homeassistant.services import (
+    ATTR_ENTRY_ID,
+    ATTR_SAFE_MODE,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -130,7 +132,7 @@ async def test_reload_core_conf(hass: HomeAssistant) -> None:
 
 
 @patch("homeassistant.config.os.path.isfile", Mock(return_value=True))
-@patch("homeassistant.components.homeassistant._LOGGER.error")
+@patch("homeassistant.components.homeassistant.services._LOGGER.error")
 @patch("homeassistant.core_config.async_process_ha_core_config")
 @pytest.mark.parametrize(
     ("files_patch", "expected_error"),
@@ -244,7 +246,7 @@ async def test_entity_update(hass: HomeAssistant) -> None:
     await async_setup_component(hass, DOMAIN, {})
 
     with patch(
-        "homeassistant.components.homeassistant.async_update_entity",
+        "homeassistant.components.homeassistant.services.async_update_entity",
         return_value=None,
     ) as mock_update:
         await hass.services.async_call(
@@ -338,7 +340,7 @@ async def test_turn_on_off_toggle_schema(
 
     for service in SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE:
         for invalid in None, "nothing", ENTITY_MATCH_ALL, ENTITY_MATCH_NONE:
-            with pytest.raises(vol.Invalid):
+            with pytest.raises(probatio.Invalid):
                 await hass.services.async_call(
                     ha.DOMAIN,
                     service,
@@ -368,7 +370,9 @@ async def test_not_allowing_recursion(
 
 
 async def test_reload_config_entry_by_entity_id(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test being able to reload a config entry by entity_id."""
     await async_setup_component(hass, DOMAIN, {})
@@ -398,6 +402,11 @@ async def test_reload_config_entry_by_entity_id(
         entry1.entry_id,
         entry2.entry_id,
     }
+    assert (
+        "Reloading a config entry by target is deprecated and will stop working in "
+        "Home Assistant 2027.4, please specify the config entry to reload in the "
+        "'entry_id' parameter instead"
+    ) in caplog.text
 
     with pytest.raises(ValueError):
         await hass.services.async_call(
@@ -408,7 +417,9 @@ async def test_reload_config_entry_by_entity_id(
         )
 
 
-async def test_reload_config_entry_by_entry_id(hass: HomeAssistant) -> None:
+async def test_reload_config_entry_by_entry_id(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test being able to reload a config entry by config entry id."""
     await async_setup_component(hass, DOMAIN, {})
 
@@ -425,6 +436,7 @@ async def test_reload_config_entry_by_entry_id(hass: HomeAssistant) -> None:
 
     assert len(mock_reload.mock_calls) == 1
     assert mock_reload.mock_calls[0][1][0] == "8955375327824e14ba89e4b29cc3ec9a"
+    assert "Reloading a config entry by target is deprecated" not in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -588,7 +600,7 @@ async def test_reload_custom_templates(hass: HomeAssistant) -> None:
     """Test we can call reload_custom_templates."""
     await async_setup_component(hass, DOMAIN, {})
     with patch(
-        "homeassistant.components.homeassistant.async_load_custom_templates",
+        "homeassistant.components.homeassistant.services.async_load_custom_templates",
         return_value=None,
     ) as mock_load_custom_templates:
         await hass.services.async_call(

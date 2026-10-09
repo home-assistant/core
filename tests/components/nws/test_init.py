@@ -1,5 +1,7 @@
 """Tests for init module."""
 
+import logging
+
 from pynws import NwsNoDataError
 import pytest
 
@@ -195,6 +197,40 @@ async def test_location_change_updates_coordinates(
     assert coordinator.name == f"NWS observation station {new_station}"
 
 
+async def test_location_change_does_not_log_coordinates(
+    hass: HomeAssistant,
+    mock_simple_nws,
+    location_entity_config: dict,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that the tracked location is not written to the log."""
+    caplog.set_level(logging.INFO)
+    entity = location_entity_config["entry"]
+    hass.states.async_set(
+        entity.entity_id,
+        "home",
+        {ATTR_LATITUDE: 40.0, ATTR_LONGITUDE: -80.0},
+    )
+
+    config_entry = MockConfigEntry(domain=DOMAIN, data=location_entity_config["config"])
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    caplog.clear()
+    hass.states.async_set(
+        entity.entity_id,
+        "away",
+        {ATTR_LATITUDE: 41.0, ATTR_LONGITUDE: -81.0},
+    )
+    await hass.async_block_till_done()
+
+    assert "NWS API updated: station" in caplog.text
+    assert "41.0000" not in caplog.text
+    assert "-81.0000" not in caplog.text
+
+
 async def test_location_change_resets_api_success_time(
     hass: HomeAssistant, mock_simple_nws, location_entity_config: dict
 ) -> None:
@@ -261,6 +297,7 @@ async def test_no_update_without_significant_move(
         "away",
         {ATTR_LATITUDE: new_lat, ATTR_LONGITUDE: new_lon},
     )
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
     await config_entry.runtime_data.coordinator_observation.async_refresh()
     await hass.async_block_till_done()
 

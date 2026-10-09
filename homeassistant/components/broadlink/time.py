@@ -36,6 +36,7 @@ class BroadlinkTime(BroadlinkEntity, TimeEntity):
         """Initialize the sensor."""
         super().__init__(device)
 
+        # Legacy format, kept as migrating existing unique IDs is not worth the risk
         self._attr_unique_id = f"{device.unique_id}-device_time"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
 
     @override

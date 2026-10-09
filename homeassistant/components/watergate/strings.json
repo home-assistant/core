@@ -55,6 +55,14 @@
         }
       }
     },
+    "number": {
+      "auto_shut_off_duration_threshold": {
+        "name": "Auto shut-off duration threshold"
+      },
+      "auto_shut_off_volume_threshold": {
+        "name": "Auto shut-off volume threshold"
+      }
+    },
     "sensor": {
       "mqtt_up_since": {
         "name": "MQTT up since"
@@ -90,6 +98,11 @@
       "auto_shut_off": {
         "name": "Auto shut-off"
       }
+    }
+  },
+  "exceptions": {
+    "valve_action_failed": {
+      "message": "Failed to change the valve state"
     }
   }
 }

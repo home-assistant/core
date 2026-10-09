@@ -3,8 +3,6 @@
 import collections
 from typing import Any, override
 
-import voluptuous as vol
-
 from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
@@ -27,13 +25,9 @@ from homeassistant.const import (
     STATE_ON,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import (
-    config_validation as cv,
-    device_registry as dr,
-    entity_platform,
-)
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.unit_conversion import TemperatureConverter
@@ -61,13 +55,6 @@ from .services import (
     _async_get_thermostats,
 )
 from .util import is_indefinite_hold
-
-ATTR_DST_ENABLED = "dst_enabled"
-ATTR_MIC_ENABLED = "mic_enabled"
-ATTR_AUTO_AWAY = "auto_away"
-ATTR_FOLLOW_ME = "follow_me"
-ATTR_SENSOR_LIST = "device_ids"
-ATTR_PRESET_MODE = "preset_mode"
 
 PRESET_AWAY_INDEFINITELY = "away_indefinitely"
 PRESET_TEMPERATURE = "temp"
@@ -127,12 +114,6 @@ PRESET_TO_ECOBEE_HOLD = {
     PRESET_HOLD_INDEFINITE: "indefinite",
 }
 
-SERVICE_SET_DST_MODE = "set_dst_mode"
-SERVICE_SET_MIC_MODE = "set_mic_mode"
-SERVICE_SET_OCCUPANCY_MODES = "set_occupancy_modes"
-SERVICE_SET_SENSORS_USED_IN_CLIMATE = "set_sensors_used_in_climate"
-
-
 SUPPORT_FLAGS = (
     ClimateEntityFeature.TARGET_TEMPERATURE
     | ClimateEntityFeature.PRESET_MODE
@@ -168,46 +149,25 @@ async def async_setup_entry(
         entities.append(Thermostat(data, index, thermostat, hass))
 
     async_add_entities(entities, True)
-    _async_get_thermostats(hass).extend(entities)
 
-    platform = entity_platform.async_get_current_platform()
+    # The ecobee actions act on whatever is in this list, so the entities have
+    # to be taken back out again when the entry goes away.
+    thermostats = _async_get_thermostats(hass)
+    thermostats.extend(entities)
 
-    platform.async_register_entity_service(
-        SERVICE_SET_DST_MODE,
-        {vol.Required(ATTR_DST_ENABLED): cv.boolean},
-        "set_dst_mode",
-    )
+    @callback
+    def _remove_thermostats() -> None:
+        for entity in entities:
+            thermostats.remove(entity)
 
-    platform.async_register_entity_service(
-        SERVICE_SET_MIC_MODE,
-        {vol.Required(ATTR_MIC_ENABLED): cv.boolean},
-        "set_mic_mode",
-    )
-
-    platform.async_register_entity_service(
-        SERVICE_SET_OCCUPANCY_MODES,
-        {
-            vol.Optional(ATTR_AUTO_AWAY): cv.boolean,
-            vol.Optional(ATTR_FOLLOW_ME): cv.boolean,
-        },
-        "set_occupancy_modes",
-    )
-
-    platform.async_register_entity_service(
-        SERVICE_SET_SENSORS_USED_IN_CLIMATE,
-        {
-            vol.Optional(ATTR_PRESET_MODE): cv.string,
-            vol.Required(ATTR_SENSOR_LIST): cv.ensure_list,
-        },
-        "set_sensors_used_in_climate",
-    )
+    config_entry.async_on_unload(_remove_thermostats)
 
 
 class Thermostat(ClimateEntity):
     """A thermostat class for Ecobee."""
 
     _attr_precision = PRECISION_TENTHS
-    _attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
+    _attr_native_temperature_unit = UnitOfTemperature.FAHRENHEIT
     _attr_min_humidity = DEFAULT_MIN_HUMIDITY
     _attr_max_humidity = DEFAULT_MAX_HUMIDITY
     _attr_fan_modes = [FAN_AUTO, FAN_ON]
@@ -297,13 +257,13 @@ class Thermostat(ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> float:
+    def native_current_temperature(self) -> float:
         """Return the current temperature."""
         return self.thermostat["runtime"]["actualTemperature"] / 10.0
 
     @property
     @override
-    def target_temperature_low(self) -> float | None:
+    def native_target_temperature_low(self) -> float | None:
         """Return the lower bound temperature we try to reach."""
         if self.hvac_mode == HVACMode.HEAT_COOL:
             return self.thermostat["runtime"]["desiredHeat"] / 10.0
@@ -311,7 +271,7 @@ class Thermostat(ClimateEntity):
 
     @property
     @override
-    def target_temperature_high(self) -> float | None:
+    def native_target_temperature_high(self) -> float | None:
         """Return the upper bound temperature we try to reach."""
         if self.hvac_mode == HVACMode.HEAT_COOL:
             return self.thermostat["runtime"]["desiredCool"] / 10.0
@@ -346,7 +306,7 @@ class Thermostat(ClimateEntity):
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         if self.hvac_mode == HVACMode.HEAT_COOL:
             return None
@@ -546,7 +506,7 @@ class Thermostat(ClimateEntity):
             )
 
         elif preset_mode == PRESET_TEMPERATURE:
-            self.set_temp_hold(self.current_temperature)
+            self.set_temp_hold(self.native_current_temperature)
 
         elif preset_mode in (PRESET_HOLD_NEXT_TRANSITION, PRESET_HOLD_INDEFINITE):
             self.data.ecobee.set_climate_hold(

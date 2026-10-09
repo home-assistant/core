@@ -9,7 +9,7 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "forbidden": "The server understood the request but refuses to authorize it.",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "invalid_ics_file": "There was a problem reading the calendar information. See the error log for additional details.",
+      "invalid_ics_file": "The remote calendar feed contains invalid data. See the error log for additional details.",
       "timeout_connect": "[%key:common::config_flow::error::timeout_connect%]"
     },
     "step": {
@@ -47,7 +47,7 @@
       "message": "Unable to fetch calendar data. See the debug log for additional details."
     },
     "unable_to_parse": {
-      "message": "Unable to parse calendar data: {err}"
+      "message": "The remote calendar feed contains invalid data. See the error log for additional details."
     }
   },
   "title": "Remote Calendar"

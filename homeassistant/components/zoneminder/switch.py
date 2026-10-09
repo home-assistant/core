@@ -3,7 +3,7 @@
 import logging
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 from zoneminder.monitor import Monitor, MonitorState
 from zoneminder.zm import ZoneMinder
 
@@ -24,8 +24,8 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_COMMAND_ON): cv.string,
-        vol.Required(CONF_COMMAND_OFF): cv.string,
+        probatio.Required(CONF_COMMAND_ON): cv.string,
+        probatio.Required(CONF_COMMAND_OFF): cv.string,
     }
 )
 

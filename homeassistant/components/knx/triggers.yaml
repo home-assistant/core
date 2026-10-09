@@ -1,0 +1,38 @@
+telegram:
+  fields:
+    destination:
+      required: true
+      default: []
+      example: "1/2/3"
+      selector:
+        text:
+          multiple: true
+    group_value_write:
+      required: true
+      default: true
+      selector:
+        boolean:
+    group_value_response:
+      required: true
+      default: true
+      selector:
+        boolean:
+    group_value_read:
+      required: true
+      default: true
+      selector:
+        boolean:
+    incoming:
+      required: true
+      default: true
+      selector:
+        boolean:
+    outgoing:
+      required: true
+      default: true
+      selector:
+        boolean:
+    type:
+      example: "9.001"
+      selector:
+        text:

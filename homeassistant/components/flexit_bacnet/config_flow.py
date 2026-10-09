@@ -6,7 +6,7 @@ from typing import Any, override
 
 from flexit_bacnet import FlexitBACnet
 from flexit_bacnet.bacnet import DecodingError
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_DEVICE_ID, CONF_IP_ADDRESS
@@ -17,10 +17,10 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_DEVICE_ID = 2
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_IP_ADDRESS): str,
-        vol.Required(CONF_DEVICE_ID, default=DEFAULT_DEVICE_ID): int,
+        probatio.Required(CONF_IP_ADDRESS): str,
+        probatio.Required(CONF_DEVICE_ID, default=DEFAULT_DEVICE_ID): int,
     }
 )
 

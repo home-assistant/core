@@ -56,16 +56,17 @@ async def test_sensor_attributes_show_on_map_true(
 
 
 async def test_sensor_device_info(
-    hass: HomeAssistant, init_integration: MockConfigEntry
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    init_integration: MockConfigEntry,
 ) -> None:
     """Test sensor has correct device info."""
-    entity_registry = er.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     entity = entity_registry.async_get("sensor.iss")
 
     assert entity is not None
     assert entity.unique_id == f"{init_integration.entry_id}_people"
 
-    device_registry = dr.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     device = device_registry.async_get(entity.device_id)
 
     assert device is not None
@@ -89,6 +90,7 @@ async def test_sensor_updates_with_coordinator(
 
     # Trigger coordinator refresh
     coordinator = init_integration.runtime_data
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
     await coordinator.async_refresh()
     await hass.async_block_till_done()
 

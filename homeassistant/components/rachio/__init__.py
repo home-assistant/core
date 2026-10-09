@@ -9,7 +9,11 @@ from requests.exceptions import ConnectTimeout
 from homeassistant.components import cloud
 from homeassistant.const import CONF_API_KEY, CONF_WEBHOOK_ID, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
@@ -82,16 +86,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: RachioConfigEntry) -> bo
         await person.async_setup(hass)
     except ConfigEntryAuthFailed as error:
         # Reauth is not yet implemented
-        _LOGGER.error("Authentication failed: %s", error)
-        return False
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="authentication_failed",
+        ) from error
     except ConnectTimeout as error:
         _LOGGER.error("Could not reach the Rachio API: %s", error)
         raise ConfigEntryNotReady from error
 
     # Check for Rachio controller devices
     if not person.controllers and not person.base_stations:
-        _LOGGER.error("No Rachio devices found in account %s", person.username)
-        return False
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="no_devices_found",
+        )
     _LOGGER.debug(
         (
             "%d Rachio device(s) found; The url %s must be accessible from the internet"

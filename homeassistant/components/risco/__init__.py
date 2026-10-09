@@ -23,7 +23,11 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -89,9 +93,11 @@ async def _async_setup_local_entry(
         await risco.connect()
     except CannotConnectError as error:
         raise ConfigEntryNotReady from error
-    except UnauthorizedError:
-        _LOGGER.exception("Failed to authenticate with local Risco panel")
-        return False
+    except UnauthorizedError as error:
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="local_unauthorized",
+        ) from error
 
     async def _error(error: Exception) -> None:
         if isinstance(error, OperationError) and CLOCK_TIMEOUT_ERROR_FRAGMENT in str(
@@ -207,6 +213,6 @@ async def _update_listener(hass: HomeAssistant, entry: RiscoConfigEntry) -> None
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Risco integration services."""
 
-    await async_setup_services(hass)
+    async_setup_services(hass)
 
     return True

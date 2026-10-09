@@ -1580,6 +1580,7 @@ async def test_supervisor_issues_suggestions_change_updates_fixable_state(
     await hass.async_block_till_done()
     assert events == ["changed"]
 
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
     await issues_coordinator.async_refresh()
     await hass.async_block_till_done()
     assert events == ["changed", "changed"]
@@ -1631,6 +1632,7 @@ async def test_supervisor_issues_periodic_refresh_recovers_after_initial_failure
     assert issues_coordinator is not None
     assert len(issues_coordinator.issues) == 0
 
+    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
     await issues_coordinator.async_refresh()
     await hass.async_block_till_done()
     assert len(issues_coordinator.issues) == 1
