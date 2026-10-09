@@ -88,10 +88,10 @@ async def test_form_success(
             )
         await hass.async_block_till_done()
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "ABCDEFGHIJ"
     assert result["data"] == {**CONNECTION_INPUT, CONF_MODEL: expected_model}
+    assert result["result"].unique_id == "ABCDEFGHIJ"
     assert len(mock_setup_entry.mock_calls) == 1
     assert mock_discover.call_count == 1
     assert mock_discover.call_args.kwargs == {"return_when": asyncio.ALL_COMPLETED}

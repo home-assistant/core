@@ -783,9 +783,9 @@ async def test_region_override(
 
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == UNIQUE_ID
+    assert result["result"].unique_id == UNIQUE_ID
     # The overridden region determines which server is registered
     assert mock_api_class.call_args.kwargs["server"] == SERVERS["eu"]
 

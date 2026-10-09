@@ -163,7 +163,6 @@ async def test_valid_hostname(hass: HomeAssistant, mock_setup_entry: AsyncMock) 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_HOST: "valid-hostname.local"}
     )
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Outdoor Smart Plug (WPO-01)"
     assert result["data"] == {
@@ -172,6 +171,7 @@ async def test_valid_hostname(hass: HomeAssistant, mock_setup_entry: AsyncMock) 
         CONF_DEVICE_ID: "aabbccddee02",
         CONF_MODEL: "WPO-01",
     }
+    assert result["result"].unique_id == "aabbccddee02"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -215,7 +215,6 @@ async def test_zeroconf_discovery(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={}
     )
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "systemnexa2_test (WPO-01)"
     assert result["data"] == {
@@ -224,6 +223,7 @@ async def test_zeroconf_discovery(
         CONF_DEVICE_ID: "aabbccddee02",
         CONF_MODEL: "WPO-01",
     }
+    assert result["result"].unique_id == "aabbccddee02"
     assert len(mock_setup_entry.mock_calls) == 1
 
 

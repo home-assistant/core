@@ -73,7 +73,6 @@ async def test_user(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=MOCK_STATIONS_DATA
         )
-        # pylint: disable-next=home-assistant-tests-config-flow-unique-id
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["data"][CONF_NAME] == "Home"
         assert result["data"][CONF_API_KEY] == "269534f6-xxxx-xxxx-xxxx-yyyyzzzzxxxx"
@@ -84,6 +83,7 @@ async def test_user(hass: HomeAssistant) -> None:
             "36b4b812-xxxx-xxxx-xxxx-c51735325858",
         ]
         assert result["options"][CONF_SHOW_ON_MAP]
+        assert result["result"].unique_id == "51.0_13.0"
 
         await hass.async_block_till_done()
 

@@ -97,10 +97,10 @@ async def test_success(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None
         )
         await hass.async_block_till_done()
 
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["data"][CONF_USERNAME] == SLEEPIQ_CONFIG[CONF_USERNAME]
     assert result2["data"][CONF_PASSWORD] == SLEEPIQ_CONFIG[CONF_PASSWORD]
+    assert result2["result"].unique_id == SLEEPIQ_CONFIG[CONF_USERNAME].lower()
     assert len(mock_setup_entry.mock_calls) == 1
 
 

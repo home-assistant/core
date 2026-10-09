@@ -7,7 +7,7 @@ from homeassistant.components.slack.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from . import CONF_DATA, CONF_INPUT, TEAM_NAME, create_entry, mock_connection
+from . import CONF_DATA, CONF_INPUT, TEAM_ID, TEAM_NAME, create_entry, mock_connection
 
 from tests.test_util.aiohttp import AiohttpClientMocker
 
@@ -25,10 +25,10 @@ async def test_flow_user(
         result["flow_id"],
         user_input=CONF_INPUT,
     )
-    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TEAM_NAME
     assert result["data"] == CONF_DATA
+    assert result["result"].unique_id == TEAM_ID
 
 
 async def test_flow_user_already_configured(
