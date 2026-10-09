@@ -127,6 +127,9 @@
     },
     "service_should_be_blocking": {
       "message": "A non-blocking action call with argument {non_blocking_argument} can't be used together with argument {return_response}."
+    },
+    "unload_failed": {
+      "message": "Failed to unload one or more platforms for {title}."
     }
   },
   "issues": {

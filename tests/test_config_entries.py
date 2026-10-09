@@ -3511,6 +3511,49 @@ async def test_entry_unload(
     assert hasattr(entry, "runtime_data") == has_runtime_data
 
 
+async def test_entry_unload_platforms_failed(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+) -> None:
+    """Test unloading an entry where a forwarded platform fails to unload."""
+
+    async def async_unload_entry(
+        hass: HomeAssistant, entry: config_entries.ConfigEntry
+    ) -> bool:
+        """Mock unload entry."""
+        return await hass.config_entries.async_unload_platforms(
+            entry, ["light", "switch"]
+        )
+
+    entry = MockConfigEntry(
+        domain="comp",
+        title="Mock Title",
+        state=config_entries.ConfigEntryState.LOADED,
+    )
+    entry.add_to_hass(hass)
+
+    mock_integration(hass, MockModule("comp", async_unload_entry=async_unload_entry))
+    mock_integration(
+        hass, MockModule("light", async_unload_entry=AsyncMock(return_value=True))
+    )
+    mock_integration(
+        hass, MockModule("switch", async_unload_entry=AsyncMock(return_value=False))
+    )
+    hass.config.components.update({"light", "switch"})
+
+    with pytest.raises(
+        ConfigEntryError, match="Failed to unload one or more platforms"
+    ) as exc_info:
+        await manager.async_unload_platforms(entry, ["light", "switch"])
+    assert exc_info.value.translation_domain == HOMEASSISTANT_DOMAIN
+    assert exc_info.value.translation_key == "unload_failed"
+    assert exc_info.value.translation_placeholders == {"title": "Mock Title"}
+
+    assert not await manager.async_unload(entry.entry_id)
+    assert entry.state is config_entries.ConfigEntryState.FAILED_UNLOAD
+    assert entry.reason == "Failed to unload one or more platforms"
+
+
 @pytest.mark.parametrize(
     "state",
     [

@@ -3021,7 +3021,7 @@ class ConfigEntries:
         self, entry: ConfigEntry, platforms: Iterable[Platform | str]
     ) -> bool:
         """Forward the unloading of an entry to platforms."""
-        return all(
+        result = all(
             await asyncio.gather(
                 *(
                     create_eager_task(
@@ -3036,6 +3036,14 @@ class ConfigEntries:
                 )
             )
         )
+        if not result:
+            raise ConfigEntryError(
+                "Failed to unload one or more platforms",
+                translation_domain=HOMEASSISTANT_DOMAIN,
+                translation_key="unload_failed",
+                translation_placeholders={"title": entry.title},
+            )
+        return result
 
     async def async_forward_entry_unload(
         self, entry: ConfigEntry, domain: Platform | str
