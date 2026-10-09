@@ -169,7 +169,7 @@ async def async_setup_entry(
     if newly_silent := silent - known_silent:
         LOGGER.warning(
             "%s did not answer for %s while probing, so the entities those"
-            " would carry are missing; this is looked at again every %s minutes",
+            " would carry are missing; this is looked at again in %s minutes",
             entry.title,
             " and ".join(sorted(newly_silent)),
             int(ATTACHMENT_SCAN_INTERVAL.total_seconds() // 60),
@@ -275,10 +275,13 @@ async def _async_reload_when_attachments_change(
     entry.runtime_data.settled_silent_blocks = settled
 
     # Kept with the entry for the next setup, before a reload below can start
-    # one: a block that answered here must not be taken for absent by it.
-    if settled != _known_silent_blocks(entry):
+    # one: a block that answered here must not be taken for absent by it. Only
+    # blocks whose return this check reloads for are kept: any other block that
+    # started answering later would stay unseen until something else reloaded.
+    kept = settled & _probed_blocks(probed).keys()
+    if kept != _known_silent_blocks(entry):
         hass.config_entries.async_update_entry(
-            entry, data={**entry.data, CONF_SILENT_BLOCKS: sorted(settled)}
+            entry, data={**entry.data, CONF_SILENT_BLOCKS: sorted(kept)}
         )
 
     known = _probed_blocks(solaredge)

@@ -44,6 +44,8 @@ from .conftest import (
     BATTERY_SERIAL_NUMBERS,
     METER_SERIAL_NUMBER,
     SERIAL_NUMBER,
+    STORAGE_CAPACITY_BASE,
+    add_storage_capacity,
     async_seed_unit,
     tcp_data,
 )
@@ -1253,3 +1255,24 @@ async def test_a_stored_discovery_block_is_still_asked_at_setup(
         await _setup(hass, entry)
 
     assert asked == [frozenset({"power_control"})]
+
+
+async def test_only_a_block_a_check_reloads_for_is_kept(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
+) -> None:
+    """A silent block is only skipped at setup if the check can bring it back.
+
+    The check reloads when a control block starts answering. A silent model
+    chain, which is where storage capacity is found, does not get that reload,
+    so taking it for absent at setup would hide it until something else did.
+    """
+    add_storage_capacity(mock_modbus_unit, state_of_charge=5960)
+    mock_modbus_unit.fail_read(POWER_CONTROL_REGISTER, ModbusTimeoutError("timed out"))
+    mock_modbus_unit.fail_read(STORAGE_CAPACITY_BASE, ModbusTimeoutError("timed out"))
+    await _setup(hass, mock_config_entry)
+    await _tick_attachment_check(hass, freezer)
+
+    assert mock_config_entry.data[CONF_SILENT_BLOCKS] == ["power_control"]
