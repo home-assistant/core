@@ -1,8 +1,25 @@
 {
   "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
     "step": {
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "password": "Your Plexilent app password. It is used once to sign in and is not stored."
+        },
+        "description": "Enter the password for {email} again.",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      },
       "user": {
-        "description": "Sign in with the account you use in the Plexilent app. Your devices must be reachable through a Wi-Fi gateway.",
         "data": {
           "email": "[%key:common::config_flow::data::email%]",
           "password": "[%key:common::config_flow::data::password%]"
@@ -10,26 +27,9 @@
         "data_description": {
           "email": "The email you sign in to the app with.",
           "password": "Your Plexilent app password. It is used once to sign in and is not stored."
-        }
-      },
-      "reauth_confirm": {
-        "title": "[%key:common::config_flow::title::reauth%]",
-        "description": "Enter the password for {email} again.",
-        "data": {
-          "password": "[%key:common::config_flow::data::password%]"
         },
-        "data_description": {
-          "password": "Your Plexilent app password. It is used once to sign in and is not stored."
-        }
+        "description": "Sign in with the account you use in the Plexilent app. Your devices must be reachable through a Wi-Fi gateway."
       }
-    },
-    "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
-    },
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
     }
   }
 }

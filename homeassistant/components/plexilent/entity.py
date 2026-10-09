@@ -1,7 +1,7 @@
 """Base entity for the Plexilent integration."""
 
 from collections.abc import Callable
-from typing import Any
+from typing import Any, override
 
 from pyplexilent import Device, PlexilentError
 
@@ -40,6 +40,7 @@ class PlexilentEntity(CoordinatorEntity[PlexilentCoordinator]):
         return self.coordinator.data[self._id]
 
     @property
+    @override
     def available(self) -> bool:
         """Return whether the cloud lists the device and its gateway reaches it."""
         return (

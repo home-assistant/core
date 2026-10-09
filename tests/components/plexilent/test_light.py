@@ -31,7 +31,10 @@ def _entity_id(hass: HomeAssistant, device_id: str) -> str:
 
 
 async def test_lights(
-    hass: HomeAssistant, client: MagicMock, entry: MockConfigEntry
+    hass: HomeAssistant,
+    client: MagicMock,
+    entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Every light type becomes a light with its own colour modes; others are not lights."""
     await setup_integration(hass, entry)
@@ -51,7 +54,7 @@ async def test_lights(
     assert "brightness" not in gate.attributes
     assert len(hass.states.async_entity_ids(LIGHT_DOMAIN)) == 4
 
-    device = dr.async_get(hass).async_get_device_by_identifier(
+    device = device_registry.async_get_device_by_identifier(
         (DOMAIN, "m:2"), entry.entry_id
     )
     assert (device.manufacturer, device.model, device.name) == (

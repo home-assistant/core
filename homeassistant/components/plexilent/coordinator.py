@@ -1,6 +1,7 @@
 """Data update coordinator for the Plexilent integration."""
 
 import logging
+from typing import override
 
 from pyplexilent import Device, Plexilent, PlexilentAuthError, PlexilentError
 
@@ -34,6 +35,7 @@ class PlexilentCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         )
         self.client = client
 
+    @override
     async def _async_update_data(self) -> dict[str, Device]:
         """Fetch every device and its state from the cloud."""
         try:

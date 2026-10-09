@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 import probatio
 from pyplexilent import Plexilent, PlexilentAuthError, PlexilentConnectionError
@@ -48,6 +48,7 @@ class PlexilentConfigFlow(ConfigFlow, domain=DOMAIN):
             return None, {"base": "unknown"}
         return token, {}
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

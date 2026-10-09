@@ -1,6 +1,6 @@
 """Light platform for the Plexilent integration."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -50,11 +50,13 @@ class PlexilentLight(PlexilentEntity, LightEntity):
             self._attr_max_color_temp_kelvin = device.cct_max
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return whether the light is on."""
         return bool(self.device.on)
 
     @property
+    @override
     def color_mode(self) -> ColorMode:
         """Return the colour mode: colour while a colour is set, else white."""
         modes = MODES[self.device.type]
@@ -63,21 +65,25 @@ class PlexilentLight(PlexilentEntity, LightEntity):
         return ColorMode.HS if self.device.hs else ColorMode.COLOR_TEMP
 
     @property
+    @override
     def brightness(self) -> int | None:
         """Return the brightness, 0-255."""
         level = self.device.brightness
         return None if level is None else value_to_brightness(PERCENT, level)
 
     @property
+    @override
     def color_temp_kelvin(self) -> int | None:
         """Return the white temperature in Kelvin."""
         return self.device.cct
 
     @property
+    @override
     def hs_color(self) -> tuple[float, float] | None:
         """Return the colour as hue and saturation."""
         return self.device.hs
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on, with brightness, white or colour if given."""
         fields: dict[str, Any] = {"on": True}
@@ -92,6 +98,7 @@ class PlexilentLight(PlexilentEntity, LightEntity):
             fields["hs"] = kwargs[ATTR_HS_COLOR]
         await self._send(**fields)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off."""
         await self._send(on=False)
