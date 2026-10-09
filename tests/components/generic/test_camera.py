@@ -8,7 +8,7 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import aiohttp
 from freezegun.api import FrozenDateTimeFactory
-import httpx
+import httpx2
 import pytest
 import respx
 
@@ -422,7 +422,10 @@ async def test_stream_source_error(
         assert msg["success"] is False
         assert msg["error"] == {
             "code": "start_stream_failed",
-            "message": "camera.config_test does not support play stream service",
+            "message": "Camera camera.config_test does not support streaming",
+            "translation_domain": "camera",
+            "translation_key": "stream_not_supported",
+            "translation_placeholders": {"entity_id": "camera.config_test"},
         }
 
 
@@ -484,7 +487,10 @@ async def test_no_stream_source(
         assert msg["success"] is False
         assert msg["error"] == {
             "code": "start_stream_failed",
-            "message": "camera.config_test does not support play stream service",
+            "message": "Camera camera.config_test does not support streaming",
+            "translation_domain": "camera",
+            "translation_key": "stream_not_supported",
+            "translation_placeholders": {"entity_id": "camera.config_test"},
         }
 
 
@@ -578,8 +584,8 @@ async def test_timeout_cancelled(
         assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
 
     respx.get("http://example.com").side_effect = [
-        httpx.RequestError,
-        httpx.TimeoutException,
+        httpx2.RequestError,
+        httpx2.TimeoutException,
     ]
 
     for total_calls in range(2, 4):

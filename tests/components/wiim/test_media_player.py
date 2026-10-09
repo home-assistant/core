@@ -66,15 +66,17 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_ENTITY_PICTURE,
     CONF_HOST,
+    EVENT_STATE_CHANGED,
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from . import fire_general_update, fire_transport_update, setup_integration
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_capture_events
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
 
@@ -1299,6 +1301,86 @@ async def test_join_and_unjoin_services_use_resolved_member_udns(
     mock_wiim_controller.async_ungroup_device.assert_awaited_once_with(
         mock_wiim_device.udn
     )
+
+
+async def test_join_service_resolves_renamed_member(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_wiim_device: MagicMock,
+    mock_wiim_controller: MagicMock,
+) -> None:
+    """Test a renamed player is resolved by its new entity_id."""
+    follower_device = _build_mock_wiim_device(
+        udn="uuid:follower-1234",
+        name="Follower WiiM Device",
+        ip_address="192.168.1.101",
+        base_device=mock_wiim_device,
+    )
+    wiim_component.async_create_wiim_device.side_effect = [
+        mock_wiim_device,
+        follower_device,
+    ]
+    follower_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "192.168.1.101"},
+        title=follower_device.name,
+        unique_id=follower_device.udn,
+    )
+    mock_wiim_controller.get_group_snapshot.side_effect = lambda udn: WiimGroupSnapshot(
+        role=WiimGroupRole.STANDALONE, leader_udn=udn, member_udns=(udn,)
+    )
+    await setup_integration(hass, mock_config_entry)
+    await setup_integration(hass, follower_config_entry)
+
+    old_entity_id = "media_player.follower_wiim_device"
+    new_entity_id = "media_player.renamed_follower"
+    state_changes = async_capture_events(hass, EVENT_STATE_CHANGED)
+    entity_registry.async_update_entity(old_entity_id, new_entity_id=new_entity_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(old_entity_id) is None
+    state = hass.states.get(new_entity_id)
+    assert state is not None
+    assert state.attributes[ATTR_GROUP_MEMBERS] == [new_entity_id]
+    # The state is written once under the new entity_id, already re-keyed
+    assert [
+        (
+            event.data["old_state"],
+            event.data["new_state"].attributes[ATTR_GROUP_MEMBERS],
+        )
+        for event in state_changes
+        if event.data["entity_id"] == new_entity_id
+    ] == [(None, [new_entity_id])]
+
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_JOIN,
+        {
+            ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID,
+            ATTR_GROUP_MEMBERS: [new_entity_id],
+        },
+        blocking=True,
+    )
+
+    mock_wiim_controller.async_join_group.assert_awaited_once_with(
+        mock_wiim_device.udn, [follower_device.udn]
+    )
+    mock_wiim_controller.async_join_group.reset_mock()
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_JOIN,
+            {
+                ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID,
+                ATTR_GROUP_MEMBERS: [old_entity_id],
+            },
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == "invalid_grouping_entity"
+    mock_wiim_controller.async_join_group.assert_not_awaited()
 
 
 async def test_join_service_invalid_member_uses_translation(
