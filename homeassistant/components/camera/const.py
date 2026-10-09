@@ -36,6 +36,12 @@ CAMERA_STREAM_SOURCE_TIMEOUT: Final = 10
 CAMERA_IMAGE_TIMEOUT: Final = 10
 
 
+class CameraEntityCapabilityAttribute(StrEnum):
+    """Capability attributes for camera entities."""
+
+    HAS_TWO_WAY_AUDIO = "has_two_way_audio"
+
+
 class CameraEntityStateAttribute(StrEnum):
     """State attributes for camera entities."""
 
@@ -73,4 +79,3 @@ class CameraEntityFeature(IntFlag):
 
     ON_OFF = 1
     STREAM = 2
-    TWO_WAY_AUDIO = 4

@@ -64,6 +64,7 @@ from .const import (  # noqa: F401
     SERVICE_PLAY_STREAM,
     SERVICE_RECORD,
     SERVICE_SNAPSHOT,
+    CameraEntityCapabilityAttribute,
     CameraEntityFeature,
     CameraEntityStateAttribute,
     CameraState,
@@ -360,6 +361,7 @@ async def _async_call_webrtc_provider(
 CACHED_PROPERTIES_WITH_ATTR_ = {
     "brand",
     "frame_interval",
+    "has_two_way_audio",
     "is_on",
     "is_recording",
     "is_streaming",
@@ -373,13 +375,18 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     """The base class for camera entities."""
 
     _entity_component_unrecorded_attributes = frozenset(
-        {CameraEntityStateAttribute.ACCESS_TOKEN, EntityStateAttribute.ENTITY_PICTURE}
+        {
+            CameraEntityCapabilityAttribute.HAS_TWO_WAY_AUDIO,
+            CameraEntityStateAttribute.ACCESS_TOKEN,
+            EntityStateAttribute.ENTITY_PICTURE,
+        }
     )
 
     # Entity Properties
     entity_description: CameraEntityDescription
     _attr_brand: str | None = None
     _attr_frame_interval: float = MIN_STREAM_INTERVAL
+    _attr_has_two_way_audio: bool = False
     _attr_is_on: bool = True
     _attr_is_recording: bool = False
     _attr_is_streaming: bool = False
@@ -455,6 +462,19 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     def frame_interval(self) -> float:
         """Return the interval between frames of the mjpeg stream."""
         return self._attr_frame_interval
+
+    @cached_property
+    def has_two_way_audio(self) -> bool:
+        """Return true if the camera supports two way audio."""
+        return self._attr_has_two_way_audio
+
+    @property
+    @override
+    def capability_attributes(self) -> dict[str, Any]:
+        """Return capability attributes."""
+        return {
+            CameraEntityCapabilityAttribute.HAS_TWO_WAY_AUDIO: self.has_two_way_audio
+        }
 
     @property
     @override
