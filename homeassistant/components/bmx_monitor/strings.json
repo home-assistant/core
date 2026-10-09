@@ -127,7 +127,7 @@
           "rate_limit": "The minimum allowed time between sensor updates (in seconds).",
           "rate_limit_mode": "Select if/when you want to rate limit sensor updates."
         },
-        "description": "Sensor updates are only ever done when a Bluetooth advertisement is seen, so the rate limit is a way of throttling updates if the device is sending out a lot of advertisements.\n\nIt is recommended to select the appropriate battery chemistry as the BM2 by default has some strange definitions of overall status.",
+        "description": "By default sensors are updated every time a BM2 advertisement is seen or every 60 seconds.  The rate limit is a way of throttling updates if the BM2 is sending out a lot of advertisements.\n\nIt is recommended to select the appropriate battery chemistry as the BM2 by default has some strange definitions of overall status.",
         "title": "Options"
       }
     }
