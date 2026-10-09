@@ -2,7 +2,6 @@
 
 import asyncio
 from datetime import timedelta
-import logging
 
 from aiohttp.client_exceptions import ClientError
 from pyeconet import EcoNetApiInterface
@@ -22,8 +21,6 @@ from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 
 from .const import DOMAIN, PUSH_UPDATE
-
-_LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -56,8 +53,6 @@ async def async_setup_entry(
             translation_key="invalid_credentials",
         ) from err
     except (ClientError, PyeconetError) as err:
-        # pylint: disable-next=home-assistant-log-and-raise
-        _LOGGER.error("Config entry failed: %s", err)
         raise ConfigEntryNotReady from err
 
     try:
