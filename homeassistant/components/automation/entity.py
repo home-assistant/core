@@ -30,6 +30,7 @@ from homeassistant.core import (
 from homeassistant.exceptions import HomeAssistantError, ServiceNotFound, TemplateError
 from homeassistant.helpers import (
     condition as condition_helper,
+    issue_registry as ir,
     trigger as trigger_helper,
 )
 from homeassistant.helpers.entity import ToggleEntity
@@ -566,20 +567,8 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
                         variables, trigger_context, started_action
                     )
             except ServiceNotFound as err:
-                async_create_issue(
-                    self.hass,
-                    DOMAIN,
-                    f"{self.entity_id}_service_not_found_{err.domain}.{err.service}",
-                    is_fixable=True,
-                    is_persistent=True,
-                    severity=IssueSeverity.ERROR,
-                    translation_key="service_not_found",
-                    translation_placeholders={
-                        "service": f"{err.domain}.{err.service}",
-                        "entity_id": self.entity_id,
-                        "name": self._attr_name or self.entity_id,
-                        "edit": f"/config/automation/edit/{self.unique_id}",
-                    },
+                self._async_create_service_not_found_issue(
+                    f"{err.domain}.{err.service}"
                 )
                 automation_trace.set_error(err)
             except (probatio.Invalid, HomeAssistantError) as err:
@@ -615,6 +604,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
         """
         super().async_entity_id_changed(old_entity_id)
         self._async_update_logger()
+        self._async_move_service_not_found_issues(old_entity_id)
         if (detach_triggers := self._async_detach_triggers) is None:
             # Not attached, or an attach in progress retries with the new entity_id
             return
@@ -626,6 +616,48 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
             self._async_attach_triggers_for_entity_id(),
             f"automation {self.entity_id} reattach",
         )
+
+    @callback
+    def _async_create_service_not_found_issue(self, service: str) -> str:
+        """Create a repair issue for a missing service and return its id."""
+        issue_id = f"{self.entity_id}_service_not_found_{service}"
+        async_create_issue(
+            self.hass,
+            DOMAIN,
+            issue_id,
+            is_fixable=True,
+            is_persistent=True,
+            severity=IssueSeverity.ERROR,
+            translation_key="service_not_found",
+            translation_placeholders={
+                "service": service,
+                "entity_id": self.entity_id,
+                "name": self._attr_name or self.entity_id,
+                "edit": f"/config/automation/edit/{self.unique_id}",
+            },
+        )
+        return issue_id
+
+    @callback
+    def _async_move_service_not_found_issues(self, old_entity_id: str) -> None:
+        """Move missing service issues, their id and placeholders use entity_id."""
+        issue_registry = ir.async_get(self.hass)
+        for (domain, issue_id), issue in list(issue_registry.issues.items()):
+            # Matched on the placeholder, an issue_id prefix can match another
+            # automation's entity_id
+            if (
+                domain != DOMAIN
+                or issue.translation_key != "service_not_found"
+                or issue.translation_placeholders is None
+                or issue.translation_placeholders["entity_id"] != old_entity_id
+            ):
+                continue
+            async_delete_issue(self.hass, DOMAIN, issue_id)
+            new_issue_id = self._async_create_service_not_found_issue(
+                issue.translation_placeholders["service"]
+            )
+            if issue.dismissed_version is not None:
+                issue_registry.async_ignore(DOMAIN, new_issue_id, True)
 
     async def _async_attach_triggers_for_entity_id(self) -> None:
         """Attach the triggers, retrying if the entity_id changes while attaching.

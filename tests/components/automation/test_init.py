@@ -1918,6 +1918,73 @@ async def test_automation_with_error_in_script(
     assert issues[0]["issue_id"] == "automation.hello_service_not_found_test.automation"
 
 
+@pytest.mark.parametrize("ignored", [False, True])
+async def test_automation_changed_entity_id_moves_service_not_found_issue(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    ignored: bool,
+) -> None:
+    """Test service not found issues follow an entity_id change."""
+    entry = entity_registry.async_get_or_create(
+        "automation", "automation", "hello", suggested_object_id="hello"
+    )
+    entity_registry.async_get_or_create(
+        "automation", "automation", "hello_2", suggested_object_id="hello_2"
+    )
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "id": "hello",
+                    "alias": "Hello",
+                    "trigger": {"platform": "event", "event_type": "test_event"},
+                    "action": {"action": "test.automation"},
+                },
+                {
+                    "id": "hello_2",
+                    "alias": "Hello 2",
+                    "trigger": {"platform": "event", "event_type": "test_event"},
+                    "action": {"action": "test.automation"},
+                },
+            ]
+        },
+    )
+    hass.bus.async_fire("test_event")
+    await hass.async_block_till_done()
+    old_issue_id = "automation.hello_service_not_found_test.automation"
+    other_issue_id = "automation.hello_2_service_not_found_test.automation"
+    assert issue_registry.async_get_issue(automation.DOMAIN, old_issue_id)
+    other_issue = issue_registry.async_get_issue(automation.DOMAIN, other_issue_id)
+    assert other_issue
+    ir.async_ignore_issue(hass, automation.DOMAIN, old_issue_id, ignored)
+
+    entity_registry.async_update_entity(
+        entry.entity_id, new_entity_id="automation.renamed"
+    )
+    await hass.async_block_till_done()
+
+    assert issue_registry.async_get_issue(automation.DOMAIN, old_issue_id) is None
+    issue = issue_registry.async_get_issue(
+        automation.DOMAIN, "automation.renamed_service_not_found_test.automation"
+    )
+    assert issue
+    assert issue.is_persistent
+    assert (issue.dismissed_version is not None) is ignored
+    assert issue.translation_placeholders == {
+        "service": "test.automation",
+        "entity_id": "automation.renamed",
+        "name": "Hello",
+        "edit": "/config/automation/edit/hello",
+    }
+    # Another automation's issue is not moved, its id starts with the old entity_id
+    assert (
+        issue_registry.async_get_issue(automation.DOMAIN, other_issue_id) == other_issue
+    )
+
+
 async def test_automation_with_error_in_script_2(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
