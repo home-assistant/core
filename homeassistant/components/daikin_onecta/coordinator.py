@@ -119,11 +119,15 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
                 for dev_data in cloud_devices:
                     if dev_data.id in devices:
                         device = devices[dev_data.id]
-                        device.set_device_data(dev_data)
+                        registry_metadata_changed = device.set_device_data(dev_data)
                     else:
                         device = DaikinOnectaDevice(dev_data)
                         devices[dev_data.id] = device
-                    device.async_update_device_registry(self.hass, self.config_entry)
+                        registry_metadata_changed = True
+                    if registry_metadata_changed:
+                        device.async_update_device_registry(
+                            self.hass, self.config_entry
+                        )
 
                 self.update_interval = self._determine_update_interval()
 

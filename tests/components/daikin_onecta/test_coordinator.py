@@ -26,7 +26,7 @@ EXPECTED_RATE_LIMIT_RETRY_AFTER = 3060
 EXPECTED_CONNECTION_ERROR = "network unavailable"
 
 
-def test_device_update_refreshes_cached_name() -> None:
+def test_device_update_detects_registry_metadata_changes() -> None:
     """Use the replacement cloud model's name in device-registry metadata."""
     device = DaikinOnectaDevice(
         SimpleNamespace(
@@ -39,7 +39,7 @@ def test_device_update_refreshes_cached_name() -> None:
         )
     )
 
-    device.set_device_data(
+    assert device.set_device_data(
         SimpleNamespace(
             id="gateway",
             display_name="New name",
@@ -51,6 +51,31 @@ def test_device_update_refreshes_cached_name() -> None:
     )
 
     assert device.name == "New name"
+
+
+def test_device_update_ignores_unchanged_registry_metadata() -> None:
+    """Avoid rewriting a device registry entry for unchanged cloud metadata."""
+    device = DaikinOnectaDevice(
+        SimpleNamespace(
+            id="gateway",
+            display_name="Name",
+            available=True,
+            mac_address=None,
+            device_model="Model",
+            gateway_embedded_id=None,
+        )
+    )
+
+    assert not device.set_device_data(
+        SimpleNamespace(
+            id="gateway",
+            display_name="Name",
+            available=True,
+            mac_address=None,
+            device_model="Model",
+            gateway_embedded_id=None,
+        )
+    )
 
 
 async def test_device_registry_refreshes_without_climate_entity(
@@ -444,6 +469,7 @@ class TestOnectaDataUpdateCoordinator:
     async def test_updated_cloud_device_replaces_cached_model(self, coordinator):
         """Replace the cached gateway model with cloud data."""
         existing_device = MagicMock()
+        existing_device.set_device_data.return_value = False
         cloud_device = MagicMock(id="gateway")
         coordinator.data = {"gateway": existing_device}
         coordinator.api.last_patch_call = None
@@ -454,3 +480,23 @@ class TestOnectaDataUpdateCoordinator:
         await coordinator._async_update_data_from_cloud()
 
         existing_device.set_device_data.assert_called_once_with(cloud_device)
+        existing_device.async_update_device_registry.assert_not_called()
+
+    async def test_changed_gateway_metadata_refreshes_device_registry(
+        self, coordinator
+    ):
+        """Refresh the registry when a cloud-model replacement changes metadata."""
+        existing_device = MagicMock()
+        existing_device.set_device_data.return_value = True
+        cloud_device = MagicMock(id="gateway")
+        coordinator.data = {"gateway": existing_device}
+        coordinator.api.last_patch_call = None
+        coordinator.api.get_cloud_device_details = AsyncMock(
+            return_value=[cloud_device]
+        )
+
+        await coordinator._async_update_data_from_cloud()
+
+        existing_device.async_update_device_registry.assert_called_once_with(
+            coordinator.hass, coordinator.config_entry
+        )
