@@ -15,7 +15,7 @@ def async_deprecated_media_path(hass: HomeAssistant) -> None:
         DOMAIN,
         "deprecated_media_path",
         is_fixable=False,
-        breaks_in_ha_version="2027.4.0",
+        breaks_in_ha_version="2027.5.0",
         severity=IssueSeverity.WARNING,
         translation_key="deprecated_media_path",
         translation_placeholders={
