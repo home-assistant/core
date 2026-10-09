@@ -13,6 +13,7 @@ from homeassistant.const import CONF_API_VERSION, CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.device_registry import AnyDeviceEntry
 
 from .const import DOMAIN, HUB_EXCEPTIONS, MANUFACTURER
 from .coordinator import PowerviewShadeUpdateCoordinator
@@ -185,7 +186,7 @@ async def _migrate_unique_ids(hass: HomeAssistant, entry: PowerviewConfigEntry) 
             )
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, entry: PowerviewConfigEntry, device: dr.DeviceEntry
+    hass: HomeAssistant, entry: PowerviewConfigEntry, device: AnyDeviceEntry
 ) -> bool:
     """Remove a config entry from a device.
 
