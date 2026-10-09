@@ -189,6 +189,8 @@ class LibreHardwareMonitorConfigFlow(ConfigFlow, domain=DOMAIN):
         reconfig_entry = self._get_reconfigure_entry()
 
         if user_input:
+            self._async_abort_entries_match(user_input)
+
             try:
                 lhm_data = await _validate_connection(user_input)
             except LibreHardwareMonitorConnectionError as exception:

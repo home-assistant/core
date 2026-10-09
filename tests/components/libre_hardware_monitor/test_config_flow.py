@@ -459,3 +459,30 @@ async def test_reconfigure_deprecated_version_is_rejected(
     assert result["step_id"] == "reconfigure"
     assert result["errors"] == {"base": "deprecated_version"}
     assert mock_config_entry.data == VALID_CONFIG
+
+
+async def test_reconfigure_lhm_server_already_exists(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_lhm_client: AsyncMock,
+) -> None:
+    """Test that reconfiguring to a server of another entry is aborted."""
+    mock_config_entry.add_to_hass(hass)
+    MockConfigEntry(
+        domain=DOMAIN,
+        title="192.168.0.21:8086",
+        data=RECONFIGURE_INPUT,
+        version=2,
+        minor_version=2,
+    ).add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], RECONFIGURE_INPUT
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert mock_config_entry.data == VALID_CONFIG
+    mock_lhm_client.get_data.assert_not_called()
