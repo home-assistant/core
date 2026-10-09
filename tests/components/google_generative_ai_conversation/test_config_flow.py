@@ -768,11 +768,17 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("current_llm_apis", "suggested_llm_apis", "expected_options"),
     [
-        ("assist", ["assist"], ["assist"]),
-        (["assist"], ["assist"], ["assist"]),
-        ("non-existent", [], ["assist"]),
-        (["non-existent"], [], ["assist"]),
-        (["assist", "non-existent"], ["assist"], ["assist"]),
+        ("assist", ["assist"], ["assist", "homeassistant"]),
+        (["assist"], ["assist"], ["assist", "homeassistant"]),
+        ("non-existent", [], ["assist", "homeassistant"]),
+        (["non-existent"], [], ["assist", "homeassistant"]),
+        (["assist", "non-existent"], ["assist"], ["assist", "homeassistant"]),
+        pytest.param(
+            ["homeassistant"],
+            ["homeassistant"],
+            ["assist", "homeassistant"],
+            id="homeassistant_list",
+        ),
     ],
 )
 async def test_reconfigure_conversation_subentry_llm_api_schema(

@@ -1,7 +1,7 @@
 """The tests for the TTS component."""
 
 import asyncio
-from collections.abc import AsyncGenerator
+from collections.abc import AsyncGenerator, Callable
 from http import HTTPStatus
 import io
 from pathlib import Path
@@ -25,10 +25,11 @@ from homeassistant.components.media_player import (
     MediaType,
 )
 from homeassistant.components.tts import DOMAIN
+from homeassistant.components.tts.const import DEFAULT_TIME_MEMORY
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -48,6 +49,7 @@ from .common import (
 
 from tests.common import (
     MockModule,
+    async_fire_time_changed,
     async_mock_service,
     load_fixture_bytes,
     mock_integration,
@@ -427,7 +429,7 @@ async def test_service_wrong_language(
     """Set up a TTS platform and call service."""
     calls = async_mock_service(hass, MP_DOMAIN, SERVICE_PLAY_MEDIA)
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(ServiceValidationError, match="Language lang is not supported"):
         await hass.services.async_call(
             tts.DOMAIN,
             tts_service,
@@ -706,7 +708,7 @@ async def test_service_wrong_options(
     """Set up a TTS platform and call service with wrong options."""
     calls = async_mock_service(hass, MP_DOMAIN, SERVICE_PLAY_MEDIA)
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(ServiceValidationError, match="Unsupported options: "):
         await hass.services.async_call(
             tts.DOMAIN,
             tts_service,
@@ -1386,11 +1388,21 @@ async def test_generate_media_source_id(
     indirect=["setup"],
 )
 @pytest.mark.parametrize(
-    ("engine", "language", "options"),
+    ("engine", "language", "options", "message"),
     [
-        ("not-loaded-engine", None, None),
-        (None, "unsupported-language", None),
-        (None, None, {"option": "not-supported"}),
+        (
+            "not-loaded-engine",
+            None,
+            None,
+            "The selected text-to-speech provider is not available",
+        ),
+        (
+            None,
+            "unsupported-language",
+            None,
+            "Language unsupported-language is not supported",
+        ),
+        (None, None, {"option": "not-supported"}, "Unsupported options: option"),
     ],
 )
 async def test_generate_media_source_id_invalid_options(
@@ -1399,9 +1411,10 @@ async def test_generate_media_source_id_invalid_options(
     engine: str | None,
     language: str | None,
     options: dict[str, Any] | None,
+    message: str,
 ) -> None:
     """Test generating a media source ID."""
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(ServiceValidationError, match=message):
         tts.generate_media_source_id(hass, "msg", engine, language, options, None)
 
 
@@ -2082,6 +2095,66 @@ async def test_stream(hass: HomeAssistant, mock_tts_entity: MockTTSEntity) -> No
     assert stream2.extension == "wav"
     result_data = b"".join([chunk async for chunk in stream2.async_stream_result()])
     assert result_data == data
+
+
+async def _message_stream() -> AsyncGenerator[str]:
+    """Stream a message."""
+    yield "beer"
+
+
+@pytest.mark.parametrize(
+    "set_message",
+    [
+        pytest.param(lambda stream: stream.async_set_message("beer"), id="message"),
+        pytest.param(
+            lambda stream: stream.async_set_message_stream(_message_stream()),
+            id="message_stream",
+        ),
+    ],
+)
+async def test_stream_set_message_after_memory_cache_age(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_tts_entity: MockTTSEntity,
+    set_message: Callable[[tts.ResultStream], None],
+) -> None:
+    """Test a stream created long before its message is set can still be fetched.
+
+    A pipeline creates its stream when the run starts, for example before
+    waiting for the wake word, which can be long before the message is known.
+    """
+    await mock_config_entry_setup(hass, mock_tts_entity)
+    stream = tts.async_create_stream(hass, mock_tts_entity.entity_id)
+
+    freezer.tick(DEFAULT_TIME_MEMORY + 2)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    set_message(stream)
+
+    assert tts.async_get_stream(hass, stream.token) is stream
+    result_data = b"".join([chunk async for chunk in stream.async_stream_result()])
+    assert result_data
+
+
+async def test_stream_override_result_after_memory_cache_age(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_tts_entity: MockTTSEntity,
+    tmp_path: Path,
+) -> None:
+    """Test a stream overridden long after it was created can still be fetched."""
+    await mock_config_entry_setup(hass, mock_tts_entity)
+    stream = tts.async_create_stream(hass, mock_tts_entity.entity_id)
+
+    freezer.tick(DEFAULT_TIME_MEMORY + 2)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # The Assist pipeline overrides the result for its local acknowledgment
+    stream.async_override_result(tmp_path / "acknowledge.mp3")
+
+    assert tts.async_get_stream(hass, stream.token) is stream
 
 
 async def test_result_stream_message_set_idempotent(

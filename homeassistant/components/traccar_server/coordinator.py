@@ -309,10 +309,6 @@ class TraccarServerCoordinator(DataUpdateCoordinator[TraccarServerCoordinatorDat
             )
 
         accuracy = position["accuracy"] or 0.0
-        if (
-            not skip_accuracy_filter
-            and self.max_accuracy > 0
-            and accuracy > self.max_accuracy
-        ):
+        if not skip_accuracy_filter and 0 < self.max_accuracy < accuracy:
             return None
         return attr

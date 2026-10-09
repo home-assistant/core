@@ -82,6 +82,11 @@
       }
     }
   },
+  "exceptions": {
+    "invalid_credentials": {
+      "message": "Access error from Nexia service, please check credentials"
+    }
+  },
   "services": {
     "set_aircleaner_mode": {
       "description": "Sets the air cleaner mode.",

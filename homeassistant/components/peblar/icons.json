@@ -21,6 +21,12 @@
     "number": {
       "charge_current_limit": {
         "default": "mdi:speedometer"
+      },
+      "solar_charging_custom_power_target": {
+        "default": "mdi:transmission-tower"
+      },
+      "solar_charging_custom_power_threshold": {
+        "default": "mdi:transmission-tower-export"
       }
     },
     "select": {
@@ -78,6 +84,9 @@
           "off": "mdi:lock-open-variant",
           "on": "mdi:lock"
         }
+      },
+      "solar_charging_custom_always_charge": {
+        "default": "mdi:solar-power"
       }
     },
     "update": {

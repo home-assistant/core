@@ -1,17 +1,20 @@
 """Test the Blink init."""
 
+from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock
 
 from aiohttp import ClientError
 from blinkpy.auth import LoginError
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.blink.const import DOMAIN
+from homeassistant.components.blink.coordinator import SCAN_INTERVAL
 from homeassistant.components.blink.services import SERVICE_SAVE_VIDEO
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 CAMERA_NAME = "Camera 1"
 FILENAME = "blah"
@@ -81,6 +84,7 @@ async def test_scheduled_refresh_is_not_forced(
     mock_blink_api: MagicMock,
     mock_blink_auth_api: MagicMock,
     mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test a scheduled poll does not force a cache refresh.
 
@@ -92,9 +96,9 @@ async def test_scheduled_refresh_is_not_forced(
     await hass.async_block_till_done()
 
     mock_blink_api.refresh.reset_mock()
-    coordinator = mock_config_entry.runtime_data
-    await coordinator.async_refresh()
-    await hass.async_block_till_done()
+    freezer.tick(timedelta(seconds=SCAN_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     mock_blink_api.refresh.assert_awaited_once_with()
 
