@@ -211,6 +211,13 @@ def memory_used(data: SystemBridgeData) -> float | None:
     return None
 
 
+def memory_used_percentage(data: SystemBridgeData) -> float | None:
+    """Return the used memory percentage."""
+    if data.memory is not None and (virtual := data.memory.virtual) is not None:
+        return virtual.percent
+    return None
+
+
 def partition_usage(
     data: SystemBridgeData,
     device_index: int,
@@ -293,7 +300,7 @@ BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         suggested_display_precision=2,
-        value=lambda data: data.memory.virtual.percent,
+        value=memory_used_percentage,
     ),
     SystemBridgeSensorEntityDescription(
         key="memory_used",
