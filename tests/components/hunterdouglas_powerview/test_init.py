@@ -101,5 +101,5 @@ async def test_remove_hub_device_via_websocket_is_blocked(
 
     # Assertions: The request must fail, and the Hub device must NOT be deleted
     assert msg["success"] is False
-    assert msg["error"]["code"] in ("unknown_error", "connect_remove")
+    assert msg["error"]["code"] == "home_assistant_error"
     assert device_registry.async_get(hub_device.id) is not None
