@@ -8,7 +8,8 @@ import inspect
 import logging
 import sys
 from types import CodeType
-from typing import TYPE_CHECKING, Any, NamedTuple, cast, override
+from typing import TYPE_CHECKING, Any, NamedTuple, Self, cast, overload, override
+from warnings import deprecated as mark_deprecated
 
 from propcache.api import cached_property
 
@@ -456,8 +457,9 @@ class _DeprecatedEntityMember[_T]:
     """Deprecated name of an entity member, forwarding to its replacement.
 
     Declare a DeprecatedEntityProperty and a DeprecatedEntityAttr on the entity base
-    class, and call migrate_deprecated_entity_members from the base class'
-    __init_subclass__ to serve subclasses which still provide the deprecated name.
+    class, annotated Final so type checkers reject subclasses providing them, and
+    call migrate_deprecated_entity_members from the base class' __init_subclass__
+    to serve subclasses which still provide the deprecated name at runtime.
 
     core_integration_behavior applies to core integrations providing or using the
     deprecated name, it defaults to ReportBehavior.LOG.
@@ -483,6 +485,15 @@ class _DeprecatedEntityMember[_T]:
         """Store the deprecated name and the domain of the entity base class."""
         self.name = name
         self.domain = owner.__module__.rpartition(".")[2]
+
+    @overload
+    def __get__(self, instance: None, owner: type | None = None) -> Self: ...
+
+    # For type checkers only, usage is reported at runtime by _report_usage; mypy
+    # needs a literal message
+    @overload
+    @mark_deprecated("Deprecated, use the native_ replacement", category=None)
+    def __get__(self, instance: object, owner: type | None = None) -> _T: ...
 
     def __get__(self, instance: object | None, owner: type | None = None) -> Any:
         """Read the replacement."""
@@ -566,6 +577,7 @@ class DeprecatedEntityProperty[_T](_DeprecatedEntityMember[_T]):
         """Return the replacement and the _attr_ shorthand storing it."""
         return frozenset({self.replacement, f"_attr_{self.replacement}"})
 
+    @mark_deprecated("Deprecated, use the native_ replacement", category=None)
     def __set__(self, instance: object, value: _T) -> None:
         """Refuse a write, like a property without setter."""
         raise AttributeError(
@@ -582,6 +594,7 @@ class DeprecatedEntityProperty[_T](_DeprecatedEntityMember[_T]):
 class DeprecatedEntityAttr[_T](_DeprecatedEntityMember[_T]):
     """Deprecated _attr_ shorthand, an alias of its replacement shorthand."""
 
+    @mark_deprecated("Deprecated, use the native_ replacement", category=None)
     def __set__(self, instance: object, value: _T) -> None:
         """Write the replacement."""
         self._report_usage(instance, "writes")

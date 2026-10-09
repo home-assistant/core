@@ -3,7 +3,7 @@
 from datetime import timedelta
 import functools as ft
 import logging
-from typing import TYPE_CHECKING, Any, Literal, final, override
+from typing import Any, Final, Literal, final, override
 
 from propcache.api import cached_property
 
@@ -368,29 +368,12 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Return the unit of measurement the entity reports temperatures in."""
         return self._attr_native_temperature_unit
 
-    if TYPE_CHECKING:
-
-        @final  # type: ignore[misc]
-        @property
-        def _attr_temperature_unit(self) -> str:
-            """Deprecated, use _attr_native_temperature_unit instead."""
-
-        @_attr_temperature_unit.setter
-        def _attr_temperature_unit(self, value: str) -> None:
-            """Deprecated, use _attr_native_temperature_unit instead."""
-
-        @final
-        @property
-        def temperature_unit(self) -> str:
-            """Deprecated, use native_temperature_unit instead."""
-
-    else:
-        temperature_unit = DeprecatedEntityProperty[str](
-            "native_temperature_unit", "2027.11"
-        )
-        _attr_temperature_unit = DeprecatedEntityAttr[str](
-            "_attr_native_temperature_unit", "2027.11"
-        )
+    temperature_unit: Final = DeprecatedEntityProperty[str](
+        "native_temperature_unit", "2027.11"
+    )
+    _attr_temperature_unit: Final = DeprecatedEntityAttr[str](
+        "_attr_native_temperature_unit", "2027.11"
+    )
 
     @cached_property
     def current_humidity(self) -> float | None:
@@ -422,58 +405,24 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Return the current temperature in the native unit."""
         return self._attr_native_current_temperature
 
-    if TYPE_CHECKING:
-
-        @final  # type: ignore[misc]
-        @property
-        def _attr_current_temperature(self) -> float | None:
-            """Deprecated, use _attr_native_current_temperature instead."""
-
-        @_attr_current_temperature.setter
-        def _attr_current_temperature(self, value: float | None) -> None:
-            """Deprecated, use _attr_native_current_temperature instead."""
-
-        @final
-        @property
-        def current_temperature(self) -> float | None:
-            """Deprecated, use native_current_temperature instead."""
-
-    else:
-        current_temperature = DeprecatedEntityProperty[float | None](
-            "native_current_temperature", "2027.11"
-        )
-        _attr_current_temperature = DeprecatedEntityAttr[float | None](
-            "_attr_native_current_temperature", "2027.11"
-        )
+    current_temperature: Final = DeprecatedEntityProperty[float | None](
+        "native_current_temperature", "2027.11"
+    )
+    _attr_current_temperature: Final = DeprecatedEntityAttr[float | None](
+        "_attr_native_current_temperature", "2027.11"
+    )
 
     @cached_property
     def native_target_temperature(self) -> float | None:
         """Return the temperature we try to reach, in the native unit."""
         return self._attr_native_target_temperature
 
-    if TYPE_CHECKING:
-
-        @final  # type: ignore[misc]
-        @property
-        def _attr_target_temperature(self) -> float | None:
-            """Deprecated, use _attr_native_target_temperature instead."""
-
-        @_attr_target_temperature.setter
-        def _attr_target_temperature(self, value: float | None) -> None:
-            """Deprecated, use _attr_native_target_temperature instead."""
-
-        @final
-        @property
-        def target_temperature(self) -> float | None:
-            """Deprecated, use native_target_temperature instead."""
-
-    else:
-        target_temperature = DeprecatedEntityProperty[float | None](
-            "native_target_temperature", "2027.11"
-        )
-        _attr_target_temperature = DeprecatedEntityAttr[float | None](
-            "_attr_native_target_temperature", "2027.11"
-        )
+    target_temperature: Final = DeprecatedEntityProperty[float | None](
+        "native_target_temperature", "2027.11"
+    )
+    _attr_target_temperature: Final = DeprecatedEntityAttr[float | None](
+        "_attr_native_target_temperature", "2027.11"
+    )
 
     @cached_property
     def target_temperature_step(self) -> float | None:
@@ -488,29 +437,12 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """
         return self._attr_native_target_temperature_high
 
-    if TYPE_CHECKING:
-
-        @final  # type: ignore[misc]
-        @property
-        def _attr_target_temperature_high(self) -> float | None:
-            """Deprecated, use _attr_native_target_temperature_high instead."""
-
-        @_attr_target_temperature_high.setter
-        def _attr_target_temperature_high(self, value: float | None) -> None:
-            """Deprecated, use _attr_native_target_temperature_high instead."""
-
-        @final
-        @property
-        def target_temperature_high(self) -> float | None:
-            """Deprecated, use native_target_temperature_high instead."""
-
-    else:
-        target_temperature_high = DeprecatedEntityProperty[float | None](
-            "native_target_temperature_high", "2027.11"
-        )
-        _attr_target_temperature_high = DeprecatedEntityAttr[float | None](
-            "_attr_native_target_temperature_high", "2027.11"
-        )
+    target_temperature_high: Final = DeprecatedEntityProperty[float | None](
+        "native_target_temperature_high", "2027.11"
+    )
+    _attr_target_temperature_high: Final = DeprecatedEntityAttr[float | None](
+        "_attr_native_target_temperature_high", "2027.11"
+    )
 
     @cached_property
     def native_target_temperature_low(self) -> float | None:
@@ -520,29 +452,12 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """
         return self._attr_native_target_temperature_low
 
-    if TYPE_CHECKING:
-
-        @final  # type: ignore[misc]
-        @property
-        def _attr_target_temperature_low(self) -> float | None:
-            """Deprecated, use _attr_native_target_temperature_low instead."""
-
-        @_attr_target_temperature_low.setter
-        def _attr_target_temperature_low(self, value: float | None) -> None:
-            """Deprecated, use _attr_native_target_temperature_low instead."""
-
-        @final
-        @property
-        def target_temperature_low(self) -> float | None:
-            """Deprecated, use native_target_temperature_low instead."""
-
-    else:
-        target_temperature_low = DeprecatedEntityProperty[float | None](
-            "native_target_temperature_low", "2027.11"
-        )
-        _attr_target_temperature_low = DeprecatedEntityAttr[float | None](
-            "_attr_native_target_temperature_low", "2027.11"
-        )
+    target_temperature_low: Final = DeprecatedEntityProperty[float | None](
+        "native_target_temperature_low", "2027.11"
+    )
+    _attr_target_temperature_low: Final = DeprecatedEntityAttr[float | None](
+        "_attr_native_target_temperature_low", "2027.11"
+    )
 
     @cached_property
     def preset_mode(self) -> str | None:
