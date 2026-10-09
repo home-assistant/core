@@ -15,7 +15,7 @@ from homeassistant.components.blueprint import (
     BlueprintInUse,
     DomainBlueprints,
 )
-from homeassistant.components.template import DOMAIN, SERVICE_RELOAD
+from homeassistant.components.template import DOMAIN
 from homeassistant.components.template.config import (
     ALARM_CONTROL_PANEL_DOMAIN,
     BINARY_SENSOR_DOMAIN,
@@ -31,7 +31,7 @@ from homeassistant.components.template.config import (
     VACUUM_DOMAIN,
     WEATHER_DOMAIN,
 )
-from homeassistant.const import STATE_ON
+from homeassistant.const import SERVICE_RELOAD, STATE_ON
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component

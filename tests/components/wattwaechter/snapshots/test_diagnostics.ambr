@@ -11,6 +11,7 @@
     }),
     'meter': dict({
       'datetime_str': '2024-01-01T00:00:00',
+      'gw': None,
       'timestamp': 1704067200,
       'values': dict({
         '0.0.0': '**REDACTED**',

@@ -12,13 +12,7 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     OptionsFlowWithReload,
 )
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_SCAN_INTERVAL,
-    CONF_USERNAME,
-)
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.service_info.ssdp import (
@@ -36,7 +30,6 @@ from .const import (
     CONF_TRY_HOTSPOT,
     DEFAULT_CONSIDER_HOME,
     DEFAULT_INTERFACE,
-    DEFAULT_SCAN_INTERVAL,
     DEFAULT_TELNET_PORT,
     DOMAIN,
 )
@@ -199,14 +192,6 @@ class KeeneticOptionsFlowHandler(OptionsFlowWithReload):
 
         options = probatio.Schema(
             {
-                # Polling interval is user-configurable, which is no longer allowed
-                # pylint: disable-next=home-assistant-config-flow-polling-field
-                probatio.Required(
-                    CONF_SCAN_INTERVAL,
-                    default=self.config_entry.options.get(
-                        CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
-                    ),
-                ): int,
                 probatio.Required(
                     CONF_CONSIDER_HOME,
                     default=self.config_entry.options.get(

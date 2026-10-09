@@ -19,13 +19,19 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 from homeassistant.helpers import config_entry_oauth2_flow, config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import generate_entity_id
+from homeassistant.helpers.typing import ConfigType
 
 from .api import ApiAuthImpl, get_feature_access
 from .const import DOMAIN
+from .services import async_setup_services
 from .store import GoogleConfigEntry, GoogleRuntimeData, LocalCalendarStore
 
 _LOGGER = logging.getLogger(__name__)
@@ -76,6 +82,12 @@ DEVICE_SCHEMA = probatio.Schema(
 )
 
 
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Google Calendar integration."""
+    async_setup_services(hass)
+    return True
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: GoogleConfigEntry) -> bool:
     """Set up Google from a config entry."""
     # Validate google_calendars.yaml (if present) as soon as possible to return
@@ -83,8 +95,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: GoogleConfigEntry) -> bo
     try:
         await hass.async_add_executor_job(load_config, hass.config.path(YAML_DEVICES))
     except probatio.Invalid as err:
-        _LOGGER.error("Configuration error in %s: %s", YAML_DEVICES, str(err))
-        return False
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="invalid_calendar_config",
+            translation_placeholders={"file": YAML_DEVICES},
+        ) from err
 
     implementation = (
         await config_entry_oauth2_flow.async_get_config_entry_implementation(

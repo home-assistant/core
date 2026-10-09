@@ -217,8 +217,9 @@ REMINDERS_ERRORS = (
 # Cloud Storage key. Such a reminder has no readable title and no notes, and
 # `update()` rewrites TitleDocument and NotesDocument unconditionally, so
 # writing one back would replace the real title with this placeholder and blank
-# the notes. They are left out of the to-do lists entirely until the library
-# requests Protected Cloud Storage access.
+# the notes. pyicloud requests that key before every Reminders access, so this
+# should not happen anymore, but any such reminder is still left out of the
+# to-do lists rather than risk overwriting it.
 UNDECODED_TITLE = "Error Decoding Title"
 
 # Reminders are fetched one list at a time, so keep the per-list page bounded.
@@ -314,9 +315,10 @@ class IcloudRemindersCoordinator(DataUpdateCoordinator[dict[str, IcloudReminderL
         """Warn once if reminders had to be left out because of encryption.
 
         With Advanced Data Protection enabled, CloudKit only returns readable
-        content to a session holding a Protected Cloud Storage key, which
-        pyicloud does not yet request. Those reminders are skipped rather than
-        shown as placeholders, so say once why a list looks short.
+        content to a session holding a Protected Cloud Storage key. pyicloud
+        requests one, but if a reminder still comes back undecoded it is
+        skipped rather than shown as a placeholder, so say once why a list
+        looks short.
         """
         if self._warned_undecoded or not self._skipped_undecoded:
             return
@@ -324,8 +326,7 @@ class IcloudRemindersCoordinator(DataUpdateCoordinator[dict[str, IcloudReminderL
         self._warned_undecoded = True
         _LOGGER.warning(
             "Some reminders could not be decrypted and have been left out of "
-            "the to-do lists. This account uses Advanced Data Protection, "
-            "which Home Assistant cannot read Reminders from yet"
+            "the to-do lists"
         )
 
 
