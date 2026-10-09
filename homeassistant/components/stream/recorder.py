@@ -7,9 +7,6 @@ import math
 import os
 from typing import TYPE_CHECKING, override
 
-import av
-import av.container
-
 from homeassistant.core import HomeAssistant, callback
 
 from .const import (
@@ -21,6 +18,8 @@ from .core import PROVIDERS, IdleTimer, Segment, StreamOutput, StreamSettings
 from .fmp4utils import read_init, transform_init
 
 if TYPE_CHECKING:
+    import av.container
+
     from homeassistant.components.camera import DynamicStreamSettings
 
 _LOGGER = logging.getLogger(__name__)
@@ -64,6 +63,7 @@ class RecorderOutput(StreamOutput):
 
     async def async_record(self) -> None:
         """Handle saving stream."""
+        import av  # noqa: PLC0415
 
         os.makedirs(os.path.dirname(self.video_path), exist_ok=True)
 
