@@ -12,6 +12,7 @@ from homeassistant.helpers.update_coordinator import (
 
 from .const import DOMAIN
 from .coordinator import (
+    DataGrandLyonAlertsCoordinator,
     DataGrandLyonParkAndRideCoordinator,
     DataGrandLyonTclCoordinator,
     DataGrandLyonVelovCoordinator,
@@ -94,3 +95,16 @@ class DataGrandLyonParkAndRideEntity(
     ) -> None:
         """Initialize the park-and-ride entity."""
         super().__init__(coordinator, subentry, description, "TCL", "Park & Ride")
+
+
+class DataGrandLyonLineEntity(DataGrandLyonEntity[DataGrandLyonAlertsCoordinator]):
+    """Base entity for Data Grand Lyon TCL lines."""
+
+    def __init__(
+        self,
+        coordinator: DataGrandLyonAlertsCoordinator,
+        subentry: ConfigSubentry,
+        description: EntityDescription,
+    ) -> None:
+        """Initialize the line entity."""
+        super().__init__(coordinator, subentry, description, "TCL", "Line")
