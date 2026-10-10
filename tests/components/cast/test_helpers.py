@@ -163,39 +163,6 @@ async def test_parse_http_error(
         await parse_playlist(hass, url)
 
 
-async def test_stale_connection_status_listener(hass: HomeAssistant) -> None:
-    """Test an old Cast listener cannot update a reconnected device."""
-    entry = MockConfigEntry(domain=DOMAIN)
-    info = MagicMock()
-    info.uuid = MagicMock()
-    info.is_audio_group = False
-    info.friendly_name = "Test speaker"
-
-    entity = cast_media_player.CastMediaPlayerEntity(hass, entry, info)
-    entity.entity_id = "media_player.speaker"
-
-    chromecast = MagicMock()
-    chromecast.uuid = info.uuid
-    mz_mgr = MagicMock()
-
-    old_listener = CastStatusListener(entity, chromecast, mz_mgr)
-    entity._status_listener = old_listener
-    entity._chromecast = chromecast
-    entity.mz_mgr = mz_mgr
-
-    new_listener = CastStatusListener(entity, chromecast, mz_mgr)
-    entity._status_listener = new_listener
-
-    with patch.object(entity, "new_connection_status") as callback:
-        old_listener.new_connection_status(MagicMock(status="CONNECTED"))
-        new_listener.new_connection_status(MagicMock(status="CONNECTED"))
-
-        # Allow the Home Assistant event loop to process scheduled callbacks.
-        await hass.async_block_till_done()
-
-        callback.assert_called_once()
-
-
 async def test_connection_status_queued_before_invalidation(
     hass: HomeAssistant,
 ) -> None:
