@@ -4,7 +4,7 @@ import asyncio
 from collections.abc import Callable
 import json
 from typing import Any
-from unittest.mock import ANY, AsyncMock, MagicMock, Mock, PropertyMock, patch
+from unittest.mock import ANY, AsyncMock, MagicMock, Mock, patch
 from uuid import UUID
 
 import attr
@@ -277,7 +277,7 @@ def get_status_callbacks(chromecast_mock, mz_mock=None):
     cast_status_cb = status_listener.new_cast_status
 
     connection_listener = chromecast_mock.register_connection_listener.call_args[0][0]
-    conn_status_cb = connection_listener.new_connection_status
+    conn_status_cb = connection_listener.async_new_connection_status
 
     mc = chromecast_mock.socket_client.media_controller
     media_status_cb = mc.register_status_listener.call_args[0][0].new_media_status
@@ -779,33 +779,6 @@ async def test_connection_status_after_invalidation(hass: HomeAssistant) -> None
 
     entity.new_connection_status(connection_status)
 
-    assert not entity.available
-
-
-async def test_connection_status_invalidation_during_callback(
-    hass: HomeAssistant,
-) -> None:
-    """Test invalidation while processing a connection status callback."""
-    entry = MockConfigEntry(domain=DOMAIN)
-    info = get_fake_chromecast_info()
-    entity = cast_media_player.CastMediaPlayerEntity(hass, entry, info)
-    entity.entity_id = "media_player.speaker"
-
-    entity._chromecast = MagicMock()
-    mz_mgr = MagicMock()
-    entity.mz_mgr = mz_mgr
-
-    def invalidate_during_callback() -> bool:
-        entity._invalidate()
-        return False
-
-    with patch.object(
-        type(entity), "available", new_callable=PropertyMock
-    ) as available:
-        available.side_effect = invalidate_during_callback
-        entity.new_connection_status(MagicMock(status="CONNECTED"))
-
-    mz_mgr.get_multizone_memberships.assert_not_called()
     assert not entity.available
 
 

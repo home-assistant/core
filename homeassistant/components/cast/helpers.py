@@ -1,6 +1,5 @@
 """Helpers to deal with Cast devices."""
 
-import asyncio
 import configparser
 from dataclasses import dataclass
 import logging
@@ -201,24 +200,14 @@ class CastStatusListener(
 
     @override
     def new_connection_status(self, status):
-        """Handle reception of a new ConnectionStatus."""
-        if not self._valid:
-            return
-
-        try:
-            running_loop = asyncio.get_running_loop()
-        except RuntimeError:
-            running_loop = None
-
-        if running_loop is self._cast_device.hass.loop:
-            self._handle_connection_status(status)
-        else:
+        """Schedule connection status handling on the Home Assistant event loop."""
+        if self._valid:
             self._cast_device.hass.loop.call_soon_threadsafe(
-                self._handle_connection_status, status
+                self.async_new_connection_status, status
             )
 
-    def _handle_connection_status(self, status):
-        """Process connection status on the Home Assistant event loop."""
+    def async_new_connection_status(self, status):
+        """Handle connection status on the Home Assistant event loop."""
         if (
             self._valid and self._cast_device._status_listener is self  # noqa: SLF001
         ):

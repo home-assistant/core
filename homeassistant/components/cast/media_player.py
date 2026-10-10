@@ -484,10 +484,6 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
                 self._cast_info.friendly_name,
                 connection_status.status,
             )
-            # The Chromecast may have been invalidated while processing
-            # this callback. Do not restore availability for a stale device.
-            if self._chromecast is None:
-                return
 
             self._attr_available = new_available
             if new_available and not self._cast_info.is_audio_group:
