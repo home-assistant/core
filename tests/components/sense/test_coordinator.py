@@ -1,21 +1,20 @@
 """Tests for the Sense coordinators."""
 
-from datetime import timedelta
 from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from sense_energy import SenseAuthenticationException, SenseMFARequiredException
 
-from homeassistant.components.sense.const import DOMAIN, TREND_UPDATE_RATE
+from homeassistant.components.sense.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 
-from . import setup_platform
+from . import setup_platform, trigger_trend_refresh
 from .const import MONITOR_ID
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
@@ -37,9 +36,7 @@ async def test_trend_coordinator_auth_failure(
 
     mock_sense.update_trend_data.side_effect = exception
 
-    freezer.tick(timedelta(seconds=TREND_UPDATE_RATE))
-    async_fire_time_changed(hass, freezer())
-    await hass.async_block_till_done()
+    await trigger_trend_refresh(hass, freezer)
 
     state = hass.states.get(f"sensor.sense_{MONITOR_ID}_daily_energy")
     assert state.state == STATE_UNAVAILABLE
