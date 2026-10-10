@@ -455,7 +455,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "inkbird",
     "insteon",
     "integration",
-    "intellifire",
     "intesishome",
     "ios",
     "iotawatt",
