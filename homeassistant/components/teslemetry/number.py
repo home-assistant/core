@@ -397,6 +397,8 @@ class TeslemetryChargeOnSolarLowerLimitNumberEntity(
                 return
 
             sent_value = await async_set_charge_on_solar(
+                self.hass,
+                self.config_entry,
                 self.api,
                 enabled=True,
                 lower_charge_limit=value,

@@ -409,6 +409,8 @@ class TeslemetryChargeOnSolarSwitchEntity(TeslemetryChargeOnSolarEntity, SwitchE
         """Set charge-on-solar mode, omitting the upper bound if it isn't known yet."""
         async with self.vehicle.charge_on_solar_lock:
             await async_set_charge_on_solar(
+                self.hass,
+                self.config_entry,
                 self.api,
                 enabled=enabled,
                 lower_charge_limit=self.vehicle.charge_on_solar_lower_limit,

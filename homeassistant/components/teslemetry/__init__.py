@@ -49,7 +49,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     Platform,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryNotReady,
@@ -622,6 +622,20 @@ async def _async_setup_charge_on_solar(
     return None
 
 
+@callback
+def _async_subscribe_charge_on_solar_labs(
+    hass: HomeAssistant, entry: TeslemetryConfigEntry
+) -> CALLBACK_TYPE:
+    """Reload the entry so the charge-on-solar entities follow the Labs toggle."""
+
+    async def _async_handle_labs_update(_event_data: EventLabsUpdatedData) -> None:
+        hass.config_entries.async_schedule_reload(entry.entry_id)
+
+    return async_subscribe_preview_feature(
+        hass, DOMAIN, LABS_CHARGE_ON_SOLAR_FEATURE, _async_handle_labs_update
+    )
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -> bool:
     """Set up Teslemetry config."""
 
@@ -909,15 +923,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
         vehicle_metadata,
     )
 
-    async def _async_handle_labs_update(_event_data: EventLabsUpdatedData) -> None:
-        """Reload so the charge-on-solar entities follow the Labs toggle."""
-        hass.config_entries.async_schedule_reload(entry.entry_id)
-
-    entry.async_on_unload(
-        async_subscribe_preview_feature(
-            hass, DOMAIN, LABS_CHARGE_ON_SOLAR_FEATURE, _async_handle_labs_update
-        )
-    )
+    entry.async_on_unload(_async_subscribe_charge_on_solar_labs(hass, entry))
 
     if stream:
         entry.async_on_unload(stream.close)
