@@ -22,6 +22,8 @@ from .const import TEST_DEVICE_1, TEST_DEVICE_1_SN, TEST_DEVICE_2, TEST_DEVICE_2
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
+SYNC_METHODS = ["sync_dnd_state", "sync_media_state", "sync_notifications"]
+
 
 async def test_coordinator_stale_device(
     hass: HomeAssistant,
@@ -198,7 +200,7 @@ async def test_sync_history_state_error(
     assert mock_config_entry.state is expected_state
 
 
-@pytest.mark.parametrize("method_name", ["sync_dnd_state", "sync_media_state"])
+@pytest.mark.parametrize("method_name", SYNC_METHODS)
 @pytest.mark.parametrize(
     ("side_effect", "expected_state"),
     [
@@ -245,10 +247,7 @@ async def test_sync_state_error(
     assert mock_config_entry.state is expected_state
 
 
-@pytest.mark.parametrize(
-    "method_name",
-    ["sync_dnd_state", "sync_media_state"],
-)
+@pytest.mark.parametrize("method_name", SYNC_METHODS)
 @pytest.mark.parametrize(
     "error",
     [
@@ -270,7 +269,7 @@ async def test_device_state_sync_failure_logged_on_first_refresh(
     method_name: str,
     error: Exception,
 ) -> None:
-    """Test a failing DND/media sync on first refresh is logged but does not block setup."""
+    """Test a failing sync on first refresh is logged but does not block setup."""
     getattr(mock_amazon_devices_client, method_name).side_effect = error
 
     await setup_integration(hass, mock_config_entry)
@@ -284,21 +283,23 @@ async def test_device_state_sync_failure_logged_on_first_refresh(
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
 
+@pytest.mark.parametrize("method_name", SYNC_METHODS)
 async def test_device_state_sync_on_device_list_change(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_amazon_devices_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    method_name: str,
 ) -> None:
-    """Test DND and media state are resynced when a device is added."""
+    """Test per-device state is synced on setup and resynced when a device is added."""
+    sync_mock: AsyncMock = getattr(mock_amazon_devices_client, method_name)
     mock_amazon_devices_client.get_devices_data.return_value = {
         TEST_DEVICE_1_SN: TEST_DEVICE_1,
     }
 
     await setup_integration(hass, mock_config_entry)
 
-    mock_amazon_devices_client.sync_dnd_state.assert_awaited_once()
-    mock_amazon_devices_client.sync_media_state.assert_awaited_once()
+    sync_mock.assert_awaited_once()
 
     mock_amazon_devices_client.get_devices_data.return_value = {
         TEST_DEVICE_1_SN: TEST_DEVICE_1,
@@ -309,13 +310,11 @@ async def test_device_state_sync_on_device_list_change(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert mock_amazon_devices_client.sync_dnd_state.call_count == 2
-    assert mock_amazon_devices_client.sync_media_state.call_count == 2
+    assert sync_mock.await_count == 2
 
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     # Device list unchanged: no additional resync
-    assert mock_amazon_devices_client.sync_dnd_state.call_count == 2
-    assert mock_amazon_devices_client.sync_media_state.call_count == 2
+    assert sync_mock.await_count == 2

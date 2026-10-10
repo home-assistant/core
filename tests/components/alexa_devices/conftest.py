@@ -67,6 +67,8 @@ def mock_amazon_devices_client() -> Generator[AsyncMock]:
         client.on_volume_state_event = MagicMock()
         client.on_media_state_event = MagicMock()
         client.on_todo_event = MagicMock()
+        client.on_notification_event = MagicMock()
+        client.sync_notifications = AsyncMock()
         client.on_dnd_event = MagicMock()
         dnd_event_handler: list[Callable[[dict[str, bool]], Awaitable[None]]] = []
         client.on_dnd_event.append.side_effect = dnd_event_handler.append
