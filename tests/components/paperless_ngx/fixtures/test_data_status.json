@@ -1,5 +1,5 @@
 {
-  "pngx_version": "2.15.3",
+  "pngx_version": "2.3.0",
   "server_os": "Linux-6.6.74-haos-raspi-aarch64-with-glibc2.36",
   "install_type": "docker",
   "storage": {

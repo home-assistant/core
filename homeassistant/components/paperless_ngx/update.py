@@ -63,18 +63,20 @@ class PaperlessUpdate(PaperlessEntity[PaperlessStatusCoordinator], UpdateEntity)
     @override
     def available(self) -> bool:
         """Return True if entity is available."""
-        return self._attr_available
+        return self._attr_available and self.coordinator.last_update_success
 
     @property
     @override
     def installed_version(self) -> str | None:
         """Return the installed version."""
-        return self.coordinator.api.host_version
+        if not self.coordinator.last_update_success or self.coordinator.data is None:
+            return None
+
+        return self.coordinator.data.pngx_version
 
     @override
     async def async_update(self) -> None:
         """Update the entity."""
-        remote_version = None
         try:
             remote_version = await self.coordinator.api.remote_version()
         except PaperlessConnectionError as err:
