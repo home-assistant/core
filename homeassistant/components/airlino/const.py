@@ -4,6 +4,7 @@ from datetime import timedelta
 import logging
 
 DOMAIN = "airlino"
+CONF_SETUP_VERIFIED = "setup_verified"
 
 VALID_MODELS = {
     "AirLino pro",

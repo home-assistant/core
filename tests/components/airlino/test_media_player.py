@@ -2,7 +2,12 @@
 
 from unittest.mock import AsyncMock, MagicMock
 
-from airlino_api import PLAYER_STATE_PLAYING, VOLUME_MAX, AirlinoApiConnectionError
+from airlino_api import (
+    PLAYER_STATE_PLAYING,
+    VOLUME_MAX,
+    AirlinoApiConnectionError,
+    AirlinoApiError,
+)
 import pytest
 
 from homeassistant.components.airlino import AirlinoRuntimeData
@@ -153,6 +158,18 @@ async def test_play_media_rejects_https(make_player) -> None:
     api.async_play_station.assert_not_awaited()
 
 
+async def test_repeated_play_media_errors_each_raise(make_player) -> None:
+    """Raise for each failed stream command, including repeated errors."""
+    player, _, _, api = make_player()
+    api.async_play_station.side_effect = AirlinoApiError("invalid stream")
+
+    for _ in range(2):
+        with pytest.raises(HomeAssistantError):
+            await player.async_play_media("url", "http://example.test/stream")
+
+    assert api.async_play_station.await_count == 2
+
+
 async def test_play_and_volume_commands_refresh_coordinator(make_player) -> None:
     """Refresh coordinator data after play and volume commands."""
     player, _, coordinator, api = make_player()
@@ -197,6 +214,7 @@ async def test_join_ignores_self_and_links_requested_receiver(make_player) -> No
     player, _, coordinator, api = make_player()
     receiver_api = MagicMock()
     receiver_api.async_get_receiver_state = AsyncMock(return_value={"sender": None})
+    receiver_api.async_get_sender_status = AsyncMock(return_value={"enabled": False})
     receiver_api.async_receiver_link = AsyncMock()
     receiver_coordinator = MagicMock()
     receiver_coordinator.data = {"online": True}
@@ -206,9 +224,180 @@ async def test_join_ignores_self_and_links_requested_receiver(make_player) -> No
 
     await player.async_join_players([player.entity_id, "media_player.kitchen"])
 
-    api.async_enable_sender.assert_awaited_once()
+    api.async_enable_sender.assert_awaited_once_with("Living room Group")
     receiver_api.async_receiver_link.assert_awaited_once_with("sender-uuid")
     receiver_coordinator.async_request_refresh.assert_awaited_once()
+    coordinator.async_request_refresh.assert_awaited_once()
+
+
+async def test_empty_or_self_only_join_does_not_enable_sender(make_player) -> None:
+    """Do not leave a sender running when no receivers were requested."""
+    player, _, coordinator, api = make_player()
+
+    await player.async_join_players([])
+    await player.async_join_players([player.entity_id])
+
+    api.async_enable_sender.assert_not_awaited()
+    coordinator.async_request_refresh.assert_not_awaited()
+
+
+async def test_unjoin_sender_unlinks_receivers_and_disables_sender(make_player) -> None:
+    """Dissolve a sender group by unlinking each receiver first."""
+    player, _, coordinator, api = make_player(
+        {"sender": {"enabled": True, "uuid": "sender-uuid"}}
+    )
+    receiver_api = MagicMock()
+    receiver_api.async_receiver_unlink = AsyncMock()
+    receiver_coordinator = MagicMock()
+    receiver_coordinator.data = {"receiver": {"sender": "sender-uuid"}}
+    receiver_coordinator.async_request_refresh = AsyncMock()
+    receiver_runtime = AirlinoRuntimeData(
+        api=receiver_api, coordinator=receiver_coordinator
+    )
+    player._all_runtimes = MagicMock(
+        return_value=[
+            (None, AirlinoRuntimeData(api=api, coordinator=coordinator)),
+            (None, receiver_runtime),
+        ]
+    )
+
+    await player.async_unjoin_player()
+
+    receiver_api.async_receiver_unlink.assert_awaited_once()
+    receiver_coordinator.async_request_refresh.assert_awaited_once()
+    api.async_disable_sender.assert_awaited_once()
+    coordinator.async_request_refresh.assert_awaited_once()
+
+
+async def test_unjoin_last_receiver_disables_empty_sender(make_player) -> None:
+    """Disable the master when its last receiver leaves the group."""
+    player, _, coordinator, api = make_player({"receiver": {"sender": "master-uuid"}})
+    master_api = MagicMock()
+    master_api.async_disable_sender = AsyncMock()
+    master_coordinator = MagicMock()
+    master_coordinator.data = {"sender": {"enabled": True, "uuid": "master-uuid"}}
+    master_coordinator.async_request_refresh = AsyncMock()
+    master_runtime = AirlinoRuntimeData(api=master_api, coordinator=master_coordinator)
+    player._all_runtimes = MagicMock(
+        return_value=[
+            (None, master_runtime),
+            (None, AirlinoRuntimeData(api=api, coordinator=coordinator)),
+        ]
+    )
+
+    await player.async_unjoin_player()
+
+    api.async_receiver_unlink.assert_awaited_once()
+    master_api.async_disable_sender.assert_awaited_once()
+    master_coordinator.async_request_refresh.assert_awaited_once()
+    coordinator.async_request_refresh.assert_awaited_once()
+
+
+async def test_unjoin_receiver_keeps_master_with_other_receivers(make_player) -> None:
+    """Keep the master sender enabled while another receiver remains linked."""
+    player, _, coordinator, api = make_player({"receiver": {"sender": "master-uuid"}})
+    master_api = MagicMock()
+    master_api.async_disable_sender = AsyncMock()
+    master_coordinator = MagicMock()
+    master_coordinator.data = {"sender": {"enabled": True, "uuid": "master-uuid"}}
+    master_coordinator.async_request_refresh = AsyncMock()
+    master_runtime = AirlinoRuntimeData(api=master_api, coordinator=master_coordinator)
+    other_coordinator = MagicMock()
+    other_coordinator.data = {"receiver": {"sender": "master-uuid"}}
+    other_runtime = AirlinoRuntimeData(api=MagicMock(), coordinator=other_coordinator)
+    player._all_runtimes = MagicMock(
+        return_value=[
+            (None, master_runtime),
+            (None, AirlinoRuntimeData(api=api, coordinator=coordinator)),
+            (None, other_runtime),
+        ]
+    )
+
+    await player.async_unjoin_player()
+
+    api.async_receiver_unlink.assert_awaited_once()
+    master_api.async_disable_sender.assert_not_awaited()
+    master_coordinator.async_request_refresh.assert_not_awaited()
+    coordinator.async_request_refresh.assert_awaited_once()
+
+
+async def test_sender_unjoin_unlinks_receivers_and_disables_sender(make_player) -> None:
+    """Unlink members and turn off the sender when leaving as the master."""
+    player, _, coordinator, api = make_player(
+        {"sender": {"enabled": True, "uuid": "sender-uuid"}}
+    )
+    receiver_api = MagicMock()
+    receiver_api.async_receiver_unlink = AsyncMock()
+    receiver_coordinator = MagicMock()
+    receiver_coordinator.data = {"receiver": {"sender": "sender-uuid"}}
+    receiver_coordinator.async_request_refresh = AsyncMock()
+    receiver_runtime = AirlinoRuntimeData(
+        api=receiver_api, coordinator=receiver_coordinator
+    )
+    player._all_runtimes = MagicMock(
+        return_value=[
+            (None, AirlinoRuntimeData(api=api, coordinator=coordinator)),
+            (None, receiver_runtime),
+        ]
+    )
+
+    await player.async_unjoin_player()
+
+    receiver_api.async_receiver_unlink.assert_awaited_once()
+    receiver_coordinator.async_request_refresh.assert_awaited_once()
+    api.async_disable_sender.assert_awaited_once()
+    coordinator.async_request_refresh.assert_awaited_once()
+
+
+async def test_last_receiver_unjoin_disables_master(make_player) -> None:
+    """Disable the master when its final receiver leaves."""
+    player, _, coordinator, api = make_player({"receiver": {"sender": "master-uuid"}})
+    master_api = MagicMock()
+    master_api.async_disable_sender = AsyncMock()
+    master_coordinator = MagicMock()
+    master_coordinator.data = {"sender": {"enabled": True, "uuid": "master-uuid"}}
+    master_coordinator.async_request_refresh = AsyncMock()
+    master_runtime = AirlinoRuntimeData(api=master_api, coordinator=master_coordinator)
+    player._all_runtimes = MagicMock(
+        return_value=[
+            (None, master_runtime),
+            (None, AirlinoRuntimeData(api=api, coordinator=coordinator)),
+        ]
+    )
+
+    await player.async_unjoin_player()
+
+    api.async_receiver_unlink.assert_awaited_once()
+    master_api.async_disable_sender.assert_awaited_once()
+    master_coordinator.async_request_refresh.assert_awaited_once()
+    coordinator.async_request_refresh.assert_awaited_once()
+
+
+async def test_receiver_unjoin_keeps_master_with_other_receivers(make_player) -> None:
+    """Keep a master enabled while another receiver is still linked."""
+    player, _, coordinator, api = make_player({"receiver": {"sender": "master-uuid"}})
+    master_api = MagicMock()
+    master_api.async_disable_sender = AsyncMock()
+    master_coordinator = MagicMock()
+    master_coordinator.data = {"sender": {"enabled": True, "uuid": "master-uuid"}}
+    master_coordinator.async_request_refresh = AsyncMock()
+    master_runtime = AirlinoRuntimeData(api=master_api, coordinator=master_coordinator)
+    other_coordinator = MagicMock()
+    other_coordinator.data = {"receiver": {"sender": "master-uuid"}}
+    other_runtime = AirlinoRuntimeData(api=MagicMock(), coordinator=other_coordinator)
+    player._all_runtimes = MagicMock(
+        return_value=[
+            (None, master_runtime),
+            (None, AirlinoRuntimeData(api=api, coordinator=coordinator)),
+            (None, other_runtime),
+        ]
+    )
+
+    await player.async_unjoin_player()
+
+    api.async_receiver_unlink.assert_awaited_once()
+    master_api.async_disable_sender.assert_not_awaited()
+    master_coordinator.async_request_refresh.assert_not_awaited()
     coordinator.async_request_refresh.assert_awaited_once()
 
 
@@ -226,3 +415,33 @@ async def test_offline_member_fails_before_enabling_sender(make_player) -> None:
 
     api.async_enable_sender.assert_not_awaited()
     offline_api.async_receiver_link.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    ("receiver_state", "sender_state"),
+    [
+        ({"sender": "another-master"}, {"enabled": False}),
+        ({"sender": None}, {"enabled": True, "uuid": "member-sender"}),
+    ],
+)
+async def test_join_rejects_member_already_in_group(
+    make_player, receiver_state: dict, sender_state: dict
+) -> None:
+    """Reject grouped receivers and active senders before changing groups."""
+    player, _, _, sender_api = make_player()
+    member_api = MagicMock()
+    member_api.async_get_receiver_state = AsyncMock(return_value=receiver_state)
+    member_api.async_get_sender_status = AsyncMock(return_value=sender_state)
+    member_api.async_receiver_unlink = AsyncMock()
+    member_api.async_receiver_link = AsyncMock()
+    member_coordinator = MagicMock()
+    member_coordinator.data = {"online": True}
+    runtime = AirlinoRuntimeData(api=member_api, coordinator=member_coordinator)
+    player._async_find_runtime_by_entity_id = AsyncMock(return_value=runtime)
+
+    with pytest.raises(HomeAssistantError):
+        await player.async_join_players(["media_player.kitchen"])
+
+    sender_api.async_enable_sender.assert_not_awaited()
+    member_api.async_receiver_unlink.assert_not_awaited()
+    member_api.async_receiver_link.assert_not_awaited()

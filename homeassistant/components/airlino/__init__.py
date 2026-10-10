@@ -10,7 +10,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import is_supported_api_version
+from .const import CONF_SETUP_VERIFIED, is_supported_api_version
 from .coordinator import AirlinoDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -49,6 +49,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: AirlinoConfigEntry) -> b
     coordinator = AirlinoDataUpdateCoordinator(hass, entry, api)
 
     await coordinator.async_config_entry_first_refresh()
+
+    if not entry.data.get(CONF_SETUP_VERIFIED, False):
+        hass.config_entries.async_update_entry(
+            entry, data={**entry.data, CONF_SETUP_VERIFIED: True}
+        )
 
     entry.runtime_data = AirlinoRuntimeData(api=api, coordinator=coordinator)
 

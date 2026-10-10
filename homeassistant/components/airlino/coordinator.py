@@ -8,7 +8,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN, LOGGER, UPDATE_INTERVAL
+from .const import CONF_SETUP_VERIFIED, DOMAIN, LOGGER, UPDATE_INTERVAL
 
 if TYPE_CHECKING:
     from . import AirlinoConfigEntry
@@ -32,6 +32,7 @@ class AirlinoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             update_interval=UPDATE_INTERVAL,
         )
         self.api = api
+        self._setup_verified = entry.data.get(CONF_SETUP_VERIFIED, False)
         # Device info (model, devicename, firmware) only changes on reboot or
         # a firmware update, so it is fetched once and refreshed whenever the
         # device comes back from being unreachable.
@@ -50,10 +51,14 @@ class AirlinoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             player_status = await self.api.async_get_player_status()
             volume = await self.api.async_get_master_volume()
         except AirlinoApiConnectionError as err:
-            # The device is unreachable (e.g. in standby). This is expected
-            # and not an error: report it as data so the entity shows
-            # unavailable without spamming the log. The last known device
-            # info is kept so the device name is still shown for it.
+            if not self._setup_verified:
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="update_failed",
+                    translation_placeholders={"err": str(err)},
+                ) from err
+            # An unreachable device is expected after its setup has been
+            # verified (e.g. in standby): report it as offline data.
             if was_online:
                 LOGGER.info("AirLino is unreachable, assuming it is off")
             LOGGER.debug("AirLino is unreachable, assuming it is off: %s", err)
@@ -67,6 +72,7 @@ class AirlinoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 translation_key="update_failed",
                 translation_placeholders={"err": str(err)},
             ) from err
+        self._setup_verified = True
         if previous is not None and not was_online:
             LOGGER.info("AirLino is available again")
         sender: dict[str, Any] | None = previous.get("sender") if previous else None

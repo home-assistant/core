@@ -100,6 +100,7 @@ async def test_user_flow_recovers_from_errors(
         CONF_HOST: HOST,
         "port": DEFAULT_PORT,
         "api_version": "v22",
+        "setup_verified": False,
     }
 
 
@@ -126,6 +127,7 @@ async def test_user_flow_uses_custom_port(
     assert result["result"].unique_id == MAC
     assert result["data"]["port"] == 9000
     assert result["data"]["api_version"] == "v21"
+    assert result["data"]["setup_verified"] is False
 
 
 async def test_user_flow_aborts_if_device_is_configured(hass: HomeAssistant) -> None:
@@ -269,6 +271,7 @@ async def test_zeroconf_flow_confirms_and_creates_entry(
     assert result["data"][CONF_HOST] == HOST
     assert result["data"]["port"] == DEFAULT_PORT
     assert result["data"]["api_version"] == "v22"
+    assert result["data"]["setup_verified"] is False
 
 
 async def test_zeroconf_flow_uses_default_values(

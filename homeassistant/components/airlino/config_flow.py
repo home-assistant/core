@@ -20,6 +20,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import (
+    CONF_SETUP_VERIFIED,
     DOMAIN,
     MIN_API_VERSION,
     VALID_MODELS,
@@ -157,6 +158,7 @@ class AirlinoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         CONF_HOST: user_input[CONF_HOST],
                         "port": user_input.get("port", DEFAULT_PORT),
                         "api_version": info["api_version"],
+                        CONF_SETUP_VERIFIED: False,
                     },
                 )
 
@@ -242,6 +244,7 @@ class AirlinoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     CONF_HOST: self._host,
                     "port": self._port,
                     "api_version": self._api_version,
+                    CONF_SETUP_VERIFIED: False,
                 },
             )
 

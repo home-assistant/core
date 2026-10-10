@@ -220,7 +220,9 @@ class AirlinoMediaPlayer(
                 translation_key="sender_uuid_missing",
             )
 
-        requested_runtimes: list[tuple[str, AirlinoRuntimeData]] = []
+        requested_runtimes: list[
+            tuple[str, AirlinoRuntimeData, dict[str, Any] | None]
+        ] = []
         for entity_id in group_members:
             if entity_id == self.entity_id:
                 continue
@@ -240,18 +242,33 @@ class AirlinoMediaPlayer(
                     translation_key="device_unavailable",
                     translation_placeholders={"entity_id": entity_id},
                 )
-            requested_runtimes.append((entity_id, runtime))
-
-        if not (sender_status or {}).get("enabled"):
-            await self._async_call(self.coordinator.api.async_enable_sender)
-        for _, runtime in requested_runtimes:
-            receiver_state: dict[str, Any] = await self._async_call(
+            receiver_state: dict[str, Any] | None = await self._async_call(
                 runtime.api.async_get_receiver_state
             )
+            sender_state: dict[str, Any] = await self._async_call(
+                runtime.api.async_get_sender_status
+            )
+            receiver_master = (receiver_state or {}).get("sender")
+            if (receiver_master and receiver_master != uuid) or (
+                sender_state or {}
+            ).get("enabled"):
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="member_already_grouped",
+                    translation_placeholders={"entity_id": entity_id},
+                )
+            requested_runtimes.append((entity_id, runtime, receiver_state))
+
+        if not requested_runtimes:
+            return
+
+        if not (sender_status or {}).get("enabled"):
+            await self._async_call(
+                self.coordinator.api.async_enable_sender,
+                f"{self._device_name} Group",
+            )
+        for _, runtime, receiver_state in requested_runtimes:
             if (receiver_state or {}).get("sender") != uuid:
-                # Not linked (or linked to another sender): link to ours.
-                if (receiver_state or {}).get("sender"):
-                    await self._async_call(runtime.api.async_receiver_unlink)
                 await self._async_call(runtime.api.async_receiver_link, uuid)
             await runtime.coordinator.async_request_refresh()
         await self.coordinator.async_request_refresh()
@@ -432,7 +449,7 @@ class AirlinoMediaPlayer(
             play_item = await media_source.async_resolve_media(
                 self.hass, media_id, self.entity_id
             )
-            media_id = async_process_play_media_url(self.hass, play_item.url)
+            media_id = play_item.url
         elif media_type not in (MediaType.URL, "url"):
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
@@ -440,6 +457,7 @@ class AirlinoMediaPlayer(
                 translation_placeholders={"media_type": media_type},
             )
 
+        media_id = async_process_play_media_url(self.hass, media_id)
         if urlsplit(media_id).scheme == "https":
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
@@ -447,18 +465,8 @@ class AirlinoMediaPlayer(
             )
 
         _LOGGER.debug("Playing media on AirLino: %s", media_id)
-        previous_error = self.coordinator.data.get("error")
         await self._async_call(self.coordinator.api.async_play_station, media_id)
         await self.coordinator.async_request_refresh()
-        # The device accepts the play command even if it cannot decode the
-        # stream; the failure is only reported in the player status.
-        error = self.coordinator.data.get("error")
-        if error and error != previous_error:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="play_failed",
-                translation_placeholders={"error": error},
-            )
 
     @override
     async def async_media_play(self) -> None:

@@ -46,6 +46,9 @@
     "media_type_unsupported": {
       "message": "Media type {media_type} is not supported by AirLino; only URL playback is supported."
     },
+    "member_already_grouped": {
+      "message": "{entity_id} is already part of a multiroom group; remove it from that group before joining another."
+    },
     "multiroom_receiver_control": {
       "message": "This AirLino is part of a multiroom group and follows the master. Only volume control is available; ungroup it by modifying the group from the master device to control it directly."
     },

@@ -19,7 +19,7 @@ def coordinator(hass: HomeAssistant):
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="AirLino",
-        data={"host": "192.0.2.1"},
+        data={"host": "192.0.2.1", "setup_verified": False},
         unique_id="00:11:22:33:44:55",
     )
     api = MagicMock()
@@ -69,9 +69,33 @@ async def test_songcast_failure_preserves_previous_state(coordinator) -> None:
     api.async_get_receiver_state.assert_not_awaited()
 
 
-async def test_connection_failure_reports_offline(coordinator) -> None:
-    """Report an unreachable device as offline without failing the update."""
+async def test_initial_connection_failure_fails_update(coordinator) -> None:
+    """Fail the initial update for an unverified config entry."""
     update_coordinator, api = coordinator
+    api.async_get_device_info.side_effect = AirlinoApiConnectionError("offline")
+
+    with pytest.raises(UpdateFailed):
+        await update_coordinator._async_update_data()
+
+    api.async_get_player_status.assert_not_awaited()
+
+
+async def test_verified_entry_reports_offline_after_restart(coordinator) -> None:
+    """Allow an established entry to load offline after a restart."""
+    update_coordinator, api = coordinator
+    update_coordinator._setup_verified = True
+    api.async_get_device_info.side_effect = AirlinoApiConnectionError("offline")
+
+    data = await update_coordinator._async_update_data()
+
+    assert data == {"online": False, "device": None}
+    api.async_get_player_status.assert_not_awaited()
+
+
+async def test_connection_failure_reports_offline(coordinator) -> None:
+    """Report an unreachable device as offline after a successful update."""
+    update_coordinator, api = coordinator
+    update_coordinator._setup_verified = True
     update_coordinator.data = {"online": True, "device": {"model": "AirLino"}}
     api.async_get_device_info.side_effect = AirlinoApiConnectionError("offline")
 
