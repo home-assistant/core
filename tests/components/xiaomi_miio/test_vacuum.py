@@ -280,6 +280,25 @@ async def test_xiaomi_vacuum_battery_sensor(
     assert state.state == "64"
 
 
+@pytest.mark.usefixtures(
+    "entity_registry_enabled_by_default", "mock_mirobo_is_got_error"
+)
+@pytest.mark.freeze_time("2026-10-10 16:00:00+00:00")
+async def test_xiaomi_vacuum_dnd_sensors(hass: HomeAssistant) -> None:
+    """Test the DnD sensors use the next occurrence in the configured time zone."""
+    await hass.config.async_set_time_zone("America/New_York")
+    entity_name = "test_vacuum_cleaner_dnd"
+    await setup_component(hass, entity_name)
+
+    # 22:00 is still ahead today, 06:00 has passed and moves to tomorrow
+    state = hass.states.get(f"sensor.{entity_name}_dnd_start")
+    assert state is not None
+    assert state.state == "2026-10-11T02:00:00+00:00"
+    state = hass.states.get(f"sensor.{entity_name}_dnd_end")
+    assert state is not None
+    assert state.state == "2026-10-11T10:00:00+00:00"
+
+
 async def test_xiaomi_vacuum_battery_sensor_unknown(
     hass: HomeAssistant, mock_mirobo_is_on: MagicMock
 ) -> None:
