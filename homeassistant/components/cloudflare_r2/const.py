@@ -17,6 +17,12 @@ CONF_BUCKET = "bucket"
 CLOUDFLARE_R2_DOMAIN: Final = "r2.cloudflarestorage.com"
 DEFAULT_ENDPOINT_URL: Final = "https://ACCOUNT_ID." + CLOUDFLARE_R2_DOMAIN + "/"
 
+# HeadBucket has no response body, so a missing bucket only reports the status code
+BUCKET_NOT_FOUND_ERROR_CODES: Final = ("404", "NoSuchBucket")
+
+# Only rejected credentials trigger reauth; other errors are retried
+AUTH_ERROR_HTTP_STATUS_CODES: Final = (401, 403)
+
 DATA_BACKUP_AGENT_LISTENERS: HassKey[list[Callable[[], None]]] = HassKey(
     f"{DOMAIN}.backup_agent_listeners"
 )

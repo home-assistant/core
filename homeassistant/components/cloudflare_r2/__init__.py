@@ -15,9 +15,15 @@ from botocore.exceptions import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 
 from .const import (
+    AUTH_ERROR_HTTP_STATUS_CODES,
+    BUCKET_NOT_FOUND_ERROR_CODES,
     CONF_ACCESS_KEY_ID,
     CONF_BUCKET,
     CONF_ENDPOINT_URL,
@@ -32,25 +38,50 @@ type R2ConfigEntry = ConfigEntry[S3Client]
 _LOGGER = logging.getLogger(__name__)
 
 
+async def _async_create_client(data: dict) -> S3Client:
+    """Create an S3 client and verify the bucket is accessible."""
+    session = AioSession()
+    # pylint: disable-next=unnecessary-dunder-call
+    client = await session.create_client(
+        "s3",
+        endpoint_url=data.get(CONF_ENDPOINT_URL),
+        aws_secret_access_key=data[CONF_SECRET_ACCESS_KEY],
+        aws_access_key_id=data[CONF_ACCESS_KEY_ID],
+        config=AioConfig(warm_up_loader_caches=True),
+    ).__aenter__()
+    try:
+        await client.head_bucket(Bucket=data[CONF_BUCKET])
+    except BaseException:
+        await client.__aexit__(None, None, None)
+        raise
+    return client
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: R2ConfigEntry) -> bool:
     """Set up Cloudflare R2 from a config entry."""
 
     data = cast(dict, entry.data)
     try:
-        session = AioSession()
-        # pylint: disable-next=unnecessary-dunder-call
-        client = await session.create_client(
-            "s3",
-            endpoint_url=data.get(CONF_ENDPOINT_URL),
-            aws_secret_access_key=data[CONF_SECRET_ACCESS_KEY],
-            aws_access_key_id=data[CONF_ACCESS_KEY_ID],
-            config=AioConfig(warm_up_loader_caches=True),
-        ).__aenter__()
-        await client.head_bucket(Bucket=data[CONF_BUCKET])
+        client = await _async_create_client(data)
     except ClientError as err:
-        raise ConfigEntryError(
+        if err.response["Error"]["Code"] in BUCKET_NOT_FOUND_ERROR_CODES:
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="bucket_not_found",
+                translation_placeholders={"bucket": data[CONF_BUCKET]},
+            ) from err
+        if (
+            err.response["ResponseMetadata"]["HTTPStatusCode"]
+            in AUTH_ERROR_HTTP_STATUS_CODES
+        ):
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="invalid_credentials",
+            ) from err
+        raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
-            translation_key="invalid_credentials",
+            translation_key="service_error",
+            translation_placeholders={"error": err.response["Error"]["Code"]},
         ) from err
     except ParamValidationError as err:
         if "Invalid bucket name" in str(err):
@@ -58,6 +89,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: R2ConfigEntry) -> bool:
                 translation_domain=DOMAIN,
                 translation_key="invalid_bucket_name",
             ) from err
+        raise
     except ValueError as err:
         raise ConfigEntryError(
             translation_domain=DOMAIN,

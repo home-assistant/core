@@ -54,7 +54,7 @@ rules:
   parallel-updates:
     status: exempt
     comment: This integration does not poll.
-  reauthentication-flow: todo
+  reauthentication-flow: done
   test-coverage: done
 
   # Gold
@@ -104,7 +104,7 @@ rules:
   icon-translations:
     status: exempt
     comment: This integration does not use icons.
-  reconfiguration-flow: todo
+  reconfiguration-flow: done
   repair-issues:
     status: exempt
     comment: There are no issues which can be repaired.

@@ -9,7 +9,7 @@ from botocore.exceptions import (
 )
 import pytest
 
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
@@ -39,6 +39,10 @@ async def test_load_unload_config_entry(
             ParamValidationError(report="Invalid bucket name"),
             ConfigEntryState.SETUP_ERROR,
         ),
+        (
+            ParamValidationError(report="Unknown parameter"),
+            ConfigEntryState.SETUP_ERROR,
+        ),
         (ValueError(), ConfigEntryState.SETUP_ERROR),
         (
             EndpointConnectionError(endpoint_url="https://example.com"),
@@ -61,18 +65,72 @@ async def test_setup_entry_create_client_errors(
         assert mock_config_entry.state is state
 
 
-async def test_setup_entry_head_bucket_error(
+@pytest.mark.parametrize("status_code", [401, 403])
+async def test_setup_entry_head_bucket_auth_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_client: AsyncMock,
+    status_code: int,
 ) -> None:
-    """Test setup_entry error when calling head_bucket."""
+    """Test rejected credentials start a reauth flow."""
     mock_client.head_bucket.side_effect = ClientError(
-        error_response={"Error": {"Code": "InvalidAccessKeyId"}},
+        error_response={
+            "Error": {"Code": "InvalidAccessKeyId"},
+            "ResponseMetadata": {"HTTPStatusCode": status_code},
+        },
         operation_name="head_bucket",
     )
     await setup_integration(hass, mock_config_entry)
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    mock_client.__aexit__.assert_awaited_once()
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+    assert flows[0]["context"]["entry_id"] == mock_config_entry.entry_id
+
+
+@pytest.mark.parametrize("status_code", [429, 500, 503])
+async def test_setup_entry_head_bucket_retryable_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_client: AsyncMock,
+    status_code: int,
+) -> None:
+    """Test transient service errors are retried and do not start reauth."""
+    mock_client.head_bucket.side_effect = ClientError(
+        error_response={
+            "Error": {"Code": str(status_code)},
+            "ResponseMetadata": {"HTTPStatusCode": status_code},
+        },
+        operation_name="head_bucket",
+    )
+    await setup_integration(hass, mock_config_entry)
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.error_reason_translation_key == "service_error"
+    assert mock_config_entry.error_reason_translation_placeholders == {
+        "error": str(status_code)
+    }
+    mock_client.__aexit__.assert_awaited_once()
+    assert not hass.config_entries.flow.async_progress()
+
+
+@pytest.mark.parametrize("code", ["404", "NoSuchBucket"])
+async def test_setup_entry_bucket_not_found(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_client: AsyncMock,
+    code: str,
+) -> None:
+    """Test a missing bucket is a hard error and does not start reauth."""
+    mock_client.head_bucket.side_effect = ClientError(
+        error_response={"Error": {"Code": code}},
+        operation_name="head_bucket",
+    )
+    await setup_integration(hass, mock_config_entry)
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.error_reason_translation_key == "bucket_not_found"
+    assert not hass.config_entries.flow.async_progress()
 
 
 async def test_setup_entry_warms_loader_caches(
