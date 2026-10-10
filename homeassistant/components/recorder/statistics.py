@@ -5,7 +5,7 @@ from collections.abc import Callable, Iterable, Sequence
 import dataclasses
 from datetime import datetime, timedelta
 from functools import lru_cache, partial
-from itertools import chain, groupby
+from itertools import batched, chain, groupby
 import logging
 import math
 from operator import itemgetter
@@ -24,6 +24,7 @@ from sqlalchemy import (
     lambda_stmt,
     select,
     text,
+    union_all,
 )
 from sqlalchemy.engine.row import Row
 from sqlalchemy.exc import SQLAlchemyError
@@ -42,6 +43,7 @@ from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.collection import chunked_or_all
 from homeassistant.util.enum import try_parse_enum
 from homeassistant.util.unit_conversion import (
+    AggregationType,
     ApparentPowerConverter,
     AreaConverter,
     BaseUnitConverter,
@@ -117,6 +119,12 @@ from .util import (
 if TYPE_CHECKING:
     from . import Recorder
 
+# Stay below SQLite's limit of 500 compound SELECT terms.
+MAX_STATISTICS_PERIODS_PER_QUERY = 400
+# Only look up the available range when a bounded request would need
+# more than this number of period query batches.
+MAX_STATISTICS_PERIOD_QUERY_BATCHES_BEFORE_RANGE_LOOKUP = 2
+
 QUERY_STATISTICS = (
     Statistics.metadata_id,
     Statistics.start_ts,
@@ -152,8 +160,9 @@ def query_circular_mean(table: type[StatisticsBase]) -> tuple[Label, Label]:
     # in Python.
     # https://en.wikipedia.org/wiki/Circular_mean
     radians = func.radians(table.mean)
-    weighted_sum_sin = func.sum(func.sin(radians) * table.mean_weight)
-    weighted_sum_cos = func.sum(func.cos(radians) * table.mean_weight)
+    mean_weight = func.coalesce(table.mean_weight, 0.0)
+    weighted_sum_sin = func.sum(func.sin(radians) * mean_weight)
+    weighted_sum_cos = func.sum(func.cos(radians) * mean_weight)
     weight = func.sqrt(
         func.power(weighted_sum_sin, 2) + func.power(weighted_sum_cos, 2)
     )
@@ -403,6 +412,50 @@ def _get_statistic_to_display_unit_converter(
 
     return converter.converter_factory_allow_none(
         from_unit=statistic_unit, to_unit=display_unit
+    )
+
+
+def _requires_pre_aggregation_unit_conversion(
+    hass: HomeAssistant,
+    statistic_id: str,
+    metadata: StatisticMetaData,
+    requested_units: dict[str, str] | None,
+    aggregations: set[AggregationType],
+) -> bool:
+    """Return whether unit conversion excludes SQL aggregate reduction."""
+    statistic_unit = metadata["unit_of_measurement"]
+    if (
+        converter := _get_unit_converter(metadata["unit_class"], statistic_unit)
+    ) is None:
+        return False
+
+    state_unit = statistic_unit
+    if state := hass.states.get(statistic_id):
+        state_unit = state.attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT)
+
+    display_unit = (
+        requested_units[converter.UNIT_CLASS]
+        if requested_units and converter.UNIT_CLASS in requested_units
+        else state_unit
+    )
+
+    if display_unit not in converter.VALID_UNITS:
+        return False
+
+    if (
+        display_unit != statistic_unit
+        and "mean" in aggregations
+        and metadata["mean_type"] is StatisticMeanType.CIRCULAR
+    ):
+        return True
+
+    return any(
+        not converter.is_aggregation_preserving(
+            statistic_unit,
+            display_unit,
+            aggregation,
+        )
+        for aggregation in aggregations
     )
 
 
@@ -1201,7 +1254,14 @@ def _reduce_statistics(
         mean_values: list[tuple[float, float]] = []
         min_values: list[float] = []
         prev_stat: StatisticsRow = stat_list[0]
-        fake_entry: StatisticsRow = {"start": stat_list[-1]["start"] + period_seconds}
+        # Ensure the fake entry is outside the final local calendar period,
+        # including across DST fall-back.
+        fake_entry: StatisticsRow = {
+            "start": max(
+                stat_list[-1]["start"] + period_seconds,
+                period_start_end(stat_list[-1]["start"])[1],
+            )
+        }
 
         # Loop over the hourly statistics + a fake entry to end the period
         for statistic in chain(stat_list, (fake_entry,)):
@@ -1474,6 +1534,345 @@ def _generate_statistics_during_period_stmt(
         stmt += lambda q: q.filter(table.metadata_id.in_(metadata_ids))
     stmt += lambda q: q.order_by(table.metadata_id, table.start_ts)
     return stmt
+
+
+def _generate_statistics_period_stmt(
+    metadata_ids: list[int] | None,
+    period_bounds: tuple[tuple[float, float], ...],
+    types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
+    mean_type: StatisticMeanType = StatisticMeanType.NONE,
+) -> Select:
+    """Select reduced statistics for each calendar period."""
+    queries = []
+
+    metadata_ids_param = (
+        bindparam(
+            "metadata_ids",
+            value=metadata_ids,
+            type_=Statistics.metadata_id.type,
+            expanding=True,
+            literal_execute=True,
+        )
+        if metadata_ids
+        else None
+    )
+
+    aggregate_types = types & {"mean", "min", "max"}
+    endpoint_types = types & {"sum", "state", "last_reset"}
+
+    mean_columns: tuple[Label, ...] = ()
+    if "mean" in aggregate_types:
+        assert mean_type is not StatisticMeanType.NONE
+        mean_columns = (
+            query_circular_mean(Statistics)
+            if mean_type is StatisticMeanType.CIRCULAR
+            else (func.avg(Statistics.mean).label("mean"),)
+        )
+
+    # Aggregate statistics are reduced over all rows in the calendar period.
+    aggregate_columns = {
+        "mean": mean_columns,
+        "min": (func.min(Statistics.min).label("min"),),
+        "max": (func.max(Statistics.max).label("max"),),
+    }
+
+    for lower, upper in period_bounds:
+        query = select(Statistics.metadata_id)
+
+        if aggregate_types:
+            # Keep the first row timestamp so the existing reducer can still
+            # determine the correct calendar period for aggregate-only and
+            # mixed requests.
+            query = query.add_columns(
+                func.min(Statistics.start_ts).label("period_start_ts")
+            )
+
+            for key, aggregate_columns_for_type in aggregate_columns.items():
+                if key in aggregate_types:
+                    query = query.add_columns(*aggregate_columns_for_type)
+
+        if endpoint_types:
+            # Endpoint values must come from the last actual Statistics row
+            # in the period, so keep its timestamp for the join below.
+            query = query.add_columns(
+                func.max(Statistics.start_ts).label("endpoint_start_ts")
+            )
+
+        query = query.where(
+            Statistics.start_ts >= lower,
+            Statistics.start_ts < upper,
+        )
+
+        if metadata_ids_param is not None:
+            query = query.where(Statistics.metadata_id.in_(metadata_ids_param))
+
+        queries.append(query.group_by(Statistics.metadata_id))
+
+    # One reduced row per metadata id and calendar period.
+    reduced = union_all(*queries).subquery()
+
+    if endpoint_types:
+        # Endpoint-only requests expose the timestamp of the last row.
+        # Mixed requests keep the first timestamp of the reduced period so
+        # the existing reducer sees the same period representative as before.
+        columns = select(
+            Statistics.metadata_id,
+            (
+                reduced.c.period_start_ts if aggregate_types else Statistics.start_ts
+            ).label("start_ts"),
+        )
+    else:
+        # Aggregate-only requests do not need to join back to Statistics.
+        columns = select(
+            reduced.c.metadata_id,
+            reduced.c.period_start_ts.label("start_ts"),
+        )
+
+    for key, aggregate_columns_for_type in aggregate_columns.items():
+        if key in aggregate_types:
+            columns = columns.add_columns(
+                *(
+                    getattr(reduced.c, aggregate_column.name)
+                    for aggregate_column in aggregate_columns_for_type
+                )
+            )
+
+    if not endpoint_types:
+        return columns
+
+    # Endpoint values must be read from the final actual row in the period.
+    for key, type_columns in _type_column_mapping.items():
+        if key in endpoint_types:
+            columns = columns.add_columns(
+                *(getattr(Statistics, column) for column in type_columns)
+            )
+
+    return columns.join(
+        reduced,
+        and_(
+            Statistics.metadata_id == reduced.c.metadata_id,
+            Statistics.start_ts == reduced.c.endpoint_start_ts,
+        ),
+    )
+
+
+def _generate_statistics_start_end_stmt(
+    metadata_ids: list[int] | None,
+) -> StatementLambdaElement:
+    """Find the first and last timestamp for the requested statistics."""
+    if metadata_ids is None:
+        return lambda_stmt(
+            lambda: select(
+                func.min(Statistics.start_ts),
+                func.max(Statistics.start_ts),
+            )
+        )
+
+    range_per_id = (
+        select(
+            func.min(Statistics.start_ts).label("first_ts"),
+            func.max(Statistics.start_ts).label("last_ts"),
+        )
+        .where(Statistics.metadata_id.in_(metadata_ids))
+        .group_by(Statistics.metadata_id)
+        .subquery()
+    )
+
+    return lambda_stmt(
+        lambda: select(
+            func.min(range_per_id.c.first_ts),
+            func.max(range_per_id.c.last_ts),
+        )
+    )
+
+
+def _iter_statistics_period_bounds(
+    start_ts: float,
+    end_ts: float,
+    period_start_end: Callable[[float], tuple[float, float]],
+) -> Iterable[tuple[float, float]]:
+    """Yield statistics calendar-period bounds."""
+    while start_ts < end_ts:
+        next_ts = min(period_start_end(start_ts)[1], end_ts)
+        yield start_ts, next_ts
+        start_ts = next_ts
+
+
+def _statistics_periods_per_query(
+    max_bind_vars: int,
+    fixed_binds_per_period: int,
+) -> int:
+    """Return the maximum number of periods per query."""
+    return min(
+        MAX_STATISTICS_PERIODS_PER_QUERY,
+        max_bind_vars // fixed_binds_per_period,
+    )
+
+
+def _statistics_range_exceeds_period_limit(
+    start_ts: float,
+    end_ts: float,
+    period_start_end: Callable[[float], tuple[float, float]],
+    max_periods: int,
+) -> bool:
+    """Return whether the range contains more than max_periods periods."""
+    for index, _ in enumerate(
+        _iter_statistics_period_bounds(start_ts, end_ts, period_start_end),
+        start=1,
+    ):
+        if index > max_periods:
+            return True
+    return False
+
+
+def _clip_bounded_statistics_range(
+    session: Session,
+    start_ts: float,
+    end_ts: float,
+    metadata_ids: list[int] | None,
+    period_start_end: Callable[[float], tuple[float, float]],
+    periods_per_query: int,
+    max_metadata_ids_per_query: int,
+) -> tuple[float, float] | None:
+    """Clip a long bounded request to the available statistics range."""
+    max_periods_without_range_lookup = (
+        periods_per_query * MAX_STATISTICS_PERIOD_QUERY_BATCHES_BEFORE_RANGE_LOOKUP
+    )
+
+    if not _statistics_range_exceeds_period_limit(
+        start_ts,
+        end_ts,
+        period_start_end,
+        max_periods_without_range_lookup,
+    ):
+        return start_ts, end_ts
+
+    first_ts: float | None = None
+    last_ts: float | None = None
+
+    id_chunks = (
+        chunked_or_all(metadata_ids, max_metadata_ids_per_query)
+        if metadata_ids
+        else (None,)
+    )
+
+    for ids in id_chunks:
+        available_range = cast(
+            Sequence[Row],
+            execute_stmt_lambda_element(
+                session,
+                _generate_statistics_start_end_stmt(ids),
+                orm_rows=False,
+            ),
+        )
+        chunk_first_ts, chunk_last_ts = available_range[0]
+
+        if chunk_first_ts is not None:
+            first_ts = (
+                chunk_first_ts if first_ts is None else min(first_ts, chunk_first_ts)
+            )
+
+        if chunk_last_ts is not None:
+            last_ts = chunk_last_ts if last_ts is None else max(last_ts, chunk_last_ts)
+
+    if first_ts is None or last_ts is None:
+        return None
+
+    start_ts = max(
+        start_ts,
+        period_start_end(first_ts)[0],
+    )
+    end_ts = min(
+        end_ts,
+        period_start_end(last_ts)[1],
+    )
+
+    if start_ts >= end_ts:
+        return None
+
+    return start_ts, end_ts
+
+
+def _get_statistics_period_rows(
+    session: Session,
+    start_time: datetime,
+    end_time: datetime,
+    metadata_ids: list[int] | None,
+    period_start_end: Callable[[float], tuple[float, float]],
+    types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
+    max_bind_vars: int,
+    mean_type: StatisticMeanType = StatisticMeanType.NONE,
+) -> list[Row]:
+    """Fetch reduced rows for each statistic and calendar period."""
+    rows: list[Row] = []
+
+    circular_bind_vars = (
+        6 if "mean" in types and mean_type is StatisticMeanType.CIRCULAR else 0
+    )
+    fixed_binds_per_period = 2 + circular_bind_vars
+
+    max_metadata_ids_per_query = min(
+        MAX_IDS_FOR_INDEXED_GROUP_BY,
+        max_bind_vars,
+    )
+
+    id_chunks = (
+        chunked_or_all(metadata_ids, max_metadata_ids_per_query)
+        if metadata_ids
+        else (None,)
+    )
+
+    requested_start_ts = start_time.timestamp()
+
+    periods_per_query = _statistics_periods_per_query(
+        max_bind_vars,
+        fixed_binds_per_period,
+    )
+
+    bounded_range = _clip_bounded_statistics_range(
+        session,
+        requested_start_ts,
+        end_time.timestamp(),
+        metadata_ids,
+        period_start_end,
+        periods_per_query,
+        max_metadata_ids_per_query,
+    )
+
+    if bounded_range is None:
+        return []
+
+    start_ts, end_ts = bounded_range
+
+    for ids in id_chunks:
+        for period_bounds in batched(
+            _iter_statistics_period_bounds(
+                start_ts,
+                end_ts,
+                period_start_end,
+            ),
+            periods_per_query,
+            strict=False,
+        ):
+            stmt = _generate_statistics_period_stmt(
+                ids,
+                period_bounds,
+                types,
+                mean_type,
+            )
+            rows.extend(
+                cast(
+                    Sequence[Row],
+                    execute_stmt_lambda_element(
+                        session,
+                        stmt,
+                        orm_rows=False,
+                    ),
+                )
+            )
+
+    rows.sort(key=itemgetter(0, 1))
+    return rows
 
 
 def _generate_max_mean_min_statistic_in_sub_period_stmt(
@@ -2087,6 +2486,77 @@ def _augment_result_with_change(
             prev_sum = _sum
 
 
+def _get_mixed_mean_statistics_period_result(
+    hass: HomeAssistant,
+    session: Session,
+    start_time: datetime,
+    end_time: datetime,
+    statistic_ids: set[str] | None,
+    metadata: dict[str, tuple[int, StatisticMetaData]],
+    period_start_end: Callable[[float], tuple[float, float]],
+    types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
+    table: type[StatisticsBase],
+    units: dict[str, str] | None,
+) -> dict[str, list[StatisticsRow]]:
+    """Fetch reduced statistics for mixed mean types."""
+    result: dict[str, list[StatisticsRow]] = {}
+
+    # Statistics without a mean can use the cheaper arithmetic query
+    # because the existing reducer ignores their mean value.
+    mean_groups = (
+        (
+            StatisticMeanType.ARITHMETIC,
+            {
+                statistic_id: item
+                for statistic_id, item in metadata.items()
+                if item[1]["mean_type"]
+                in {
+                    StatisticMeanType.ARITHMETIC,
+                    StatisticMeanType.NONE,
+                }
+            },
+        ),
+        (
+            StatisticMeanType.CIRCULAR,
+            {
+                statistic_id: item
+                for statistic_id, item in metadata.items()
+                if item[1]["mean_type"] is StatisticMeanType.CIRCULAR
+            },
+        ),
+    )
+
+    for mean_type, group_metadata in mean_groups:
+        group_stats = _get_statistics_period_rows(
+            session,
+            start_time,
+            end_time,
+            [metadata_id for metadata_id, _ in group_metadata.values()],
+            period_start_end,
+            types,
+            get_instance(hass).max_bind_vars,
+            mean_type,
+        )
+
+        if not group_stats:
+            continue
+
+        result.update(
+            _sorted_statistics_to_dict(
+                hass,
+                group_stats,
+                set(group_metadata) if statistic_ids is not None else None,
+                group_metadata,
+                True,
+                table,
+                units,
+                types,
+            )
+        )
+
+    return result
+
+
 def _statistics_during_period_with_session(
     hass: HomeAssistant,
     session: Session,
@@ -2173,26 +2643,125 @@ def _statistics_during_period_with_session(
     table: type[Statistics | StatisticsShortTerm] = (
         Statistics if period != "5minute" else StatisticsShortTerm
     )
-    stmt = _generate_statistics_during_period_stmt(
-        start_time, end_time, metadata_ids, table, types
+    stats: Sequence[Row]
+
+    # Each optimized query can only use one mean aggregation strategy at a time.
+    mean_types = (
+        {
+            meta["mean_type"]
+            for _, meta in metadata.values()
+            if meta["mean_type"] is not StatisticMeanType.NONE
+        }
+        if "mean" in types
+        else set()
     )
-    stats = cast(
-        Sequence[Row], execute_stmt_lambda_element(session, stmt, orm_rows=False)
+    mean_type = next(iter(mean_types), StatisticMeanType.NONE)
+
+    aggregations = cast(
+        set[AggregationType],
+        types & {"mean", "min", "max"},
     )
 
-    if not stats:
-        return {}
-
-    result = _sorted_statistics_to_dict(
-        hass,
-        stats,
-        statistic_ids,
-        metadata,
-        True,
-        table,
-        units,
-        types,
+    supported_types = {"mean", "min", "max", "sum", "state", "last_reset"}
+    period_query_candidate = (
+        bool(types)
+        and end_time is not None
+        and period in {"day", "week", "month", "year"}
+        and types <= supported_types
+        and ("mean" not in types or mean_type is not StatisticMeanType.NONE)
     )
+
+    requires_pre_aggregation_conversion = (
+        period_query_candidate
+        and bool(aggregations)
+        and any(
+            _requires_pre_aggregation_unit_conversion(
+                hass,
+                statistic_id,
+                meta,
+                units,
+                aggregations,
+            )
+            for statistic_id, (_, meta) in metadata.items()
+        )
+    )
+
+    use_period_query = (
+        period_query_candidate and not requires_pre_aggregation_conversion
+    )
+
+    if use_period_query:
+        bounded_end_time = cast(datetime, end_time)
+
+        factories = {
+            "day": reduce_day_ts_factory,
+            "week": reduce_week_ts_factory,
+            "month": reduce_month_ts_factory,
+            "year": reduce_year_ts_factory,
+        }
+        _, period_start_end = factories[period]()
+
+        if len(mean_types) > 1:
+            result = _get_mixed_mean_statistics_period_result(
+                hass,
+                session,
+                start_time,
+                bounded_end_time,
+                statistic_ids,
+                metadata,
+                period_start_end,
+                types,
+                table,
+                units,
+            )
+        else:
+            stats = _get_statistics_period_rows(
+                session,
+                start_time,
+                bounded_end_time,
+                metadata_ids,
+                period_start_end,
+                types,
+                get_instance(hass).max_bind_vars,
+                mean_type,
+            )
+
+            if not stats:
+                return {}
+
+            result = _sorted_statistics_to_dict(
+                hass,
+                stats,
+                statistic_ids,
+                metadata,
+                True,
+                table,
+                units,
+                types,
+            )
+
+    else:
+        stmt = _generate_statistics_during_period_stmt(
+            start_time, end_time, metadata_ids, table, types
+        )
+        stats = cast(
+            Sequence[Row],
+            execute_stmt_lambda_element(session, stmt, orm_rows=False),
+        )
+
+        if not stats:
+            return {}
+
+        result = _sorted_statistics_to_dict(
+            hass,
+            stats,
+            statistic_ids,
+            metadata,
+            True,
+            table,
+            units,
+            types,
+        )
 
     if period == "day":
         result = _reduce_statistics_per_day(result, types, metadata)

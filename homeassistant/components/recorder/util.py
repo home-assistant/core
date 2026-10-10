@@ -17,7 +17,7 @@ from awesomeversion import (
 )
 import ciso8601
 import probatio
-from sqlalchemy import inspect, text
+from sqlalchemy import Select, inspect, text
 from sqlalchemy.engine import Result, Row
 from sqlalchemy.engine.interfaces import DBAPIConnection
 from sqlalchemy.exc import OperationalError, SQLAlchemyError, StatementError
@@ -187,7 +187,7 @@ def execute(qry: Query) -> list[Row]:
 
 def execute_stmt_lambda_element(
     session: Session,
-    stmt: StatementLambdaElement,
+    stmt: StatementLambdaElement | Select,
     start_time: datetime | None = None,
     end_time: datetime | None = None,
     yield_per: int = DEFAULT_YIELD_STATES_ROWS,

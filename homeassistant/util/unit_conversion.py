@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from functools import lru_cache
 from math import floor, log10
-from typing import override
+from typing import Literal, override
 
 from homeassistant.const import (
     UNIT_NOT_RECOGNIZED_TEMPLATE,
@@ -36,6 +36,8 @@ from homeassistant.const import (
 )
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.deprecation import deprecated_function
+
+type AggregationType = Literal["mean", "min", "max"]
 
 # Distance conversion constants
 _MM_TO_M = 0.001  # 1 mm = 0.001 m
@@ -124,6 +126,48 @@ class BaseUnitConverter:
     def convert(cls, value: float, from_unit: str | None, to_unit: str | None) -> float:
         """Convert one unit of measurement to another."""
         return cls.converter_factory(from_unit, to_unit)(value)
+
+    @classmethod
+    def is_aggregation_preserving(
+        cls,
+        from_unit: str | None,
+        to_unit: str | None,
+        aggregation: AggregationType,
+    ) -> bool:
+        """Return whether conversion after aggregation preserves the aggregate."""
+        if (
+            aggregation not in {"mean", "min", "max"}
+            or from_unit not in cls.VALID_UNITS
+            or to_unit not in cls.VALID_UNITS
+        ):
+            return False
+
+        if from_unit == to_unit:
+            return True
+
+        if cls._are_unit_inverses(from_unit, to_unit):
+            return False
+
+        return cls._is_aggregation_preserving(
+            from_unit,
+            to_unit,
+            aggregation,
+        )
+
+    @classmethod
+    def _is_aggregation_preserving(
+        cls,
+        from_unit: str | None,
+        to_unit: str | None,
+        aggregation: AggregationType,
+    ) -> bool:
+        # Custom conversion factories must explicitly opt in to aggregation.
+        return (
+            cls.converter_factory.__func__  # type: ignore[attr-defined]
+            is BaseUnitConverter.converter_factory.__func__  # type: ignore[attr-defined]
+            and cls.converter_factory_allow_none.__func__  # type: ignore[attr-defined]
+            is BaseUnitConverter.converter_factory_allow_none.__func__  # type: ignore[attr-defined]
+        )
 
     @classmethod
     @lru_cache
@@ -696,6 +740,20 @@ class SpeedConverter(BaseUnitConverter):
     }
 
     @classmethod
+    @override
+    def _is_aggregation_preserving(
+        cls,
+        from_unit: str | None,
+        to_unit: str | None,
+        aggregation: AggregationType,
+    ) -> bool:
+        """Return whether speed conversion preserves the aggregate."""
+        if UnitOfSpeed.BEAUFORT in (from_unit, to_unit):
+            return False
+
+        return True
+
+    @classmethod
     @lru_cache
     @override
     def converter_factory(
@@ -795,6 +853,17 @@ class TemperatureConverter(BaseUnitConverter):
         UnitOfTemperature.FAHRENHEIT: 1.8,
         UnitOfTemperature.KELVIN: 1.0,
     }
+
+    @classmethod
+    @override
+    def _is_aggregation_preserving(
+        cls,
+        from_unit: str | None,
+        to_unit: str | None,
+        aggregation: AggregationType,
+    ) -> bool:
+        """Return whether temperature conversion preserves the aggregate."""
+        return True
 
     @classmethod
     @lru_cache

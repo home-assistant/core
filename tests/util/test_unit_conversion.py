@@ -1,6 +1,8 @@
 """Test Home Assistant unit conversion utility functions."""
 
+from collections.abc import Callable
 import inspect
+from typing import override
 
 import pytest
 
@@ -35,6 +37,7 @@ from homeassistant.const import (
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import unit_conversion
 from homeassistant.util.unit_conversion import (
+    AggregationType,
     ApparentPowerConverter,
     AreaConverter,
     BaseUnitConverter,
@@ -1547,3 +1550,128 @@ def test_temperature_delta_convert(
     """Test conversion to other units."""
     expected = pytest.approx(expected)
     assert TemperatureDeltaConverter.convert(value, from_unit, to_unit) == expected
+
+
+def test_custom_converter_is_not_aggregation_preserving_by_default() -> None:
+    """Test custom conversion math is conservative by default."""
+
+    class CustomConverterFactory(BaseUnitConverter):
+        """Custom converter overriding the standard converter factory."""
+
+        UNIT_CLASS = "custom"
+        VALID_UNITS = {"a", "b"}
+        _UNIT_CONVERSION = {"a": 1.0, "b": 1.0}
+
+        @classmethod
+        @override
+        def converter_factory(
+            cls,
+            from_unit: str | None,
+            to_unit: str | None,
+        ) -> Callable[[float], float]:
+            return lambda value: value
+
+    class CustomConverterFactoryAllowNone(BaseUnitConverter):
+        """Custom converter overriding the nullable converter factory."""
+
+        UNIT_CLASS = "custom"
+        VALID_UNITS = {"a", "b"}
+        _UNIT_CONVERSION = {"a": 1.0, "b": 1.0}
+
+        @classmethod
+        @override
+        def converter_factory_allow_none(
+            cls,
+            from_unit: str | None,
+            to_unit: str | None,
+        ) -> Callable[[float | None], float | None]:
+            return lambda value: value
+
+    assert not CustomConverterFactory.is_aggregation_preserving("a", "b", "mean")
+    assert not CustomConverterFactoryAllowNone.is_aggregation_preserving(
+        "a", "b", "mean"
+    )
+
+
+@pytest.mark.parametrize(
+    ("converter", "from_unit", "to_unit", "preserving_aggregations"),
+    [
+        pytest.param(
+            PowerConverter,
+            UnitOfPower.WATT,
+            UnitOfPower.KILO_WATT,
+            {"mean", "min", "max"},
+            id="ratio",
+        ),
+        pytest.param(
+            PowerConverter,
+            UnitOfPower.WATT,
+            UnitOfPower.WATT,
+            {"mean", "min", "max"},
+            id="same-unit",
+        ),
+        pytest.param(
+            TemperatureConverter,
+            UnitOfTemperature.CELSIUS,
+            UnitOfTemperature.FAHRENHEIT,
+            {"mean", "min", "max"},
+            id="temperature",
+        ),
+        pytest.param(
+            EnergyDistanceConverter,
+            UnitOfEnergyDistance.KILO_WATT_HOUR_PER_100_KM,
+            UnitOfEnergyDistance.WATT_HOUR_PER_KM,
+            {"mean", "min", "max"},
+            id="energy-distance-same-side-ratio",
+        ),
+        pytest.param(
+            EnergyDistanceConverter,
+            UnitOfEnergyDistance.KM_PER_KILO_WATT_HOUR,
+            UnitOfEnergyDistance.MILES_PER_KILO_WATT_HOUR,
+            {"mean", "min", "max"},
+            id="energy-distance-efficiency-ratio",
+        ),
+        pytest.param(
+            EnergyDistanceConverter,
+            UnitOfEnergyDistance.KILO_WATT_HOUR_PER_100_KM,
+            UnitOfEnergyDistance.KM_PER_KILO_WATT_HOUR,
+            set(),
+            id="energy-distance-inverse",
+        ),
+        pytest.param(
+            SpeedConverter,
+            UnitOfSpeed.METERS_PER_SECOND,
+            UnitOfSpeed.KILOMETERS_PER_HOUR,
+            {"mean", "min", "max"},
+            id="speed-ratio",
+        ),
+        pytest.param(
+            SpeedConverter,
+            UnitOfSpeed.METERS_PER_SECOND,
+            UnitOfSpeed.BEAUFORT,
+            set(),
+            id="beaufort",
+        ),
+        pytest.param(
+            PowerConverter,
+            INVALID_SYMBOL,
+            UnitOfPower.WATT,
+            set(),
+            id="invalid-unit",
+        ),
+    ],
+)
+@pytest.mark.parametrize("aggregation", ["mean", "min", "max"])
+def test_is_aggregation_preserving(
+    converter: type[BaseUnitConverter],
+    from_unit: str | None,
+    to_unit: str | None,
+    preserving_aggregations: set[AggregationType],
+    aggregation: AggregationType,
+) -> None:
+    """Test whether unit conversion preserves aggregation."""
+    assert converter.is_aggregation_preserving(
+        from_unit,
+        to_unit,
+        aggregation,
+    ) is (aggregation in preserving_aggregations)
