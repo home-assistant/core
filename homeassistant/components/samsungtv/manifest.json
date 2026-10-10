@@ -36,7 +36,7 @@
   "loggers": ["samsungctl", "samsungtvws"],
   "quality_scale": "gold",
   "requirements": [
-    "getmac==0.9.5",
+    "getmac==0.9.6",
     "samsungctl[websocket]==0.7.1",
     "samsungtvws[async,encrypted]==3.0.6",
     "async-upnp-client==0.48.2"
