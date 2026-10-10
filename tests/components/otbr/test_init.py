@@ -243,6 +243,9 @@ async def test_import_insecure_dataset(
 
 
 @pytest.mark.parametrize(
+    "failing_read", ["get_extended_address", "get_active_dataset_tlvs"]
+)
+@pytest.mark.parametrize(
     "error",
     [
         TimeoutError,
@@ -251,9 +254,9 @@ async def test_import_insecure_dataset(
     ],
 )
 async def test_config_entry_not_ready(
-    hass: HomeAssistant, get_active_dataset_tlvs: AsyncMock, error
+    hass: HomeAssistant, request: pytest.FixtureRequest, failing_read: str, error
 ) -> None:
-    """Test raising ConfigEntryNotReady ."""
+    """Test raising ConfigEntryNotReady, before the dataset lock and under it."""
 
     config_entry = MockConfigEntry(
         data=CONFIG_ENTRY_DATA_MULTIPAN,
@@ -263,7 +266,7 @@ async def test_config_entry_not_ready(
         unique_id=TEST_BORDER_AGENT_EXTENDED_ADDRESS.hex(),
     )
     config_entry.add_to_hass(hass)
-    get_active_dataset_tlvs.side_effect = error
+    request.getfixturevalue(failing_read).side_effect = error
     assert not await hass.config_entries.async_setup(config_entry.entry_id)
 
 
@@ -284,6 +287,44 @@ async def test_border_agent_id_not_supported(
     assert not await hass.config_entries.async_setup(config_entry.entry_id)
     assert config_entry.state is ConfigEntryState.SETUP_ERROR
     assert config_entry.reason == "The OTBR does not support Border Agent ID"
+
+
+@pytest.mark.usefixtures("multiprotocol_addon_manager_mock")
+async def test_setup_waits_for_the_dataset_lock(
+    hass: HomeAssistant, get_active_dataset_tlvs: AsyncMock
+) -> None:
+    """Setup reads the router and stores its dataset under the dataset lock."""
+    config_entry = MockConfigEntry(
+        data=CONFIG_ENTRY_DATA_MULTIPAN,
+        domain=otbr.DOMAIN,
+        options={},
+        title="My OTBR",
+        unique_id=TEST_BORDER_AGENT_EXTENDED_ADDRESS.hex(),
+    )
+    config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.thread.dataset_store.DatasetStore.async_add"
+    ) as mock_add:
+        async with otbr.util.async_get_dataset_lock(hass):
+            task = hass.async_create_task(
+                hass.config_entries.async_setup(config_entry.entry_id)
+            )
+            for _ in range(5):
+                await asyncio.sleep(0)
+            assert not task.done()
+            get_active_dataset_tlvs.assert_not_awaited()
+            mock_add.assert_not_called()
+
+        assert await task
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    mock_add.assert_called_once_with(
+        otbr.DOMAIN,
+        DATASET_CH16.hex(),
+        TEST_BORDER_AGENT_ID.hex(),
+        TEST_BORDER_AGENT_EXTENDED_ADDRESS.hex(),
+    )
 
 
 async def test_config_entry_update(hass: HomeAssistant) -> None:
