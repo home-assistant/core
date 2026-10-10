@@ -1,0 +1,30 @@
+{
+  "domain": "sma_modbus",
+  "name": "SMA Modbus",
+  "codeowners": ["@burmistrzak"],
+  "config_flow": true,
+  "dependencies": ["modbus"],
+  "documentation": "https://www.home-assistant.io/integrations/sma_modbus",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "loggers": ["sma_modbus", "modbus_connection"],
+  "quality_scale": "silver",
+  "requirements": ["sma-modbus==2.1.3"],
+  "zeroconf": [
+    {
+      "name": "website for sma-inverter: sma*",
+      "type": "_http._tcp.local."
+    },
+    {
+      "name": "website for sma-product: sma*",
+      "type": "_http._tcp.local."
+    },
+    {
+      "name": "website on sma*",
+      "properties": {
+        "path": "/legal_notices.txt"
+      },
+      "type": "_http._tcp.local."
+    }
+  ]
+}
