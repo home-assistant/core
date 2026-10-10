@@ -230,3 +230,66 @@ async def test_tts_service_speak_error(
             temperature=RECOMMENDED_TEMPERATURE,
         ),
     )
+
+
+@pytest.mark.usefixtures("mock_init_component")
+@pytest.mark.parametrize(
+    ("model", "sampling"),
+    [
+        ("gemini-2.5-flash-preview-tts", True),
+        ("gemini-3.1-flash-tts-preview", True),
+        ("gemini-3.8-flash-tts", False),
+        ("models/gemini-3.8-flash-lite-tts", False),
+        ("gemini-4-flash-tts-preview", False),
+    ],
+)
+async def test_tts_wire_parameters(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_genai_transport: AsyncMock,
+    model: str,
+    sampling: bool,
+) -> None:
+    """TTS independently omits temperature, without adding thinking or changing voices."""
+    subentry = mock_config_entry.subentries["ulid-tts"]
+    hass.config_entries.async_update_subentry(
+        mock_config_entry, subentry, data={**subentry.data, CONF_CHAT_MODEL: model}
+    )
+    await hass.async_block_till_done()
+    mock_genai_transport.return_value = [
+        {
+            "candidates": [
+                {
+                    "content": {
+                        "role": "model",
+                        "parts": [
+                            {
+                                "inlineData": {
+                                    "data": "YXVkaW8=",
+                                    "mimeType": "audio/L16;rate=24000",
+                                }
+                            }
+                        ],
+                    }
+                }
+            ]
+        }
+    ]
+    entity = hass.data[tts.DOMAIN].get_entity("tts.google_ai_tts")
+    with patch(
+        "homeassistant.components.google_generative_ai_conversation.tts.convert_to_wav",
+        return_value=b"wav",
+    ):
+        assert await entity.async_get_tts_audio(
+            "Hello", "en-US", {tts.ATTR_VOICE: "zephyr"}
+        ) == ("wav", b"wav")
+    config = mock_genai_transport.call_args.kwargs["http_request"].data[
+        "generationConfig"
+    ]
+    assert ("temperature" in config) is sampling
+    assert not {"thinkingConfig", "topP", "topK"}.intersection(config)
+    assert config["responseModalities"] == ["AUDIO"]
+    assert (
+        config["speechConfig"]["voice_config"]["prebuilt_voice_config"]["voice_name"]
+        == "zephyr"
+    )

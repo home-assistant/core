@@ -4,7 +4,13 @@ import datetime
 from unittest.mock import AsyncMock, patch
 
 from freezegun import freeze_time
-from google.genai.types import GenerateContentResponse, ThinkingConfig, ThinkingLevel
+from google.genai import Client
+from google.genai.types import (
+    GenerateContentConfig,
+    GenerateContentResponse,
+    ThinkingConfig,
+    ThinkingLevel,
+)
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -15,8 +21,17 @@ from homeassistant.components.conversation import (
     UserContent,
     trace,
 )
+from homeassistant.components.google_generative_ai_conversation.const import (
+    CONF_CHAT_MODEL,
+    CONF_TEMPERATURE,
+    CONF_THINKING_BUDGET,
+    CONF_THINKING_LEVEL,
+    CONF_TOP_K,
+    CONF_TOP_P,
+)
 from homeassistant.components.google_generative_ai_conversation.entity import (
     ERROR_GETTING_RESPONSE,
+    GoogleGenerativeAILLMBaseEntity,
     _create_thinking_config,
     _escape_decode,
     _format_schema,
@@ -1044,3 +1059,227 @@ async def test_token_stats_reported(
         "cached_input_tokens": 5,
         "output_tokens": 20,
     }
+
+
+@pytest.mark.parametrize("prefix", ["", "models/"])
+@pytest.mark.parametrize(
+    ("model", "sampling"),
+    [
+        ("gemini-2.0-flash", True),
+        ("gemini-2.5-pro", True),
+        ("gemini-3-flash", True),
+        ("gemini-3.1-flash-lite", True),
+        ("gemini-3.1-pro", True),
+        ("gemini-3.5-flash", True),
+        ("gemini-3.5-flash-preview-x", True),
+        ("gemini-3.5-flash-lite", False),
+        ("gemini-3.5-flash-lite-preview-x", False),
+        ("gemini-3.5-flash-liteish", True),
+        ("gemini-robotics-er-1.60-preview", False),
+        ("models/models/gemini-3.8-flash", True),
+        ("gemini-3.5-transcribe", False),
+        ("gemini-3.6-flash", False),
+        ("gemini-3.8-flash", False),
+        ("gemini-3.10-flash", False),
+        ("gemini-4-flash", False),
+        ("gemini-10-pro", False),
+        ("gemini-30-flash", False),
+        ("gemini-flash-latest", False),
+        ("gemini-pro-latest", False),
+        ("gemini-flash-lite-latest", False),
+        ("gemini-unknown-latest", False),
+        ("gemini-nano-banana-2.1", False),
+        ("gemini-robotics-er-2-preview", False),
+        ("gemini-robotics-er-1.6-preview", True),
+        ("gemini-3.1-flash-image", True),
+        ("gemini-3.8-flash-image", False),
+        ("gemini-3foo", False),
+        ("gemini-2.50-flash", True),
+        ("gemma-4-31b-it", True),
+        ("custom-latest", True),
+    ],
+)
+async def test_generation_sampling_request(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_genai_transport: AsyncMock,
+    prefix: str,
+    model: str,
+    sampling: bool,
+) -> None:
+    """Prove field omission through the real SDK converter and request builder."""
+    subentry = mock_config_entry.subentries["ulid-conversation"]
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        subentry,
+        data={
+            CONF_CHAT_MODEL: prefix + model,
+            CONF_TEMPERATURE: 0.2,
+            CONF_TOP_P: 0.7,
+            CONF_TOP_K: 17,
+            CONF_THINKING_BUDGET: 512,
+            CONF_THINKING_LEVEL: "low",
+        },
+    )
+    client = Client(api_key="test-api-key")
+    mock_config_entry.runtime_data = client
+    entity = GoogleGenerativeAILLMBaseEntity(mock_config_entry, subentry)
+    try:
+        await client.aio.models.generate_content(
+            model=prefix + model,
+            contents="Hello",
+            config=entity.create_generate_content_config(),
+        )
+    finally:
+        await client.aio.aclose()
+        client.close()
+    request = mock_genai_transport.call_args.kwargs["http_request"]
+    config = request.data["generationConfig"]
+    assert {
+        key: config[key] for key in ("temperature", "topP", "topK") if key in config
+    } == ({"temperature": 0.2, "topP": 0.7, "topK": 17} if sampling else {})
+    assert config["maxOutputTokens"] == 3000
+    assert len(request.data["safetySettings"]) == 4
+    assert subentry.data[CONF_TEMPERATURE] == 0.2
+
+
+@pytest.mark.parametrize("prefix", ["", "models/"])
+@pytest.mark.parametrize(
+    ("model", "level", "expected"),
+    [
+        ("gemini-3.6-flash", "minimal", ThinkingLevel.MINIMAL),
+        ("gemini-3.5-flash-lite", "minimal", ThinkingLevel.MINIMAL),
+        ("gemini-3.5-flash", "minimal", ThinkingLevel.MINIMAL),
+        ("gemini-3.8-flash", "minimal", None),
+        ("gemini-3.8-flash", "low", ThinkingLevel.LOW),
+        ("gemini-3.8-flash", "medium", ThinkingLevel.MEDIUM),
+        ("gemini-3.8-flash", "high", ThinkingLevel.HIGH),
+        ("gemini-flash-latest", "low", ThinkingLevel.LOW),
+        ("gemini-pro-latest", "medium", ThinkingLevel.MEDIUM),
+        ("gemini-flash-lite-latest", "high", ThinkingLevel.HIGH),
+        ("gemini-flash-lite-latest", "minimal", None),
+        ("gemini-flash-latest", "auto", None),
+        ("gemini-pro-latest", None, None),
+        ("gemini-3.10-flash", "low", ThinkingLevel.LOW),
+        ("gemini-4-flash", "high", ThinkingLevel.HIGH),
+        ("gemini-4-pro", "minimal", None),
+        ("gemini-10-pro", "medium", ThinkingLevel.MEDIUM),
+        ("gemini-30-flash", "low", ThinkingLevel.LOW),
+        ("gemini-3.5-transcribe", "low", ThinkingLevel.LOW),
+    ],
+)
+async def test_generation_thinking_levels(
+    mock_genai_transport: AsyncMock,
+    prefix: str,
+    model: str,
+    level: str | None,
+    expected: ThinkingLevel | None,
+) -> None:
+    """Supported configured levels survive; budgets never leak into level models."""
+    config = _create_thinking_config(prefix + model, 512, level)
+    assert config is not None
+    assert config.include_thoughts is True
+    assert config.thinking_level == expected
+    assert config.thinking_budget is None
+    client = Client(api_key="test-api-key")
+    try:
+        await client.aio.models.generate_content(
+            model=prefix + model,
+            contents="Hello",
+            config=GenerateContentConfig(thinking_config=config),
+        )
+    finally:
+        await client.aio.aclose()
+        client.close()
+    body = mock_genai_transport.call_args.kwargs["http_request"].data[
+        "generationConfig"
+    ]
+    assert body["thinkingConfig"] == config.model_dump(exclude_none=True)
+    assert "thinking_budget" not in body["thinkingConfig"]
+
+
+@pytest.mark.parametrize(
+    "model",
+    [
+        "gemini-3foo",
+        "gemini-2.50-flash",
+        "gemini-4-flash-tts-preview",
+        "gemini-4-flash-image-preview",
+        "gemini-4-live",
+        "gemini-robotics-er-2-preview",
+        "gemini-nano-banana-2.1",
+        "custom-latest",
+    ],
+)
+def test_no_new_specialized_thinking(model: str) -> None:
+    """Do not invent thinking capability for specialized or unknown model names."""
+    assert _create_thinking_config(model, 512, "low") is None
+
+
+@pytest.mark.usefixtures("mock_init_component")
+@pytest.mark.parametrize(
+    "model", ["gemini-3.8-flash", "gemini-flash-latest", "gemini-4-flash"]
+)
+async def test_conversation_wire_tool_continuation(
+    hass: HomeAssistant,
+    mock_config_entry_with_assist: MockConfigEntry,
+    mock_chat_log: MockChatLog,  # noqa: F811
+    mock_genai_transport: AsyncMock,
+    model: str,
+) -> None:
+    """Exercise both streamed HTTP bodies with a real SDK chat and a tool result."""
+    subentry = mock_config_entry_with_assist.subentries["ulid-conversation"]
+    hass.config_entries.async_update_subentry(
+        mock_config_entry_with_assist,
+        subentry,
+        data={**subentry.data, CONF_CHAT_MODEL: model, CONF_THINKING_LEVEL: "low"},
+    )
+    await hass.async_block_till_done()
+    mock_genai_transport.return_value = [
+        {
+            "candidates": [
+                {
+                    "content": {
+                        "role": "model",
+                        "parts": [{"functionCall": {"name": "test_tool", "args": {}}}],
+                    },
+                    "finishReason": "STOP",
+                }
+            ]
+        },
+        {
+            "candidates": [
+                {
+                    "content": {"role": "model", "parts": [{"text": "Done"}]},
+                    "finishReason": "STOP",
+                }
+            ]
+        },
+    ]
+    mock_chat_log.mock_tool_results({"mock-tool-call": {"result": "Done"}})
+    result = await conversation.async_converse(
+        hass,
+        "Call the test tool",
+        mock_chat_log.conversation_id,
+        Context(),
+        agent_id="conversation.google_ai_conversation",
+    )
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
+    assert mock_genai_transport.call_count == 2
+    for call in mock_genai_transport.call_args_list:
+        assert call.kwargs["stream"] is True
+        body = call.kwargs["http_request"].data
+        config = body["generationConfig"]
+        assert not {"temperature", "topP", "topK"}.intersection(config)
+        assert config["thinkingConfig"] == {
+            "include_thoughts": True,
+            "thinking_level": "LOW",
+        }
+        assert config["maxOutputTokens"] == 3000
+        assert body["tools"]
+    assert (
+        "functionResponse"
+        in mock_genai_transport.call_args_list[1]
+        .kwargs["http_request"]
+        .data["contents"][-1]["parts"][0]
+    )

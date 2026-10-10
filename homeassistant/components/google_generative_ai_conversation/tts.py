@@ -25,7 +25,7 @@ from .const import (
     RECOMMENDED_TEMPERATURE,
     RECOMMENDED_TTS_MODEL,
 )
-from .entity import GoogleGenerativeAILLMBaseEntity
+from .entity import GoogleGenerativeAILLMBaseEntity, supports_custom_sampling
 from .helpers import convert_to_wav
 
 
@@ -200,10 +200,12 @@ class GoogleGenerativeAITextToSpeechEntity(
         self, message: str, language: str, options: dict[str, Any]
     ) -> TtsAudioType:
         """Load tts audio file from the engine."""
+        model = self.subentry.data.get(CONF_CHAT_MODEL, RECOMMENDED_TTS_MODEL)
         config = types.GenerateContentConfig()
-        config.temperature = self.subentry.data.get(
-            CONF_TEMPERATURE, RECOMMENDED_TEMPERATURE
-        )
+        if supports_custom_sampling(model):
+            config.temperature = self.subentry.data.get(
+                CONF_TEMPERATURE, RECOMMENDED_TEMPERATURE
+            )
         config.response_modalities = ["AUDIO"]
         config.speech_config = types.SpeechConfig(
             voice_config=types.VoiceConfig(
@@ -240,7 +242,7 @@ class GoogleGenerativeAITextToSpeechEntity(
 
         try:
             response = await self._genai_client.aio.models.generate_content(
-                model=self.subentry.data.get(CONF_CHAT_MODEL, RECOMMENDED_TTS_MODEL),
+                model=model,
                 contents=message,
                 config=config,
             )

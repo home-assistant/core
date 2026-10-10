@@ -9,6 +9,7 @@ import pytest
 from homeassistant.components import stt
 from homeassistant.components.google_generative_ai_conversation.const import (
     CONF_CHAT_MODEL,
+    CONF_THINKING_LEVEL,
     DEFAULT_STT_PROMPT,
     DOMAIN,
     RECOMMENDED_STT_MODEL,
@@ -359,3 +360,53 @@ async def test_stt_uses_default_model(
 
     call_args = mock_genai_client.aio.models.generate_content.call_args
     assert call_args.kwargs["model"] == RECOMMENDED_STT_MODEL
+
+
+@pytest.mark.usefixtures("mock_init_component")
+@pytest.mark.parametrize(
+    ("model", "sampling"),
+    [
+        ("gemini-3.1-flash-lite", True),
+        ("gemini-3.8-flash", False),
+        ("gemini-flash-latest", False),
+        ("gemini-3.5-transcribe", False),
+    ],
+)
+async def test_stt_wire_parameters(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_genai_transport: AsyncMock,
+    model: str,
+    sampling: bool,
+) -> None:
+    """Run a loaded STT entity through real SDK unary request construction."""
+    subentry = mock_config_entry.subentries["ulid-stt"]
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        subentry,
+        data={**subentry.data, CONF_CHAT_MODEL: model, CONF_THINKING_LEVEL: "low"},
+    )
+    await hass.async_block_till_done()
+    entity = hass.data[stt.DOMAIN].get_entity("stt.google_ai_stt")
+    metadata = stt.SpeechMetadata(
+        language="en-US",
+        format=stt.AudioFormats.OGG,
+        codec=stt.AudioCodecs.OPUS,
+        bit_rate=stt.AudioBitRates.BITRATE_16,
+        sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
+        channel=stt.AudioChannels.CHANNEL_MONO,
+    )
+    result = await entity.async_process_audio_stream(
+        metadata, _async_get_audio_stream(b"audio")
+    )
+    assert result.result is stt.SpeechResultState.SUCCESS
+    assert result.text == "Done"
+    body = mock_genai_transport.call_args.kwargs["http_request"].data
+    config = body["generationConfig"]
+    assert {"temperature", "topP", "topK"}.issubset(config) is sampling
+    assert config["thinkingConfig"] == {
+        "include_thoughts": True,
+        "thinking_level": "LOW",
+    }
+    assert "en-US" in body["contents"][0]["parts"][0]["text"]
+    assert body["contents"][0]["parts"][1]["inlineData"]["mime_type"] == "audio/ogg"
