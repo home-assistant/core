@@ -610,6 +610,53 @@ async def test_entity_duplicate_removal(
     assert "Removing entity: switch" not in caplog.text
 
 
+async def test_discovery_hash_cleared_on_add_abort(
+    hass: HomeAssistant,
+    mqtt_mock: MqttMockHAClient,
+    entity_registry: er.EntityRegistry,
+    setup_tasmota,
+) -> None:
+    """Test the discovery hash is cleared when adding the entity is aborted.
+
+    If it leaks, a later discovery message is treated as an update for a
+    non-existent entity and the entity can never be created.
+    """
+    config = copy.deepcopy(DEFAULT_CONFIG)
+    config["rl"][0] = 1
+    mac = config["mac"]
+    discovery_hash = (mac, "switch", "relay", 0)
+
+    # Pin the entity_id via the registry, then occupy it with an unrelated state so
+    # the platform aborts adding the tasmota entity because the id is in use.
+    entity_registry.async_get_or_create(
+        "switch", "tasmota", f"{mac}_switch_relay_0", suggested_object_id="tasmota_test"
+    )
+    hass.states.async_set("switch.tasmota_test", "on")
+
+    async_fire_mqtt_message(
+        hass,
+        f"{DEFAULT_PREFIX}/{mac}/config",
+        json.dumps(config),
+    )
+    await hass.async_block_till_done()
+
+    assert discovery_hash not in hass.data[ALREADY_DISCOVERED]
+
+    # Free the entity_id and re-discover; the entity is created this time
+    hass.states.async_remove("switch.tasmota_test")
+    async_fire_mqtt_message(
+        hass,
+        f"{DEFAULT_PREFIX}/{mac}/config",
+        json.dumps(config),
+    )
+    await hass.async_block_till_done()
+
+    assert discovery_hash in hass.data[ALREADY_DISCOVERED]
+    state = hass.states.get("switch.tasmota_test")
+    assert state is not None
+    assert state.name == "Tasmota Test"
+
+
 async def test_same_topic(
     hass: HomeAssistant,
     mqtt_mock: MqttMockHAClient,
