@@ -5,7 +5,7 @@
       "reauth_unsupported": "Reauthentication is not supported for ventilation units.",
       "unidentified_ventilation_unit": "The ventilation unit at this address does not report its identity, so it can't be confirmed as the configured unit.",
       "wrong_device": "Device ID does not match the existing configuration. Please use the correct device credentials.",
-      "wrong_ventilation_unit": "The ventilation unit at this address is not the one that was configured."
+      "wrong_ventilation_unit": "A different ventilation unit answered at this address."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",

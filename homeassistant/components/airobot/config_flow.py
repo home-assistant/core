@@ -311,13 +311,19 @@ class AirobotConfigFlow(BaseConfigFlow, domain=DOMAIN):
             data = {CONF_HOST: self._discovered_host}
 
             try:
-                await validate_ventilation_input(self.hass, data)
+                identity = await validate_ventilation_input(self.hass, data)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
+                # The IP may have moved to another unit since it was discovered
+                if (
+                    identity is not None
+                    and format_mac(identity.mac_address) != self._discovered_mac
+                ):
+                    return self.async_abort(reason="wrong_ventilation_unit")
                 entry_data: dict[str, Any] = {
                     **data,
                     CONF_DEVICE_TYPE: DEVICE_TYPE_VENTILATION,

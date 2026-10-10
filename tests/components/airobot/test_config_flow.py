@@ -581,6 +581,32 @@ async def test_dhcp_discovery_ventilation_errors(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+async def test_dhcp_discovery_ventilation_wrong_unit(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_vu_client: AsyncMock,
+) -> None:
+    """Test confirming discovery aborts when another unit answers at the IP."""
+    mock_vu_client.async_get_identity.return_value = AirobotIdentity(
+        serial_number="07654321", mac_address="11:22:33:44:55:66"
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_DHCP},
+        data=DhcpServiceInfo(
+            ip="192.168.1.200",
+            macaddress="aabbccddeeff",
+            hostname="airobot-ventilation",
+        ),
+    )
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "wrong_ventilation_unit"
+    assert not hass.config_entries.async_entries(DOMAIN)
+
+
 async def test_dhcp_discovery_ventilation_duplicate(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
