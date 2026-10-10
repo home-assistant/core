@@ -11,6 +11,10 @@ from daikin_onecta.models import Characteristic
 import pytest
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.components.climate import (
+    DOMAIN as CLIMATE_DOMAIN,
+    SERVICE_SET_TEMPERATURE as CLIMATE_SERVICE_SET_TEMPERATURE,
+)
 from homeassistant.components.daikin_onecta.binary_sensor import DaikinBinarySensor
 from homeassistant.components.daikin_onecta.device import DaikinOnectaDevice
 from homeassistant.components.daikin_onecta.fan import DaikinAirPurifier
@@ -831,6 +835,17 @@ async def test_firmware_install_executes_command(
 
     coordinator = config_entry.runtime_data
     coordinator.async_update_listeners()
+    assert hass.states.get(state.entity_id).attributes["in_progress"] is True
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        CLIMATE_SERVICE_SET_TEMPERATURE,
+        {
+            ATTR_ENTITY_ID: "climate.johnny_maaike_room_temperature",
+            ATTR_TEMPERATURE: 25,
+        },
+        blocking=True,
+    )
     assert hass.states.get(state.entity_id).attributes["in_progress"] is True
 
     # Even a fresh poll without status or version evidence may still be stale.
