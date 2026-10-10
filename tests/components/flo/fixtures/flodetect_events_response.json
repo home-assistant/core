@@ -1,0 +1,37 @@
+{
+  "params": {
+    "macAddress": "111111111111",
+    "limit": "20"
+  },
+  "items": [
+    {
+      "macAddress": "111111111111",
+      "events": [
+        {
+          "id": "evt-002",
+          "startAt": "2026-07-12T09:41:10-04:00",
+          "endAt": "2026-07-12T09:48:22-04:00",
+          "totalGal": 14.8,
+          "duration": 432,
+          "macAddress": "111111111111",
+          "predicted": {
+            "id": 101,
+            "displayText": "Shower"
+          }
+        },
+        {
+          "id": "evt-001",
+          "startAt": "2026-07-12T10:12:03-04:00",
+          "endAt": "2026-07-12T10:14:41-04:00",
+          "totalGal": 2.4,
+          "duration": 158,
+          "macAddress": "111111111111",
+          "predicted": {
+            "id": 300,
+            "displayText": "Faucet"
+          }
+        }
+      ]
+    }
+  ]
+}

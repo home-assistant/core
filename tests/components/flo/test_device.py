@@ -33,13 +33,20 @@ async def test_device(
     }
     assert consumption_macs == {"111111111111", "1a2b3c4d5e6f"}
 
+    event_macs = {
+        call[1].query.get("macAddress")
+        for call in aioclient_mock.mock_calls
+        if call[0] == "get" and call[1].path == "/api/v2/flodetect/events"
+    }
+    assert event_macs == {"111111111111"}
+
     call_count = aioclient_mock.call_count
 
     freezer.tick(timedelta(seconds=90))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert aioclient_mock.call_count == call_count + 6
+    assert aioclient_mock.call_count == call_count + 7
 
 
 @pytest.mark.usefixtures("aioclient_mock_fixture")
