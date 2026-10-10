@@ -125,7 +125,6 @@ def exception_handler[_EntityT: HydrawiseEntity, **_P](
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="command_error",
-                translation_placeholders={"error": str(error)},
             ) from error
 
     return handler
