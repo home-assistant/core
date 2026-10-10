@@ -836,8 +836,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/humidifier/ @home-assistant/core @Shulyaka
 /homeassistant/components/humidity/ @home-assistant/core
 /tests/components/humidity/ @home-assistant/core
-/homeassistant/components/hunterdouglas_powerview/ @bdraco @kingy444 @trullock
-/tests/components/hunterdouglas_powerview/ @bdraco @kingy444 @trullock
+/homeassistant/components/hunterdouglas_powerview/ @bdraco @kingy444
+/tests/components/hunterdouglas_powerview/ @bdraco @kingy444
 /homeassistant/components/husqvarna_automower/ @Thomas55555
 /tests/components/husqvarna_automower/ @Thomas55555
 /homeassistant/components/husqvarna_automower_ble/ @alistair23
