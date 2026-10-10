@@ -1,0 +1,41 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The IP address or hostname of your stove."
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "heat_up": {
+        "name": "Heat-up"
+      },
+      "performance": {
+        "name": "Performance"
+      },
+      "phase": {
+        "name": "Phase",
+        "state": {
+          "burning_out": "Burning out",
+          "heating_up": "Heating up",
+          "idle": "[%key:common::state::idle%]",
+          "needs_wood": "Needs wood",
+          "nominal": "Nominal"
+        }
+      }
+    }
+  }
+}

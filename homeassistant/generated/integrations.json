@@ -2889,6 +2889,12 @@
       "integration_type": "virtual",
       "supported_by": "aquacell"
     },
+    "hase_iq": {
+      "name": "Hase iQ",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "hassio": {
       "name": "Home Assistant Supervisor",
       "integration_type": "hub",
