@@ -70,7 +70,9 @@ async def test_speed_operation_fails(hass: HomeAssistant) -> None:
     entity_id = "number.mock_title_effect_speed"
 
     bulb.set_speed.side_effect = WizLightConnectionError("Network is unreachable")
-    with pytest.raises(HomeAssistantError, match="Network is unreachable"):
+    with pytest.raises(
+        HomeAssistantError, match="Error while communicating with the WiZ device"
+    ):
         await hass.services.async_call(
             NUMBER_DOMAIN,
             SERVICE_SET_VALUE,

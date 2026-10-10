@@ -6,7 +6,11 @@ from functools import wraps
 from typing import Any, Concatenate, override
 
 from pywizlight.bulblibrary import BulbType
-from pywizlight.exceptions import WizLightError
+from pywizlight.exceptions import (
+    WizLightConnectionError,
+    WizLightMethodNotFound,
+    WizLightTimeOutError,
+)
 
 from homeassistant.const import ATTR_HW_VERSION, ATTR_MODEL
 from homeassistant.core import callback
@@ -67,11 +71,17 @@ def wiz_exception_handler[_WizEntityT: WizEntity, **_P](
     async def wrapper(self: _WizEntityT, *args: _P.args, **kwargs: _P.kwargs) -> None:
         try:
             await func(self, *args, **kwargs)
-        except WizLightError as err:
+        except WizLightTimeOutError as err:
             raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="communication_error",
-                translation_placeholders={"error": str(err)},
+                translation_domain=DOMAIN, translation_key="timeout"
+            ) from err
+        except WizLightMethodNotFound as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="not_supported"
+            ) from err
+        except WizLightConnectionError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="communication_error"
             ) from err
 
     return wrapper

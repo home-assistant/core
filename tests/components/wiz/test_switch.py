@@ -56,7 +56,9 @@ async def test_switch_operation_fails(hass: HomeAssistant) -> None:
     entity_id = "switch.mock_title"
 
     switch.turn_on.side_effect = WizLightConnectionError("Network is unreachable")
-    with pytest.raises(HomeAssistantError, match="Network is unreachable"):
+    with pytest.raises(
+        HomeAssistantError, match="Error while communicating with the WiZ device"
+    ):
         await hass.services.async_call(
             SWITCH_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id}, blocking=True
         )

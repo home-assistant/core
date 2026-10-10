@@ -90,7 +90,9 @@ async def test_command_fails(hass: HomeAssistant) -> None:
     device, _ = await async_setup_integration(hass, bulb_type=FAKE_DIMMABLE_FAN)
 
     device.fan_turn_on.side_effect = WizLightConnectionError("Network is unreachable")
-    with pytest.raises(HomeAssistantError, match="Network is unreachable"):
+    with pytest.raises(
+        HomeAssistantError, match="Error while communicating with the WiZ device"
+    ):
         await hass.services.async_call(
             FAN_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
         )

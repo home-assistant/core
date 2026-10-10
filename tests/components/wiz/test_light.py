@@ -2,7 +2,11 @@
 
 import pytest
 from pywizlight import PilotBuilder, PilotParser
-from pywizlight.exceptions import WizLightConnectionError, WizLightTimeOutError
+from pywizlight.exceptions import (
+    WizLightConnectionError,
+    WizLightMethodNotFound,
+    WizLightTimeOutError,
+)
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -75,24 +79,29 @@ async def test_light_operation(
     assert hass.states.get(entity_id).state == STATE_ON
 
 
-async def test_light_operation_fails(hass: HomeAssistant) -> None:
-    """Test a light command raises HomeAssistantError when the bulb does not answer."""
+@pytest.mark.parametrize(
+    ("error", "translation_key"),
+    [
+        (WizLightConnectionError("Network is unreachable"), "communication_error"),
+        (WizLightTimeOutError("The request to the bulb timed out"), "timeout"),
+        (WizLightMethodNotFound("Method not found"), "not_supported"),
+    ],
+)
+async def test_light_operation_fails(
+    hass: HomeAssistant, error: Exception, translation_key: str
+) -> None:
+    """Test a light command raises a translated HomeAssistantError on device errors."""
     bulb, _ = await async_setup_integration(hass)
     entity_id = "light.mock_title"
 
-    bulb.turn_on.side_effect = WizLightConnectionError("Network is unreachable")
-    with pytest.raises(HomeAssistantError, match="Network is unreachable"):
-        await hass.services.async_call(
-            LIGHT_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id}, blocking=True
-        )
-
-    bulb.turn_off.side_effect = WizLightTimeOutError(
-        "The request to the bulb timed out"
-    )
-    with pytest.raises(HomeAssistantError, match="timed out"):
-        await hass.services.async_call(
-            LIGHT_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
-        )
+    bulb.turn_on.side_effect = error
+    bulb.turn_off.side_effect = error
+    for service in (SERVICE_TURN_ON, SERVICE_TURN_OFF):
+        with pytest.raises(HomeAssistantError) as exc_info:
+            await hass.services.async_call(
+                LIGHT_DOMAIN, service, {ATTR_ENTITY_ID: entity_id}, blocking=True
+            )
+        assert exc_info.value.translation_key == translation_key
 
 
 async def test_rgbww_light(hass: HomeAssistant) -> None:
