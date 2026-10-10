@@ -4,7 +4,6 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Any, override
 
-from awesomeversion import AwesomeVersion
 from openevsehttp import OpenEVSE
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
@@ -18,7 +17,8 @@ from .helpers import openevse_exception_handler
 # Serialized, so a manual override toggle is done before the next state check
 PARALLEL_UPDATES = 1
 
-OVERRIDE_STATE_MIN_FIRMWARE = AwesomeVersion("4.0.1")
+# Firmware from which the library toggles the override over HTTP, not RAPI
+OVERRIDE_STATE_MIN_FIRMWARE = "4.0.1"
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -33,9 +33,7 @@ class OpenEVSESwitchDescription(SwitchEntityDescription):
 async def _set_manual_override(charger: OpenEVSE, enable: bool) -> None:
     """Toggle the manual override, unless it is already in the requested state."""
     # Older firmware does not report the override state, so it can only toggle
-    if (version := charger.wifi_firmware) is None or AwesomeVersion(
-        version
-    ) < OVERRIDE_STATE_MIN_FIRMWARE:
+    if not charger.version_check(OVERRIDE_STATE_MIN_FIRMWARE):
         await charger.toggle_override()
         return
 
