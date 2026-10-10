@@ -235,10 +235,12 @@ class AirobotConfigFlow(BaseConfigFlow, domain=DOMAIN):
                     and entry.data.get(CONF_HOST) == discovery_info.ip
                 ):
                     if entry.unique_id is None:
-                        self.hass.config_entries.async_update_entry(
+                        # Reload so the entities move to MAC unique IDs now
+                        return self.async_update_reload_and_abort(
                             entry,
                             unique_id=self._discovered_mac,
-                            data={**entry.data, CONF_MAC: self._discovered_mac},
+                            data_updates={CONF_MAC: self._discovered_mac},
+                            reason="already_configured",
                         )
                     return self.async_abort(reason="already_configured")
             return await self.async_step_vu_dhcp_confirm()
