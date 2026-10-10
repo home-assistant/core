@@ -1,6 +1,7 @@
 """Support to set a numeric value from a slider or text box."""
 
 from contextlib import suppress
+from dataclasses import dataclass
 import logging
 from typing import Any, Self, override
 
@@ -16,19 +17,26 @@ from homeassistant.const import (  # noqa: F401
     CONF_UNIT_OF_MEASUREMENT,
     SERVICE_RELOAD,
 )
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import collection, config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
-import homeassistant.helpers.service
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType, VolDictType
 
-from .const import InputNumberEntityStateAttribute
+from .const import (  # noqa: F401
+    ATTR_VALUE,
+    DATA_INPUT_NUMBER,
+    DOMAIN,
+    SERVICE_DECREMENT,
+    SERVICE_INCREMENT,
+    SERVICE_SET_VALUE,
+    InputNumberEntityStateAttribute,
+)
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "input_number"
 
 CONF_INITIAL = "initial"
 CONF_MIN = "min"
@@ -39,14 +47,9 @@ MODE_SLIDER = "slider"
 MODE_BOX = "box"
 
 ATTR_INITIAL = "initial"
-ATTR_VALUE = "value"
 ATTR_MIN = "min"
 ATTR_MAX = "max"
 ATTR_STEP = "step"
-
-SERVICE_SET_VALUE = "set_value"
-SERVICE_INCREMENT = "increment"
-SERVICE_DECREMENT = "decrement"
 
 
 def _cv_input_number(cfg):
@@ -66,7 +69,7 @@ def _cv_input_number(cfg):
 
 
 STORAGE_FIELDS: VolDictType = {
-    probatio.Required(CONF_NAME): probatio.All(str, probatio.Length(min=1)),
+    probatio.Required(CONF_NAME): probatio.All(str, probatio.NonEmpty()),
     probatio.Required(CONF_MIN): probatio.Coerce(float),
     probatio.Required(CONF_MAX): probatio.Coerce(float),
     probatio.Optional(CONF_INITIAL): probatio.Coerce(float),
@@ -104,9 +107,16 @@ CONFIG_SCHEMA = probatio.Schema(
     },
     extra=probatio.ALLOW_EXTRA,
 )
-RELOAD_SERVICE_SCHEMA = probatio.Schema({})
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
+
+
+@dataclass(slots=True)
+class InputNumberData:
+    """Runtime data for the input_number integration."""
+
+    component: EntityComponent[InputNumber]
+    yaml_collection: collection.YamlCollection
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -139,31 +149,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         storage_collection, DOMAIN, DOMAIN, STORAGE_FIELDS, STORAGE_FIELDS
     ).async_setup(hass)
 
-    async def reload_service_handler(service_call: ServiceCall) -> None:
-        """Reload yaml entities."""
-        conf = await component.async_prepare_reload(skip_reset=True)
-        await yaml_collection.async_load(
-            [{CONF_ID: id_, **conf} for id_, conf in conf.get(DOMAIN, {}).items()]
-        )
+    hass.data[DATA_INPUT_NUMBER] = InputNumberData(component, yaml_collection)
 
-    homeassistant.helpers.service.async_register_admin_service(
-        hass,
-        DOMAIN,
-        SERVICE_RELOAD,
-        reload_service_handler,
-        schema=RELOAD_SERVICE_SCHEMA,
-    )
-
-    component.async_register_entity_service(
-        SERVICE_SET_VALUE,
-        {probatio.Required(ATTR_VALUE): probatio.Coerce(float)},
-        "async_set_native_value",
-    )
-
-    component.async_register_entity_service(SERVICE_INCREMENT, None, "async_increment")
-
-    component.async_register_entity_service(SERVICE_DECREMENT, None, "async_decrement")
-
+    async_setup_services(hass)
     return True
 
 

@@ -1,15 +1,11 @@
 """Support for testing internet speed via Fast.com."""
 
-import logging
-
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.start import async_at_started
 
 from .const import PLATFORMS
 from .coordinator import FastdotcomConfigEntry, FastdotcomDataUpdateCoordinator
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: FastdotcomConfigEntry) -> bool:

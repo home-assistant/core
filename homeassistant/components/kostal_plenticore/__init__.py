@@ -6,7 +6,9 @@ from pykoplenti import ApiException
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 
+from .const import DOMAIN
 from .coordinator import Plenticore, PlenticoreConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
@@ -19,7 +21,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: PlenticoreConfigEntry) -
     plenticore = Plenticore(hass, entry)
 
     if not await plenticore.async_setup():
-        return False
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="authentication_failed",
+            translation_placeholders={"host": plenticore.host},
+        )
 
     entry.runtime_data = plenticore
 

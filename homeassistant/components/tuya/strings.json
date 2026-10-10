@@ -5,6 +5,10 @@
       "login_error": "Login error ({code}): {msg}"
     },
     "step": {
+      "reauth_confirm": {
+        "description": "Your Smart Life or Tuya Smart account needs to be reauthenticated.\n\nSelect **Submit** to get a QR code to scan with the app.",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      },
       "reauth_user_code": {
         "data": {
           "user_code": "User code"
@@ -23,6 +27,11 @@
         },
         "description": "Enter your Smart Life or Tuya Smart user code.\n\nYou can find this code in the Smart Life app or Tuya Smart app in **Settings** > **Account and Security** screen, and enter the code shown on the **User Code** field. The user code is case-sensitive, please be sure to enter it exactly as shown in the app."
       }
+    }
+  },
+  "device": {
+    "channel": {
+      "name": "Channel {index}"
     }
   },
   "entity": {
@@ -220,9 +229,6 @@
       "indexed_cook_temperature": {
         "name": "Cooking temperature {index}"
       },
-      "indexed_irrigation_duration": {
-        "name": "Irrigation duration {index}"
-      },
       "indexed_maximum_brightness": {
         "name": "Maximum brightness {index}"
       },
@@ -270,6 +276,9 @@
       },
       "siren_duration": {
         "name": "Siren duration"
+      },
+      "speed": {
+        "name": "[%key:component::sensor::entity_component::speed::name%]"
       },
       "target_dis_closest": {
         "name": "Closest target distance"
@@ -539,6 +548,9 @@
           "interim": "Interim",
           "smart": "Smart"
         }
+      },
+      "pump_mode": {
+        "name": "Mode"
       },
       "quick_heat_temperature": {
         "name": "Quick heat temperature",
@@ -1069,8 +1081,14 @@
           "level_3": "[%key:common::state::full%]"
         }
       },
+      "water_once": {
+        "name": "Session water usage"
+      },
       "water_time": {
         "name": "Water usage duration"
+      },
+      "water_total": {
+        "name": "Total water usage"
       },
       "wind_chill_index_temperature": {
         "name": "Wind chill index"
@@ -1267,9 +1285,6 @@
       }
     },
     "valve": {
-      "indexed_valve": {
-        "name": "Valve {index}"
-      },
       "valve": {
         "name": "Valve"
       }
@@ -1278,6 +1293,9 @@
   "exceptions": {
     "action_dpcode_not_found": {
       "message": "Unable to process action as the device does not provide a corresponding function code (expected one of {expected} in {available})."
+    },
+    "command_rejected": {
+      "message": "The Tuya cloud rejected the command."
     },
     "device_not_found": {
       "message": "Feeder with ID {device_id} could not be found."
@@ -1293,6 +1311,9 @@
     },
     "invalid_meal_plan_data": {
       "message": "Unable to parse meal plan data."
+    },
+    "send_command_failed": {
+      "message": "Failed to send the command to the Tuya cloud."
     }
   },
   "selector": {

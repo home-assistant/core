@@ -17,7 +17,11 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import slugify
@@ -88,9 +92,16 @@ async def async_migrate_entry(hass: HomeAssistant, entry: MastodonConfigEntry) -
                 setup_mastodon,
                 entry,
             )
+        except MastodonUnauthorizedError as ex:
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="auth_failed",
+            ) from ex
         except MastodonError as ex:
-            LOGGER.error("Migration failed with error %s", ex)
-            return False
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="failed_to_connect",
+            ) from ex
 
         hass.config_entries.async_update_entry(
             entry,

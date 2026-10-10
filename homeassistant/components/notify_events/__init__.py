@@ -10,7 +10,11 @@ from homeassistant.helpers.typing import ConfigType
 from .const import DOMAIN
 
 CONFIG_SCHEMA = probatio.Schema(
-    {DOMAIN: probatio.Schema({probatio.Required(CONF_TOKEN): cv.string})},
+    {
+        DOMAIN: probatio.Schema(
+            {probatio.Required(probatio.Secret(CONF_TOKEN)): cv.string}
+        )
+    },
     extra=probatio.ALLOW_EXTRA,
 )
 

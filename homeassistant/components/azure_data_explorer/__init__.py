@@ -78,8 +78,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryError(
             "Could not find Azure Data Explorer database or table"
         ) from exp
-    except KustoAuthenticationError:
-        return False
+    except KustoAuthenticationError as exp:
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="authentication_failed",
+        ) from exp
 
     entry.async_on_unload(adx.async_stop)
     await adx.async_start()

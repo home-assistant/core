@@ -1,21 +1,30 @@
 """Test the YouTube config flow."""
 
+import time
 from unittest.mock import patch
 
 import pytest
 from youtubeaio.types import ForbiddenError
 
 from homeassistant import config_entries
-from homeassistant.components.youtube.const import CONF_CHANNELS, DOMAIN
+from homeassistant.components.youtube.const import (
+    CONF_CHANNEL_ID,
+    CONF_CHANNELS,
+    DOMAIN,
+    SUBENTRY_TYPE_CHANNEL,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.exceptions import OAuth2TokenRequestConnectionError
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from . import MockYouTube
 from .conftest import (
+    CHANNEL_ID,
     CLIENT_ID,
     GOOGLE_AUTH_URI,
     GOOGLE_TOKEN_URI,
+    LINUS_CHANNEL_ID,
     SCOPES,
     TITLE,
     ComponentSetup,
@@ -69,7 +78,7 @@ async def test_full_flow(
         assert result["step_id"] == "channels"
 
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={CONF_CHANNELS: ["UC_x5XG1OV2P6uZZ5FSM9Ttw"]}
+            result["flow_id"], user_input={CONF_CHANNELS: [CHANNEL_ID]}
         )
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
@@ -78,11 +87,19 @@ async def test_full_flow(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TITLE
     assert "result" in result
-    assert result["result"].unique_id == "UC_x5XG1OV2P6uZZ5FSM9Ttw"
-    assert "token" in result["result"].data
-    assert result["result"].data["token"]["access_token"] == "mock-access-token"
-    assert result["result"].data["token"]["refresh_token"] == "mock-refresh-token"
-    assert result["options"] == {CONF_CHANNELS: ["UC_x5XG1OV2P6uZZ5FSM9Ttw"]}
+    entry = result["result"]
+    assert entry.unique_id == CHANNEL_ID
+    assert entry.version == 2
+    assert "token" in entry.data
+    assert entry.data["token"]["access_token"] == "mock-access-token"
+    assert entry.data["token"]["refresh_token"] == "mock-refresh-token"
+    assert entry.options == {}
+    assert len(entry.subentries) == 1
+    subentry = next(iter(entry.subentries.values()))
+    assert subentry.subentry_type == SUBENTRY_TYPE_CHANNEL
+    assert subentry.unique_id == CHANNEL_ID
+    assert subentry.title == "Google for Developers"
+    assert subentry.data == {CONF_CHANNEL_ID: CHANNEL_ID}
 
 
 @pytest.mark.usefixtures("current_request_with_host")
@@ -215,23 +232,27 @@ async def test_flow_without_subscriptions(
         schema = result["data_schema"]
         channels = schema.schema[CONF_CHANNELS].config["options"]
         assert len(channels) == 1
-        assert channels[0]["value"] == "UC_x5XG1OV2P6uZZ5FSM9Ttw"
+        assert channels[0]["value"] == CHANNEL_ID
         assert "(Your Channel)" in channels[0]["label"]
 
         # Test selecting the own channel
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input={CONF_CHANNELS: ["UC_x5XG1OV2P6uZZ5FSM9Ttw"]},
+            user_input={CONF_CHANNELS: [CHANNEL_ID]},
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TITLE
     assert "result" in result
-    assert result["result"].unique_id == "UC_x5XG1OV2P6uZZ5FSM9Ttw"
-    assert "token" in result["result"].data
-    assert result["result"].data["token"]["access_token"] == "mock-access-token"
-    assert result["result"].data["token"]["refresh_token"] == "mock-refresh-token"
-    assert result["options"] == {CONF_CHANNELS: ["UC_x5XG1OV2P6uZZ5FSM9Ttw"]}
+    entry = result["result"]
+    assert entry.unique_id == CHANNEL_ID
+    assert "token" in entry.data
+    assert entry.data["token"]["access_token"] == "mock-access-token"
+    assert entry.data["token"]["refresh_token"] == "mock-refresh-token"
+    assert entry.options == {}
+    assert len(entry.subentries) == 1
+    subentry = next(iter(entry.subentries.values()))
+    assert subentry.unique_id == CHANNEL_ID
 
 
 @pytest.mark.usefixtures("current_request_with_host")
@@ -384,7 +405,7 @@ async def test_reauth(
     assert result["description_placeholders"] == placeholders
     assert len(mock_setup.mock_calls) == call_count
 
-    assert config_entry.unique_id == "UC_x5XG1OV2P6uZZ5FSM9Ttw"
+    assert config_entry.unique_id == CHANNEL_ID
     assert "token" in config_entry.data
     # Verify access token is refreshed
     assert config_entry.data["token"]["access_token"] == access_token
@@ -428,30 +449,70 @@ async def test_flow_exception(
         assert result["reason"] == "unknown"
 
 
-async def test_options_flow(
-    hass: HomeAssistant, setup_integration: ComponentSetup
+@pytest.mark.parametrize(
+    ("exception", "abort_reason", "placeholders"),
+    [
+        (
+            ForbiddenError(
+                "YouTube Data API v3 has not been used in project 0"
+                " before or it is disabled."
+            ),
+            "access_not_configured",
+            {
+                "message": "YouTube Data API v3 has not been used in project 0"
+                " before or it is disabled."
+            },
+        ),
+        (Exception("Some failure"), "unknown", None),
+    ],
+    ids=["forbidden", "unknown"],
+)
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_flow_channel_listing_error(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    exception: Exception,
+    abort_reason: str,
+    placeholders: dict[str, str] | None,
 ) -> None:
-    """Test the full options flow."""
-    await setup_integration()
-    with patch(
-        "homeassistant.components.youtube.config_flow.YouTube",
-        return_value=MockYouTube(hass),
+    """Test the initial flow aborts when listing the channels fails."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": "https://example.com/auth/external/callback",
+        },
+    )
+
+    assert result["url"] == (
+        f"{GOOGLE_AUTH_URI}?response_type=code&client_id={CLIENT_ID}"
+        "&redirect_uri=https://example.com/auth/external/callback"
+        f"&state={state}&scope={'+'.join(SCOPES)}"
+        "&access_type=offline&prompt=consent"
+    )
+
+    client = await hass_client_no_auth()
+    resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
+    assert resp.status == 200
+    assert resp.headers["content-type"] == "text/html; charset=utf-8"
+
+    # The account check succeeds, listing the subscriptions afterwards fails
+    mock = MockYouTube(hass)
+    with (
+        patch("homeassistant.components.youtube.async_setup_entry", return_value=True),
+        patch(
+            "homeassistant.components.youtube.config_flow.YouTube",
+            return_value=mock,
+        ),
+        patch.object(mock, "get_user_subscriptions", side_effect=exception),
     ):
-        entry = hass.config_entries.async_entries(DOMAIN)[0]
-        result = await hass.config_entries.options.async_init(entry.entry_id)
-        await hass.async_block_till_done()
-
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "init"
-
-        result = await hass.config_entries.options.async_configure(
-            result["flow_id"],
-            user_input={CONF_CHANNELS: ["UC_x5XG1OV2P6uZZ5FSM9Ttw"]},
-        )
-        await hass.async_block_till_done()
-
-        assert result["type"] is FlowResultType.CREATE_ENTRY
-        assert result["data"] == {CONF_CHANNELS: ["UC_x5XG1OV2P6uZZ5FSM9Ttw"]}
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+        assert result["type"] is FlowResultType.ABORT
+        assert result["reason"] == abort_reason
+        assert result.get("description_placeholders") == placeholders
 
 
 @pytest.mark.usefixtures("current_request_with_host")
@@ -500,17 +561,14 @@ async def test_own_channel_included(
         schema = result["data_schema"]
         channels = schema.schema[CONF_CHANNELS].config["options"]
         assert any(
-            channel["value"] == "UC_x5XG1OV2P6uZZ5FSM9Ttw"
-            and "(Your Channel)" in channel["label"]
+            channel["value"] == CHANNEL_ID and "(Your Channel)" in channel["label"]
             for channel in channels
         )
 
         # Test selecting both own channel and a subscribed channel
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input={
-                CONF_CHANNELS: ["UC_x5XG1OV2P6uZZ5FSM9Ttw", "UC_x5XG1OV2P6uZZ5FSM9Ttw"]
-            },
+            user_input={CONF_CHANNELS: [CHANNEL_ID, CHANNEL_ID]},
         )
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
@@ -519,45 +577,300 @@ async def test_own_channel_included(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TITLE
     assert "result" in result
-    assert result["result"].unique_id == "UC_x5XG1OV2P6uZZ5FSM9Ttw"
-    assert "token" in result["result"].data
-    assert result["result"].data["token"]["access_token"] == "mock-access-token"
-    assert result["result"].data["token"]["refresh_token"] == "mock-refresh-token"
-    assert result["options"] == {
-        CONF_CHANNELS: ["UC_x5XG1OV2P6uZZ5FSM9Ttw", "UC_x5XG1OV2P6uZZ5FSM9Ttw"]
-    }
+    entry = result["result"]
+    assert entry.unique_id == CHANNEL_ID
+    assert "token" in entry.data
+    assert entry.data["token"]["access_token"] == "mock-access-token"
+    assert entry.data["token"]["refresh_token"] == "mock-refresh-token"
+    assert entry.options == {}
+    # Duplicate selections are deduplicated into a single subentry
+    assert len(entry.subentries) == 1
+    subentry = next(iter(entry.subentries.values()))
+    assert subentry.unique_id == CHANNEL_ID
+    assert subentry.title == "Google for Developers"
 
 
-async def test_options_flow_own_channel(
+async def test_subentry_flow_add_channel(
     hass: HomeAssistant, setup_integration: ComponentSetup
 ) -> None:
-    """Test the options flow includes the user's own channel."""
+    """Test adding a channel subentry."""
     await setup_integration()
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+
+    # Listing shows the Linus channel, the Google channel is already tracked;
+    # the reload after adding needs both channels
+    mock = MockYouTube(
+        hass,
+        channel_fixture="get_channel_2.json",
+        extra_channel_fixtures=["get_channel.json"],
+    )
     with patch(
-        "homeassistant.components.youtube.config_flow.YouTube",
+        "homeassistant.components.youtube.api.YouTube",
+        return_value=mock,
+    ):
+        result = await hass.config_entries.subentries.async_init(
+            (entry.entry_id, SUBENTRY_TYPE_CHANNEL),
+            context={"source": config_entries.SOURCE_USER},
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        # The already configured channel is not selectable
+        options = result["data_schema"].schema[CONF_CHANNEL_ID].config["options"]
+        assert [option["value"] for option in options] == [LINUS_CHANNEL_ID]
+
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], user_input={CONF_CHANNEL_ID: LINUS_CHANNEL_ID}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Linus Tech Tips"
+    assert result["data"] == {CONF_CHANNEL_ID: LINUS_CHANNEL_ID}
+    assert len(entry.subentries) == 2
+    new_subentry = next(
+        subentry
+        for subentry in entry.subentries.values()
+        if subentry.unique_id == LINUS_CHANNEL_ID
+    )
+    assert new_subentry.title == "Linus Tech Tips"
+    assert hass.states.get("sensor.linus_tech_tips_subscribers") is not None
+
+
+async def test_subentry_flow_no_channels_left(
+    hass: HomeAssistant, setup_integration: ComponentSetup
+) -> None:
+    """Test the subentry flow aborts when all channels are already tracked."""
+    await setup_integration()
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+
+    with patch(
+        "homeassistant.components.youtube.api.YouTube",
         return_value=MockYouTube(hass),
     ):
-        entry = hass.config_entries.async_entries(DOMAIN)[0]
-        result = await hass.config_entries.options.async_init(entry.entry_id)
+        result = await hass.config_entries.subentries.async_init(
+            (entry.entry_id, SUBENTRY_TYPE_CHANNEL),
+            context={"source": config_entries.SOURCE_USER},
+        )
         await hass.async_block_till_done()
 
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_subscriptions"
+
+
+async def test_subentry_flow_add_own_channel(
+    hass: HomeAssistant, setup_integration: ComponentSetup
+) -> None:
+    """Test the account's own channel can be added if not tracked yet."""
+    await setup_integration()
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    hass.config_entries.async_remove_subentry(entry, "channel_1")
+    await hass.async_block_till_done()
+    assert not entry.subentries
+
+    with patch(
+        "homeassistant.components.youtube.api.YouTube",
+        return_value=MockYouTube(hass),
+    ):
+        result = await hass.config_entries.subentries.async_init(
+            (entry.entry_id, SUBENTRY_TYPE_CHANNEL),
+            context={"source": config_entries.SOURCE_USER},
+        )
         assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "init"
+        assert result["step_id"] == "user"
 
-        # Verify the form schema contains the user's own channel
-        schema = result["data_schema"]
-        channels = schema.schema[CONF_CHANNELS].config["options"]
-        assert any(
-            channel["value"] == "UC_x5XG1OV2P6uZZ5FSM9Ttw"
-            and "(Your Channel)" in channel["label"]
-            for channel in channels
-        )
+        options = result["data_schema"].schema[CONF_CHANNEL_ID].config["options"]
+        assert [option["value"] for option in options] == [CHANNEL_ID]
 
-        result = await hass.config_entries.options.async_configure(
-            result["flow_id"],
-            user_input={CONF_CHANNELS: ["UC_x5XG1OV2P6uZZ5FSM9Ttw"]},
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], user_input={CONF_CHANNEL_ID: CHANNEL_ID}
         )
         await hass.async_block_till_done()
 
-        assert result["type"] is FlowResultType.CREATE_ENTRY
-        assert result["data"] == {CONF_CHANNELS: ["UC_x5XG1OV2P6uZZ5FSM9Ttw"]}
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Google for Developers"
+    assert len(entry.subentries) == 1
+    subentry = next(iter(entry.subentries.values()))
+    assert subentry.unique_id == CHANNEL_ID
+    assert subentry.title == "Google for Developers"
+    assert hass.states.get("sensor.google_for_developers_subscribers") is not None
+
+
+async def test_subentry_flow_unknown_channel(
+    hass: HomeAssistant, setup_integration: ComponentSetup
+) -> None:
+    """Test the subentry flow aborts when the channel is not available."""
+    await setup_integration()
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    hass.config_entries.async_remove_subentry(entry, "channel_1")
+    await hass.async_block_till_done()
+
+    # The subscription lists the channel, but it cannot be fetched anymore
+    mock = MockYouTube(hass, channel_fixture="get_no_channel.json")
+    with patch(
+        "homeassistant.components.youtube.api.YouTube",
+        return_value=mock,
+    ):
+        result = await hass.config_entries.subentries.async_init(
+            (entry.entry_id, SUBENTRY_TYPE_CHANNEL),
+            context={"source": config_entries.SOURCE_USER},
+        )
+        assert result["type"] is FlowResultType.FORM
+
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], user_input={CONF_CHANNEL_ID: CHANNEL_ID}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unknown_channel"
+    assert not entry.subentries
+    assert entry.state is config_entries.ConfigEntryState.LOADED
+
+
+@pytest.mark.parametrize(
+    ("exception", "abort_reason", "placeholders"),
+    [
+        (
+            ForbiddenError(
+                "YouTube Data API v3 has not been used in project 0"
+                " before or it is disabled."
+            ),
+            "access_not_configured",
+            {
+                "message": "YouTube Data API v3 has not been used in project 0"
+                " before or it is disabled."
+            },
+        ),
+        (Exception("Some failure"), "unknown", None),
+    ],
+    ids=["forbidden", "unknown"],
+)
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_subentry_flow_api_error_listing_channels(
+    hass: HomeAssistant,
+    setup_integration: ComponentSetup,
+    exception: Exception,
+    abort_reason: str,
+    placeholders: dict[str, str] | None,
+) -> None:
+    """Test the subentry flow aborts when listing channels fails."""
+    await setup_integration()
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+
+    mock = MockYouTube(hass)
+    with (
+        patch(
+            "homeassistant.components.youtube.api.YouTube",
+            return_value=mock,
+        ),
+        patch.object(mock, "get_user_channels", side_effect=exception),
+    ):
+        result = await hass.config_entries.subentries.async_init(
+            (entry.entry_id, SUBENTRY_TYPE_CHANNEL),
+            context={"source": config_entries.SOURCE_USER},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == abort_reason
+    assert result.get("description_placeholders") == placeholders
+
+
+@pytest.mark.parametrize(
+    ("exception", "abort_reason", "placeholders"),
+    [
+        (
+            ForbiddenError(
+                "YouTube Data API v3 has not been used in project 0"
+                " before or it is disabled."
+            ),
+            "access_not_configured",
+            {
+                "message": "YouTube Data API v3 has not been used in project 0"
+                " before or it is disabled."
+            },
+        ),
+        (Exception("Some failure"), "unknown", None),
+    ],
+    ids=["forbidden", "unknown"],
+)
+async def test_subentry_flow_api_error_fetching_channel(
+    hass: HomeAssistant,
+    setup_integration: ComponentSetup,
+    exception: Exception,
+    abort_reason: str,
+    placeholders: dict[str, str] | None,
+) -> None:
+    """Test the subentry flow aborts when fetching the selected channel fails."""
+    await setup_integration()
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    hass.config_entries.async_remove_subentry(entry, "channel_1")
+    await hass.async_block_till_done()
+
+    # Listing channels for the form succeeds, only get_channels raises
+    mock = MockYouTube(hass)
+    mock.set_thrown_exception(exception)
+    with patch(
+        "homeassistant.components.youtube.api.YouTube",
+        return_value=mock,
+    ):
+        result = await hass.config_entries.subentries.async_init(
+            (entry.entry_id, SUBENTRY_TYPE_CHANNEL),
+            context={"source": config_entries.SOURCE_USER},
+        )
+        assert result["type"] is FlowResultType.FORM
+
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], user_input={CONF_CHANNEL_ID: CHANNEL_ID}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == abort_reason
+    assert result.get("description_placeholders") == placeholders
+
+
+async def test_subentry_flow_token_refresh_error(
+    hass: HomeAssistant, setup_integration: ComponentSetup
+) -> None:
+    """Test the subentry flow aborts when the token cannot be refreshed."""
+    await setup_integration()
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    hass.config_entries.async_remove_subentry(entry, "channel_1")
+    await hass.async_block_till_done()
+
+    with patch(
+        "homeassistant.components.youtube.api.YouTube",
+        return_value=MockYouTube(hass),
+    ):
+        # Listing channels succeeds with the still valid token
+        result = await hass.config_entries.subentries.async_init(
+            (entry.entry_id, SUBENTRY_TYPE_CHANNEL),
+            context={"source": config_entries.SOURCE_USER},
+        )
+        assert result["type"] is FlowResultType.FORM
+
+        # The token expires before the submission and the refresh fails
+        hass.config_entries.async_update_entry(
+            entry,
+            data={
+                **entry.data,
+                "token": {
+                    **entry.data["token"],
+                    "expires_at": time.time() - 3600,
+                },
+            },
+        )
+        await hass.async_block_till_done()
+        with patch(
+            "homeassistant.components.youtube.OAuth2Session.async_ensure_token_valid",
+            side_effect=OAuth2TokenRequestConnectionError(domain=DOMAIN),
+        ):
+            result = await hass.config_entries.subentries.async_configure(
+                result["flow_id"], user_input={CONF_CHANNEL_ID: CHANNEL_ID}
+            )
+            await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unknown"

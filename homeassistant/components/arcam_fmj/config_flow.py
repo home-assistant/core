@@ -4,8 +4,8 @@ import socket
 from typing import Any, override
 from urllib.parse import urlparse
 
-from arcam.fmj import ConnectionFailed
 from arcam.fmj.client import Client
+from arcam.fmj.errors import ConnectionFailed
 from arcam.fmj.utils import get_uniqueid_from_host, get_uniqueid_from_udn
 import probatio
 

@@ -14,6 +14,7 @@
       "no_wifi_networks": "No Wi-Fi networks found during scan.",
       "reauth_unsuccessful": "Re-authentication was unsuccessful, please remove the integration and set it up again.",
       "unknown": "[%key:common::config_flow::error::unknown%]",
+      "unsupported_device": "{model} is not supported by the Shelly integration because it uses an incompatible protocol.",
       "wifi_provisioned": "Wi-Fi credentials for {ssid} have been provisioned to {name}. The device is connecting to Wi-Fi and will complete setup automatically."
     },
     "error": {
@@ -443,6 +444,9 @@
       "lamp_life": {
         "name": "Lamp life"
       },
+      "last_seen": {
+        "name": "Last seen"
+      },
       "left_slot_level": {
         "name": "Left slot level"
       },
@@ -642,6 +646,9 @@
     },
     "circuit_breaker_remote_disabled": {
       "message": "Circuit breaker for {entity} of {device} is tripped and cannot be turned on remotely"
+    },
+    "custom_integration_entry": {
+      "message": "The config entry {title} probably comes from a custom integration, please remove it if you want to use core Shelly integration"
     },
     "device_communication_action_error": {
       "message": "Device communication error occurred while calling action for {entity} of {device}"

@@ -1,11 +1,10 @@
 """Support for LinkPlay media players."""
-# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 from datetime import timedelta
 import logging
 from typing import TYPE_CHECKING, Any, override
 
-from linkplay.bridge import LinkPlayBridge
+from linkplay.bridge import LinkPlayBridge, LinkPlayPlayer
 from linkplay.consts import EqualizerMode, LoopMode, PlayingMode, PlayingStatus
 from linkplay.controller import LinkPlayController, LinkPlayMultiroom
 from linkplay.exceptions import LinkPlayRequestException
@@ -21,13 +20,13 @@ from homeassistant.components.media_player import (
     RepeatMode,
     async_process_play_media_url,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.dt import utcnow
 
-from . import SHARED_DATA, LinkPlayConfigEntry
-from .const import DOMAIN
+from . import LinkPlayConfigEntry
+from .const import DOMAIN, SHARED_DATA_KEY
 from .entity import LinkPlayBaseEntity, exception_wrap
 
 _LOGGER = logging.getLogger(__name__)
@@ -142,9 +141,23 @@ class LinkPlayMediaPlayerEntity(LinkPlayBaseEntity, MediaPlayerEntity):
     async def async_added_to_hass(self) -> None:
         """Handle common setup when added to hass."""
         await super().async_added_to_hass()
-        self.hass.data[DOMAIN][SHARED_DATA].entity_to_bridge[self.entity_id] = (
-            self._bridge.device.uuid
-        )
+        entity_to_bridge = self.hass.data[SHARED_DATA_KEY].entity_to_bridge
+        entity_to_bridge[self.entity_id] = self._bridge.device.uuid
+
+        @callback
+        def _remove_entity_mapping() -> None:
+            entity_to_bridge.pop(self.entity_id, None)
+
+        self.async_on_remove(_remove_entity_mapping)
+
+    @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Map the new entity_id to the bridge."""
+        entity_to_bridge = self.hass.data[SHARED_DATA_KEY].entity_to_bridge
+        entity_to_bridge.pop(old_entity_id, None)
+        entity_to_bridge[self.entity_id] = self._bridge.device.uuid
+        super().async_entity_id_changed(old_entity_id)
 
     @exception_wrap
     async def async_update(self) -> None:
@@ -189,37 +202,37 @@ class LinkPlayMediaPlayerEntity(LinkPlayBaseEntity, MediaPlayerEntity):
     @override
     async def async_media_pause(self) -> None:
         """Send pause command."""
-        await self._bridge.player.pause()
+        await self._active_player.pause()
 
     @exception_wrap
     @override
     async def async_media_play(self) -> None:
         """Send play command."""
-        await self._bridge.player.resume()
+        await self._active_player.resume()
 
     @exception_wrap
     @override
     async def async_media_stop(self) -> None:
         """Send stop command."""
-        await self._bridge.player.stop()
+        await self._active_player.stop()
 
     @exception_wrap
     @override
     async def async_media_next_track(self) -> None:
         """Send next command."""
-        await self._bridge.player.next()
+        await self._active_player.next()
 
     @exception_wrap
     @override
     async def async_media_previous_track(self) -> None:
         """Send previous command."""
-        await self._bridge.player.previous()
+        await self._active_player.previous()
 
     @exception_wrap
     @override
     async def async_set_repeat(self, repeat: RepeatMode) -> None:
         """Set repeat mode."""
-        await self._bridge.player.set_loop_mode(REPEAT_MAP_INV[repeat])
+        await self._active_player.set_loop_mode(REPEAT_MAP_INV[repeat])
 
     @override
     async def async_browse_media(
@@ -253,13 +266,13 @@ class LinkPlayMediaPlayerEntity(LinkPlayBaseEntity, MediaPlayerEntity):
             media_id = play_item.url
 
         url = async_process_play_media_url(self.hass, media_id)
-        await self._bridge.player.play(url)
+        await self._active_player.play(url)
 
     @exception_wrap
     async def async_play_preset(self, preset_number: int) -> None:
         """Play preset number."""
         try:
-            await self._bridge.player.play_preset(preset_number)
+            await self._active_player.play_preset(preset_number)
         except ValueError as err:
             raise HomeAssistantError(err) from err
 
@@ -267,14 +280,14 @@ class LinkPlayMediaPlayerEntity(LinkPlayBaseEntity, MediaPlayerEntity):
     @override
     async def async_media_seek(self, position: float) -> None:
         """Seek to a position."""
-        await self._bridge.player.seek(round(position))
+        await self._active_player.seek(round(position))
 
     @exception_wrap
     @override
     async def async_join_players(self, group_members: list[str]) -> None:
         """Join `group_members` as a player group with the current player."""
 
-        controller: LinkPlayController = self.hass.data[DOMAIN][SHARED_DATA].controller
+        controller: LinkPlayController = self.hass.data[SHARED_DATA_KEY].controller
         multiroom = self._bridge.multiroom
         if multiroom is None:
             multiroom = LinkPlayMultiroom(self._bridge)
@@ -289,7 +302,7 @@ class LinkPlayMediaPlayerEntity(LinkPlayBaseEntity, MediaPlayerEntity):
     async def _get_linkplay_bridge(self, entity_id: str) -> LinkPlayBridge:
         """Get linkplay bridge from entity_id."""
 
-        shared_data = self.hass.data[DOMAIN][SHARED_DATA]
+        shared_data = self.hass.data[SHARED_DATA_KEY]
         controller = shared_data.controller
         bridge_uuid = shared_data.entity_to_bridge.get(entity_id, None)
         bridge = await controller.find_bridge(bridge_uuid)
@@ -311,7 +324,7 @@ class LinkPlayMediaPlayerEntity(LinkPlayBaseEntity, MediaPlayerEntity):
         if multiroom is None:
             return []
 
-        shared_data = self.hass.data[DOMAIN][SHARED_DATA]
+        shared_data = self.hass.data[SHARED_DATA_KEY]
         leader_id: str | None = None
         followers = []
 
@@ -327,18 +340,31 @@ class LinkPlayMediaPlayerEntity(LinkPlayBaseEntity, MediaPlayerEntity):
         return [leader_id, *followers]
 
     @property
+    def _active_player(self) -> LinkPlayPlayer:
+        """Return the player that holds the active media info.
+
+        A follower in a multiroom group does not expose the media info of the
+        stream it is playing; that info is only available on the group leader.
+        """
+        multiroom = self._bridge.multiroom
+        if multiroom is not None and multiroom.leader is not self._bridge:
+            return multiroom.leader.player
+        return self._bridge.player
+
+    @property
     @override
     def media_image_url(self) -> str | None:
         """Image url of playing media."""
-        if self._bridge.player.status in [PlayingStatus.PLAYING, PlayingStatus.PAUSED]:
-            return str(self._bridge.player.album_art)
+        player = self._active_player
+        if player.status in [PlayingStatus.PLAYING, PlayingStatus.PAUSED]:
+            return str(player.album_art)
         return None
 
     @exception_wrap
     @override
     async def async_unjoin_player(self) -> None:
         """Remove this player from any group."""
-        controller: LinkPlayController = self.hass.data[DOMAIN][SHARED_DATA].controller
+        controller: LinkPlayController = self.hass.data[SHARED_DATA_KEY].controller
 
         multiroom = self._bridge.multiroom
         if multiroom is not None:
@@ -352,24 +378,28 @@ class LinkPlayMediaPlayerEntity(LinkPlayBaseEntity, MediaPlayerEntity):
         self._attr_state = STATE_MAP[self._bridge.player.status]
         self._attr_volume_level = self._bridge.player.volume / 100
         self._attr_is_volume_muted = self._bridge.player.muted
-        self._attr_repeat = REPEAT_MAP[self._bridge.player.loop_mode]
-        self._attr_shuffle = self._bridge.player.loop_mode == LoopMode.RANDOM_PLAYBACK
+        self._attr_repeat = REPEAT_MAP[self._active_player.loop_mode]
+        self._attr_shuffle = self._active_player.loop_mode == LoopMode.RANDOM_PLAYBACK
         self._attr_sound_mode = self._bridge.player.equalizer_mode.value
         self._attr_supported_features = DEFAULT_FEATURES
 
         if self._bridge.player.status == PlayingStatus.PLAYING:
-            if self._bridge.player.total_length != 0:
+            # A follower mirrors the media info from the group leader and routes
+            # its transport controls to the leader, so the seekable features
+            # follow the leader's player as well.
+            player = self._active_player
+            if player.total_length != 0:
                 self._attr_supported_features = (
                     self._attr_supported_features | SEEKABLE_FEATURES
                 )
 
             self._attr_source = SOURCE_MAP.get(self._bridge.player.play_mode, "other")
-            self._attr_media_position = self._bridge.player.current_position_in_seconds
+            self._attr_media_position = player.current_position_in_seconds
             self._attr_media_position_updated_at = utcnow()
-            self._attr_media_duration = self._bridge.player.total_length_in_seconds
-            self._attr_media_artist = self._bridge.player.artist
-            self._attr_media_title = self._bridge.player.title
-            self._attr_media_album_name = self._bridge.player.album
+            self._attr_media_duration = player.total_length_in_seconds
+            self._attr_media_artist = player.artist
+            self._attr_media_title = player.title
+            self._attr_media_album_name = player.album
         elif self._bridge.player.status == PlayingStatus.STOPPED:
             self._attr_media_position = None
             self._attr_media_position_updated_at = None

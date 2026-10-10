@@ -74,8 +74,6 @@ async def test_error_history_ignored(
 ) -> None:
     """Test a stale error in the errors list does not trigger the sensor."""
 
-    # The spa reports "All Clear", but the errors list still holds an entry
-    # that is flagged active.
     spa.get_errors.return_value = [mock_error]
     spa_state.error_code = 0
 
@@ -87,6 +85,25 @@ async def test_error_history_ignored(
     assert state is not None
     assert state.state == STATE_OFF
     assert "error_code" not in state.attributes
+
+
+async def test_error_without_history_entry(
+    spa, spa_state, hass: HomeAssistant, config_entry
+) -> None:
+    """Test the sensor is on, with only the code, when no history entry matches."""
+
+    spa.get_errors.return_value = []
+    spa_state.error_code = 42
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(f"binary_sensor.{spa.brand}_{spa.model}_error")
+    assert state is not None
+    assert state.state == STATE_ON
+    assert state.attributes["error_code"] == 42
+    assert "error_title" not in state.attributes
 
 
 async def test_snooze_reminder(spa, setup_entry, hass: HomeAssistant) -> None:

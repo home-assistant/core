@@ -83,11 +83,29 @@
       "avatar": {
         "name": "Avatar"
       },
+      "box_art": {
+        "name": "Box art"
+      },
+      "branded_key_art": {
+        "name": "Branded key art"
+      },
+      "feature_promotional_square_art": {
+        "name": "Feature promotional square art"
+      },
       "gamerpic": {
         "name": "Gamerpic"
       },
       "now_playing": {
         "name": "[%key:component::xbox::entity::sensor::now_playing::name%]"
+      },
+      "poster": {
+        "name": "Poster"
+      },
+      "super_hero_art": {
+        "name": "Superhero art"
+      },
+      "titled_hero_art": {
+        "name": "Titled hero art"
       }
     },
     "sensor": {
@@ -173,6 +191,18 @@
     },
     "xbox_not_configured": {
       "message": "The Xbox integration is not configured."
+    }
+  },
+  "issues": {
+    "deprecated_entity": {
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "description": "The Xbox entity `{entity}` is no longer functional and will be removed in a future release.\n\nPlease update any automations and scripts that use this entity, then press **Submit** to remove it now and resolve this issue."
+          }
+        }
+      },
+      "title": "The Xbox {name} entity is deprecated"
     }
   }
 }

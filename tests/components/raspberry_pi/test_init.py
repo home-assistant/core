@@ -1,6 +1,6 @@
 """Test the Raspberry Pi integration."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -95,6 +95,56 @@ async def test_setup_entry_wrong_board(hass: HomeAssistant) -> None:
 
     assert len(mock_get_os_info.mock_calls) == 1
     assert len(hass.config_entries.async_entries()) == 0
+
+
+@pytest.mark.parametrize(
+    ("hassio", "board", "reason"),
+    [
+        pytest.param(
+            False,
+            None,
+            "Home Assistant is not running on Home Assistant OS, the Raspberry Pi"
+            " entry will be removed",
+            id="no_hassio",
+        ),
+        pytest.param(
+            True,
+            "generic-x86-64",
+            "Home Assistant is not running on a Raspberry Pi (generic-x86-64), the"
+            " Raspberry Pi entry will be removed",
+            id="wrong_board",
+        ),
+    ],
+)
+async def test_setup_entry_error_reason(
+    hass: HomeAssistant, hassio: bool, board: str | None, reason: str
+) -> None:
+    """Test the setup error reason when the entry is about to be removed."""
+    config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={},
+        title="Raspberry Pi",
+    )
+    config_entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.raspberry_pi.is_hassio",
+            return_value=hassio,
+        ),
+        patch(
+            "homeassistant.components.raspberry_pi.get_os_info",
+            return_value={"board": board},
+        ),
+        patch.object(hass.config_entries, "async_remove", AsyncMock()) as mock_remove,
+    ):
+        assert not await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert config_entry.reason == reason
+    mock_remove.assert_awaited_once_with(config_entry.entry_id)
 
 
 async def test_setup_entry_wait_hassio(hass: HomeAssistant) -> None:
