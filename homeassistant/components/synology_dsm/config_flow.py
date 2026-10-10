@@ -11,7 +11,7 @@ import probatio
 from synology_dsm import SynologyDSM
 from synology_dsm.api.file_station.models import SynoFileSharedFolder
 from synology_dsm.exceptions import (
-    SynologyDSMAPIErrorException,
+    SynologyDSMAPIInsufficientPrivilegeException,
     SynologyDSMException,
     SynologyDSMLogin2SAFailedException,
     SynologyDSMLogin2SAForcedException,
@@ -71,7 +71,6 @@ from .const import (
     DEFAULT_USE_SSL,
     DEFAULT_VERIFY_SSL,
     DOMAIN,
-    ERROR_INSUFFICIENT_PRIVILEGE,
     SYNOLOGY_CONNECTION_EXCEPTIONS,
 )
 from .coordinator import SynologyDSMConfigEntry
@@ -234,12 +233,8 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
         except SynologyDSMRequestException as ex:
             _LOGGER.error(ex)
             errors[CONF_HOST] = "cannot_connect"
-        except SynologyDSMAPIErrorException as ex:
-            if ex.args[0]["code"] == ERROR_INSUFFICIENT_PRIVILEGE:
-                errors["base"] = "insufficient_privilege"
-            else:
-                _LOGGER.error(ex)
-                errors["base"] = "unknown"
+        except SynologyDSMAPIInsufficientPrivilegeException:
+            errors["base"] = "insufficient_privilege"
         except SynologyDSMException as ex:
             _LOGGER.error(ex)
             errors["base"] = "unknown"

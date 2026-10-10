@@ -10,6 +10,7 @@ import pytest
 from synology_dsm.api.file_station.models import SynoFileSharedFolder
 from synology_dsm.exceptions import (
     SynologyDSMAPIErrorException,
+    SynologyDSMAPIInsufficientPrivilegeException,
     SynologyDSMException,
     SynologyDSMLogin2SAFailedException,
     SynologyDSMLogin2SAForcedException,
@@ -670,8 +671,8 @@ async def test_unknown_failed(hass: HomeAssistant, service: MagicMock) -> None:
         ),
         pytest.param(
             "utilisation.update",
-            SynologyDSMAPIErrorException(
-                "SYNO.Core.System.Utilization", 105, "Insufficient user privilege"
+            SynologyDSMAPIInsufficientPrivilegeException(
+                "SYNO.Core.System.Utilization", None
             ),
             {"base": "insufficient_privilege"},
             id="insufficient_privilege",
