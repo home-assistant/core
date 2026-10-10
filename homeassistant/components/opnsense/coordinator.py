@@ -1,5 +1,6 @@
 """Coordinator for OPNsense device tracker updates."""
 
+from dataclasses import dataclass
 import logging
 from typing import override
 
@@ -15,18 +16,28 @@ from aiopnsense import (
     OPNsenseUnknownFirmware,
 )
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import SCAN_INTERVAL
-from .types import DeviceDetails, DeviceDetailsByMAC, OPNsenseConfigEntry
+from .types import DeviceDetails, DeviceDetailsByMAC
 
 _LOGGER = logging.getLogger(__name__)
 
+type OPNsenseConfigEntry = ConfigEntry[OPNsenseRuntimeData]
 
-class OPNsenseDeviceTrackerCoordinator(DataUpdateCoordinator[DeviceDetailsByMAC]):
+
+@dataclass(slots=True)
+class OPNsenseRuntimeData:
+    """Runtime data for OPNsense config entries."""
+
+    coordinator: OPNsenseCoordinator
+
+
+class OPNsenseCoordinator(DataUpdateCoordinator[DeviceDetailsByMAC]):
     """Coordinator for OPNsense device tracker updates."""
 
     def __init__(
@@ -46,7 +57,6 @@ class OPNsenseDeviceTrackerCoordinator(DataUpdateCoordinator[DeviceDetailsByMAC]
         )
         self.client = client
         self.interfaces = interfaces
-        self.tracked_devices: set[str] = set()
 
     def _get_mac_addrs(self, devices: list[DeviceDetails]) -> DeviceDetailsByMAC:
         """Create dict with mac address keys from list of devices."""
