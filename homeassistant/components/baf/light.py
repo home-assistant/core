@@ -25,7 +25,12 @@ async def async_setup_entry(
     """Set up BAF lights."""
     device = entry.runtime_data
     if device.has_light:
-        klass = BAFFanLight if device.has_fan else BAFStandaloneLight
+        klass = (
+            BAFColorTempLight
+            if device.light_warmest_color_temperature
+            and device.light_coolest_color_temperature
+            else BAFBrightnessLight
+        )
         async_add_entities([klass(device)])
 
 
@@ -58,24 +63,26 @@ class BAFLight(BAFEntity, LightEntity):
         self._device.light_mode = OffOnAuto.OFF
 
 
-class BAFFanLight(BAFLight):
-    """Representation of a Big Ass Fans light on a fan."""
+class BAFBrightnessLight(BAFLight):
+    """Representation of a Big Ass Fans light without color temperature."""
 
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
     _attr_color_mode = ColorMode.BRIGHTNESS
 
 
-class BAFStandaloneLight(BAFLight):
-    """Representation of a Big Ass Fans light."""
+class BAFColorTempLight(BAFLight):
+    """Representation of a Big Ass Fans light with color temperature."""
 
     _attr_supported_color_modes = {ColorMode.COLOR_TEMP}
     _attr_color_mode = ColorMode.COLOR_TEMP
 
     def __init__(self, device: Device) -> None:
-        """Init a standalone light."""
+        """Init a light with color temperature."""
         super().__init__(device)
-        self._attr_max_color_temp_kelvin = device.light_warmest_color_temperature
-        self._attr_min_color_temp_kelvin = device.light_coolest_color_temperature
+        warmest = device.light_warmest_color_temperature
+        coolest = device.light_coolest_color_temperature
+        self._attr_min_color_temp_kelvin = min(warmest, coolest)
+        self._attr_max_color_temp_kelvin = max(warmest, coolest)
 
     @callback
     @override
