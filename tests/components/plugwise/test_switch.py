@@ -18,7 +18,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
@@ -263,6 +263,16 @@ async def test_deprecated_dhw_comfort_switch_kept_when_referenced(
         suggested_object_id="opentherm_dhw_cm_switch",
         disabled_by=er.RegistryEntryDisabler.USER,
     )
+    hass.set_state(CoreState.starting)
+    with patch("homeassistant.components.plugwise.PLATFORMS", [SWITCH_DOMAIN]):
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entity_registry.async_get_entity_id(
+        SWITCH_DOMAIN, DOMAIN, DHW_CM_SWITCH_UNIQUE_ID
+    )
+    assert (DOMAIN, DHW_CM_SWITCH_ISSUE_ID) not in issue_registry.issues
+
     assert await async_setup_component(
         hass,
         AUTOMATION_DOMAIN,
@@ -291,10 +301,7 @@ async def test_deprecated_dhw_comfort_switch_kept_when_referenced(
             }
         },
     )
-
-    with patch("homeassistant.components.plugwise.PLATFORMS", [SWITCH_DOMAIN]):
-        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.async_block_till_done()
 
     assert (
         entity_registry.async_get_entity_id(

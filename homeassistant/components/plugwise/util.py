@@ -7,7 +7,8 @@ from plugwise.exceptions import PlugwiseException
 
 from homeassistant.components.automation import automations_with_entity
 from homeassistant.components.script import scripts_with_entity
-from homeassistant.core import HomeAssistant
+from homeassistant.const import EVENT_COMPONENT_LOADED, EVENT_HOMEASSISTANT_STARTED
+from homeassistant.core import CoreState, Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.issue_registry import (
@@ -15,12 +16,15 @@ from homeassistant.helpers.issue_registry import (
     async_create_issue,
     async_delete_issue,
 )
+from homeassistant.helpers.typing import NoEventData
+from homeassistant.setup import ATTR_COMPONENT, EventComponentLoaded
 
 from .const import DOMAIN
 from .entity import PlugwiseEntity
 
 # Version in which deprecated entities will be removed.
 DEPRECATED_REMOVAL_VERSION = "2027.4.0"
+_REFERENCE_COMPONENTS = {"automation", "script"}
 
 
 def deprecate_entity(
@@ -48,6 +52,41 @@ def deprecate_entity(
         async_delete_issue(hass, DOMAIN, issue_id)
         return False
 
+    entity_entry = entity_registry.async_get(entity_id)
+    if entity_entry is None:
+        async_delete_issue(hass, DOMAIN, issue_id)
+        return False
+
+    if hass.state is not CoreState.running:
+        _async_defer_deprecation_check(
+            hass,
+            entity_registry,
+            platform_domain=platform_domain,
+            entity_unique_id=entity_unique_id,
+            issue_id=issue_id,
+            translation_key=translation_key,
+        )
+        return True
+
+    return _async_check_deprecated_entity(
+        hass,
+        entity_registry,
+        entity_id=entity_id,
+        issue_id=issue_id,
+        translation_key=translation_key,
+    )
+
+
+@callback
+def _async_check_deprecated_entity(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    *,
+    entity_id: str,
+    issue_id: str,
+    translation_key: str,
+) -> bool:
+    """Check whether a deprecated entity should remain in the registry."""
     entity_entry = entity_registry.async_get(entity_id)
     if entity_entry is None:
         async_delete_issue(hass, DOMAIN, issue_id)
@@ -106,6 +145,59 @@ def _automations_and_scripts_using_entity(
                 items.append(f"- `{used_entity_id}`")
 
     return items
+
+
+@callback
+def _async_defer_deprecation_check(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    *,
+    platform_domain: str,
+    entity_unique_id: str,
+    issue_id: str,
+    translation_key: str,
+) -> None:
+    """Recheck entity references after automation and script setup."""
+    unsubscribers: list[Callable[[], None]] = []
+    loaded_components: set[str] = set()
+
+    @callback
+    def _async_recheck() -> None:
+        for unsubscribe in unsubscribers:
+            unsubscribe()
+
+        if entity_id := entity_registry.async_get_entity_id(
+            platform_domain, DOMAIN, entity_unique_id
+        ):
+            _async_check_deprecated_entity(
+                hass,
+                entity_registry,
+                entity_id=entity_id,
+                issue_id=issue_id,
+                translation_key=translation_key,
+            )
+        else:
+            async_delete_issue(hass, DOMAIN, issue_id)
+
+    @callback
+    def _async_component_loaded(event: Event[EventComponentLoaded]) -> None:
+        if (component := event.data[ATTR_COMPONENT]) in _REFERENCE_COMPONENTS:
+            loaded_components.add(component)
+            if _REFERENCE_COMPONENTS.issubset(loaded_components):
+                _async_recheck()
+
+    @callback
+    def _async_homeassistant_started(_: Event[NoEventData]) -> None:
+        _async_recheck()
+
+    unsubscribers.append(
+        hass.bus.async_listen(EVENT_COMPONENT_LOADED, _async_component_loaded)
+    )
+    unsubscribers.append(
+        hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STARTED, _async_homeassistant_started
+        )
+    )
 
 
 def plugwise_command[_PlugwiseEntityT: PlugwiseEntity, **_P, _R](
