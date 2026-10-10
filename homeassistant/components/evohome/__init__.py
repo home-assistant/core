@@ -21,7 +21,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.typing import ConfigType
@@ -69,6 +69,9 @@ class EvoData:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Evohome integration."""
+
+    # Remove any (persistent) repair issues for deprecations that have been completed
+    ir.async_delete_issue(hass, DOMAIN, "deprecated_set_system_mode_service")
 
     token_manager = TokenManager(
         hass,

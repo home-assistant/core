@@ -11,9 +11,10 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.evohome.const import DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
-from .conftest import mock_post_request
+from .conftest import mock_post_request, setup_evohome
 
 _MSG_429 = (
     "You have exceeded the server's API rate limit. Wait a while "
@@ -178,3 +179,40 @@ async def test_setup(hass: HomeAssistant, snapshot: SnapshotAssertion) -> None:
     """
 
     assert hass.services.async_services_for_domain(DOMAIN).keys() == snapshot
+
+
+@pytest.mark.parametrize("install", ["default"])
+@pytest.mark.parametrize(
+    "ignore_missing_translations",
+    [
+        [
+            "component.evohome.issues.deprecated_controller_service.title",
+            "component.evohome.issues.deprecated_controller_service.description",
+        ]
+    ],
+)
+async def test_stale_deprecation_issue_removed(
+    hass: HomeAssistant,
+    config: dict[str, str],
+    install: str,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test a persistent repair issue of a completed deprecation is removed."""
+
+    issue_id = "deprecated_set_system_mode_service"
+
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        issue_id,
+        is_fixable=False,
+        is_persistent=True,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_controller_service",
+    )
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
+
+    async for _ in setup_evohome(hass, config, install=install):
+        pass
+
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
