@@ -54,6 +54,14 @@ ac_set_schedules:
       selector:
         object:
 
+charge_get_schedules:
+  fields:
+    vehicle:
+      required: true
+      selector:
+        device:
+          integration: renault
+
 charge_start:
   fields:
     vehicle:
