@@ -10,7 +10,6 @@ from lorawan_connection import (
     EventType,
     Unsubscribe,
     notify,
-    subscribe,
 )
 
 from homeassistant.config_entries import SOURCE_INTEGRATION_DISCOVERY, ConfigEntry
@@ -44,26 +43,6 @@ class ConnectionRegistry:
 
 
 DATA_REGISTRY: HassKey[ConnectionRegistry] = HassKey("lorawan")
-
-
-@callback
-def async_subscribe_connections(
-    hass: HomeAssistant, listener: Callable[[str, Connection | None], None]
-) -> Unsubscribe:
-    """Replay active connections, then report registrations and withdrawals.
-
-    A withdrawn connection is reported as None. The caller owns any device-event
-    subscriptions it creates and removes this listener on unload.
-    """
-    registry = hass.data[DATA_REGISTRY]
-    unsubscribe = subscribe(registry.changed, lambda change: listener(*change))
-    try:
-        for entry_id, registered in tuple(registry.connections.items()):
-            listener(entry_id, registered.connection)
-    except BaseException:
-        unsubscribe()
-        raise
-    return unsubscribe
 
 
 async def async_register_connection(

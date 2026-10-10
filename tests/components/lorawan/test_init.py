@@ -16,10 +16,7 @@ from lorawan_connection import (
 from lorawan_connection.mock import MockConnection
 import pytest
 
-from homeassistant.components.lorawan import (
-    async_register_connection,
-    async_subscribe_connections,
-)
+from homeassistant.components.lorawan import async_register_connection
 from homeassistant.components.lorawan.connection import DATA_REGISTRY
 from homeassistant.config_entries import SOURCE_INTEGRATION_DISCOVERY
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
@@ -33,14 +30,11 @@ from .helpers import DESCRIPTOR, inventory
 from tests.common import MockConfigEntry
 
 
-async def test_subscribe_and_reconnect(
+async def test_registration_and_reconnect(
     hass: HomeAssistant, registered_backend: RegisterBackend
 ) -> None:
-    """Consumers see current connections, withdrawals, and replacement transports."""
+    """The registry tracks active connections, withdrawals, and replacements."""
     first, unregister = await registered_backend("network", [DESCRIPTOR])
-    changed = Mock()
-    unsubscribe = async_subscribe_connections(hass, listener=changed)
-    changed.assert_called_once_with("network", first)
     assert hass.data[DATA_REGISTRY].connections["network"].connection is first
     events = Mock()
     stop_events = await first.async_subscribe(
@@ -54,16 +48,13 @@ async def test_subscribe_and_reconnect(
     )
     assert first.downlinks[queue_id].data == b"command"
     first.disconnect()
-    changed.assert_called_with("network", None)
     assert not hass.data[DATA_REGISTRY].connections
     unregister()
     second, unregister_second = await registered_backend("network", [DESCRIPTOR])
-    changed.assert_called_with("network", second)
+    assert hass.data[DATA_REGISTRY].connections["network"].connection is second
     stop_events()
-    unsubscribe()
-    unsubscribe()
     unregister_second()
-    assert changed.call_count == 3
+    assert not hass.data[DATA_REGISTRY].connections
 
 
 async def test_discovery_replay_and_live_events(
@@ -261,29 +252,14 @@ async def test_disconnect_during_registration(
         unsubscribe()
 
 
-async def test_failed_listener_replay(
-    hass: HomeAssistant, registered_backend: RegisterBackend
-) -> None:
-    """Initial callback errors release the listener before propagating."""
-    await registered_backend("network", [])
-    listener = Mock(side_effect=RuntimeError("observer failed"))
-    with pytest.raises(RuntimeError, match="observer failed"):
-        async_subscribe_connections(hass, listener)
-    await registered_backend("other", [])
-    listener.assert_called_once()
-
-
 async def test_shutdown_releases_subscriptions(
     hass: HomeAssistant, registered_backend: RegisterBackend
 ) -> None:
     """HA shutdown releases discovery without closing provider-owned transports."""
     backend, _ = await registered_backend("network", [DESCRIPTOR])
-    changed = Mock()
-    async_subscribe_connections(hass, changed)
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
     assert not hass.data[DATA_REGISTRY].connections
-    changed.assert_called_with("network", None)
     with patch(
         "homeassistant.components.lorawan.connection.discovery_flow.async_create_flow"
     ) as discover:

@@ -6,12 +6,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_lorawan
 
-from .connection import (
-    DATA_REGISTRY,
-    ConnectionRegistry,
-    async_register_connection,
-    async_subscribe_connections,
-)
+from .connection import DATA_REGISTRY, ConnectionRegistry, async_register_connection
 from .const import DOMAIN
 from .device_manager import DeviceManager, device_identifier
 from .entity import LoRaWANEntity
@@ -20,7 +15,6 @@ __all__ = [
     "DeviceManager",
     "LoRaWANEntity",
     "async_register_connection",
-    "async_subscribe_connections",
     "device_identifier",
 ]
 
