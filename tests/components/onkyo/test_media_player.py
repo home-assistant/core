@@ -261,9 +261,10 @@ async def test_select_hdmi_output(
 
 
 async def test_query_state_task(
-    read_queue: asyncio.Queue, writes: list[Instruction]
+    read_queue: asyncio.Queue, writes: list[Instruction], written: asyncio.Event
 ) -> None:
     """Test query state task."""
+    written.clear()
     read_queue.put_nowait(
         status.Power(
             Code.from_kind_zone(Kind.POWER, Zone.MAIN), None, status.Power.Param.STANDBY
@@ -285,16 +286,17 @@ async def test_query_state_task(
         )
     )
 
-    await asyncio.sleep(0.1)
+    await written.wait()
 
     queries = [w for w in writes if isinstance(w, query.Volume)]
     assert len(queries) == 1
 
 
 async def test_query_av_info_task(
-    read_queue: asyncio.Queue, writes: list[Instruction]
+    read_queue: asyncio.Queue, writes: list[Instruction], written: asyncio.Event
 ) -> None:
     """Test query AV info task."""
+    written.clear()
     read_queue.put_nowait(
         status.InputSource(
             Code.from_kind_zone(Kind.INPUT_SOURCE, Zone.MAIN),
@@ -310,7 +312,7 @@ async def test_query_av_info_task(
         )
     )
 
-    await asyncio.sleep(0.1)
+    await written.wait()
 
     queries = [w for w in writes if isinstance(w, query.AudioInformation)]
     assert len(queries) == 1

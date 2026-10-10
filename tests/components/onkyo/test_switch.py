@@ -171,9 +171,10 @@ async def test_actions(
 
 
 async def test_query_state_task(
-    read_queue: asyncio.Queue, writes: list[Instruction]
+    read_queue: asyncio.Queue, writes: list[Instruction], written: asyncio.Event
 ) -> None:
     """Test query state task."""
+    written.clear()
     read_queue.put_nowait(
         status.Power(
             Code.from_kind_zone(Kind.POWER, Zone.MAIN), None, status.Power.Param.STANDBY
@@ -195,7 +196,7 @@ async def test_query_state_task(
         )
     )
 
-    await asyncio.sleep(0.1)
+    await written.wait()
 
     queries = [w for w in writes if isinstance(w, query.ChannelMuting)]
     assert len(queries) == 1
