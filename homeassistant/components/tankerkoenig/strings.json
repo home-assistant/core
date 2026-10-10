@@ -11,6 +11,7 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_location%]"
     },
     "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "no_stations": "Could not find any station in range."
     },
@@ -177,6 +178,9 @@
     }
   },
   "options": {
+    "abort": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
     "error": {
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
     },
