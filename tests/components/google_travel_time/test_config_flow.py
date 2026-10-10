@@ -318,7 +318,7 @@ async def test_options_flow_traffic_model_error(
     travel_routing_preference: str,
     traffic_model: str,
 ) -> None:
-    """Test options flow."""
+    """Test options flow for traffic model error."""
     result = await hass.config_entries.options.async_init(mock_config.entry_id)
 
     assert result["type"] is FlowResultType.FORM
@@ -335,7 +335,43 @@ async def test_options_flow_traffic_model_error(
             CONF_TRAVEL_ROUTING_PREFERENCE: travel_routing_preference,
         },
     )
+
+    # Verify the expected error, and the data schema contains all expected fields.
+    assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {"base": "traffic_model_not_allowed"}
+    data_schema = result["data_schema"].schema
+    assert set(data_schema) == {
+        CONF_AVOID,
+        CONF_UNITS,
+        CONF_LANGUAGE,
+        CONF_TRANSIT_MODE,
+        CONF_TRANSIT_ROUTING_PREFERENCE,
+        CONF_MODE,
+        CONF_TIME_TYPE,
+        CONF_TIME,
+        CONF_TRAFFIC_MODEL,
+        CONF_TRAVEL_ROUTING_PREFERENCE,
+    }
+
+    # Removing the traffic model allows the user to finish the flow
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_MODE: "driving",
+            CONF_UNITS: UNITS_IMPERIAL,
+            CONF_TIME_TYPE: ARRIVAL_TIME,
+            CONF_TIME: "08:00",
+            CONF_TRAVEL_ROUTING_PREFERENCE: travel_routing_preference,
+        },
+    )
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        CONF_MODE: "driving",
+        CONF_UNITS: UNITS_IMPERIAL,
+        CONF_ARRIVAL_TIME: "08:00",
+        CONF_TRAVEL_ROUTING_PREFERENCE: travel_routing_preference,
+    }
 
 
 @pytest.mark.parametrize(

@@ -121,13 +121,6 @@ class GoogleOptionsFlow(OptionsFlow):
                     CONF_DEPARTURE_TIME, ""
                 )
         else:
-            time_type = user_input.pop(CONF_TIME_TYPE)
-            if time := user_input.pop(CONF_TIME, None):
-                if time_type == ARRIVAL_TIME:
-                    user_input[CONF_ARRIVAL_TIME] = time
-                else:
-                    user_input[CONF_DEPARTURE_TIME] = time
-
             routing_preference = user_input.get(
                 CONF_TRAVEL_ROUTING_PREFERENCE, "traffic_aware_optimal"
             )
@@ -138,6 +131,13 @@ class GoogleOptionsFlow(OptionsFlow):
                 errors["base"] = "traffic_model_not_allowed"
 
             if not errors:
+                time_type = user_input.pop(CONF_TIME_TYPE)
+                if time := user_input.pop(CONF_TIME, None):
+                    if time_type == ARRIVAL_TIME:
+                        user_input[CONF_ARRIVAL_TIME] = time
+                    else:
+                        user_input[CONF_DEPARTURE_TIME] = time
+
                 return self.async_create_entry(
                     title="",
                     data=user_input,
