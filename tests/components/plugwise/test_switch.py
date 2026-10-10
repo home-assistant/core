@@ -247,6 +247,55 @@ async def test_deprecated_dhw_comfort_switch_removed_when_disabled(
 @pytest.mark.parametrize("chosen_env", ["anna_p1"], indirect=True)
 @pytest.mark.parametrize("cooling_present", [True], indirect=True)
 @pytest.mark.usefixtures("mock_smile_anna")
+async def test_deferred_dhw_switch_check_unsubscribed_when_entry_unloads(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test deferred entity checks are cancelled when the config entry unloads."""
+    mock_config_entry.add_to_hass(hass)
+    entity_registry.async_get_or_create(
+        SWITCH_DOMAIN,
+        DOMAIN,
+        DHW_CM_SWITCH_UNIQUE_ID,
+        config_entry=mock_config_entry,
+        suggested_object_id="opentherm_dhw_cm_switch",
+        disabled_by=er.RegistryEntryDisabler.USER,
+    )
+    hass.set_state(CoreState.starting)
+
+    with patch("homeassistant.components.plugwise.PLATFORMS", [SWITCH_DOMAIN]):
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+        assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+
+    assert await async_setup_component(
+        hass,
+        AUTOMATION_DOMAIN,
+        {
+            AUTOMATION_DOMAIN: {
+                "alias": "Unrelated automation",
+                "trigger": {
+                    "platform": "state",
+                    "entity_id": "sensor.unrelated",
+                },
+                "action": [],
+            }
+        },
+    )
+    assert await async_setup_component(
+        hass, SCRIPT_DOMAIN, {SCRIPT_DOMAIN: {"unrelated_script": {"sequence": []}}}
+    )
+    await hass.async_block_till_done()
+
+    assert entity_registry.async_get_entity_id(
+        SWITCH_DOMAIN, DOMAIN, DHW_CM_SWITCH_UNIQUE_ID
+    )
+
+
+@pytest.mark.parametrize("chosen_env", ["anna_p1"], indirect=True)
+@pytest.mark.parametrize("cooling_present", [True], indirect=True)
+@pytest.mark.usefixtures("mock_smile_anna")
 async def test_deprecated_dhw_comfort_switch_kept_when_referenced(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

@@ -79,6 +79,7 @@ async def async_setup_entry(
                     if not deprecate_entity(
                         hass,
                         entity_registry,
+                        async_on_unload=entry.async_on_unload,
                         platform_domain=Platform.SWITCH,
                         entity_unique_id=f"{device_id}-dhw_cm_switch",
                         issue_id=f"deprecated_dhw_cm_switch_{device_id}",

@@ -31,6 +31,7 @@ def deprecate_entity(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     *,
+    async_on_unload: Callable[[Callable[[], None]], None],
     platform_domain: str,
     entity_unique_id: str,
     issue_id: str,
@@ -61,6 +62,7 @@ def deprecate_entity(
         _async_defer_deprecation_check(
             hass,
             entity_registry,
+            async_on_unload=async_on_unload,
             platform_domain=platform_domain,
             entity_unique_id=entity_unique_id,
             issue_id=issue_id,
@@ -152,6 +154,7 @@ def _async_defer_deprecation_check(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     *,
+    async_on_unload: Callable[[Callable[[], None]], None],
     platform_domain: str,
     entity_unique_id: str,
     issue_id: str,
@@ -190,10 +193,24 @@ def _async_defer_deprecation_check(
     def _async_homeassistant_started(_: Event[NoEventData]) -> None:
         _async_recheck()
 
-    unsubscribers.append(
+    @callback
+    def _async_register_unsubscriber(unsubscribe: Callable[[], None]) -> None:
+        is_subscribed = True
+
+        @callback
+        def _async_unsubscribe() -> None:
+            nonlocal is_subscribed
+            if is_subscribed:
+                is_subscribed = False
+                unsubscribe()
+
+        unsubscribers.append(_async_unsubscribe)
+        async_on_unload(_async_unsubscribe)
+
+    _async_register_unsubscriber(
         hass.bus.async_listen(EVENT_COMPONENT_LOADED, _async_component_loaded)
     )
-    unsubscribers.append(
+    _async_register_unsubscriber(
         hass.bus.async_listen_once(
             EVENT_HOMEASSISTANT_STARTED, _async_homeassistant_started
         )
