@@ -928,6 +928,9 @@
     }
   },
   "exceptions": {
+    "account_device": {
+      "message": "Reolink device {host} is set up as an 'account device', which blocks local login. Reset the device and set it up again as a 'local device' following the Reolink instructions: {reolink_account_device_link}, also see the troubleshooting steps: {account_device_link}"
+    },
     "api_error": {
       "message": "The device responded with an error: {err}"
     },

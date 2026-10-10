@@ -38,6 +38,8 @@ from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import (
+    ACCOUNT_DEVICE_HA_URL,
+    ACCOUNT_DEVICE_REOLINK_URL,
     CONF_BC_CONNECT,
     CONF_BC_ONLY,
     CONF_BC_PORT,
@@ -285,12 +287,8 @@ class ReolinkFlowHandler(ConfigFlow, domain=DOMAIN):
                 errors[CONF_PASSWORD] = "invalid_auth"
             except LoginAccountDeviceError:
                 errors["base"] = "account_device"
-                placeholders["account_device_link"] = (
-                    "https://www.home-assistant.io/integrations/reolink/#cant-set-up-the-integration"
-                )
-                placeholders["reolink_account_device_link"] = (
-                    "https://support.reolink.com/articles/61043321354265-Introduction-to-Reolink-Local-Device-and-Account-Device/#h_01KZQW3H9DPM7R1S131Z1K0F1Q"
-                )
+                placeholders["account_device_link"] = ACCOUNT_DEVICE_HA_URL
+                placeholders["reolink_account_device_link"] = ACCOUNT_DEVICE_REOLINK_URL
             except LoginFirmwareError:
                 errors["base"] = "update_needed"
                 placeholders["current_firmware"] = host.api.sw_version
