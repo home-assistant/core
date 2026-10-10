@@ -39,7 +39,9 @@ async def test_set_alarm_away(hass: HomeAssistant) -> None:
     """Test alarm state updates immediately after arming away."""
     with (
         patch("jaraco.abode.event_controller.EventController.add_device_callback"),
-        patch("jaraco.abode.devices.alarm.Alarm.mode", new_callable=PropertyMock) as mock_mode,
+        patch(
+            "jaraco.abode.devices.alarm.Alarm.mode", new_callable=PropertyMock
+        ) as mock_mode,
     ):
         mock_mode.return_value = "standby"
         await setup_platform(hass, ALARM_DOMAIN)
@@ -67,7 +69,9 @@ async def test_set_alarm_home(hass: HomeAssistant) -> None:
     """Test alarm state updates immediately after arming home."""
     with (
         patch("jaraco.abode.event_controller.EventController.add_device_callback"),
-        patch("jaraco.abode.devices.alarm.Alarm.mode", new_callable=PropertyMock) as mock_mode,
+        patch(
+            "jaraco.abode.devices.alarm.Alarm.mode", new_callable=PropertyMock
+        ) as mock_mode,
     ):
         mock_mode.return_value = "standby"
         await setup_platform(hass, ALARM_DOMAIN)
@@ -95,7 +99,9 @@ async def test_set_alarm_standby(hass: HomeAssistant) -> None:
     """Test alarm state updates immediately after disarming."""
     with (
         patch("jaraco.abode.event_controller.EventController.add_device_callback"),
-        patch("jaraco.abode.devices.alarm.Alarm.mode", new_callable=PropertyMock) as mock_mode,
+        patch(
+            "jaraco.abode.devices.alarm.Alarm.mode", new_callable=PropertyMock
+        ) as mock_mode,
     ):
         mock_mode.return_value = "away"
         await setup_platform(hass, ALARM_DOMAIN)
