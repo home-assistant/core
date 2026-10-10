@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 from functools import partial
-from typing import TYPE_CHECKING, Literal, cast, override
+from typing import Literal, cast, override
 
 from aiounifi.interfaces.api_handlers import APIHandler, ItemEvent
 from aiounifi.interfaces.clients import Clients
@@ -22,6 +22,7 @@ from aiounifi.models.client import Client
 from aiounifi.models.device import (
     Device,
     TypedDeviceTemperature,
+    TypedDeviceUplink,
     TypedDeviceUptimeStatsWanMonitor,
 )
 from aiounifi.models.outlet import Outlet
@@ -38,6 +39,7 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     PERCENTAGE,
     EntityCategory,
+    Platform,
     UnitOfDataRate,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
@@ -194,23 +196,23 @@ def async_uptime_value_changed_fn(
 
 
 @callback
-def async_device_outlet_power_supported_fn(hub: UnifiHub, obj_id: str) -> bool:
+def async_device_outlet_power_discovery_fn(hub: UnifiHub, obj_id: str) -> bool:
     """Determine if an outlet has the power property."""
     return hub.api.outlets[obj_id].has_metering is True
 
 
 @callback
-def async_device_outlet_supported_fn(hub: UnifiHub, obj_id: str) -> bool:
+def async_device_outlet_discovery_fn(hub: UnifiHub, obj_id: str) -> bool:
     """Determine if a device supports reading overall power metrics."""
     return hub.api.devices[obj_id].outlet_ac_power_budget is not None
 
 
 @callback
-def async_device_battery_pool_supported_fn(
-    field: str, key: str, hub: UnifiHub, obj_id: str
+def async_device_battery_pool_discovery_fn(
+    field: str, hub: UnifiHub, obj_id: str
 ) -> bool:
-    """Discover reported battery pool fields and retain discovered sensors."""
-    return (key, obj_id) in hub.entity_loader.known_objects or (
+    """Determine if a battery pool field is reported."""
+    return (
         async_device_battery_pool_value_fn(field, hub, hub.api.devices[obj_id])
         is not None
     )
@@ -225,19 +227,48 @@ def async_device_battery_pool_value_fn(
 
 
 @callback
-def async_device_uplink_mac_supported_fn(hub: UnifiHub, obj_id: str) -> bool:
+def async_device_outlet_power_value_fn(
+    hub: UnifiHub, outlet: Outlet
+) -> float | str | None:
+    """Return outlet power only when the relay state is known."""
+    relay_state = cast(bool | None, outlet.raw.get("relay_state"))
+    if relay_state is None:
+        return None
+    return outlet.power if relay_state else "0"
+
+
+@callback
+def async_device_uplink_mac_discovery_fn(hub: UnifiHub, obj_id: str) -> bool:
     """Determine if a device supports reading uplink MAC address."""
-    return "uplink_mac" in hub.api.devices[obj_id].raw.get("uplink", {})
+    return async_device_uplink_mac_value_fn(hub, hub.api.devices[obj_id]) is not None
 
 
-def device_system_stats_supported_fn(
+@callback
+def async_device_uplink_mac_value_fn(hub: UnifiHub, device: Device) -> str | None:
+    """Return the uplink MAC when its telemetry is present."""
+    uplink = cast(TypedDeviceUplink | None, device.raw.get("uplink"))
+    return uplink.get("uplink_mac") if uplink is not None else None
+
+
+def device_system_stats_discovery_fn(
     stat_index: int, hub: UnifiHub, obj_id: str
 ) -> bool:
     """Determine if a device supports reading item at index in system stats."""
     return (
-        "system-stats" in hub.api.devices[obj_id].raw
-        and hub.api.devices[obj_id].system_stats[stat_index] != ""
+        async_device_system_stats_value_fn(stat_index, hub, hub.api.devices[obj_id])
+        is not None
     )
+
+
+@callback
+def async_device_system_stats_value_fn(
+    stat_index: int, hub: UnifiHub, device: Device
+) -> str | None:
+    """Return a reported system statistic, clearing missing readings."""
+    if device.raw.get("system-stats") is None:
+        return None
+    value = device.system_stats[stat_index]
+    return value if value != "" else None
 
 
 @callback
@@ -261,7 +292,7 @@ def async_device_state_value_fn(hub: UnifiHub, device: Device) -> str | None:
 
 
 @callback
-def async_device_wan_latency_supported_fn(
+def async_device_wan_latency_discovery_fn(
     wan: WanName,
     monitor_target: str,
     hub: UnifiHub,
@@ -283,11 +314,7 @@ def async_device_wan_latency_value_fn(
     """Retrieve the monitor target from WAN monitors."""
     target = _device_wan_latency_monitor(wan, monitor_target, device)
 
-    if TYPE_CHECKING:
-        # Checked by async_device_wan_latency_supported_fn
-        assert target
-
-    return target.get("latency_average")
+    return target.get("latency_average") if target is not None else None
 
 
 @callback
@@ -296,8 +323,8 @@ def _device_wan_latency_monitor(
 ) -> TypedDeviceUptimeStatsWanMonitor | None:
     """Return the target of the WAN latency monitor."""
     if device.uptime_stats and (uptime_stats_wan := device.uptime_stats.get(wan)):
-        for monitor in uptime_stats_wan.get("monitors", []):
-            if monitor_target in monitor["target"]:
+        for monitor in uptime_stats_wan.get("monitors") or []:
+            if monitor_target in (monitor.get("target") or ""):
                 return monitor
     return None
 
@@ -321,8 +348,8 @@ def make_wan_latency_sensors() -> tuple[UnifiSensorEntityDescription, ...]:
             available_fn=async_device_available_fn,
             device_info_fn=async_device_device_info_fn,
             object_fn=lambda api, obj_id: api.devices[obj_id],
-            supported_fn=partial(
-                async_device_wan_latency_supported_fn, wan, monitor_target
+            discovery_fn=partial(
+                async_device_wan_latency_discovery_fn, wan, monitor_target
             ),
             translation_placeholders_fn=lambda _: {"target": name, "wan": wan},
             unique_id_fn=lambda hub, obj_id: f"{slugify(name_wan)}_latency-{obj_id}",
@@ -352,18 +379,7 @@ def async_device_temperatures_value_fn(
 
 
 @callback
-def async_device_temperatures_available_fn(
-    temperature_name: str, hub: UnifiHub, obj_id: str
-) -> bool:
-    """Determine if a device temperature has a value."""
-    device = hub.api.devices[obj_id]
-    if not async_device_available_fn(hub, obj_id):
-        return False
-    return _device_temperature(temperature_name, device.temperatures or []) is not None
-
-
-@callback
-def async_device_temperatures_supported_fn(
+def async_device_temperatures_discovery_fn(
     temperature_name: str, hub: UnifiHub, obj_id: str
 ) -> bool:
     """Determine if an device have a temperatures."""
@@ -403,10 +419,10 @@ def make_device_temperatur_sensors() -> tuple[UnifiSensorEntityDescription, ...]
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
             entity_registry_enabled_default=False,
             api_handler_fn=lambda api: api.devices,
-            available_fn=partial(async_device_temperatures_available_fn, name),
+            available_fn=async_device_available_fn,
             device_info_fn=async_device_device_info_fn,
             object_fn=lambda api, obj_id: api.devices[obj_id],
-            supported_fn=partial(async_device_temperatures_supported_fn, name),
+            discovery_fn=partial(async_device_temperatures_discovery_fn, name),
             translation_placeholders_fn=lambda _: {"name": name},
             unique_id_fn=lambda hub, obj_id: f"temperature-{slugify(name)}-{obj_id}",
             value_fn=partial(async_device_temperatures_value_fn, name),
@@ -501,7 +517,10 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         available_fn=async_device_available_fn,
         device_info_fn=async_device_device_info_fn,
         object_fn=lambda api, obj_id: api.ports[obj_id],
-        supported_fn=lambda hub, obj_id: bool(hub.api.ports[obj_id].port_poe),
+        discovery_fn=lambda hub, obj_id: bool(hub.api.ports[obj_id].port_poe),
+        supported_fn=lambda hub, obj_id: (
+            hub.api.ports[obj_id].raw.get("port_poe") is not False
+        ),
         translation_placeholders_fn=lambda port: {"port_name": port.name},
         unique_id_fn=lambda hub, obj_id: f"poe_power-{obj_id}",
         value_fn=lambda _, obj: obj.poe_power if obj.poe_mode != "off" else "0",
@@ -554,10 +573,12 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         available_fn=async_device_available_fn,
         device_info_fn=async_device_device_info_fn,
         object_fn=lambda api, obj_id: api.ports[obj_id],
-        supported_fn=lambda hub, obj_id: hub.api.ports[obj_id].raw.get("speed", 0) > 0,
+        discovery_fn=lambda hub, obj_id: (
+            (hub.api.ports[obj_id].raw.get("speed") or 0) > 0
+        ),
         translation_placeholders_fn=lambda port: {"port_name": port.name},
         unique_id_fn=lambda hub, obj_id: f"port_link_speed-{obj_id}",
-        value_fn=lambda hub, port: port.raw.get("speed", 0),
+        value_fn=lambda hub, port: port.raw.get("speed"),
     ),
     UnifiSensorEntityDescription[Clients, Client](
         key="Client uptime",
@@ -612,10 +633,13 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         device_info_fn=async_device_device_info_fn,
         object_fn=lambda api, obj_id: api.outlets[obj_id],
         should_poll=True,
-        supported_fn=async_device_outlet_power_supported_fn,
+        discovery_fn=async_device_outlet_power_discovery_fn,
+        supported_fn=lambda hub, obj_id: (
+            hub.api.outlets[obj_id].has_metering is not False
+        ),
         translation_placeholders_fn=lambda outlet: {"outlet_name": outlet.name},
         unique_id_fn=lambda hub, obj_id: f"outlet_power-{obj_id}",
-        value_fn=lambda _, obj: obj.power if obj.relay_state else "0",
+        value_fn=async_device_outlet_power_value_fn,
     ),
     UnifiSensorEntityDescription[Devices, Device](
         key="SmartPower AC power budget",
@@ -629,7 +653,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         available_fn=async_device_available_fn,
         device_info_fn=async_device_device_info_fn,
         object_fn=lambda api, obj_id: api.devices[obj_id],
-        supported_fn=async_device_outlet_supported_fn,
+        discovery_fn=async_device_outlet_discovery_fn,
         unique_id_fn=lambda hub, obj_id: f"ac_power_budget-{obj_id}",
         value_fn=lambda hub, device: device.outlet_ac_power_budget,
     ),
@@ -645,7 +669,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         available_fn=async_device_available_fn,
         device_info_fn=async_device_device_info_fn,
         object_fn=lambda api, obj_id: api.devices[obj_id],
-        supported_fn=async_device_outlet_supported_fn,
+        discovery_fn=async_device_outlet_discovery_fn,
         unique_id_fn=lambda hub, obj_id: f"ac_power_conumption-{obj_id}",
         value_fn=lambda hub, device: device.outlet_ac_power_consumption,
     ),
@@ -659,9 +683,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         available_fn=async_device_available_fn,
         device_info_fn=async_device_device_info_fn,
         object_fn=lambda api, obj_id: api.devices[obj_id],
-        supported_fn=partial(
-            async_device_battery_pool_supported_fn, "batteryLevel", "UPS battery level"
-        ),
+        discovery_fn=partial(async_device_battery_pool_discovery_fn, "batteryLevel"),
         unique_id_fn=lambda hub, obj_id: f"ups_battery_level-{obj_id}",
         value_fn=partial(async_device_battery_pool_value_fn, "batteryLevel"),
     ),
@@ -675,11 +697,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         available_fn=async_device_available_fn,
         device_info_fn=async_device_device_info_fn,
         object_fn=lambda api, obj_id: api.devices[obj_id],
-        supported_fn=partial(
-            async_device_battery_pool_supported_fn,
-            "timeToRemain",
-            "UPS battery runtime",
-        ),
+        discovery_fn=partial(async_device_battery_pool_discovery_fn, "timeToRemain"),
         unique_id_fn=lambda hub, obj_id: f"ups_battery_runtime-{obj_id}",
         value_fn=partial(async_device_battery_pool_value_fn, "timeToRemain"),
     ),
@@ -694,10 +712,9 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         available_fn=async_device_available_fn,
         device_info_fn=async_device_device_info_fn,
         object_fn=lambda api, obj_id: api.devices[obj_id],
-        supported_fn=partial(
-            async_device_battery_pool_supported_fn,
+        discovery_fn=partial(
+            async_device_battery_pool_discovery_fn,
             "device_total_power_output",
-            "UPS output power",
         ),
         unique_id_fn=lambda hub, obj_id: f"ups_output_power-{obj_id}",
         value_fn=partial(
@@ -715,10 +732,9 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         available_fn=async_device_available_fn,
         device_info_fn=async_device_device_info_fn,
         object_fn=lambda api, obj_id: api.devices[obj_id],
-        supported_fn=partial(
-            async_device_battery_pool_supported_fn,
+        discovery_fn=partial(
+            async_device_battery_pool_discovery_fn,
             "device_output_current",
-            "UPS output current",
         ),
         unique_id_fn=lambda hub, obj_id: f"ups_output_current-{obj_id}",
         value_fn=partial(async_device_battery_pool_value_fn, "device_output_current"),
@@ -734,10 +750,9 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         available_fn=async_device_available_fn,
         device_info_fn=async_device_device_info_fn,
         object_fn=lambda api, obj_id: api.devices[obj_id],
-        supported_fn=partial(
-            async_device_battery_pool_supported_fn,
+        discovery_fn=partial(
+            async_device_battery_pool_discovery_fn,
             "device_output_voltage",
-            "UPS output voltage",
         ),
         unique_id_fn=lambda hub, obj_id: f"ups_output_voltage-{obj_id}",
         value_fn=partial(async_device_battery_pool_value_fn, "device_output_voltage"),
@@ -753,10 +768,9 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         available_fn=async_device_available_fn,
         device_info_fn=async_device_device_info_fn,
         object_fn=lambda api, obj_id: api.devices[obj_id],
-        supported_fn=partial(
-            async_device_battery_pool_supported_fn,
+        discovery_fn=partial(
+            async_device_battery_pool_discovery_fn,
             "device_input_voltage",
-            "UPS input voltage",
         ),
         unique_id_fn=lambda hub, obj_id: f"ups_input_voltage-{obj_id}",
         value_fn=partial(async_device_battery_pool_value_fn, "device_input_voltage"),
@@ -772,10 +786,9 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         available_fn=async_device_available_fn,
         device_info_fn=async_device_device_info_fn,
         object_fn=lambda api, obj_id: api.devices[obj_id],
-        supported_fn=partial(
-            async_device_battery_pool_supported_fn,
+        discovery_fn=partial(
+            async_device_battery_pool_discovery_fn,
             "device_bypass_voltage",
-            "UPS bypass voltage",
         ),
         unique_id_fn=lambda hub, obj_id: f"ups_bypass_voltage-{obj_id}",
         value_fn=partial(async_device_battery_pool_value_fn, "device_bypass_voltage"),
@@ -790,10 +803,9 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         available_fn=async_device_available_fn,
         device_info_fn=async_device_device_info_fn,
         object_fn=lambda api, obj_id: api.devices[obj_id],
-        supported_fn=partial(
-            async_device_battery_pool_supported_fn,
+        discovery_fn=partial(
+            async_device_battery_pool_discovery_fn,
             "device_total_power_factor",
-            "UPS output power factor",
         ),
         unique_id_fn=lambda hub, obj_id: f"ups_output_power_factor-{obj_id}",
         value_fn=partial(
@@ -822,7 +834,10 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         available_fn=async_device_available_fn,
         device_info_fn=async_device_device_info_fn,
         object_fn=lambda api, obj_id: api.devices[obj_id],
-        supported_fn=lambda hub, obj_id: hub.api.devices[obj_id].has_temperature,
+        discovery_fn=lambda hub, obj_id: hub.api.devices[obj_id].has_temperature,
+        supported_fn=lambda hub, obj_id: (
+            hub.api.devices[obj_id].raw.get("has_temperature") is not False
+        ),
         unique_id_fn=lambda hub, obj_id: f"device_temperature-{obj_id}",
         value_fn=lambda hub, device: device.general_temperature,
     ),
@@ -835,8 +850,8 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         device_info_fn=async_device_device_info_fn,
         object_fn=lambda api, obj_id: api.devices[obj_id],
         unique_id_fn=lambda hub, obj_id: f"device_uplink_mac-{obj_id}",
-        supported_fn=async_device_uplink_mac_supported_fn,
-        value_fn=lambda hub, device: device.raw.get("uplink", {}).get("uplink_mac"),
+        discovery_fn=async_device_uplink_mac_discovery_fn,
+        value_fn=async_device_uplink_mac_value_fn,
         is_connected_fn=lambda hub, obj_id: hub.api.devices[obj_id].state == 1,
     ),
     UnifiSensorEntityDescription[Devices, Device](
@@ -862,9 +877,9 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         available_fn=async_device_available_fn,
         device_info_fn=async_device_device_info_fn,
         object_fn=lambda api, obj_id: api.devices[obj_id],
-        supported_fn=partial(device_system_stats_supported_fn, 0),
+        discovery_fn=partial(device_system_stats_discovery_fn, 0),
         unique_id_fn=lambda hub, obj_id: f"cpu_utilization-{obj_id}",
-        value_fn=lambda hub, device: device.system_stats[0],
+        value_fn=partial(async_device_system_stats_value_fn, 0),
     ),
     UnifiSensorEntityDescription[Devices, Device](
         key="Device memory utilization",
@@ -876,9 +891,9 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         available_fn=async_device_available_fn,
         device_info_fn=async_device_device_info_fn,
         object_fn=lambda api, obj_id: api.devices[obj_id],
-        supported_fn=partial(device_system_stats_supported_fn, 1),
+        discovery_fn=partial(device_system_stats_discovery_fn, 1),
         unique_id_fn=lambda hub, obj_id: f"memory_utilization-{obj_id}",
-        value_fn=lambda hub, device: device.system_stats[1],
+        value_fn=partial(async_device_system_stats_value_fn, 1),
     ),
 )
 
@@ -892,7 +907,10 @@ async def async_setup_entry(
 ) -> None:
     """Set up sensors for UniFi Network integration."""
     config_entry.runtime_data.entity_loader.register_platform(
-        async_add_entities, UnifiSensorEntity, ENTITY_DESCRIPTIONS
+        async_add_entities,
+        UnifiSensorEntity,
+        ENTITY_DESCRIPTIONS,
+        domain=Platform.SENSOR,
     )
 
 
