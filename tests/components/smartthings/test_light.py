@@ -565,6 +565,84 @@ async def test_lamp_without_switch(
     )
 
 
+def connect_cooktop_hood(devices: AsyncMock) -> None:
+    """Set the hood of the cooktop fixture as connected with an enabled lamp."""
+    set_attribute_value(
+        devices,
+        Capability.SAMSUNG_CE_CONNECTION_STATE,
+        Attribute.CONNECTION_STATE,
+        "connected",
+        component="hood",
+    )
+    set_attribute_value(
+        devices,
+        Capability.CUSTOM_DISABLED_CAPABILITIES,
+        Attribute.DISABLED_CAPABILITIES,
+        [Capability.SAMSUNG_CE_COUNT_DOWN_TIMER],
+        component="hood",
+    )
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ks_cooktop_000001"])
+@pytest.mark.parametrize(
+    ("service", "option"),
+    [(SERVICE_TURN_ON, "Lamp_On"), (SERVICE_TURN_OFF, "Lamp_Off")],
+)
+async def test_cooktop_hood_lamp(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    service: str,
+    option: str,
+) -> None:
+    """Test the lamp of a hood paired with a cooktop uses the execute capability."""
+    connect_cooktop_hood(devices)
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("light.table_de_cuisson_light")
+    assert state.state == STATE_OFF
+    assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.ONOFF]
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        service,
+        {ATTR_ENTITY_ID: "light.table_de_cuisson_light"},
+        blocking=True,
+    )
+    devices.execute_device_command.assert_called_once_with(
+        "5c202ad1-d112-d746-50b8-bd76a554b362",
+        Capability.EXECUTE,
+        Command.EXECUTE,
+        MAIN,
+        argument=["/mode/vs/1", {"x.com.samsung.da.options": [option]}],
+    )
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ks_cooktop_000001"])
+async def test_cooktop_hood_lamp_state(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the lamp state of a hood paired with a cooktop."""
+    connect_cooktop_hood(devices)
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("light.table_de_cuisson_light").state == STATE_OFF
+
+    await trigger_update(
+        hass,
+        devices,
+        "5c202ad1-d112-d746-50b8-bd76a554b362",
+        Capability.SAMSUNG_CE_LAMP,
+        Attribute.BRIGHTNESS_LEVEL,
+        "high",
+        component="hood",
+    )
+
+    assert hass.states.get("light.table_de_cuisson_light").state == STATE_ON
+
+
 @pytest.mark.parametrize("device_fixture", ["da_ks_hood_01001"])
 async def test_lamp_from_off(
     hass: HomeAssistant, devices: AsyncMock, mock_config_entry: MockConfigEntry
