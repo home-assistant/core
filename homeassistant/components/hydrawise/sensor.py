@@ -125,8 +125,6 @@ ZONE_SENSORS: tuple[HydrawiseSensorEntityDescription, ...] = (
     ),
 )
 
-FLOW_MEASUREMENT_KEYS = [x.key for x in FLOW_CONTROLLER_SENSORS]
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -212,18 +210,6 @@ class HydrawiseSensor(HydrawiseEntity, SensorEntity):
             if self.coordinator.data.user.units.units_name == "imperial"
             else UnitOfVolume.LITERS
         )
-
-    @property
-    @override
-    def icon(self) -> str | None:
-        """Icon of the entity based on the value."""
-        if (
-            self.entity_description.key in FLOW_MEASUREMENT_KEYS
-            and self.entity_description.device_class == SensorDeviceClass.WATER
-            and round(self.state, 2) == 0.0
-        ):
-            return "mdi:water-outline"
-        return None
 
     @override
     def _update_attrs(self) -> None:

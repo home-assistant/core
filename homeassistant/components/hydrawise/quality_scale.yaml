@@ -69,9 +69,7 @@ rules:
   entity-disabled-by-default: todo
   entity-translations: done
   exception-translations: done
-  icon-translations:
-    status: todo
-    comment: The sensor entity overrides the icon property based on its state.
+  icon-translations: done
   reconfiguration-flow: todo
   repair-issues:
     status: exempt
