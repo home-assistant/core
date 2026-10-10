@@ -323,25 +323,12 @@ class Recorder(threading.Thread):
         """Initialize the recorder."""
         entity_filter = self.entity_filter
         exclude_event_types = self.exclude_event_types
-        include_event_data = self.include_event_data
-        exclude_event_data = self.exclude_event_data
         queue_put = self._queue.put_nowait
 
         @callback
         def _event_listener(event: Event) -> None:
             """Listen for new events and put them in the process queue."""
             if event.event_type in exclude_event_types:
-                return
-
-            if _event_data_filter_matches(event, exclude_event_data, self.dialect_name):
-                return
-
-            if (
-                event.event_type in include_event_data
-                and not _event_data_filter_matches(
-                    event, include_event_data, self.dialect_name
-                )
-            ):
                 return
 
             if entity_filter is None or not (
@@ -1086,6 +1073,18 @@ class Recorder(threading.Thread):
         if event.event_type == EVENT_STATE_CHANGED:
             self._process_state_changed_event_into_session(event)
         else:
+            # Startup events can be queued before the database dialect is known.
+            if _event_data_filter_matches(
+                event, self.exclude_event_data, self.dialect_name
+            ):
+                return
+            if (
+                event.event_type in self.include_event_data
+                and not _event_data_filter_matches(
+                    event, self.include_event_data, self.dialect_name
+                )
+            ):
+                return
             self._process_non_state_changed_event_into_session(event)
         # Commit if the commit interval is zero
         if not self.commit_interval:

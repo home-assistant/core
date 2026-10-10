@@ -1548,6 +1548,61 @@ async def test_purge_filtered_event_data(
 
 
 @pytest.mark.parametrize(
+    ("filter_attribute", "match_value"),
+    [("include_event_data", "keep"), ("exclude_event_data", "drop")],
+)
+async def test_purge_filtered_event_data_shared_payload(
+    hass: HomeAssistant,
+    recorder_mock: Recorder,
+    filter_attribute: str,
+    match_value: str,
+) -> None:
+    """Test filter purging preserves data still used by unrelated events."""
+    hass.bus.async_fire("filtered_event", {"command": "drop"})
+    hass.bus.async_fire("unfiltered_event", {"command": "drop"})
+    await async_wait_recording_done(hass)
+
+    with patch.object(
+        recorder_mock,
+        filter_attribute,
+        {"filtered_event": ((("command", match_value),),)},
+    ):
+        await hass.services.async_call(
+            DOMAIN, SERVICE_PURGE, {"keep_days": 10, "apply_filter": True}
+        )
+        await async_wait_purge_done(hass)
+
+    with session_scope(hass=hass, read_only=True) as session:
+        assert (
+            session.query(Events)
+            .filter(
+                Events.event_type_id.in_(select_event_type_ids(("filtered_event",)))
+            )
+            .count()
+            == 0
+        )
+        assert (
+            session.query(EventData)
+            .filter(EventData.shared_data == '{"command":"drop"}')
+            .count()
+            == 1
+        )
+
+    hass.bus.async_fire("unfiltered_event", {"command": "drop"})
+    await async_wait_recording_done(hass)
+    with session_scope(hass=hass, read_only=True) as session:
+        assert (
+            session.query(EventData)
+            .join(Events)
+            .filter(
+                Events.event_type_id.in_(select_event_type_ids(("unfiltered_event",)))
+            )
+            .count()
+            == 2
+        )
+
+
+@pytest.mark.parametrize(
     "error_target",
     [
         "homeassistant.components.recorder.purge._purge_batch_data_ids",

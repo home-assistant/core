@@ -966,6 +966,47 @@ def test_event_data_filter_dialect_normalization(
     )
 
 
+@pytest.mark.parametrize(
+    ("filter_attribute", "dialect", "recorded"),
+    [
+        ("include_event_data", SupportedDialect.SQLITE, False),
+        ("include_event_data", SupportedDialect.POSTGRESQL, True),
+        ("exclude_event_data", SupportedDialect.SQLITE, True),
+        ("exclude_event_data", SupportedDialect.POSTGRESQL, False),
+    ],
+)
+async def test_event_data_filter_before_database_setup(
+    hass: HomeAssistant,
+    filter_attribute: str,
+    dialect: SupportedDialect,
+    recorded: bool,
+) -> None:
+    """Test startup events use the dialect determined during database setup."""
+    recorder_helper.async_initialize_recorder(hass)
+    instance = _default_recorder(hass)
+    instance.entity_filter = None
+    setattr(instance, filter_attribute, {"test_event": ((("value", "before"),),)})
+    assert instance.dialect_name is None
+    instance.async_initialize()
+
+    hass.bus.async_fire("test_event", {"value": "before\0after"})
+    await hass.async_block_till_done()
+    assert instance.backlog == 1
+    event = instance._queue.get_nowait()
+    assert isinstance(event, Event)
+
+    with (
+        patch.object(instance, "dialect_name", dialect),
+        patch.object(
+            instance, "_process_non_state_changed_event_into_session"
+        ) as process,
+    ):
+        instance._process_one_event(event)
+
+    assert process.call_count == int(recorded)
+    instance._async_stop_queue_watcher_and_event_listener()
+
+
 def test_event_data_filter_unserializable_event() -> None:
     """Test filter matching tolerates event data that Recorder cannot serialize."""
     assert not _event_data_filter_matches(
