@@ -379,7 +379,7 @@ class MediaSearchAndPlayHandler(intent.IntentHandler):
             )
             or not (results := entity_response.result)
         ):
-            raise intent.IntentHandleError(f"No results found for {search_query}")
+            raise intent.IntentNoResultsError(f"No results found for {search_query}")
 
         # 2. Play Media (first result)
         first_result = results[0]
