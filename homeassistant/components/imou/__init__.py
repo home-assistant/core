@@ -8,11 +8,11 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 
 from .const import (
-    DOMAIN,
     API_URLS,
     CONF_API_URL,
     CONF_APP_ID,
     CONF_APP_SECRET,
+    DOMAIN,
     PLATFORMS,
 )
 from .coordinator import ImouConfigEntry, ImouDataUpdateCoordinator
