@@ -977,7 +977,7 @@
       "message": "Function not supported by this device: {err}"
     },
     "password_incompatible": {
-      "message": "Reolink password contains incompatible special character or is too long, please change the password to only contain characters: a-z, A-Z, 0-9 or {special_chars} and not be longer than 31 characters"
+      "message": "Reolink password contains an incompatible special character or is too long; please change the password to only contain characters a-z, A-Z, 0-9, or {special_chars} and not be longer than 31 characters"
     },
     "service_not_chime": {
       "message": "Reolink play_chime error: {device_name} is not a Chime"
