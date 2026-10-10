@@ -41,7 +41,10 @@ from homeassistant.components.assist_satellite import (
 
 # pylint: disable-next=home-assistant-component-root-import
 from homeassistant.components.assist_satellite.entity import AssistSatelliteState
-from homeassistant.components.esphome.assist_satellite import VoiceAssistantUDPServer
+from homeassistant.components.esphome.assist_satellite import (
+    EsphomeAssistSatellite,
+    VoiceAssistantUDPServer,
+)
 from homeassistant.components.esphome.const import NO_WAKE_WORD
 from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
@@ -280,6 +283,7 @@ async def test_pipeline_api_audio(
                 "conversation_id": conversation_id,
                 "continue_conversation": "1",
                 "speech": "test response",
+                "response_type": "action_done",
             },
         )
 
@@ -762,6 +766,113 @@ async def test_pipeline_media_player(
             await tts_finished.wait()
 
             assert satellite.state == AssistSatelliteState.IDLE
+
+
+def _intent_end(
+    satellite: EsphomeAssistSatellite,
+    mock_client: APIClient,
+    response: intent_helper.IntentResponse,
+) -> dict[str, str]:
+    """Send an intent-end event for a response and return the data the device got."""
+    satellite.on_pipeline_event(
+        PipelineEvent(
+            type=PipelineEventType.INTENT_END,
+            data={
+                "intent_output": conversation.ConversationResult(
+                    response=response,
+                    conversation_id="test-conversation-id",
+                ).as_dict()
+            },
+        )
+    )
+    event_type, data = mock_client.send_voice_assistant_event.call_args_list[-1].args
+    assert event_type == VoiceAssistantEventType.VOICE_ASSISTANT_INTENT_END
+    return data
+
+
+def _answered(
+    response_type: intent_helper.IntentResponseType,
+) -> intent_helper.IntentResponse:
+    """Build a response for an intent Home Assistant handled."""
+    response = intent_helper.IntentResponse("en")
+    response.response_type = response_type
+    response.async_set_speech("Turned on the light")
+    return response
+
+
+def _failed(
+    error_code: intent_helper.IntentResponseErrorCode,
+) -> intent_helper.IntentResponse:
+    """Build a response for an intent Home Assistant could not handle."""
+    response = intent_helper.IntentResponse("en")
+    response.async_set_error(error_code, "Sorry, I couldn't understand that")
+    return response
+
+
+@pytest.mark.parametrize(
+    ("response", "expected_response_type", "expected_error_code"),
+    [
+        pytest.param(
+            _answered(intent_helper.IntentResponseType.ACTION_DONE),
+            "action_done",
+            None,
+            id="action_done",
+        ),
+        pytest.param(
+            _answered(intent_helper.IntentResponseType.QUERY_ANSWER),
+            "query_answer",
+            None,
+            id="query_answer",
+        ),
+        pytest.param(
+            _failed(intent_helper.IntentResponseErrorCode.NO_INTENT_MATCH),
+            "error",
+            "no_intent_match",
+            id="no_intent_match",
+        ),
+        pytest.param(
+            _failed(intent_helper.IntentResponseErrorCode.NO_VALID_TARGETS),
+            "error",
+            "no_valid_targets",
+            id="no_valid_targets",
+        ),
+        pytest.param(
+            _failed(intent_helper.IntentResponseErrorCode.FAILED_TO_HANDLE),
+            "error",
+            "failed_to_handle",
+            id="failed_to_handle",
+        ),
+        pytest.param(
+            _failed(intent_helper.IntentResponseErrorCode.UNKNOWN),
+            "error",
+            "unknown",
+            id="unknown",
+        ),
+    ],
+)
+async def test_intent_end_reports_what_happened_to_the_intent(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+    response: intent_helper.IntentResponse,
+    expected_response_type: str,
+    expected_error_code: str | None,
+) -> None:
+    """Test that intent-end tells the device how Home Assistant answered."""
+    mock_device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info={
+            "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
+        },
+    )
+    await hass.async_block_till_done()
+
+    satellite = get_satellite_entity(hass, mock_device.device_info.mac_address)
+    assert satellite is not None
+
+    data = _intent_end(satellite, mock_client, response)
+    assert data["response_type"] == expected_response_type
+    assert data.get("error_code") == expected_error_code
 
 
 async def test_timer_events(
