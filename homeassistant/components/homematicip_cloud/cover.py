@@ -22,11 +22,6 @@ HMIP_COVER_CLOSED = 1
 HMIP_SLATS_OPEN = 0
 HMIP_SLATS_CLOSED = 1
 
-SLATS_CHANNEL_TYPES = (
-    FunctionalChannelType.BLIND_CHANNEL,
-    FunctionalChannelType.MULTI_MODE_INPUT_BLIND_CHANNEL,
-)
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -41,75 +36,75 @@ async def async_setup_entry(
         if isinstance(group, ExtendedLinkedShutterGroup)
     ]
     for device in hap.home.devices:
-        channel_types = {
-            channel.functionalChannelType for channel in device.functionalChannels
-        }
-        if FunctionalChannelType.SHADING_CHANNEL in channel_types:
-            entities.append(HomematicipBlindModule(hap, device))
-        if FunctionalChannelType.DOOR_CHANNEL in channel_types:
-            entities.append(HomematicipGarageDoorModule(hap, device))
-        entities.extend(
-            _channel_covers(
-                hap, device, SLATS_CHANNEL_TYPES, HomematicipMultiCoverSlats
+        for channel_types, entity_class in COVER_CHANNEL_TYPES:
+            channels = [
+                channel
+                for channel in device.functionalChannels
+                if channel.functionalChannelType in channel_types
+            ]
+            # a lone channel is the device itself, so it keeps the device name
+            is_multi_channel = len(channels) > 1
+            entities.extend(
+                entity_class(
+                    hap,
+                    device,
+                    channel=channel.index,
+                    channel_real_index=channel.index,
+                    is_multi_channel=is_multi_channel,
+                )
+                for channel in channels
             )
-        )
-        entities.extend(
-            _channel_covers(
-                hap,
-                device,
-                (FunctionalChannelType.SHUTTER_CHANNEL,),
-                HomematicipMultiCoverShutter,
-            )
-        )
 
     async_add_entities(entities)
 
 
-def _channel_covers(
-    hap: HomematicipHAP,
-    device,
-    channel_types: tuple[FunctionalChannelType, ...],
-    entity_class: type[HomematicipMultiCoverShutter],
-) -> list[HomematicipMultiCoverShutter]:
-    """Return one cover per channel of the given types."""
-    channels = [
-        channel
-        for channel in device.functionalChannels
-        if channel.functionalChannelType in channel_types
-    ]
-    # a lone channel is the device itself, so it keeps the device name
-    is_multi_channel = len(channels) > 1
-    return [
-        entity_class(
-            hap, device, channel=channel.index, is_multi_channel=is_multi_channel
+class HomematicipChannelCover(HomematicipGenericEntity, CoverEntity):
+    """Representation of a HomematicIP cover channel."""
+
+    _cover_feature_id: str
+
+    def __init__(
+        self,
+        hap: HomematicipHAP,
+        device,
+        channel: int,
+        channel_real_index: int,
+        is_multi_channel: bool,
+    ) -> None:
+        """Initialize the cover channel entity."""
+        super().__init__(
+            hap,
+            device,
+            channel=channel,
+            channel_real_index=channel_real_index,
+            is_multi_channel=is_multi_channel,
+            feature_id=self._cover_feature_id,
         )
-        for channel in channels
-    ]
 
 
-class HomematicipBlindModule(HomematicipGenericEntity, CoverEntity):
+class HomematicipBlindModule(HomematicipChannelCover):
     """Representation of the HomematicIP blind module."""
 
     _attr_device_class = CoverDeviceClass.BLIND
 
-    def __init__(self, hap: HomematicipHAP, device) -> None:
-        """Initialize the blind module entity."""
-        super().__init__(hap, device, feature_id="blind")
+    _cover_feature_id = "blind"
 
     @property
     @override
     def current_cover_position(self) -> int | None:
         """Return current position of cover."""
-        if self._device.primaryShadingLevel is not None:
-            return int((1 - self._device.primaryShadingLevel) * 100)
+        channel = self.get_channel_or_raise()
+        if channel.primaryShadingLevel is not None:
+            return int((1 - channel.primaryShadingLevel) * 100)
         return None
 
     @property
     @override
     def current_cover_tilt_position(self) -> int | None:
         """Return current tilt position of cover."""
-        if self._device.secondaryShadingLevel is not None:
-            return int((1 - self._device.secondaryShadingLevel) * 100)
+        channel = self.get_channel_or_raise()
+        if channel.secondaryShadingLevel is not None:
+            return int((1 - channel.secondaryShadingLevel) * 100)
         return None
 
     @override
@@ -118,7 +113,8 @@ class HomematicipBlindModule(HomematicipGenericEntity, CoverEntity):
         position = kwargs[ATTR_POSITION]
         # HmIP cover is closed:1 -> open:0
         level = 1 - position / 100.0
-        await self._device.set_primary_shading_level_async(primaryShadingLevel=level)
+        channel = self.get_channel_or_raise()
+        await channel.async_set_primary_shading_level(primaryShadingLevel=level)
 
     @override
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
@@ -126,8 +122,9 @@ class HomematicipBlindModule(HomematicipGenericEntity, CoverEntity):
         position = kwargs[ATTR_TILT_POSITION]
         # HmIP slats is closed:1 -> open:0
         level = 1 - position / 100.0
-        await self._device.set_secondary_shading_level_async(
-            primaryShadingLevel=self._device.primaryShadingLevel,
+        channel = self.get_channel_or_raise()
+        await channel.async_set_secondary_shading_level(
+            primaryShadingLevel=channel.primaryShadingLevel,
             secondaryShadingLevel=level,
         )
 
@@ -135,81 +132,72 @@ class HomematicipBlindModule(HomematicipGenericEntity, CoverEntity):
     @override
     def is_closed(self) -> bool | None:
         """Return if the cover is closed."""
-        if self._device.primaryShadingLevel is not None:
-            return self._device.primaryShadingLevel == HMIP_COVER_CLOSED
+        channel = self.get_channel_or_raise()
+        if channel.primaryShadingLevel is not None:
+            return channel.primaryShadingLevel == HMIP_COVER_CLOSED
         return None
 
     @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
-        await self._device.set_primary_shading_level_async(
+        channel = self.get_channel_or_raise()
+        await channel.async_set_primary_shading_level(
             primaryShadingLevel=HMIP_COVER_OPEN
         )
 
     @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
-        await self._device.set_primary_shading_level_async(
+        channel = self.get_channel_or_raise()
+        await channel.async_set_primary_shading_level(
             primaryShadingLevel=HMIP_COVER_CLOSED
         )
 
     @override
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the device if in motion."""
-        await self._device.stop_async()
+        channel = self.get_channel_or_raise()
+        await channel.async_set_shutter_stop()
 
     @override
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Open the slats."""
-        await self._device.set_secondary_shading_level_async(
-            primaryShadingLevel=self._device.primaryShadingLevel,
+        channel = self.get_channel_or_raise()
+        await channel.async_set_secondary_shading_level(
+            primaryShadingLevel=channel.primaryShadingLevel,
             secondaryShadingLevel=HMIP_SLATS_OPEN,
         )
 
     @override
     async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Close the slats."""
-        await self._device.set_secondary_shading_level_async(
-            primaryShadingLevel=self._device.primaryShadingLevel,
+        channel = self.get_channel_or_raise()
+        await channel.async_set_secondary_shading_level(
+            primaryShadingLevel=channel.primaryShadingLevel,
             secondaryShadingLevel=HMIP_SLATS_CLOSED,
         )
 
     @override
     async def async_stop_cover_tilt(self, **kwargs: Any) -> None:
         """Stop the device if in motion."""
-        await self._device.stop_async()
+        channel = self.get_channel_or_raise()
+        await channel.async_set_shutter_stop()
 
 
-class HomematicipMultiCoverShutter(HomematicipGenericEntity, CoverEntity):
+class HomematicipMultiCoverShutter(HomematicipChannelCover):
     """Representation of the HomematicIP cover shutter."""
 
     _attr_device_class = CoverDeviceClass.SHUTTER
 
-    def __init__(
-        self,
-        hap: HomematicipHAP,
-        device,
-        channel=1,
-        is_multi_channel=True,
-        feature_id="shutter",
-    ) -> None:
-        """Initialize the multi cover entity."""
-        super().__init__(
-            hap,
-            device,
-            channel=channel,
-            is_multi_channel=is_multi_channel,
-            feature_id=feature_id,
-        )
+    _cover_feature_id = "shutter"
 
     @property
     @override
     def current_cover_position(self) -> int | None:
         """Return current position of cover."""
-        if self._device.functionalChannels[self._channel].shutterLevel is not None:
-            return int(
-                (1 - self._device.functionalChannels[self._channel].shutterLevel) * 100
-            )
+        channel = self.get_channel_or_raise()
+        if channel.shutterLevel is not None:
+            return int((1 - channel.shutterLevel) * 100)
         return None
 
     @override
@@ -218,62 +206,49 @@ class HomematicipMultiCoverShutter(HomematicipGenericEntity, CoverEntity):
         position = kwargs[ATTR_POSITION]
         # HmIP cover is closed:1 -> open:0
         level = 1 - position / 100.0
-        await self._device.set_shutter_level_async(level, self._channel)
+        channel = self.get_channel_or_raise()
+        await channel.async_set_shutter_level(level)
 
     @property
     @override
     def is_closed(self) -> bool | None:
         """Return if the cover is closed."""
-        if self._device.functionalChannels[self._channel].shutterLevel is not None:
-            return (
-                self._device.functionalChannels[self._channel].shutterLevel
-                == HMIP_COVER_CLOSED
-            )
+        channel = self.get_channel_or_raise()
+        if channel.shutterLevel is not None:
+            return channel.shutterLevel == HMIP_COVER_CLOSED
         return None
 
     @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
-        await self._device.set_shutter_level_async(HMIP_COVER_OPEN, self._channel)
+        channel = self.get_channel_or_raise()
+        await channel.async_set_shutter_level(HMIP_COVER_OPEN)
 
     @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
-        await self._device.set_shutter_level_async(HMIP_COVER_CLOSED, self._channel)
+        channel = self.get_channel_or_raise()
+        await channel.async_set_shutter_level(HMIP_COVER_CLOSED)
 
     @override
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the device if in motion."""
-        await self._device.set_shutter_stop_async(self._channel)
+        channel = self.get_channel_or_raise()
+        await channel.async_set_shutter_stop()
 
 
-class HomematicipMultiCoverSlats(HomematicipMultiCoverShutter, CoverEntity):
+class HomematicipMultiCoverSlats(HomematicipMultiCoverShutter):
     """Representation of the HomematicIP multi cover slats."""
 
-    def __init__(
-        self,
-        hap: HomematicipHAP,
-        device,
-        channel=1,
-        is_multi_channel=True,
-    ) -> None:
-        """Initialize the multi slats entity."""
-        super().__init__(
-            hap,
-            device,
-            channel=channel,
-            is_multi_channel=is_multi_channel,
-            feature_id="slats",
-        )
+    _cover_feature_id = "slats"
 
     @property
     @override
     def current_cover_tilt_position(self) -> int | None:
         """Return current tilt position of cover."""
-        if self._device.functionalChannels[self._channel].slatsLevel is not None:
-            return int(
-                (1 - self._device.functionalChannels[self._channel].slatsLevel) * 100
-            )
+        channel = self.get_channel_or_raise()
+        if channel.slatsLevel is not None:
+            return int((1 - channel.slatsLevel) * 100)
         return None
 
     @override
@@ -282,38 +257,34 @@ class HomematicipMultiCoverSlats(HomematicipMultiCoverShutter, CoverEntity):
         position = kwargs[ATTR_TILT_POSITION]
         # HmIP slats is closed:1 -> open:0
         level = 1 - position / 100.0
-        await self._device.set_slats_level_async(
-            slatsLevel=level, channelIndex=self._channel
-        )
+        channel = self.get_channel_or_raise()
+        await channel.async_set_slats_level(slatsLevel=level)
 
     @override
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Open the slats."""
-        await self._device.set_slats_level_async(
-            slatsLevel=HMIP_SLATS_OPEN, channelIndex=self._channel
-        )
+        channel = self.get_channel_or_raise()
+        await channel.async_set_slats_level(slatsLevel=HMIP_SLATS_OPEN)
 
     @override
     async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Close the slats."""
-        await self._device.set_slats_level_async(
-            slatsLevel=HMIP_SLATS_CLOSED, channelIndex=self._channel
-        )
+        channel = self.get_channel_or_raise()
+        await channel.async_set_slats_level(slatsLevel=HMIP_SLATS_CLOSED)
 
     @override
     async def async_stop_cover_tilt(self, **kwargs: Any) -> None:
         """Stop the device if in motion."""
-        await self._device.set_shutter_stop_async(self._channel)
+        channel = self.get_channel_or_raise()
+        await channel.async_set_shutter_stop()
 
 
-class HomematicipGarageDoorModule(HomematicipGenericEntity, CoverEntity):
+class HomematicipGarageDoorModule(HomematicipChannelCover):
     """Representation of the HomematicIP Garage Door Module."""
 
     _attr_device_class = CoverDeviceClass.GARAGE
 
-    def __init__(self, hap: HomematicipHAP, device) -> None:
-        """Initialize the garage door module entity."""
-        super().__init__(hap, device, feature_id="garage_door")
+    _cover_feature_id = "garage_door"
 
     @property
     @override
@@ -325,7 +296,7 @@ class HomematicipGarageDoorModule(HomematicipGenericEntity, CoverEntity):
             DoorState.VENTILATION_POSITION: 10,
             DoorState.POSITION_UNKNOWN: None,
         }
-        return door_state_to_position.get(self._device.doorState)
+        return door_state_to_position.get(self.get_channel_or_raise().doorState)
 
     @property
     @override
@@ -466,3 +437,19 @@ class HomematicipCoverShutterGroup(HomematicipGenericEntity, CoverEntity):
     async def async_stop_cover_tilt(self, **kwargs: Any) -> None:
         """Stop the group if in motion."""
         await self._device.set_shutter_stop_async()
+
+
+COVER_CHANNEL_TYPES: tuple[
+    tuple[tuple[FunctionalChannelType, ...], type[HomematicipChannelCover]], ...
+] = (
+    ((FunctionalChannelType.SHADING_CHANNEL,), HomematicipBlindModule),
+    (
+        (
+            FunctionalChannelType.BLIND_CHANNEL,
+            FunctionalChannelType.MULTI_MODE_INPUT_BLIND_CHANNEL,
+        ),
+        HomematicipMultiCoverSlats,
+    ),
+    ((FunctionalChannelType.SHUTTER_CHANNEL,), HomematicipMultiCoverShutter),
+    ((FunctionalChannelType.DOOR_CHANNEL,), HomematicipGarageDoorModule),
+)
