@@ -8,7 +8,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from homeassistant.util import dt as dt_util
 
 from .api import AirlinoApi, AirlinoApiConnectionError, AirlinoApiError
-from .const import LOGGER, UPDATE_INTERVAL
+from .const import DOMAIN, LOGGER, UPDATE_INTERVAL
 
 
 class AirlinoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
@@ -59,7 +59,11 @@ class AirlinoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             # shown (e.g. in the multiroom selection) while unavailable.
             return {"online": False, "device": self._device_info}
         except Exception as err:
-            raise UpdateFailed(f"Could not update AirLino: {err}") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed",
+                translation_placeholders={"err": str(err)},
+            ) from err
         if not was_online:
             LOGGER.info("AirLino is available again")
         sender: dict[str, Any] | None = None

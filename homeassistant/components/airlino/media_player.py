@@ -404,9 +404,7 @@ class AirlinoMediaPlayer(
         media_content_type: MediaType | str | None = None,
         media_content_id: str | None = None,
     ) -> BrowseMedia:
-        """Browse Home Assistant media sources (no own media sources)."""
-        # media_content_id is sufficient for routing to the media source
-        # integration; the content type is ignored.
+        """Browse Home Assistant media sources."""
         del media_content_type
         return await media_source.async_browse_media(
             self.hass,

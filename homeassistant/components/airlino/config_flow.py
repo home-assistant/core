@@ -96,11 +96,7 @@ def _get_mac(network_info: dict) -> str | None:
 
 
 def _txt_str(properties: dict, key: str) -> str | None:
-    """Return a TXT record value as string.
-
-    Depending on the HA version, properties are either
-    dict[str, str] or dict[str, list[bytes]].
-    """
+    """Return a TXT record value as string."""
     value = properties.get(key)
     if value is None:
         return None

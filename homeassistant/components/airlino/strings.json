@@ -54,6 +54,9 @@
     },
     "sender_uuid_missing": {
       "message": "Could not start multiroom: the AirLino did not report a sender UUID."
+    },
+    "update_failed": {
+      "message": "Could not update AirLino: {err}"
     }
   }
 }
