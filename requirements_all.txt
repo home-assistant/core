@@ -1533,7 +1533,7 @@ librouteros==4.2.2
 libsoundtouch==0.8
 
 # homeassistant.components.lifx
-lifx-async==7.9.3
+lifx-async==7.10.1
 
 # homeassistant.components.osramlightify
 lightify==1.0.7.3
@@ -2015,7 +2015,7 @@ py-schluter==0.1.7
 py-sucks==0.9.11
 
 # homeassistant.components.synology_dsm
-py-synologydsm-api==2.10.3
+py-synologydsm-api==2.11.0
 
 # homeassistant.components.unifi_access
 py-unifi-access==1.6.1
@@ -3205,7 +3205,7 @@ synology-srm==0.2.0
 systembridgeconnector==5.5.0
 
 # homeassistant.components.tailscale
-tailscale==0.7.0
+tailscale==1.0.0
 
 # homeassistant.components.tapsaff
 tapsaff==0.2.1
@@ -3455,7 +3455,7 @@ whoisdomain==2.20260806.3
 wiffi==1.1.2
 
 # homeassistant.components.wiim
-wiim==0.1.7
+wiim==0.2.1
 
 # homeassistant.components.wirelesstag
 wirelesstagpy==0.8.1
