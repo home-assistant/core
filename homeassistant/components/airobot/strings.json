@@ -193,6 +193,9 @@
     "connection_failed": {
       "message": "Failed to communicate with device."
     },
+    "modbus_link_conflict": {
+      "message": "The ventilation unit at {host} is already in use by another integration with different Modbus settings."
+    },
     "set_preset_mode_failed": {
       "message": "Failed to set preset mode to {preset_mode}."
     },

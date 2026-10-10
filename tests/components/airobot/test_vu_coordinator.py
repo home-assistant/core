@@ -22,6 +22,7 @@ from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -108,6 +109,25 @@ async def test_vu_setup_entry_exceptions(
     await hass.async_block_till_done()
 
     assert mock_vu_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_vu_setup_fails_on_modbus_link_conflict(
+    hass: HomeAssistant, mock_vu_config_entry: MockConfigEntry
+) -> None:
+    """Test setup stops when the unit is held over different link settings."""
+    mock_vu_config_entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.airobot.async_get_unit",
+        side_effect=HomeAssistantError("Modbus device is already in use"),
+    ):
+        await hass.config_entries.async_setup(mock_vu_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_vu_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_vu_config_entry.error_reason_translation_key == "modbus_link_conflict"
+    assert mock_vu_config_entry.error_reason_translation_placeholders == {
+        "host": mock_vu_config_entry.data[CONF_HOST]
+    }
 
 
 # The device is registered by its entities

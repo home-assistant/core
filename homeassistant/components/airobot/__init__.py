@@ -8,9 +8,10 @@ from pyairobotmodbus import DEFAULT_PORT, DEFAULT_UNIT_ID
 from homeassistant.components.modbus import async_get_unit
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryError, HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
-from .const import CONF_DEVICE_TYPE, DEVICE_TYPE_VENTILATION
+from .const import CONF_DEVICE_TYPE, DEVICE_TYPE_VENTILATION, DOMAIN
 from .coordinator import (
     AirobotConfigEntry,
     AirobotDataUpdateCoordinator,
@@ -56,12 +57,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: AirobotConfigEntry) -> b
     """Set up Airobot from a config entry."""
     coordinator: AirobotDataUpdateCoordinator | AirobotVUCoordinator
     if _is_ventilation_entry(entry):
-        unit = async_get_unit(
-            hass,
-            entry,
-            ModbusTcpParams(host=entry.data[CONF_HOST], port=DEFAULT_PORT),
-            DEFAULT_UNIT_ID,
-        )
+        try:
+            unit = async_get_unit(
+                hass,
+                entry,
+                ModbusTcpParams(host=entry.data[CONF_HOST], port=DEFAULT_PORT),
+                DEFAULT_UNIT_ID,
+            )
+        # Another integration holds the unit over different link settings
+        except HomeAssistantError as err:
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="modbus_link_conflict",
+                translation_placeholders={"host": entry.data[CONF_HOST]},
+            ) from err
         coordinator = AirobotVUCoordinator(hass, entry, unit)
         await _async_migrate_vu_unique_ids(hass, entry)
         platforms = VU_PLATFORMS
