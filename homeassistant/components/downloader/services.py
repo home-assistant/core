@@ -1,5 +1,6 @@
 """Support for functionality to download files."""
 
+from contextlib import suppress
 from enum import StrEnum
 from http import HTTPStatus
 import os
@@ -11,6 +12,7 @@ import requests
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.os_error import os_write_error
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.util import raise_if_invalid_filename, raise_if_invalid_path
 
@@ -104,7 +106,14 @@ async def download_file(service: ServiceCall) -> None:
                     subdir_path = os.path.join(download_path, subdir)
 
                     # Ensure subdir exist
-                    os.makedirs(subdir_path, exist_ok=True)
+                    try:
+                        os.makedirs(subdir_path, exist_ok=True)
+                    except OSError as err:
+                        service.hass.bus.fire(
+                            f"{DOMAIN}_{DOWNLOAD_FAILED_EVENT}",
+                            {"url": url, "filename": filename},
+                        )
+                        raise os_write_error(err, subdir_path) from err
 
                     final_path = os.path.join(subdir_path, filename)
 
@@ -125,8 +134,23 @@ async def download_file(service: ServiceCall) -> None:
 
                 LOGGER.debug("%s -> %s", url, final_path)
 
-                with open(final_path, "wb") as fil:
-                    fil.writelines(req.iter_content(1024))
+                file_created = False
+                try:
+                    with open(final_path, "wb") as fil:
+                        file_created = True
+                        fil.writelines(req.iter_content(1024))
+                # requests errors subclass OSError and are handled further down
+                except requests.exceptions.RequestException:
+                    raise
+                except OSError as err:
+                    service.hass.bus.fire(
+                        f"{DOMAIN}_{DOWNLOAD_FAILED_EVENT}",
+                        {"url": url, "filename": filename},
+                    )
+                    if file_created:
+                        with suppress(OSError):
+                            os.remove(final_path)
+                    raise os_write_error(err, final_path) from err
 
                 LOGGER.debug("Downloading of %s done", url)
                 service.hass.bus.fire(
