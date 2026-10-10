@@ -347,7 +347,10 @@ class UpdateEntity(
         return _version_is_newer(latest_version, installed_version)
 
     def has_update(self) -> bool:
-        """Return True if there is an update available."""
+        """Return True if there is an update available.
+
+        Integrations can override this method to implement custom logic.
+        """
         if (installed_version := self.installed_version) is None:
             return False
         if (latest_version := self.latest_version) is None:
