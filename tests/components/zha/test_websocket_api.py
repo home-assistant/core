@@ -958,7 +958,9 @@ async def test_ws_permit_ha12(
     assert app_controller.permit_with_link_key.call_count == 0
 
 
-async def test_ws_permit_overlapping_restores_log_levels(zha_client) -> None:
+async def test_ws_permit_overlapping_restores_log_levels(
+    zha_client: MockHAClientWebSocket,
+) -> None:
     """Test overlapping permit subscriptions restore the original log levels."""
 
     async def send_and_wait_result(payload: dict[str, Any]) -> None:
