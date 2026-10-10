@@ -54,7 +54,11 @@ rules:
   docs-supported-functions: done
   docs-troubleshooting: done
   docs-use-cases: done
-  dynamic-devices: done
+  dynamic-devices:
+    status: done
+    comment: >-
+      New gateways, management points, and entity-producing capabilities trigger
+      a single pending reload. Ordinary state changes and removals do not.
   entity-category: done
   entity-device-class: done
   entity-disabled-by-default:

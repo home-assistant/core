@@ -18,6 +18,7 @@ from .const import (
     SENSOR_PERIOD_WEEKLY,
     SENSOR_PERIOD_YEARLY,
     SENSOR_PERIODS,
+    SENSORY_DATA_SENSOR_TYPES,
 )
 from .coordinator import DaikinOnectaConfigEntry
 from .device import DaikinOnectaDevice
@@ -166,16 +167,7 @@ def add_sensory_sensors(
                 sensor,
             ),
         )
-        for sensor in (
-            "roomTemperature",
-            "outdoorTemperature",
-            "leavingWaterTemperature",
-            "tankTemperature",
-            "roomHumidity",
-            "pm1Concentration",
-            "pm25Concentration",
-            "pm10Concentration",
-        )
+        for sensor in SENSORY_DATA_SENSOR_TYPES
         if sensor in SENSOR_DESCRIPTIONS
         and management_point.sensory_characteristic(sensor) is not None
     )

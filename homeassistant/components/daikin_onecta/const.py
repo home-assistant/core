@@ -12,6 +12,17 @@ SCHEDULE_OFF = "off"
 
 FANMODE_FIXED = "fixed"
 
+SENSORY_DATA_SENSOR_TYPES = (
+    "roomTemperature",
+    "outdoorTemperature",
+    "leavingWaterTemperature",
+    "tankTemperature",
+    "roomHumidity",
+    "pm1Concentration",
+    "pm25Concentration",
+    "pm10Concentration",
+)
+
 SENSOR_PERIOD_DAILY = "d"
 SENSOR_PERIOD_WEEKLY = "w"
 SENSOR_PERIOD_YEARLY = "m"

@@ -24,6 +24,7 @@ from homeassistant.util import dt as dt_util
 from .const import DOMAIN
 from .daikin_api import DaikinApi
 from .device import DaikinOnectaDevice
+from .discovery import gateway_entity_keys
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,6 +54,7 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
         """Initialize."""
         self._daikin_api = daikin_api
         self._cloud_update_sequence = 0
+        self._reload_pending = False
 
         super().__init__(
             hass,
@@ -145,12 +147,13 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
                             self.hass, self.config_entry
                         )
 
-                if has_new_topology:
+                if has_new_topology and not self._reload_pending:
                     # Platform setup is capability-driven. Reload only when the
-                    # cloud reports a newly addressable gateway or management
-                    # point, so it can create the corresponding entities.
+                    # cloud reports newly supported entities, including new
+                    # capabilities of existing management points.
                     # Missing topology remains in the registry and is handled
                     # by the availability checks above.
+                    self._reload_pending = True
                     self.hass.config_entries.async_schedule_reload(
                         self.config_entry.entry_id
                     )
@@ -167,22 +170,12 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
     @staticmethod
     def _topology(
         devices: Iterable[GatewayDevice],
-    ) -> set[tuple[str, str | None, str | None]]:
-        """Return addressable gateway and management-point identities."""
+    ) -> set[tuple[str, str | None, str]]:
+        """Return supported entity identities, independent of their current values."""
         return {
-            topology_item
+            entity_key
             for device in devices
-            for topology_item in (
-                (device.id, None, None),
-                *(
-                    (
-                        device.id,
-                        management_point.embedded_id,
-                        management_point.management_point_type,
-                    )
-                    for management_point in device.management_points
-                ),
-            )
+            for entity_key in gateway_entity_keys(device)
         }
 
     def _determine_update_interval(self) -> timedelta:
