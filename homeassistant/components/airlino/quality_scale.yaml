@@ -14,7 +14,9 @@ rules:
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
-  docs-triggers: done
+  docs-triggers:
+    status: exempt
+    comment: This integration does not provide triggers.
   entity-event-setup:
     status: exempt
     comment: No event listeners/subscriptions are used.
