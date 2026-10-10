@@ -55,7 +55,7 @@ from tests.typing import WebSocketGenerator
 
 PV_POWER_REGISTER = 0x0586
 BATTERY_3_VOLTAGE_REGISTER = 0x0612
-SOLAR_GENERATION_REGISTER = 0x0684
+METER_ENERGY_REGISTER = 0x0688
 
 
 def _heal_after_one_failure(unit: MockModbusUnit, address: int) -> None:
@@ -648,11 +648,11 @@ async def test_link_dying_during_the_retry_marks_sensors_unavailable(
 ) -> None:
     """Test a link lost while retrying one component fails the whole poll."""
     unit = mock_connection.for_unit(1)
-    _drop_link_after_one_failure(unit, SOLAR_GENERATION_REGISTER)
+    _drop_link_after_one_failure(unit, METER_ENERGY_REGISTER)
 
     freezer.tick(timedelta(seconds=SCAN_INTERVAL))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     entity_id = entity_registry.async_get_entity_id(
         SENSOR_DOMAIN, DOMAIN, f"{MOCK_SERIAL}_grid_frequency"
