@@ -1,6 +1,5 @@
 """Test the Airthings BLE integration init."""
 
-import asyncio
 from copy import deepcopy
 from datetime import timedelta
 from unittest.mock import patch
@@ -16,15 +15,10 @@ from homeassistant.components.airthings_ble.const import (
     DEVICE_SPECIFIC_SCAN_INTERVAL,
     DOMAIN,
 )
-from homeassistant.components.homeassistant import (
-    DOMAIN as HA_DOMAIN,
-    SERVICE_UPDATE_ENTITY,
-)
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
-from homeassistant.setup import async_setup_component
 
 from . import (
     CORENTIUM_HOME_2_DEVICE_INFO,
@@ -545,92 +539,34 @@ async def test_connectivity_mode_issue_updated_on_refresh(
     assert _issue_translation_keys(issue_registry) == expected_issues
 
 
-async def test_connectivity_mode_issue_deleted_on_unload(
+async def test_connectivity_mode_issue_kept_on_reload(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
 ) -> None:
-    """Test the connectivity mode issue is deleted when the entry is unloaded."""
+    """Test the connectivity mode issue survives a reload that cannot read the device."""
+    entry = await _setup_corentium_home_2(hass, "SmartLink")
+
+    with (
+        patch_async_ble_device_from_address(CORENTIUM_HOME_2_SERVICE_INFO.device),
+        patch_airthings_ble(side_effect=BleakError("Device not reachable")),
+    ):
+        await hass.config_entries.async_reload(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert _issue_translation_keys(issue_registry) == ["smartlink"]
+
+
+async def test_connectivity_mode_issue_deleted_on_remove(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test the connectivity mode issue is deleted when the entry is removed."""
     entry = await _setup_corentium_home_2(hass, "SmartLink")
 
     assert _issue_translation_keys(issue_registry) == ["smartlink"]
 
-    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.config_entries.async_remove(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entry.state is ConfigEntryState.NOT_LOADED
-    assert _issue_translation_keys(issue_registry) == []
-
-
-async def test_connectivity_mode_issue_deleted_after_refresh_during_unload(
-    hass: HomeAssistant,
-    issue_registry: ir.IssueRegistry,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test a refresh finishing while the entry unloads leaves no issue behind."""
-    entry = await _setup_corentium_home_2(hass, "Bluetooth")
-    release_update = asyncio.Event()
-    update_done = asyncio.Event()
-    unload_platforms = hass.config_entries.async_unload_platforms
-
-    async def _delayed_update(*_):
-        await release_update.wait()
-        update_done.set()
-        return _corentium_home_2_with_mode("SmartLink")
-
-    async def _unload_platforms_during_update(*args):
-        release_update.set()
-        await update_done.wait()
-        return await unload_platforms(*args)
-
-    with (
-        patch_airthings_ble(side_effect=_delayed_update),
-        patch.object(
-            hass.config_entries,
-            "async_unload_platforms",
-            side_effect=_unload_platforms_during_update,
-        ),
-    ):
-        freezer.tick(
-            DEVICE_SPECIFIC_SCAN_INTERVAL[AirthingsDeviceType.CORENTIUM_HOME_2.value]
-        )
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done()
-
-        assert await hass.config_entries.async_unload(entry.entry_id)
-
-    assert entry.state is ConfigEntryState.NOT_LOADED
-    assert _issue_translation_keys(issue_registry) == []
-
-
-async def test_connectivity_mode_issue_not_created_by_update_after_unload(
-    hass: HomeAssistant,
-    issue_registry: ir.IssueRegistry,
-) -> None:
-    """Test a manual update finishing after unload does not create an issue."""
-    assert await async_setup_component(hass, HA_DOMAIN, {})
-    entry = await _setup_corentium_home_2(hass, "Bluetooth")
-    release_update = asyncio.Event()
-
-    async def _delayed_update(*_):
-        await release_update.wait()
-        return _corentium_home_2_with_mode("SmartLink")
-
-    with patch_airthings_ble(side_effect=_delayed_update):
-        update = hass.async_create_task(
-            hass.services.async_call(
-                HA_DOMAIN,
-                SERVICE_UPDATE_ENTITY,
-                {ATTR_ENTITY_ID: "sensor.airthings_corentium_home_2_123456_battery"},
-                blocking=True,
-            )
-        )
-        await asyncio.sleep(0)
-
-        assert await hass.config_entries.async_unload(entry.entry_id)
-
-        release_update.set()
-        await update
-        await hass.async_block_till_done()
-
-    assert entry.state is ConfigEntryState.NOT_LOADED
     assert _issue_translation_keys(issue_registry) == []

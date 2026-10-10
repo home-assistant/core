@@ -1,7 +1,5 @@
 """The Airthings BLE integration."""
 
-from functools import partial
-
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
@@ -16,15 +14,6 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: AirthingsBLEConfigEntry
 ) -> bool:
     """Set up Airthings BLE device from a config entry."""
-    entry.async_on_unload(
-        partial(
-            ir.async_delete_issue,
-            hass,
-            DOMAIN,
-            connectivity_mode_issue_id(entry.entry_id),
-        )
-    )
-
     coordinator = AirthingsBLEDataUpdateCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
 
@@ -46,3 +35,10 @@ async def async_unload_entry(
 ) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def async_remove_entry(
+    hass: HomeAssistant, entry: AirthingsBLEConfigEntry
+) -> None:
+    """Remove the connectivity mode issue of a removed config entry."""
+    ir.async_delete_issue(hass, DOMAIN, connectivity_mode_issue_id(entry.entry_id))
