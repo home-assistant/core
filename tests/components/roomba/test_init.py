@@ -1,6 +1,6 @@
 """Tests for the Roomba integration setup."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from roombapy import RoombaAuthError, RoombaConnectionError
@@ -67,18 +67,18 @@ async def test_stop_disconnects(
     await hass.async_block_till_done()
 
     mock_roomba.disconnect.assert_awaited_once()
+
+
+@pytest.mark.usefixtures("mock_roomba")
 async def test_setup_cannot_connect(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test setup fails when no connection data is returned."""
     mock_config_entry.add_to_hass(hass)
 
-    with (
-        patch("homeassistant.components.roomba.RoombaFactory.create_roomba"),
-        patch(
-            "homeassistant.components.roomba.async_connect_or_timeout",
-            return_value={},
-        ),
+    with patch(
+        "homeassistant.components.roomba.async_connect_or_timeout",
+        return_value={},
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
