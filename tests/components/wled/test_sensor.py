@@ -369,6 +369,23 @@ async def test_usermod_readings_without_a_sensor(
     assert hass.states.get("sensor.wled_rgb_light_humidity") is None
 
 
+async def test_usermod_readings_in_a_unit_of_another_kind(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_wled: MagicMock,
+) -> None:
+    """Test readings in a unit that doesn't fit the sensor don't become sensors."""
+    await _async_setup_with_readings(
+        hass,
+        mock_config_entry,
+        mock_wled,
+        {"temperature": [48.3, "%"], "humidity": [22.1, "°C"]},
+    )
+
+    assert hass.states.get("sensor.wled_rgb_light_temperature") is None
+    assert hass.states.get("sensor.wled_rgb_light_humidity") is None
+
+
 async def test_usermod_sensor_follows_device(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

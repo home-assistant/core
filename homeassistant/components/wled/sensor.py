@@ -1,6 +1,6 @@
 """Support for WLED sensors."""
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, override
@@ -45,24 +45,28 @@ class WLEDSensorEntityDescription(SensorEntityDescription):
 
 
 # The units usermods report their readings in, as Home Assistant knows them.
-_USERMOD_UNITS = {
+_TEMPERATURE_UNITS = {
     "°C": UnitOfTemperature.CELSIUS,
     "C": UnitOfTemperature.CELSIUS,
     "°F": UnitOfTemperature.FAHRENHEIT,
     "F": UnitOfTemperature.FAHRENHEIT,
+}
+_HUMIDITY_UNITS = {
     "RH": PERCENTAGE,
     "%RH": PERCENTAGE,
     "%": PERCENTAGE,
 }
 
 
-def _usermod_reading(device: WLEDDevice, reading: str) -> tuple[float, str] | None:
+def _usermod_reading(
+    device: WLEDDevice, reading: str, units: Mapping[str, str]
+) -> tuple[float, str] | None:
     """Return a usermod reading and its unit, if it's a number in a known unit."""
     if (
         device.info.sensor is None
         or (sensor := device.info.sensor.get(reading)) is None
         or sensor.unit is None
-        or (unit := _USERMOD_UNITS.get(sensor.unit.replace(" ", ""))) is None
+        or (unit := units.get(sensor.unit.replace(" ", ""))) is None
         or isinstance(sensor.value, bool)
         or not isinstance(sensor.value, (int, float))
     ):
@@ -72,18 +76,22 @@ def _usermod_reading(device: WLEDDevice, reading: str) -> tuple[float, str] | No
 
 
 def _usermod_sensor(
-    key: str, reading: str, **kwargs: Any
+    key: str, reading: str, units: Mapping[str, str], **kwargs: Any
 ) -> WLEDSensorEntityDescription:
     """Describe a sensor for a reading a usermod reports, like a temperature."""
     return WLEDSensorEntityDescription(
         key=key,
         state_class=SensorStateClass.MEASUREMENT,
-        exists_fn=lambda device: _usermod_reading(device, reading) is not None,
+        exists_fn=lambda device: _usermod_reading(device, reading, units) is not None,
         unit_fn=lambda device: (
-            measured[1] if (measured := _usermod_reading(device, reading)) else None
+            measured[1]
+            if (measured := _usermod_reading(device, reading, units))
+            else None
         ),
         value_fn=lambda device: (
-            measured[0] if (measured := _usermod_reading(device, reading)) else None
+            measured[0]
+            if (measured := _usermod_reading(device, reading, units))
+            else None
         ),
         **kwargs,
     )
@@ -189,24 +197,28 @@ SENSORS: tuple[WLEDSensorEntityDescription, ...] = (
     _usermod_sensor(
         "usermod_temperature",
         "temperature",
+        _TEMPERATURE_UNITS,
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
     _usermod_sensor(
         "usermod_sht_temperature",
         "temp",
+        _TEMPERATURE_UNITS,
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
     _usermod_sensor(
         "usermod_sht_humidity",
         "humidity",
+        _HUMIDITY_UNITS,
         device_class=SensorDeviceClass.HUMIDITY,
         native_unit_of_measurement=PERCENTAGE,
     ),
     _usermod_sensor(
         "usermod_internal_temperature",
         "Internal Temperature",
+        _TEMPERATURE_UNITS,
         translation_key="internal_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
