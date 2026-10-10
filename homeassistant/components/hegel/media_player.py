@@ -16,6 +16,7 @@ from hegel_ip_client import (
 from hegel_ip_client.exceptions import HegelConnectionError
 
 from homeassistant.components.media_player import (
+    MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
@@ -69,6 +70,7 @@ class HegelMediaPlayer(MediaPlayerEntity):
     _attr_should_poll = False
     _attr_name = None
     _attr_has_entity_name = True
+    _attr_device_class = MediaPlayerDeviceClass.RECEIVER
     _attr_supported_features = (
         MediaPlayerEntityFeature.VOLUME_SET
         | MediaPlayerEntityFeature.VOLUME_MUTE

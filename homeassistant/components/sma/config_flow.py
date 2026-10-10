@@ -280,25 +280,12 @@ class SmaConfigFlow(ConfigFlow, domain=DOMAIN):
             self._discovery_data[CONF_MAC],
         )
 
-        existing_entries_with_host = [
-            entry
-            for entry in self._async_current_entries(include_ignore=False)
-            if entry.data.get(CONF_HOST) == self._data[CONF_HOST]
-            and not entry.data.get(CONF_MAC)
-        ]
-
-        # If we have an existing entry with the same host but no MAC address,
-        # we update the entry with the MAC address and reload it.
-        if existing_entries_with_host:
-            entry = existing_entries_with_host[0]
-            self.async_update_reload_and_abort(
-                entry, data_updates={CONF_MAC: self._data[CONF_MAC]}
-            )
-
         if not (match := HOSTNAME_SERIAL.match(discovery_info.hostname)):
             return self.async_abort(reason="not_supported")
         await self.async_set_unique_id(match.group(1))
-        self._abort_if_unique_id_configured(updates={CONF_HOST: self._data[CONF_HOST]})
+        self._abort_if_unique_id_configured(
+            updates={CONF_HOST: self._data[CONF_HOST], CONF_MAC: self._data[CONF_MAC]}
+        )
 
         return await self.async_step_discovery_confirm()
 

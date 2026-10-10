@@ -55,11 +55,13 @@ class ISYEntity(Entity):
     async def async_added_to_hass(self) -> None:
         """Subscribe to the node change events."""
         self._change_handler = self._node.status_events.subscribe(self.async_on_update)
+        self.async_on_remove(self._change_handler.unsubscribe)
 
         if hasattr(self._node, "control_events"):
             self._control_handler = self._node.control_events.subscribe(
                 self.async_on_control
             )
+            self.async_on_remove(self._control_handler.unsubscribe)
 
     @callback
     def async_on_update(self, event: NodeProperty) -> None:
@@ -252,6 +254,7 @@ class ISYAuxControlEntity(Entity):
             event_filter={ATTR_CONTROL: self._control},
             key=self.unique_id,
         )
+        self.async_on_remove(self._change_handler.unsubscribe)
         self._availability_handler = self._node.isy.nodes.status_events.subscribe(
             self.async_on_update,
             event_filter={
@@ -260,6 +263,7 @@ class ISYAuxControlEntity(Entity):
             },
             key=self.unique_id,
         )
+        self.async_on_remove(self._availability_handler.unsubscribe)
 
     @callback
     def async_on_update(self, event: NodeProperty | NodeChangedEvent, key: str) -> None:

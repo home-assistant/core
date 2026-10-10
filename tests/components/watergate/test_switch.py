@@ -116,10 +116,12 @@ async def test_switch_raises_on_client_failure(
         WatergateApiException("boom")
     )
 
-    with pytest.raises(HomeAssistantError, match="Failed to update auto shut-off"):
+    with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             SWITCH_DOMAIN,
             service,
             {ATTR_ENTITY_ID: ENTITY_ID},
             blocking=True,
         )
+
+    assert exc_info.value.translation_key == "auto_shut_off_update_failed"

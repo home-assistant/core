@@ -39,8 +39,13 @@
 # name: test_switch_setup[fc_data0][switch.mock_title_port_forward_test_port_mapping-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'description': 'Test Port Mapping',
+      'external_port': 80,
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Port forward Test Port Mapping',
       <EntityStateAttribute.ICON: 'icon'>: 'mdi:check-network',
+      'internal_ip': '10.10.10.10',
+      'internal_port': 8080,
+      'protocol': 'TCP',
     }),
     'context': <ANY>,
     'entity_id': 'switch.mock_title_port_forward_test_port_mapping',
@@ -90,8 +95,13 @@
 # name: test_switch_setup[fc_data0][switch.mock_title_port_forward_test_port_mapping_81-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'description': 'Test Port Mapping',
+      'external_port': 81,
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Port forward Test Port Mapping 81',
       <EntityStateAttribute.ICON: 'icon'>: 'mdi:check-network',
+      'internal_ip': '10.10.10.10',
+      'internal_port': 8081,
+      'protocol': 'UDP',
     }),
     'context': <ANY>,
     'entity_id': 'switch.mock_title_port_forward_test_port_mapping_81',
@@ -293,8 +303,13 @@
 # name: test_switch_setup[fc_data1][switch.mock_title_port_forward_test_port_mapping-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'description': 'Test Port Mapping',
+      'external_port': 80,
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Port forward Test Port Mapping',
       <EntityStateAttribute.ICON: 'icon'>: 'mdi:check-network',
+      'internal_ip': '10.10.10.10',
+      'internal_port': 8080,
+      'protocol': 'TCP',
     }),
     'context': <ANY>,
     'entity_id': 'switch.mock_title_port_forward_test_port_mapping',
@@ -344,8 +359,13 @@
 # name: test_switch_setup[fc_data1][switch.mock_title_port_forward_test_port_mapping_81-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'description': 'Test Port Mapping',
+      'external_port': 81,
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Port forward Test Port Mapping 81',
       <EntityStateAttribute.ICON: 'icon'>: 'mdi:check-network',
+      'internal_ip': '10.10.10.10',
+      'internal_port': 8081,
+      'protocol': 'UDP',
     }),
     'context': <ANY>,
     'entity_id': 'switch.mock_title_port_forward_test_port_mapping_81',
@@ -547,8 +567,13 @@
 # name: test_switch_setup[fc_data2][switch.mock_title_port_forward_test_port_mapping-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'description': 'Test Port Mapping',
+      'external_port': 80,
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Port forward Test Port Mapping',
       <EntityStateAttribute.ICON: 'icon'>: 'mdi:check-network',
+      'internal_ip': '10.10.10.10',
+      'internal_port': 8080,
+      'protocol': 'TCP',
     }),
     'context': <ANY>,
     'entity_id': 'switch.mock_title_port_forward_test_port_mapping',
@@ -598,8 +623,13 @@
 # name: test_switch_setup[fc_data2][switch.mock_title_port_forward_test_port_mapping_81-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'description': 'Test Port Mapping',
+      'external_port': 81,
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Port forward Test Port Mapping 81',
       <EntityStateAttribute.ICON: 'icon'>: 'mdi:check-network',
+      'internal_ip': '10.10.10.10',
+      'internal_port': 8081,
+      'protocol': 'UDP',
     }),
     'context': <ANY>,
     'entity_id': 'switch.mock_title_port_forward_test_port_mapping_81',
@@ -858,8 +888,13 @@
 # name: test_switch_setup[fc_data3][switch.mock_title_port_forward_test_port_mapping-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'description': 'Test Port Mapping',
+      'external_port': 80,
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Port forward Test Port Mapping',
       <EntityStateAttribute.ICON: 'icon'>: 'mdi:check-network',
+      'internal_ip': '10.10.10.10',
+      'internal_port': 8080,
+      'protocol': 'TCP',
     }),
     'context': <ANY>,
     'entity_id': 'switch.mock_title_port_forward_test_port_mapping',
@@ -909,8 +944,13 @@
 # name: test_switch_setup[fc_data3][switch.mock_title_port_forward_test_port_mapping_81-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'description': 'Test Port Mapping',
+      'external_port': 81,
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Port forward Test Port Mapping 81',
       <EntityStateAttribute.ICON: 'icon'>: 'mdi:check-network',
+      'internal_ip': '10.10.10.10',
+      'internal_port': 8081,
+      'protocol': 'UDP',
     }),
     'context': <ANY>,
     'entity_id': 'switch.mock_title_port_forward_test_port_mapping_81',
