@@ -143,17 +143,10 @@ def writes() -> list[Instruction]:
 
 
 @pytest.fixture
-def written() -> asyncio.Event:
-    """Event set when a message is written."""
-    return asyncio.Event()
-
-
-@pytest.fixture
 def mock_receiver(
     mock_connect: AsyncMock,
     read_queue: asyncio.Queue[Status | None],
     writes: list[Instruction],
-    written: asyncio.Event,
 ) -> AsyncMock:
     """Mock an Onkyo receiver."""
     receiver_class = AsyncMock(Receiver, auto_spec=True)
@@ -167,7 +160,6 @@ def mock_receiver(
 
     async def write(message: Instruction) -> None:
         writes.append(message)
-        written.set()
 
     receiver.read = read
     receiver.write = write
