@@ -139,7 +139,7 @@ async def async_register_connection(
                 brands=frozenset(
                     pair for brands in registry.integrations.values() for pair in brands
                 ),
-                callback=handle_event,
+                listener=handle_event,
             )
         )
     except BaseException:

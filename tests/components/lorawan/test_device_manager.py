@@ -358,7 +358,7 @@ async def test_collection_connection_filter_and_disconnect() -> None:
     connection.emit(inventory(DESCRIPTOR))
     listener = Mock()
     unsubscribe = await connection.async_subscribe(
-        brands=frozenset({("tts", "test_vendor")}), callback=listener
+        brands=frozenset({("tts", "test_vendor")}), listener=listener
     )
     listener.assert_not_called()
     unsubscribe()
@@ -374,17 +374,17 @@ async def test_disconnect_while_vendor_subscribes() -> None:
 
     connection = _CollectionConnection()
     listener = Mock()
-    await connection.async_subscribe(brands=None, callback=listener)
+    await connection.async_subscribe(brands=None, listener=listener)
     stop_events = Mock()
 
     async def replay(
         *,
         brands: frozenset[tuple[str, int | str]] | None,
-        callback: Callable[[DeviceEvent], None],
+        listener: Callable[[DeviceEvent], None],
     ) -> Mock:
-        callback(inventory(DESCRIPTOR))
+        listener(inventory(DESCRIPTOR))
         connection.detach()
-        callback(inventory(replace(DESCRIPTOR, name="Stale"), EventType.UPDATED))
+        listener(inventory(replace(DESCRIPTOR, name="Stale"), EventType.UPDATED))
         return stop_events
 
     backend = Mock(async_subscribe=AsyncMock(side_effect=replay))

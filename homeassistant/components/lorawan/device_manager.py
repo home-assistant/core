@@ -61,18 +61,17 @@ class _CollectionConnection:
         ] = []
         self._disconnect: list[Callable[[None], None]] = []
 
-    # Connection requires the callback parameter name on these two methods.
-    async def async_subscribe(  # pylint: disable=redefined-outer-name
+    async def async_subscribe(
         self,
         *,
         brands: frozenset[tuple[str, int | str]] | None,
-        callback: Callable[[DeviceEvent], None],
+        listener: Callable[[DeviceEvent], None],
     ) -> Unsubscribe:
-        item = (brands, callback)
+        item = (brands, listener)
         self._listeners.append(item)
         for descriptor in tuple(self._devices.values()):
             if brands is None or (descriptor.stack, descriptor.brand_id) in brands:
-                callback(self._event(EventType.ADDED, descriptor))
+                listener(self._event(EventType.ADDED, descriptor))
 
         def unsubscribe() -> None:
             if item in self._listeners:
@@ -80,10 +79,8 @@ class _CollectionConnection:
 
         return unsubscribe
 
-    def on_disconnect(  # pylint: disable=redefined-outer-name
-        self, callback: Callable[[], None]
-    ) -> Unsubscribe:
-        return subscribe(self._disconnect, lambda _: callback())
+    def on_disconnect(self, listener: Callable[[], None]) -> Unsubscribe:
+        return subscribe(self._disconnect, lambda _: listener())
 
     async def async_send_downlink(self, downlink: Downlink) -> str:
         if self.registration is None:
@@ -122,7 +119,7 @@ class _CollectionConnection:
             )
         )
         unsubscribe = await registration.connection.async_subscribe(
-            brands=brands, callback=receive
+            brands=brands, listener=receive
         )
         if self.registration is not registration:
             unsubscribe()

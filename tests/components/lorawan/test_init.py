@@ -44,7 +44,7 @@ async def test_subscribe_and_reconnect(
     assert async_get_connections(hass) == {"network": first}
     events = Mock()
     stop_events = await first.async_subscribe(
-        brands=frozenset({("example", 123)}), callback=events
+        brands=frozenset({("example", 123)}), listener=events
     )
     events.assert_called_once()
     first.emit(inventory(replace(DESCRIPTOR, name="Renamed"), EventType.UPDATED))
@@ -196,7 +196,7 @@ async def test_concurrent_registration(
     async def replay(
         *,
         brands: frozenset[tuple[str, int | str]] | None,
-        callback: Callable[[DeviceEvent], None],
+        listener: Callable[[DeviceEvent], None],
     ) -> Mock:
         started.set()
         await finish.wait()
@@ -232,9 +232,9 @@ async def test_disconnect_during_registration(
     async def replay(
         *,
         brands: frozenset[tuple[str, int | str]] | None,
-        callback: Callable[[DeviceEvent], None],
+        listener: Callable[[DeviceEvent], None],
     ) -> Mock:
-        callback(inventory())
+        listener(inventory())
         backend.on_disconnect.call_args.args[0]()
         return stop_events
 
