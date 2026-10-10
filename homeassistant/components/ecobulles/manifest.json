@@ -1,0 +1,11 @@
+{
+  "domain": "ecobulles",
+  "name": "Ecobulles",
+  "codeowners": ["@jul-fls"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/ecobulles",
+  "integration_type": "hub",
+  "iot_class": "cloud_polling",
+  "quality_scale": "bronze",
+  "requirements": ["pyecobulles==0.1.1"]
+}
