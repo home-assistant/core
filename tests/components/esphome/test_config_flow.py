@@ -87,7 +87,14 @@ async def test_retrieve_encryption_key_from_storage_with_device_mac(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
-        data={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
     )
     await hass.async_block_till_done()
 
@@ -245,7 +252,6 @@ async def test_user_connection_updates_host(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
-        data=None,
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -306,11 +312,11 @@ async def test_user_sets_unique_id(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
-        data=None,
     )
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    assert result["errors"] == {}
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -329,15 +335,22 @@ async def test_user_sets_unique_id(hass: HomeAssistant) -> None:
 async def test_user_resolve_error(hass: HomeAssistant, mock_client: APIClient) -> None:
     """Test user step with IP resolve error."""
 
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
     with patch(
         "homeassistant.components.esphome.config_flow.APIConnectionError",
         new_callable=lambda: ResolveAPIError,
     ) as exc:
         mock_client.device_info.side_effect = exc
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-            data={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
         )
 
     assert result["type"] is FlowResultType.FORM
@@ -394,7 +407,6 @@ async def test_user_causes_zeroconf_to_abort(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
-        data=None,
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -438,7 +450,14 @@ async def test_user_provisioning_closed(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
-        data={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -467,7 +486,14 @@ async def test_user_connection_error(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
-        data={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -508,7 +534,14 @@ async def test_user_with_password(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
-        data={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -541,7 +574,14 @@ async def test_user_invalid_password(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
-        data={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -591,15 +631,21 @@ async def test_user_dashboard_has_wrong_key(
             mac_address="11:22:33:44:55:AA",
         ),
     ]
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
 
     with patch(
         "homeassistant.components.esphome.coordinator.ESPHomeDashboardAPI.get_encryption_key",
         return_value=WRONG_NOISE_PSK,
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-            data={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
         )
         await hass.async_block_till_done()
 
@@ -647,14 +693,21 @@ async def test_user_discovers_name_and_gets_key_from_dashboard(
     )
     await MockDashboardRefresh(hass).async_refresh()
 
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
     with patch(
         "homeassistant.components.esphome.coordinator.ESPHomeDashboardAPI.get_encryption_key",
         return_value=VALID_NOISE_PSK,
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-            data={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
         )
         await hass.async_block_till_done()
 
@@ -698,15 +751,21 @@ async def test_user_discovers_name_and_gets_key_from_dashboard_fails(
         }
     )
     await MockDashboardRefresh(hass).async_refresh()
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
 
     with patch(
         "homeassistant.components.esphome.coordinator.ESPHomeDashboardAPI.get_encryption_key",
         side_effect=dashboard_exception,
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-            data={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
         )
         await hass.async_block_till_done()
 
@@ -752,16 +811,22 @@ async def test_user_discovers_name_and_dashboard_is_unavailable(
             "configuration": "test.yaml",
         }
     )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
 
     with patch(
         "homeassistant.components.esphome.coordinator.ESPHomeDashboardAPI.get_devices",
         side_effect=TimeoutError,
     ):
         await MockDashboardRefresh(hass).async_refresh()
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-            data={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
         )
         await hass.async_block_till_done()
 
@@ -790,11 +855,17 @@ async def test_login_connection_error(
 ) -> None:
     """Test user step with connection error on login attempt."""
     mock_client.device_info.return_value = DeviceInfo(uses_password=True, name="test")
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
-        data={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -1117,11 +1188,17 @@ async def test_discovery_abort_without_update_same_host_port(
 async def test_user_requires_psk(hass: HomeAssistant, mock_client: APIClient) -> None:
     """Test user step with requiring encryption key."""
     mock_client.device_info.side_effect = RequiresEncryptionAPIError
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
-        data={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -1163,11 +1240,17 @@ async def test_encryption_key_valid_psk(
     """Test encryption key step with valid key."""
 
     mock_client.device_info.side_effect = RequiresEncryptionAPIError
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
-        data={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -1202,11 +1285,17 @@ async def test_encryption_key_invalid_psk(
     """Test encryption key step with invalid key."""
 
     mock_client.device_info.side_effect = RequiresEncryptionAPIError
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
-        data={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -1572,15 +1661,21 @@ async def test_user_flow_stale_storage_key_falls_back_to_dashboard(
 
     mock_dashboard["configured"].append({"name": "test", "configuration": "test.yaml"})
     await MockDashboardRefresh(hass).async_refresh()
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
 
     with patch(
         "homeassistant.components.esphome.coordinator.ESPHomeDashboardAPI.get_encryption_key",
         return_value=VALID_NOISE_PSK,
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-            data={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
         )
         await hass.async_block_till_done()
 
@@ -1673,15 +1768,21 @@ async def test_user_flow_offline_device_stops_candidate_probing(
 
     mock_dashboard["configured"].append({"name": "test", "configuration": "test.yaml"})
     await MockDashboardRefresh(hass).async_refresh()
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
 
     with patch(
         "homeassistant.components.esphome.coordinator.ESPHomeDashboardAPI.get_encryption_key",
         return_value=VALID_NOISE_PSK,
     ) as mock_get_encryption_key:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-            data={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
         )
         await hass.async_block_till_done()
 
@@ -1719,11 +1820,17 @@ async def test_user_flow_manual_key_repairs_stale_storage(
         InvalidEncryptionKeyAPIError("Wrong key", "test", "11:22:33:44:55:AA"),
         DeviceInfo(uses_password=False, name="test", mac_address="11:22:33:44:55:AA"),
     ]
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
-        data={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
     )
     await hass.async_block_till_done()
 
@@ -2647,11 +2754,17 @@ async def test_user_discovers_name_no_dashboard(
             mac_address="11:22:33:44:55:AA",
         ),
     ]
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
-        data={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
     )
     await hass.async_block_till_done()
 
@@ -2769,11 +2882,17 @@ async def test_user_flow_name_conflict_migrate(
     mock_client.device_info_and_list_entities = AsyncMock(
         return_value=(device_info, [], [])
     )
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
-        data={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
     )
     await hass.async_block_till_done()
 
@@ -2822,11 +2941,17 @@ async def test_user_flow_name_conflict_overwrite(
     mock_client.device_info_and_list_entities = AsyncMock(
         return_value=(device_info, [], [])
     )
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
-        data={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
     )
 
     assert result["type"] is FlowResultType.MENU
@@ -3295,7 +3420,14 @@ async def test_user_flow_starts_zwave_discovery(
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
-            data={CONF_HOST: "192.168.1.100", CONF_PORT: 6053},
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+        assert result["errors"] == {}
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_HOST: "192.168.1.100", CONF_PORT: 6053},
         )
 
     # Verify the entry was created
@@ -3363,7 +3495,14 @@ async def test_user_flow_no_zwave_discovery_without_home_id(
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
-            data={CONF_HOST: "192.168.1.103", CONF_PORT: 6053},
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+        assert result["errors"] == {}
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_HOST: "192.168.1.103", CONF_PORT: 6053},
         )
 
     # Verify the ESPHome entry was created
@@ -3414,7 +3553,14 @@ async def test_user_flow_no_zwave_discovery_without_capabilities(
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
-            data={CONF_HOST: "192.168.1.101", CONF_PORT: 6053},
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+        assert result["errors"] == {}
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_HOST: "192.168.1.101", CONF_PORT: 6053},
         )
 
     # Verify the entry was created
@@ -3467,7 +3613,14 @@ async def test_user_flow_zwave_discovery_aborts(
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
-            data={CONF_HOST: "192.168.1.102", CONF_PORT: 6053},
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+        assert result["errors"] == {}
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_HOST: "192.168.1.102", CONF_PORT: 6053},
         )
 
     # Verify the ESPHome entry was still created despite Z-Wave flow aborting
