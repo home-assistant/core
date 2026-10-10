@@ -144,9 +144,11 @@ Every check has a code following the
 | `W7437` | [`home-assistant-light-missing-supported-color-modes`](#w7437-home-assistant-light-missing-supported-color-modes) | Light entity reports a `color_mode` but does not set supported color modes |
 | `W7439` | [`home-assistant-tests-coordinator-async-refresh`](#w7439-home-assistant-tests-coordinator-async-refresh) | Tests should advance the time instead of refreshing a coordinator directly |
 | `W7440` | [`home-assistant-tests-config-flow-unique-id`](#w7440-home-assistant-tests-config-flow-unique-id) | Happy path config flow tests should assert the created entry's unique ID |
+| `W7441` | [`home-assistant-tests-config-flow-error-recovery`](#w7441-home-assistant-tests-config-flow-error-recovery) | Config flow tests that show an error should finish the flow afterwards |
 | `W7442` | [`home-assistant-redundant-translation-key`](#w7442-home-assistant-redundant-translation-key) | `translation_key` only repeats the name the `device_class` already provides |
 | `W7447` | [`home-assistant-coordinator-untyped-config-entry`](#w7447-home-assistant-coordinator-untyped-config-entry) | Coordinator should use the integration's typed config entry instead of `ConfigEntry` |
 | `W7448` | [`home-assistant-coordinator-redundant-config-entry`](#w7448-home-assistant-coordinator-redundant-config-entry) | Coordinator assigns `self.config_entry` that `DataUpdateCoordinator.__init__` already sets |
+| `W7449` | [`home-assistant-coordinator-entity-available`](#w7449-home-assistant-coordinator-entity-available) | `CoordinatorEntity` overrides `available` with only `coordinator.data` and without `super().available` |
 | `W7450` | [`home-assistant-log-and-raise`](#w7450-home-assistant-log-and-raise) | Don't log an error that is raised to Home Assistant, which already reports it |
 
 
@@ -346,6 +348,35 @@ When the alias lives in `__init__.py`, import it in the coordinator under
 coordinator that passes `config_entry` to `super().__init__` doesn't need to
 assign `self.config_entry` itself. To narrow its type, annotate it on the
 class instead.
+
+
+## `home_assistant_coordinator_entity_available` checker
+
+Checks `available` overrides on coordinator entities.
+
+### `W7449`: `home-assistant-coordinator-entity-available`
+
+`CoordinatorEntity.available` returns `coordinator.last_update_success`, so the
+entity becomes unavailable when an update fails. An override that takes its
+availability only from `coordinator.data` keeps the entity available with the
+data of the last successful update, because the coordinator keeps that data
+when an update fails:
+
+```python
+@property
+def available(self) -> bool:
+    return super().available and self.device_id in self.coordinator.data
+```
+
+Properties and methods of the entity and the coordinator are followed, so
+`self.data` or `self.coordinator.get_device(...)` reading `coordinator.data`
+count as coordinator data.
+
+Overrides with a source of their own, such as a client, a device, a websocket
+or `_attr_available`, are not flagged. Neither are entities of a push
+coordinator, one that never sets an `update_interval` and gets its data
+through `async_set_updated_data`: its `last_update_success` doesn't show
+whether the device is reachable.
 
 
 ## `home_assistant_log_and_raise` checker
@@ -603,6 +634,48 @@ skipped too: they make a mock raise an exception through `side_effect` or
 expect non-empty `errors`. Resetting a `side_effect` to `None`, replacing a
 method with a function or a mock, or returning a list of values doesn't count
 as an error.
+
+
+## `home_assistant_tests_config_flow_error_recovery` checker
+
+Detects config flow tests that show an error but never prove the user can
+recover from it.
+
+### `W7441`: `home-assistant-tests-config-flow-error-recovery`
+
+A config flow test that asserts a step shows an error should then fix the
+cause and finish the flow, so the test proves the flow recovers:
+
+```python
+assert result["errors"] == {"base": "cannot_connect"}
+
+mock_client.connect.side_effect = None
+result = await hass.config_entries.flow.async_configure(
+    result["flow_id"], USER_INPUT
+)
+assert result["type"] is FlowResultType.CREATE_ENTRY
+```
+
+Only `tests/components/<domain>/test_config_flow.py` modules are checked.
+Any error counts, on any field and in any flow (user, discovery, reauth,
+reconfigure, options, subentry): `errors == {...}`, `errors["base"] == ...`,
+`"base" in errors`, a bare `assert result["errors"]` and `errors != {}`, also
+through a local alias such as `errors = result["errors"]`. A test is flagged
+when, after an error assertion, it never asserts that a result has type
+`CREATE_ENTRY` or aborted with a `*_successful` reason (as reauth and
+reconfigure flows do); every error needs its own. A finishing assertion in a
+branch that cannot run after the error, such as the `else` of the `if` that
+shows the error, does not count, and neither does one after a new flow is
+started with `async_init`: that flow is not the one that showed the error.
+
+Helper functions from the integration's own tests are followed, both for
+showing the error (such as `assert_form_error(result, "cannot_connect")`) and
+for finishing the flow, with the arguments they are called with. A reason
+taken from a test argument counts when all its `pytest.mark.parametrize`
+values end with `_successful`.
+
+See the [config-flow-test-coverage quality scale rule](https://developers.home-assistant.io/docs/core/integration-quality-scale/rules/config-flow-test-coverage).
+
 
 ## `home_assistant_enforce_utcnow` checker
 

@@ -59,6 +59,21 @@
     "oauth2_unknown_implementation": {
       "message": "The configured authentication method is no longer available, re-authentication required"
     },
+    "os_write_dir_not_found": {
+      "message": "Cannot write {path}: the folder does not exist."
+    },
+    "os_write_error": {
+      "message": "Cannot write {path}."
+    },
+    "os_write_no_space": {
+      "message": "Cannot write {path}: no space left on the device."
+    },
+    "os_write_permission_denied": {
+      "message": "Cannot write {path}: permission denied."
+    },
+    "os_write_read_only": {
+      "message": "Cannot write {path}: the file system is read-only."
+    },
     "platform_component_load_err": {
       "message": "Platform error: {domain} - {error}."
     },

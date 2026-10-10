@@ -89,6 +89,12 @@ def _usermod_sensor(
     )
 
 
+def _connected_over_wifi(device: WLEDDevice) -> bool:
+    """Return whether the device is connected over Wi-Fi, not wired."""
+    # Without a Wi-Fi connection, the library reports no signal strength.
+    return device.info.wifi is not None and device.info.wifi.rssi is not None
+
+
 SENSORS: tuple[WLEDSensorEntityDescription, ...] = (
     WLEDSensorEntityDescription(
         key="estimated_current",
@@ -138,6 +144,7 @@ SENSORS: tuple[WLEDSensorEntityDescription, ...] = (
     WLEDSensorEntityDescription(
         key="wifi_signal",
         translation_key="wifi_signal",
+        exists_fn=_connected_over_wifi,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -147,6 +154,7 @@ SENSORS: tuple[WLEDSensorEntityDescription, ...] = (
     WLEDSensorEntityDescription(
         key="wifi_rssi",
         translation_key="wifi_rssi",
+        exists_fn=_connected_over_wifi,
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         state_class=SensorStateClass.MEASUREMENT,
@@ -157,6 +165,7 @@ SENSORS: tuple[WLEDSensorEntityDescription, ...] = (
     WLEDSensorEntityDescription(
         key="wifi_channel",
         translation_key="wifi_channel",
+        exists_fn=_connected_over_wifi,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_fn=lambda device: device.info.wifi.channel if device.info.wifi else None,
@@ -164,6 +173,7 @@ SENSORS: tuple[WLEDSensorEntityDescription, ...] = (
     WLEDSensorEntityDescription(
         key="wifi_bssid",
         translation_key="wifi_bssid",
+        exists_fn=_connected_over_wifi,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_fn=lambda device: device.info.wifi.bssid if device.info.wifi else None,

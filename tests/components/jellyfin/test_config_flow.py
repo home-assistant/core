@@ -127,6 +127,18 @@ async def test_form_cannot_connect(
 
     assert len(mock_client.auth.connect_to_address.mock_calls) == 1
 
+    mock_client.auth.connect_to_address.return_value = await async_load_json_fixture(
+        hass, "auth-connect-address.json"
+    )
+
+    result3 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"],
+        user_input=USER_INPUT,
+    )
+    await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_form_invalid_auth(
     hass: HomeAssistant,
@@ -157,6 +169,18 @@ async def test_form_invalid_auth(
     assert len(mock_client.auth.connect_to_address.mock_calls) == 1
     assert len(mock_client.auth.login.mock_calls) == 1
 
+    mock_client.auth.login.return_value = await async_load_json_fixture(
+        hass, "auth-login.json"
+    )
+
+    result3 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"],
+        user_input=USER_INPUT,
+    )
+    await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_form_exception(
     hass: HomeAssistant, mock_jellyfin: MagicMock, mock_client: MagicMock
@@ -180,6 +204,16 @@ async def test_form_exception(
     assert result2["errors"] == {"base": "unknown"}
 
     assert len(mock_client.auth.connect_to_address.mock_calls) == 1
+
+    mock_client.auth.connect_to_address.side_effect = None
+
+    result3 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"],
+        user_input=USER_INPUT,
+    )
+    await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_persists_device_id_on_error(

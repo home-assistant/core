@@ -18,7 +18,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN
 from .discovery import PGLabDiscovery
 
 type PGLabConfigEntry = ConfigEntry[PGLabDiscovery]
@@ -60,8 +60,6 @@ async def async_setup_entry(
         async_unsubscribe_topics(hass, sub_state)
 
     if not await mqtt.async_wait_for_mqtt_client(hass):
-        # pylint: disable-next=home-assistant-log-and-raise
-        LOGGER.error("MQTT integration not available")
         raise ConfigEntryNotReady("MQTT integration not available")
 
     # Create an MQTT client for PGLab used for PGLab python module.

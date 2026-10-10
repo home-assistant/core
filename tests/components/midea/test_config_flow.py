@@ -1,7 +1,9 @@
 """Tests for the Midea config flow."""
 
-from collections.abc import Callable
+from collections.abc import Callable, Generator
+from contextlib import contextmanager
 from functools import partial
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from midealocal.const import DeviceType, ProtocolVersion
@@ -65,6 +67,82 @@ from .const import (
 from tests.common import MockConfigEntry, get_schema_suggested_value
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
+
+
+@contextmanager
+def _patch_manual_success() -> Generator[None]:
+    """Patch discovery and a device that accepts the connection."""
+    dm = MagicMock()
+    dm.connect.return_value = True
+    with (
+        patch(
+            "homeassistant.components.midea.config_flow.discover",
+            return_value=DISCOVERY_RESULT,
+        ),
+        patch(
+            "homeassistant.components.midea.config_flow.device_selector",
+            return_value=dm,
+        ),
+    ):
+        yield
+
+
+@contextmanager
+def _patch_cloud_success() -> Generator[None]:
+    """Patch a cloud that logs in and hands out a working token and key."""
+    cloud = MagicMock()
+    cloud.login = AsyncMock(return_value=True)
+    cloud.get_device_info = AsyncMock(return_value=None)
+    cloud.get_cloud_keys = AsyncMock(
+        return_value={"method": {"token": TEST_TOKEN, "key": TEST_KEY}}
+    )
+    dm = MagicMock()
+    dm.connect.return_value = True
+    with (
+        patch(
+            "homeassistant.components.midea.config_flow.async_get_clientsession",
+            return_value=object(),
+        ),
+        patch(
+            "homeassistant.components.midea.config_flow.get_midea_cloud",
+            return_value=cloud,
+        ),
+        patch(
+            "homeassistant.components.midea.config_flow.MideaCloud.get_default_keys",
+            AsyncMock(return_value={}),
+        ),
+        patch(
+            "homeassistant.components.midea.config_flow.device_selector",
+            return_value=dm,
+        ),
+    ):
+        yield
+
+
+async def _async_finish_with_cloud(
+    hass: HomeAssistant, flow_id: str, user_input: dict[str, Any]
+) -> ConfigFlowResult:
+    """Submit the input with a working cloud and assert the device entry is created."""
+    with _patch_cloud_success():
+        result = await hass.config_entries.flow.async_configure(
+            flow_id, user_input=user_input
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == str(TEST_DEVICE_ID)
+    return result
+
+
+async def _async_finish_with_preset(
+    hass: HomeAssistant, flow_id: str
+) -> ConfigFlowResult:
+    """Select the device, log in with the preset account and assert the entry."""
+    result = await hass.config_entries.flow.async_configure(
+        flow_id, user_input={CONF_DEVICE: TEST_DEVICE_ID}
+    )
+    assert result["step_id"] == "auth_method"
+    return await _async_finish_with_cloud(
+        hass, flow_id, {"login_mode": LOGIN_MODE_PRESET}
+    )
 
 
 async def test_manual_flow_success(hass: HomeAssistant) -> None:
@@ -175,6 +253,7 @@ async def test_manual_flow_duplicate_unique_id(hass: HomeAssistant) -> None:
         "default_keys_return",
         "pre_input",
         "expected_error",
+        "recovery_input",
     ),
     [
         pytest.param(
@@ -187,6 +266,7 @@ async def test_manual_flow_duplicate_unique_id(hass: HomeAssistant) -> None:
             {},
             None,
             "invalid_token",
+            {**EXTENDED_DATA},
             id="invalid_token",
         ),
         pytest.param(
@@ -199,6 +279,7 @@ async def test_manual_flow_duplicate_unique_id(hass: HomeAssistant) -> None:
             {},
             None,
             "invalid_device_ip",
+            {**EXTENDED_DATA},
             id="discover_empty",
         ),
         pytest.param(
@@ -211,6 +292,7 @@ async def test_manual_flow_duplicate_unique_id(hass: HomeAssistant) -> None:
             {},
             None,
             "invalid_device_id_for_ip",
+            {**EXTENDED_DATA},
             id="discover_id_mismatch",
         ),
         pytest.param(
@@ -229,6 +311,7 @@ async def test_manual_flow_duplicate_unique_id(hass: HomeAssistant) -> None:
             {},
             None,
             "ip_address_mismatch",
+            {**EXTENDED_DATA, CONF_IP_ADDRESS: "2.2.2.2"},
             id="ip_mismatch",
         ),
         pytest.param(
@@ -247,6 +330,7 @@ async def test_manual_flow_duplicate_unique_id(hass: HomeAssistant) -> None:
             {},
             None,
             "protocol_mismatch",
+            {**EXTENDED_DATA, CONF_PROTOCOL: ProtocolVersion.V2},
             id="protocol_mismatch",
         ),
         pytest.param(
@@ -264,6 +348,7 @@ async def test_manual_flow_duplicate_unique_id(hass: HomeAssistant) -> None:
             {},
             None,
             "type_mismatch",
+            {**EXTENDED_DATA, CONF_TYPE: DeviceType.C3},
             id="type_mismatch",
         ),
         pytest.param(
@@ -276,6 +361,7 @@ async def test_manual_flow_duplicate_unique_id(hass: HomeAssistant) -> None:
             {},
             None,
             "device_auth_failed",
+            {**EXTENDED_DATA},
             id="connect_fails",
         ),
         pytest.param(
@@ -288,6 +374,7 @@ async def test_manual_flow_duplicate_unique_id(hass: HomeAssistant) -> None:
             {},
             None,
             "preset_login_failed",
+            {**EXTENDED_DATA},
             id="preset_login_fails",
         ),
         pytest.param(
@@ -300,6 +387,7 @@ async def test_manual_flow_duplicate_unique_id(hass: HomeAssistant) -> None:
             {},
             None,
             "token_unavailable",
+            {**EXTENDED_DATA},
             id="no_token_from_cloud",
         ),
         pytest.param(
@@ -312,6 +400,7 @@ async def test_manual_flow_duplicate_unique_id(hass: HomeAssistant) -> None:
             {},
             None,
             "device_not_registered",
+            {**EXTENDED_DATA},
             id="cloud_rejects_token_request",
         ),
     ],
@@ -327,6 +416,7 @@ async def test_manual_step_errors(
     default_keys_return: dict[str, dict[str, str]],
     pre_input: dict[str, object] | None,
     expected_error: str,
+    recovery_input: dict[str, Any],
 ) -> None:
     """Test every async_step_manually error branch via one parametrized flow."""
     result = await hass.config_entries.flow.async_init(
@@ -388,6 +478,13 @@ async def test_manual_step_errors(
     assert result["step_id"] == "manually"
     assert result["errors"] == {"base": expected_error}
 
+    with _patch_manual_success():
+        result = await hass.config_entries.flow.async_configure(
+            flow_id,
+            user_input=recovery_input,
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_manual_step_retains_user_input_on_error(hass: HomeAssistant) -> None:
     """Test the manual form keeps the user's entered values after a validation error.
@@ -424,6 +521,13 @@ async def test_manual_step_retains_user_input_on_error(hass: HomeAssistant) -> N
         == (submitted[CONF_IP_ADDRESS])
     )
     assert get_schema_suggested_value(data_schema, CONF_TOKEN) == "zz"
+
+    with _patch_manual_success():
+        result = await hass.config_entries.flow.async_configure(
+            flow_id,
+            user_input={**EXTENDED_DATA},
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_manual_step_retries_discovery_after_mismatch(
@@ -483,6 +587,7 @@ async def test_search_flow_no_new_devices_found(hass: HomeAssistant) -> None:
     """Test the search step reports no_devices when discovery only finds already-configured devices."""
     entry = MockConfigEntry(
         domain=DOMAIN,
+        minor_version=2,
         data={CONF_DEVICE_ID: TEST_DEVICE_ID, CONF_IP_ADDRESS: TEST_IP_ADDRESS},
     )
     entry.add_to_hass(hass)
@@ -513,6 +618,37 @@ async def test_search_flow_no_new_devices_found(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "search"
     assert result["errors"] == {"base": "no_devices"}
+
+    dm = MagicMock()
+    dm.connect.return_value = True
+    with (
+        patch(
+            "homeassistant.components.midea.config_flow.discover",
+            return_value={
+                TEST_DEVICE_ID + 1: {
+                    **BASE_DATA,
+                    CONF_IP_ADDRESS: "2.2.2.2",
+                    CONF_TYPE: TEST_TYPE,
+                    CONF_PROTOCOL: ProtocolVersion.V2,
+                }
+            },
+        ),
+        patch(
+            "homeassistant.components.midea.config_flow.device_selector",
+            return_value=dm,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            flow_id,
+            user_input={CONF_IP_ADDRESS: "2.2.2.2"},
+        )
+        assert result["step_id"] == "auto"
+
+        result = await hass.config_entries.flow.async_configure(
+            flow_id,
+            user_input={CONF_DEVICE: TEST_DEVICE_ID + 1},
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_auto_flow_cloud_device_info_overrides_name_and_subtype(
@@ -875,6 +1011,8 @@ async def test_auto_flow_phase2_login_false_keeps_phase1_cloud_error(
     assert result["errors"] == {"base": "device_not_registered"}
     assert result["description_placeholders"] == {"error_code": "3201"}
 
+    await _async_finish_with_preset(hass, flow_id)
+
 
 async def test_auto_flow_v3_token_retrieval_exhausted(hass: HomeAssistant) -> None:
     """Test both phase 1 and phase 2 key retrieval failing surfaces token_unavailable."""
@@ -950,6 +1088,8 @@ async def test_auto_flow_v3_token_retrieval_exhausted(hass: HomeAssistant) -> No
     assert result["errors"] == {"base": "token_unavailable"}
     assert dm.connect.call_count == 4
 
+    await _async_finish_with_preset(hass, flow_id)
+
 
 async def test_auto_flow_v3_phase2_login_failed(hass: HomeAssistant) -> None:
     """Test phase 2's forced preset re-login failing surfaces preset_login_failed."""
@@ -1010,6 +1150,8 @@ async def test_auto_flow_v3_phase2_login_failed(hass: HomeAssistant) -> None:
     assert result["errors"] == {"base": "preset_login_failed"}
     assert cloud.login.call_count == 2
 
+    await _async_finish_with_preset(hass, flow_id)
+
 
 async def test_auto_flow_v3_phase2_no_keys_available(hass: HomeAssistant) -> None:
     """Test phase 2 succeeding to log in but still finding no keys surfaces token_unavailable."""
@@ -1069,6 +1211,8 @@ async def test_auto_flow_v3_phase2_no_keys_available(hass: HomeAssistant) -> Non
     assert result["step_id"] == "auto"
     assert result["errors"] == {"base": "token_unavailable"}
     assert cloud.get_cloud_keys.call_count == 2
+
+    await _async_finish_with_preset(hass, flow_id)
 
 
 async def test_auto_flow_v3_phase2_success_after_phase1_failure(
@@ -1227,6 +1371,8 @@ async def test_auto_flow_recovers_after_preset_login_error(
         )
 
     assert result["step_id"] == "auth_method"
+
+    await _async_finish_with_cloud(hass, flow_id, {"login_mode": LOGIN_MODE_PRESET})
 
 
 @pytest.mark.parametrize(
@@ -1427,6 +1573,12 @@ async def test_login_credentials_step_login_failed_sets_error(
     assert get_schema_suggested_value(data_schema, CONF_ACCOUNT) == "user"
     assert get_schema_suggested_value(data_schema, CONF_SERVER) == DEFAULT_CLOUD
 
+    await _async_finish_with_cloud(
+        hass,
+        flow_id,
+        {CONF_SERVER: DEFAULT_CLOUD, CONF_ACCOUNT: "user", CONF_PASSWORD: "pass"},
+    )
+
 
 @pytest.mark.parametrize(
     ("login_error", "expected_error", "expected_code"),
@@ -1511,6 +1663,12 @@ async def test_login_credentials_step_maps_cloud_error(
     assert result["errors"] == {"base": expected_error}
     assert result["description_placeholders"] == {"error_code": expected_code}
 
+    await _async_finish_with_cloud(
+        hass,
+        flow_id,
+        {CONF_SERVER: DEFAULT_CLOUD, CONF_ACCOUNT: "user", CONF_PASSWORD: "pass"},
+    )
+
 
 @pytest.mark.parametrize(
     (
@@ -1519,6 +1677,7 @@ async def test_login_credentials_step_maps_cloud_error(
         "expected_step",
         "expected_error",
         "expected_code",
+        "recovery_steps",
     ),
     [
         pytest.param(
@@ -1527,6 +1686,7 @@ async def test_login_credentials_step_maps_cloud_error(
             "auth_method",
             "account_locked",
             "7610",
+            [],
             id="preset_login_rejected",
         ),
         pytest.param(
@@ -1535,6 +1695,7 @@ async def test_login_credentials_step_maps_cloud_error(
             "auto",
             "device_not_registered",
             "3201",
+            [({CONF_DEVICE: TEST_DEVICE_ID}, "auth_method")],
             id="device_bound_to_other_account",
         ),
     ],
@@ -1546,6 +1707,7 @@ async def test_auto_flow_preset_auth_maps_cloud_error(
     expected_step: str,
     expected_error: str,
     expected_code: str,
+    recovery_steps: list[tuple[dict[str, Any], str]],
 ) -> None:
     """Test cloud API errors on the preset auth path surface a specific message.
 
@@ -1611,6 +1773,14 @@ async def test_auto_flow_preset_auth_maps_cloud_error(
     assert result["step_id"] == expected_step
     assert result["errors"] == {"base": expected_error}
     assert result["description_placeholders"] == {"error_code": expected_code}
+
+    for user_input, next_step in recovery_steps:
+        result = await hass.config_entries.flow.async_configure(
+            flow_id, user_input=user_input
+        )
+        assert result["step_id"] == next_step
+
+    await _async_finish_with_cloud(hass, flow_id, {"login_mode": LOGIN_MODE_PRESET})
 
 
 async def test_login_credentials_step_recovers_after_failed_login(
@@ -1876,6 +2046,13 @@ async def test_manual_step_v3_missing_token_key_sets_retrieved_values(
     assert mock_device_selector.call_args.args[5] == TEST_TOKEN
     assert mock_device_selector.call_args.args[6] == TEST_KEY
 
+    with _patch_manual_success():
+        result = await hass.config_entries.flow.async_configure(
+            flow_id,
+            user_input={**EXTENDED_DATA},
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_manual_step_v3_missing_token_key_unsupported_device_type(
     hass: HomeAssistant,
@@ -1951,6 +2128,13 @@ async def test_manual_step_v3_missing_token_key_unsupported_device_type(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "manually"
     assert result["errors"] == {"base": "token_unavailable"}
+
+    with _patch_manual_success():
+        result = await hass.config_entries.flow.async_configure(
+            flow_id,
+            user_input={**EXTENDED_DATA},
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_manually_flow_success(hass: HomeAssistant) -> None:
@@ -2045,6 +2229,13 @@ async def test_manually_flow_unsupported_device_type(hass: HomeAssistant) -> Non
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "manually"
     assert result["errors"] == {"base": "device_auth_failed"}
+
+    with _patch_manual_success():
+        result = await hass.config_entries.flow.async_configure(
+            flow_id,
+            user_input={**EXTENDED_DATA},
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_manually_flow_builds_concrete_device_subclass(
@@ -2400,6 +2591,8 @@ async def test_auth_method_preset_login_failed(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "auth_method"
     assert result["errors"] == {"base": "preset_login_failed"}
+
+    await _async_finish_with_cloud(hass, flow_id, {"login_mode": LOGIN_MODE_PRESET})
 
 
 async def _assert_reconfigure_success(

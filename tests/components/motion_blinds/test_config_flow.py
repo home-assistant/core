@@ -307,6 +307,21 @@ async def test_config_flow_discovery_fail(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "discovery_error"}
 
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "connect"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_API_KEY: TEST_API_KEY},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_config_flow_invalid_interface(hass: HomeAssistant) -> None:
     """Failed flow manually initialized by the user with invalid interface."""
