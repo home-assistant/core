@@ -13,17 +13,27 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN
+from .const import DOMAIN, SLOW_SCAN_INTERVAL
 from .coordinator import (
     MetOfficeConfigEntry,
     MetOfficeRuntimeData,
     MetOfficeUpdateCoordinator,
 )
+from .services import async_setup_services
 
 PLATFORMS = [Platform.SENSOR, Platform.WEATHER]
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Met Office integration."""
+    async_setup_services(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: MetOfficeConfigEntry) -> bool:
@@ -54,6 +64,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: MetOfficeConfigEntry) ->
         latitude=latitude,
         longitude=longitude,
         frequency="daily",
+        update_interval=SLOW_SCAN_INTERVAL,
     )
 
     metoffice_twice_daily_coordinator = MetOfficeUpdateCoordinator(
@@ -64,6 +75,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: MetOfficeConfigEntry) ->
         latitude=latitude,
         longitude=longitude,
         frequency="twice-daily",
+        update_interval=SLOW_SCAN_INTERVAL,
     )
 
     # Fetch initial data so we have data when entities subscribe
@@ -73,7 +85,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: MetOfficeConfigEntry) ->
     )
 
     entry.runtime_data = MetOfficeRuntimeData(
-        coordinates=f"{latitude}_{longitude}",
+        initial_coordinates=(latitude, longitude),
         hourly_coordinator=metoffice_hourly_coordinator,
         daily_coordinator=metoffice_daily_coordinator,
         twice_daily_coordinator=metoffice_twice_daily_coordinator,
