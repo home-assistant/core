@@ -23,7 +23,7 @@ from .const import DOMAIN
 from .entity import PlugwiseEntity
 
 # Version in which deprecated entities will be removed.
-DEPRECATED_REMOVAL_VERSION = "2027.4.0"
+DEPRECATED_REMOVAL_VERSION = "2027.5.0"
 _REFERENCE_COMPONENTS = {"automation", "script"}
 
 
