@@ -228,25 +228,29 @@ class UnifiEntityLoader:
     ) -> bool:
         """Validate if entity is allowed and supported before creating it."""
         if (
-            (description.key, obj_id) in self.known_objects
-            or not description.allowed_fn(self.hub, obj_id)
-            or not description.supported_fn(self.hub, obj_id)
-        ):
+            description.key,
+            obj_id,
+        ) in self.known_objects or not description.allowed_fn(self.hub, obj_id):
             return False
-        if description.discovery_fn is None or description.discovery_fn(
-            self.hub, obj_id
-        ):
+        supported = description.supported_fn(self.hub, obj_id)
+        if description.discovery_fn is None:
+            return supported
+        if supported and description.discovery_fn(self.hub, obj_id):
             return True
         assert domain is not None
         registry = er.async_get(self.hub.hass)
         entity_id = registry.async_get_entity_id(
             domain, DOMAIN, description.unique_id_fn(self.hub, obj_id)
         )
-        return (
-            entity_id is not None
-            and registry.entities[entity_id].config_entry_id
-            == self.hub.config.entry.entry_id
-        )
+        if (
+            entity_id is None
+            or registry.entities[entity_id].config_entry_id
+            != self.hub.config.entry.entry_id
+        ):
+            return False
+        if not supported:
+            registry.async_remove(entity_id)
+        return supported
 
     @callback
     def get_data_update_coordinator[HandlerT: APIHandler[ApiItem]](

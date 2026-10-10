@@ -79,6 +79,33 @@ TELEMETRY_CASES = [
     ),
 ]
 
+CAPABILITY_CASES = [
+    pytest.param(
+        "has_temperature",
+        True,
+        False,
+        "temperature",
+        f"device_temperature-{DEVICE['mac']}",
+        id="general-temperature",
+    ),
+    pytest.param(
+        "port_table",
+        [{"port_idx": 1, "name": "Port 1", "port_poe": True}],
+        [{"port_idx": 1, "name": "Port 1", "port_poe": False}],
+        "port_1_poe_power",
+        f"poe_power-{DEVICE['mac']}_1",
+        id="poe",
+    ),
+    pytest.param(
+        "outlet_table",
+        [{"index": 1, "name": "Outlet 1", "has_metering": True}],
+        [{"index": 1, "name": "Outlet 1", "has_metering": False}],
+        "outlet_1_outlet_power",
+        f"outlet_power-{DEVICE['mac']}_1",
+        id="outlet-metering",
+    ),
+]
+
 
 @pytest.fixture
 def device_payload(
@@ -425,6 +452,77 @@ async def test_telemetry_registry_scope(
     await config_entry_factory()
     assert entity_registry.async_get(registered.entity_id) == registered
     assert hass.states.get("sensor.device_ac_power_budget") is None
+
+
+@pytest.mark.parametrize(
+    ("field", "telemetry", "unsupported", "sensor", "unique_id"), CAPABILITY_CASES
+)
+@pytest.mark.parametrize("disabled_by", [None, RegistryEntryDisabler.USER])
+async def test_capability_loss_on_reload(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    config_entry_factory: ConfigEntryFactoryType,
+    entity_registry: er.EntityRegistry,
+    mock_requests: Callable[[], None],
+    mock_websocket_message: WebsocketMessageMock,
+    device_payload: list[dict[str, Any]],
+    field: str,
+    unsupported: bool | list[dict[str, Any]],
+    sensor: str,
+    unique_id: str,
+    disabled_by: RegistryEntryDisabler | None,
+) -> None:
+    """Remove registered sensors when reload reports explicit capability loss."""
+    original = deepcopy(device_payload[0])
+    config_entry = await config_entry_factory()
+    entry = entity_registry.async_update_entity(
+        f"sensor.device_{sensor}",
+        new_entity_id="sensor.custom_capability",
+        disabled_by=disabled_by,
+    )
+    assert entry.unique_id == unique_id
+    await hass.async_block_till_done()
+
+    device_payload[0][field] = deepcopy(unsupported)
+    aioclient_mock.clear_requests()
+    mock_requests()
+    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert entity_registry.async_get(entry.entity_id) is None
+    assert hass.states.get(entry.entity_id) is None
+
+    mock_websocket_message(message=MessageKey.DEVICE, data=original)
+    await hass.async_block_till_done()
+    assert entity_registry.async_get(entry.entity_id) is not None
+
+
+@pytest.mark.parametrize(
+    ("field", "telemetry", "unsupported", "sensor", "unique_id"), CAPABILITY_CASES
+)
+async def test_capability_loss_registry_scope(
+    hass: HomeAssistant,
+    config_entry_factory: ConfigEntryFactoryType,
+    entity_registry: er.EntityRegistry,
+    device_payload: list[dict[str, Any]],
+    field: str,
+    unsupported: bool | list[dict[str, Any]],
+    sensor: str,
+    unique_id: str,
+) -> None:
+    """Keep another config entry's registry entry despite unsupported telemetry."""
+    other_entry = MockConfigEntry(domain="unifi")
+    other_entry.add_to_hass(hass)
+    registered = entity_registry.async_get_or_create(
+        "sensor",
+        "unifi",
+        unique_id,
+        suggested_object_id="other_device_capability",
+        config_entry=other_entry,
+    )
+    device_payload[0][field] = deepcopy(unsupported)
+    await config_entry_factory()
+    assert entity_registry.async_get(registered.entity_id) == registered
+    assert hass.states.get(f"sensor.device_{sensor}") is None
 
 
 @pytest.mark.parametrize(
