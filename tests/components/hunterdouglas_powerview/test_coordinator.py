@@ -33,7 +33,7 @@ async def test_stale_shade_devices_removed_on_refresh(
     phantom = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, "99999")},
-        via_device=(DOMAIN, MOCK_SERIAL),
+        via_device_id=hub.id,
     )
 
     freezer.tick(timedelta(seconds=61))
