@@ -1,6 +1,7 @@
 """DataUpdateCoordinator for INDI Allsky integration."""
 
 from dataclasses import dataclass
+from datetime import datetime
 import logging
 from typing import override
 
@@ -17,6 +18,7 @@ from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 from .util import get_ssl_context
@@ -32,12 +34,18 @@ class IndiAllSkyData:
 
     exposure: ExposureData | None = None
     latest_keogram: MediaData | None = None
+    latest_keogram_image: bytes | None = None
+    latest_keogram_updated: datetime | None = None
     latest_startrail: MediaData | None = None
+    latest_startrail_image: bytes | None = None
+    latest_startrail_updated: datetime | None = None
     sensor: SensorData | None = None
 
 
 class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[IndiAllSkyData]):
     """Class to manage fetching INDI Allsky data from the API."""
+
+    config_entry: IndiAllSkyConfigEntry
 
     def __init__(self, hass: HomeAssistant, entry: IndiAllSkyConfigEntry) -> None:
         """Initialize the coordinator."""
@@ -52,7 +60,11 @@ class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[IndiAllSkyData]):
         )
         self.latest_exposure: ExposureData | None = None
         self.latest_keogram: MediaData | None = None
+        self.latest_keogram_image: bytes | None = None
+        self.latest_keogram_updated: datetime | None = None
         self.latest_startrail: MediaData | None = None
+        self.latest_startrail_image: bytes | None = None
+        self.latest_startrail_updated: datetime | None = None
         self.latest_sensor: SensorData | None = None
 
         entry.async_on_unload(
@@ -90,7 +102,11 @@ class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[IndiAllSkyData]):
             IndiAllSkyData(
                 exposure=exposure,
                 latest_keogram=self.latest_keogram,
+                latest_keogram_image=self.latest_keogram_image,
+                latest_keogram_updated=self.latest_keogram_updated,
                 latest_startrail=self.latest_startrail,
+                latest_startrail_image=self.latest_startrail_image,
+                latest_startrail_updated=self.latest_startrail_updated,
                 sensor=self.latest_sensor,
             )
         )
@@ -98,11 +114,29 @@ class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[IndiAllSkyData]):
     def _handle_keogram_complete(self, media: MediaData) -> None:
         """Handle new keogram_complete event from WebSocket stream."""
         self.latest_keogram = media
+        self.config_entry.async_create_background_task(
+            self.hass,
+            self._async_fetch_keogram_and_update(media),
+            "indi_allsky_fetch_keogram",
+        )
+
+    async def _async_fetch_keogram_and_update(self, media: MediaData) -> None:
+        """Fetch latest keogram image and update coordinator."""
+        self.latest_keogram_updated = dt_util.utcnow()
+        try:
+            self.latest_keogram_image = await self.client.fetch_image("latestkeogram")
+        except IndiAllSkyError:
+            _LOGGER.warning("Failed to fetch latest keogram image")
+            self.latest_keogram_image = None
         self.async_set_updated_data(
             IndiAllSkyData(
                 exposure=self.latest_exposure,
-                latest_keogram=media,
+                latest_keogram=self.latest_keogram,
+                latest_keogram_image=self.latest_keogram_image,
+                latest_keogram_updated=self.latest_keogram_updated,
                 latest_startrail=self.latest_startrail,
+                latest_startrail_image=self.latest_startrail_image,
+                latest_startrail_updated=self.latest_startrail_updated,
                 sensor=self.latest_sensor,
             )
         )
@@ -110,11 +144,31 @@ class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[IndiAllSkyData]):
     def _handle_startrail_complete(self, media: MediaData) -> None:
         """Handle new startrail_complete event from WebSocket stream."""
         self.latest_startrail = media
+        self.config_entry.async_create_background_task(
+            self.hass,
+            self._async_fetch_startrail_and_update(media),
+            "indi_allsky_fetch_startrail",
+        )
+
+    async def _async_fetch_startrail_and_update(self, media: MediaData) -> None:
+        """Fetch latest startrail image and update coordinator."""
+        self.latest_startrail_updated = dt_util.utcnow()
+        try:
+            self.latest_startrail_image = await self.client.fetch_image(
+                "lateststartrail"
+            )
+        except IndiAllSkyError:
+            _LOGGER.warning("Failed to fetch latest startrail image")
+            self.latest_startrail_image = None
         self.async_set_updated_data(
             IndiAllSkyData(
                 exposure=self.latest_exposure,
                 latest_keogram=self.latest_keogram,
-                latest_startrail=media,
+                latest_keogram_image=self.latest_keogram_image,
+                latest_keogram_updated=self.latest_keogram_updated,
+                latest_startrail=self.latest_startrail,
+                latest_startrail_image=self.latest_startrail_image,
+                latest_startrail_updated=self.latest_startrail_updated,
                 sensor=self.latest_sensor,
             )
         )
@@ -184,7 +238,11 @@ class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[IndiAllSkyData]):
             IndiAllSkyData(
                 exposure=self.latest_exposure,
                 latest_keogram=self.latest_keogram,
+                latest_keogram_image=self.latest_keogram_image,
+                latest_keogram_updated=self.latest_keogram_updated,
                 latest_startrail=self.latest_startrail,
+                latest_startrail_image=self.latest_startrail_image,
+                latest_startrail_updated=self.latest_startrail_updated,
                 sensor=self.latest_sensor,
             )
         )
@@ -193,7 +251,8 @@ class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[IndiAllSkyData]):
     async def _async_update_data(self) -> IndiAllSkyData:
         """Fetch INDI Allsky metadata and verify connection."""
         try:
-            await self.client.fetch_image("latestimage")
+            if self.latest_exposure is None:
+                await self.client.fetch_image("latestimage")
             if not self.client.is_connected:
                 await self.client.connect()
             if self.latest_sensor is None:
@@ -207,6 +266,10 @@ class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[IndiAllSkyData]):
         return IndiAllSkyData(
             exposure=self.latest_exposure,
             latest_keogram=self.latest_keogram,
+            latest_keogram_image=self.latest_keogram_image,
+            latest_keogram_updated=self.latest_keogram_updated,
             latest_startrail=self.latest_startrail,
+            latest_startrail_image=self.latest_startrail_image,
+            latest_startrail_updated=self.latest_startrail_updated,
             sensor=self.latest_sensor,
         )
