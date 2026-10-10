@@ -73,7 +73,12 @@ rules:
   repair-issues:
     status: exempt
     comment: The integration has no user-actionable repair cases.
-  stale-devices: done
+  stale-devices:
+    status: done
+    comment: >-
+      Users can remove gateways absent from a successful cloud response after
+      an on-demand Sites lookup confirms they are no longer linked. Offline
+      gateways and incomplete or failed responses do not allow removal.
   async-dependency: done
   inject-websession: done
   strict-typing: done

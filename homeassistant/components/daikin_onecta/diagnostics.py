@@ -4,12 +4,12 @@ from typing import Any
 
 from aiohttp import ClientError
 from daikin_onecta.exceptions import OnectaError
-from daikin_onecta.models import Site
 
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.core import HomeAssistant
 
 from .coordinator import DaikinOnectaConfigEntry
+from .daikin_api import gateway_site_membership
 
 TO_REDACT = {
     "access_token",
@@ -42,14 +42,6 @@ TO_REDACT = {
 }
 
 
-def _site_membership(sites: list[Site], gateway_device_id: str) -> bool | None:
-    """Return a gateway's membership across complete site responses."""
-    membership = [site.has_gateway_device(gateway_device_id) for site in sites]
-    if True in membership:
-        return True
-    return None if None in membership else False
-
-
 async def async_get_config_entry_diagnostics(
     hass: HomeAssistant,
     entry: DaikinOnectaConfigEntry,
@@ -71,7 +63,7 @@ async def async_get_config_entry_diagnostics(
             "gateway_membership": [
                 {
                     "gateway_device_id": device.id,
-                    "linked_to_site": _site_membership(sites, device.id),
+                    "linked_to_site": gateway_site_membership(sites, device.id),
                 }
                 for device in (coordinator.data or {}).values()
             ],

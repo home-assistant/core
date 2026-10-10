@@ -21,6 +21,11 @@ class DaikinOnectaDevice:
         self.name: str = device.display_name
 
     @property
+    def present_in_cloud(self) -> bool:
+        """Return whether the latest successful response included this gateway."""
+        return self._is_present_in_cloud
+
+    @property
     def available(self) -> bool:
         """Return whether the device is connected to the Daikin cloud."""
         return self._is_present_in_cloud and self.device.available

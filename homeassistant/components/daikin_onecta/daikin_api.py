@@ -23,6 +23,14 @@ from homeassistant.util import dt as dt_util
 _LOGGER = logging.getLogger(__name__)
 
 
+def gateway_site_membership(sites: list[Site], gateway_device_id: str) -> bool | None:
+    """Return membership without assuming an incomplete site response is empty."""
+    membership = [site.has_gateway_device(gateway_device_id) for site in sites]
+    if True in membership:
+        return True
+    return None if None in membership else False
+
+
 class DaikinApi:
     """Home Assistant adapter around the standalone Daikin Onecta client."""
 
