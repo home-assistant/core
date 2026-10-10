@@ -231,8 +231,8 @@ class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
             if entry.data.get(CONF_HOST) in known_hosts:
                 return self.async_abort(reason="already_configured")
 
-        # Entries are keyed by site and a console may announce no address,
-        # so match it against the devices a site manages.
+        # Entries are keyed by site and a console may announce no address.
+        # Not the device registry: it also holds clients, which a console can be.
         loaded_entries: list[UnifiConfigEntry] = (
             self.hass.config_entries.async_loaded_entries(DOMAIN)
         )
