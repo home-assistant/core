@@ -51,9 +51,9 @@ def mock_zha_get_last_network_settings() -> Generator[None]:
 
 @pytest.fixture(autouse=True)
 def mock_usb_path_exists() -> Generator[None]:
-    """Mock os.path.exists to allow the ZBT-1 integration to load."""
+    """Report the device as plugged in, to allow the ZBT-1 integration to load."""
     with patch(
-        "homeassistant.components.homeassistant_sky_connect.os.path.exists",
+        "homeassistant.components.homeassistant_sky_connect.async_is_serial_port_present",
         return_value=True,
     ):
         yield

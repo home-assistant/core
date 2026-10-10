@@ -226,7 +226,7 @@ async def test_config_entry_migration_v5_collapses_duplicates(
     newer_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.homeassistant_sky_connect.os.path.exists",
+        "homeassistant.components.homeassistant_sky_connect.async_is_serial_port_present",
         return_value=True,
     ):
         await async_setup_component(hass, DOMAIN, {})
@@ -299,7 +299,7 @@ async def test_config_entry_migration_v5_prefers_active_entry(
     sibling_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.homeassistant_sky_connect.os.path.exists",
+        "homeassistant.components.homeassistant_sky_connect.async_is_serial_port_present",
         return_value=True,
     ):
         await async_setup_component(hass, DOMAIN, {})
@@ -369,7 +369,7 @@ async def test_config_entry_migration_v5_removes_duplicates_of_migrated_entry(
     migrated_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.homeassistant_sky_connect.os.path.exists",
+        "homeassistant.components.homeassistant_sky_connect.async_is_serial_port_present",
         return_value=True,
     ):
         await async_setup_component(hass, DOMAIN, {})
@@ -413,7 +413,7 @@ async def test_setup_fails_on_missing_usb_port(hass: HomeAssistant) -> None:
 
     # Set up the config entry
     with patch(
-        "homeassistant.components.homeassistant_sky_connect.os.path.exists"
+        "homeassistant.components.homeassistant_sky_connect.async_is_serial_port_present"
     ) as mock_exists:
         mock_exists.return_value = False
         await hass.config_entries.async_setup(config_entry.entry_id)
@@ -464,7 +464,7 @@ async def test_usb_device_reactivity(hass: HomeAssistant) -> None:
     config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.homeassistant_sky_connect.os.path.exists"
+        "homeassistant.components.homeassistant_sky_connect.async_is_serial_port_present"
     ) as mock_exists:
         mock_exists.return_value = False
         await hass.config_entries.async_setup(config_entry.entry_id)
@@ -666,7 +666,7 @@ async def test_multi_pan_migration_issue_not_created_for_cpc(
 
     with (
         patch(
-            "homeassistant.components.homeassistant_sky_connect.os.path.exists",
+            "homeassistant.components.homeassistant_sky_connect.async_is_serial_port_present",
             return_value=True,
         ),
         patch(
@@ -695,7 +695,7 @@ async def test_multi_pan_migration_issue_created_for_addon(
 
     with (
         patch(
-            "homeassistant.components.homeassistant_sky_connect.os.path.exists",
+            "homeassistant.components.homeassistant_sky_connect.async_is_serial_port_present",
             return_value=True,
         ),
         patch(
@@ -739,7 +739,7 @@ async def test_multi_pan_migration_issue_deleted_for_ezsp(
 
     with (
         patch(
-            "homeassistant.components.homeassistant_sky_connect.os.path.exists",
+            "homeassistant.components.homeassistant_sky_connect.async_is_serial_port_present",
             return_value=True,
         ),
         patch(
