@@ -76,3 +76,28 @@ class LondonAirConfigFlow(ConfigFlow, domain=DOMAIN):
             title="London Air",
             data={CONF_LOCATIONS: list(import_config[CONF_LOCATIONS])},
         )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the reconfigure step."""
+        errors: dict[str, str] = {}
+        entry = self._get_reconfigure_entry()
+        if user_input is not None:
+            if not user_input[CONF_LOCATIONS]:
+                errors[CONF_LOCATIONS] = "required"
+            else:
+                try:
+                    await self._test_connection()
+                except aiohttp.ClientError, TimeoutError:
+                    errors["base"] = "cannot_connect"
+                else:
+                    return self.async_update_reload_and_abort(
+                        entry, data_updates=user_input
+                    )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self._schema(entry.data[CONF_LOCATIONS]),
+            errors=errors,
+        )

@@ -9,6 +9,7 @@ from homeassistant.components.london_air.const import CONF_LOCATIONS, DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
@@ -89,7 +90,7 @@ async def test_user_cannot_connect(
 
     mock_session.get.return_value = MagicMock(
         raise_for_status=MagicMock(
-            side_effect=ClientResponseError(None, None, status=503)
+            side_effect=ClientResponseError(MagicMock(), (), status=503)
         )
     )
 
@@ -127,7 +128,7 @@ async def test_user_already_configured(
 
     mock_session.get.return_value = MagicMock(
         raise_for_status=MagicMock(
-            side_effect=ClientResponseError(None, None, status=503)
+            side_effect=ClientResponseError(MagicMock(), (), status=503)
         )
     )
 
@@ -167,7 +168,7 @@ async def test_import_cannot_connect(
     """Test importing from YAML when the API is unreachable."""
     mock_session.get.return_value = MagicMock(
         raise_for_status=MagicMock(
-            side_effect=ClientResponseError(None, None, status=503)
+            side_effect=ClientResponseError(MagicMock(), (), status=503)
         )
     )
 
@@ -178,3 +179,31 @@ async def test_import_cannot_connect(
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
+
+
+async def test_reconfigure(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_session: MagicMock,
+    api_payload: dict[str, Any],
+) -> None:
+    """Test the reconfigure flow updates the locations."""
+    response = MagicMock()
+    response.raise_for_status = MagicMock()
+    response.json = AsyncMock(return_value=api_payload)
+    mock_session.get.return_value = response
+
+    mock_config_entry.add_to_hass(hass)
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_LOCATIONS: ["Merton", "Barnet"]}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data[CONF_LOCATIONS] == ["Merton", "Barnet"]

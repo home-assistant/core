@@ -14,7 +14,7 @@ SCAN_INTERVAL = timedelta(minutes=30)
 
 REQUEST_TIMEOUT = aiohttp.ClientTimeout(total=10)
 
-MANUFACTURER = "King's College London"
+MANUFACTURER = "Imperial College London"
 
 AUTHORITIES = [
     "Barking and Dagenham",

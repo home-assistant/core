@@ -158,7 +158,7 @@ async def test_yaml_migration(
     mock_session: MagicMock,
     api_payload: dict[str, Any],
 ) -> None:
-    """Test YAML setup imports a config entry and keeps the legacy entity ID."""
+    """Test YAML setup imports a config entry and keeps the legacy entity IDs."""
     response = MagicMock()
     response.raise_for_status = MagicMock()
     response.json = AsyncMock(return_value=api_payload)
@@ -167,17 +167,23 @@ async def test_yaml_migration(
     assert await async_setup_component(
         hass,
         "sensor",
-        {"sensor": {"platform": "london_air", "locations": ["Merton"]}},
+        {
+            "sensor": {
+                "platform": "london_air",
+                "locations": ["Merton", "City of London"],
+            }
+        },
     )
     await hass.async_block_till_done()
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
     assert entries[0].unique_id == DOMAIN
+    assert entries[0].data["locations"] == ["Merton", "City of London"]
 
     assert (
         len(er.async_entries_for_config_entry(entity_registry, entries[0].entry_id))
-        == 1
+        == 2
     )
 
     assert issue_registry.async_get_issue(
@@ -187,6 +193,8 @@ async def test_yaml_migration(
     state = hass.states.get("sensor.merton")
     assert state is not None
     assert state.state == "Low"
+
+    assert hass.states.get("sensor.city_of_london") is not None
 
 
 async def test_yaml_migration_import_failure(
