@@ -11,9 +11,8 @@ class SuggestionFilter:
 
     Generating every suggestion of a large project is cheap, but sending them
     all is not - a caller that only wants the covers of one device shouldn't
-    have to receive the whole installation. Field metadata descriptions follow
-    the convention of the library `*.mcp` input dataclasses, so a parameter
-    schema can be derived from this class.
+    have to receive the whole installation. The fields carry their descriptions
+    in `metadata`, so a parameter schema can be derived from this class.
     """
 
     platform: str | None = field(

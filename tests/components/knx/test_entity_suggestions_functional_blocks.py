@@ -20,19 +20,20 @@ from homeassistant.components.knx.storage.entity_suggestions.functional_blocks i
 )
 from homeassistant.components.knx.storage.knx_selector import GroupAddressConfig, ga
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
 
+from . import KnxEntityGenerator, KnxSuggestionGetter
 from .conftest import KNXTestKit
-
-from tests.typing import WebSocketGenerator
 
 DPT_SWITCH = {"main": 1, "sub": 1}
 DPT_PERCENT = {"main": 5, "sub": 1}
 DPT_COLOR_TEMP_ABS = {"main": 7, "sub": 600}
 DPT_COLOR_RGB = {"main": 232, "sub": 600}
+DPT_COLOR_RGBW = {"main": 251, "sub": 600}
 
 
-def _channel(name: str, fbs: list[str] | None, com_object_ids: list[str]) -> dict:
+def _channel(
+    name: str, fbs: list[str] | None, com_object_ids: list[str]
+) -> dict[str, Any]:
     return {
         "identifier": name,
         "name": name,
@@ -41,11 +42,11 @@ def _channel(name: str, fbs: list[str] | None, com_object_ids: list[str]) -> dic
     }
 
 
-def _com_object(dpas: list[str] | None, ga_links: list[str]) -> dict:
+def _com_object(dpas: list[str] | None, ga_links: list[str]) -> dict[str, Any]:
     return {"dpas": dpas, "group_address_links": ga_links}
 
 
-def _group_address(address: str, dpt: dict | None) -> dict:
+def _group_address(address: str, dpt: dict[str, int] | None) -> dict[str, Any]:
     return {"name": f"GA {address}", "address": address, "description": "", "dpt": dpt}
 
 
@@ -79,6 +80,7 @@ TEST_PROJECT: dict[str, Any] = {
         "6/0/2": _group_address("6/0/2", DPT_SWITCH),
         "6/0/3": _group_address("6/0/3", DPT_COLOR_RGB),
         "6/0/4": _group_address("6/0/4", DPT_COLOR_RGB),
+        "6/0/5": _group_address("6/0/5", DPT_COLOR_RGBW),
         "6/1/1": _group_address("6/1/1", DPT_PERCENT),
         "6/1/2": _group_address("6/1/2", DPT_PERCENT),
         "6/1/3": _group_address("6/1/3", DPT_PERCENT),
@@ -185,7 +187,7 @@ TEST_PROJECT: dict[str, Any] = {
 }
 
 
-def _test_channel(device: str, channel: str) -> dict:
+def _test_channel(device: str, channel: str) -> dict[str, Any]:
     return TEST_PROJECT["devices"][device]["channels"][channel]
 
 
@@ -332,7 +334,7 @@ def test_combined_color_preferred() -> None:
     ]
 
 
-def _with_com_objects(**com_objects: dict) -> dict[str, Any]:
+def _with_com_objects(**com_objects: dict[str, Any]) -> dict[str, Any]:
     """Return the test project extended by additional com objects."""
     return {
         **TEST_PROJECT,
@@ -363,6 +365,22 @@ def test_passive_address_with_other_dpt_dropped() -> None:
     )
     assert suggestion is not None
     assert suggestion["knx"]["ga_color_temp"] == {"write": "5/0/5", "dpt": "7.600"}
+
+
+def test_conflicting_dpt_dropped() -> None:
+    """Test a state address resolving to another DPT than the write address is dropped."""
+    project = _with_com_objects(
+        # RGBW state for an RGB write address - both valid colour DPTs on their own
+        **{"co-92": _com_object(["423.82"], ["6/0/5"])},
+    )
+    channel = _channel("RGB", ["423"], ["co-60", "co-62", "co-92"])
+    suggestion = _build_platform_suggestion(project, channel, Platform.LIGHT)
+    assert suggestion is not None
+    assert suggestion["knx"] == {
+        "ga_switch": {"write": "6/0/1"},
+        "color": {"ga_color": {"write": "6/0/3", "dpt": "232.600"}},
+    }
+    assert suggestion["unmatched"] == ["423.82"]
 
 
 def test_incomplete_preferred_color_option_skipped() -> None:
@@ -422,28 +440,15 @@ def test_incomplete_config_dropped() -> None:
     assert _build_platform_suggestion(TEST_PROJECT, channel, Platform.LIGHT) is None
 
 
-async def _get_suggestions(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, **filters: Any
-) -> dict:
-    client = await hass_ws_client(hass)
-    await client.send_json_auto_id(
-        {"type": "knx/get_entity_suggestions"} | filters,
-    )
-    res = await client.receive_json()
-    assert res["success"], res
-    return res["result"]
-
-
 async def test_ws_get_entity_suggestions(
-    hass: HomeAssistant,
     knx: KNXTestKit,
-    hass_ws_client: WebSocketGenerator,
+    get_entity_suggestions: KnxSuggestionGetter,
     hass_storage: dict[str, Any],
 ) -> None:
     """Test the knx/get_entity_suggestions command."""
     hass_storage[KNX_PROJECT_STORAGE_KEY] = {"version": 1, "data": TEST_PROJECT}
     await knx.setup_integration()
-    result = await _get_suggestions(hass, hass_ws_client)
+    result = await get_entity_suggestions()
 
     assert result["providers"]["fb"] == {
         "state": "ok",
@@ -481,55 +486,36 @@ async def test_ws_get_entity_suggestions(
 
 
 async def test_ws_get_entity_suggestions_duplicates(
-    hass: HomeAssistant,
     knx: KNXTestKit,
-    hass_ws_client: WebSocketGenerator,
+    create_ui_entity: KnxEntityGenerator,
+    get_entity_suggestions: KnxSuggestionGetter,
     hass_storage: dict[str, Any],
 ) -> None:
     """Test that entities using suggested group addresses are reported."""
     hass_storage[KNX_PROJECT_STORAGE_KEY] = {"version": 1, "data": TEST_PROJECT}
     await knx.setup_integration()
-    client = await hass_ws_client(hass)
-    await client.send_json_auto_id(
-        {
-            "type": "knx/create_entity",
-            "platform": Platform.SWITCH,
-            "data": {
-                "entity": {
-                    "name": "Existing",
-                    "device_info": None,
-                    "entity_category": None,
-                },
-                "knx": {"ga_switch": {"write": "1/0/4"}},
-            },
-        }
-    )
-    res = await client.receive_json()
-    assert res["success"], res
-    entity_id = res["result"]["entity_id"]
+    entity = await create_ui_entity(Platform.SWITCH, {"ga_switch": {"write": "1/0/4"}})
 
-    result = await _get_suggestions(hass, hass_ws_client)
+    result = await get_entity_suggestions()
     suggestions = {suggestion["id"]: suggestion for suggestion in result["suggestions"]}
-    assert suggestions["fb_1.1.1_CH-2"]["existing_entity_ids"] == [entity_id]
+    assert suggestions["fb_1.1.1_CH-2"]["existing_entity_ids"] == [entity.entity_id]
     assert suggestions["fb_1.1.2_CH-1"]["existing_entity_ids"] == []
 
 
 async def test_ws_get_entity_suggestions_no_project(
-    hass: HomeAssistant,
     knx: KNXTestKit,
-    hass_ws_client: WebSocketGenerator,
+    get_entity_suggestions: KnxSuggestionGetter,
 ) -> None:
     """Test suggestions without project data."""
     await knx.setup_integration()
-    result = await _get_suggestions(hass, hass_ws_client)
+    result = await get_entity_suggestions()
     assert result["suggestions"] == []
     assert result["providers"]["fb"] == {"state": "no_project"}
 
 
 async def test_ws_get_entity_suggestions_outdated_parser(
-    hass: HomeAssistant,
     knx: KNXTestKit,
-    hass_ws_client: WebSocketGenerator,
+    get_entity_suggestions: KnxSuggestionGetter,
     hass_storage: dict[str, Any],
 ) -> None:
     """Test suggestions for a project imported with an old parser version."""
@@ -541,7 +527,7 @@ async def test_ws_get_entity_suggestions_outdated_parser(
         },
     }
     await knx.setup_integration()
-    result = await _get_suggestions(hass, hass_ws_client)
+    result = await get_entity_suggestions()
     assert result["suggestions"] == []
     assert result["providers"]["fb"] == {
         "state": "outdated_parser",
@@ -550,9 +536,8 @@ async def test_ws_get_entity_suggestions_outdated_parser(
 
 
 async def test_ws_get_entity_suggestions_no_semantics(
-    hass: HomeAssistant,
     knx: KNXTestKit,
-    hass_ws_client: WebSocketGenerator,
+    get_entity_suggestions: KnxSuggestionGetter,
     hass_storage: dict[str, Any],
 ) -> None:
     """Test suggestions for a project without semantics information."""
@@ -571,6 +556,6 @@ async def test_ws_get_entity_suggestions_no_semantics(
         },
     }
     await knx.setup_integration()
-    result = await _get_suggestions(hass, hass_ws_client)
+    result = await get_entity_suggestions()
     assert result["suggestions"] == []
     assert result["providers"]["fb"] == {"state": "no_semantics"}

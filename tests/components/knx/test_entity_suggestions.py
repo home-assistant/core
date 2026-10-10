@@ -17,36 +17,11 @@ from homeassistant.components.knx.storage.entity_suggestions.const import (
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
+from . import KnxEntityGenerator, KnxSuggestionGetter
 from .conftest import KNXTestKit
-
-from tests.typing import WebSocketGenerator
 
 # an entity is created on this address to test duplicate reporting
 CONFIGURED_ADDRESS = "1/2/5"
-
-
-async def _create_entity(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, address: str
-) -> str:
-    """Create a UI entity using `address` and return its entity id."""
-    client = await hass_ws_client(hass)
-    await client.send_json_auto_id(
-        {
-            "type": "knx/create_entity",
-            "platform": Platform.SWITCH,
-            "data": {
-                "entity": {
-                    "name": "Existing",
-                    "device_info": None,
-                    "entity_category": None,
-                },
-                "knx": {"ga_switch": {"write": address}},
-            },
-        }
-    )
-    res = await client.receive_json()
-    assert res["success"], res
-    return res["result"]["entity_id"]
 
 
 def _suggestion(
@@ -110,20 +85,9 @@ def test_provider_requires_provider_id() -> None:
         _IncompleteProvider()  # type: ignore[abstract]
 
 
-async def _get_suggestions(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, **filters: Any
-) -> dict:
-    client = await hass_ws_client(hass)
-    await client.send_json_auto_id({"type": "knx/get_entity_suggestions"} | filters)
-    res = await client.receive_json()
-    assert res["success"], res
-    return res["result"]
-
-
 async def test_ws_get_entity_suggestions(
-    hass: HomeAssistant,
     knx: KNXTestKit,
-    hass_ws_client: WebSocketGenerator,
+    get_entity_suggestions: KnxSuggestionGetter,
 ) -> None:
     """Test suggestions of a provider are returned with their hints."""
     await knx.setup_integration()
@@ -131,7 +95,7 @@ async def test_ws_get_entity_suggestions(
         "homeassistant.components.knx.storage.entity_suggestions.SUGGESTION_PROVIDERS",
         [_StubProvider()],
     ):
-        result = await _get_suggestions(hass, hass_ws_client)
+        result = await get_entity_suggestions()
 
     # ids are prefixed with the provider id so they stay unique across providers
     assert [suggestion["id"] for suggestion in result["suggestions"]] == [
@@ -146,28 +110,29 @@ async def test_ws_get_entity_suggestions(
 
 
 async def test_ws_get_entity_suggestions_existing_entities(
-    hass: HomeAssistant,
     knx: KNXTestKit,
-    hass_ws_client: WebSocketGenerator,
+    create_ui_entity: KnxEntityGenerator,
+    get_entity_suggestions: KnxSuggestionGetter,
 ) -> None:
     """Test entities using a suggested group address are reported centrally."""
     await knx.setup_integration()
-    entity_id = await _create_entity(hass, hass_ws_client, CONFIGURED_ADDRESS)
+    entity = await create_ui_entity(
+        Platform.SWITCH, {"ga_switch": {"write": CONFIGURED_ADDRESS}}
+    )
     with patch(
         "homeassistant.components.knx.storage.entity_suggestions.SUGGESTION_PROVIDERS",
         [_StubProvider()],
     ):
-        result = await _get_suggestions(hass, hass_ws_client)
+        result = await get_entity_suggestions()
 
     by_id = {suggestion["id"]: suggestion for suggestion in result["suggestions"]}
-    assert by_id["stub_configured"]["existing_entity_ids"] == [entity_id]
+    assert by_id["stub_configured"]["existing_entity_ids"] == [entity.entity_id]
     assert by_id["stub_light"]["existing_entity_ids"] == []
 
 
 async def test_ws_get_entity_suggestions_without_providers(
-    hass: HomeAssistant,
     knx: KNXTestKit,
-    hass_ws_client: WebSocketGenerator,
+    get_entity_suggestions: KnxSuggestionGetter,
 ) -> None:
     """Test an empty result when no provider generates suggestions."""
     await knx.setup_integration()
@@ -175,30 +140,28 @@ async def test_ws_get_entity_suggestions_without_providers(
         "homeassistant.components.knx.storage.entity_suggestions.SUGGESTION_PROVIDERS",
         [],
     ):
-        result = await _get_suggestions(hass, hass_ws_client)
+        result = await get_entity_suggestions()
 
     assert result == {"suggestions": [], "providers": {}}
 
 
 async def test_ws_get_entity_suggestions_filtered(
-    hass: HomeAssistant,
     knx: KNXTestKit,
-    hass_ws_client: WebSocketGenerator,
+    create_ui_entity: KnxEntityGenerator,
+    get_entity_suggestions: KnxSuggestionGetter,
 ) -> None:
     """Test narrowing down suggestions."""
     await knx.setup_integration()
-    await _create_entity(hass, hass_ws_client, CONFIGURED_ADDRESS)
+    await create_ui_entity(
+        Platform.SWITCH, {"ga_switch": {"write": CONFIGURED_ADDRESS}}
+    )
     with patch(
         "homeassistant.components.knx.storage.entity_suggestions.SUGGESTION_PROVIDERS",
         [_StubProvider()],
     ):
-        by_platform = await _get_suggestions(
-            hass, hass_ws_client, platform=Platform.COVER
-        )
-        by_group = await _get_suggestions(hass, hass_ws_client, group_id="1.1.1")
-        unconfigured = await _get_suggestions(
-            hass, hass_ws_client, include_configured=False
-        )
+        by_platform = await get_entity_suggestions(platform=Platform.COVER)
+        by_group = await get_entity_suggestions(group_id="1.1.1")
+        unconfigured = await get_entity_suggestions(include_configured=False)
 
     assert [suggestion["id"] for suggestion in by_platform["suggestions"]] == [
         "stub_cover"

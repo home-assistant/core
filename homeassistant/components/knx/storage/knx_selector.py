@@ -230,8 +230,8 @@ class GASelector(KNXSelectorBase):
         self.dpt = dpt
         self.dpt_required = dpt_required
         self.valid_dpt = (valid_dpt,) if isinstance(valid_dpt, str) else valid_dpt
-        self.dpa_write = dpa_write
-        self.dpa_state = dpa_state
+        self.dpa_write = tuple(dpa_write) if dpa_write is not None else None
+        self.dpa_state = tuple(dpa_state) if dpa_state is not None else None
 
         self.schema = self.build_schema()
 

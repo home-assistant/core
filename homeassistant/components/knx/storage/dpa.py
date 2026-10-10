@@ -13,6 +13,11 @@ No validation is done against them.
 from enum import StrEnum
 
 
+def functional_block(dpa: str) -> str:
+    """Return the functional block number of a DPA identifier - "417" of "417.52"."""
+    return dpa.partition(".")[0]
+
+
 class FB417(StrEnum):
     """FB 417 Light Switching Actuator Basic."""
 

@@ -27,6 +27,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from ..const import CONF_DPT, CONF_GA_PASSIVE
+from ..dpa import functional_block
 from ..entity_store_schema import KNX_SCHEMA_FOR_PLATFORM
 from ..knx_selector import (
     GASelector,
@@ -175,8 +176,7 @@ def _functional_block_platforms() -> dict[str, list[Platform]]:
     platforms_by_block: dict[str, set[Platform]] = {}
     for platform in KNX_SCHEMA_FOR_PLATFORM:
         for dpa in _collect_dpa_index(platform):
-            block = dpa.partition(".")[0]
-            platforms_by_block.setdefault(block, set()).add(platform)
+            platforms_by_block.setdefault(functional_block(dpa), set()).add(platform)
 
     result: dict[str, list[Platform]] = {}
     for block, platforms in platforms_by_block.items():
@@ -256,34 +256,49 @@ def _try_assign_dpa(
     ga_dpt = project["group_addresses"][primary_ga]["dpt"]
     if not _ga_dpt_valid_for_selector(ga_dpt, target.selector):
         return False
+    dpt_value = _dpt_select_value(ga_dpt, target.selector)
     assignment = assignments.get(target.path)
-    if assignment is not None and target.slot in assignment.ga_schema:
-        # slot already assigned by another com object - first wins
-        return False
-    if assignment is None:
+    if assignment is not None:
+        if target.slot in assignment.ga_schema:
+            # slot already assigned by another com object - first wins
+            return False
+        if dpt_value != assignment.ga_schema.get(CONF_DPT):
+            # write and state addresses are encoded with the same DPT
+            return False
+    else:
         assignment = _SlotAssignment(ga_schema={}, group_select=target.group_select)
         assignments[target.path] = assignment
 
     assignment.ga_schema[target.slot] = primary_ga
-    if (dpt_value := _dpt_select_value(ga_dpt, target.selector)) is not None:
+    if dpt_value is not None:
         assignment.ga_schema[CONF_DPT] = dpt_value
     assignment.dpas.append(dpa)
     assignment.group_addresses.add(primary_ga)
     if target.selector.passive and (
-        passive_links := [
-            ga
-            for ga in ga_links[1:]
-            if _passive_dpt_valid(
-                project["group_addresses"][ga]["dpt"],
-                target.selector,
-                assignment.ga_schema.get(CONF_DPT),
-            )
-        ]
+        passive_links := _passive_links(
+            project, ga_links[1:], target.selector, dpt_value
+        )
     ):
         passive: list[str] = assignment.ga_schema.setdefault(CONF_GA_PASSIVE, [])
         passive.extend(ga for ga in passive_links if ga not in passive)
         assignment.group_addresses.update(passive_links)
     return True
+
+
+def _passive_links(
+    project: KNXProject,
+    ga_links: list[str],
+    selector: GASelector,
+    dpt_value: str | None,
+) -> list[str]:
+    """Return the group addresses accepted as passive addresses of a key."""
+    return [
+        ga
+        for ga in ga_links
+        if _passive_dpt_valid(
+            project["group_addresses"][ga]["dpt"], selector, dpt_value
+        )
+    ]
 
 
 def _passive_dpt_valid(
