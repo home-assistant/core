@@ -7,6 +7,7 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock, call, patch
 
 import aiohttp
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_homeassistant.common import MockConfigEntry, MockModule, mock_integration
 from pytest_homeassistant.test_util.aiohttp import AiohttpClientMocker
@@ -25,11 +26,17 @@ from homeassistant.components.homeassistant_hardware.util import (
     FirmwareInfo,
     OwningAddon,
 )
+from homeassistant.components.otbr.util import (
+    PROPAGATION_WINDOWS_STORAGE_KEY,
+    PROPAGATION_WINDOWS_STORAGE_VERSION,
+    async_get_dataset_lock,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
 from . import DATASET_CH15, DATASET_CH16, TEST_BORDER_AGENT_ID, TEST_BORDER_AGENT_ID_2
 
@@ -110,6 +117,44 @@ async def test_user_flow(
 ) -> None:
     """Test the user flow."""
     await _finish_user_flow(hass, url)
+
+
+async def test_the_flow_waits_for_the_dataset_lock(
+    hass: HomeAssistant,
+    get_active_dataset_tlvs: AsyncMock,
+    get_border_agent_id: AsyncMock,
+) -> None:
+    """A router being set up is not read while another write holds the lock."""
+    reached_router = asyncio.Event()
+
+    async def border_agent_id() -> bytes:
+        reached_router.set()
+        return TEST_BORDER_AGENT_ID
+
+    get_border_agent_id.side_effect = border_agent_id
+    result = await hass.config_entries.flow.async_init(
+        otbr.DOMAIN, context={"source": "user"}
+    )
+
+    with patch("homeassistant.components.otbr.async_setup_entry", return_value=True):
+        async with async_get_dataset_lock(hass):
+            task = hass.async_create_task(
+                hass.config_entries.flow.async_configure(
+                    result["flow_id"], {"url": "http://custom_url:1234"}
+                )
+            )
+            # The router is identified before the lock, and read only after it.
+            await reached_router.wait()
+            for _ in range(5):
+                await asyncio.sleep(0)
+            assert not task.done()
+            get_active_dataset_tlvs.assert_not_awaited()
+
+        result = await task
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == TEST_BORDER_AGENT_ID.hex()
+    get_active_dataset_tlvs.assert_awaited_once()
 
 
 @pytest.mark.usefixtures(
@@ -343,6 +388,57 @@ async def test_user_flow_router_not_setup(
     assert config_entry.options == {}
     assert config_entry.title == "OpenThread Border Router"
     assert config_entry.unique_id == TEST_BORDER_AGENT_ID.hex()
+
+
+@pytest.mark.usefixtures("get_border_agent_id")
+async def test_user_flow_waits_until_the_preferred_network_propagated(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    hass_storage: dict[str, Any],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A new router gets the preferred dataset once its window has closed."""
+    hass_storage[PROPAGATION_WINDOWS_STORAGE_KEY] = {
+        "version": PROPAGATION_WINDOWS_STORAGE_VERSION,
+        # DATASET_CH15's extended PAN ID
+        "data": {"f642646da209b1d0": dt_util.utcnow().timestamp() + 300},
+    }
+    url = "http://custom_url:1234"
+    aioclient_mock.get(f"{url}/node/dataset/active", status=HTTPStatus.NO_CONTENT)
+
+    result = await hass.config_entries.flow.async_init(
+        otbr.DOMAIN, context={"source": "user"}
+    )
+    with patch(
+        "homeassistant.components.otbr.config_flow.async_get_preferred_dataset",
+        return_value=DATASET_CH15.hex(),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"url": url}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "dataset_propagating"}
+    assert result["description_placeholders"] == {"remaining": "300"}
+    assert all(mock_call[0] != "PUT" for mock_call in aioclient_mock.mock_calls)
+
+    aioclient_mock.put(f"{url}/node/dataset/active", status=HTTPStatus.CREATED)
+    aioclient_mock.put(f"{url}/node/state", status=HTTPStatus.OK)
+    freezer.tick(300)
+    with (
+        patch(
+            "homeassistant.components.otbr.config_flow.async_get_preferred_dataset",
+            return_value=DATASET_CH15.hex(),
+        ),
+        patch("homeassistant.components.otbr.async_setup_entry", return_value=None),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"url": url}
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert aioclient_mock.mock_calls[-2][1].path == "/node/dataset/active"
+    assert aioclient_mock.mock_calls[-2][2] == DATASET_CH15.hex()
 
 
 @pytest.mark.usefixtures("get_border_agent_id")
@@ -858,6 +954,57 @@ async def test_hassio_discovery_flow_router_not_setup_has_preferred(
     assert config_entry.unique_id == HASSIO_DATA.uuid
 
 
+@pytest.mark.usefixtures("get_border_agent_id")
+async def test_hassio_discovery_flow_waits_until_the_preferred_network_propagated(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    multiprotocol_addon_manager_mock,
+    otbr_addon_info,
+    hass_storage: dict[str, Any],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A discovered router is kept for confirmation until the preferred network's window closes."""
+    hass_storage[PROPAGATION_WINDOWS_STORAGE_KEY] = {
+        "version": PROPAGATION_WINDOWS_STORAGE_VERSION,
+        # DATASET_CH15's extended PAN ID
+        "data": {"f642646da209b1d0": dt_util.utcnow().timestamp() + 300},
+    }
+    url = "http://core-silabs-multiprotocol:8081"
+    aioclient_mock.get(f"{url}/node/dataset/active", status=HTTPStatus.NO_CONTENT)
+
+    with patch(
+        "homeassistant.components.otbr.config_flow.async_get_preferred_dataset",
+        return_value=DATASET_CH15.hex(),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            otbr.DOMAIN, context={"source": "hassio"}, data=HASSIO_DATA
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "hassio_confirm"
+    assert result["errors"] == {"base": "dataset_propagating"}
+    assert result["description_placeholders"] == {"remaining": "300"}
+    assert all(mock_call[0] != "PUT" for mock_call in aioclient_mock.mock_calls)
+
+    aioclient_mock.put(f"{url}/node/dataset/active", status=HTTPStatus.CREATED)
+    aioclient_mock.put(f"{url}/node/state", status=HTTPStatus.OK)
+    freezer.tick(300)
+    with (
+        patch(
+            "homeassistant.components.otbr.config_flow.async_get_preferred_dataset",
+            return_value=DATASET_CH15.hex(),
+        ),
+        patch("homeassistant.components.otbr.async_setup_entry", return_value=None),
+    ):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Silicon Labs Multiprotocol"
+    assert result["result"].unique_id == HASSIO_DATA.uuid
+    assert aioclient_mock.mock_calls[-2][1].path == "/node/dataset/active"
+    assert aioclient_mock.mock_calls[-2][2] == DATASET_CH15.hex()
+
+
 @pytest.mark.parametrize("key_format", [KeyFormat.PASCAL_CASE, KeyFormat.CAMEL_CASE])
 @pytest.mark.usefixtures("get_border_agent_id")
 async def test_hassio_discovery_flow_router_not_setup_has_preferred_2(
@@ -1358,6 +1505,56 @@ async def test_reconfigure_flow_cannot_connect(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert config_entry.data == {"url": "http://new_url:1234"}
+
+
+@pytest.mark.usefixtures(
+    "get_border_agent_id",
+    "get_extended_address",
+    "get_coprocessor_version",
+    "fast_border_agent_discovery",
+)
+async def test_reconfigure_flow_waits_until_the_preferred_network_propagated(
+    hass: HomeAssistant,
+    get_active_dataset_tlvs: AsyncMock,
+    hass_storage: dict[str, Any],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A router without a dataset gets the preferred one once its window has closed."""
+    hass_storage[PROPAGATION_WINDOWS_STORAGE_KEY] = {
+        "version": PROPAGATION_WINDOWS_STORAGE_VERSION,
+        # DATASET_CH15's extended PAN ID
+        "data": {"f642646da209b1d0": dt_util.utcnow().timestamp() + 300},
+    }
+    config_entry = await _setup_user_entry(hass)
+    get_active_dataset_tlvs.return_value = None
+
+    result = await config_entry.start_reconfigure_flow(hass)
+    with (
+        patch(
+            "homeassistant.components.otbr.config_flow.async_get_preferred_dataset",
+            return_value=DATASET_CH15.hex(),
+        ),
+        patch("python_otbr_api.OTBR.set_active_dataset_tlvs") as set_active_mock,
+        patch("python_otbr_api.OTBR.set_enabled"),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"url": "http://new_url:1234"}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["errors"] == {"base": "dataset_propagating"}
+        assert result["description_placeholders"] == {"remaining": "300"}
+        set_active_mock.assert_not_called()
+
+        freezer.tick(300)
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"url": "http://new_url:1234"}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    set_active_mock.assert_called_once_with(DATASET_CH15)
 
 
 @pytest.mark.usefixtures(

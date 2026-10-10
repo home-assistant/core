@@ -2,7 +2,7 @@
 
 from contextlib import suppress
 import logging
-from typing import TYPE_CHECKING, cast, override
+from typing import TYPE_CHECKING, Any, cast, override
 
 import aiohttp
 import probatio
@@ -27,8 +27,10 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 
-from .const import DEFAULT_CHANNEL, DOMAIN
+from .const import API_TIMEOUT, DEFAULT_CHANNEL, DOMAIN
 from .util import (
+    async_get_dataset_lock,
+    async_get_propagation_windows,
     compose_default_network_name,
     generate_random_pan_id,
     get_allowed_channel,
@@ -42,6 +44,15 @@ _LOGGER = logging.getLogger(__name__)
 
 class AlreadyConfigured(HomeAssistantError):
     """Raised when the router is already configured."""
+
+
+class DatasetPropagating(HomeAssistantError):
+    """Raised while the preferred network's propagation window is open."""
+
+    def __init__(self, remaining: int) -> None:
+        """Initialize with the seconds the window has left."""
+        super().__init__()
+        self.remaining = remaining
 
 
 @callback
@@ -85,21 +96,41 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    _hassio_discovery: HassioServiceInfo | None = None
+
     async def _set_dataset(self, api: python_otbr_api.OTBR, otbr_url: str) -> None:
         """Connect to the OTBR and create or apply a dataset if it doesn't have one."""
+        # A channel change in between would leave this router on the old channel.
+        async with async_get_dataset_lock(self.hass):
+            await self._async_set_dataset(api, otbr_url)
+
+    async def _async_set_dataset(
+        self, api: python_otbr_api.OTBR, otbr_url: str
+    ) -> None:
+        """Create or apply a dataset. The caller holds the dataset lock."""
         if await api.get_active_dataset_tlvs() is None:
             allowed_channel = await get_allowed_channel(self.hass, otbr_url)
 
             thread_dataset_channel = None
+            thread_dataset_xpan = None
             thread_dataset_tlv = await async_get_preferred_dataset(self.hass)
             if thread_dataset_tlv:
                 dataset = tlv_parser.parse_tlv(thread_dataset_tlv)
                 if channel := dataset.get(MeshcopTLVType.CHANNEL):
                     thread_dataset_channel = cast(tlv_parser.Channel, channel).channel
+                if xpan := dataset.get(MeshcopTLVType.EXTPANID):
+                    thread_dataset_xpan = str(xpan).lower()
 
             if thread_dataset_tlv is not None and (
                 not allowed_channel or allowed_channel == thread_dataset_channel
             ):
+                # Until its window closes, the stored dataset is ahead of the mesh.
+                if thread_dataset_xpan and (
+                    remaining := (
+                        await async_get_propagation_windows(self.hass)
+                    ).seconds_left(thread_dataset_xpan)
+                ):
+                    raise DatasetPropagating(remaining)
                 await api.set_active_dataset_tlvs(bytes.fromhex(thread_dataset_tlv))
             else:
                 _LOGGER.debug(
@@ -146,7 +177,9 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
         Will raise if the router's border agent id is in use by another config entry.
         Returns the router's border agent id.
         """
-        api = python_otbr_api.OTBR(otbr_url, async_get_clientsession(self.hass), 10)
+        api = python_otbr_api.OTBR(
+            otbr_url, async_get_clientsession(self.hass), API_TIMEOUT
+        )
         border_agent_id = await api.get_border_agent_id()
         _LOGGER.debug("border agent id for url %s: %s", otbr_url, border_agent_id.hex())
 
@@ -167,6 +200,7 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Set up by user."""
         errors = {}
+        placeholders: dict[str, str] = {}
 
         if user_input is not None:
             url = user_input[CONF_URL].rstrip("/")
@@ -174,6 +208,9 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
                 border_agent_id = await self._connect_and_configure_router(url)
             except AlreadyConfigured:
                 errors["base"] = "already_configured"
+            except DatasetPropagating as err:
+                errors["base"] = "dataset_propagating"
+                placeholders["remaining"] = str(err.remaining)
             except (
                 python_otbr_api.OTBRError,
                 aiohttp.ClientError,
@@ -190,7 +227,10 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
 
         data_schema = probatio.Schema({CONF_URL: str})
         return self.async_show_form(
-            step_id="user", data_schema=data_schema, errors=errors
+            step_id="user",
+            data_schema=data_schema,
+            errors=errors,
+            description_placeholders=placeholders,
         )
 
     async def async_step_reconfigure(
@@ -198,6 +238,7 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle reconfiguration of the OTBR URL."""
         errors = {}
+        placeholders: dict[str, str] = {}
         entry = self._get_reconfigure_entry()
 
         if entry.source == SOURCE_HASSIO:
@@ -209,6 +250,9 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
                 await self._connect_and_configure_router(url)
             except AlreadyConfigured:
                 errors["base"] = "already_configured"
+            except DatasetPropagating as err:
+                errors["base"] = "dataset_propagating"
+                placeholders["remaining"] = str(err.remaining)
             except (
                 python_otbr_api.OTBRError,
                 aiohttp.ClientError,
@@ -232,6 +276,7 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
                 probatio.Schema({CONF_URL: str}), user_input or entry.data
             ),
             errors=errors,
+            description_placeholders=placeholders,
         )
 
     @callback
@@ -288,10 +333,33 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
 
             return self.async_abort(reason="already_configured")
 
+        return await self._async_configure_hassio_router(discovery_info)
+
+    async def async_step_hassio_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Set up a discovered router held back by a propagating change."""
+        assert self._hassio_discovery is not None
+        return await self._async_configure_hassio_router(self._hassio_discovery)
+
+    async def _async_configure_hassio_router(
+        self, discovery_info: HassioServiceInfo
+    ) -> ConfigFlowResult:
+        """Configure the app's router and create its entry."""
+        config = discovery_info.config
+        url = f"http://{config['host']}:{config['port']}"
         try:
             await self._connect_and_configure_router(url)
         except AlreadyConfigured:
             return self.async_abort(reason="already_configured")
+        except DatasetPropagating as err:
+            # Kept as a discovered flow, to be confirmed once the change is through.
+            self._hassio_discovery = discovery_info
+            return self.async_show_form(
+                step_id="hassio_confirm",
+                errors={"base": "dataset_propagating"},
+                description_placeholders={"remaining": str(err.remaining)},
+            )
         except (
             python_otbr_api.OTBRError,
             aiohttp.ClientError,
@@ -303,5 +371,5 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(discovery_info.uuid)
         return self.async_create_entry(
             title=await _title(self.hass, discovery_info),
-            data=config_entry_data,
+            data={"url": url},
         )
