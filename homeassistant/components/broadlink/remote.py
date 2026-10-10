@@ -36,6 +36,7 @@ from homeassistant.components.remote import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_COMMAND, STATE_OFF
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -250,28 +251,33 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
             raise ValueError(err_msg)
 
         at_least_one_sent = False
-        for _, codes in product(range(repeat), code_list):
+        try:
+            for _, codes in product(range(repeat), code_list):
+                if at_least_one_sent:
+                    await asyncio.sleep(delay)
+
+                if len(codes) > 1:
+                    code = codes[self._flags[subdevice]]
+                else:
+                    code = codes[0]
+
+                try:
+                    await device.async_request(device.api.send_data, code)
+                except (BroadlinkException, OSError) as err:
+                    raise HomeAssistantError(
+                        translation_domain=DOMAIN,
+                        translation_key="send_command_failed",
+                        translation_placeholders={"error": str(err)},
+                    ) from err
+
+                if len(codes) > 1:
+                    self._flags[subdevice] ^= 1
+                at_least_one_sent = True
+
+        finally:
+            # Toggle flags that were used before the failure must be kept in sync.
             if at_least_one_sent:
-                await asyncio.sleep(delay)
-
-            if len(codes) > 1:
-                code = codes[self._flags[subdevice]]
-            else:
-                code = codes[0]
-
-            try:
-                await device.async_request(device.api.send_data, code)
-            # pylint: disable-next=home-assistant-action-swallowed-exception
-            except (BroadlinkException, OSError) as err:
-                _LOGGER.error("Error during %s: %s", service, err)
-                break
-
-            if len(codes) > 1:
-                self._flags[subdevice] ^= 1
-            at_least_one_sent = True
-
-        if at_least_one_sent:
-            self._flag_storage.async_delay_save(self._get_flags, FLAG_SAVE_DELAY)
+                self._flag_storage.async_delay_save(self._get_flags, FLAG_SAVE_DELAY)
 
     @override
     async def async_learn_command(self, **kwargs: Any) -> None:
@@ -306,27 +312,61 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
                 raise ValueError(err_msg)
 
             should_store = False
+            failed_commands: list[str] = []
+            first_error: BroadlinkException | None = None
 
-            for command in commands:
-                try:
-                    code = await learn_command(command)
-                    if toggle:
-                        code = [code, await learn_command(command)]
+            try:
+                for command in commands:
+                    try:
+                        code = await learn_command(command)
+                        if toggle:
+                            code = [code, await learn_command(command)]
 
-                # pylint: disable-next=home-assistant-action-swallowed-exception
-                except (AuthorizationError, NetworkTimeoutError, OSError) as err:
-                    _LOGGER.error("Failed to learn '%s': %s", command, err)
-                    break
+                    except (AuthorizationError, NetworkTimeoutError, OSError) as err:
+                        raise HomeAssistantError(
+                            translation_domain=DOMAIN,
+                            translation_key="learn_command_failed",
+                            translation_placeholders={
+                                "command": repr(command),
+                                "error": str(err),
+                            },
+                        ) from err
 
-                except BroadlinkException as err:
-                    _LOGGER.error("Failed to learn '%s': %s", command, err)
-                    continue
+                    except BroadlinkException as err:
+                        # The device could not read this one command, the
+                        # remaining commands are still worth trying.
+                        if first_error is None:
+                            first_error = err
+                        failed_commands.append(command)
+                        continue
 
-                self._codes.setdefault(subdevice, {}).update({command: code})
-                should_store = True
+                    self._codes.setdefault(subdevice, {}).update({command: code})
+                    should_store = True
 
-            if should_store:
-                await self._code_storage.async_save(self._codes)
+            finally:
+                # Commands learned before the failure must still be stored.
+                if should_store:
+                    await self._code_storage.async_save(self._codes)
+
+            if failed_commands:
+                if len(failed_commands) == 1:
+                    raise HomeAssistantError(
+                        translation_domain=DOMAIN,
+                        translation_key="learn_command_failed",
+                        translation_placeholders={
+                            "command": repr(failed_commands[0]),
+                            "error": str(first_error),
+                        },
+                    )
+
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="learn_commands_failed",
+                    translation_placeholders={
+                        "commands": ", ".join(map(repr, failed_commands)),
+                        "error": str(first_error),
+                    },
+                )
 
     async def _async_learn_ir_command(self, command):
         """Learn an infrared command."""
@@ -464,9 +504,11 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
         try:
             codes = self._codes[subdevice]
         except KeyError as err:
-            err_msg = f"Device not found: {subdevice!r}"
-            _LOGGER.error("Failed to call %s. %s", service, err_msg)
-            raise ValueError(err_msg) from err
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="device_not_found",
+                translation_placeholders={"device": repr(subdevice)},
+            ) from err
 
         cmds_not_found = []
         for command in commands:
@@ -475,18 +517,6 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
             except KeyError:
                 cmds_not_found.append(command)
 
-        if cmds_not_found:
-            if len(cmds_not_found) == 1:
-                err_msg = f"Command not found: {cmds_not_found[0]!r}"
-            else:
-                err_msg = f"Commands not found: {cmds_not_found!r}"
-
-            if len(cmds_not_found) == len(commands):
-                _LOGGER.error("Failed to call %s. %s", service, err_msg)
-                raise ValueError(err_msg)
-
-            _LOGGER.error("Error during %s. %s", service, err_msg)
-
         # Clean up
         if not codes:
             del self._codes[subdevice]
@@ -494,3 +524,19 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
                 self._flag_storage.async_delay_save(self._get_flags, FLAG_SAVE_DELAY)
 
         self._code_storage.async_delay_save(self._get_codes, CODE_SAVE_DELAY)
+
+        if cmds_not_found:
+            if len(cmds_not_found) == 1:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="command_not_found",
+                    translation_placeholders={"command": repr(cmds_not_found[0])},
+                )
+
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="commands_not_found",
+                translation_placeholders={
+                    "commands": ", ".join(map(repr, cmds_not_found))
+                },
+            )
