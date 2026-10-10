@@ -18,13 +18,6 @@
       }
     }
   },
-  "entity": {
-    "sensor": {
-      "air_quality": {
-        "name": "Air quality"
-      }
-    }
-  },
   "exceptions": {
     "update_failed": {
       "message": "Error fetching London Air data"

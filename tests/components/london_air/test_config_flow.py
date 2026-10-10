@@ -125,7 +125,11 @@ async def test_user_already_configured(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    mock_session.get.return_value = MagicMock()
+    mock_session.get.return_value = MagicMock(
+        raise_for_status=MagicMock(
+            side_effect=ClientResponseError(None, None, status=503)
+        )
+    )
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={CONF_LOCATIONS: ["Merton"]}

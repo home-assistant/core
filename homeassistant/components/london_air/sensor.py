@@ -57,6 +57,7 @@ async def async_setup_platform(
             hass,
             DOMAIN,
             f"deprecated_yaml_import_issue_{result.get('reason')}",
+            breaks_in_ha_version="2027.5.0",
             is_fixable=False,
             issue_domain=DOMAIN,
             severity=ir.IssueSeverity.WARNING,
@@ -71,7 +72,8 @@ async def async_setup_platform(
     ir.async_create_issue(
         hass,
         HOMEASSISTANT_DOMAIN,
-        "deprecated_yaml",
+        f"deprecated_yaml_{DOMAIN}",
+        breaks_in_ha_version="2027.5.0",
         is_fixable=False,
         issue_domain=DOMAIN,
         severity=ir.IssueSeverity.WARNING,
@@ -100,7 +102,7 @@ class LondonAirSensor(CoordinatorEntity[LondonAirDataUpdateCoordinator], SensorE
     """Sensor reporting the air quality band for a London authority."""
 
     _attr_has_entity_name = True
-    _attr_translation_key = "air_quality"
+    _attr_name = None
 
     def __init__(
         self,

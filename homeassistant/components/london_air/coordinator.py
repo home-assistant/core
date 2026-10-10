@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import AUTHORITIES, DOMAIN, SCAN_INTERVAL, URL
+from .const import AUTHORITIES, DOMAIN, REQUEST_TIMEOUT, SCAN_INTERVAL, URL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,10 +42,10 @@ class LondonAirDataUpdateCoordinator(
     async def _async_update_data(self) -> dict[str, list[dict[str, Any]]]:
         """Fetch the latest data from the API."""
         try:
-            response = await self._session.get(URL)
+            response = await self._session.get(URL, timeout=REQUEST_TIMEOUT)
             response.raise_for_status()
             payload = await response.json()
-        except aiohttp.ClientError as err:
+        except (aiohttp.ClientError, TimeoutError) as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
