@@ -1212,7 +1212,7 @@ gpiozero==1.6.2
 gps3==0.33.3
 
 # homeassistant.components.gree
-greeclimate==2.1.4
+greeclimate==3.2.1
 
 # homeassistant.components.greencell
 greencell_client==1.0.3
