@@ -27,7 +27,7 @@ class AnovaData:
 type AnovaConfigEntry = ConfigEntry[AnovaData]
 
 
-class AnovaCoordinator(DataUpdateCoordinator[APCUpdate]):
+class AnovaCoordinator(DataUpdateCoordinator[APCUpdate | None]):
     """Anova custom coordinator."""
 
     config_entry: AnovaConfigEntry
@@ -47,7 +47,6 @@ class AnovaCoordinator(DataUpdateCoordinator[APCUpdate]):
         )
         self.device_unique_id = anova_device.cooker_id
         self.anova_device = anova_device
-        self.anova_device.set_update_listener(self.async_set_updated_data)
         self.device_info: DeviceInfo | None = None
 
         self.device_info = DeviceInfo(
@@ -57,3 +56,19 @@ class AnovaCoordinator(DataUpdateCoordinator[APCUpdate]):
             model="Precision Cooker",
         )
         self.sensor_data_set: bool = False
+        # Owned by the coordinator, not the number entities, so it's seeded
+        # from the device's own state (see _handle_device_update) regardless
+        # of entity setup ordering.
+        self.pending_target_temperature: float | None = None
+        self.pending_cook_time_seconds: int | None = None
+        self.anova_device.set_update_listener(self._handle_device_update)
+        if (last_update := anova_device.last_update) is not None:
+            self._handle_device_update(last_update)
+
+    def _handle_device_update(self, update: APCUpdate) -> None:
+        """Seed the pending target temperature/timer on first data, then propagate."""
+        if self.pending_target_temperature is None:
+            self.pending_target_temperature = update.sensor.target_temperature
+        if self.pending_cook_time_seconds is None:
+            self.pending_cook_time_seconds = update.sensor.cook_time
+        self.async_set_updated_data(update)

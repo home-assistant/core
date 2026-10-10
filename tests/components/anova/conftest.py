@@ -257,6 +257,149 @@ async def anova_api_no_data(
 
 
 @pytest.fixture
+async def anova_api_unsupported_device_type(
+    hass: HomeAssistant,
+) -> AnovaApi:
+    """Mock the api for Anova with a device type that has no command capabilities.
+
+    Simulates a future device type (e.g. a Precision Oven) that
+    get_supported_capabilities doesn't recognize.
+    """
+    api_mock = anova_api_mock(
+        connect_messages=[
+            MockedanovaWebsocketMessage(
+                {
+                    "command": "EVENT_APC_WIFI_LIST",
+                    "payload": [
+                        {
+                            "cookerId": DUMMY_ID,
+                            "type": "oven_v1",
+                            "pairedAt": "2023-08-12T02:33:20.917716Z",
+                            "name": "Anova Precision Oven",
+                        }
+                    ],
+                }
+            ),
+        ]
+    )
+
+    with (
+        patch("homeassistant.components.anova.AnovaApi", return_value=api_mock),
+        patch(
+            "homeassistant.components.anova.config_flow.AnovaApi", return_value=api_mock
+        ),
+    ):
+        api = AnovaApi(
+            None,
+            "sample@gmail.com",
+            "sample",
+        )
+        yield api
+
+
+@pytest.fixture
+async def anova_api_a3(
+    hass: HomeAssistant,
+) -> AnovaApi:
+    """Mock the api for Anova with an a3 device.
+
+    anova-wifi 2.0.0 advertises cook capabilities for a3 but reports its
+    temperatures in the device's display unit, so cook controls are gated.
+    """
+    api_mock = anova_api_mock(
+        connect_messages=[
+            MockedanovaWebsocketMessage(
+                {
+                    "command": "EVENT_APC_WIFI_LIST",
+                    "payload": [
+                        {
+                            "cookerId": DUMMY_ID,
+                            "type": "a3",
+                            "pairedAt": "2023-08-12T02:33:20.917716Z",
+                            "name": "Anova Precision Cooker",
+                        }
+                    ],
+                }
+            ),
+        ],
+        post_connect_messages=[],
+    )
+
+    with (
+        patch("homeassistant.components.anova.AnovaApi", return_value=api_mock),
+        patch(
+            "homeassistant.components.anova.config_flow.AnovaApi", return_value=api_mock
+        ),
+    ):
+        api = AnovaApi(
+            None,
+            "sample@gmail.com",
+            "sample",
+        )
+        yield api
+
+
+COOKING_STATE_MESSAGE = MockedanovaWebsocketMessage(
+    {
+        "command": "EVENT_APC_STATE",
+        "payload": {
+            "cookerId": DUMMY_ID,
+            "state": {
+                "boot-id": "8620610049456548422",
+                "job": {
+                    "cook-time-seconds": 1800,
+                    "id": "8759286e3125b0c547",
+                    "mode": "COOK",
+                    "ota-url": "",
+                    "target-temperature": 60,
+                    "temperature-unit": "C",
+                },
+                "job-status": {
+                    "cook-time-remaining": 1800,
+                    "job-start-systick": 599679,
+                    "provisioning-pairing-code": 7514,
+                    "state": "COOKING",
+                    "state-change-systick": 599679,
+                },
+                "pin-info": {
+                    "device-safe": 0,
+                    "water-leak": 0,
+                    "water-level-critical": 0,
+                    "water-temp-too-high": 0,
+                },
+                "temperature-info": {
+                    "heater-temperature": 22.37,
+                    "triac-temperature": 36.04,
+                    "water-temperature": 18.33,
+                },
+            },
+        },
+    }
+)
+
+
+@pytest.fixture
+async def anova_api_cooking(
+    hass: HomeAssistant,
+) -> AnovaApi:
+    """Mock the api for Anova with an already-running cook."""
+    api_mock = anova_api_mock(post_connect_messages=[COOKING_STATE_MESSAGE])
+
+    with (
+        patch("homeassistant.components.anova.AnovaApi", return_value=api_mock),
+        patch(
+            "homeassistant.components.anova.config_flow.AnovaApi", return_value=api_mock
+        ),
+    ):
+        api = AnovaApi(
+            None,
+            "sample@gmail.com",
+            "sample",
+        )
+        yield api
+
+
+@pytest.fixture
 async def anova_api_websocket_failure(
     hass: HomeAssistant,
 ) -> AnovaApi:
