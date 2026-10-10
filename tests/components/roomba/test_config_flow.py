@@ -639,7 +639,7 @@ async def test_form_user_no_devices_password_fetch_fails_cannot_connect(
     mocked_roomba.connect.side_effect = None
     with (
         patch(
-            "homeassistant.components.roomba.config_flow.RoombaFactory.create_roomba",
+            "homeassistant.components.roomba.RoombaClient",
             return_value=mocked_roomba,
         ),
         patch(
