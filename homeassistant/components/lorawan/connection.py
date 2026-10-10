@@ -14,7 +14,7 @@ from lorawan_connection import (
 )
 
 from homeassistant.config_entries import SOURCE_INTEGRATION_DISCOVERY, ConfigEntry
-from homeassistant.core import HomeAssistant, callback as hass_callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import discovery_flow
 from homeassistant.util.hass_dict import HassKey
 
@@ -44,7 +44,7 @@ class ConnectionRegistry:
 DATA_REGISTRY: HassKey[ConnectionRegistry] = HassKey("lorawan")
 
 
-@hass_callback
+@callback
 def async_get_connections(hass: HomeAssistant) -> dict[str, Connection]:
     """Return connected backends keyed by their provider config entry ID."""
     return {
@@ -53,9 +53,9 @@ def async_get_connections(hass: HomeAssistant) -> dict[str, Connection]:
     }
 
 
-@hass_callback
+@callback
 def async_subscribe_connections(
-    hass: HomeAssistant, callback: Callable[[str, Connection | None], None]
+    hass: HomeAssistant, listener: Callable[[str, Connection | None], None]
 ) -> Unsubscribe:
     """Replay active connections, then report registrations and withdrawals.
 
@@ -63,11 +63,11 @@ def async_subscribe_connections(
     subscriptions it creates and removes this listener on unload.
     """
     registry = hass.data[DATA_REGISTRY]
-    unsubscribe = subscribe(registry.changed, lambda change: callback(*change))
+    unsubscribe = subscribe(registry.changed, lambda change: listener(*change))
     try:
         for entry_id, registered in tuple(registry.connections.items()):
             if registry.connections.get(entry_id) is registered:
-                callback(entry_id, registered.connection)
+                listener(entry_id, registered.connection)
     except BaseException:
         unsubscribe()
         raise
@@ -93,13 +93,13 @@ async def async_register_connection(
     pending_discoveries: set[str] = set()
     unsubscribes: list[Unsubscribe] = []
 
-    @hass_callback
+    @callback
     def discover(domain: str) -> None:
         discovery_flow.async_create_flow(
             hass, domain, context={"source": SOURCE_INTEGRATION_DISCOVERY}, data={}
         )
 
-    @hass_callback
+    @callback
     def handle_event(event: DeviceEvent) -> None:
         if (
             disconnected
@@ -115,7 +115,7 @@ async def async_register_connection(
                 else:
                     pending_discoveries.add(domain)
 
-    @hass_callback
+    @callback
     def unregister() -> None:
         nonlocal active, disconnected
         disconnected = True

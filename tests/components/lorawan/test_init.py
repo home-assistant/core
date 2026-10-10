@@ -31,7 +31,7 @@ async def test_subscribe_and_reconnect(
     """Consumers see current connections, withdrawals, and replacement transports."""
     first, unregister = await registered_backend("network", [DESCRIPTOR])
     changed = Mock()
-    unsubscribe = async_subscribe_connections(hass, changed)
+    unsubscribe = async_subscribe_connections(hass, listener=changed)
     changed.assert_called_once_with("network", first)
     assert async_get_connections(hass) == {"network": first}
     events = Mock()

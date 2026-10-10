@@ -29,7 +29,7 @@ from homeassistant.config_entries import (
     ConfigEntry,
     ConfigEntryChange,
 )
-from homeassistant.core import HomeAssistant, callback as hass_callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -61,7 +61,8 @@ class _CollectionConnection:
         ] = []
         self._disconnect: list[Callable[[None], None]] = []
 
-    async def async_subscribe(
+    # Connection requires the callback parameter name on these two methods.
+    async def async_subscribe(  # pylint: disable=redefined-outer-name
         self,
         *,
         brands: frozenset[tuple[str, int | str]] | None,
@@ -79,7 +80,9 @@ class _CollectionConnection:
 
         return unsubscribe
 
-    def on_disconnect(self, callback: Callable[[], None]) -> Unsubscribe:
+    def on_disconnect(  # pylint: disable=redefined-outer-name
+        self, callback: Callable[[], None]
+    ) -> Unsubscribe:
         return subscribe(self._disconnect, lambda _: callback())
 
     async def async_send_downlink(self, downlink: Downlink) -> str:
@@ -217,7 +220,7 @@ class DeviceManager[DeviceT: Device, CoordinatorT: DataUpdateCoordinator[Any]]:
             raise
         self._cleanup_deleted_connections()
 
-    @hass_callback
+    @callback
     def _connection_changed(self, entry_id: str) -> None:
         if task := self._tasks.pop(entry_id, None):
             task.cancel()
@@ -289,7 +292,7 @@ class DeviceManager[DeviceT: Device, CoordinatorT: DataUpdateCoordinator[Any]]:
             ) and not registered.identifiers.intersection(identifiers):
                 self._registry.async_remove_device(registered.id)
 
-    @hass_callback
+    @callback
     def _entry_changed(self, change: ConfigEntryChange, entry: ConfigEntry) -> None:
         if change is ConfigEntryChange.REMOVED:
             if task := self._tasks.pop(entry.entry_id, None):
@@ -312,7 +315,7 @@ class DeviceManager[DeviceT: Device, CoordinatorT: DataUpdateCoordinator[Any]]:
             ):
                 self._registry.async_remove_device(registered.id)
 
-    @hass_callback
+    @callback
     def subscribe_coordinator_added(
         self, listener: Callable[[CoordinatorT], None]
     ) -> Unsubscribe:
@@ -337,7 +340,7 @@ class DeviceManager[DeviceT: Device, CoordinatorT: DataUpdateCoordinator[Any]]:
             raise
         return unsubscribe
 
-    @hass_callback
+    @callback
     def _device_added(self, entry_id: str, device: DeviceT) -> None:
         coordinator = self._create_coordinator(self._hass, device)
         self.coordinators[(entry_id, device.descriptor.dev_eui)] = coordinator
@@ -355,19 +358,19 @@ class DeviceManager[DeviceT: Device, CoordinatorT: DataUpdateCoordinator[Any]]:
             device_identifier(self._entry.domain, device), self._entry.entry_id
         )
 
-    @hass_callback
+    @callback
     def _update_name(self, device: DeviceT) -> None:
         if registered := self._registry_device(device):
             self._registry.async_update_device(
                 registered.id, name=device.descriptor.name
             )
 
-    @hass_callback
+    @callback
     def _remove_registry_device(self, device: DeviceT) -> None:
         if registered := self._registry_device(device):
             self._registry.async_remove_device(registered.id)
 
-    @hass_callback
+    @callback
     def _device_removed(self, entry_id: str, device: DeviceT) -> None:
         if coordinator := self.coordinators.pop(
             (entry_id, device.descriptor.dev_eui), None
@@ -385,7 +388,7 @@ class DeviceManager[DeviceT: Device, CoordinatorT: DataUpdateCoordinator[Any]]:
             for unsubscribe in session.unsubscribes:
                 unsubscribe()
 
-    @hass_callback
+    @callback
     def close(self) -> None:
         """Release collections, coordinators and subscriptions without deleting devices."""
         if self._closed:
