@@ -363,6 +363,9 @@
     "air_purifier_turn_on_failed": {
       "message": "Failed to turn on {device}"
     },
+    "authentication_failed": {
+      "message": "Daikin API authentication failed"
+    },
     "api_error": {
       "message": "Daikin API returned HTTP {status}"
     },

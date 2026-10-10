@@ -591,7 +591,6 @@
         'area_id': None,
         'capabilities': dict({
           <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
-            <HVACMode.OFF: 'off'>,
             <HVACMode.HEAT: 'heat'>,
           ]),
           <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 75,
@@ -632,7 +631,6 @@
           <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 23.9,
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Climate control getr422 Leaving Water Temperature',
           <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
-            <HVACMode.OFF: 'off'>,
             <HVACMode.HEAT: 'heat'>,
           ]),
           <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 75,

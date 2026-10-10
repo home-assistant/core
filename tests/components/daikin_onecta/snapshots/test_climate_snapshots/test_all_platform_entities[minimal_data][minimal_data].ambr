@@ -444,7 +444,6 @@
         'area_id': None,
         'capabilities': dict({
           <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
-            <HVACMode.OFF: 'off'>,
             <HVACMode.HEAT: 'heat'>,
             <HVACMode.COOL: 'cool'>,
             <HVACMode.HEAT_COOL: 'heat_cool'>,
@@ -486,7 +485,6 @@
           <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 26,
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Altherma Leaving Water Temperature',
           <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
-            <HVACMode.OFF: 'off'>,
             <HVACMode.HEAT: 'heat'>,
             <HVACMode.COOL: 'cool'>,
             <HVACMode.HEAT_COOL: 'heat_cool'>,
@@ -501,7 +499,7 @@
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
-        'state': 'off',
+        'state': 'heat_cool',
       }),
     }),
     'climate.altherma_room_temperature': dict({
@@ -512,7 +510,6 @@
         'area_id': None,
         'capabilities': dict({
           <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
-            <HVACMode.OFF: 'off'>,
             <HVACMode.HEAT: 'heat'>,
             <HVACMode.COOL: 'cool'>,
             <HVACMode.HEAT_COOL: 'heat_cool'>,
@@ -555,7 +552,6 @@
           <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 21.2,
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Altherma Room Temperature',
           <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
-            <HVACMode.OFF: 'off'>,
             <HVACMode.HEAT: 'heat'>,
             <HVACMode.COOL: 'cool'>,
             <HVACMode.HEAT_COOL: 'heat_cool'>,
@@ -572,7 +568,7 @@
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
-        'state': 'off',
+        'state': 'heat_cool',
       }),
     }),
     'sensor.altherma_control_mode': dict({

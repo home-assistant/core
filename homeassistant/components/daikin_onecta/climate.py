@@ -334,13 +334,16 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
         cc = self._climate_control()
         if cc is not None:
             onoff = cc.on_off_mode
-            if onoff is not None and onoff.value != "off" and operationmode is not None:
+            if operationmode is not None and (onoff is None or onoff.value != "off"):
                 mode = operationmode.value
         return DAIKIN_HVAC_TO_HA.get(mode)
 
     def _get_hvac_modes(self) -> list[HVACMode]:
         """Return the list of available HVAC modes."""
-        modes = [HVACMode.OFF]
+        modes: list[HVACMode] = []
+        cc = self._climate_control()
+        if cc is not None and cc.on_off_mode is not None and cc.on_off_mode.settable:
+            modes.append(HVACMode.OFF)
         operationmode = self._operation_mode()
         if operationmode is not None:
             if operationmode.settable:

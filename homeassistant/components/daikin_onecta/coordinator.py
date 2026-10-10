@@ -14,6 +14,7 @@ from daikin_onecta.exceptions import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed, OAuth2TokenRequestError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
@@ -79,6 +80,10 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
                 cloud_devices = await self.api.get_cloud_device_details(
                     cooldown=_POST_WRITE_COOLDOWN
                 )
+            except OAuth2TokenRequestError:
+                # Preserve refresh-token failures so Home Assistant can handle
+                # authentication failures rather than retrying the coordinator.
+                raise
             except OnectaRateLimitError as err:
                 raise UpdateFailed(
                     translation_domain=DOMAIN,
@@ -91,6 +96,11 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
                     translation_key="connection_failed",
                 ) from err
             except OnectaApiError as err:
+                if err.status == 401:
+                    raise ConfigEntryAuthFailed(
+                        translation_domain=DOMAIN,
+                        translation_key="authentication_failed",
+                    ) from err
                 raise UpdateFailed(
                     translation_domain=DOMAIN,
                     translation_key="api_error",
