@@ -1,0 +1,26 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "site_id": "Site ID",
+          "sitekey": "Site Key"
+        },
+        "data_description": {
+          "site_id": "Site ID for your website on Clicky",
+          "sitekey": "Site Key for your website on Clicky"
+        },
+        "description": "You can find the credentials needed below by logging into your Clicky account, choosing your site in your dashboard, and going to the Prefs tab.",
+        "title": "Connect to Clicky"
+      }
+    }
+  }
+}
