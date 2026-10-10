@@ -9,6 +9,7 @@ from homeassistant.components import text
 from homeassistant.components.mqtt.const import DOMAIN
 from homeassistant.const import ATTR_ASSUMED_STATE, ATTR_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from .common import (
     help_custom_config,
@@ -308,6 +309,43 @@ async def test_validation_payload_greater_then_max_state_length(
     async_fire_mqtt_message(hass, "state-topic", "".join("x" for _ in range(310)))
 
     assert "Cannot update state for entity text.test" in caplog.text
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            DOMAIN: {
+                text.DOMAIN: {
+                    "name": "test",
+                    "command_topic": "command-topic",
+                    "command_template": "{{ this.entity_id }} {{ value }}",
+                    "unique_id": "very_unique",
+                }
+            }
+        }
+    ],
+)
+async def test_command_template_this_after_entity_id_change(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test this in a command template refers to the entity after a rename."""
+    mqtt_mock = await mqtt_mock_entry()
+    await async_set_value(hass, "text.test", "a")
+    mqtt_mock.async_publish.assert_called_once_with(
+        "command-topic", "text.test a", 0, False, message_expiry_interval=None
+    )
+    mqtt_mock.async_publish.reset_mock()
+
+    entity_registry.async_update_entity("text.test", new_entity_id="text.renamed")
+    await hass.async_block_till_done()
+    await async_set_value(hass, "text.renamed", "b")
+
+    mqtt_mock.async_publish.assert_called_once_with(
+        "command-topic", "text.renamed b", 0, False, message_expiry_interval=None
+    )
 
 
 @pytest.mark.parametrize(

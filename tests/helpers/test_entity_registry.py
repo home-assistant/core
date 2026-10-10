@@ -1593,6 +1593,28 @@ async def test_filter_on_load(
     assert entry_disabled_user.disabled_by is er.RegistryEntryDisabler.USER
 
 
+async def test_async_load_twice_raises(hass: HomeAssistant) -> None:
+    """Test loading the entity registry twice raises."""
+    registry = er.async_get(hass)
+    with pytest.raises(RuntimeError, match="Entity registry is already loaded"):
+        await registry.async_load()
+
+
+@pytest.mark.parametrize("load_registries", [False])
+async def test_async_wait_loaded(hass: HomeAssistant) -> None:
+    """Test waiting until the entity registry is loaded."""
+    dr.async_setup(hass)
+    await dr.async_load(hass)
+    registry = er.async_get(hass)
+    wait_task = hass.async_create_task(registry.async_wait_loaded())
+    await asyncio.sleep(0)
+    assert not wait_task.done()
+
+    await er.async_load(hass)
+
+    await wait_task
+
+
 @pytest.mark.parametrize("load_registries", [False])
 async def test_load_bad_data(
     hass: HomeAssistant,
@@ -2995,17 +3017,14 @@ async def test_update_entity_own_area_without_own_name(
         entity_registry.async_update_entity(entry.entity_id, area_id="kitchen")
     assert entity_registry.async_get(entry.entity_id).area_id is None
 
-    # A name equal to the device name is not a name of its own
-    with pytest.raises(ValueError, match="without a name of its own"):
-        entity_registry.async_update_entity(
-            entry.entity_id, area_id="kitchen", name="Device"
-        )
-
-    # Naming the entity in the same update makes the area valid
+    # Naming the entity in the same update makes the area valid, also with a
+    # name equal to the device name, which is not consulted for an own area
     entry = entity_registry.async_update_entity(
-        entry.entity_id, area_id="kitchen", name="Light"
+        entry.entity_id, area_id="kitchen", name="Device"
     )
     assert entry.area_id == "kitchen"
+
+    entry = entity_registry.async_update_entity(entry.entity_id, name="Light")
 
     # Clearing the name would leave the area without a name
     with pytest.raises(ValueError, match="without a name of its own"):

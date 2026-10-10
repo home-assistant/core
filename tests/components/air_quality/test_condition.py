@@ -12,6 +12,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     UnitOfDensity,
+    UnitOfRadiationConcentration,
     UnitOfRatio,
 )
 from homeassistant.core import HomeAssistant
@@ -37,6 +38,9 @@ _UGM3_UNIT_ATTRIBUTES = {
 }
 _PPB_UNIT_ATTRIBUTES = {ATTR_UNIT_OF_MEASUREMENT: UnitOfRatio.PARTS_PER_BILLION}
 _PPM_UNIT_ATTRIBUTES = {ATTR_UNIT_OF_MEASUREMENT: UnitOfRatio.PARTS_PER_MILLION}
+_BQM3_UNIT_ATTRIBUTES = {
+    ATTR_UNIT_OF_MEASUREMENT: UnitOfRadiationConcentration.BECQUEREL_PER_CUBIC_METER
+}
 
 
 @pytest.fixture
@@ -70,6 +74,17 @@ _UGM3_THRESHOLD = {
         },
     }
 }
+_BQM3_THRESHOLD = {
+    "threshold": {
+        "type": "above",
+        "value": {
+            "number": 50,
+            "unit_of_measurement": (
+                UnitOfRadiationConcentration.BECQUEREL_PER_CUBIC_METER
+            ),
+        },
+    }
+}
 
 
 _CONDITION_TARGET_SUPPORT: dict[str, TargetSupport] = {
@@ -86,6 +101,7 @@ _CONDITION_TARGET_SUPPORT: dict[str, TargetSupport] = {
     "is_no_value": TargetSupport.STANDARD,
     "is_no2_value": TargetSupport.STANDARD,
     "is_so2_value": TargetSupport.STANDARD,
+    "is_radon_value": TargetSupport.STANDARD,
     "is_co2_value": TargetSupport.STANDARD,
     "is_pm1_value": TargetSupport.STANDARD,
     "is_pm25_value": TargetSupport.STANDARD,
@@ -114,6 +130,8 @@ _CONDITION_TARGET_SUPPORT: dict[str, TargetSupport] = {
         ("air_quality.is_so2_value", _UGM3_THRESHOLD, True, True),
         # Numerical conditions with unit conversion (ppb base)
         ("air_quality.is_voc_ratio_value", _PPB_THRESHOLD, True, True),
+        # Numerical conditions with unit conversion (Bq/m³ base)
+        ("air_quality.is_radon_value", _BQM3_THRESHOLD, True, True),
         # Numerical conditions without unit conversion
         ("air_quality.is_co2_value", _PLAIN_THRESHOLD, True, True),
         ("air_quality.is_pm1_value", _PLAIN_THRESHOLD, True, True),
@@ -338,6 +356,12 @@ async def test_air_quality_binary_condition_behavior_all(
             threshold_unit=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
             unit_attributes=_UGM3_UNIT_ATTRIBUTES,
         ),
+        *parametrize_numerical_condition_above_below_any(
+            "air_quality.is_radon_value",
+            device_class="radon",
+            threshold_unit=UnitOfRadiationConcentration.BECQUEREL_PER_CUBIC_METER,
+            unit_attributes=_BQM3_UNIT_ATTRIBUTES,
+        ),
     ],
 )
 async def test_air_quality_numerical_with_unit_condition_behavior_any(
@@ -411,6 +435,12 @@ async def test_air_quality_numerical_with_unit_condition_behavior_any(
             device_class="sulphur_dioxide",
             threshold_unit=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
             unit_attributes=_UGM3_UNIT_ATTRIBUTES,
+        ),
+        *parametrize_numerical_condition_above_below_all(
+            "air_quality.is_radon_value",
+            device_class="radon",
+            threshold_unit=UnitOfRadiationConcentration.BECQUEREL_PER_CUBIC_METER,
+            unit_attributes=_BQM3_UNIT_ATTRIBUTES,
         ),
     ],
 )
@@ -651,6 +681,101 @@ async def test_air_quality_condition_unit_conversion_co(
             (
                 {"state": "200", "attributes": _unit_invalid},
                 {"state": "800", "attributes": _unit_invalid},
+            ),
+        ],
+    )
+
+
+async def test_air_quality_condition_unit_conversion_radon(
+    hass: HomeAssistant,
+) -> None:
+    """Test that the radon condition converts units correctly."""
+    _unit_bqm3 = {
+        ATTR_UNIT_OF_MEASUREMENT: UnitOfRadiationConcentration.BECQUEREL_PER_CUBIC_METER
+    }
+    _unit_pcil = {
+        ATTR_UNIT_OF_MEASUREMENT: UnitOfRadiationConcentration.PICOCURIES_PER_LITER
+    }
+    _unit_invalid = {ATTR_UNIT_OF_MEASUREMENT: "not_a_valid_unit"}
+
+    await assert_numerical_condition_unit_conversion(
+        hass,
+        condition="air_quality.is_radon_value",
+        entity_id="sensor.test",
+        pass_states=[
+            {
+                "state": "150",
+                "attributes": {"device_class": "radon", **_unit_bqm3},
+            }
+        ],
+        fail_states=[
+            {
+                "state": "50",
+                "attributes": {"device_class": "radon", **_unit_bqm3},
+            }
+        ],
+        numerical_condition_options=[
+            {
+                "threshold": {
+                    "type": "between",
+                    "value_min": {
+                        "number": 2,
+                        "unit_of_measurement": (
+                            UnitOfRadiationConcentration.PICOCURIES_PER_LITER
+                        ),
+                    },
+                    "value_max": {
+                        "number": 8,
+                        "unit_of_measurement": (
+                            UnitOfRadiationConcentration.PICOCURIES_PER_LITER
+                        ),
+                    },
+                }
+            },
+            {
+                "threshold": {
+                    "type": "between",
+                    "value_min": {
+                        "number": 74,
+                        "unit_of_measurement": (
+                            UnitOfRadiationConcentration.BECQUEREL_PER_CUBIC_METER
+                        ),
+                    },
+                    "value_max": {
+                        "number": 296,
+                        "unit_of_measurement": (
+                            UnitOfRadiationConcentration.BECQUEREL_PER_CUBIC_METER
+                        ),
+                    },
+                }
+            },
+        ],
+        limit_entity_condition_options={
+            "threshold": {
+                "type": "between",
+                "value_min": {"entity": "sensor.above"},
+                "value_max": {"entity": "sensor.below"},
+            }
+        },
+        limit_entities=("sensor.above", "sensor.below"),
+        limit_entity_states=[
+            (
+                {"state": "2", "attributes": _unit_pcil},
+                {"state": "8", "attributes": _unit_pcil},
+            ),
+            (
+                {"state": "74", "attributes": _unit_bqm3},
+                {"state": "296", "attributes": _unit_bqm3},
+            ),
+        ],
+        invalid_limit_entity_states=[
+            (
+                {"state": "2", "attributes": _unit_invalid},
+                {"state": "8", "attributes": _unit_invalid},
+            ),
+            (
+                {"state": "74", "attributes": _unit_invalid},
+                {"state": "296", "attributes": _unit_invalid},
             ),
         ],
     )

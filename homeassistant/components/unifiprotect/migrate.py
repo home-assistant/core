@@ -2,6 +2,8 @@
 
 import logging
 
+from uiprotect.data import Bootstrap
+
 from homeassistant.components.automation import automations_with_entity
 from homeassistant.components.script import scripts_with_entity
 from homeassistant.const import Platform
@@ -116,13 +118,16 @@ def _async_repair_if_used(
     issue_id: str,
     translation_key: str,
     placeholders: dict[str, str] | None = None,
+    breaks_in: str | None = None,
 ) -> None:
-    """Raise a persistent repair for a removed entity that is still in use.
+    """Raise a repair for an entity that is going away and is still in use.
 
-    The removal cannot rewrite the user's automations/scripts, so the repair
-    lists the affected ones (the caller supplies any replacement hint via
-    ``placeholders``). Disabled entities are skipped: they are not active in any
-    automation.
+    Neither a removal nor a deprecation can rewrite the user's
+    automations/scripts, so the repair lists the affected ones (the caller
+    supplies any replacement hint via ``placeholders``). Disabled entities are
+    skipped: they are not active in any automation. Pass ``breaks_in`` while the
+    entity still exists; the repair then clears itself once the last usage is
+    gone, where a removal repair has to persist.
     """
     if entity.disabled_by is not None:
         return
@@ -131,13 +136,16 @@ def _async_repair_if_used(
         | set(scripts_with_entity(hass, entity.entity_id))
     )
     if not items:
+        if breaks_in is not None:
+            ir.async_delete_issue(hass, DOMAIN, issue_id)
         return
     ir.async_create_issue(
         hass,
         DOMAIN,
         issue_id,
         is_fixable=False,
-        is_persistent=True,
+        is_persistent=breaks_in is None,
+        breaks_in_ha_version=breaks_in,
         severity=IssueSeverity.WARNING,
         translation_key=translation_key,
         translation_placeholders={
@@ -291,3 +299,97 @@ def async_remove_sense_setting_mirrors(
                 "sense_setting_mirror_removed_no_replacement",
             )
         registry.async_remove(entity.entity_id)
+
+
+# Release that removes the deprecated light mirrors.
+LIGHT_SETTING_MIRROR_BREAKS_IN = "2027.1.0"
+
+# Light mirrors keyed by their own (platform, key), pointing at the (platform,
+# key) of the control that replaces them and the repair text. ``None`` is the
+# light entity itself, whose unique_id is the bare MAC.
+_LIGHT_MIRROR_REPLACEMENTS: dict[tuple[str, str], tuple[Platform, str | None, str]] = {
+    (Platform.BINARY_SENSOR, "light"): (
+        Platform.LIGHT,
+        None,
+        "setting_mirror_deprecated",
+    ),
+    (Platform.BINARY_SENSOR, "status_light"): (
+        Platform.SWITCH,
+        "status_light",
+        "setting_mirror_deprecated",
+    ),
+    (Platform.SENSOR, "sensitivity"): (
+        Platform.NUMBER,
+        "sensitivity",
+        "setting_mirror_deprecated",
+    ),
+    # The sensor shows the raw mode, the select its own option names.
+    (Platform.SENSOR, "light_motion"): (
+        Platform.SELECT,
+        "light_motion",
+        "setting_mirror_deprecated_light_mode",
+    ),
+}
+
+
+@callback
+def async_deprecate_light_setting_mirrors(
+    hass: HomeAssistant, entry: UFPConfigEntry, bootstrap: Bootstrap
+) -> None:
+    """Deprecate the read-only mirrors of the light controls.
+
+    The light and its controls write through the public API, which the local
+    user's write permission does not gate, so they are now available to every
+    user and the ``PermRequired.NO_WRITE`` mirrors only duplicate them.
+
+    Runs after platform setup so the repair can name the replacement.
+
+    Added in 2026.11.0
+    """
+    _async_deprecate_setting_mirrors(
+        hass,
+        entry,
+        {light.mac for light in bootstrap.lights.values()},
+        _LIGHT_MIRROR_REPLACEMENTS,
+        LIGHT_SETTING_MIRROR_BREAKS_IN,
+    )
+
+
+@callback
+def _async_deprecate_setting_mirrors(
+    hass: HomeAssistant,
+    entry: UFPConfigEntry,
+    macs: set[str],
+    replacements: dict[tuple[str, str], tuple[Platform, str | None, str]],
+    breaks_in: str,
+) -> None:
+    """Raise a repair for each used mirror, pointing at its replacement.
+
+    The mirror keys are shared across device types, so the match is scoped to
+    ``macs``.
+    """
+    if not macs:
+        return
+    registry = er.async_get(hass)
+    for entity in er.async_entries_for_config_entry(registry, entry.entry_id):
+        mac, _, key = entity.unique_id.partition("_")
+        mirror = (entity.domain, key)
+        if mirror not in replacements or mac not in macs:
+            continue
+        platform, replacement_key, translation_key = replacements[mirror]
+        replacement_id = registry.async_get_entity_id(
+            platform,
+            DOMAIN,
+            mac if replacement_key is None else f"{mac}_{replacement_key}",
+        )
+        # Nothing to point the repair at before the replacement exists.
+        if replacement_id is None:
+            continue
+        _async_repair_if_used(
+            hass,
+            entity,
+            f"setting_mirror_deprecated_{entity.unique_id}",
+            translation_key,
+            {"replacement": replacement_id},
+            breaks_in=breaks_in,
+        )

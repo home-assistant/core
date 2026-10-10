@@ -223,6 +223,15 @@ class SensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             )
         return self._get_uptime(current_uptime)
 
+    @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Opt in to in-place entity_id changes.
+
+        This can be removed in Home Assistant Core 2027.11.
+        """
+        super().async_entity_id_changed(old_entity_id)
+
     @override
     async def async_prepare_to_add_to_hass(self) -> None:
         """Run before the entity is added to hass.

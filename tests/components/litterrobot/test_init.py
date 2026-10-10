@@ -197,8 +197,29 @@ async def test_unique_id_migration_conflict(
     assert entry.minor_version == 2
 
 
+@pytest.mark.parametrize(
+    ("side_effect", "state", "reason"),
+    [
+        pytest.param(
+            LitterRobotLoginException,
+            ConfigEntryState.MIGRATION_ERROR,
+            "Invalid credentials. Please check your username and password, then"
+            " try again",
+            id="invalid_credentials",
+        ),
+        pytest.param(
+            LitterRobotException,
+            ConfigEntryState.SETUP_RETRY,
+            "Unable to connect to the Whisker API to migrate the configuration",
+            id="cannot_connect",
+        ),
+    ],
+)
 async def test_unique_id_migration_connection_failure(
     hass: HomeAssistant,
+    side_effect: type[Exception],
+    state: ConfigEntryState,
+    reason: str,
 ) -> None:
     """Test migration fails when API is unreachable for unique_id."""
     entry = MockConfigEntry(
@@ -211,14 +232,15 @@ async def test_unique_id_migration_connection_failure(
 
     with patch(
         "homeassistant.components.litterrobot.Account.connect",
-        side_effect=LitterRobotException,
+        side_effect=side_effect,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
     assert entry.unique_id is None
     assert entry.minor_version == 1
-    assert entry.state is ConfigEntryState.MIGRATION_ERROR
+    assert entry.state is state
+    assert entry.reason == reason
 
 
 async def test_device_remove_devices(

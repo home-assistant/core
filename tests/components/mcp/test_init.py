@@ -4,7 +4,7 @@ import re
 import ssl
 from unittest.mock import AsyncMock, Mock, patch
 
-import httpx
+import httpx2
 from mcp import McpError
 from mcp.types import (
     CallToolResult,
@@ -97,9 +97,9 @@ async def test_init(
 @pytest.mark.parametrize(
     ("side_effect"),
     [
-        (httpx.TimeoutException("Some timeout")),
-        (httpx.HTTPStatusError("", request=None, response=httpx.Response(500))),
-        (httpx.HTTPError("Some HTTP error")),
+        (httpx2.TimeoutException("Some timeout")),
+        (httpx2.HTTPStatusError("", request=None, response=httpx2.Response(500))),
+        (httpx2.HTTPError("Some HTTP error")),
     ],
 )
 async def test_mcp_server_failure(
@@ -124,8 +124,8 @@ async def test_mcp_server_setup_auth_failure(
     mock_mcp_client: Mock,
 ) -> None:
     """Test setup auth failure triggers reauth."""
-    mock_mcp_client.side_effect = httpx.HTTPStatusError(
-        "Authentication required", request=None, response=httpx.Response(401)
+    mock_mcp_client.side_effect = httpx2.HTTPStatusError(
+        "Authentication required", request=None, response=httpx2.Response(401)
     )
 
     await hass.config_entries.async_setup(config_entry.entry_id)
@@ -145,10 +145,10 @@ async def test_mcp_server_setup_auth_failure_with_www_authenticate_header(
     headers = {
         "WWW-Authenticate": 'mcp resource_metadata="https://example.com/custom-discovery", scope="read write"'
     }
-    mock_mcp_client.side_effect = httpx.HTTPStatusError(
+    mock_mcp_client.side_effect = httpx2.HTTPStatusError(
         "Authentication required",
         request=None,
-        response=httpx.Response(401, headers=headers),
+        response=httpx2.Response(401, headers=headers),
     )
 
     await hass.config_entries.async_setup(config_entry.entry_id)
@@ -174,7 +174,7 @@ async def test_mcp_server_http_transport_failure(
 ) -> None:
     """Test the integration fails to setup if the HTTP transport fails."""
     mock_http_streamable_client.side_effect = ExceptionGroup(
-        "Connection error", [httpx.ConnectError("Connection failed")]
+        "Connection error", [httpx2.ConnectError("Connection failed")]
     )
 
     await hass.config_entries.async_setup(config_entry.entry_id)
@@ -192,15 +192,15 @@ async def test_mcp_server_sse_transport_failure(
     This exercises the case where the HTTP transport fails with method not
     allowed, indicating an SSE server, then also fails with SSE.
     """
-    http_405 = httpx.HTTPStatusError(
-        "Method not allowed", request=None, response=httpx.Response(405)
+    http_405 = httpx2.HTTPStatusError(
+        "Method not allowed", request=None, response=httpx2.Response(405)
     )
     mock_http_streamable_client.side_effect = ExceptionGroup(
         "Method not allowed", [http_405]
     )
 
     mock_sse_client.side_effect = ExceptionGroup(
-        "Connection error", [httpx.ConnectError("Connection failed")]
+        "Connection error", [httpx2.ConnectError("Connection failed")]
     )
 
 
@@ -211,10 +211,10 @@ async def test_mcp_server_sse_transport_failure(
             ExceptionGroup(
                 "Method not allowed",
                 [
-                    httpx.HTTPStatusError(
+                    httpx2.HTTPStatusError(
                         "Method not allowed",
                         request=None,
-                        response=httpx.Response(405),
+                        response=httpx2.Response(405),
                     )
                 ],
             ),
@@ -262,8 +262,8 @@ async def test_mcp_server_authentication_failure(
     mock_mcp_client: Mock,
 ) -> None:
     """Test the integration fails to setup if the server fails authentication."""
-    mock_mcp_client.side_effect = httpx.HTTPStatusError(
-        "Authentication required", request=None, response=httpx.Response(401)
+    mock_mcp_client.side_effect = httpx2.HTTPStatusError(
+        "Authentication required", request=None, response=httpx2.Response(401)
     )
 
     await hass.config_entries.async_setup(config_entry_with_auth.entry_id)
@@ -278,8 +278,8 @@ async def test_list_tools_failure(
     hass: HomeAssistant, config_entry: MockConfigEntry, mock_mcp_client: Mock
 ) -> None:
     """Test the integration fails to load if the first data fetch returns an error."""
-    mock_mcp_client.return_value.list_tools.side_effect = httpx.HTTPStatusError(
-        "", request=None, response=httpx.Response(500)
+    mock_mcp_client.return_value.list_tools.side_effect = httpx2.HTTPStatusError(
+        "", request=None, response=httpx2.Response(500)
     )
 
     await hass.config_entries.async_setup(config_entry.entry_id)
@@ -460,8 +460,8 @@ async def test_call_tool_fails(
     tool = api_instance.tools[0]
     assert tool.name == "search_memory"
 
-    mock_mcp_client.return_value.call_tool.side_effect = httpx.HTTPStatusError(
-        "Server error", request=None, response=httpx.Response(500)
+    mock_mcp_client.return_value.call_tool.side_effect = httpx2.HTTPStatusError(
+        "Server error", request=None, response=httpx2.Response(500)
     )
     with pytest.raises(
         HomeAssistantError, match="Error when calling tool: Server error"
@@ -526,8 +526,8 @@ async def test_tool_call_no_auth_auth_failure(
     tool = api_instance.tools[0]
 
     # Mock tool call encountering a 401 response
-    mock_mcp_client.return_value.call_tool.side_effect = httpx.HTTPStatusError(
-        "Authentication required", request=None, response=httpx.Response(401)
+    mock_mcp_client.return_value.call_tool.side_effect = httpx2.HTTPStatusError(
+        "Authentication required", request=None, response=httpx2.Response(401)
     )
 
     with pytest.raises(ConfigEntryAuthFailed):
@@ -566,10 +566,10 @@ async def test_tool_call_no_auth_auth_failure_with_www_authenticate_header(
     headers = {
         "WWW-Authenticate": 'mcp resource_metadata="https://example.com/custom-discovery", scope="read write"'
     }
-    mock_mcp_client.return_value.call_tool.side_effect = httpx.HTTPStatusError(
+    mock_mcp_client.return_value.call_tool.side_effect = httpx2.HTTPStatusError(
         "Authentication required",
         request=None,
-        response=httpx.Response(401, headers=headers),
+        response=httpx2.Response(401, headers=headers),
     )
 
     with pytest.raises(ConfigEntryAuthFailed):
@@ -780,7 +780,7 @@ async def test_tool_call_http_error(
     tool = api_instance.tools[0]
 
     # Mock tool call raising HTTPError
-    mock_mcp_client.return_value.call_tool.side_effect = httpx.HTTPError(
+    mock_mcp_client.return_value.call_tool.side_effect = httpx2.HTTPError(
         "Connection timed out or failed"
     )
 
@@ -804,14 +804,14 @@ async def test_sse_client_does_not_build_ssl_context(
     mock_sse_client: AsyncMock,
 ) -> None:
     """Test the SSE transport does not load certificates in the event loop."""
-    http_405 = httpx.HTTPStatusError(
-        "Method not allowed", request=None, response=httpx.Response(405)
+    http_405 = httpx2.HTTPStatusError(
+        "Method not allowed", request=None, response=httpx2.Response(405)
     )
     mock_http_streamable_client.side_effect = ExceptionGroup(
         "Method not allowed", [http_405]
     )
     mock_sse_client.side_effect = ExceptionGroup(
-        "Connection error", [httpx.ConnectError("Connection failed")]
+        "Connection error", [httpx2.ConnectError("Connection failed")]
     )
 
     await hass.config_entries.async_setup(config_entry.entry_id)
@@ -819,7 +819,7 @@ async def test_sse_client_does_not_build_ssl_context(
 
     client_factory = mock_sse_client.call_args.kwargs["httpx_client_factory"]
     with patch.object(ssl.SSLContext, "load_verify_locations") as mock_load_certs:
-        client = client_factory(headers={}, timeout=httpx.Timeout(5))
+        client = client_factory(headers={}, timeout=httpx2.Timeout(5))
 
     assert not mock_load_certs.called
     await client.aclose()

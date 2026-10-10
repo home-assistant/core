@@ -167,7 +167,7 @@ class Thermostat(ClimateEntity):
     """A thermostat class for Ecobee."""
 
     _attr_precision = PRECISION_TENTHS
-    _attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
+    _attr_native_temperature_unit = UnitOfTemperature.FAHRENHEIT
     _attr_min_humidity = DEFAULT_MIN_HUMIDITY
     _attr_max_humidity = DEFAULT_MAX_HUMIDITY
     _attr_fan_modes = [FAN_AUTO, FAN_ON]
@@ -257,13 +257,13 @@ class Thermostat(ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> float:
+    def native_current_temperature(self) -> float:
         """Return the current temperature."""
         return self.thermostat["runtime"]["actualTemperature"] / 10.0
 
     @property
     @override
-    def target_temperature_low(self) -> float | None:
+    def native_target_temperature_low(self) -> float | None:
         """Return the lower bound temperature we try to reach."""
         if self.hvac_mode == HVACMode.HEAT_COOL:
             return self.thermostat["runtime"]["desiredHeat"] / 10.0
@@ -271,7 +271,7 @@ class Thermostat(ClimateEntity):
 
     @property
     @override
-    def target_temperature_high(self) -> float | None:
+    def native_target_temperature_high(self) -> float | None:
         """Return the upper bound temperature we try to reach."""
         if self.hvac_mode == HVACMode.HEAT_COOL:
             return self.thermostat["runtime"]["desiredCool"] / 10.0
@@ -306,7 +306,7 @@ class Thermostat(ClimateEntity):
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         if self.hvac_mode == HVACMode.HEAT_COOL:
             return None
@@ -506,7 +506,7 @@ class Thermostat(ClimateEntity):
             )
 
         elif preset_mode == PRESET_TEMPERATURE:
-            self.set_temp_hold(self.current_temperature)
+            self.set_temp_hold(self.native_current_temperature)
 
         elif preset_mode in (PRESET_HOLD_NEXT_TRANSITION, PRESET_HOLD_INDEFINITE):
             self.data.ecobee.set_climate_hold(

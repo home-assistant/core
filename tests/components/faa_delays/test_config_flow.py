@@ -1,5 +1,7 @@
 """Test the FAA Delays config flow."""
 
+from collections.abc import Generator
+from contextlib import contextmanager
 from unittest.mock import patch
 
 from aiohttp import ClientConnectionError
@@ -18,6 +20,18 @@ from tests.common import MockConfigEntry
 async def mock_valid_airport(self, *args, **kwargs):
     """Return a valid airport."""
     self.code = "test"
+
+
+@contextmanager
+def _patch_valid_airport() -> Generator[None]:
+    """Patch a valid airport and the entry setup."""
+    with (
+        patch.object(faadelays.Airport, "update", new=mock_valid_airport),
+        patch(
+            "homeassistant.components.faa_delays.async_setup_entry", return_value=True
+        ),
+    ):
+        yield
 
 
 async def test_form(hass: HomeAssistant) -> None:
@@ -49,6 +63,7 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result2["data"] == {
         "id": "test",
     }
+    assert result2["result"].unique_id == "test"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -91,6 +106,14 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
+    with _patch_valid_airport():
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"id": "test"}
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_form_unexpected_exception(hass: HomeAssistant) -> None:
     """Test we handle an unexpected exception."""
@@ -108,3 +131,11 @@ async def test_form_unexpected_exception(hass: HomeAssistant) -> None:
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
+
+    with _patch_valid_airport():
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"id": "test"}
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY

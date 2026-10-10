@@ -3,6 +3,7 @@
 from abc import abstractmethod
 import asyncio
 from collections.abc import Awaitable, Callable, Iterable, Sequence
+import errno
 import io
 import logging
 import os
@@ -10,7 +11,7 @@ from pathlib import Path
 from types import MappingProxyType
 from typing import Any, cast
 
-import httpx
+import httpx2
 from telegram import (
     Bot,
     CallbackQuery,
@@ -585,15 +586,20 @@ class TelegramNotificationService:
             )
             _LOGGER.debug("downloaded: %s", entry.get(ATTR_URL) or entry.get(ATTR_FILE))
 
-            caption: str | None = entry.get(ATTR_CAPTION)
+            # The parse mode of the media group itself only applies to a caption
+            # of the whole group, so each caption needs its own
+            caption_kwargs: dict[str, Any] = {
+                "caption": entry.get(ATTR_CAPTION),
+                "parse_mode": params[ATTR_PARSER],
+            }
             if entry[ATTR_MEDIA_TYPE] == InputMediaType.AUDIO:
-                media.append(InputMediaAudio(file_content, caption=caption))
+                media.append(InputMediaAudio(file_content, **caption_kwargs))
             elif entry[ATTR_MEDIA_TYPE] == InputMediaType.DOCUMENT:
-                media.append(InputMediaDocument(file_content, caption=caption))
+                media.append(InputMediaDocument(file_content, **caption_kwargs))
             elif entry[ATTR_MEDIA_TYPE] == InputMediaType.PHOTO:
-                media.append(InputMediaPhoto(file_content, caption=caption))
+                media.append(InputMediaPhoto(file_content, **caption_kwargs))
             else:
-                media.append(InputMediaVideo(file_content, caption=caption))
+                media.append(InputMediaVideo(file_content, **caption_kwargs))
 
         return await self._send_msg_formatted(
             self.bot.send_media_group,
@@ -604,7 +610,6 @@ class TelegramNotificationService:
             protect_content=kwargs.get(ATTR_PROTECT_CONTENT, False),
             message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
             reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
-            parse_mode=params[ATTR_PARSER],
             context=context,
         )
 
@@ -1118,10 +1123,7 @@ class TelegramNotificationService:
         if not file.file_path:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key="action_failed",
-                translation_placeholders={
-                    "error": "No file path returned from Telegram"
-                },
+                translation_key="no_file_path",
             )
         if not file_name:
             file_name = os.path.basename(file.file_path)
@@ -1164,7 +1166,7 @@ def initialize_bot(hass: HomeAssistant, p_config: MappingProxyType[str, Any]) ->
 
     proxy_url: str | None = p_config.get(CONF_PROXY_URL)
     if proxy_url is not None:
-        proxy = httpx.Proxy(proxy_url)
+        proxy = httpx2.Proxy(proxy_url)
         request = HTTPXRequest(
             connection_pool_size=8,
             proxy=proxy,
@@ -1210,9 +1212,9 @@ async def load_data(
         if authentication == HTTP_BEARER_AUTHENTICATION:
             headers = {"Authorization": f"Bearer {password}"}
         elif authentication == HTTP_DIGEST_AUTHENTICATION:
-            params["auth"] = httpx.DigestAuth(username, password)
+            params["auth"] = httpx2.DigestAuth(username, password)
         elif authentication == HTTP_BASIC_AUTHENTICATION:
-            params["auth"] = httpx.BasicAuth(username, password)
+            params["auth"] = httpx2.BasicAuth(username, password)
 
         retry_num = 0
         async with get_async_client(hass, verify_ssl) as client:
@@ -1221,7 +1223,7 @@ async def load_data(
                     response = await client.get(
                         url, headers=headers, timeout=DEFAULT_TIMEOUT_SECONDS, **params
                     )
-                except (httpx.HTTPError, httpx.InvalidURL) as err:
+                except (httpx2.HTTPError, httpx2.InvalidURL) as err:
                     raise HomeAssistantError(
                         translation_domain=DOMAIN,
                         translation_key="failed_to_load_url",
@@ -1247,10 +1249,17 @@ async def load_data(
                 if retry_num < num_retries:
                     # Add a sleep to allow other async operations to proceed
                     await asyncio.sleep(_RETRY_DELAY)
+
+            # A 200 with data returns early, so a final 200 means an empty body
+            if response.status_code == 200:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="failed_to_load_url_empty",
+                )
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key="failed_to_load_url",
-                translation_placeholders={"error": str(response.status_code)},
+                translation_key="failed_to_load_url_status",
+                translation_placeholders={"status_code": str(response.status_code)},
             )
     elif filepath is not None:
         if hass.config.is_allowed_path(filepath):
@@ -1297,6 +1306,14 @@ def _validate_credentials_input(
         )
 
 
+# OS errors are not translatable, so the common causes get their own message
+READ_ERROR_TRANSLATION_KEYS: dict[int | None, str] = {
+    errno.ENOENT: "file_not_found",
+    errno.EACCES: "file_permission_denied",
+    errno.EPERM: "file_permission_denied",
+}
+
+
 def _read_file_as_bytesio(file_path: str) -> io.BytesIO:
     """Read a file and return it as a BytesIO object."""
     try:
@@ -1307,6 +1324,8 @@ def _read_file_as_bytesio(file_path: str) -> io.BytesIO:
     except OSError as err:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
-            translation_key="failed_to_load_file",
-            translation_placeholders={"error": str(err)},
+            translation_key=READ_ERROR_TRANSLATION_KEYS.get(
+                err.errno, "failed_to_load_file"
+            ),
+            translation_placeholders={"file_path": file_path},
         ) from err
