@@ -341,6 +341,11 @@ jobs:
       - name: Register hadolint problem matcher
         run: |
           echo "::add-matcher::.github/workflows/matchers/hadolint.json"
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Check ${{ matrix.file }}
         uses: docker://hadolint/hadolint:v2.15.1@sha256:32dac94127fd60b7b7e3fbfc65e1383b9b5e25c9bfd7b8536de7a539fe68a12d
         with:
