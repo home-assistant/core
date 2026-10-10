@@ -307,7 +307,9 @@ async def test_bluetooth_step_cannot_connect(hass: HomeAssistant, exc, error) ->
         (dkey_errors.WrongActivationCode, "wrong_code"),
     ],
 )
-async def test_bluetooth_step_cannot_associate(hass: HomeAssistant, exc, error) -> None:
+async def test_bluetooth_step_cannot_associate(
+    hass: HomeAssistant, exc: type[Exception], error: str
+) -> None:
     """Test bluetooth step and we cannot associate."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -337,8 +339,9 @@ async def test_bluetooth_step_cannot_associate(hass: HomeAssistant, exc, error) 
         )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "associate"
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": error}
+
+    await _test_common_success(hass, result)
 
 
 async def test_reauth(hass: HomeAssistant) -> None:

@@ -21,6 +21,7 @@ PLATFORMS = [
     Platform.BUTTON,
     Platform.COVER,
     Platform.EVENT,
+    Platform.LIGHT,
     Platform.NUMBER,
     Platform.SELECT,
     Platform.SENSOR,

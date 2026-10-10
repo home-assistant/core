@@ -144,10 +144,9 @@ class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
 
     @property
     @override
-    # pylint: disable-next=home-assistant-coordinator-entity-available
     def available(self) -> bool:
         """Return the availability of the entity."""
-        return self.data is not None
+        return super().available and self.data is not None
 
     @property
     @override

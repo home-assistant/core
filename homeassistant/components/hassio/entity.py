@@ -3,7 +3,13 @@
 from collections.abc import Callable
 from typing import override
 
-from aiohasupervisor.models import CIFSMountResponse, HostInfo, NFSMountResponse, OSInfo
+from aiohasupervisor.models import (
+    CIFSMountResponse,
+    DiskMountResponse,
+    HostInfo,
+    NFSMountResponse,
+    OSInfo,
+)
 from aiohasupervisor.models.base import ContainerStats
 
 from homeassistant.core import callback
@@ -240,7 +246,7 @@ class HassioMountEntity(CoordinatorEntity[HassioMainDataUpdateCoordinator]):
         self,
         coordinator: HassioMainDataUpdateCoordinator,
         entity_description: EntityDescription,
-        mount: CIFSMountResponse | NFSMountResponse,
+        mount: CIFSMountResponse | DiskMountResponse | NFSMountResponse,
     ) -> None:
         """Initialize base entity."""
         super().__init__(coordinator)

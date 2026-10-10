@@ -1206,8 +1206,11 @@ async def test_detect_radio_type_success_with_settings(
     assert zigate_probe.await_count == 0
 
 
+@patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
 @patch(f"bellows.{PROBE_FUNCTION_PATH}", return_value=False)
-async def test_user_port_config_fail(probe_mock, hass: HomeAssistant) -> None:
+async def test_user_port_config_fail(
+    probe_mock: AsyncMock, hass: HomeAssistant
+) -> None:
     """Test port config flow."""
 
     result = await hass.config_entries.flow.async_init(
@@ -1226,9 +1229,32 @@ async def test_user_port_config_fail(probe_mock, hass: HomeAssistant) -> None:
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "manual_port_config"
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"]["base"] == "cannot_connect"
     assert probe_mock.await_count == 1
+
+    probe_mock.return_value = True
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_DEVICE_PATH: "/dev/ttyUSB33",
+            CONF_BAUDRATE: 115200,
+            CONF_FLOW_CONTROL: "none",
+        },
+    )
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "choose_setup_strategy"
+
+    result_setup = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={"next_step_id": config_flow.SETUP_STRATEGY_RECOMMENDED},
+    )
+
+    result2 = await consume_progress_flow(
+        hass,
+        flow_id=result_setup["flow_id"],
+        valid_step_ids=("form_new_network",),
+    )
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
 
 
 @patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
@@ -2077,8 +2103,24 @@ async def test_formation_strategy_restore_manual_backup_invalid_upload(
 
     assert result3["type"] is FlowResultType.FORM
     assert result3["step_id"] == "upload_manual_backup"
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result3["errors"]["base"] == "invalid_backup_json"
+
+    with patch(
+        "homeassistant.components.zha.config_flow.ZhaConfigFlowHandler._parse_uploaded_backup",
+        return_value=zigpy.backups.NetworkBackup(),
+    ):
+        result_upload = await hass.config_entries.flow.async_configure(
+            result3["flow_id"],
+            user_input={config_flow.UPLOADED_BACKUP_FILE: str(uuid.uuid4())},
+        )
+
+        result4 = await consume_progress_flow(
+            hass,
+            flow_id=result_upload["flow_id"],
+            valid_step_ids=("restore_backup",),
+        )
+
+    assert result4["type"] is FlowResultType.CREATE_ENTRY
 
 
 def test_format_backup_choice() -> None:

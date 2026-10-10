@@ -101,10 +101,9 @@ class MotionCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinatorMotionBlind
 
     @property
     @override
-    # pylint: disable-next=home-assistant-coordinator-entity-available
     def available(self) -> bool:
         """Return True if entity is available."""
-        if self.coordinator.data is None:
+        if not super().available or self.coordinator.data is None:
             return False
 
         gateway_available = self.coordinator.data[KEY_GATEWAY][ATTR_AVAILABLE]

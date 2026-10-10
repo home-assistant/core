@@ -214,6 +214,7 @@ class ModelContextProtocolConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         self.data[CONF_URL] = url
         self.data[CONF_SLUG] = discovery_info.slug
         self.addon_name = discovery_info.name
+        self.context["title_placeholders"] = {"name": self.addon_name}
         return await self.async_step_hassio_confirm()
 
     async def async_step_hassio_confirm(

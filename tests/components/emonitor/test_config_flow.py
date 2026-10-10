@@ -1,5 +1,7 @@
 """Test the SiteSage Emonitor config flow."""
 
+from collections.abc import Generator
+from contextlib import contextmanager
 from unittest.mock import MagicMock, patch
 
 from aioemonitor.monitor import EmonitorNetwork, EmonitorStatus
@@ -25,6 +27,19 @@ def _mock_emonitor():
     return EmonitorStatus(
         MagicMock(), EmonitorNetwork("AABBCCDDEEFF", "1.2.3.4"), MagicMock()
     )
+
+
+@contextmanager
+def _patch_success() -> Generator[None]:
+    """Patch the Emonitor status call and entry setup."""
+    with (
+        patch(
+            "homeassistant.components.emonitor.config_flow.Emonitor.async_get_status",
+            return_value=_mock_emonitor(),
+        ),
+        patch("homeassistant.components.emonitor.async_setup_entry", return_value=True),
+    ):
+        yield
 
 
 async def test_form(hass: HomeAssistant) -> None:
@@ -81,8 +96,15 @@ async def test_form_unknown_error(hass: HomeAssistant) -> None:
         )
 
     assert result2["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "unknown"}
+
+    with _patch_success():
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"], {CONF_HOST: "1.2.3.4"}
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_cannot_connect(hass: HomeAssistant) -> None:
@@ -103,8 +125,15 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
         )
 
     assert result2["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {CONF_HOST: "cannot_connect"}
+
+    with _patch_success():
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"], {CONF_HOST: "1.2.3.4"}
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_dhcp_can_confirm(hass: HomeAssistant) -> None:

@@ -23,6 +23,7 @@ from boschshcpy import (
     SHCIntrusionSystem,
     SHCLightSwitchBSM,
     SHCMicromoduleBlinds,
+    SHCMicromoduleDimmer,
     SHCMicromoduleRelay,
     SHCMotionDetector,
     SHCMotionDetector2,
@@ -435,6 +436,28 @@ def intrusion_system_device(
     device.arming_state = arming_state
     device.alarm_state = alarm_state
     device.active_configuration_profile = profile
+    return device
+
+
+def micromodule_dimmer_device(
+    device_id: str = "hdm:ZigBee:dimmer1",
+    name: str = "Dimmer",
+    binarystate: bool = False,
+    brightness: int = 50,
+) -> SHCMicromoduleDimmer:
+    """Build a minimal device double for the micromodule_dimmers bucket."""
+    device = create_autospec(SHCMicromoduleDimmer, instance=True, spec_set=True)
+    device.name = name
+    device.id = device_id
+    device.root_device_id = "test-mac"
+    device.serial = f"serial-{device_id}"
+    device.manufacturer = "Bosch"
+    device.device_model = "MICROMODULE_DIMMER"
+    device.device_services = []
+    device.deleted = False
+    device.status = "AVAILABLE"
+    device.binarystate = binarystate
+    device.brightness = brightness
     return device
 
 
