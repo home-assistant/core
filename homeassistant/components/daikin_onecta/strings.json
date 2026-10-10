@@ -342,17 +342,17 @@
     }
   },
   "exceptions": {
-    "air_purifier_set_mode_failed": {
-      "message": "Failed to set the air-purification mode for {device}"
-    },
-    "air_purifier_set_percentage_failed": {
-      "message": "Failed to set the fan speed for {device}"
-    },
     "air_purifier_mode_unavailable": {
       "message": "Air purifier mode control is unavailable for {device}"
     },
     "air_purifier_power_unavailable": {
       "message": "Air purifier power control is unavailable for {device}"
+    },
+    "air_purifier_set_mode_failed": {
+      "message": "Failed to set the air-purification mode for {device}"
+    },
+    "air_purifier_set_percentage_failed": {
+      "message": "Failed to set the fan speed for {device}"
     },
     "air_purifier_speed_unavailable": {
       "message": "Air purifier speed control is unavailable for {device}"
@@ -363,17 +363,17 @@
     "air_purifier_turn_on_failed": {
       "message": "Failed to turn on {device}"
     },
-    "authentication_failed": {
-      "message": "Daikin API authentication failed"
-    },
     "api_error": {
       "message": "Daikin API returned HTTP {status}"
     },
-    "climate_operation_mode_unavailable": {
-      "message": "Cannot set the temperature for {device} because its operation mode is unavailable"
+    "authentication_failed": {
+      "message": "Daikin API authentication failed"
     },
     "climate_hvac_mode_unavailable": {
       "message": "The requested HVAC mode is unavailable for {device}"
+    },
+    "climate_operation_mode_unavailable": {
+      "message": "Cannot set the temperature for {device} because its operation mode is unavailable"
     },
     "climate_power_unavailable": {
       "message": "The power control is unavailable for {device}"
@@ -402,23 +402,23 @@
     "oauth2_token_request_failed": {
       "message": "Unable to obtain Daikin OAuth token: {error}"
     },
+    "preset_mode_unavailable": {
+      "message": "The requested preset mode is unavailable for {device}"
+    },
     "rate_limit_exceeded": {
       "message": "Daikin API rate limit exceeded"
     },
     "refresh_failed": {
       "message": "Failed to refresh Daikin devices"
     },
-    "preset_mode_unavailable": {
-      "message": "The requested preset mode is unavailable for {device}"
+    "schedule_option_unavailable": {
+      "message": "The requested schedule option is unavailable for {device}"
     },
     "schedule_select_failed": {
       "message": "Failed to select schedule for {device}"
     },
     "schedule_selection_unavailable": {
       "message": "Cannot select a schedule for {device} because schedule data is unavailable"
-    },
-    "schedule_option_unavailable": {
-      "message": "The requested schedule option is unavailable for {device}"
     },
     "set_fan_mode_failed": {
       "message": "Failed to set the fan mode for {device}"
@@ -435,14 +435,14 @@
     "set_temperature_failed": {
       "message": "Failed to set the temperature for {device}"
     },
+    "swing_control_unavailable": {
+      "message": "Swing control is unavailable for {device}"
+    },
     "switch_turn_off_failed": {
       "message": "Failed to turn off {device}"
     },
     "switch_turn_on_failed": {
       "message": "Failed to turn on {device}"
-    },
-    "swing_control_unavailable": {
-      "message": "Swing control is unavailable for {device}"
     },
     "turn_off_failed": {
       "message": "Failed to turn off {device}"
