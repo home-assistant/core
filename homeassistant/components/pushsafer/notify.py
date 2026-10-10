@@ -136,7 +136,7 @@ class PushsaferNotificationService(BaseNotificationService):
             if response.status_code != HTTPStatus.OK:
                 _LOGGER.error("Pushsafer failed with: %s", response.text)
             else:
-                _LOGGER.debug("Push send: %s", response.json())
+                _LOGGER.debug("Push send: %s", response.text)
 
     @classmethod
     def get_base64(cls, filebyte, mimetype):

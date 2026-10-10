@@ -16,7 +16,6 @@ from homeassistant.helpers import (
 
 from .const import DOMAIN
 from .coordinator import PortainerConfigEntry
-from .util import async_call_portainer
 
 
 class PortainerService(StrEnum):
@@ -130,12 +129,12 @@ async def prune_images(call: ServiceCall) -> None:
     coordinator = config_entry.runtime_data
     endpoint_id = _async_get_endpoint_id(device, config_entry)
 
-    await async_call_portainer(
+    await coordinator.async_call_portainer(
         coordinator.portainer.images_prune(
             endpoint_id=endpoint_id,
             until=call.data.get(PortainerServiceArgument.UNTIL),
             dangling=call.data.get(PortainerServiceArgument.DANGLING, False),
-        )
+        ),
     )
 
 
@@ -145,12 +144,12 @@ async def prune_build_cache(call: ServiceCall) -> None:
     coordinator = config_entry.runtime_data
     endpoint_id = _async_get_endpoint_id(device, config_entry)
 
-    await async_call_portainer(
+    await coordinator.async_call_portainer(
         coordinator.portainer.prune_build_cache(
             endpoint_id,
             all_cache=call.data[PortainerServiceArgument.ALL],
             until=call.data.get(PortainerServiceArgument.UNTIL),
-        )
+        ),
     )
 
 
@@ -165,13 +164,13 @@ async def recreate_container(call: ServiceCall) -> None:
     )
     timeout: timedelta | None = call.data.get(PortainerServiceArgument.TIMEOUT)
 
-    await async_call_portainer(
+    await coordinator.async_call_portainer(
         coordinator.portainer.container_recreate(
             endpoint_id=endpoint_id,
             container_id=container_id,
             **({"timeout": timeout} if timeout is not None else {}),
             pull_image=call.data.get(PortainerServiceArgument.PULL_IMAGE, False),
-        )
+        ),
     )
 
     await coordinator.async_request_refresh()

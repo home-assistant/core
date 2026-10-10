@@ -2,7 +2,6 @@
 
 from http import HTTPStatus
 from pathlib import Path
-import re
 from unittest.mock import MagicMock
 
 import pytest
@@ -302,7 +301,7 @@ async def test_resolving_errors(hass: HomeAssistant, setup: str, engine: str) ->
     # Non-existing option
     with pytest.raises(
         media_source.Unresolvable,
-        match=re.escape("Invalid options found: ['non_existing_option']"),
+        match="Unsupported options: non_existing_option",
     ):
         await media_source.async_resolve_media(
             hass,

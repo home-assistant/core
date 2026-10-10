@@ -103,7 +103,10 @@ class GroupSelectOption(KNXSelectorBase):
     def __init__(self, schema: probatio.Schemable, translation_key: str) -> None:
         """Initialize the group select option schema."""
         self.translation_key = translation_key
-        self.schema = probatio.Schema(schema)
+        # a `DataclassSchema` stays unwrapped so it serializes as its fields
+        self.schema = (
+            schema if isinstance(schema, probatio.Schema) else probatio.Schema(schema)
+        )
 
     @override
     def serialize(self) -> dict[str, Any]:
@@ -155,7 +158,11 @@ class GroupSelectSchema:
 
 
 class GroupSelect(KNXSelectorBase):
-    """Selector for group select options."""
+    """Selector for group select options.
+
+    Yields the value of the matching option - an instance of its dataclass for
+    options built by `group_select`.
+    """
 
     selector_type = "knx_group_select"
     serialize_subschema = True
@@ -168,6 +175,13 @@ class GroupSelect(KNXSelectorBase):
         """Initialize the group select selector."""
         self.collapsible = collapsible
         self.schema = GroupSelectSchema(*options)
+
+    @override
+    def __call__(self, data: Any) -> Any:
+        """Validate the passed data."""
+        if data is None:  # `Optional(key, default=None)` passes its default through
+            return None
+        return self.schema(data)
 
     @override
     def serialize(self) -> dict[str, Any]:
@@ -312,20 +326,49 @@ class GroupAddressConfig:
     passive: list[str | int] = field(default_factory=list)
     dpt: str | None = None
 
-    def write_and_passive(self) -> list[DeviceAddressableType | None]:
-        """Return the write address followed by the passive addresses."""
-        return [self.write, *self.passive]
 
-    def state_and_passive(self) -> list[DeviceAddressableType | None]:
-        """Return the state address followed by the passive addresses."""
-        return [self.state, *self.passive]
+def write_and_passive(
+    config: GroupAddressConfig | None,
+) -> list[DeviceAddressableType | None] | None:
+    """Return the write address followed by the passive addresses."""
+    return [config.write, *config.passive] if config is not None else None
+
+
+def state_and_passive(
+    config: GroupAddressConfig | None,
+) -> list[DeviceAddressableType | None] | None:
+    """Return the state address followed by the passive addresses."""
+    return [config.state, *config.passive] if config is not None else None
+
+
+def write_address(config: GroupAddressConfig | None) -> DeviceAddressableType | None:
+    """Return the write address of an optional group address."""
+    return config.write if config is not None else None
+
+
+def group_select(
+    *options: tuple[str, type], collapsible: bool = True
+) -> probatio.Coerce:
+    """Annotate a dataclass field with a group select of `(translation_key, type)`.
+
+    `Coerce` makes probatio run the selector before the field type check, like `ga`.
+    """
+    return probatio.Coerce(
+        GroupSelect(
+            *(
+                GroupSelectOption(
+                    probatio.DataclassSchema(config_type),
+                    translation_key=translation_key,
+                )
+                for translation_key, config_type in options
+            ),
+            collapsible=collapsible,
+        )
+    )
 
 
 class GroupAddressSelector(GASelector):
-    """`GASelector` yielding a `GroupAddressConfig` instead of a dict.
-
-    Temporary: fold into `GASelector` once all platforms use typed configs.
-    """
+    """`GASelector` yielding a `GroupAddressConfig` instead of a dict."""
 
     @override
     def __call__(self, data: Any) -> GroupAddressConfig | None:
@@ -422,6 +465,32 @@ class SyncStateSelector(KNXSelectorBase):
         return self.schema(data)
 
 
+@dataclass(kw_only=True, slots=True)
+class PayloadValue:
+    """A value encoded with the DPT of the linked group address."""
+
+    value: Any
+
+
+@dataclass(kw_only=True, slots=True)
+class RawPayload:
+    """A raw payload sent as is."""
+
+    payload: int
+    payload_length: int
+
+
+type KnxPayload = PayloadValue | RawPayload
+
+
+@dataclass(kw_only=True, slots=True)
+class SelectOption:
+    """A select option mapping a name to a payload."""
+
+    name: str
+    data: KnxPayload
+
+
 class KnxPayloadSelector(KNXSelectorBase):
     """Selector for KNX payload configuration.
 
@@ -454,35 +523,47 @@ class KnxPayloadSelector(KNXSelectorBase):
         }
 
     @override
-    def __call__(self, data: Any) -> Any:
+    def __call__(self, data: Any) -> KnxPayload:
         """Validate the passed data."""
         validated = self.schema(data)
-        if CONF_PAYLOAD in validated and CONF_PAYLOAD_LENGTH in validated:
-            payload = validated[CONF_PAYLOAD]
-            payload_length = validated[CONF_PAYLOAD_LENGTH]
-            try:
-                int_payload = int(payload, 16)
-            except ValueError as ex:
-                raise probatio.Invalid(f"Invalid payload format: {payload}") from ex
-            validated[CONF_PAYLOAD] = hex(int_payload)  # prepends "0x" if not present
+        if CONF_VALUE in validated:
+            # the value is checked against the DPT by the platform sub-validator
+            return PayloadValue(value=validated[CONF_VALUE])
+        payload = validated[CONF_PAYLOAD]
+        payload_length = validated[CONF_PAYLOAD_LENGTH]
+        try:
+            int_payload = int(payload, 16)
+        except ValueError as ex:
+            raise probatio.Invalid(f"Invalid payload format: {payload}") from ex
 
-            if int_payload < 0:
-                raise probatio.Invalid(f"Payload cannot be negative: {payload}")
-            if payload_length == 0:
-                # DPT 1,2,3 is marked length 0, has 6 bit size
-                if int_payload > 63:
-                    raise probatio.Invalid(
-                        f"Payload exceeds DPT 1,2,3 limit of 0x3f (63): {payload}"
-                    )
-            else:
-                max_payload = (1 << (payload_length * 8)) - 1
-                if int_payload > max_payload:
-                    raise probatio.Invalid(
-                        f"Payload {payload} exceeds possible maximum for "
-                        f"length {payload_length}: {hex(max_payload)}"
-                    )
-        # CONF_VALUE branch needs subvalidator as we don't have the DPT available here
-        return validated
+        if int_payload < 0:
+            raise probatio.Invalid(f"Payload cannot be negative: {payload}")
+        if payload_length == 0:
+            # DPT 1,2,3 is marked length 0, has 6 bit size
+            if int_payload > 63:
+                raise probatio.Invalid(
+                    f"Payload exceeds DPT 1,2,3 limit of 0x3f (63): {payload}"
+                )
+        else:
+            max_payload = (1 << (payload_length * 8)) - 1
+            if int_payload > max_payload:
+                raise probatio.Invalid(
+                    f"Payload {payload} exceeds possible maximum for "
+                    f"length {payload_length}: {hex(max_payload)}"
+                )
+        return RawPayload(payload=int_payload, payload_length=payload_length)
+
+    @staticmethod
+    def to_storage(value: KnxPayload) -> dict[str, Any]:
+        """Render a validated payload to its storage form."""
+        match value:
+            case PayloadValue():
+                return {CONF_VALUE: value.value}
+            case RawPayload():
+                return {
+                    CONF_PAYLOAD: hex(value.payload),
+                    CONF_PAYLOAD_LENGTH: value.payload_length,
+                }
 
 
 class KnxSelectOptionsSelector(KNXSelectorBase):
@@ -509,7 +590,7 @@ class KnxSelectOptionsSelector(KNXSelectorBase):
             "ga_path": self.ga_path,
         }
 
-    def _validate_option(self, data: Any) -> dict[str, Any]:
+    def _validate_option(self, data: Any) -> SelectOption:
         """Validate a single option entry.
 
         The typed `value` branch needs the DPT and is validated by the platform
@@ -523,5 +604,15 @@ class KnxSelectOptionsSelector(KNXSelectorBase):
         payload = {
             key: value for key, value in data.items() if key != SelectConf.OPTION
         }
-        validated = self._payload_selector(payload)
-        return {SelectConf.OPTION: option, **validated}
+        return SelectOption(name=option, data=self._payload_selector(payload))
+
+    @staticmethod
+    def to_storage(value: list[SelectOption]) -> list[dict[str, Any]]:
+        """Render validated options to their storage form."""
+        return [
+            {
+                SelectConf.OPTION: option.name,
+                **KnxPayloadSelector.to_storage(option.data),
+            }
+            for option in value
+        ]
