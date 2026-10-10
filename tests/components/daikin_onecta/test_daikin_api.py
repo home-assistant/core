@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from daikin_onecta import (
     OnectaApiError,
+    OnectaAuthenticationError,
     OnectaConnectionError,
     OnectaRateLimitError,
     Site,
@@ -121,6 +122,29 @@ async def test_write_success(
     assert await api.async_execute_command(command)
     command.assert_awaited_once_with(api.client)
     assert api.last_patch_call is not None
+
+
+@pytest.mark.parametrize("status", [401, 403])
+async def test_write_authentication_error(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    status: int,
+) -> None:
+    """Start reauthentication and use the platform's translated write failure."""
+    api = DaikinApi(hass, config_entry, MagicMock())
+    command = AsyncMock(
+        side_effect=OnectaAuthenticationError(
+            status=status,
+            method="PATCH",
+            path="/v1/management-points/point",
+        )
+    )
+
+    with patch.object(config_entry, "async_start_reauth") as start_reauth:
+        assert not await api.async_execute_command(command)
+
+    start_reauth.assert_called_once_with(hass)
+    assert api.last_patch_call is None
 
 
 async def test_write_api_error(

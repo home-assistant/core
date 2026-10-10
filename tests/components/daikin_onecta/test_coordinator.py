@@ -6,7 +6,12 @@ from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
 from zoneinfo import ZoneInfo
 
-from daikin_onecta import OnectaApiError, OnectaConnectionError, OnectaRateLimitError
+from daikin_onecta import (
+    OnectaApiError,
+    OnectaAuthenticationError,
+    OnectaConnectionError,
+    OnectaRateLimitError,
+)
 from daikin_onecta.rate_limit import RateLimit
 import pytest
 
@@ -385,13 +390,15 @@ class TestOnectaDataUpdateCoordinator:
         assert exc_info.value.translation_key == "api_error"
         assert exc_info.value.translation_placeholders == {"status": "500"}
 
-    async def test_unauthorized_api_error_requires_authentication(self, coordinator):
+    @pytest.mark.parametrize("status", [401, 403])
+    async def test_unauthorized_api_error_requires_authentication(
+        self, coordinator: OnectaDataUpdateCoordinator, status: int
+    ) -> None:
         """A rejected cloud token must not become a polling retry."""
         coordinator.api.last_patch_call = None
         coordinator.api.get_cloud_device_details = AsyncMock(
-            side_effect=OnectaApiError(
-                401,
-                "Unauthorized",
+            side_effect=OnectaAuthenticationError(
+                status=status,
                 method="GET",
                 path="/v1/gateway-devices",
             )

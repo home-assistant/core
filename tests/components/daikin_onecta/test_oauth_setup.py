@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock, patch
 
 from aiohttp import RequestInfo
+from daikin_onecta import OnectaAuthenticationError
 import pytest
 from yarl import URL
 
@@ -23,6 +24,34 @@ from tests.common import MockConfigEntry
 def _token_request_info() -> RequestInfo:
     url = URL("https://idp.onecta.daikineurope.com/v1/oidc/token")
     return RequestInfo(url=url, method="POST", headers={}, real_url=url)
+
+
+@pytest.mark.parametrize("status", [401, 403])
+async def test_setup_rejected_cloud_token_requires_authentication(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    status: int,
+) -> None:
+    """Handle the library's real authentication exception during initial polling."""
+    with (
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
+            return_value=MagicMock(),
+        ),
+        patch(
+            "homeassistant.components.daikin_onecta.DaikinApi.async_get_access_token",
+            return_value="token",
+        ),
+        patch(
+            "homeassistant.components.daikin_onecta.DaikinApi.get_cloud_device_details",
+            side_effect=OnectaAuthenticationError(
+                status=status, method="GET", path="/v1/gateway-devices"
+            ),
+        ),
+    ):
+        assert not await hass.config_entries.async_setup(config_entry.entry_id)
+
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
 def _reauth_error() -> OAuth2TokenRequestReauthError:

@@ -9,6 +9,7 @@ from typing import override
 
 from daikin_onecta.exceptions import (
     OnectaApiError,
+    OnectaAuthenticationError,
     OnectaConnectionError,
     OnectaRateLimitError,
 )
@@ -98,12 +99,12 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
                     translation_domain=DOMAIN,
                     translation_key="connection_failed",
                 ) from err
+            except OnectaAuthenticationError as err:
+                raise ConfigEntryAuthFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="authentication_failed",
+                ) from err
             except OnectaApiError as err:
-                if err.status == 401:
-                    raise ConfigEntryAuthFailed(
-                        translation_domain=DOMAIN,
-                        translation_key="authentication_failed",
-                    ) from err
                 raise UpdateFailed(
                     translation_domain=DOMAIN,
                     translation_key="api_error",
