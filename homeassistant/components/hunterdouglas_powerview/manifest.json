@@ -1,7 +1,7 @@
 {
   "domain": "hunterdouglas_powerview",
   "name": "Hunter Douglas PowerView",
-  "codeowners": ["@bdraco", "@kingy444", "@trullock"],
+  "codeowners": ["@bdraco", "@kingy444"],
   "config_flow": true,
   "dhcp": [
     {
