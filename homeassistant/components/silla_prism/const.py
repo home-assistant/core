@@ -1,5 +1,6 @@
 """Constants for the Silla Prism integration."""
 
+from datetime import timedelta
 from typing import Final
 
 from homeassistant.const import Platform
@@ -22,3 +23,8 @@ PORT: Final = 1
 #: Minimum/maximum charging current, in amps, as accepted by Prism.
 MIN_CURRENT: Final = 6
 MAX_CURRENT: Final = 32
+
+#: Prism has no last will or heartbeat and publishes a topic only when its
+#: value changes, but the grid power reported by its meter changes every few
+#: seconds, so a live Prism is never silent this long.
+OFFLINE_TIMEOUT: Final = timedelta(seconds=150)

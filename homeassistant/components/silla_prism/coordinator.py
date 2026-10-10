@@ -4,8 +4,12 @@ Prism is push-only: it publishes a retained MQTT topic whenever a value
 changes. A single subscription to ``<base_topic>/#`` feeds every message into
 the :class:`~pysillaprism.PrismDevice`, which accumulates typed state; the
 coordinator then pushes updates to entities via ``async_set_updated_data``.
+
+Prism has no last will, so it is considered offline when no message has been
+received from it for ``OFFLINE_TIMEOUT``.
 """
 
+from datetime import datetime
 import logging
 from typing import override
 
@@ -18,12 +22,13 @@ from homeassistant.components.mqtt import (
     client as mqtt,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_BASE_TOPIC, DOMAIN
+from .const import CONF_BASE_TOPIC, DOMAIN, OFFLINE_TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,6 +47,8 @@ class PrismCoordinator(DataUpdateCoordinator[PrismStatus]):
         self.device = PrismDevice(self.base_topic, publish=self._async_publish)
         self.device.on_status_update = self._on_status_update
         self.device.on_hello = self._on_hello
+        self._offline_job = HassJob(self._on_offline, cancel_on_shutdown=True)
+        self._cancel_offline: CALLBACK_TYPE | None = None
 
     @override
     async def _async_setup(self) -> None:
@@ -54,6 +61,8 @@ class PrismCoordinator(DataUpdateCoordinator[PrismStatus]):
                 self.hass, self.device.subscription_topic, self._message_received
             )
         )
+        self._schedule_offline()
+        self.config_entry.async_on_unload(self._unschedule_offline)
 
     @override
     async def _async_update_data(self) -> PrismStatus:
@@ -66,8 +75,44 @@ class PrismCoordinator(DataUpdateCoordinator[PrismStatus]):
 
     @callback
     def _message_received(self, msg: ReceiveMessage) -> None:
-        if isinstance(msg.payload, str):
-            self.device.handle_message(msg.topic, msg.payload)
+        if not isinstance(msg.payload, str):
+            return
+        was_online = self.last_update_success
+        # Only messages the library understands count as a sign of life: the
+        # subscription also echoes the commands published by this integration.
+        if self.device.handle_message(msg.topic, msg.payload) is None:
+            return
+        self._schedule_offline()
+        if not was_online:
+            _LOGGER.info("Prism on %s is back online", self.base_topic)
+            # A status update has already notified the entities; other
+            # messages (hello, command results) have not.
+            if not self.last_update_success:
+                self.async_set_updated_data(self.device.status)
+
+    @callback
+    def _schedule_offline(self) -> None:
+        """(Re)start the countdown after which Prism is considered offline."""
+        self._unschedule_offline()
+        self._cancel_offline = async_call_later(
+            self.hass, OFFLINE_TIMEOUT, self._offline_job
+        )
+
+    @callback
+    def _unschedule_offline(self) -> None:
+        if self._cancel_offline is not None:
+            self._cancel_offline()
+            self._cancel_offline = None
+
+    @callback
+    def _on_offline(self, _now: datetime) -> None:
+        self._cancel_offline = None
+        self.async_set_update_error(
+            UpdateFailed(
+                f"No message received from Prism on {self.base_topic} for "
+                f"{int(OFFLINE_TIMEOUT.total_seconds())} seconds"
+            )
+        )
 
     @callback
     def _on_status_update(self, _update: StatusUpdate) -> None:
