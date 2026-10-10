@@ -1,0 +1,91 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "A JFL Alarm listener is already configured on that port."
+    },
+    "error": {
+      "port_in_use": "Another service is already listening on that port.",
+      "unknown": "Unexpected error."
+    },
+    "step": {
+      "user": {
+        "data": {
+          "host": "Listening address",
+          "port": "Listening port"
+        },
+        "data_description": {
+          "host": "Leave `0.0.0.0` to listen on every network interface. A specific address is only needed on a machine with several networks.",
+          "port": "The panel connects to this port. It must be reachable from the panel's network."
+        },
+        "description": "JFL panels dial out to Home Assistant, so this integration listens and waits. Choose the TCP port to listen on; it must match the reporting destination programmed into the panel. Everything else is detected from the panel itself."
+      }
+    }
+  },
+  "config_subentries": {
+    "panel": {
+      "abort": {
+        "already_configured": "That panel has already been added.",
+        "reconfigure_successful": "The panel settings were saved."
+      },
+      "entry_type": "Panel",
+      "error": {
+        "invalid_serial": "Enter the panel's serial number."
+      },
+      "initiate_flow": {
+        "user": "Add a panel"
+      },
+      "step": {
+        "reconfigure": {
+          "data": {
+            "code": "Code to arm and disarm (optional)",
+            "code_arm_required": "Also ask for the code when arming",
+            "read_only": "Read-only mode"
+          },
+          "data_description": {
+            "code": "Leave empty for no code. This is a Home Assistant code, not a panel user code — it is never sent to the panel.",
+            "code_arm_required": "Disarming always asks for the code once one is set. Turn this off if you would rather arm without typing it.",
+            "read_only": "While read-only mode is on, the integration observes the panel and never sends it a command."
+          },
+          "description": "Settings for panel {serial}. The serial number identifies the panel and cannot be changed."
+        },
+        "user": {
+          "data": {
+            "code": "Code to arm and disarm (optional)",
+            "code_arm_required": "Also ask for the code when arming",
+            "read_only": "Read-only mode",
+            "serial": "Panel serial number"
+          },
+          "data_description": {
+            "code": "Leave empty for no code. This is a Home Assistant code, not a panel user code — it is never sent to the panel. It stops a tablet on the wall from disarming the house with one tap.",
+            "code_arm_required": "Disarming always asks for the code once one is set. Turn this off if you would rather arm without typing it.",
+            "read_only": "While read-only mode is on, the integration observes the panel and never sends it a command. Status is still requested, because the panel only reports its state when asked.",
+            "serial": "The ten-character serial the panel reports."
+          },
+          "description": "Panels that report in are added automatically. Add one by hand only if it is not powered up yet."
+        }
+      }
+    }
+  },
+  "device": {
+    "partition": {
+      "name": "Partition {number}"
+    }
+  },
+  "exceptions": {
+    "cannot_bind": {
+      "message": "Could not listen on {host}:{port}: {error}"
+    },
+    "invalid_code": {
+      "message": "Wrong code."
+    },
+    "not_permitted": {
+      "message": "Panel {serial} does not allow this operation from a monitoring connection. Check the panel's programming at address {address}."
+    },
+    "panel_not_connected": {
+      "message": "Panel {serial} is not connected, so the command was not sent."
+    },
+    "read_only": {
+      "message": "Panel {serial} is in read-only mode, so nothing was sent. Turn read-only mode off in the panel's settings to allow arming and disarming."
+    }
+  }
+}
