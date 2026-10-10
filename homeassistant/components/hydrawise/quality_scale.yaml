@@ -63,9 +63,7 @@ rules:
   entity-category:
     status: todo
     comment: The connectivity binary sensor should be a diagnostic entity.
-  entity-device-class:
-    status: todo
-    comment: The remaining watering time sensor is missing the duration device class.
+  entity-device-class: done
   entity-disabled-by-default: todo
   entity-translations: done
   exception-translations: done
