@@ -672,6 +672,13 @@ class SensorGroup(GroupEntity, SensorEntity):
                 )
             )
             or (
+                # Test if device class has no valid units and all uom's are same
+                device_class
+                and device_class not in UNIT_CONVERTERS
+                and device_class not in DEVICE_CLASS_UNITS
+                and all(x == unit_of_measurements[0] for x in unit_of_measurements)
+            )
+            or (
                 # Test no device class and all uom's are same
                 device_class is None
                 and all(x == unit_of_measurements[0] for x in unit_of_measurements)
@@ -726,7 +733,8 @@ class SensorGroup(GroupEntity, SensorEntity):
         """Return valid units.
 
         If device class is set and compatible unit of measurements.
-        If device class is not set, use one unit of measurement.
+        If device class is not set or does not define valid units,
+        only the native unit of measurement is valid.
         Only calculate valid units if there are no valid units set.
         """
         if (valid_units := self._valid_units) and not self._ignore_non_numeric:
@@ -741,7 +749,11 @@ class SensorGroup(GroupEntity, SensorEntity):
         if device_class and (device_class) in DEVICE_CLASS_UNITS and native_uom:
             valid_uoms: set = DEVICE_CLASS_UNITS[device_class]
             return valid_uoms
-        if device_class is None and native_uom:
+        if (
+            native_uom
+            and device_class not in UNIT_CONVERTERS
+            and device_class not in DEVICE_CLASS_UNITS
+        ):
             return {native_uom}
         return set()
 

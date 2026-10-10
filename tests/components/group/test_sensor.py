@@ -615,6 +615,109 @@ async def test_sensor_with_uoms_but_no_device_class(
     assert state.state == str(float(sum(VALUES)))
 
 
+async def test_sensor_with_monetary_device_class(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the sensor works with same uom for a device class without a converter."""
+    config = {
+        SENSOR_DOMAIN: {
+            "platform": DOMAIN,
+            "name": "test_sum",
+            "type": "sum",
+            "entities": ["sensor.test_1", "sensor.test_2", "sensor.test_3"],
+            "unique_id": "very_unique_id_monetary_sensor",
+        }
+    }
+
+    entity_ids = config["sensor"]["entities"]
+
+    hass.states.async_set(
+        entity_ids[0],
+        str(VALUES[0]),
+        {
+            "device_class": SensorDeviceClass.MONETARY,
+            "state_class": SensorStateClass.TOTAL,
+            "unit_of_measurement": "EUR",
+        },
+    )
+    hass.states.async_set(
+        entity_ids[1],
+        str(VALUES[1]),
+        {
+            "device_class": SensorDeviceClass.MONETARY,
+            "state_class": SensorStateClass.TOTAL,
+            "unit_of_measurement": "EUR",
+        },
+    )
+    hass.states.async_set(
+        entity_ids[2],
+        str(VALUES[2]),
+        {
+            "device_class": SensorDeviceClass.MONETARY,
+            "state_class": SensorStateClass.TOTAL,
+            "unit_of_measurement": "EUR",
+        },
+    )
+
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test_sum")
+    assert state.attributes.get("device_class") == "monetary"
+    assert state.attributes.get("state_class") == "total"
+    assert state.attributes.get("unit_of_measurement") == "EUR"
+    assert state.state == str(float(sum(VALUES)))
+
+    assert not [
+        issue for issue in issue_registry.issues.values() if issue.domain == DOMAIN
+    ]
+
+    hass.states.async_set(
+        entity_ids[0],
+        str(VALUES[0]),
+        {
+            "device_class": SensorDeviceClass.MONETARY,
+            "state_class": SensorStateClass.TOTAL,
+            "unit_of_measurement": "USD",
+        },
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.test_sum")
+    assert state.attributes.get("device_class") == "monetary"
+    assert state.attributes.get("state_class") == "total"
+    assert state.attributes.get("unit_of_measurement") is None
+    assert state.state == STATE_UNKNOWN
+
+    assert issue_registry.async_get_issue(
+        DOMAIN, "sensor.test_sum_uoms_not_matching_device_class"
+    )
+
+    assert (
+        "Unable to use state. Only entities with correct unit"
+        " of measurement is supported" in caplog.text
+    )
+
+    hass.states.async_set(
+        entity_ids[0],
+        str(VALUES[0]),
+        {
+            "device_class": SensorDeviceClass.MONETARY,
+            "state_class": SensorStateClass.TOTAL,
+            "unit_of_measurement": "EUR",
+        },
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.test_sum")
+    assert state.attributes.get("device_class") == "monetary"
+    assert state.attributes.get("state_class") == "total"
+    assert state.attributes.get("unit_of_measurement") == "EUR"
+    assert state.state == str(float(sum(VALUES)))
+
+
 async def test_sensor_calculated_properties_not_same(
     hass: HomeAssistant, issue_registry: ir.IssueRegistry
 ) -> None:
