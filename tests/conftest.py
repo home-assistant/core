@@ -2,7 +2,7 @@
 
 import asyncio
 from collections.abc import AsyncGenerator, Callable, Coroutine, Generator, Sequence
-from contextlib import AsyncExitStack, asynccontextmanager, contextmanager
+from contextlib import AsyncExitStack, asynccontextmanager, contextmanager, suppress
 import datetime
 import functools
 import gc
@@ -18,6 +18,7 @@ import sqlite3
 import ssl
 import sys
 import threading
+import time
 from typing import TYPE_CHECKING, Any, Self, cast
 from unittest.mock import AsyncMock, MagicMock, Mock, _patch, patch
 
@@ -1688,31 +1689,53 @@ def recorder_db_url(
         db_url = url.set(database=f"{url.database}-{worker}").render_as_string(
             hide_password=False
         )
+        # The database belongs to this worker, so a leftover from a failed
+        # teardown must not fail all following tests on the worker
+        drop_existing_db = True
 
-    def drop_db() -> None:
+    def drop_db(*, terminate: bool = False) -> None:
         import sqlalchemy as sa  # noqa: PLC0415
         import sqlalchemy_utils  # noqa: PLC0415
 
+        made_url = sa.make_url(db_url)
+        db = made_url.database
         if db_url.startswith("mysql://"):
-            made_url = sa.make_url(db_url)
-            db = made_url.database
+            query = sa.text(
+                "select id FROM information_schema.processlist"
+                " WHERE db=:db and id != CONNECTION_ID()"
+            )
+            kill = "KILL {}"
             engine = sa.create_engine(db_url)
-            # Check for any open connections to the database before dropping it
-            # to ensure that InnoDB does not deadlock.
+        else:
+            query = sa.text(
+                "select pid FROM pg_stat_activity"
+                " WHERE datname=:db and pid != pg_backend_pid()"
+                " and backend_type = 'client backend'"
+            )
+            kill = "select pg_terminate_backend({})"
+            engine = sa.create_engine(made_url.set(database="postgres"))
+        # Check for any open connections to the database before dropping it:
+        # MySQL can deadlock and Postgres refuses to drop a database in use.
+        # Connections of the test can take a moment to close on a busy
+        # machine, so wait for them.
+        for _ in range(30):
             with engine.begin() as connection:
-                query = sa.text(
-                    "select id FROM information_schema.processlist"
-                    " WHERE db=:db and id != CONNECTION_ID()"
-                )
                 rows = connection.execute(query, parameters={"db": db}).fetchall()
-                if rows:
-                    raise RuntimeError(
-                        f"Unable to drop database {db} because it is in use by {rows}"
-                    )
-            engine.dispose()
-            sqlalchemy_utils.drop_database(db_url)
-        elif db_url.startswith("postgresql://"):
-            sqlalchemy_utils.drop_database(db_url)
+                if rows and terminate:
+                    # A leftover of an earlier test on this worker
+                    for (session_id,) in rows:
+                        # The session can close between the query and the kill
+                        with suppress(sa.exc.OperationalError):
+                            connection.execute(sa.text(kill.format(int(session_id))))
+            if not rows:
+                break
+            time.sleep(0.1)
+        engine.dispose()
+        if rows:
+            raise RuntimeError(
+                f"Unable to drop database {db} because it is in use by {rows}"
+            )
+        sqlalchemy_utils.drop_database(db_url)
 
     if db_url == "sqlite://" and persistent_database:
         tmp_path = tmp_path_factory.mktemp("recorder")
@@ -1721,7 +1744,7 @@ def recorder_db_url(
         import sqlalchemy_utils  # noqa: PLC0415
 
         if drop_existing_db and sqlalchemy_utils.database_exists(db_url):
-            drop_db()
+            drop_db(terminate=True)
 
         if sqlalchemy_utils.database_exists(db_url):
             raise RuntimeError(
