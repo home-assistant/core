@@ -110,11 +110,39 @@ async def test_updating_state(
     assert state is not None
     assert state.state == LockState.UNLOCKED.value
 
-    get_device_by_id(mock_api_client, "dev_lock_001")["status"]["is_locked"] = 2
     freezer.tick(timedelta(seconds=DEFAULT_SCAN_INTERVAL))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
+    assert mock_api_client.async_get_devices.await_count == 2
 
     state = hass.states.get("lock.front_door_lock")
     assert state is not None
     assert state.state == LockState.UNLOCKED.value
+
+    get_device_by_id(mock_api_client, "dev_lock_001")["status"]["is_locked"] = 2
+    freezer.tick(timedelta(seconds=DEFAULT_SCAN_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert mock_api_client.async_get_devices.await_count == 3
+
+    state = hass.states.get("lock.front_door_lock")
+    assert state is not None
+    assert state.state == LockState.LOCKED.value
+
+
+async def test_legacy_locked_state(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_api_client: AsyncMock,
+) -> None:
+    """Test the legacy locked state field."""
+    status = get_device_by_id(mock_api_client, "dev_lock_001")["status"]
+    status.pop("is_locked")
+    status["locked"] = True
+
+    with patch("homeassistant.components.xthings_cloud.PLATFORMS", [Platform.LOCK]):
+        await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("lock.front_door_lock")
+    assert state is not None
+    assert state.state == LockState.LOCKED.value
