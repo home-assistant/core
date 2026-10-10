@@ -49,10 +49,13 @@ def mock_error(spa):
     return error
 
 
-async def test_error(spa, hass: HomeAssistant, config_entry, mock_error) -> None:
+async def test_error(
+    spa, spa_state, hass: HomeAssistant, config_entry, mock_error
+) -> None:
     """Test the error sensor."""
 
     spa.get_errors.return_value = [mock_error]
+    spa_state.error_code = mock_error.code
 
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
@@ -64,6 +67,26 @@ async def test_error(spa, hass: HomeAssistant, config_entry, mock_error) -> None
 
     assert state.state == STATE_ON
     assert state.attributes["error_code"] == 11
+
+
+async def test_error_history_ignored(
+    spa, spa_state, hass: HomeAssistant, config_entry, mock_error
+) -> None:
+    """Test a stale error in the errors list does not trigger the sensor."""
+
+    # The spa reports "All Clear", but the errors list still holds an entry
+    # that is flagged active.
+    spa.get_errors.return_value = [mock_error]
+    spa_state.error_code = 0
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(f"binary_sensor.{spa.brand}_{spa.model}_error")
+    assert state is not None
+    assert state.state == STATE_OFF
+    assert "error_code" not in state.attributes
 
 
 async def test_snooze_reminder(spa, setup_entry, hass: HomeAssistant) -> None:
