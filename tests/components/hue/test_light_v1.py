@@ -3,14 +3,16 @@
 from unittest.mock import Mock
 
 import aiohue
+import pytest
 
 from homeassistant.components import hue
-from homeassistant.components.hue.const import CONF_ALLOW_HUE_GROUPS
+from homeassistant.components.hue.const import CONF_ALLOW_HUE_GROUPS, SERVICE_FLASH
 from homeassistant.components.hue.v1 import light as hue_light
 from homeassistant.components.light import ColorMode
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import Platform
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import (
     area_registry as ar,
     device_registry as dr,
@@ -18,7 +20,7 @@ from homeassistant.helpers import (
 )
 from homeassistant.util import color as color_util
 
-from .conftest import create_config_entry
+from .conftest import create_config_entry, setup_component
 
 HUE_LIGHT_NS = "homeassistant.components.light.hue."
 GROUP_RESPONSE = {
@@ -996,3 +998,22 @@ async def test_group_features(
     assert (
         device_entry.area_id == area_registry.async_get_area_by_name("Dining Room").id
     )
+
+
+async def test_flash_not_supported(hass: HomeAssistant, mock_bridge_v1: Mock) -> None:
+    """Test flashing is not supported by lights of a V1 bridge."""
+    mock_bridge_v1.mock_light_responses.append(LIGHT_RESPONSE)
+    await setup_component(hass)
+    await setup_bridge(hass, mock_bridge_v1)
+    requests = len(mock_bridge_v1.mock_requests)
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            hue.DOMAIN,
+            SERVICE_FLASH,
+            {ATTR_ENTITY_ID: "light.hue_lamp_1", "duration": 5},
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == "flash_not_supported"
+    assert len(mock_bridge_v1.mock_requests) == requests
