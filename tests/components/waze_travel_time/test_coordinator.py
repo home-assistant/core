@@ -12,7 +12,7 @@ from homeassistant.components.waze_travel_time.config_flow import WazeConfigFlow
 from homeassistant.components.waze_travel_time.const import DEFAULT_OPTIONS, DOMAIN
 from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from .const import MOCK_CONFIG
@@ -41,19 +41,18 @@ def route_entries() -> list[MockConfigEntry]:
             version=WazeConfigFlow.VERSION,
             minor_version=WazeConfigFlow.MINOR_VERSION,
         )
-        for _ in range(10)
+        for _ in range(91)
     ]
 
 
 @pytest.mark.parametrize(
     ("route_count", "minutes"),
     [
-        pytest.param(1, 5, id="one"),
-        pytest.param(2, 5, id="two"),
-        pytest.param(3, 5, id="three"),
-        pytest.param(4, 6, id="four"),
-        pytest.param(5, 7, id="five"),
-        pytest.param(10, 14, id="ten"),
+        pytest.param(3, 5, id="minimum_interval"),
+        pytest.param(4, 6, id="above_minimum_interval"),
+        pytest.param(10, 14, id="multiple_rounds"),
+        pytest.param(90, 121, id="exactly_one_round"),
+        pytest.param(91, 122, id="more_than_reserved_budget"),
     ],
 )
 async def test_polling_interval(
@@ -86,6 +85,51 @@ async def test_polling_interval(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
     assert mock_update.call_count == route_count
+
+
+@pytest.mark.parametrize(
+    ("route_count", "expected_max_requests"),
+    [
+        pytest.param(17, 85, id="seventeen"),
+        pytest.param(45, 90, id="exactly_two_rounds"),
+        pytest.param(90, 90, id="exactly_one_round"),
+    ],
+)
+async def test_polling_round_budget(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_update: AsyncMock,
+    route_entries: list[MockConfigEntry],
+    route_count: int,
+    expected_max_requests: int,
+) -> None:
+    """Repeated polling rounds never exceed the budget within a two-hour window."""
+    for entry in route_entries[:route_count]:
+        entry.add_to_hass(hass)
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert mock_update.call_count == route_count
+
+    # Include startup requests, then observe every minute for two quota windows.
+    request_minutes = [0] * route_count
+    max_requests = route_count
+    previous_requests = route_count
+    for minute in range(1, 241):
+        freezer.tick(timedelta(minutes=1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+        new_requests = mock_update.call_count - previous_requests
+        request_minutes.extend([minute] * new_requests)
+        previous_requests = mock_update.call_count
+
+        # Count both window boundaries to catch an extra round at the reset time.
+        requests_in_window = sum(
+            request_minute >= minute - 120 for request_minute in request_minutes
+        )
+        assert requests_in_window <= 90
+        max_requests = max(max_requests, requests_in_window)
+
+    assert max_requests == expected_max_requests
 
 
 async def test_entry_lifecycle(
@@ -164,6 +208,106 @@ async def test_entry_lifecycle(
     await hass.async_block_till_done()
     assert coordinator.update_interval == timedelta(minutes=5)
     assert first.runtime_data is coordinator
+
+
+@pytest.mark.usefixtures("mock_update")
+@pytest.mark.parametrize(
+    ("disable_polling", "disable_sensor"),
+    [
+        pytest.param(True, None, id="polling_disabled"),
+        pytest.param(False, er.RegistryEntryDisabler.USER, id="sensor_disabled"),
+    ],
+)
+async def test_too_many_polling_routes_issue(
+    hass: HomeAssistant,
+    route_entries: list[MockConfigEntry],
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    disable_polling: bool,
+    disable_sensor: er.RegistryEntryDisabler | None,
+) -> None:
+    """Warn only above the automatic polling budget and clear on lifecycle changes."""
+    # Ninety active routes fit one round; a non-polling entry must not trigger a warning.
+    for entry in route_entries[:90]:
+        entry.add_to_hass(hass)
+    extra = route_entries[90]
+    extra.add_to_hass(hass)
+    hass.config_entries.async_update_entry(extra, pref_disable_polling=disable_polling)
+    entity_registry.async_get_or_create(
+        "sensor",
+        DOMAIN,
+        extra.entry_id,
+        config_entry=extra,
+        disabled_by=disable_sensor,
+    )
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+    assert not issue_registry.issues
+
+    # Enabling the ninety-first route creates one shared, actionable warning.
+    hass.config_entries.async_update_entry(extra, pref_disable_polling=False)
+    entity_id = entity_registry.async_get_entity_id("sensor", DOMAIN, extra.entry_id)
+    assert entity_id is not None
+    entity_registry.async_update_entity(entity_id, disabled_by=None)
+    assert await hass.config_entries.async_reload(extra.entry_id)
+    await hass.async_block_till_done()
+    issue = issue_registry.async_get_issue(DOMAIN, "too_many_polling_routes")
+    assert issue is not None
+    assert issue.severity is ir.IssueSeverity.WARNING
+    assert not issue.is_fixable
+    assert issue.translation_key == "too_many_polling_routes"
+    assert issue.translation_placeholders == {"max_routes": "90"}
+    assert (
+        issue.learn_more_url
+        == "https://www.home-assistant.io/integrations/waze_travel_time/#defining-a-custom-polling-interval"
+    )
+    assert len(issue_registry.issues) == 1
+
+    # Reloading must not duplicate the warning; unloading must clear it.
+    assert await hass.config_entries.async_reload(extra.entry_id)
+    await hass.async_block_till_done()
+    assert len(issue_registry.issues) == 1
+    assert await hass.config_entries.async_unload(extra.entry_id)
+    await hass.async_block_till_done()
+    assert not issue_registry.issues
+    assert await hass.config_entries.async_setup(extra.entry_id)
+    await hass.async_block_till_done()
+    assert len(issue_registry.issues) == 1
+
+    # Disabling automatic polling is one of the actions recommended by the Repair.
+    hass.config_entries.async_update_entry(extra, pref_disable_polling=True)
+    assert await hass.config_entries.async_reload(extra.entry_id)
+    await hass.async_block_till_done()
+    assert not issue_registry.issues
+    hass.config_entries.async_update_entry(extra, pref_disable_polling=False)
+    assert await hass.config_entries.async_reload(extra.entry_id)
+    await hass.async_block_till_done()
+    assert len(issue_registry.issues) == 1
+
+    # Disabling the only sensor stops polling even though its entry stays loaded.
+    entity_registry.async_update_entity(
+        entity_id, disabled_by=er.RegistryEntryDisabler.USER
+    )
+    await hass.async_block_till_done()
+    assert extra.state is ConfigEntryState.LOADED
+    assert not issue_registry.issues
+    entity_registry.async_update_entity(entity_id, disabled_by=None)
+    assert await hass.config_entries.async_reload(extra.entry_id)
+    await hass.async_block_till_done()
+    assert len(issue_registry.issues) == 1
+
+    # Disabling or removing an entry also resolves the warning.
+    assert await hass.config_entries.async_set_disabled_by(
+        extra.entry_id, ConfigEntryDisabler.USER
+    )
+    await hass.async_block_till_done()
+    assert not issue_registry.issues
+    assert await hass.config_entries.async_set_disabled_by(extra.entry_id, None)
+    await hass.async_block_till_done()
+    assert len(issue_registry.issues) == 1
+    assert await hass.config_entries.async_remove(extra.entry_id)
+    await hass.async_block_till_done()
+    assert not issue_registry.issues
 
 
 @pytest.mark.parametrize(

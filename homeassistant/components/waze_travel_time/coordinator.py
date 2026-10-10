@@ -5,7 +5,7 @@ from collections.abc import Callable, Collection
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from math import ceil
+from math import ceil, floor
 from typing import Literal, override
 
 import httpx
@@ -14,6 +14,11 @@ from pywaze.route_calculator import CalcRoutesResponse, WazeRouteCalculator, WRC
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfLength
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.helpers.issue_registry import (
+    IssueSeverity,
+    async_create_issue,
+    async_delete_issue,
+)
 from homeassistant.helpers.location import find_coordinates
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.hass_dict import HassKey
@@ -244,16 +249,33 @@ class WazeTravelTimeCoordinator(DataUpdateCoordinator[WazeTravelTimeData]):
         are preventive and do not guarantee protection against 429 responses.
         """
         coordinators = self.hass.data[POLLING_COORDINATORS]
-        interval = timedelta(
-            minutes=max(
-                MIN_UPDATE_INTERVAL_MINUTES,
-                ceil(
-                    ROUTING_QUOTA_WINDOW_MINUTES
-                    * len(coordinators)
-                    / (ROUTING_REQUEST_QUOTA * (1 - ROUTING_QUOTA_RESERVE))
-                ),
+        request_budget = ROUTING_REQUEST_QUOTA * (1 - ROUTING_QUOTA_RESERVE)
+        if len(coordinators) > request_budget:
+            async_create_issue(
+                self.hass,
+                DOMAIN,
+                "too_many_polling_routes",
+                is_fixable=False,
+                severity=IssueSeverity.WARNING,
+                translation_key="too_many_polling_routes",
+                translation_placeholders={"max_routes": str(floor(request_budget))},
+                learn_more_url="https://www.home-assistant.io/integrations/waze_travel_time/#defining-a-custom-polling-interval",
             )
-        )
+        else:
+            async_delete_issue(self.hass, DOMAIN, "too_many_polling_routes")
+
+        if not coordinators:
+            return
+
+        polling_rounds = floor(request_budget / len(coordinators))
+        if polling_rounds > 0:
+            # Keep another round beyond the window boundary, allowing for timer rounding.
+            minutes = floor(ROUTING_QUOTA_WINDOW_MINUTES / polling_rounds) + 1
+        else:
+            minutes = ceil(
+                ROUTING_QUOTA_WINDOW_MINUTES * len(coordinators) / request_budget
+            )
+        interval = timedelta(minutes=max(MIN_UPDATE_INTERVAL_MINUTES, minutes))
         for coordinator in coordinators:
             if coordinator.update_interval != interval:
                 coordinator.update_interval = interval
