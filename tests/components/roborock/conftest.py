@@ -266,6 +266,7 @@ def create_b01_q10_trait() -> Mock:
         if not attr_name.startswith("_"):
             setattr(status, attr_name, value)
     status.not_disturb = True
+    status.resolve_error = AsyncMock()
     q10_trait.status = status
 
     q10_trait.vacuum = AsyncMock()

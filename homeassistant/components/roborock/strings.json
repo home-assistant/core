@@ -857,6 +857,16 @@
       "description": "Retrieves the current position of the vacuum.",
       "name": "Get current position"
     },
+    "resolve_error": {
+      "description": "Resolve a dock or robot error on the vacuum.",
+      "fields": {
+        "error_code": {
+          "description": "The error code to resolve. If not specified, resolves the current dock error.",
+          "name": "Error code"
+        }
+      },
+      "name": "Resolve error"
+    },
     "set_vacuum_goto_position": {
       "description": "Sends the vacuum to a specific position.",
       "fields": {
