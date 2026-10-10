@@ -160,8 +160,8 @@ def _serialize_product(product: CatalogProduct) -> dict[str, Any]:
 async def _async_resolve_product(
     data: FarmadData, apb: str, product_input: str
 ) -> tuple[str, str]:
-    """Resolve a product from the order history or a search by CNK code."""
-    if (description := data.products.get(product_input)) is not None:
+    """Resolve a product from the pharmacy's order history or a search by CNK code."""
+    if (description := data.products.get(apb, {}).get(product_input)) is not None:
         return product_input, description
     if CNK_PATTERN.fullmatch(product_input) is None:
         raise ServiceValidationError(

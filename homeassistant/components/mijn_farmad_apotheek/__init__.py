@@ -24,15 +24,17 @@ class FarmadData:
     """Runtime data of the Mijn Farmad Apotheek integration.
 
     The pharmacies list the apb number and display label of every
-    pharmacy the account is linked to. The products map the CNK codes of the order history to
-    their descriptions, so ordering a known CNK needs no catalog
-    search. The lock serializes the draft handling of the order
-    action, so concurrent orders cannot invalidate each other.
+    pharmacy the account is linked to. The products map, per
+    pharmacy, the CNK codes of that pharmacy's order history to
+    their descriptions, so ordering a known CNK at the same
+    pharmacy needs no catalog search. The lock serializes the
+    draft handling of the order action, so concurrent orders
+    cannot invalidate each other.
     """
 
     client: FarmadClient
     pharmacies: list[dict[str, str]]
-    products: dict[str, str]
+    products: dict[str, dict[str, str]]
     lock: asyncio.Lock = field(default_factory=asyncio.Lock)
 
 
@@ -62,7 +64,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: FarmadConfigEntry) -> bo
         on_token_refresh=persist_tokens,
     )
     pharmacies: list[dict[str, str]] = []
-    products: dict[str, str] = {}
+    products: dict[str, dict[str, str]] = {}
     try:
         account = await client.async_get_account()
         for apb in account.entitled_pharmacies:
@@ -70,9 +72,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: FarmadConfigEntry) -> bo
             pharmacies.append(
                 {"value": apb, "label": f"{organization.name} ({organization.city})"}
             )
+            history = products.setdefault(apb, {})
             for basket in await client.async_get_baskets(apb):
                 for line in basket.items:
-                    products.setdefault(line.cnk, line.description_nl)
+                    history.setdefault(line.cnk, line.description_nl)
     except FarmadAuthenticationError as err:
         await client.async_close()
         raise ConfigEntryError(

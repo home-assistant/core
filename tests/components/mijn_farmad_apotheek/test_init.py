@@ -5,6 +5,7 @@ from unittest.mock import MagicMock
 
 from aiofarmad import (
     BasketItem,
+    CustomerBasket,
     DraftBasket,
     DraftProduct,
     FarmadAuthenticationError,
@@ -49,6 +50,7 @@ from . import (
     API_PRODUCT_DESCRIPTION_2,
     API_SEARCH_QUERY,
     get_mock_account,
+    get_mock_baskets,
     init_integration,
 )
 
@@ -91,7 +93,9 @@ async def test_setup_entry(hass: HomeAssistant, mock_farmad_client: MagicMock) -
             "label": f"{API_PHARMACY_NAME} ({API_PHARMACY_CITY})",
         }
     ]
-    assert entry.runtime_data.products == {API_PRODUCT_CNK: API_PRODUCT_DESCRIPTION}
+    assert entry.runtime_data.products == {
+        API_APB: {API_PRODUCT_CNK: API_PRODUCT_DESCRIPTION}
+    }
     client.async_get_account.assert_awaited_once()
     client.async_get_organization.assert_awaited_once_with(API_APB)
     client.async_get_baskets.assert_awaited_once_with(API_APB)
@@ -406,6 +410,34 @@ async def test_order_medication_no_search_results(
 
     assert exc_info.value.translation_key == "no_search_results"
     client.async_submit_basket.assert_not_awaited()
+
+
+async def test_order_medication_history_other_pharmacy(
+    hass: HomeAssistant, mock_farmad_client: MagicMock
+) -> None:
+    """Test a CNK from another pharmacy's history goes through the catalog search."""
+    client = mock_farmad_client.return_value
+    client.async_get_account.return_value = get_mock_account((API_APB, API_APB_2))
+
+    def baskets(apb: str) -> tuple[CustomerBasket, ...]:
+        return get_mock_baskets() if apb == API_APB else ()
+
+    client.async_get_baskets.side_effect = baskets
+    await init_integration(hass)
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_ORDER_MEDICATION,
+            {**ORDER_DATA, "apb": API_APB_2},
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == "no_search_results"
+    client.async_search_products_in_apb.assert_awaited_once_with(
+        API_APB_2, API_PRODUCT_CNK
+    )
+    client.async_save_draft_basket.assert_not_awaited()
 
 
 async def test_order_medication_invalid_product(
