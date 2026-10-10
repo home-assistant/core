@@ -19,6 +19,19 @@ from tests.common import MockConfigEntry
 from tests.typing import WebSocketGenerator
 
 
+def _get_hub_device(
+    device_registry: dr.DeviceRegistry, entry: MockConfigEntry
+) -> dr.DeviceEntry:
+    """Return the hub device (the only one with no parent) for an entry."""
+    return next(
+        device
+        for device in dr.async_entries_for_config_entry(
+            device_registry, entry.entry_id
+        )
+        if device.via_device_id is None
+    )
+
+
 async def _setup_entry(hass: HomeAssistant) -> MockConfigEntry:
     entry = MockConfigEntry(domain=DOMAIN, data={"host": "1.2.3.4"}, unique_id=MOCK_MAC)
     entry.add_to_hass(hass)
@@ -61,7 +74,7 @@ async def test_remove_phantom_shade_via_websocket(
     phantom = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, "99999")},
-        via_device=(DOMAIN, MOCK_SERIAL),
+        via_device_id=hub.id,
     )
 
     client = await hass_ws_client(hass)
@@ -81,9 +94,9 @@ async def test_remove_active_shade_and_hub_blocked(
     hub = device_registry.async_get_device(identifiers={(DOMAIN, MOCK_SERIAL)})
     assert hub is not None
     shade = next(
-        d
-        for d in dr.async_entries_for_config_entry(device_registry, entry.entry_id)
-        if d.via_device_id
+        device
+        for device in dr.async_entries_for_config_entry(device_registry, entry.entry_id)
+        if device.via_device_id
     )
 
     assert not await async_remove_config_entry_device(hass, entry, hub)
@@ -102,7 +115,7 @@ async def test_remove_device_blocked_when_entry_not_loaded(
     shade = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, "99999")},
-        via_device=(DOMAIN, MOCK_SERIAL),
+        via_device_id=hub.id,
     )
 
     assert not await async_remove_config_entry_device(hass, entry, shade)
