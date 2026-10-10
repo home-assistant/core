@@ -3,7 +3,6 @@
 from datetime import timedelta
 from typing import Any
 
-import aiohttp
 import pytest
 
 from homeassistant.components.google_wifi import const
@@ -113,7 +112,7 @@ async def test_sensor_states_update_from_router_data(hass: HomeAssistant) -> Non
     assert hass.states.get("sensor.test_wifi_status").state == "Online"
 
 
-@pytest.mark.usefixtures("mock_success")
+@pytest.mark.usefixtures("mock_unreachable")
 async def test_sensor_updates_after_failure_and_recovery(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
@@ -123,8 +122,6 @@ async def test_sensor_updates_after_failure_and_recovery(
         name="Test Wifi",
     )
 
-    aioclient_mock.clear_requests()
-    aioclient_mock.get(RESOURCE_URL, exc=aiohttp.ClientError("boom"))
     await fire_polling_update(hass, 31)
     assert hass.states.get("sensor.test_wifi_uptime").state == STATE_UNAVAILABLE
     assert hass.states.get("sensor.test_wifi_status").state == STATE_UNAVAILABLE
@@ -134,7 +131,7 @@ async def test_sensor_updates_after_failure_and_recovery(
     await fire_polling_update(hass, 62)
 
     assert hass.states.get("sensor.test_wifi_current_version").state == "newVersion"
-    assert hass.states.get("sensor.test_wifi_new_version").state == "latest"
+    assert hass.states.get("sensor.test_wifi_new_version").state == "1.2.3.4"
     assert hass.states.get("sensor.test_wifi_uptime").state == "2.0"
     assert hass.states.get("sensor.test_wifi_local_ip").state == STATE_UNKNOWN
     assert hass.states.get("sensor.test_wifi_status").state == "Offline"
