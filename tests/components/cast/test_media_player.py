@@ -290,7 +290,7 @@ def get_status_callbacks(chromecast_mock, mz_mock=None):
     return cast_status_cb, conn_status_cb, media_status_cb, group_media_status_cb
 
 
-async def async_send_connection_status(hass, callback, status):
+async def async_send_connection_status(hass: HomeAssistant, callback, status) -> None:
     """Send a connection status and wait for its state update."""
     callback(status)
     await hass.async_block_till_done()
