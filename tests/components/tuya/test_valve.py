@@ -10,6 +10,7 @@ from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.tuya.const import DOMAIN
 from homeassistant.components.valve import (
+    ATTR_CURRENT_POSITION,
     DOMAIN as VALVE_DOMAIN,
     SERVICE_CLOSE_VALVE,
     SERVICE_OPEN_VALVE,
@@ -198,3 +199,66 @@ async def test_state(
     state = hass.states.get(entity_id)
     assert state is not None, f"{entity_id} does not exist"
     assert state.state == expected_state
+
+
+@pytest.mark.parametrize(
+    "mock_device_code",
+    ["sfkzq_kcdiut0eqeni7b8n"],
+)
+@pytest.mark.parametrize(
+    ("percent_state", "expected_state", "expected_position"),
+    [
+        (20, "open", 20),
+        (0, "closed", 0),
+        (100, "open", 100),
+        (None, STATE_UNKNOWN, None),
+        ("some string", STATE_UNKNOWN, None),
+    ],
+)
+async def test_position_state(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+    percent_state: Any,
+    expected_state: str,
+    expected_position: int | None,
+) -> None:
+    """Test a valve reporting a position derives its state from it."""
+    entity_id = "valve.smart_water_valve_bv05_valve"
+    mock_device.status["percent_state"] = percent_state
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+
+    state = hass.states.get(entity_id)
+    assert state is not None, f"{entity_id} does not exist"
+    assert state.state == expected_state
+    assert state.attributes.get(ATTR_CURRENT_POSITION) == expected_position
+
+
+@pytest.mark.parametrize(
+    "mock_device_code",
+    ["sfkzq_kcdiut0eqeni7b8n"],
+)
+@pytest.mark.freeze_time("2024-01-01")
+async def test_selective_state_update_position(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+    notification_helper: TuyaNotificationHelper,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test an update on the position dpcode refreshes the state."""
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+    await check_selective_state_update(
+        hass,
+        mock_device,
+        notification_helper,
+        freezer,
+        entity_id="valve.smart_water_valve_bv05_valve",
+        dpcode="percent_state",
+        initial_state="open",
+        updates={"percent_state": 0},
+        expected_state="closed",
+        last_reported="2024-01-01T00:01:00+00:00",
+    )
