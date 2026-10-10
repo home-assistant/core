@@ -706,10 +706,7 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
                 tool_results.append(chat_content)
                 continue
 
-            if (
-                not isinstance(chat_content, conversation.ToolResultContent)
-                and chat_content.content == ""
-            ):
+            if chat_content.content == "":
                 # Skipping is not possible since the number of
                 # function calls need to match the number of
                 # function responses and skipping one would
