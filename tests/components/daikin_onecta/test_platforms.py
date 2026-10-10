@@ -6,6 +6,7 @@ from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock
 
 from daikin_onecta.client import OnectaClient
+from daikin_onecta.exceptions import OnectaConnectionError
 import pytest
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
@@ -238,6 +239,37 @@ async def test_refresh_button_reports_failed_refresh(
     assert err.value.translation_key == "refresh_failed"
     assert err.value.translation_placeholders is None
     coordinator.async_refresh.assert_awaited_once()
+
+
+async def test_refresh_button_recovers_after_failed_poll(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Keep the button usable to retry a failed poll without reloading."""
+    await _async_setup_fixture(hass, config_entry, "dry")
+    coordinator = config_entry.runtime_data
+    coordinator.api.get_cloud_device_details = AsyncMock(
+        side_effect=OnectaConnectionError(
+            "network unavailable", method="GET", path="/v1/gateway-devices"
+        )
+    )
+    await coordinator.async_refresh()
+    assert not coordinator.last_update_success
+    state = hass.states.get("button.daikin_onecta_account_refresh")
+    assert state is not None
+    assert state.state != "unavailable"
+
+    coordinator.api.get_cloud_device_details = AsyncMock(
+        return_value=_load_gateway_devices("dry")
+    )
+    await hass.services.async_call(
+        BUTTON_DOMAIN,
+        SERVICE_PRESS,
+        {ATTR_ENTITY_ID: "button.daikin_onecta_account_refresh"},
+        blocking=True,
+    )
+
+    assert coordinator.last_update_success
+    coordinator.api.get_cloud_device_details.assert_awaited_once()
 
 
 async def test_switch_service_updates_cached_state(

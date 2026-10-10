@@ -34,6 +34,12 @@ class DaikinRefreshButton(DaikinOnectaAccountEntity, ButtonEntity):
         self._attr_unique_id = f"{self._account_id}_refresh"
         self.entity_description = BUTTON_DESCRIPTIONS["refresh"]
 
+    @property
+    @override
+    def available(self) -> bool:
+        """Allow manual recovery even when the previous cloud refresh failed."""
+        return True
+
     @override
     async def async_press(self) -> None:
         """Request an immediate account refresh."""
