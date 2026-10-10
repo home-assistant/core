@@ -238,6 +238,7 @@ def _try_assign_dpa(
     com_object: CommunicationObject,
     target: DpaSlotTarget,
     assignments: dict[ConfigPath, _SlotAssignment],
+    unmatched: set[str],
 ) -> bool:
     """Assign a com objects group addresses to the config key targeted by a DPA.
 
@@ -263,9 +264,13 @@ def _try_assign_dpa(
             # slot already assigned by another com object - first wins
             return False
         if dpt_value != assignment.ga_schema.get(CONF_DPT):
-            # write and state addresses are encoded with the same DPT
-            return False
-    else:
+            # write and state addresses are encoded with the same DPT - the
+            # write address decides, independent of the order of com objects
+            if target.slot != "write":
+                return False
+            unmatched.update(assignment.dpas)
+            assignment = None
+    if assignment is None:
         assignment = _SlotAssignment(ga_schema={}, group_select=target.group_select)
         assignments[target.path] = assignment
 
@@ -378,7 +383,7 @@ def _build_platform_suggestion(
         for dpa in com_object["dpas"] or ():
             target = dpa_index.get(dpa)
             if target is None or not _try_assign_dpa(
-                project, dpa, com_object, target, assignments
+                project, dpa, com_object, target, assignments, unmatched
             ):
                 unmatched.add(dpa)
 
