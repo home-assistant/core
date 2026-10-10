@@ -96,8 +96,13 @@ class LondonAirConfigFlow(ConfigFlow, domain=DOMAIN):
                         entry, data_updates=user_input
                     )
 
+        default = (
+            entry.data[CONF_LOCATIONS]
+            if user_input is None
+            else user_input[CONF_LOCATIONS]
+        )
         return self.async_show_form(
             step_id="reconfigure",
-            data_schema=self._schema(entry.data[CONF_LOCATIONS]),
+            data_schema=self._schema(default),
             errors=errors,
         )

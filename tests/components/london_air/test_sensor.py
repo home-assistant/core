@@ -189,6 +189,9 @@ async def test_yaml_migration(
     assert issue_registry.async_get_issue(
         HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
     )
+    assert (
+        issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, "deprecated_yaml") is None
+    )
 
     state = hass.states.get("sensor.merton")
     assert state is not None
@@ -220,9 +223,12 @@ async def test_yaml_migration_import_failure(
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 0
 
-    assert issue_registry.async_get_issue(
+    issue = issue_registry.async_get_issue(
         DOMAIN, "deprecated_yaml_import_issue_cannot_connect"
     )
+    assert issue is not None
+    assert issue.is_fixable is False
+    assert issue.severity is ir.IssueSeverity.WARNING
 
     assert hass.states.get("sensor.merton") is None
 

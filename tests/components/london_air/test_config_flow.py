@@ -9,6 +9,7 @@ from homeassistant.components.london_air.const import CONF_LOCATIONS, DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
@@ -207,3 +208,90 @@ async def test_reconfigure(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert mock_config_entry.data[CONF_LOCATIONS] == ["Merton", "Barnet"]
+
+
+async def test_reconfigure_preserves_submitted_locations(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_session: MagicMock,
+    api_payload: dict[str, Any],
+) -> None:
+    """Test reconfigure preserves submitted locations after a connection error."""
+    response = MagicMock()
+    response.raise_for_status = MagicMock()
+    response.json = AsyncMock(return_value=api_payload)
+    mock_session.get.return_value = response
+
+    mock_config_entry.add_to_hass(hass)
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    mock_session.get.return_value = MagicMock(
+        raise_for_status=MagicMock(
+            side_effect=ClientResponseError(MagicMock(), (), status=503)
+        )
+    )
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_LOCATIONS: ["Merton", "Barnet"]}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
+
+    locations = next(
+        key.default() for key in result["data_schema"].schema if key == CONF_LOCATIONS
+    )
+    assert locations == ["Merton", "Barnet"]
+
+
+async def test_reconfigure_removes_location(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_session: MagicMock,
+    api_payload: dict[str, Any],
+) -> None:
+    """Test reconfigure removes entities and devices for removed locations."""
+    response = MagicMock()
+    response.raise_for_status = MagicMock()
+    response.json = AsyncMock(return_value=api_payload)
+    mock_session.get.return_value = response
+
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry, data={CONF_LOCATIONS: ["Merton", "City of London"]}
+    )
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.merton") is not None
+    assert hass.states.get("sensor.city_of_london") is not None
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_LOCATIONS: ["Merton"]}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data[CONF_LOCATIONS] == ["Merton"]
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.merton") is not None
+    assert hass.states.get("sensor.city_of_london") is None
+
+    identifiers = {
+        identifier
+        for device in dr.async_entries_for_config_entry(
+            device_registry, mock_config_entry.entry_id
+        )
+        for identifier in device.identifiers
+    }
+    assert (DOMAIN, "Merton") in identifiers
+    assert (DOMAIN, "City of London") not in identifiers
