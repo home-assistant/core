@@ -1,6 +1,8 @@
 """DataUpdateCoordinator for INDI Allsky integration."""
 
+from contextlib import suppress
 from dataclasses import dataclass
+from datetime import timedelta
 import logging
 from typing import override
 
@@ -23,6 +25,8 @@ from .util import get_ssl_context
 
 _LOGGER = logging.getLogger(__name__)
 
+SCAN_INTERVAL = timedelta(seconds=30)
+
 type IndiAllSkyConfigEntry = ConfigEntry[IndiAllSkyDataUpdateCoordinator]
 
 
@@ -38,6 +42,8 @@ class IndiAllSkyData:
 
 class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[IndiAllSkyData]):
     """Class to manage fetching INDI Allsky data from the API."""
+
+    config_entry: IndiAllSkyConfigEntry
 
     def __init__(self, hass: HomeAssistant, entry: IndiAllSkyConfigEntry) -> None:
         """Initialize the coordinator."""
@@ -80,12 +86,17 @@ class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[IndiAllSkyData]):
             _LOGGER,
             config_entry=entry,
             name=DOMAIN,
-            update_interval=None,
+            update_interval=SCAN_INTERVAL,
         )
 
     def _handle_exposure_complete(self, exposure: ExposureData) -> None:
         """Handle new exposure_complete event from WebSocket stream."""
         self.latest_exposure = exposure
+        self.config_entry.async_create_background_task(
+            self.hass,
+            self._async_fetch_sensors(),
+            "indi_allsky_fetch_sensors",
+        )
         self.async_set_updated_data(
             IndiAllSkyData(
                 exposure=exposure,
@@ -94,6 +105,11 @@ class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[IndiAllSkyData]):
                 sensor=self.latest_sensor,
             )
         )
+
+    async def _async_fetch_sensors(self) -> None:
+        """Fetch sensor update from indi-allsky."""
+        with suppress(IndiAllSkyError):
+            await self.client.fetch_sensors()
 
     def _handle_keogram_complete(self, media: MediaData) -> None:
         """Handle new keogram_complete event from WebSocket stream."""
@@ -193,11 +209,11 @@ class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[IndiAllSkyData]):
     async def _async_update_data(self) -> IndiAllSkyData:
         """Fetch INDI Allsky metadata and verify connection."""
         try:
-            await self.client.fetch_image("latestimage")
+            if self.latest_exposure is None:
+                await self.client.fetch_image("latestimage")
             if not self.client.is_connected:
                 await self.client.connect()
-            if self.latest_sensor is None:
-                await self.client.fetch_sensors()
+            await self.client.fetch_sensors()
         except IndiAllSkyError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,

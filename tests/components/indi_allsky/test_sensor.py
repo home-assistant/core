@@ -1,9 +1,11 @@
 """Tests for the INDI Allsky sensor platform."""
 
 from dataclasses import replace
+from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
 from aioindiallsky import ExposureData, SensorData
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -13,7 +15,7 @@ from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.mark.usefixtures(
@@ -475,3 +477,41 @@ async def test_initial_sensor_fetch_preserved(
     state = hass.states.get("sensor.indi_allsky_dew_point")
     assert state is not None
     assert state.state == "14.8"
+
+
+async def test_exposure_complete_triggers_sensor_fetch(
+    hass: HomeAssistant,
+    mock_indi_allsky_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    mock_exposure_data: ExposureData,
+) -> None:
+    """Test that exposure_complete event triggers sensor fetch."""
+    with patch("homeassistant.components.indi_allsky._PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, mock_config_entry)
+
+    mock_indi_allsky_client.fetch_sensors.reset_mock()
+
+    for callback in mock_indi_allsky_client.callbacks.get("exposure_complete", []):
+        callback(mock_exposure_data)
+    await hass.async_block_till_done()
+
+    mock_indi_allsky_client.fetch_sensors.assert_called_once()
+
+
+async def test_periodic_sensor_polling(
+    hass: HomeAssistant,
+    mock_indi_allsky_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test periodic sensor polling via coordinator update interval."""
+    with patch("homeassistant.components.indi_allsky._PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, mock_config_entry)
+
+    mock_indi_allsky_client.fetch_sensors.reset_mock()
+
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    mock_indi_allsky_client.fetch_sensors.assert_called_once()
