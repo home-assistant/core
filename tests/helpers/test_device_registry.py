@@ -4629,6 +4629,64 @@ async def test_async_get_or_create_deprecated_parameters(
         ("via_device", ("some_domain", "via_id")),
     ],
 )
+def test_device_info_deprecated_parameters(parameter: str, value: Any) -> None:
+    """Test a device info can carry deprecated parameters.
+
+    They were dropped from the typed device info when they were deprecated, but an
+    integration can still set them until they are removed. Passing them on to
+    async_get_or_create is covered by its own deprecation tests.
+    """
+    assert dict(dr.DeviceInfo(**{parameter: value})) == {parameter: value}
+
+    device_info = dr.DeviceInfo()
+    device_info[parameter] = value
+    assert dict(device_info) == {parameter: value}
+
+
+def test_device_info_membership() -> None:
+    """Test `in` reports the set fields, while a device info is not iterable."""
+    device_info = dr.DeviceInfo(name="name")
+
+    assert "name" in device_info
+    assert "model" not in device_info
+    assert "unknown" not in device_info
+    with pytest.raises(TypeError):
+        list(device_info)
+
+
+def test_device_info_rejects_unknown_key() -> None:
+    """Test a device info rejects setting a key which is not a field."""
+    device_info = dr.DeviceInfo(name="name")
+    with pytest.raises(KeyError):
+        device_info["config_entry_id"] = "entry_id"
+
+
+@pytest.mark.parametrize(
+    ("args", "kwargs"),
+    [
+        pytest.param(({"name": "name"},), {}, id="mapping"),
+        pytest.param((), {"config_entry_id": "entry_id"}, id="unknown_keyword"),
+    ],
+)
+def test_device_info_rejected_arguments(
+    args: tuple[Any, ...], kwargs: dict[str, Any]
+) -> None:
+    """Test a device info rejects a mapping, or a keyword which is not a field."""
+    with pytest.raises(TypeError):
+        dr.DeviceInfo(*args, **kwargs)
+
+
+@pytest.mark.parametrize(
+    ("parameter", "value"),
+    [
+        ("created_at", "2024-01-01T00:00:00+00:00"),
+        ("default_manufacturer", "manufacturer"),
+        ("default_model", "model"),
+        ("default_name", "name"),
+        ("modified_at", "2024-01-01T00:00:00+00:00"),
+        ("via_device", ("some_domain", "via_id")),
+    ],
+)
 @pytest.mark.usefixtures("mock_integration_frame")
 async def test_async_get_or_create_deprecated_parameter_reported_before_mutation(
     hass: HomeAssistant,
