@@ -7,6 +7,7 @@ from google_weather_api import (
     CurrentConditionsResponse,
     DailyForecastResponse,
     HourlyForecastResponse,
+    MinuteForecastResponse,
 )
 import pytest
 
@@ -65,6 +66,9 @@ def mock_google_weather_api() -> Generator[AsyncMock]:
     hourly_forecast = HourlyForecastResponse.from_dict(
         load_json_object_fixture("hourly_forecast.json", DOMAIN)
     )
+    minute_forecast = MinuteForecastResponse.from_dict(
+        load_json_object_fixture("minute_forecast.json", DOMAIN)
+    )
 
     with (
         patch(
@@ -79,5 +83,6 @@ def mock_google_weather_api() -> Generator[AsyncMock]:
         api.async_get_current_conditions.return_value = current_conditions
         api.async_get_daily_forecast.return_value = daily_forecast
         api.async_get_hourly_forecast.return_value = hourly_forecast
+        api.async_get_minute_forecast.return_value = minute_forecast
 
         yield api
