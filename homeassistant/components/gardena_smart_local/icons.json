@@ -1,0 +1,7 @@
+{
+  "services": {
+    "open_valve": {
+      "service": "mdi:valve-open"
+    }
+  }
+}
