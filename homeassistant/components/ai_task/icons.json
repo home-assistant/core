@@ -5,6 +5,9 @@
     }
   },
   "services": {
+    "clear_images": {
+      "service": "mdi:delete"
+    },
     "generate_data": {
       "service": "mdi:file-star-four-points-outline"
     },
