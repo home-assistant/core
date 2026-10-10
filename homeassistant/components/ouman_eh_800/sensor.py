@@ -27,7 +27,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import OumanDevice
 from .coordinator import OumanEh800ConfigEntry
-from .entity import OumanEh800Entity, OumanEh800EntityDescription
+from .entity import OumanEh800EndpointEntity, OumanEh800EntityDescription
 
 PARALLEL_UPDATES = 0
 
@@ -195,12 +195,12 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
     async_add_entities(
         OumanEh800SensorEntity(coordinator, endpoint, description)
-        for endpoint in coordinator.data
+        for endpoint in coordinator.data.values
         if (description := SENSOR_DESCRIPTIONS.get(endpoint)) is not None
     )
 
 
-class OumanEh800SensorEntity(OumanEh800Entity, SensorEntity):
+class OumanEh800SensorEntity(OumanEh800EndpointEntity, SensorEntity):
     """Ouman EH-800 sensor entity."""
 
     entity_description: OumanEh800SensorDescription
@@ -209,6 +209,6 @@ class OumanEh800SensorEntity(OumanEh800Entity, SensorEntity):
     @override
     def native_value(self) -> float | str:
         """Return the current sensor value."""
-        value = self.coordinator.data[self._endpoint]
+        value = self.coordinator.data.values[self._endpoint]
         assert isinstance(value, float | str)
         return value

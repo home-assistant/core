@@ -59,6 +59,7 @@ async def test_user_form(hass: HomeAssistant) -> None:
         CONF_HOST: "some host",
         CONF_ACCESS_TOKEN: "test-token",
     }
+    assert result2["result"].unique_id == "ZXXX12345"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -174,6 +175,20 @@ async def test_user_form_invalid_auth(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_auth"}
 
+    with (
+        patch_bond_version(return_value={"bondid": "ZXXX12345"}),
+        patch_bond_bridge(),
+        patch_bond_device_ids(),
+        _patch_async_setup_entry(),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: "some host", CONF_ACCESS_TOKEN: "test-token"},
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_user_form_cannot_connect(hass: HomeAssistant) -> None:
     """Test we handle cannot connect error."""
@@ -194,6 +209,20 @@ async def test_user_form_cannot_connect(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
+    with (
+        patch_bond_version(return_value={"bondid": "ZXXX12345"}),
+        patch_bond_bridge(),
+        patch_bond_device_ids(),
+        _patch_async_setup_entry(),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: "some host", CONF_ACCESS_TOKEN: "test-token"},
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_user_form_old_firmware(hass: HomeAssistant) -> None:
     """Test we handle unsupported old firmware."""
@@ -213,6 +242,20 @@ async def test_user_form_old_firmware(hass: HomeAssistant) -> None:
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "old_firmware"}
+
+    with (
+        patch_bond_version(return_value={"bondid": "ZXXX12345"}),
+        patch_bond_bridge(),
+        patch_bond_device_ids(),
+        _patch_async_setup_entry(),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: "some host", CONF_ACCESS_TOKEN: "test-token"},
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_user_form_unexpected_client_error(hass: HomeAssistant) -> None:
@@ -303,6 +346,7 @@ async def test_zeroconf_form(hass: HomeAssistant) -> None:
         CONF_HOST: "127.0.0.1",
         CONF_ACCESS_TOKEN: "test-token",
     }
+    assert result2["result"].unique_id == "ZXXX12345"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -446,6 +490,7 @@ async def test_zeroconf_form_token_unavailable(hass: HomeAssistant) -> None:
         CONF_HOST: "127.0.0.1",
         CONF_ACCESS_TOKEN: "test-token",
     }
+    assert result2["result"].unique_id == "ZXXX12345"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -530,6 +575,7 @@ async def test_zeroconf_form_with_token_available(hass: HomeAssistant) -> None:
         CONF_HOST: "127.0.0.1",
         CONF_ACCESS_TOKEN: "discovered-token",
     }
+    assert result2["result"].unique_id == "ZXXX12345"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -811,6 +857,19 @@ async def _help_test_form_unexpected_error(
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
+
+    with (
+        patch_bond_version(return_value={"bondid": "ZXXX12345"}),
+        patch_bond_bridge(),
+        patch_bond_device_ids(),
+        _patch_async_setup_entry(),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 def _patch_async_setup_entry():

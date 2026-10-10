@@ -7,17 +7,18 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import aiohttp
+from freezegun.api import FrozenDateTimeFactory
 from google_drive_api.exceptions import GoogleDriveApiError
 import pytest
 
-from homeassistant.components.google_drive.const import DOMAIN
+from homeassistant.components.google_drive.const import DOMAIN, SCAN_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
 )
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 type ComponentSetup = Callable[[], Awaitable[None]]
@@ -190,6 +191,7 @@ async def test_runtime_token_refresh_failures(
     setup_integration: ComponentSetup,
     aioclient_mock: AiohttpClientMocker,
     config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
     mock_kwargs: dict[str, Any],
     expected_reauth_flows: int,
 ) -> None:
@@ -233,9 +235,9 @@ async def test_runtime_token_refresh_failures(
     )
 
     # The expired token forces a refresh during the update, hitting our mock.
-    coordinator = config_entry.runtime_data
-    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
-    await coordinator.async_refresh()
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     reauth_flows = [
         flow
@@ -244,5 +246,5 @@ async def test_runtime_token_refresh_failures(
     ]
 
     # In both cases, the coordinator update should safely fail
-    assert not coordinator.last_update_success
+    assert not config_entry.runtime_data.last_update_success
     assert len(reauth_flows) == expected_reauth_flows

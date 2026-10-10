@@ -1,7 +1,6 @@
 """Support for Lupusec Home Security system."""
 
 from json import JSONDecodeError
-import logging
 
 import lupupy
 from lupupy.exceptions import LupusecException
@@ -9,11 +8,10 @@ from lupupy.exceptions import LupusecException
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import device_registry as dr
 
 from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 NOTIFICATION_ID = "lupusec_notification"
 NOTIFICATION_TITLE = "Lupusec Security Setup"
@@ -39,12 +37,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: LupusecConfigEntry) -> b
         lupusec_system = await hass.async_add_executor_job(
             lupupy.Lupusec, username, password, host
         )
-    except LupusecException:
-        _LOGGER.error("Failed to connect to Lupusec device at %s", host)
-        return False
-    except JSONDecodeError:
-        _LOGGER.error("Failed to connect to Lupusec device at %s", host)
-        return False
+    except LupusecException as err:
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+            translation_placeholders={"host": host},
+        ) from err
+    except JSONDecodeError as err:
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+            translation_placeholders={"host": host},
+        ) from err
 
     entry.runtime_data = lupusec_system
 
