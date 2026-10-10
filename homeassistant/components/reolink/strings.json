@@ -986,9 +986,6 @@
     },
     "webhook_no_url": {
       "message": "Error registering URL for webhook {event_id}: Home Assistant URL is not available"
-    },
-    "write_image_error": {
-      "message": "Can't write image to `{filename}`, see the log for details"
     }
   },
   "issues": {
