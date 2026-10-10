@@ -84,7 +84,6 @@ async def test_image_events_and_fetching(
         callback(mock_startrail_data)
     await hass.async_block_till_done()
 
-    # Verify alias prefetching completed before any entity image access
     mock_indi_allsky_client.fetch_image.assert_any_call("latestkeogram")
     mock_indi_allsky_client.fetch_image.assert_any_call("lateststartrail")
 
