@@ -628,9 +628,10 @@ def _validate_grid_stat_uniqueness(value: list[SourceType]) -> list[SourceType]:
 
 
 def _validate_single_home_total(
-    value: list[DeviceConsumption],
-) -> list[DeviceConsumption]:
-    totals = [d for d in value if d.get("is_home_total")]
+    value: list[EnergyDeviceConsumption],
+) -> list[EnergyDeviceConsumption]:
+    """Validate that at most one device is flagged as the home total."""
+    totals = [device for device in value if device.get("is_home_total")]
     if len(totals) > 1:
         raise probatio.Invalid("Only one device can be the home total")
     if totals and "included_in_stat" in totals[0]:
