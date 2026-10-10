@@ -1,7 +1,8 @@
 """Testing the Prowl initialisation."""
 
+import asyncio
 from typing import Any
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 import prowlpy
 import pytest
@@ -280,7 +281,8 @@ async def test_legacy_service_from_config_entry(
     )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
+    # The legacy action is set up in a background task of the entry
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert entry.state is ConfigEntryState.LOADED
     assert hass.services.has_service(notify.DOMAIN, service)
@@ -292,6 +294,39 @@ async def test_legacy_service_from_config_entry(
     await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
     assert not hass.services.has_service(notify.DOMAIN, service)
+
+
+@pytest.mark.usefixtures("mock_prowlpy")
+async def test_legacy_service_setup_cancelled_on_unload(hass: HomeAssistant) -> None:
+    """Test unloading an imported entry cancels a pending legacy action setup."""
+    started = asyncio.Event()
+    cancelled = asyncio.Event()
+
+    async def pending_load_platform(*args: Any) -> None:
+        started.set()
+        try:
+            await asyncio.Event().wait()
+        except asyncio.CancelledError:
+            cancelled.set()
+            raise
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="prowl",
+        data={CONF_API_KEY: TEST_API_KEY},
+        source=SOURCE_IMPORT,
+    )
+    entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.prowl.discovery.async_load_platform",
+        pending_load_platform,
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await started.wait()
+        await hass.config_entries.async_unload(entry.entry_id)
+
+    assert cancelled.is_set()
+    assert not hass.services.has_service(notify.DOMAIN, "prowl")
 
 
 @pytest.mark.usefixtures("mock_prowlpy")
@@ -313,7 +348,7 @@ async def test_legacy_service_keeps_other_yaml_notify_platforms(
     }
     # The entry sets up notify before it is set up from the YAML config
     assert await async_setup_component(hass, DOMAIN, config)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert hass.services.has_service(notify.DOMAIN, "prowl")
     assert hass.services.has_service(notify.DOMAIN, "other")

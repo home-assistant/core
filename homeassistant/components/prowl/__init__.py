@@ -93,14 +93,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         and entry.data[CONF_API_KEY] not in hass.data[DATA_YAML_API_KEYS]
         and slugify(legacy_service_name) not in hass.data[DATA_YAML_SERVICE_NAMES]
     ):
-        hass.async_create_task(
+        # Owned by the entry, so unloading cancels a pending setup
+        entry.async_create_background_task(
+            hass,
             discovery.async_load_platform(
                 hass,
                 Platform.NOTIFY,
                 DOMAIN,
                 {CONF_NAME: legacy_service_name, CONF_ENTRY: entry},
                 hass.data[DATA_HASS_CONFIG],
-            )
+            ),
+            name=f"{DOMAIN} legacy notify setup",
         )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
