@@ -7637,15 +7637,6 @@ async def test_permission_check_nested_action_override(
     service.async_register_admin_service(hass, "test", "admin_action", mock_service)
 
     sequence = cv.SCRIPT_SCHEMA(
-        [
-            {
-                "action": "test.admin_action",
-                "permission_check": True,
-            }
-        ]
-    )
-
-    sequence = cv.SCRIPT_SCHEMA(
         {
             "alias": "choose step",
             "choose": [
