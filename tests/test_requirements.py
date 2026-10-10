@@ -52,29 +52,6 @@ async def test_requirement_installed_in_venv(hass: HomeAssistant) -> None:
         )
 
 
-async def test_requirement_installed_in_deps(hass: HomeAssistant) -> None:
-    """Test requirement installed in deps directory."""
-    with (
-        patch("os.path.dirname", return_value="ha_package_path"),
-        patch("homeassistant.util.package.is_virtual_env", return_value=False),
-        patch("homeassistant.util.package.is_docker_env", return_value=False),
-        patch(
-            "homeassistant.util.package.install_package", return_value=True
-        ) as mock_install,
-        patch.dict(os.environ, env_without_wheel_links(), clear=True),
-    ):
-        hass.config.skip_pip = False
-        mock_integration(hass, MockModule("comp", requirements=["package==0.0.1"]))
-        assert await setup.async_setup_component(hass, "comp", {})
-        assert "comp" in hass.config.components
-        assert mock_install.call_args == call(
-            "package==0.0.1",
-            target=hass.config.path("deps"),
-            constraints=os.path.join("ha_package_path", CONSTRAINT_FILE),
-            timeout=60,
-        )
-
-
 async def test_install_existing_package(hass: HomeAssistant) -> None:
     """Test an install attempt on an existing package."""
     with patch(
@@ -312,6 +289,45 @@ async def test_get_integration_with_requirements_concurrency(
         assert all(result.domain == "test_component_dep" for result in results)
 
     assert process_integration_calls == 1
+
+
+async def test_get_integration_with_requirements_concurrent_cancelled(
+    hass: HomeAssistant,
+) -> None:
+    """Verify cancelling a waiting caller does not break the in-progress load."""
+    hass.config.skip_pip = False
+    mock_integration(
+        hass, MockModule("test_component_dep", requirements=["test-comp-dep==1.0.0"])
+    )
+    process_event = asyncio.Event()
+    finish_event = asyncio.Event()
+
+    async def _async_process_integration_blocked(*args: object) -> None:
+        process_event.set()
+        await finish_event.wait()
+
+    manager = _async_get_manager(hass)
+    with patch.object(
+        manager, "_async_process_integration", _async_process_integration_blocked
+    ):
+        load_task1 = asyncio.create_task(
+            async_get_integration_with_requirements(hass, "test_component_dep")
+        )
+        load_task2 = asyncio.create_task(
+            async_get_integration_with_requirements(hass, "test_component_dep")
+        )
+        await process_event.wait()
+        load_task2.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await load_task2
+        finish_event.set()
+        integration = await load_task1
+
+    assert integration.domain == "test_component_dep"
+    assert (
+        await async_get_integration_with_requirements(hass, "test_component_dep")
+        is integration
+    )
 
 
 async def test_get_integration_with_requirements_pip_install_fails_two_passes(

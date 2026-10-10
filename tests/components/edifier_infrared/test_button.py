@@ -69,5 +69,5 @@ async def test_button_availability_follows_ir_entity(
 ) -> None:
     """Test button becomes unavailable when IR entity is unavailable."""
     await assert_availability_follows_source_entity(
-        hass, BLUETOOTH_BUTTON_ENTITY_ID, EMITTER_ENTITY_ID
+        hass, BLUETOOTH_BUTTON_ENTITY_ID, [EMITTER_ENTITY_ID]
     )

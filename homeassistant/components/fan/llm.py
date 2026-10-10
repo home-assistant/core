@@ -4,13 +4,25 @@ from homeassistant.components.homeassistant import async_should_expose
 from homeassistant.components.llm import LLMTools
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import intent
-from homeassistant.helpers.llm import LLM_API_ASSIST, IntentTool, LLMContext, Tool
+from homeassistant.helpers.llm import (
+    LLM_API_ASSIST,
+    IntentTool,
+    LLMContext,
+    Tool,
+    ToolAnnotations,
+)
 
-from . import DOMAIN
+from .const import DOMAIN
 from .intent import INTENT_FAN_SET_SPEED
 
+# Each intent sets a value on the user's own entities, so calling one again
+# with the same arguments has no further effect.
+LLM_ANNOTATIONS = ToolAnnotations(idempotent=True, open_world=False)
+
 # Intents owned by this integration that are exposed as LLM tools.
-LLM_INTENTS = (INTENT_FAN_SET_SPEED,)
+LLM_INTENTS = {
+    INTENT_FAN_SET_SPEED: "Set fan speed",
+}
 
 
 @callback
@@ -31,7 +43,13 @@ def async_get_tools(
         return None
 
     tools: list[Tool] = [
-        IntentTool(f"{DOMAIN}__{handler.intent_type}", handler)
+        IntentTool(
+            f"{DOMAIN}__{handler.intent_type}",
+            handler,
+            title=LLM_INTENTS[handler.intent_type],
+            integration=DOMAIN,
+            annotations=LLM_ANNOTATIONS,
+        )
         for handler in intent.async_get(hass)
         if handler.intent_type in LLM_INTENTS
     ]

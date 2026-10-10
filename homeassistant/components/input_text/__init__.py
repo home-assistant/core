@@ -1,9 +1,10 @@
 """Support to enter a value into a text box."""
 
+from dataclasses import dataclass
 import logging
 from typing import Any, Self, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.text import TextEntity
 from homeassistant.const import (  # noqa: F401
@@ -16,19 +17,25 @@ from homeassistant.const import (  # noqa: F401
     MAX_LENGTH_STATE_STATE,
     SERVICE_RELOAD,
 )
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import collection, config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
-import homeassistant.helpers.service
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType, VolDictType
 
-from .const import InputTextEntityStateAttribute
+from .const import (  # noqa: F401
+    ATTR_VALUE,
+    CONF_VALUE,
+    DATA_INPUT_TEXT,
+    DOMAIN,
+    SERVICE_SET_VALUE,
+    InputTextEntityStateAttribute,
+)
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "input_text"
 
 CONF_INITIAL = "initial"
 CONF_MIN = "min"
@@ -36,70 +43,69 @@ CONF_MIN_VALUE = 0
 CONF_MAX = "max"
 CONF_MAX_VALUE = 100
 CONF_PATTERN = "pattern"
-CONF_VALUE = "value"
 
 MODE_TEXT = "text"
 MODE_PASSWORD = "password"
 
-ATTR_VALUE = CONF_VALUE
 ATTR_MIN = "min"
 ATTR_MAX = "max"
 ATTR_PATTERN = CONF_PATTERN
 
-SERVICE_SET_VALUE = "set_value"
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 
 STORAGE_FIELDS: VolDictType = {
-    vol.Required(CONF_NAME): vol.All(str, vol.Length(min=1)),
-    vol.Optional(CONF_MIN, default=CONF_MIN_VALUE): vol.All(
-        vol.Coerce(int), vol.Range(0, MAX_LENGTH_STATE_STATE)
+    probatio.Required(CONF_NAME): probatio.All(str, probatio.NonEmpty()),
+    probatio.Optional(CONF_MIN, default=CONF_MIN_VALUE): probatio.All(
+        probatio.Coerce(int), probatio.Range(0, MAX_LENGTH_STATE_STATE)
     ),
-    vol.Optional(CONF_MAX, default=CONF_MAX_VALUE): vol.All(
-        vol.Coerce(int), vol.Range(1, MAX_LENGTH_STATE_STATE)
+    probatio.Optional(CONF_MAX, default=CONF_MAX_VALUE): probatio.All(
+        probatio.Coerce(int), probatio.Range(1, MAX_LENGTH_STATE_STATE)
     ),
-    vol.Optional(CONF_INITIAL, ""): cv.string,
-    vol.Optional(CONF_ICON): cv.icon,
-    vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
-    vol.Optional(CONF_PATTERN): cv.string,
-    vol.Optional(CONF_MODE, default=MODE_TEXT): vol.In([MODE_TEXT, MODE_PASSWORD]),
+    probatio.Optional(CONF_INITIAL, ""): cv.string,
+    probatio.Optional(CONF_ICON): cv.icon,
+    probatio.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+    probatio.Optional(CONF_PATTERN): cv.string,
+    probatio.Optional(CONF_MODE, default=MODE_TEXT): probatio.In(
+        [MODE_TEXT, MODE_PASSWORD]
+    ),
 }
 
 
 def _cv_input_text(config: dict[str, Any]) -> dict[str, Any]:
-    """Configure validation helper for input box (voluptuous)."""
+    """Configure validation helper for input box (probatio)."""
     minimum: int = config[CONF_MIN]
     maximum: int = config[CONF_MAX]
     if minimum > maximum:
-        raise vol.Invalid(
+        raise probatio.Invalid(
             f"Max len ({minimum}) is not greater than min len ({maximum})"
         )
     state: str | None = config.get(CONF_INITIAL)
     if state is not None and (len(state) < minimum or len(state) > maximum):
-        raise vol.Invalid(
+        raise probatio.Invalid(
             f"Initial value {state} length not in range {minimum}-{maximum}"
         )
     return config
 
 
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
         DOMAIN: cv.schema_with_slug_keys(
-            vol.All(
+            probatio.All(
                 lambda value: value or {},
                 {
-                    vol.Optional(CONF_NAME): cv.string,
-                    vol.Optional(CONF_MIN, default=CONF_MIN_VALUE): vol.All(
-                        vol.Coerce(int), vol.Range(0, MAX_LENGTH_STATE_STATE)
+                    probatio.Optional(CONF_NAME): cv.string,
+                    probatio.Optional(CONF_MIN, default=CONF_MIN_VALUE): probatio.All(
+                        probatio.Coerce(int), probatio.Range(0, MAX_LENGTH_STATE_STATE)
                     ),
-                    vol.Optional(CONF_MAX, default=CONF_MAX_VALUE): vol.All(
-                        vol.Coerce(int), vol.Range(1, MAX_LENGTH_STATE_STATE)
+                    probatio.Optional(CONF_MAX, default=CONF_MAX_VALUE): probatio.All(
+                        probatio.Coerce(int), probatio.Range(1, MAX_LENGTH_STATE_STATE)
                     ),
-                    vol.Optional(CONF_INITIAL): cv.string,
-                    vol.Optional(CONF_ICON): cv.icon,
-                    vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
-                    vol.Optional(CONF_PATTERN): cv.string,
-                    vol.Optional(CONF_MODE, default=MODE_TEXT): vol.In(
+                    probatio.Optional(CONF_INITIAL): cv.string,
+                    probatio.Optional(CONF_ICON): cv.icon,
+                    probatio.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+                    probatio.Optional(CONF_PATTERN): cv.string,
+                    probatio.Optional(CONF_MODE, default=MODE_TEXT): probatio.In(
                         [MODE_TEXT, MODE_PASSWORD]
                     ),
                 },
@@ -107,9 +113,16 @@ CONFIG_SCHEMA = vol.Schema(
             ),
         )
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
-RELOAD_SERVICE_SCHEMA = vol.Schema({})
+
+
+@dataclass(slots=True)
+class InputTextData:
+    """Runtime data for the input_text integration."""
+
+    component: EntityComponent[InputText]
+    yaml_collection: collection.YamlCollection
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -142,32 +155,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         storage_collection, DOMAIN, DOMAIN, STORAGE_FIELDS, STORAGE_FIELDS
     ).async_setup(hass)
 
-    async def reload_service_handler(service_call: ServiceCall) -> None:
-        """Reload yaml entities."""
-        conf = await component.async_prepare_reload(skip_reset=True)
-        await yaml_collection.async_load(
-            [{CONF_ID: id_, **(cfg or {})} for id_, cfg in conf.get(DOMAIN, {}).items()]
-        )
+    hass.data[DATA_INPUT_TEXT] = InputTextData(component, yaml_collection)
 
-    homeassistant.helpers.service.async_register_admin_service(
-        hass,
-        DOMAIN,
-        SERVICE_RELOAD,
-        reload_service_handler,
-        schema=RELOAD_SERVICE_SCHEMA,
-    )
-
-    component.async_register_entity_service(
-        SERVICE_SET_VALUE, {vol.Required(ATTR_VALUE): cv.string}, "async_set_value"
-    )
-
+    async_setup_services(hass)
     return True
 
 
 class InputTextStorageCollection(collection.DictStorageCollection):
     """Input storage based collection."""
 
-    CREATE_UPDATE_SCHEMA = vol.Schema(vol.All(STORAGE_FIELDS, _cv_input_text))
+    CREATE_UPDATE_SCHEMA = probatio.Schema(probatio.All(STORAGE_FIELDS, _cv_input_text))
 
     @override
     async def _process_create_data(self, data: dict[str, Any]) -> dict[str, Any]:

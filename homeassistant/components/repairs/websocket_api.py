@@ -5,7 +5,7 @@ from http import HTTPStatus
 from typing import Any, override
 
 from aiohttp import web
-import voluptuous as vol
+import probatio
 
 from homeassistant import data_entry_flow
 from homeassistant.auth.permissions.const import POLICY_EDIT
@@ -39,9 +39,9 @@ def async_setup(hass: HomeAssistant) -> None:
 @callback
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "repairs/get_issue_data",
-        vol.Required("domain"): str,
-        vol.Required("issue_id"): str,
+        probatio.Required("type"): "repairs/get_issue_data",
+        probatio.Required("domain"): str,
+        probatio.Required("issue_id"): str,
     }
 )
 def ws_get_issue_data(
@@ -62,24 +62,32 @@ def ws_get_issue_data(
 @callback
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "repairs/ignore_issue",
-        vol.Required("domain"): str,
-        vol.Required("issue_id"): str,
-        vol.Required("ignore"): bool,
+        probatio.Required("type"): "repairs/ignore_issue",
+        probatio.Required("domain"): str,
+        probatio.Required("issue_id"): str,
+        probatio.Required("ignore"): bool,
     }
 )
 def ws_ignore_issue(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Fix an issue."""
-    ir.async_ignore_issue(hass, msg["domain"], msg["issue_id"], msg["ignore"])
+    issue_registry = ir.async_get(hass)
+    if not issue_registry.async_get_issue(msg["domain"], msg["issue_id"]):
+        connection.send_error(
+            msg["id"],
+            "unknown_issue",
+            f"Issue '{msg['issue_id']}' not found",
+        )
+        return
+    issue_registry.async_ignore(msg["domain"], msg["issue_id"], msg["ignore"])
 
     connection.send_result(msg["id"])
 
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "repairs/list_issues",
+        probatio.Required("type"): "repairs/list_issues",
     }
 )
 @callback
@@ -130,12 +138,12 @@ class RepairsFlowIndexView(FlowManagerIndexView[RepairsFlowManager, RepairsFlowR
 
     @require_admin(permission=POLICY_EDIT)
     @RequestDataValidator(
-        vol.Schema(
+        probatio.Schema(
             {
-                vol.Required("handler"): str,
-                vol.Required("issue_id"): str,
+                probatio.Required("handler"): str,
+                probatio.Required("issue_id"): str,
             },
-            extra=vol.ALLOW_EXTRA,
+            extra=probatio.ALLOW_EXTRA,
         )
     )
     @override
@@ -144,7 +152,7 @@ class RepairsFlowIndexView(FlowManagerIndexView[RepairsFlowManager, RepairsFlowR
         try:
             result = await self._flow_mgr.async_init(
                 data["handler"],
-                data={"issue_id": data["issue_id"]},
+                context={"issue_id": data["issue_id"]},
             )
         except data_entry_flow.UnknownFlow as ex:
             return self.json_message(

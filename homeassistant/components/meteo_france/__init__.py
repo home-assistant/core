@@ -1,5 +1,4 @@
 """Support for Meteo-France weather data."""
-# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 import logging
 
@@ -10,7 +9,7 @@ from requests import RequestException
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import DOMAIN, PLATFORMS
+from .const import METEO_FRANCE_DATA, PLATFORMS
 from .coordinator import (
     MeteoFranceAlertUpdateCoordinator,
     MeteoFranceConfigEntry,
@@ -24,7 +23,8 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, entry: MeteoFranceConfigEntry) -> bool:
     """Set up a Meteo-France account from a config entry."""
-    hass.data.setdefault(DOMAIN, {})
+    if (departments_with_alert := hass.data.get(METEO_FRANCE_DATA)) is None:
+        departments_with_alert = hass.data[METEO_FRANCE_DATA] = set()
 
     client = MeteoFranceClient()
 
@@ -55,7 +55,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: MeteoFranceConfigEntry) 
         department,
     )
     if department is not None and is_valid_warning_department(department):
-        if not hass.data[DOMAIN].get(department):
+        if department not in departments_with_alert:
             coordinator_alert = MeteoFranceAlertUpdateCoordinator(
                 hass,
                 entry,
@@ -66,7 +66,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: MeteoFranceConfigEntry) 
             await coordinator_alert.async_refresh()
 
             if coordinator_alert.last_update_success:
-                hass.data[DOMAIN][department] = True
+                departments_with_alert.add(department)
         else:
             _LOGGER.warning(
                 (
@@ -108,7 +108,7 @@ async def async_unload_entry(
     """Unload a config entry."""
     if entry.runtime_data.alert_coordinator:
         department = entry.runtime_data.forecast_coordinator.data.position.get("dept")
-        hass.data[DOMAIN][department] = False
+        hass.data[METEO_FRANCE_DATA].discard(department)
         _LOGGER.debug(
             (
                 "Weather alert for depatment %s unloaded and released. It can be added"
@@ -119,8 +119,8 @@ async def async_unload_entry(
 
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        if not hass.data[DOMAIN]:
-            hass.data.pop(DOMAIN)
+        if not hass.data[METEO_FRANCE_DATA]:
+            hass.data.pop(METEO_FRANCE_DATA)
 
     return unload_ok
 

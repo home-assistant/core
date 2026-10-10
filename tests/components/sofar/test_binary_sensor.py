@@ -1,4 +1,4 @@
-"""Test the Sofar Inverter Modbus binary sensor platform."""
+"""Tests for the Sofar binary sensor platform."""
 
 from unittest.mock import patch
 
@@ -14,7 +14,7 @@ from homeassistant.const import STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import MOCK_MODEL, MOCK_SERIAL, MOCK_USER_INPUT, seed_pv_inverter
+from . import MOCK_ENTRY_DATA, MOCK_MODEL, MOCK_SERIAL, seed_pv_inverter
 
 from tests.common import MockConfigEntry, snapshot_platform
 
@@ -29,7 +29,7 @@ async def test_all_entities(
     connection = MockModbusConnection()
     seed_pv_inverter(connection.for_unit(1))
     entry = MockConfigEntry(
-        domain=DOMAIN, unique_id=MOCK_SERIAL, data=MOCK_USER_INPUT, title=MOCK_MODEL
+        domain=DOMAIN, unique_id=MOCK_SERIAL, data=MOCK_ENTRY_DATA, title=MOCK_MODEL
     )
     entry.add_to_hass(hass)
     with (
@@ -108,8 +108,9 @@ async def test_enabled_by_default_excludes_commercial_hardware(
             entity_registry, init_integration.entry_id
         )
         if e.domain == BINARY_SENSOR_DOMAIN
+        and e.unique_id.startswith(f"{MOCK_SERIAL}_fault_")
     ]
-    assert len(entries) == len(FAULT_SENSOR_DESCRIPTIONS)
+    assert len(entries) == 17
 
     disabled_categories = {
         FaultCategory(e.unique_id.removeprefix(f"{MOCK_SERIAL}_fault_"))
@@ -122,3 +123,43 @@ async def test_enabled_by_default_excludes_commercial_hardware(
         FaultCategory.INPUT_FUSE,
         FaultCategory.STRING_FUSE,
     }
+
+
+@pytest.mark.parametrize(
+    ("armed", "expected"),
+    [
+        pytest.param(0b0, STATE_OFF, id="not_armed"),
+        pytest.param(0b1, STATE_ON, id="armed"),
+        pytest.param(0b10, STATE_OFF, id="unrelated_flag_only"),
+    ],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_active_power_limit_enabled_follows_its_bit(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_connection: MockModbusConnection,
+    mock_config_entry: MockConfigEntry,
+    armed: int,
+    expected: str,
+) -> None:
+    """Test the arm bit of 1105 drives the state, not the limit itself."""
+    unit = mock_connection.for_unit(1)
+    unit.holding[0x1105] = armed
+    unit.holding[0x1106] = 800  # 80% limit, ignored while the bit is unset
+
+    with patch(
+        "homeassistant.components.sofar.async_get_unit",
+        side_effect=lambda hass, entry, params, unit_id: mock_connection.for_unit(
+            unit_id
+        ),
+    ):
+        mock_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    entity_id = entity_registry.async_get_entity_id(
+        BINARY_SENSOR_DOMAIN, DOMAIN, f"{MOCK_SERIAL}_active_power_limit_enabled"
+    )
+    assert entity_id is not None
+    assert (state := hass.states.get(entity_id)) is not None
+    assert state.state == expected

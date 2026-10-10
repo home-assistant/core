@@ -3,7 +3,7 @@
 import logging
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.cover import (
     DOMAIN as PLATFORM_DOMAIN,
@@ -12,7 +12,7 @@ from homeassistant.components.cover import (
     CoverState,
 )
 from homeassistant.const import CONF_DEVICES, CONF_NAME, CONF_TYPE
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -39,26 +39,28 @@ TYPE_STANDARD = "standard"
 TYPE_INVERTED = "inverted"
 
 RFLINK_PLATFORM = {
-    vol.Optional(
+    probatio.Optional(
         CONF_DEVICE_DEFAULTS, default=DEVICE_DEFAULTS_SCHEMA({})
     ): DEVICE_DEFAULTS_SCHEMA,
-    vol.Optional(CONF_DEVICES, default={}): vol.Schema(
+    probatio.Optional(CONF_DEVICES, default={}): probatio.Schema(
         {
             cv.string: {
-                vol.Optional(CONF_NAME): cv.string,
-                vol.Optional(CONF_TYPE): vol.Any(TYPE_STANDARD, TYPE_INVERTED),
-                vol.Optional(CONF_ALIASES, default=[]): vol.All(
-                    cv.ensure_list, [cv.string]
+                probatio.Optional(CONF_NAME): cv.string,
+                probatio.Optional(CONF_TYPE): probatio.Any(
+                    TYPE_STANDARD, TYPE_INVERTED
                 ),
-                vol.Optional(CONF_GROUP_ALIASES, default=[]): vol.All(
-                    cv.ensure_list, [cv.string]
+                probatio.Optional(CONF_ALIASES, default=[]): probatio.All(
+                    probatio.EnsureList(), [cv.string]
                 ),
-                vol.Optional(CONF_NOGROUP_ALIASES, default=[]): vol.All(
-                    cv.ensure_list, [cv.string]
+                probatio.Optional(CONF_GROUP_ALIASES, default=[]): probatio.All(
+                    probatio.EnsureList(), [cv.string]
                 ),
-                vol.Optional(CONF_FIRE_EVENT, default=False): cv.boolean,
-                vol.Optional(CONF_SIGNAL_REPETITIONS): vol.Coerce(int),
-                vol.Optional(CONF_GROUP, default=True): cv.boolean,
+                probatio.Optional(CONF_NOGROUP_ALIASES, default=[]): probatio.All(
+                    probatio.EnsureList(), [cv.string]
+                ),
+                probatio.Optional(CONF_FIRE_EVENT, default=False): cv.boolean,
+                probatio.Optional(CONF_SIGNAL_REPETITIONS): probatio.Coerce(int),
+                probatio.Optional(CONF_GROUP, default=True): cv.boolean,
             }
         }
     ),
@@ -66,7 +68,7 @@ RFLINK_PLATFORM = {
 
 PLATFORM_SCHEMA = COVER_PLATFORM_SCHEMA.extend(
     RFLINK_PLATFORM,
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 
@@ -136,6 +138,17 @@ async def async_setup_platform(
 
 class RflinkCover(RflinkCommand, CoverEntity, RestoreEntity):
     """Rflink entity which can switch on/stop/off (eg: cover)."""
+
+    @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Opt in to in-place entity_id changes.
+
+        Can be removed when backwards compatibility is disabled for core
+        integrations, i.e. once all core integrations have been migrated
+        to in-place entity ID change.
+        """
+        super().async_entity_id_changed(old_entity_id)
 
     @override
     async def async_added_to_hass(self) -> None:

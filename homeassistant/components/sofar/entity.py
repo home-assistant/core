@@ -37,7 +37,6 @@ class SofarEntity(CoordinatorEntity[SofarDataUpdateCoordinator]):
         super().__init__(runtime_data.coordinator_for(entity_description.component))
         self.entity_description = entity_description
         serial = self.coordinator.device.serial_number
-        assert serial is not None
         self._attr_unique_id = f"{serial}_{entity_description.key}"
         self._attr_device_info = self._device_info(runtime_data, serial)
 

@@ -1,7 +1,8 @@
 """A todo platform for OurGroceries."""
 
-import asyncio
 from typing import Any, override
+
+from ourgroceries import make_delete_item_edit_record
 
 from homeassistant.components.todo import (
     TodoItem,
@@ -109,11 +110,8 @@ class OurGroceriesTodoListEntity(
     @override
     async def async_delete_todo_items(self, uids: list[str]) -> None:
         """Delete a To-do item."""
-        await asyncio.gather(
-            *[
-                self.coordinator.og.remove_item_from_list(self._list_id, uid)
-                for uid in uids
-            ]
+        await self.coordinator.og.edit_items(
+            self._list_id, [make_delete_item_edit_record(uid) for uid in uids]
         )
         await self.coordinator.async_refresh()
 

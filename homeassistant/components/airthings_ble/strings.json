@@ -67,6 +67,9 @@
   "exceptions": {
     "device_not_found": {
       "message": "Could not find Airthings device with address {address}: {reason}"
+    },
+    "incomplete_read": {
+      "message": "The Airthings device did not return complete data, retrying"
     }
   }
 }

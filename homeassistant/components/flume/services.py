@@ -1,6 +1,6 @@
 """Services for flume."""
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.core import (
     HomeAssistant,
@@ -17,9 +17,11 @@ from .coordinator import FlumeConfigEntry
 
 SERVICE_LIST_NOTIFICATIONS = "list_notifications"
 CONF_CONFIG_ENTRY = "config_entry"
-LIST_NOTIFICATIONS_SERVICE_SCHEMA = vol.All(
+LIST_NOTIFICATIONS_SERVICE_SCHEMA = probatio.All(
     {
-        vol.Required(CONF_CONFIG_ENTRY): ConfigEntrySelector({"integration": DOMAIN}),
+        probatio.Required(CONF_CONFIG_ENTRY): ConfigEntrySelector(
+            {"integration": DOMAIN}
+        ),
     },
 )
 

@@ -2,7 +2,7 @@
 
 from typing import TYPE_CHECKING, Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.climate import HVACMode
 from homeassistant.components.infrared import (
@@ -47,10 +47,10 @@ _DEFAULT_HVAC_MODES = [HVACMode.COOL, HVACMode.DRY]
 @callback
 def _infrared_entity_schema(
     hass: HomeAssistant, *, emitter_required: bool
-) -> vol.Schema:
+) -> probatio.Schema:
     """Return the emitter/receiver selection schema shared by every device type."""
-    emitter_marker = vol.Required if emitter_required else vol.Optional
-    return vol.Schema(
+    emitter_marker = probatio.Required if emitter_required else probatio.Optional
+    return probatio.Schema(
         {
             emitter_marker(CONF_INFRARED_ENTITY_ID): EntitySelector(
                 EntitySelectorConfig(
@@ -58,7 +58,7 @@ def _infrared_entity_schema(
                     include_entities=async_get_emitters(hass),
                 )
             ),
-            vol.Optional(CONF_INFRARED_RECEIVER_ENTITY_ID): EntitySelector(
+            probatio.Optional(CONF_INFRARED_RECEIVER_ENTITY_ID): EntitySelector(
                 EntitySelectorConfig(
                     domain=INFRARED_DOMAIN,
                     include_entities=async_get_receivers(hass),
@@ -155,7 +155,9 @@ class LgIrConfigFlow(ConfigFlow, domain=DOMAIN):
                 self.hass, emitter_required=True
             ).extend(
                 {
-                    vol.Required(CONF_HVAC_MODES, default=_DEFAULT_HVAC_MODES): vol.All(
+                    probatio.Required(
+                        CONF_HVAC_MODES, default=_DEFAULT_HVAC_MODES
+                    ): probatio.All(
                         SelectSelector(
                             SelectSelectorConfig(
                                 options=[mode.value for mode in _HVAC_MODE_OPTIONS],
@@ -164,7 +166,7 @@ class LgIrConfigFlow(ConfigFlow, domain=DOMAIN):
                                 multiple=True,
                             )
                         ),
-                        vol.Length(min=1, msg="no_hvac_modes"),
+                        probatio.Length(min=1, msg="no_hvac_modes"),
                     )
                 }
             ),

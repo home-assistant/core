@@ -136,6 +136,10 @@ HOMEKIT = {
         "always_discover": True,
         "domain": "lifx",
     },
+    "LIFX Mirror": {
+        "always_discover": True,
+        "domain": "lifx",
+    },
     "LIFX Neon": {
         "always_discover": True,
         "domain": "lifx",
@@ -145,6 +149,10 @@ HOMEKIT = {
         "domain": "lifx",
     },
     "LIFX PAR38": {
+        "always_discover": True,
+        "domain": "lifx",
+    },
+    "LIFX Path": {
         "always_discover": True,
         "domain": "lifx",
     },
@@ -161,6 +169,10 @@ HOMEKIT = {
         "domain": "lifx",
     },
     "LIFX Round": {
+        "always_discover": True,
+        "domain": "lifx",
+    },
+    "LIFX Spot": {
         "always_discover": True,
         "domain": "lifx",
     },
@@ -695,6 +707,10 @@ ZEROCONF = {
                 "vendor": "tailwind",
             },
         },
+        {
+            "domain": "velux",
+            "name": "velux_klf_lan_*",
+        },
     ],
     "_hue._tcp.local.": [
         {
@@ -736,6 +752,11 @@ ZEROCONF = {
         {
             "domain": "overkiz",
             "name": "gateway*",
+        },
+    ],
+    "_lifx._udp.local.": [
+        {
+            "domain": "lifx",
         },
     ],
     "_linkplay._tcp.local.": [
@@ -824,6 +845,11 @@ ZEROCONF = {
             "domain": "bluesound",
         },
     ],
+    "_mypv._tcp.local.": [
+        {
+            "domain": "my_pv",
+        },
+    ],
     "_nanoleafapi._tcp.local.": [
         {
             "domain": "nanoleaf",
@@ -877,6 +903,11 @@ ZEROCONF = {
     "_plugwise._tcp.local.": [
         {
             "domain": "plugwise",
+        },
+    ],
+    "_powerhub._udp.local.": [
+        {
+            "domain": "bitvis",
         },
     ],
     "_powerview._tcp.local.": [
@@ -1075,6 +1106,15 @@ ZEROCONF = {
     "_wled._tcp.local.": [
         {
             "domain": "wled",
+        },
+    ],
+    "_workstation._tcp.local.": [
+        {
+            "domain": "hr_energy_qube",
+            "properties": {
+                "ProjectName": "deqsihpb*",
+                "Vendor": "000a5c",
+            },
         },
     ],
     "_ws._tcp.local.": [

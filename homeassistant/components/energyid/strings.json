@@ -1,8 +1,7 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "create_entry": {
       "add_sensor_mapping_hint": "You can now add mappings from any sensor in Home Assistant to {integration_name} using the '+ add sensor mapping' button."
@@ -66,6 +65,26 @@
           "title": "Add sensor mapping"
         }
       }
+    }
+  },
+  "exceptions": {
+    "auth_connection_error": {
+      "message": "Connection error authenticating with EnergyID."
+    },
+    "auth_http_error": {
+      "message": "HTTP error authenticating with EnergyID."
+    },
+    "auth_timeout": {
+      "message": "Timeout authenticating with EnergyID."
+    },
+    "auth_unexpected_error": {
+      "message": "Unexpected error authenticating with EnergyID."
+    },
+    "device_not_claimed": {
+      "message": "This Home Assistant connection is not claimed in EnergyID. Re-authenticate to claim it."
+    },
+    "invalid_credentials": {
+      "message": "Invalid provisioning credentials."
     }
   }
 }

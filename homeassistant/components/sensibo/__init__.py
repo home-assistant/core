@@ -6,6 +6,7 @@ from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -74,8 +75,22 @@ async def async_migrate_entry(hass: HomeAssistant, entry: SensiboConfigEntry) ->
 
         try:
             new_unique_id = await async_validate_api(hass, api_key)
-        except AuthenticationError, ConnectionError, NoDevicesError, NoUsernameError:
-            return False
+        except AuthenticationError as err:
+            raise ConfigEntryError(
+                translation_domain=DOMAIN, translation_key="auth_error"
+            ) from err
+        except ConnectionError as err:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN, translation_key="cannot_connect"
+            ) from err
+        except NoDevicesError as err:
+            raise ConfigEntryError(
+                translation_domain=DOMAIN, translation_key="no_data"
+            ) from err
+        except NoUsernameError as err:
+            raise ConfigEntryError(
+                translation_domain=DOMAIN, translation_key="no_username"
+            ) from err
 
         LOGGER.debug("Migrate Sensibo config entry unique id to %s", new_unique_id)
         hass.config_entries.async_update_entry(

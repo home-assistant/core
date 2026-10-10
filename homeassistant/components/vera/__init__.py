@@ -2,7 +2,6 @@
 
 import asyncio
 from collections import defaultdict
-import logging
 
 import pyvera as veraApi
 from requests.exceptions import RequestException
@@ -25,8 +24,6 @@ from .common import (
 )
 from .config_flow import fix_device_id_list, new_options
 from .const import CONF_CONTROLLER, DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
@@ -72,8 +69,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: VeraConfigEntry) -> bool
         )
     except RequestException as exception:
         # There was a network related error connecting to the Vera controller.
-        _LOGGER.exception("Error communicating with Vera API")
-        raise ConfigEntryNotReady from exception
+        raise ConfigEntryNotReady(
+            f"Error communicating with Vera API: {exception}"
+        ) from exception
 
     # Exclude devices unwanted by user.
     devices = [device for device in all_devices if device.device_id not in exclude_ids]

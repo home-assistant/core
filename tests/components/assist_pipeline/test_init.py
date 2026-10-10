@@ -1,10 +1,10 @@
 """Test Voice Assistant init."""
 
-import asyncio
 from collections.abc import Generator
 import itertools as it
 from pathlib import Path
 import tempfile
+import threading
 import time
 from unittest.mock import Mock, patch
 import wave
@@ -665,14 +665,16 @@ async def test_pipeline_saved_audio_empty_queue(
                 with wave.open(str(wav_path), "rb") as wav_file:
                     assert wav_file.getnframes() == 0
 
+        recording_thread_done = threading.Event()
+
         async def audio_data():
-            # Force timeout in _pipeline_debug_recording_thread_proc
-            await asyncio.sleep(1)
+            # Keep the stream open until the recording thread has timed out
+            await hass.async_add_executor_job(recording_thread_done.wait)
             yield b"not used"
 
         # Wrap original function to time out immediately
         _pipeline_debug_recording_thread_proc = (
-            assist_pipeline.pipeline._pipeline_debug_recording_thread_proc
+            assist_pipeline.run._pipeline_debug_recording_thread_proc
         )
 
         def proc_wrapper(run_recording_dir, queue):
@@ -681,12 +683,15 @@ async def test_pipeline_saved_audio_empty_queue(
             while queue.empty():
                 time.sleep(0.01)
 
-            _pipeline_debug_recording_thread_proc(
-                run_recording_dir, queue, message_timeout=0
-            )
+            try:
+                _pipeline_debug_recording_thread_proc(
+                    run_recording_dir, queue, message_timeout=0
+                )
+            finally:
+                recording_thread_done.set()
 
         with patch(
-            "homeassistant.components.assist_pipeline.pipeline._pipeline_debug_recording_thread_proc",
+            "homeassistant.components.assist_pipeline.run._pipeline_debug_recording_thread_proc",
             proc_wrapper,
         ):
             await assist_pipeline.async_pipeline_from_audio_stream(

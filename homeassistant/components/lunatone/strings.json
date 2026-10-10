@@ -2,7 +2,6 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "unique_id_mismatch": "Please ensure you reconfigure against the same device."
     },
     "error": {
@@ -39,7 +38,7 @@
   "entity": {
     "binary_sensor": {
       "scan_status": {
-        "name": "DALI scan"
+        "name": "Scan status"
       }
     },
     "sensor": {
@@ -55,6 +54,12 @@
     }
   },
   "exceptions": {
+    "cannot_turn_off_light": {
+      "message": "Unable to connect to the device and turn off {entity}"
+    },
+    "cannot_turn_on_light": {
+      "message": "Unable to connect to the device and turn on {entity}"
+    },
     "missing_device_info": {
       "message": "Unable to read device information. Please verify the device's network connection."
     }

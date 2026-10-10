@@ -2,9 +2,9 @@
 
 from typing import Any, override
 
+import probatio
 from rf_protocols.commands import ModulationType
 from rf_protocols.commands.kaku import KakuCommand
-import voluptuous as vol
 
 from homeassistant.components.radio_frequency import (
     async_get_transmitters,
@@ -91,7 +91,7 @@ class KakuRcConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self.async_show_form(
                 step_id="pairing_mode",
-                data_schema=vol.Schema({}),
+                data_schema=probatio.Schema({}),
             )
 
         assert self._device_data is not None
@@ -129,9 +129,9 @@ class KakuRcConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="pairing_result",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(
+                    probatio.Required(
                         _CONF_DEVICE_RESPONDED,
                         default=False,
                     ): selector.BooleanSelector()
@@ -143,7 +143,7 @@ class KakuRcConfigFlow(ConfigFlow, domain=DOMAIN):
         self,
         transmitters: list[str],
         user_input: dict[str, Any] | None = None,
-    ) -> vol.Schema:
+    ) -> probatio.Schema:
         """Build the one-step add form schema."""
         if user_input is None:
             user_input = {}
@@ -156,12 +156,12 @@ class KakuRcConfigFlow(ConfigFlow, domain=DOMAIN):
         suggested_values.update(user_input)
 
         return self.add_suggested_values_to_schema(
-            vol.Schema(
+            probatio.Schema(
                 {
-                    vol.Required(CONF_TRANSMITTER): selector.EntitySelector(
+                    probatio.Required(CONF_TRANSMITTER): selector.EntitySelector(
                         selector.EntitySelectorConfig(include_entities=transmitters),
                     ),
-                    vol.Required(CONF_DEVICE_ID): vol.All(
+                    probatio.Required(CONF_DEVICE_ID): probatio.All(
                         selector.NumberSelector(
                             selector.NumberSelectorConfig(
                                 min=0,
@@ -169,9 +169,9 @@ class KakuRcConfigFlow(ConfigFlow, domain=DOMAIN):
                                 mode=selector.NumberSelectorMode.BOX,
                             )
                         ),
-                        vol.Coerce(int),
+                        probatio.Coerce(int),
                     ),
-                    vol.Required(CONF_CHANNEL): vol.All(
+                    probatio.Required(CONF_CHANNEL): probatio.All(
                         selector.NumberSelector(
                             selector.NumberSelectorConfig(
                                 min=1,
@@ -179,9 +179,9 @@ class KakuRcConfigFlow(ConfigFlow, domain=DOMAIN):
                                 mode=selector.NumberSelectorMode.BOX,
                             )
                         ),
-                        vol.Coerce(int),
+                        probatio.Coerce(int),
                     ),
-                    vol.Required(CONF_GROUP): selector.BooleanSelector(),
+                    probatio.Required(CONF_GROUP): selector.BooleanSelector(),
                 }
             ),
             suggested_values,
