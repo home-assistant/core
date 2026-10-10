@@ -13,7 +13,6 @@ from homeassistant.components.sensor import (
     SensorEntity,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
@@ -65,7 +64,7 @@ URL = "http://api.erg.kcl.ac.uk/AirQuality/Hourly/MonitoringIndex/GroupName=Lond
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         probatio.Optional(CONF_LOCATIONS, default=AUTHORITIES): probatio.All(
-            cv.ensure_list, [probatio.In(AUTHORITIES)]
+            probatio.EnsureList(), [probatio.In(AUTHORITIES)]
         )
     }
 )

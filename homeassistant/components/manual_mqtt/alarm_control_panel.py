@@ -22,7 +22,13 @@ from homeassistant.const import (
     CONF_PLATFORM,
     CONF_TRIGGER_TIME,
 )
-from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    Event,
+    EventStateChangedData,
+    HomeAssistant,
+    callback,
+)
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -280,6 +286,7 @@ class ManualMQTTAlarm(AlarmControlPanelEntity):
         self._disarm_after_trigger = disarm_after_trigger
         self._previous_state = self._state
         self._state_ts = None
+        self._scheduled_update_unsubs: list[CALLBACK_TYPE] = []
 
         self._delay_time_by_state = {
             state: config[state][CONF_DELAY_TIME]
@@ -360,6 +367,7 @@ class ManualMQTTAlarm(AlarmControlPanelEntity):
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         self._async_validate_code(code, AlarmControlPanelState.DISARMED)
+        self._async_cancel_scheduled_updates()
         self._state = AlarmControlPanelState.DISARMED
         self._state_ts = dt_util.utcnow()
         self.async_write_ha_state()
@@ -415,22 +423,31 @@ class ManualMQTTAlarm(AlarmControlPanelEntity):
         self._state_ts = dt_util.utcnow()
         self.async_write_ha_state()
 
+        # Deadlines derive from the current state, so earlier timers are obsolete.
+        self._async_cancel_scheduled_updates()
         pending_time = self._pending_time(state)
         if state == AlarmControlPanelState.TRIGGERED:
-            async_track_point_in_time(
-                self._hass, self.async_scheduled_update, self._state_ts + pending_time
-            )
+            self._async_schedule_update(self._state_ts + pending_time)
 
             trigger_time = self._trigger_time_by_state[self._previous_state]
-            async_track_point_in_time(
-                self._hass,
-                self.async_scheduled_update,
-                self._state_ts + pending_time + trigger_time,
-            )
+            self._async_schedule_update(self._state_ts + pending_time + trigger_time)
         elif state in SUPPORTED_PENDING_STATES and pending_time:
+            self._async_schedule_update(self._state_ts + pending_time)
+
+    @callback
+    def _async_schedule_update(self, point_in_time: datetime.datetime) -> None:
+        """Schedule a state update at a point in time."""
+        self._scheduled_update_unsubs.append(
             async_track_point_in_time(
-                self._hass, self.async_scheduled_update, self._state_ts + pending_time
+                self._hass, self.async_scheduled_update, point_in_time
             )
+        )
+
+    @callback
+    def _async_cancel_scheduled_updates(self) -> None:
+        """Cancel pending scheduled state updates."""
+        while self._scheduled_update_unsubs:
+            self._scheduled_update_unsubs.pop()()
 
     def _async_validate_code(self, code, state):
         """Validate given code."""
@@ -470,8 +487,11 @@ class ManualMQTTAlarm(AlarmControlPanelEntity):
     @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to MQTT events."""
-        async_track_state_change_event(
-            self.hass, [self.entity_id], self._async_state_changed_listener
+        self.async_on_remove(self._async_cancel_scheduled_updates)
+        self.async_on_remove(
+            async_track_state_change_event(
+                self.hass, [self.entity_id], self._async_state_changed_listener
+            )
         )
 
         async def message_received(msg):
@@ -492,8 +512,10 @@ class ManualMQTTAlarm(AlarmControlPanelEntity):
                 _LOGGER.warning("Received unexpected payload: %s", msg.payload)
                 return
 
-        await mqtt.async_subscribe(
-            self.hass, self._command_topic, message_received, self._qos
+        self.async_on_remove(
+            await mqtt.async_subscribe(
+                self.hass, self._command_topic, message_received, self._qos
+            )
         )
 
     async def _async_state_changed_listener(

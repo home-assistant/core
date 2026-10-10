@@ -43,6 +43,7 @@ PARALLEL_UPDATES = 0
 class MideaSensorEntityDescription(SensorEntityDescription):
     """Describes Midea sensor entity."""
 
+    attribute: str | None = None
     models: list[DeviceType] | None = None
 
 
@@ -266,6 +267,13 @@ SENSOR_ENTITIES: list[MideaSensorEntityDescription] = [
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
+    ),
+    MideaSensorEntityDescription(
+        key="status",
+        translation_key="status",
+        models=[DeviceType.B1],
+        device_class=SensorDeviceClass.ENUM,
+        options=["standby", "idle", "working", "finished", "delay", "paused"],
     ),
     MideaSensorEntityDescription(
         key="mode",
@@ -545,7 +553,7 @@ SENSOR_ENTITIES: list[MideaSensorEntityDescription] = [
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
-        models=[DeviceType.E8],
+        models=[DeviceType.B1, DeviceType.E8],
     ),
     MideaSensorEntityDescription(
         key="bottom_temperature",
@@ -697,6 +705,313 @@ SENSOR_ENTITIES: list[MideaSensorEntityDescription] = [
         native_unit_of_measurement=UnitOfVolume.LITERS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    MideaSensorEntityDescription(
+        key="progress",
+        translation_key="wash_progress",
+        device_class=SensorDeviceClass.ENUM,
+        options=[
+            "idle",
+            "spin",
+            "rinse",
+            "wash",
+            "weight",
+            "dry",
+            "soak",
+        ],
+        models=[DeviceType.DA],
+    ),
+    MideaSensorEntityDescription(
+        key="program",
+        translation_key="wash_program",
+        device_class=SensorDeviceClass.ENUM,
+        options=[
+            "standard",
+            "fast",
+            "blanket",
+            "wool",
+            "embathe",
+            "memory",
+            "child",
+            "down_jacket",
+            "stir",
+            "mute",
+            "bucket_self_clean",
+            "air_dry",
+        ],
+        models=[DeviceType.DA],
+    ),
+    MideaSensorEntityDescription(
+        key="dehydration_level",
+        attribute="dehydration_speed",
+        translation_key="dehydration_level",
+        device_class=SensorDeviceClass.ENUM,
+        options=["none", "low", "medium", "high"],
+        models=[DeviceType.DA],
+    ),
+    MideaSensorEntityDescription(
+        key="detergent",
+        translation_key="detergent",
+        device_class=SensorDeviceClass.ENUM,
+        options=[
+            "no",
+            "less",
+            "medium",
+            "more",
+            "4",
+            "5",
+            "6",
+            "7",
+            "8",
+            "insufficient",
+        ],
+        models=[DeviceType.DA],
+    ),
+    MideaSensorEntityDescription(
+        key="softener",
+        translation_key="softener",
+        device_class=SensorDeviceClass.ENUM,
+        options=[
+            "no",
+            "intelligent",
+            "programed",  # codespell:ignore
+            "3",
+            "4",
+            "5",
+            "6",
+            "7",
+            "8",
+            "insufficient",
+        ],
+        models=[DeviceType.DA],
+    ),
+    MideaSensorEntityDescription(
+        key="wash_strength",
+        translation_key="wash_strength",
+        device_class=SensorDeviceClass.ENUM,
+        options=["none", "weak", "medium", "strong"],
+        models=[DeviceType.DA],
+    ),
+    MideaSensorEntityDescription(
+        key="status",
+        translation_key="status",
+        device_class=SensorDeviceClass.ENUM,
+        options=[
+            "idle",
+            "standby",
+            "start",
+            "pause",
+            "end",
+            "fault",
+            "delay",
+        ],
+        models=[DeviceType.DB],
+    ),
+    MideaSensorEntityDescription(
+        key="dehydration_speed",
+        translation_key="dehydration_speed",
+        native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
+        state_class=SensorStateClass.MEASUREMENT,
+        models=[DeviceType.DB],
+    ),
+    MideaSensorEntityDescription(
+        key="water_level",
+        translation_key="water_level",
+        device_class=SensorDeviceClass.ENUM,
+        options=[
+            "low",
+            "mid",
+            "high",
+            "4",
+            "auto",
+        ],
+        models=[DeviceType.DB],
+    ),
+    MideaSensorEntityDescription(
+        key="program",
+        translation_key="wash_program",
+        device_class=SensorDeviceClass.ENUM,
+        options=[
+            "cotton",
+            "eco",
+            "fast_wash",
+            "mixed_wash",
+            "fiber",
+            "wool",
+            "enzyme",
+            "ssp",
+            "sport_clothes",
+            "single_dehytration",
+            "rinsing_dehydration",
+            "big",
+            "baby_clothes",
+            "outdoor",
+            "air_wash",
+            "down_jacket",
+            "color",
+            "intelligent",
+            "quick_wash",
+            "kids",
+            "water_cotton",
+            "single_drying",
+            "fast_wash_30",
+            "fast_wash_60",
+            "water_intelligent",
+            "water_steep",
+            "water_fast_wash_30",
+            "shirt",
+            "steep",
+            "new_water_cotton",
+            "water_mixed_wash",
+            "water_fiber",
+            "water_kids",
+            "water_underwear",
+            "specialist",
+            "water_eco",
+            "wash_drying_60",
+            "self_wash_5",
+            "fast_wash_min",
+            "mixed_wash_min",
+            "dehydration_min",
+            "self_wash_min",
+            "baby_clothes_min",
+            "prevent_allergy",
+            "cold_wash",
+            "soft_wash",
+            "remove_mite_wash",
+            "water_intense_wash",
+            "fast_dry",
+            "water_outdoor",
+            "spring_autumn_wash",
+            "summer_wash",
+            "winter_wash",
+            "jean",
+            "new_clothes_wash",
+            "silk",
+            "insight_wash",
+            "fitness_clothes",
+            "mink",
+            "fresh_air",
+            "bucket_dry",
+            "jacket",
+            "bath_towel",
+            "night_fresh_wash",
+            "diy0",
+            "diy2",
+            "heart_wash",
+            "water_cold_wash",
+            "water_prevent_allergy",
+            "water_remove_mite_wash",
+            "water_ssp",
+            "silk_wash",
+            "standard",
+            "green_wool",
+            "cook_wash",
+            "fresh_remove_wrinkle",
+            "steam_sterilize_wash",
+            "aromatherapy",
+            "eco_40_60",
+            "steam_care",
+            "allergy_care",
+            "sterilize_wash",
+            "wash_and_dry",
+            "time_dry",
+            "bulky",
+            "love",
+        ],
+        models=[DeviceType.DB],
+    ),
+    MideaSensorEntityDescription(
+        key="progress",
+        translation_key="wash_progress",
+        device_class=SensorDeviceClass.ENUM,
+        options=[
+            "idle",
+            "spin",
+            "rinse",
+            "wash",
+            "pre_wash",
+            "dry",
+            "weight",
+            "hi_speed_spin",
+        ],
+        models=[DeviceType.DB],
+    ),
+    MideaSensorEntityDescription(
+        key="status",
+        translation_key="status",
+        device_class=SensorDeviceClass.ENUM,
+        options=[
+            "idle",
+            "standby",
+            "start",
+            "pause",
+            "end",
+            "prevent_wrinkle_end",
+            "delay_choosing",
+            "fault",
+            "delay",
+            "delay_pause",
+        ],
+        models=[DeviceType.DC],
+    ),
+    MideaSensorEntityDescription(
+        key="program",
+        translation_key="dry_program",
+        device_class=SensorDeviceClass.ENUM,
+        options=[
+            "cotton",
+            "fiber",
+            "mixed_wash",
+            "jean",
+            "bedsheet",
+            "outdoor",
+            "down_jacket",
+            "plush",
+            "wool",
+            "dehumidify",
+            "cold_air_fresh_air",
+            "hot_air_dry",
+            "sport_clothes",
+            "underwear",
+            "baby_clothes",
+            "shirt",
+            "standard",
+            "quick_dry",
+            "fresh_air",
+            "low_temp_dry",
+            "eco_dry",
+            "quick_dry_30",
+            "towel",
+            "intelligent_dry",
+            "steam_care",
+            "big",
+            "fixed_time_dry",
+            "night_dry",
+            "bracket_dry",
+            "western_trouser",
+            "dehumidification",
+            "smart_dry",
+            "four_piece_suit",
+            "warm_clothes",
+            "quick_dry_20",
+            "steam_sterilize",
+            "enzyme",
+            "big_60",
+            "steam_no_iron",
+            "air_wash",
+            "bed_clothes",
+            "little_fast_dry",
+            "small_piece_dry",
+            "big_dry",
+            "wool_nurse",
+            "sun_quilt",
+            "fresh_remove_smell",
+            "bucket_self_clean",
+            "silk",
+            "sterilize",
+        ],
+        models=[DeviceType.DC],
+    ),
 ]
 
 
@@ -711,7 +1026,7 @@ async def async_setup_entry(
     sensors: list[MideaSensor] = [
         MideaSensor(device, description)
         for description in SENSOR_ENTITIES
-        if device.attributes.get(description.key) is not None
+        if device.attributes.get(description.attribute or description.key) is not None
         and (not description.models or device.device_type in description.models)
     ]
 
@@ -725,10 +1040,32 @@ class MideaSensor(MideaEntity, SensorEntity):
     @override
     def native_value(self) -> StateType | datetime:
         """Native value of the sensor."""
-        value = self._device.get_attribute(self.entity_description.key)
+        description = cast(MideaSensorEntityDescription, self.entity_description)
+        value = self._device.get_attribute(description.attribute or description.key)
         if value == "unknown":
             return None
-        if self.entity_description.device_class == SensorDeviceClass.TIMESTAMP:
+        if (
+            description.key
+            in (
+                "dehydration_level",
+                "softener",
+                "detergent",
+                "temperature",
+                "water_level",
+                "program",
+            )
+            and value == "default"
+        ):
+            return None
+        if isinstance(value, str) and (
+            description.translation_key == "dehydration_speed"
+            or description.key == "temperature"
+        ):
+            try:
+                return cast("StateType", float(value))
+            except ValueError:
+                return None
+        if description.device_class == SensorDeviceClass.TIMESTAMP:
             if not isinstance(value, (int, float)) or value <= 0:
                 return None
             # round to the closest minute

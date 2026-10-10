@@ -10,9 +10,6 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_REPEAT,
     CONF_STATE,
-    SERVICE_TOGGLE,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant
@@ -28,12 +25,14 @@ from .const import (
     CONF_NOTIFIERS,
     CONF_SKIP_FIRST,
     CONF_TITLE,
+    DATA_COMPONENT,
     DEFAULT_CAN_ACK,
     DEFAULT_SKIP_FIRST,
     DOMAIN,
     LOGGER,
 )
 from .entity import AlertEntity
+from .services import async_setup_services
 
 ALERT_SCHEMA = probatio.Schema(
     {
@@ -41,7 +40,7 @@ ALERT_SCHEMA = probatio.Schema(
         probatio.Required(CONF_ENTITY_ID): cv.entity_id,
         probatio.Optional(CONF_STATE, default=STATE_ON): cv.string,
         probatio.Required(CONF_REPEAT): probatio.All(
-            cv.ensure_list,
+            probatio.EnsureList(),
             [probatio.Coerce(float)],
             # Minimum delay is 1 second = 0.016 minutes
             [probatio.Range(min=0.016)],
@@ -53,7 +52,7 @@ ALERT_SCHEMA = probatio.Schema(
         probatio.Optional(CONF_TITLE): cv.template,
         probatio.Optional(CONF_DATA): dict,
         probatio.Optional(CONF_NOTIFIERS, default=list): probatio.All(
-            cv.ensure_list, [cv.string]
+            probatio.EnsureList(), [cv.string]
         ),
     }
 )
@@ -68,7 +67,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     DEVELOPMENT OF THE ALERT INTEGRATION IS FROZEN.
     """
-    component = EntityComponent[AlertEntity](LOGGER, DOMAIN, hass)
+    component = hass.data[DATA_COMPONENT] = EntityComponent[AlertEntity](
+        LOGGER, DOMAIN, hass
+    )
 
     entities: list[AlertEntity] = []
 
@@ -109,9 +110,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if not entities:
         return False
 
-    component.async_register_entity_service(SERVICE_TURN_OFF, None, "async_turn_off")
-    component.async_register_entity_service(SERVICE_TURN_ON, None, "async_turn_on")
-    component.async_register_entity_service(SERVICE_TOGGLE, None, "async_toggle")
+    async_setup_services(hass)
 
     await component.async_add_entities(entities)
 

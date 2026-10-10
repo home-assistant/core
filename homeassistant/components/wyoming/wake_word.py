@@ -58,6 +58,7 @@ class WyomingWakeWordProvider(wake_word.WakeWordDetectionEntity):
         self._rebuild_wake_words(wake_service)
 
         self._attr_name = wake_service.name
+        # Legacy format, kept as migrating existing unique IDs is not worth the risk
         self._attr_unique_id = f"{config_entry.entry_id}-wake_word"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
 
     @override

@@ -41,7 +41,7 @@ DEFAULT_OPTIONS = {CONF_EVENTS: [DEFAULT_DOORBELL_EVENT, DEFAULT_MOTION_EVENT]}
 
 AUTH_VOL_DICT: VolDictType = {
     probatio.Required(CONF_USERNAME): str,
-    probatio.Required(CONF_PASSWORD): str,
+    probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
 }
 AUTH_SCHEMA = probatio.Schema(AUTH_VOL_DICT)
 

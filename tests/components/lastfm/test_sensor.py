@@ -1,5 +1,9 @@
 """Tests for the lastfm sensor."""
 
+from datetime import timedelta
+from unittest.mock import patch
+
+from freezegun.api import FrozenDateTimeFactory
 from pylast import LastFMNetwork, WSError
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -16,7 +20,7 @@ from homeassistant.core import HomeAssistant
 from . import API_KEY, API_SECRET, SESSION_KEY, MockUser
 from .conftest import ComponentSetup
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.parametrize(
@@ -54,6 +58,7 @@ async def test_sensor_hidden_listening_information(
     config_entry: MockConfigEntry,
     hidden_user: MockUser,
     caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test sensor stays available when the user hides recent listening info."""
     await setup_integration(config_entry, hidden_user)
@@ -64,8 +69,13 @@ async def test_sensor_hidden_listening_information(
     warnings = caplog.text.count("has hidden their recent listening information")
     assert warnings > 0
 
-    await config_entry.runtime_data.async_refresh()
+    with patch("pylast.User", return_value=hidden_user) as mock_user:
+        freezer.tick(timedelta(seconds=30))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
 
+    mock_user.assert_called()
+    assert config_entry.runtime_data.last_update_success
     assert (
         caplog.text.count("has hidden their recent listening information") == warnings
     )
@@ -77,6 +87,7 @@ async def test_sensor_now_playing_with_hidden_listening_information(
     config_entry: MockConfigEntry,
     hidden_now_playing_user: MockUser,
     caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test now playing stays available when the recent tracks request fails."""
     await setup_integration(config_entry, hidden_now_playing_user)
@@ -88,7 +99,13 @@ async def test_sensor_now_playing_with_hidden_listening_information(
         "user testaccount1 has hidden their recent listening information" in caplog.text
     )
 
-    await config_entry.runtime_data.async_refresh()
+    with patch("pylast.User", return_value=hidden_now_playing_user) as mock_user:
+        freezer.tick(timedelta(seconds=30))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    mock_user.assert_called()
+    assert config_entry.runtime_data.last_update_success
 
     assert (
         caplog.text.count(

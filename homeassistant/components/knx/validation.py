@@ -65,28 +65,27 @@ string_type_validator = dpt_subclass_validator(DPTString)
 sensor_type_validator = probatio.Any(numeric_type_validator, string_type_validator)
 
 
-def entity_category_validator(
-    platform: Platform,
-) -> Callable[[Any], EntityCategory | None]:
-    """Validate the entity category is supported by the platform.
+def parse_entity_category(value: Any) -> EntityCategory | None:
+    """Parse an entity category; `None` and "" (the UI clears with it) mean none."""
+    if value is None or value == "":
+        return None
+    try:
+        return EntityCategory(value)
+    except ValueError:
+        raise probatio.Invalid(f"'{value}' is not a valid entity category") from None
 
-    Works for both, UI and YAML configuration schema.
-    """
+
+def entity_category_supported(
+    platform: Platform,
+) -> Callable[[EntityCategory | None], EntityCategory | None]:
+    """Validate a parsed entity category is supported by the platform."""
     valid_categories = set(EntityCategory)
     if platform in PLATFORMS_WITHOUT_CONFIG_CATEGORY:
         valid_categories -= {EntityCategory.CONFIG}
 
-    def validate(value: Any) -> EntityCategory | None:
+    def validate(entity_category: EntityCategory | None) -> EntityCategory | None:
         """Validate the entity category."""
-        if value is None or value == "":  # UI sends an empty value to clear it
-            return None
-        try:
-            entity_category = EntityCategory(value)
-        except ValueError:
-            raise probatio.Invalid(
-                f"'{value}' is not a valid entity category"
-            ) from None
-        if entity_category not in valid_categories:
+        if entity_category is not None and entity_category not in valid_categories:
             _options = ", ".join(sorted(valid_categories))
             raise probatio.Invalid(
                 f"Entity category '{entity_category}' is not supported by the"
@@ -95,6 +94,14 @@ def entity_category_validator(
         return entity_category
 
     return validate
+
+
+def entity_category_validator(platform: Platform) -> probatio.All:
+    """Validate the entity category is supported by the platform.
+
+    Works for both, UI and YAML configuration schema.
+    """
+    return probatio.All(parse_entity_category, entity_category_supported(platform))
 
 
 def ga_validator(value: Any) -> str | int:
@@ -121,7 +128,7 @@ def maybe_ga_validator(value: Any) -> str | int | None:
 
 
 ga_list_validator = probatio.All(
-    cv.ensure_list,
+    probatio.EnsureList(),
     [ga_validator],
     probatio.IsTrue(
         "value must be a group address or a list containing group addresses"
@@ -130,7 +137,7 @@ ga_list_validator = probatio.All(
 
 ga_list_validator_optional = probatio.Maybe(
     probatio.All(
-        cv.ensure_list,
+        probatio.EnsureList(),
         [ga_validator],
         probatio.Any(
             probatio.IsTrue(), probatio.SetTo(None)

@@ -376,12 +376,14 @@ async def test_reauth_flow_start_retry(
 ) -> None:
     """Test retrying a transient web authentication start failure."""
     session_key_generator = MockSessionKeyGenerator(
-        web_auth_url_error=WSError("network", "16", "Service unavailable")
+        web_auth_url_error=WSError("network", "16", "Service unavailable"),
+        session_key=NEW_SESSION_KEY,
     )
     authenticated_config_entry.add_to_hass(hass)
     with (
         patch(SESSION_KEY_GENERATOR_PATH, return_value=session_key_generator),
         patch(POLLING_INTERVAL_PATH, 60),
+        patch_setup_entry(),
     ):
         result = await authenticated_config_entry.start_reauth_flow(hass)
         assert result["type"] is FlowResultType.FORM
@@ -392,11 +394,21 @@ async def test_reauth_flow_start_retry(
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={}
         )
+        assert result["type"] is FlowResultType.EXTERNAL_STEP
+        polling_task = get_session_key_polling_task(hass, result["flow_id"])
 
-    assert result["type"] is FlowResultType.EXTERNAL_STEP
-    polling_task = get_session_key_polling_task(hass, result["flow_id"])
-    hass.config_entries.flow.async_abort(result["flow_id"])
-    await hass.async_block_till_done()
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+        assert result["type"] is FlowResultType.EXTERNAL_STEP_DONE
+
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert authenticated_config_entry.options == {
+        **CONF_DATA_WITH_SESSION_KEY,
+        CONF_SESSION_KEY: NEW_SESSION_KEY,
+    }
     assert polling_task.cancelled()
 
 
@@ -666,33 +678,10 @@ async def test_flow_hidden_recent_tracks(
         assert not result["errors"]
         assert result["step_id"] == "friends"
 
-
-async def test_flow_hidden_recent_tracks_recovered(
-    hass: HomeAssistant, default_user: MockUser
-) -> None:
-    """Test the flow recovers when the hidden recent tracks error clears."""
-    with patch(
-        "pylast.User",
-        return_value=MockUser(recent_tracks_error=LOGIN_REQUIRED_ERROR),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}
-        )
-
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input=CONF_USER_DATA,
+            result["flow_id"], user_input=CONF_FRIENDS_DATA
         )
-        assert result["errors"]["base"] == "hidden_recent_tracks"
-
-    with patch("pylast.User", return_value=default_user), patch_setup_entry():
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input=CONF_USER_DATA,
-        )
-        assert result["type"] is FlowResultType.FORM
-        assert not result["errors"]
-        assert result["step_id"] == "friends"
+        assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_flow_hidden_user_with_secret(hass: HomeAssistant) -> None:
@@ -941,6 +930,15 @@ async def test_options_flow_hidden_recent_tracks(
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "init"
         assert result["errors"]["base"] == "hidden_recent_tracks"
+
+    with patch("pylast.User", return_value=default_user):
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={CONF_USERS: [USERNAME_1]},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_options_flow_from_import(

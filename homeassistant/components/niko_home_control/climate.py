@@ -46,7 +46,7 @@ class NikoHomeControlClimate(NikoHomeControlEntity, ClimateEntity):
         | ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.TURN_OFF
     )
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_name = None
     _action: NHCThermostat
 
@@ -101,5 +101,5 @@ class NikoHomeControlClimate(NikoHomeControlEntity, ClimateEntity):
             self._attr_hvac_mode = HVACMode.AUTO
             self._attr_preset_mode = THERMOSTAT_MODES[self._action.state]
 
-        self._attr_target_temperature = self._action.setpoint
-        self._attr_current_temperature = self._action.measured
+        self._attr_native_target_temperature = self._action.setpoint
+        self._attr_native_current_temperature = self._action.measured

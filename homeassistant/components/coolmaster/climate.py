@@ -100,8 +100,8 @@ class CoolmasterClimate(CoolmasterEntity, ClimateEntity):
 
     @property
     @override
-    def temperature_unit(self) -> str:
-        """Return the unit of measurement."""
+    def native_temperature_unit(self) -> str:
+        """Return the unit of measurement the device natively reports in."""
         if self._unit.temperature_unit == "celsius":
             return UnitOfTemperature.CELSIUS
 
@@ -109,13 +109,13 @@ class CoolmasterClimate(CoolmasterEntity, ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> float:
+    def native_current_temperature(self) -> float:
         """Return the current temperature."""
         return self._unit.temperature
 
     @property
     @override
-    def target_temperature(self) -> float:
+    def native_target_temperature(self) -> float:
         """Return the temperature we are trying to reach."""
         return self._unit.thermostat
 

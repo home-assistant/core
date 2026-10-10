@@ -58,7 +58,7 @@ PLACEHOLDERS = {
 
 CONFIG_SCHEMA: probatio.Schema = probatio.Schema(
     {
-        probatio.Required(CONF_API_KEY): str,
+        probatio.Required(probatio.Secret(CONF_API_KEY)): str,
         probatio.Optional(CONF_API_SECRET): TextSelector(
             TextSelectorConfig(type=TextSelectorType.PASSWORD)
         ),

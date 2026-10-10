@@ -72,6 +72,9 @@
     }
   },
   "exceptions": {
+    "local_unauthorized": {
+      "message": "Failed to authenticate with the local Risco panel"
+    },
     "not_local_entry": {
       "message": "This service only works with local Risco connections."
     }
@@ -96,8 +99,7 @@
         "sections": {
           "more_options": {
             "data": {
-              "concurrency": "Maximum concurrent requests in Risco local",
-              "scan_interval": "How often to poll Risco Cloud (in seconds)"
+              "concurrency": "Maximum concurrent requests in Risco local"
             },
             "name": "More options"
           }

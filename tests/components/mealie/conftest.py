@@ -73,6 +73,7 @@ def mock_mealie_client() -> Generator[AsyncMock]:
         client.get_shopping_items.return_value = ShoppingItemsResponse.from_json(
             load_fixture("get_shopping_items.json", DOMAIN)
         )
+        client.parse_ingredient.return_value = None
         client.get_statistics.return_value = Statistics.from_json(
             load_fixture("statistics.json", DOMAIN)
         )
@@ -91,6 +92,11 @@ def mock_config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         title="Mealie",
         data={CONF_HOST: "demo.mealie.io", CONF_API_TOKEN: "token"},
+        options={
+            "parse_todo_new": True,
+            "parse_todo_edit": True,
+            "parser": "nlp",
+        },
         entry_id="01J0BC4QM2YBRP6H5G933CETT7",
         unique_id="bf1c62fe-4941-4332-9886-e54e88dbdba0",
     )
