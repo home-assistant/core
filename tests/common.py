@@ -1336,41 +1336,14 @@ def assert_setup_component(count, domain=None):
     )
 
 
-def mock_restore_cache(hass: HomeAssistant, states: Sequence[State]) -> None:
-    """Mock the DATA_RESTORE_CACHE."""
-    key = rs.DATA_RESTORE_STATE
-    data = rs.RestoreStateData(hass)
-    now = dt_util.utcnow()
-
-    last_states = {}
-    for state in states:
-        restored_state = state.as_dict()
-        restored_state = {
-            **restored_state,
-            "attributes": json.loads(
-                json.dumps(restored_state["attributes"], cls=JSONEncoder)
-            ),
-        }
-        last_states[state.entity_id] = rs.StoredState.from_dict(
-            {"state": restored_state, "last_seen": now}
-        )
-    data.last_states = last_states
-    _LOGGER.debug("Restore cache: %s", data.last_states)
-    assert len(data.last_states) == len(states), f"Duplicate entity_id? {states}"
-
-    rs.async_get.cache_clear()
-    hass.data[key] = data
-
-
-def mock_restore_cache_with_extra_data(
-    hass: HomeAssistant, states: Sequence[tuple[State, Mapping[str, Any]]]
+def _mock_restore_cache(
+    hass: HomeAssistant, states: Sequence[tuple[State, Mapping[str, Any] | None]]
 ) -> None:
     """Mock the DATA_RESTORE_CACHE."""
-    key = rs.DATA_RESTORE_STATE
-    data = rs.RestoreStateData(hass)
+    data = rs.async_get(hass)
     now = dt_util.utcnow()
 
-    last_states = {}
+    stored_states = []
     for state, extra_data in states:
         restored_state = state.as_dict()
         restored_state = {
@@ -1379,15 +1352,30 @@ def mock_restore_cache_with_extra_data(
                 json.dumps(restored_state["attributes"], cls=JSONEncoder)
             ),
         }
-        last_states[state.entity_id] = rs.StoredState.from_dict(
+        stored_states.append(
             {"state": restored_state, "extra_data": extra_data, "last_seen": now}
         )
-    data.last_states = last_states
-    _LOGGER.debug("Restore cache: %s", data.last_states)
-    assert len(data.last_states) == len(states), f"Duplicate entity_id? {states}"
+    data._async_load_stored_states(stored_states)
+    _LOGGER.debug(
+        "Restore cache: %s and %s",
+        data.last_states_by_entity_id,
+        data.last_states_by_entity_registry_id,
+    )
+    assert len(data.last_states_by_entity_id) + len(
+        data.last_states_by_entity_registry_id
+    ) == len(states), f"Duplicate entity_id? {states}"
 
-    rs.async_get.cache_clear()
-    hass.data[key] = data
+
+def mock_restore_cache(hass: HomeAssistant, states: Sequence[State]) -> None:
+    """Mock the DATA_RESTORE_CACHE."""
+    _mock_restore_cache(hass, [(state, None) for state in states])
+
+
+def mock_restore_cache_with_extra_data(
+    hass: HomeAssistant, states: Sequence[tuple[State, Mapping[str, Any]]]
+) -> None:
+    """Mock the DATA_RESTORE_CACHE."""
+    _mock_restore_cache(hass, states)
 
 
 async def async_mock_restore_state_shutdown_restart(

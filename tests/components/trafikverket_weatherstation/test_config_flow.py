@@ -102,6 +102,26 @@ async def test_flow_fails(
 
     assert result4["errors"] == {"base": base_error}
 
+    with (
+        patch(
+            "homeassistant.components.trafikverket_weatherstation.config_flow.TrafikverketWeather.async_get_weather",
+        ),
+        patch(
+            "homeassistant.components.trafikverket_weatherstation.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result4 = await hass.config_entries.flow.async_configure(
+            result4["flow_id"],
+            user_input={
+                CONF_API_KEY: "1234567890",
+                CONF_STATION: "Vallby",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result4["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_reauth_flow(hass: HomeAssistant) -> None:
     """Test a reauthentication flow."""
@@ -190,6 +210,24 @@ async def test_reauth_flow_fails(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": base_error}
+
+    with (
+        patch(
+            "homeassistant.components.trafikverket_weatherstation.config_flow.TrafikverketWeather.async_get_weather",
+        ),
+        patch(
+            "homeassistant.components.trafikverket_weatherstation.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_API_KEY: "1234567891"},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
 
 
 async def test_reconfigure_flow(hass: HomeAssistant) -> None:

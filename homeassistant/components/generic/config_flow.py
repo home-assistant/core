@@ -10,7 +10,7 @@ import time
 from typing import Any, cast, override
 
 from aiohttp import web
-from httpx import HTTPStatusError, RequestError, TimeoutException
+from httpx2 import HTTPStatusError, RequestError, TimeoutException
 import PIL.Image
 import probatio
 import yarl

@@ -108,10 +108,8 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
             # assume previous session has expired and re-login.
             await self.api.async_login()
         except (InvalidAuth, MfaChallenge) as err:
-            _LOGGER.error("Error during login: %s", err)
             raise ConfigEntryAuthFailed from err
         except CannotConnect as err:
-            _LOGGER.error("Error during login: %s", err)
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="login_error",

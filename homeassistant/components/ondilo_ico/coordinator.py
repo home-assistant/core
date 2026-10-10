@@ -59,7 +59,6 @@ class OndiloIcoPoolsCoordinator(DataUpdateCoordinator[dict[str, OndiloIcoPoolDat
             update_interval=timedelta(minutes=20),
         )
         self.api = api
-        self.config_entry = config_entry
         self._device_registry = dr.async_get(self.hass)
 
     @override
@@ -147,7 +146,7 @@ class OndiloIcoMeasuresCoordinator(DataUpdateCoordinator[OndiloIcoMeasurementDat
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: OndiloIcoConfigEntry,
         api: OndiloClient,
         pool_id: str,
     ) -> None:
