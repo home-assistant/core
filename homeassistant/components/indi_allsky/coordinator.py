@@ -63,6 +63,7 @@ class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[IndiAllSkyData]):
         self.latest_startrail: MediaData | None = None
         self.latest_sensor: SensorData | None = None
         self._sensor_fetch_task: asyncio.Task[None] | None = None
+        self._sensor_fetch_queued = False
 
         entry.async_on_unload(
             self.client.register_callback(
@@ -83,13 +84,14 @@ class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[IndiAllSkyData]):
             self.client.register_callback("sensor_update", self._handle_sensor_update)
         )
         entry.async_on_unload(self.client.disconnect)
-        entry.async_on_unload(
-            async_track_time_interval(
-                hass,
-                self._async_handle_interval_refresh,
-                SCAN_INTERVAL,
+        if not entry.pref_disable_polling:
+            entry.async_on_unload(
+                async_track_time_interval(
+                    hass,
+                    self._async_handle_interval_refresh,
+                    SCAN_INTERVAL,
+                )
             )
-        )
 
         super().__init__(
             hass,
@@ -117,8 +119,9 @@ class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[IndiAllSkyData]):
         )
 
     def _async_trigger_fetch_sensors(self) -> None:
-        """Trigger sensor fetch if no fetch task is currently active."""
+        """Trigger sensor fetch if no fetch task is active, or queue a trailing run."""
         if self._sensor_fetch_task is not None and not self._sensor_fetch_task.done():
+            self._sensor_fetch_queued = True
             return
         self._sensor_fetch_task = self.config_entry.async_create_background_task(
             self.hass,
@@ -127,12 +130,17 @@ class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[IndiAllSkyData]):
         )
 
     async def _async_fetch_sensors(self) -> None:
-        """Fetch sensor update from indi-allsky."""
-        try:
-            with suppress(IndiAllSkyError):
-                await self.client.fetch_sensors()
-        finally:
-            self._sensor_fetch_task = None
+        """Fetch sensor update from indi-allsky, processing any queued trailing fetch."""
+        while True:
+            self._sensor_fetch_queued = False
+            try:
+                with suppress(IndiAllSkyError):
+                    await self.client.fetch_sensors()
+            finally:
+                if not self._sensor_fetch_queued:
+                    self._sensor_fetch_task = None
+            if not self._sensor_fetch_queued:
+                break
 
     def _handle_keogram_complete(self, media: MediaData) -> None:
         """Handle new keogram_complete event from WebSocket stream."""

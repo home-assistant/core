@@ -480,13 +480,13 @@ async def test_initial_sensor_fetch_preserved(
     assert state.state == "14.8"
 
 
-async def test_exposure_complete_triggers_sensor_fetch_and_coalesces(
+async def test_exposure_complete_triggers_sensor_fetch_and_queues_trailing(
     hass: HomeAssistant,
     mock_indi_allsky_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     mock_exposure_data: ExposureData,
 ) -> None:
-    """Test that exposure_complete event triggers sensor fetch and coalesces overlapping requests."""
+    """Test that exposure_complete event triggers sensor fetch and queues one trailing fetch if in-flight."""
     fetch_started = asyncio.Event()
     unblock_fetch = asyncio.Event()
 
@@ -509,14 +509,17 @@ async def test_exposure_complete_triggers_sensor_fetch_and_coalesces(
 
     await fetch_started.wait()
 
-    # While first fetch is in flight, fire another exposure complete
+    # While first fetch is in flight, fire multiple exposure completes
     for cb in callbacks:
         cb(mock_exposure_data)
+        cb(mock_exposure_data)
 
+    # Let the first fetch finish; second fetch should run and then complete
+    mock_indi_allsky_client.fetch_sensors.side_effect = None
     unblock_fetch.set()
     await hass.async_block_till_done()
 
-    mock_indi_allsky_client.fetch_sensors.assert_called_once()
+    assert mock_indi_allsky_client.fetch_sensors.call_count == 2
 
 
 async def test_periodic_sensor_polling(
@@ -536,3 +539,33 @@ async def test_periodic_sensor_polling(
     await hass.async_block_till_done()
 
     mock_indi_allsky_client.fetch_sensors.assert_called_once()
+
+
+async def test_periodic_sensor_polling_disabled(
+    hass: HomeAssistant,
+    mock_indi_allsky_client: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test periodic fallback sensor polling is not scheduled when pref_disable_polling is true."""
+    entry = MockConfigEntry(
+        domain="indi_allsky",
+        title="INDI Allsky",
+        data={
+            "host": "127.0.0.1",
+            "port": 443,
+            "ssl": True,
+            "verify_ssl": True,
+        },
+        entry_id="disabled_polling_entry_id",
+        pref_disable_polling=True,
+    )
+    with patch("homeassistant.components.indi_allsky._PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, entry)
+
+    mock_indi_allsky_client.fetch_sensors.reset_mock()
+
+    freezer.tick(timedelta(minutes=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    mock_indi_allsky_client.fetch_sensors.assert_not_called()
