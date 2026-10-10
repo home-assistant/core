@@ -495,6 +495,7 @@ class TestOnectaDataUpdateCoordinator:
     async def test_missing_cloud_device_is_marked_unavailable(self, coordinator):
         """Mark cached gateways unavailable when the cloud no longer returns them."""
         missing_device = MagicMock()
+        missing_device.device = MagicMock(id="missing", management_points=[])
         coordinator.data = {"missing": missing_device}
         coordinator.api.last_patch_call = None
         coordinator.api.get_cloud_device_details = AsyncMock(return_value=[])
@@ -502,6 +503,88 @@ class TestOnectaDataUpdateCoordinator:
         await coordinator._async_update_data_from_cloud()
 
         missing_device.mark_unavailable.assert_called_once_with()
+        coordinator.hass.config_entries.async_schedule_reload.assert_not_called()
+
+    async def test_new_cloud_gateway_schedules_reload(self, coordinator):
+        """Reload platforms when ONECTA reports a newly added gateway."""
+        existing_device = MagicMock()
+        existing_device.device = MagicMock(id="existing", management_points=[])
+        existing_device.set_device_data.return_value = False
+        new_device = MagicMock(
+            id="new",
+            display_name="New device",
+            available=True,
+            device_model="BRP069",
+            gateway_embedded_id=None,
+            mac_address=None,
+            management_points=[],
+        )
+        coordinator.data = {"existing": existing_device}
+        coordinator.api.last_patch_call = None
+        coordinator.api.get_cloud_device_details = AsyncMock(
+            return_value=[existing_device.device, new_device]
+        )
+
+        with patch.object(DaikinOnectaDevice, "async_update_device_registry"):
+            await coordinator._async_update_data_from_cloud()
+
+        coordinator.hass.config_entries.async_schedule_reload.assert_called_once_with(
+            coordinator.config_entry.entry_id
+        )
+
+    async def test_new_management_point_schedules_reload(self, coordinator):
+        """Reload platforms when ONECTA adds a management point."""
+        existing_device = MagicMock()
+        existing_device.device = MagicMock(
+            id="gateway",
+            management_points=[
+                MagicMock(
+                    embedded_id="climate",
+                    management_point_type="climateControl",
+                )
+            ],
+        )
+        existing_device.set_device_data.return_value = False
+        updated_device = MagicMock(
+            id="gateway",
+            management_points=[
+                MagicMock(
+                    embedded_id="climate",
+                    management_point_type="climateControl",
+                ),
+                MagicMock(
+                    embedded_id="hot_water",
+                    management_point_type="domesticHotWaterTank",
+                ),
+            ],
+        )
+        coordinator.data = {"gateway": existing_device}
+        coordinator.api.last_patch_call = None
+        coordinator.api.get_cloud_device_details = AsyncMock(
+            return_value=[updated_device]
+        )
+
+        await coordinator._async_update_data_from_cloud()
+
+        coordinator.hass.config_entries.async_schedule_reload.assert_called_once_with(
+            coordinator.config_entry.entry_id
+        )
+
+    async def test_unchanged_cloud_topology_does_not_schedule_reload(self, coordinator):
+        """Do not reload platforms for ordinary state updates."""
+        existing_device = MagicMock()
+        cloud_device = MagicMock(id="gateway", management_points=[])
+        existing_device.device = cloud_device
+        existing_device.set_device_data.return_value = False
+        coordinator.data = {"gateway": existing_device}
+        coordinator.api.last_patch_call = None
+        coordinator.api.get_cloud_device_details = AsyncMock(
+            return_value=[cloud_device]
+        )
+
+        await coordinator._async_update_data_from_cloud()
+
+        coordinator.hass.config_entries.async_schedule_reload.assert_not_called()
 
     async def test_updated_cloud_device_replaces_cached_model(self, coordinator):
         """Replace the cached gateway model with cloud data."""

@@ -1,5 +1,6 @@
 """Coordinator for Daikin Onecta integration."""
 
+from collections.abc import Iterable
 from datetime import datetime, time, timedelta, tzinfo
 import logging
 from math import ceil
@@ -11,6 +12,7 @@ from daikin_onecta.exceptions import (
     OnectaConnectionError,
     OnectaRateLimitError,
 )
+from daikin_onecta.models import GatewayDevice
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -65,7 +67,8 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
 
     async def _async_update_data_from_cloud(self) -> dict[str, DaikinOnectaDevice]:
         """Fetch the latest device state from Daikin."""
-        devices = self.data or {}
+        previous_devices = self.data
+        devices = previous_devices or {}
         if (
             self.api.last_patch_call is not None
             and (dt_util.utcnow() - self.api.last_patch_call).total_seconds()
@@ -110,6 +113,12 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
             if cloud_devices is None:
                 self.update_interval = _POST_WRITE_COOLDOWN
             else:
+                has_new_topology = previous_devices is not None and bool(
+                    self._topology(cloud_devices)
+                    - self._topology(
+                        device.device for device in previous_devices.values()
+                    )
+                )
                 cloud_device_ids = {device.id for device in cloud_devices}
                 for device_id, device in devices.items():
                     if device_id not in cloud_device_ids:
@@ -128,6 +137,16 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
                             self.hass, self.config_entry
                         )
 
+                if has_new_topology:
+                    # Platform setup is capability-driven. Reload only when the
+                    # cloud reports a newly addressable gateway or management
+                    # point, so it can create the corresponding entities.
+                    # Missing topology remains in the registry and is handled
+                    # by the availability checks above.
+                    self.hass.config_entries.async_schedule_reload(
+                        self.config_entry.entry_id
+                    )
+
                 self.update_interval = self._determine_update_interval()
 
         return devices
@@ -136,6 +155,27 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
     async def _async_update_data(self) -> dict[str, DaikinOnectaDevice]:
         """Fetch data for the Home Assistant coordinator interface."""
         return await self._async_update_data_from_cloud()
+
+    @staticmethod
+    def _topology(
+        devices: Iterable[GatewayDevice],
+    ) -> set[tuple[str, str | None, str | None]]:
+        """Return addressable gateway and management-point identities."""
+        return {
+            topology_item
+            for device in devices
+            for topology_item in (
+                (device.id, None, None),
+                *(
+                    (
+                        device.id,
+                        management_point.embedded_id,
+                        management_point.management_point_type,
+                    )
+                    for management_point in device.management_points
+                ),
+            )
+        }
 
     def _determine_update_interval(self) -> timedelta:
         """Determine the next polling interval."""
