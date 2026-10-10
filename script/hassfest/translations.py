@@ -356,6 +356,73 @@ _EXCEPTIONS_SCHEMA = {
 }
 
 
+RELEASE_NOTES_MESSAGES_SCHEMA = cv.schema_with_slug_keys(
+    translation_value_validator,
+    slug_validator=translation_key_validator,
+)
+
+ENTITY_COMPONENT_TRANSLATION_SCHEMA = {
+    probatio.Optional("name"): str,
+    probatio.Optional("state"): cv.schema_with_slug_keys(
+        custom_translation_value_validator(allow_placeholders=False),
+        slug_validator=translation_key_validator,
+    ),
+    probatio.Optional("state_attributes"): cv.schema_with_slug_keys(
+        {
+            probatio.Optional("name"): str,
+            probatio.Optional("state"): cv.schema_with_slug_keys(
+                custom_translation_value_validator(allow_placeholders=False),
+                slug_validator=translation_key_validator,
+            ),
+        },
+        slug_validator=translation_key_validator,
+    ),
+}
+
+ENTITY_TRANSLATION_SCHEMA = {
+    probatio.Optional("name"): translation_value_validator,
+    probatio.Optional("state"): cv.schema_with_slug_keys(
+        custom_translation_value_validator(allow_placeholders=False),
+        slug_validator=translation_key_validator,
+    ),
+    probatio.Optional("state_attributes"): cv.schema_with_slug_keys(
+        {
+            probatio.Optional("name"): custom_translation_value_validator(
+                allow_placeholders=False
+            ),
+            probatio.Optional("state"): cv.schema_with_slug_keys(
+                custom_translation_value_validator(allow_placeholders=False),
+                slug_validator=translation_key_validator,
+            ),
+        },
+        slug_validator=translation_key_validator,
+    ),
+    probatio.Optional("unit_of_measurement"): custom_translation_value_validator(
+        allow_placeholders=False
+    ),
+}
+
+ENTITY_COMPONENT_SCHEMA = probatio.Schema(
+    {
+        probatio.Optional("release_notes_messages"): RELEASE_NOTES_MESSAGES_SCHEMA,
+        probatio.Any("_", cv.slug): ENTITY_COMPONENT_TRANSLATION_SCHEMA,
+    }
+)
+
+ENTITY_SCHEMA = probatio.Schema(
+    {
+        probatio.Optional("update"): {
+            probatio.Optional("release_notes_messages"): RELEASE_NOTES_MESSAGES_SCHEMA,
+            translation_key_validator: ENTITY_TRANSLATION_SCHEMA,
+        },
+        cv.slug: cv.schema_with_slug_keys(
+            ENTITY_TRANSLATION_SCHEMA,
+            slug_validator=translation_key_validator,
+        ),
+    }
+)
+
+
 def _with_integration(
     schema: probatio.Schema, config: Config, integration: Integration
 ) -> Callable[[Any], Any]:
@@ -498,68 +565,14 @@ def _gen_strings_schema(
                 probatio.Optional("description"): translation_value_validator,
             },
             probatio.Optional("issues"): gen_issues_schema(frontend_issues),
-            probatio.Optional("entity_component"): cv.schema_with_slug_keys(
-                {
-                    probatio.Optional("name"): str,
-                    probatio.Optional("state"): cv.schema_with_slug_keys(
-                        custom_translation_value_validator(allow_placeholders=False),
-                        slug_validator=translation_key_validator,
-                    ),
-                    probatio.Optional("state_attributes"): cv.schema_with_slug_keys(
-                        {
-                            probatio.Optional("name"): str,
-                            probatio.Optional("state"): cv.schema_with_slug_keys(
-                                custom_translation_value_validator(
-                                    allow_placeholders=False
-                                ),
-                                slug_validator=translation_key_validator,
-                            ),
-                        },
-                        slug_validator=translation_key_validator,
-                    ),
-                },
-                slug_validator=probatio.Any("_", cv.slug),
-            ),
+            probatio.Optional("entity_component"): ENTITY_COMPONENT_SCHEMA,
             probatio.Optional("device"): cv.schema_with_slug_keys(
                 {
                     probatio.Optional("name"): translation_value_validator,
                 },
                 slug_validator=translation_key_validator,
             ),
-            probatio.Optional("entity"): cv.schema_with_slug_keys(
-                cv.schema_with_slug_keys(
-                    {
-                        probatio.Optional("name"): translation_value_validator,
-                        probatio.Optional("state"): cv.schema_with_slug_keys(
-                            custom_translation_value_validator(
-                                allow_placeholders=False
-                            ),
-                            slug_validator=translation_key_validator,
-                        ),
-                        probatio.Optional("state_attributes"): cv.schema_with_slug_keys(
-                            {
-                                probatio.Optional(
-                                    "name"
-                                ): custom_translation_value_validator(
-                                    allow_placeholders=False
-                                ),
-                                probatio.Optional("state"): cv.schema_with_slug_keys(
-                                    custom_translation_value_validator(
-                                        allow_placeholders=False
-                                    ),
-                                    slug_validator=translation_key_validator,
-                                ),
-                            },
-                            slug_validator=translation_key_validator,
-                        ),
-                        probatio.Optional(
-                            "unit_of_measurement"
-                        ): custom_translation_value_validator(allow_placeholders=False),
-                    },
-                    slug_validator=translation_key_validator,
-                ),
-                slug_validator=cv.slug,
-            ),
+            probatio.Optional("entity"): ENTITY_SCHEMA,
             **_EXCEPTIONS_SCHEMA,
             probatio.Optional("services"): cv.schema_with_slug_keys(
                 {
