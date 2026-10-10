@@ -457,7 +457,7 @@ aioswitcher==6.1.3
 aiosyncthing==0.7.1
 
 # homeassistant.components.tankerkoenig
-aiotankerkoenig==0.5.3
+aiotankerkoenig==0.5.5
 
 # homeassistant.components.tedee
 aiotedee==0.3.0
