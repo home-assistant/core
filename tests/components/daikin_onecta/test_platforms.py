@@ -374,13 +374,6 @@ async def test_command_cache_survives_model_replacement(
     coordinator = config_entry.runtime_data
     execute = _execute_typed_command(config_entry)
     coordinator.api.async_execute_command = execute
-    if service == SERVICE_SET_PERCENTAGE:
-        await hass.services.async_call(
-            FAN_DOMAIN,
-            SERVICE_SET_PRESET_MODE,
-            {ATTR_ENTITY_ID: entity_id, "preset_mode": "manualFan"},
-            blocking=True,
-        )
 
     async def replace_model(command: Callable[[OnectaClient], Awaitable[None]]) -> bool:
         for device in coordinator.data.values():
@@ -408,8 +401,8 @@ async def test_air_purifier_speed_updates_captured_mode_after_model_replacement(
     coordinator.api.async_execute_command = execute
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: "fan.air_purifier", "preset_mode": "manualFan"},
+        SERVICE_SET_PERCENTAGE,
+        {ATTR_ENTITY_ID: "fan.air_purifier", "percentage": 50},
         blocking=True,
     )
     device = next(
@@ -912,12 +905,6 @@ async def test_air_purifier_percentage_switches_to_manual_and_updates_cache(
 
     await hass.services.async_call(
         FAN_DOMAIN,
-        SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: "fan.air_purifier", "preset_mode": "manualFan"},
-        blocking=True,
-    )
-    await hass.services.async_call(
-        FAN_DOMAIN,
         SERVICE_SET_PERCENTAGE,
         {ATTR_ENTITY_ID: "fan.air_purifier", "percentage": 100},
         blocking=True,
@@ -925,7 +912,8 @@ async def test_air_purifier_percentage_switches_to_manual_and_updates_cache(
 
     state = hass.states.get("fan.air_purifier")
     assert state is not None
-    assert state.attributes["preset_mode"] == "manualFan"
+    assert state.attributes["preset_mode"] is None
+    assert "manualFan" not in state.attributes["preset_modes"]
     assert state.attributes["percentage"] == 100
 
 
@@ -947,6 +935,7 @@ async def test_air_purifier_turn_off_then_on_updates_cached_state(
     state = hass.states.get("fan.air_purifier")
     assert state is not None
     assert state.state == "off"
+    assert state.attributes["percentage"] == 0
 
     await hass.services.async_call(
         FAN_DOMAIN,
@@ -975,6 +964,54 @@ async def test_air_purifier_ignores_unchanged_preset(
     )
 
     execute_command.assert_not_awaited()
+
+
+async def test_air_purifier_percentage_turns_on_and_exits_preset(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """A nonzero manual speed powers on an off purifier and clears its preset."""
+    await _async_setup_fixture(hass, config_entry, "mc80z")
+    config_entry.runtime_data.api.async_execute_command = _execute_typed_command(
+        config_entry
+    )
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        FAN_SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: "fan.air_purifier"},
+        blocking=True,
+    )
+    assert hass.states.get("fan.air_purifier").attributes["percentage"] == 0
+
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        SERVICE_SET_PERCENTAGE,
+        {ATTR_ENTITY_ID: "fan.air_purifier", "percentage": 100},
+        blocking=True,
+    )
+    state = hass.states.get("fan.air_purifier")
+    assert state is not None
+    assert state.state == "on"
+    assert state.attributes["preset_mode"] is None
+    assert state.attributes["percentage"] == 100
+
+
+async def test_air_purifier_rejects_manual_speed_as_preset(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """The HA preset action must not expose the native manual speed mode."""
+    await _async_setup_fixture(hass, config_entry, "mc80z")
+    command = _execute_typed_command(config_entry)
+    config_entry.runtime_data.api.async_execute_command = command
+
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            FAN_DOMAIN,
+            SERVICE_SET_PRESET_MODE,
+            {ATTR_ENTITY_ID: "fan.air_purifier", "preset_mode": "manualFan"},
+            blocking=True,
+        )
+
+    command.assert_not_awaited()
 
 
 async def test_air_purifier_does_not_expose_read_only_preset_modes() -> None:

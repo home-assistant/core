@@ -1060,7 +1060,6 @@
         'area_id': None,
         'capabilities': dict({
           <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
-            'manualFan',
             'autoFan',
             'econo',
             'antiPollen',
@@ -1093,7 +1092,7 @@
         'platform': 'daikin_onecta',
         'previous_unique_id': None,
         'suggested_object_id': None,
-        'supported_features': <FanEntityFeature: 56>,
+        'supported_features': <FanEntityFeature: 57>,
         'translation_key': None,
         'unique_id': '1c80e348-61c1-4f0d-a8b1-917f2f904529_climateControl_air_purifier',
         'unit_of_measurement': None,
@@ -1101,9 +1100,10 @@
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'air-purifier',
+          <FanEntityStateAttribute.PERCENTAGE: 'percentage'>: None,
+          <FanEntityStateAttribute.PERCENTAGE_STEP: 'percentage_step'>: 25.0,
           <FanEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'econo',
           <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
-            'manualFan',
             'autoFan',
             'econo',
             'antiPollen',
@@ -1111,7 +1111,7 @@
             'auto',
             'moist',
           ]),
-          <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <FanEntityFeature: 56>,
+          <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <FanEntityFeature: 57>,
         }),
         'context': <ANY>,
         'entity_id': 'fan.air_purifier',
