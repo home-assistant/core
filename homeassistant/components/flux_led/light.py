@@ -4,10 +4,8 @@ import ast
 import logging
 from typing import Any, Final, override
 
-from flux_led.const import MultiColorEffects
 from flux_led.protocol import MusicMode
 from flux_led.utils import rgbcw_brightness, rgbcw_to_rgbwc, rgbw_brightness
-import probatio
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -21,27 +19,19 @@ from homeassistant.components.light import (
     LightEntity,
     LightEntityFeature,
 )
-from homeassistant.const import CONF_EFFECT
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.typing import VolDictType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
-    CONF_COLORS,
     CONF_CUSTOM_EFFECT_COLORS,
     CONF_CUSTOM_EFFECT_SPEED_PCT,
     CONF_CUSTOM_EFFECT_TRANSITION,
-    CONF_SPEED_PCT,
-    CONF_TRANSITION,
     DEFAULT_EFFECT_SPEED,
     MIN_CCT_BRIGHTNESS,
     MIN_RGB_BRIGHTNESS,
     MULTI_BRIGHTNESS_COLOR_MODES,
     TRANSITION_GRADUAL,
-    TRANSITION_JUMP,
-    TRANSITION_STROBE,
 )
 from .coordinator import FluxLedConfigEntry, FluxLedUpdateCoordinator
 from .entity import FluxOnOffEntity
@@ -66,79 +56,12 @@ MODE_ATTRS = {
     ATTR_WHITE,
 }
 
-ATTR_FOREGROUND_COLOR: Final = "foreground_color"
-ATTR_BACKGROUND_COLOR: Final = "background_color"
-ATTR_SENSITIVITY: Final = "sensitivity"
-ATTR_LIGHT_SCREEN: Final = "light_screen"
 
 # Constant color temp values for 2 flux_led special modes
 # Warm-white and Cool-white modes
 COLOR_TEMP_WARM_VS_COLD_WHITE_CUT_OFF: Final = 285
 
 EFFECT_CUSTOM: Final = "custom"
-
-SERVICE_CUSTOM_EFFECT: Final = "set_custom_effect"
-SERVICE_SET_ZONES: Final = "set_zones"
-SERVICE_SET_MUSIC_MODE: Final = "set_music_mode"
-
-CUSTOM_EFFECT_DICT: VolDictType = {
-    probatio.Required(CONF_COLORS): probatio.All(
-        probatio.EnsureList(),
-        probatio.Length(min=1, max=16),
-        [
-            probatio.All(
-                probatio.Coerce(tuple),
-                probatio.ExactSequence((cv.byte, cv.byte, cv.byte)),
-            )
-        ],
-    ),
-    probatio.Optional(CONF_SPEED_PCT, default=50): probatio.All(
-        probatio.Coerce(int), probatio.Range(min=0, max=100)
-    ),
-    probatio.Optional(CONF_TRANSITION, default=TRANSITION_GRADUAL): probatio.All(
-        cv.string, probatio.In([TRANSITION_GRADUAL, TRANSITION_JUMP, TRANSITION_STROBE])
-    ),
-}
-
-SET_MUSIC_MODE_DICT: VolDictType = {
-    probatio.Optional(ATTR_SENSITIVITY, default=100): probatio.All(
-        probatio.Coerce(int), probatio.Range(min=0, max=100)
-    ),
-    probatio.Optional(ATTR_BRIGHTNESS, default=100): probatio.All(
-        probatio.Coerce(int), probatio.Range(min=0, max=100)
-    ),
-    probatio.Optional(ATTR_EFFECT, default=1): probatio.All(
-        probatio.Coerce(int), probatio.Range(min=0, max=16)
-    ),
-    probatio.Optional(ATTR_LIGHT_SCREEN, default=False): bool,
-    probatio.Optional(ATTR_FOREGROUND_COLOR): probatio.All(
-        probatio.Coerce(tuple), probatio.ExactSequence((cv.byte,) * 3)
-    ),
-    probatio.Optional(ATTR_BACKGROUND_COLOR): probatio.All(
-        probatio.Coerce(tuple), probatio.ExactSequence((cv.byte,) * 3)
-    ),
-}
-
-SET_ZONES_DICT: VolDictType = {
-    probatio.Required(CONF_COLORS): probatio.All(
-        probatio.EnsureList(),
-        probatio.Length(min=1, max=2048),
-        [
-            probatio.All(
-                probatio.Coerce(tuple),
-                probatio.ExactSequence((cv.byte, cv.byte, cv.byte)),
-            )
-        ],
-    ),
-    probatio.Optional(CONF_SPEED_PCT, default=50): probatio.All(
-        probatio.Coerce(int), probatio.Range(min=0, max=100)
-    ),
-    probatio.Optional(
-        CONF_EFFECT, default=MultiColorEffects.STATIC.name.lower()
-    ): probatio.All(
-        cv.string, probatio.In([effect.name.lower() for effect in MultiColorEffects])
-    ),
-}
 
 
 async def async_setup_entry(
@@ -149,22 +72,6 @@ async def async_setup_entry(
     """Set up the Flux lights."""
     coordinator = entry.runtime_data
 
-    platform = entity_platform.async_get_current_platform()
-    platform.async_register_entity_service(
-        SERVICE_CUSTOM_EFFECT,
-        CUSTOM_EFFECT_DICT,
-        "async_set_custom_effect",
-    )
-    platform.async_register_entity_service(
-        SERVICE_SET_ZONES,
-        SET_ZONES_DICT,
-        "async_set_zones",
-    )
-    platform.async_register_entity_service(
-        SERVICE_SET_MUSIC_MODE,
-        SET_MUSIC_MODE_DICT,
-        "async_set_music_mode",
-    )
     options = entry.options
 
     try:

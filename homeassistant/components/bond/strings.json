@@ -28,6 +28,11 @@
       }
     }
   },
+  "exceptions": {
+    "invalid_token": {
+      "message": "The Bond access token is no longer valid"
+    }
+  },
   "services": {
     "set_fan_speed_tracked_state": {
       "description": "Sets the tracked fan speed for a Bond fan.",

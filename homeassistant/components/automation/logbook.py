@@ -14,8 +14,7 @@ from homeassistant.components.logbook import (
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_NAME
 from homeassistant.core import HomeAssistant, callback
 
-from . import ATTR_SOURCE, EVENT_AUTOMATION_TRIGGERED
-from .const import DOMAIN
+from .const import ATTR_SOURCE, DOMAIN, EVENT_AUTOMATION_TRIGGERED
 
 
 @callback

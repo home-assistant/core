@@ -404,6 +404,7 @@ set_program_and_options:
                 - consumer_products_coffee_maker_enum_type_coffee_temperature_94_c
                 - consumer_products_coffee_maker_enum_type_coffee_temperature_95_c
                 - consumer_products_coffee_maker_enum_type_coffee_temperature_96_c
+                - consumer_products_coffee_maker_enum_type_coffee_temperature_98_c
         consumer_products_coffee_maker_option_bean_container_selection:
           example: consumer_products_coffee_maker_enum_type_bean_container_selection_right
           required: false

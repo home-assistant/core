@@ -4,13 +4,10 @@ from typing import override
 
 from homeassistant.components.device_tracker import TrackerEntity
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import LoJackConfigEntry
-from .const import DOMAIN
-from .coordinator import LoJackCoordinator, get_device_name
+from .entity import LoJackEntity
 
 PARALLEL_UPDATES = 0
 
@@ -27,28 +24,10 @@ async def async_setup_entry(
     )
 
 
-class LoJackDeviceTracker(CoordinatorEntity[LoJackCoordinator], TrackerEntity):
+class LoJackDeviceTracker(LoJackEntity, TrackerEntity):
     """Representation of a LoJack device tracker."""
 
-    _attr_has_entity_name = True
     _attr_name = None  # Main entity of the device, uses device name directly
-
-    def __init__(self, coordinator: LoJackCoordinator) -> None:
-        """Initialize the device tracker."""
-        super().__init__(coordinator)
-        self._attr_unique_id = coordinator.vehicle.id
-
-    @property
-    @override
-    def device_info(self) -> DeviceInfo:
-        """Return the device info."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self.coordinator.vehicle.id)},
-            name=get_device_name(self.coordinator.vehicle),
-            manufacturer="Spireon LoJack",
-            model=self.coordinator.vehicle.model,
-            serial_number=self.coordinator.vehicle.vin,
-        )
 
     @property
     @override
@@ -69,10 +48,3 @@ class LoJackDeviceTracker(CoordinatorEntity[LoJackCoordinator], TrackerEntity):
         if self.coordinator.data.accuracy is not None:
             return int(self.coordinator.data.accuracy)
         return 0
-
-    @property
-    @override
-    def battery_level(self) -> int | None:
-        """Return the battery level of the device (if applicable)."""
-        # LoJack devices report vehicle battery voltage, not percentage
-        return None
