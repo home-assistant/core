@@ -98,6 +98,8 @@
         "zha_migration_failed": "The ZHA migration did not succeed."
       },
       "error": {
+        "channel_change_refused": "The channel change was refused, so nothing was changed: {error}",
+        "channel_change_unknown": "Whether the channel change went through is unknown: {error}. The stored channel was left as it was; check which channel the Thread network is on, then try again.",
         "unknown": "[%key:common::config_flow::error::unknown%]"
       },
       "progress": {
