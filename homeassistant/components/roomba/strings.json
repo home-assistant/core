@@ -90,10 +90,11 @@
     }
   },
   "exceptions": {
-    "empty_regions": {
-      "message": "The command {command} needs at least one region. An empty regions list would make the robot clean the whole home."
     "cannot_connect": {
       "message": "Failed to connect to Roomba at {host}"
+    },
+    "empty_regions": {
+      "message": "The command {command} needs at least one region. An empty regions list would make the robot clean the whole home."
     },
     "invalid_fan_speed": {
       "message": "Invalid fan speed {fan_speed}. Expected one of: {fan_speeds}."
