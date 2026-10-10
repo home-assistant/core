@@ -3,11 +3,10 @@
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.trigger import Trigger
 
-from .triggers.turn_on import LegacyTurnOnTrigger, TurnOnTrigger
+from .triggers.turn_on import TurnOnTrigger
 
 TRIGGERS: dict[str, type[Trigger]] = {
-    "turn_on": LegacyTurnOnTrigger,
-    "turn_on_requested": TurnOnTrigger,
+    "turn_on": TurnOnTrigger,
 }
 
 

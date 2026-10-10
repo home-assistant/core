@@ -87,9 +87,6 @@
     "source_not_found": {
       "message": "Source {source} not found in the sources list for {name}."
     },
-    "trigger_without_target": {
-      "message": "The LG webOS TV turn on trigger requires a target."
-    },
     "unhandled_trigger_type": {
       "message": "Unhandled trigger type: {trigger_type}"
     }
@@ -161,8 +158,18 @@
     }
   },
   "triggers": {
-    "turn_on_requested": {
+    "turn_on": {
       "description": "Triggers when one or more LG webOS TVs are requested to turn on.",
+      "fields": {
+        "device_id": {
+          "description": "The TVs to listen to. At least one device or entity is required.",
+          "name": "Devices"
+        },
+        "entity_id": {
+          "description": "The TV media players to listen to. At least one device or entity is required.",
+          "name": "Entities"
+        }
+      },
       "name": "TV is requested to turn on"
     }
   }

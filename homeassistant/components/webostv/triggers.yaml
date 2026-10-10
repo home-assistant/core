@@ -1,7 +1,17 @@
-turn_on_requested:
-  target:
-    entity:
-      - domain: media_player
-        integration: webostv
-    device:
-      - integration: webostv
+turn_on:
+  fields:
+    device_id:
+      required: false
+      selector:
+        device:
+          filter:
+            - integration: webostv
+          multiple: true
+    entity_id:
+      required: false
+      selector:
+        entity:
+          filter:
+            - domain: media_player
+              integration: webostv
+          multiple: true
