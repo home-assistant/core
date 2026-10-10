@@ -278,6 +278,31 @@ async def test_legacy_service_from_config_entry(
 
 
 @pytest.mark.usefixtures("mock_prowlpy")
+async def test_legacy_service_keeps_other_yaml_notify_platforms(
+    hass: HomeAssistant,
+) -> None:
+    """Test the legacy action from an entry keeps other YAML notify platforms."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="prowl",
+        data={CONF_API_KEY: TEST_API_KEY},
+        source=SOURCE_IMPORT,
+    )
+    entry.add_to_hass(hass)
+    config = {
+        notify.DOMAIN: [
+            {CONF_PLATFORM: DOMAIN, CONF_API_KEY: OTHER_API_KEY, CONF_NAME: "other"}
+        ]
+    }
+    # The entry sets up notify before it is set up from the YAML config
+    assert await async_setup_component(hass, DOMAIN, config)
+    await hass.async_block_till_done()
+
+    assert hass.services.has_service(notify.DOMAIN, "prowl")
+    assert hass.services.has_service(notify.DOMAIN, "other")
+
+
+@pytest.mark.usefixtures("mock_prowlpy")
 async def test_yaml_import_multiple_names(hass: HomeAssistant) -> None:
     """Test several YAML notifiers with the same API key create one entry."""
     await async_setup_component(

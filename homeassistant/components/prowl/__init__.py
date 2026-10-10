@@ -22,11 +22,13 @@ _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = cv.platform_only_config_schema(DOMAIN)
 
+DATA_HASS_CONFIG: HassKey[ConfigType] = HassKey(f"{DOMAIN}_hass_config")
 DATA_YAML_API_KEYS: HassKey[set[str]] = HassKey(f"{DOMAIN}_yaml_api_keys")
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Prowl component."""
+    hass.data[DATA_HASS_CONFIG] = config
     hass.data[DATA_YAML_API_KEYS] = {
         p_config[CONF_API_KEY]
         for platform, p_config in config_per_platform(config, NOTIFY_DOMAIN)
@@ -71,7 +73,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 Platform.NOTIFY,
                 DOMAIN,
                 {CONF_NAME: entry.title, CONF_ENTRY: entry},
-                {},
+                hass.data[DATA_HASS_CONFIG],
             )
         )
 
