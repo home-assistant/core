@@ -1,6 +1,7 @@
 """Time-based One Time Password auth module."""
 
 import asyncio
+from functools import partial
 from io import BytesIO
 from typing import Any, cast, override
 
@@ -210,7 +211,11 @@ class TotpSetupFlow(SetupFlow[TotpAuthModule]):
 
         if user_input:
             verified = await self.hass.async_add_executor_job(
-                pyotp.TOTP(self._ota_secret).verify, user_input["code"]
+                partial(
+                    pyotp.TOTP(self._ota_secret).verify,
+                    user_input["code"],
+                    valid_window=1,
+                )
             )
             if verified:
                 result = await self._auth_module.async_setup_user(
