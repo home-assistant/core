@@ -24,7 +24,6 @@ from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_ENTITY_CATEGORY,
     CONF_ENTITY_ID,
-    CONF_PAYLOAD,
     CONF_PLATFORM,
     EntityCategory,
     Platform,
@@ -33,10 +32,6 @@ from homeassistant.helpers import selector
 from homeassistant.helpers.typing import VolDictType
 
 from ..const import (
-    CONF_PAYLOAD_LENGTH,
-    CONF_RESPOND_TO_READ,
-    CONF_SYNC_STATE,
-    CONF_VALUE,
     DOMAIN,
     SUPPORTED_PLATFORMS_UI,
     ColorTempModes,
@@ -50,16 +45,17 @@ from ..validation import (
     validate_number_attributes,
     validate_sensor_attributes,
 )
-from .const import CONF_DATA, CONF_DPT, CONF_ENTITY, CONF_GA_SEND
+from .const import CONF_DATA, CONF_ENTITY, CONF_GA_SEND
 from .knx_selector import (
     AllSerializeFirst,
-    GASelector,
     GroupAddressConfig,
-    GroupSelect,
-    GroupSelectOption,
+    KnxPayload,
     KnxPayloadSelector,
     KNXSectionFlat,
     KnxSelectOptionsSelector,
+    PayloadValue,
+    RawPayload,
+    SelectOption,
     SyncStateSelector,
     ga,
     group_select,
@@ -153,53 +149,59 @@ class BinarySensorKnxConfig:
 BINARY_SENSOR_KNX_SCHEMA = probatio.DataclassSchema(BinarySensorKnxConfig)
 
 
-def _button_data_sub_validator(config: dict) -> dict:
-    """Validate data matching configured DPT."""
-    dpt = config[CONF_GA_SEND].get(CONF_DPT)
-    transcoder = None
-    if dpt:
-        transcoder = DPTBase.parse_transcoder(dpt)
-        assert transcoder is not None  # already checked by GASelector
+@dataclass(kw_only=True, slots=True)
+class ButtonKnxConfig:
+    """UI configuration of a KNX button."""
 
-        if CONF_VALUE in config[CONF_DATA]:
+    ga_send: Annotated[
+        GroupAddressConfig,
+        ga(
+            state=False,
+            write_required=True,
+            passive=False,
+            dpt=["numeric", "enum", "complex", "string"],
+            dpt_required=False,  # for raw payload support
+        ),
+    ]
+    data: Annotated[
+        KnxPayload, probatio.Coerce(KnxPayloadSelector(ga_path=CONF_GA_SEND))
+    ]
+
+
+def _button_payload_matches_dpt(config: ButtonKnxConfig) -> ButtonKnxConfig:
+    """Validate the payload against the configured DPT."""
+    if config.ga_send.dpt is None:
+        # without DPT only raw payloads are allowed
+        if isinstance(config.data, RawPayload):
+            return config
+        raise probatio.Invalid("Invalid configuration for button entity")
+
+    transcoder = DPTBase.parse_transcoder(config.ga_send.dpt)
+    assert transcoder is not None  # already checked by GASelector
+    match config.data:
+        case PayloadValue(value=value):
             try:
-                transcoder.to_knx(config[CONF_DATA][CONF_VALUE])
+                transcoder.to_knx(value)
             except ConversionError as ex:
                 raise probatio.Invalid(
                     f"Value invalid for DPT {transcoder.dpt_number_str()}",
-                    path=([CONF_DATA]),
+                    path=[CONF_DATA],
                 ) from ex
-        elif CONF_PAYLOAD_LENGTH in config[CONF_DATA]:
-            length = config[CONF_DATA][CONF_PAYLOAD_LENGTH]
+        case RawPayload(payload_length=length):
             if length != transcoder.payload_length or (
                 length != 0 and transcoder.payload_type is DPTBinary
             ):
                 raise probatio.Invalid(
                     f"Payload length invalid for DPT {transcoder.dpt_number_str()}",
-                    path=([CONF_DATA]),
+                    path=[CONF_DATA],
                 )
-        return config
-    # without DPT only raw allowed -> payload + payload_length (checked by KnxPayloadSelector)
-    if CONF_PAYLOAD_LENGTH in config[CONF_DATA]:
-        return config
-    raise probatio.Invalid("Invalid configuration for button entity")
+    return config
 
 
 BUTTON_KNX_SCHEMA = AllSerializeFirst(
-    probatio.Schema(
-        {
-            probatio.Required(CONF_GA_SEND): GASelector(
-                state=False,
-                write_required=True,
-                passive=False,
-                dpt=["numeric", "enum", "complex", "string"],
-                dpt_required=False,  # for raw payload support
-            ),
-            probatio.Required(CONF_DATA): KnxPayloadSelector(ga_path=CONF_GA_SEND),
-        },
-    ),
-    _button_data_sub_validator,
+    probatio.DataclassSchema(ButtonKnxConfig), _button_payload_matches_dpt
 )
+
 
 _TRAVELLING_TIME_SELECTOR = selector.NumberSelector(
     selector.NumberSelectorConfig(min=0, max=1000, step=0.1, unit_of_measurement="s")
@@ -602,124 +604,131 @@ class SceneKnxConfig:
 SCENE_KNX_SCHEMA = probatio.DataclassSchema(SceneKnxConfig)
 
 
-def _select_options_sub_validator(config: dict) -> dict:
-    """Validate select options against the configured DPT.
+@dataclass(kw_only=True, slots=True)
+class SelectOptionsFromDpt:
+    """Select options derived from an enum DPT."""
 
-    The `options_source` group selects one of two modes, distinguished by the
-    group address key:
-    - `ga_enum`: options are derived from a required enum DPT.
-    - `ga_custom`: options are configured manually, each as a typed value (needs
-      a DPT) or a raw payload. Payload ranges are validated per option by the
-      options selector.
+    ga_enum: Annotated[GroupAddressConfig, ga(write_required=True, dpt=["enum"])]
 
-    All options are sent to the same group address, so they have to share a
-    single payload length - taken from the DPT if one is configured.
+
+@dataclass(kw_only=True, slots=True)
+class SelectCustomOptions:
+    """Manually configured select options."""
+
+    ga_custom: Annotated[
+        GroupAddressConfig,
+        ga(
+            write_required=True,
+            dpt=["numeric", "enum", "complex", "string"],
+            dpt_required=False,
+        ),
+    ]
+    custom_options: Annotated[
+        list[SelectOption],
+        probatio.Coerce(KnxSelectOptionsSelector(ga_path=SelectConf.GA_CUSTOM)),
+    ]
+
+
+@dataclass(kw_only=True, slots=True)
+class SelectKnxConfig:
+    """UI configuration of a KNX select."""
+
+    options_source: Annotated[
+        SelectOptionsFromDpt | SelectCustomOptions,
+        group_select(
+            ("from_dpt", SelectOptionsFromDpt),
+            ("custom", SelectCustomOptions),
+            collapsible=False,
+        ),
+    ]
+    respond_to_read: Annotated[bool, selector.BooleanSelector()] = False
+    sync_state: SyncState = True
+
+
+def _select_options_match_dpt(config: SelectKnxConfig) -> SelectKnxConfig:
+    """Validate select options against the configured DPT."""
+    match config.options_source:
+        case SelectOptionsFromDpt(ga_enum=ga_enum):
+            if (
+                ga_enum.dpt is None
+                or get_supported_dpts()[ga_enum.dpt]["dpt_class"] != "enum"
+            ):
+                raise probatio.Invalid(
+                    "An enum data point type is required",
+                    path=[SelectConf.OPTIONS_SOURCE, SelectConf.GA_ENUM],
+                )
+        case SelectCustomOptions(ga_custom=ga_custom, custom_options=options):
+            _validate_custom_options(options, ga_custom.dpt)
+    return config
+
+
+def _validate_custom_options(options: list[SelectOption], dpt: str | None) -> None:
+    """Validate manually configured options.
+
+    Options are typed values (needing a DPT) or raw payloads. Payload ranges are
+    validated per option by the options selector. All options are sent to the
+    same group address, so they have to share a single payload length - taken
+    from the DPT if one is configured.
     """
-    source = config[SelectConf.OPTIONS_SOURCE]
-    if SelectConf.GA_ENUM in source:
-        dpt = source[SelectConf.GA_ENUM].get(CONF_DPT)
-        if dpt is None or get_supported_dpts()[dpt]["dpt_class"] != "enum":
-            raise probatio.Invalid(
-                "An enum data point type is required",
-                path=[SelectConf.OPTIONS_SOURCE, SelectConf.GA_ENUM],
-            )
-        return config
-
     error_path: list[Hashable] = [SelectConf.OPTIONS_SOURCE, SelectConf.CUSTOM_OPTIONS]
-    options = source[SelectConf.CUSTOM_OPTIONS]
     if not options:
         raise probatio.Invalid("At least one option is required", path=error_path)
 
-    dpt = source[SelectConf.GA_CUSTOM].get(CONF_DPT)
     transcoder = DPTBase.parse_transcoder(dpt) if dpt is not None else None
     payload_length = raw_payload_length(transcoder) if transcoder is not None else None
 
     options_seen: set[str] = set()
     payloads_seen: set[int] = set()
     for option in options:
-        name = option[SelectConf.OPTION]
+        name = option.name
         if name in options_seen:
             raise probatio.Invalid(
                 f"Duplicate option not allowed: {name}", path=error_path
             )
         options_seen.add(name)
 
-        if CONF_VALUE in option:
-            if transcoder is None:
-                raise probatio.Invalid(
-                    f"A data point type is required for typed option '{name}'",
-                    path=error_path,
-                )
-            try:
-                payload = int.from_bytes(
-                    transcoder.validate_payload(transcoder.to_knx(option[CONF_VALUE])),
-                    byteorder="big",
-                )
-            except ConversionError as ex:
-                raise probatio.Invalid(
-                    f"Value invalid for option '{name}' with DPT "
-                    f"{transcoder.dpt_number_str()}",
-                    path=error_path,
-                ) from ex
-        else:
-            option_length = option[CONF_PAYLOAD_LENGTH]
-            if payload_length is None:
-                payload_length = option_length
-            elif option_length != payload_length:
-                expected = (
-                    f"DPT {transcoder.dpt_number_str()}"
-                    if transcoder is not None
-                    else "the other options"
-                )
-                raise probatio.Invalid(
-                    f"Payload length {option_length} of option '{name}' doesn't "
-                    f"match payload length {payload_length} of {expected}",
-                    path=error_path,
-                )
-            payload = int(option[CONF_PAYLOAD], 16)
+        match option.data:
+            case PayloadValue(value=value):
+                if transcoder is None:
+                    raise probatio.Invalid(
+                        f"A data point type is required for typed option '{name}'",
+                        path=error_path,
+                    )
+                try:
+                    payload = int.from_bytes(
+                        transcoder.validate_payload(transcoder.to_knx(value)),
+                        byteorder="big",
+                    )
+                except ConversionError as ex:
+                    raise probatio.Invalid(
+                        f"Value invalid for option '{name}' with DPT "
+                        f"{transcoder.dpt_number_str()}",
+                        path=error_path,
+                    ) from ex
+            case RawPayload(payload=payload, payload_length=option_length):
+                if payload_length is None:
+                    payload_length = option_length
+                elif option_length != payload_length:
+                    expected = (
+                        f"DPT {transcoder.dpt_number_str()}"
+                        if transcoder is not None
+                        else "the other options"
+                    )
+                    raise probatio.Invalid(
+                        f"Payload length {option_length} of option '{name}' doesn't "
+                        f"match payload length {payload_length} of {expected}",
+                        path=error_path,
+                    )
 
         if payload in payloads_seen:
             raise probatio.Invalid(
                 f"Duplicate payload not allowed for option '{name}'", path=error_path
             )
         payloads_seen.add(payload)
-    return config
 
 
 SELECT_KNX_SCHEMA = AllSerializeFirst(
-    probatio.Schema(
-        {
-            probatio.Required(SelectConf.OPTIONS_SOURCE): GroupSelect(
-                GroupSelectOption(
-                    translation_key="from_dpt",
-                    schema={
-                        probatio.Required(SelectConf.GA_ENUM): GASelector(
-                            write_required=True, dpt=["enum"]
-                        ),
-                    },
-                ),
-                GroupSelectOption(
-                    translation_key="custom",
-                    schema={
-                        probatio.Required(SelectConf.GA_CUSTOM): GASelector(
-                            write_required=True,
-                            dpt=["numeric", "enum", "complex", "string"],
-                            dpt_required=False,
-                        ),
-                        probatio.Required(
-                            SelectConf.CUSTOM_OPTIONS
-                        ): KnxSelectOptionsSelector(ga_path=SelectConf.GA_CUSTOM),
-                    },
-                ),
-                collapsible=False,
-            ),
-            probatio.Optional(
-                CONF_RESPOND_TO_READ, default=False
-            ): selector.BooleanSelector(),
-            probatio.Optional(CONF_SYNC_STATE, default=True): SyncStateSelector(),
-        }
-    ),
-    _select_options_sub_validator,
+    probatio.DataclassSchema(SelectKnxConfig), _select_options_match_dpt
 )
 
 
