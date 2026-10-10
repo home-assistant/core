@@ -331,7 +331,6 @@ async def test_list_entities_for_display(
                 "np": "area",
                 "di": "device123",
                 "ei": "test_domain.empty_name",
-                "en": "",
                 "hn": True,
                 "lb": [],
                 "pl": "test_platform",
