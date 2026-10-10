@@ -113,7 +113,9 @@ ZONE_SENSORS: tuple[HydrawiseSensorEntityDescription, ...] = (
     HydrawiseSensorEntityDescription(
         key="watering_time",
         translation_key="watering_time",
+        device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_display_precision=0,
         value_fn=lambda sensor: (
             int(
                 sensor.zone.scheduled_runs.current_run.remaining_time.total_seconds()
