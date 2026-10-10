@@ -2579,6 +2579,9 @@ pyrisco==0.8.1
 # homeassistant.components.thread
 pyroute2==0.9.6
 
+# homeassistant.components.rtl_433
+pyrtl_433==0.4.0
+
 # homeassistant.components.rympro
 pyrympro==0.0.9
 
