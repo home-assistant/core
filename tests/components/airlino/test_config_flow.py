@@ -123,6 +123,7 @@ async def test_user_flow_uses_custom_port(
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == MAC
     assert result["data"]["port"] == 9000
     assert result["data"]["api_version"] == "v21"
 
@@ -174,6 +175,7 @@ async def test_user_flow_aborts_duplicate_in_progress_flow(
 
     abort.assert_any_call(aborted_flow_id)
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == MAC
 
 
 @pytest.fixture
@@ -262,6 +264,7 @@ async def test_zeroconf_flow_confirms_and_creates_entry(
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == MAC
     assert result["title"] == "Living Room"
     assert result["data"][CONF_HOST] == HOST
     assert result["data"]["port"] == DEFAULT_PORT
