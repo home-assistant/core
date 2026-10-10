@@ -34,7 +34,9 @@ class ConnectionRegistry:
     """Keep connection registrations and manifest matchers."""
 
     integrations: dict[str, list[tuple[str, int | str]]]
+    """Discovery matchers keyed by device integration domain."""
     connections: dict[str, RegisteredConnection] = field(default_factory=dict)
+    """Registered connections keyed by provider config entry ID."""
     changed: list[Callable[[ConnectionChange], None]] = field(default_factory=list)
     pending: set[str] = field(default_factory=set)
 
