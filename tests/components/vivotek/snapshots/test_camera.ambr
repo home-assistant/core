@@ -5,9 +5,7 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': dict({
-      <CameraEntityCapabilityAttribute.HAS_TWO_WAY_AUDIO: 'has_two_way_audio'>: False,
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -45,7 +43,6 @@
       <CameraEntityStateAttribute.BRAND: 'brand'>: 'VIVOTEK',
       <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: '/api/camera_proxy/camera.vivotek_camera?token=1caab5c3b3',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vivotek Camera',
-      <CameraEntityCapabilityAttribute.HAS_TWO_WAY_AUDIO: 'has_two_way_audio'>: False,
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CameraEntityFeature: 2>,
     }),
     'context': <ANY>,

@@ -10,6 +10,7 @@ from homeassistant.components.camera import (
     CameraState,
     async_get_image,
     async_get_stream_source,
+    get_camera_from_entity_id,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
@@ -66,6 +67,7 @@ async def test_camera(
 
     entity_id = f"{Platform.CAMERA}.{TEST_CAM_NAME}_fluent"
     assert hass.states.get(entity_id).state == CameraState.IDLE
+    assert get_camera_from_entity_id(hass, entity_id).supports_two_way_audio
 
     # check getting a image from the camera
     reolink_host.get_snapshot.return_value = b"image"

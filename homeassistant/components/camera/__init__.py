@@ -64,7 +64,6 @@ from .const import (  # noqa: F401
     SERVICE_PLAY_STREAM,
     SERVICE_RECORD,
     SERVICE_SNAPSHOT,
-    CameraEntityCapabilityAttribute,
     CameraEntityFeature,
     CameraEntityStateAttribute,
     CameraState,
@@ -133,6 +132,7 @@ class CameraCapabilities:
     """Camera capabilities."""
 
     frontend_stream_types: set[StreamType]
+    supports_two_way_audio: bool = False
 
 
 async def async_request_stream(hass: HomeAssistant, entity_id: str, fmt: str) -> str:
@@ -361,13 +361,13 @@ async def _async_call_webrtc_provider(
 CACHED_PROPERTIES_WITH_ATTR_ = {
     "brand",
     "frame_interval",
-    "has_two_way_audio",
     "is_on",
     "is_recording",
     "is_streaming",
     "model",
     "motion_detection_enabled",
     "supported_features",
+    "supports_two_way_audio",
 }
 
 
@@ -375,18 +375,13 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     """The base class for camera entities."""
 
     _entity_component_unrecorded_attributes = frozenset(
-        {
-            CameraEntityCapabilityAttribute.HAS_TWO_WAY_AUDIO,
-            CameraEntityStateAttribute.ACCESS_TOKEN,
-            EntityStateAttribute.ENTITY_PICTURE,
-        }
+        {CameraEntityStateAttribute.ACCESS_TOKEN, EntityStateAttribute.ENTITY_PICTURE}
     )
 
     # Entity Properties
     entity_description: CameraEntityDescription
     _attr_brand: str | None = None
     _attr_frame_interval: float = MIN_STREAM_INTERVAL
-    _attr_has_two_way_audio: bool = False
     _attr_is_on: bool = True
     _attr_is_recording: bool = False
     _attr_is_streaming: bool = False
@@ -395,6 +390,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     _attr_should_poll: bool = False  # No need to poll cameras
     _attr_state: None = None  # State is determined by is_on
     _attr_supported_features: CameraEntityFeature = CameraEntityFeature(0)
+    _attr_supports_two_way_audio: bool = False
 
     __supports_stream: CameraEntityFeature | None = None
 
@@ -464,17 +460,9 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         return self._attr_frame_interval
 
     @cached_property
-    def has_two_way_audio(self) -> bool:
+    def supports_two_way_audio(self) -> bool:
         """Return true if the camera supports two way audio."""
-        return self._attr_has_two_way_audio
-
-    @property
-    @override
-    def capability_attributes(self) -> dict[str, Any]:
-        """Return capability attributes."""
-        return {
-            CameraEntityCapabilityAttribute.HAS_TWO_WAY_AUDIO: self.has_two_way_audio
-        }
+        return self._attr_supports_two_way_audio
 
     @property
     @override
@@ -779,7 +767,12 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 if self._webrtc_provider:
                     frontend_stream_types.add(StreamType.WEB_RTC)
 
-        return CameraCapabilities(frontend_stream_types)
+        return CameraCapabilities(
+            frontend_stream_types,
+            # Two way audio is only available over WebRTC
+            supports_two_way_audio=self.supports_two_way_audio
+            and StreamType.WEB_RTC in frontend_stream_types,
+        )
 
     @callback
     @override
