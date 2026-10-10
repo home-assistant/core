@@ -8,6 +8,12 @@ import urllib.parse
 
 import pytest
 
+from homeassistant.components.daikin.const import DOMAIN, KEY_MAC
+from homeassistant.const import CONF_HOST
+from homeassistant.core import HomeAssistant
+
+from tests.common import MockConfigEntry
+
 type ZoneDefinition = list[str | int]
 type ZoneDevice = MagicMock
 
@@ -47,6 +53,23 @@ def configure_zone_device(
     }
 
 
+async def async_setup_daikin(
+    hass: HomeAssistant, zone_device: ZoneDevice
+) -> MockConfigEntry:
+    """Set up a Daikin config entry with a mocked library device."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=zone_device.mac,
+        data={CONF_HOST: "127.0.0.1", KEY_MAC: zone_device.mac},
+    )
+    config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    return config_entry
+
+
 @pytest.fixture
 def zone_device() -> Generator[ZoneDevice]:
     """Return a mocked zone-capable Daikin device and patch its factory."""
@@ -62,6 +85,8 @@ def zone_device() -> Generator[ZoneDevice]:
     device.support_energy_consumption = False
     device.support_humidity = False
     device.support_compressor_frequency = False
+    device.support_demand_control = False
+    device.get_demand_control = MagicMock(return_value={})
     device.compressor_frequency = 0
     device.inside_temperature = 21.0
     device.outside_temperature = 13.0
