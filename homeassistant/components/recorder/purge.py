@@ -12,14 +12,7 @@ from sqlalchemy.orm.session import Session
 from homeassistant.util.collection import chunked_or_all
 from homeassistant.util.json import json_loads
 
-from .db_schema import (
-    SHARED_DATA_OR_LEGACY_EVENT_DATA,
-    EventData,
-    Events,
-    EventTypes,
-    States,
-    StatesMeta,
-)
+from .db_schema import Events, States, StatesMeta
 from .models import DatabaseEngine
 from .queries import (
     attributes_ids_exist_in_states,
@@ -37,6 +30,7 @@ from .queries import (
     delete_statistics_short_term_rows,
     disconnect_states_rows,
     find_entity_ids_to_purge,
+    find_event_data_purge_batch,
     find_event_types_to_purge,
     find_events_to_purge,
     find_latest_statistics_runs_run_id,
@@ -65,6 +59,7 @@ class EventDataPurgeState:
     """Track a historical event-data scan across purge tasks."""
 
     last_event_id: int = 0
+    max_event_id: int | None = None
     purge_before_timestamp: float | None = None
     complete: bool = False
 
@@ -152,6 +147,7 @@ def purge_old_data(
     # Advance the cursor only after the transaction commits so retries cannot skip rows.
     if event_data_purge_state is not None:
         event_data_purge_state.last_event_id = scan_state.last_event_id
+        event_data_purge_state.max_event_id = scan_state.max_event_id
         event_data_purge_state.purge_before_timestamp = (
             scan_state.purge_before_timestamp
         )
@@ -680,30 +676,33 @@ def _purge_filtered_event_data(
         return True
     if scan_state.purge_before_timestamp is None:
         scan_state.purge_before_timestamp = purge_before_timestamp
+    if scan_state.max_event_id is None:
+        scan_state.max_event_id = (
+            session.query(Events.event_id)
+            .order_by(Events.event_id.desc())
+            .limit(1)
+            .scalar()
+            or 0
+        )
     include_event_data = instance.include_event_data
     exclude_event_data = instance.exclude_event_data
     event_types = set(include_event_data) | set(exclude_event_data)
-    events = (
-        session.query(
-            Events.event_id,
-            Events.data_id,
-            EventTypes.event_type,
-            SHARED_DATA_OR_LEGACY_EVENT_DATA,
+    events = session.execute(
+        find_event_data_purge_batch(
+            scan_state.last_event_id, scan_state.max_event_id, instance.max_bind_vars
         )
-        .join(EventTypes)
-        .outerjoin(EventData)
-        .filter(EventTypes.event_type.in_(event_types))
-        .filter(Events.time_fired_ts < scan_state.purge_before_timestamp)
-        .filter(Events.event_id > scan_state.last_event_id)
-        .order_by(Events.event_id)
-        .limit(instance.max_bind_vars)
-        .all()
-    )
+    ).all()
     if events:
         scan_state.last_event_id = events[-1].event_id
     scan_state.complete = len(events) < instance.max_bind_vars
     to_purge: list[tuple[int, int | None]] = []
-    for event_id, data_id, event_type, shared_data in events:
+    for event_id, data_id, event_type, shared_data, time_fired_ts in events:
+        if (
+            event_type not in event_types
+            or time_fired_ts is None
+            or time_fired_ts >= scan_state.purge_before_timestamp
+        ):
+            continue
         data = json_loads(shared_data) if shared_data else {}
         # Recorder discards oversized payloads as {}, so their original filter
         # matches cannot be reconstructed from the stored data.
