@@ -3002,7 +3002,7 @@ rokuecp==0.19.5
 romy==0.0.10
 
 # homeassistant.components.roomba
-roombapy==1.9.1
+roombapy==2.0.2
 
 # homeassistant.components.roon
 roonapi==0.1.6
@@ -3190,7 +3190,7 @@ subarulink==0.7.21
 sunsynk-api-client==1.4.0
 
 # homeassistant.components.surepetcare
-surepy==0.9.0
+surepy==0.10.0
 
 # homeassistant.components.swiss_hydrological_data
 swisshydrodata==0.1.0
