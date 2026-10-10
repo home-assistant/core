@@ -499,6 +499,81 @@ async def test_capability_loss_on_reload(
 @pytest.mark.parametrize(
     ("field", "telemetry", "unsupported", "sensor", "unique_id"), CAPABILITY_CASES
 )
+@pytest.mark.parametrize(
+    "disabled_by", [RegistryEntryDisabler.INTEGRATION, RegistryEntryDisabler.USER]
+)
+@pytest.mark.parametrize(
+    "capability_gaps",
+    [
+        pytest.param(
+            {
+                "has_temperature": {},
+                "port_table": {"port_table": [{"port_idx": 1, "name": "Port 1"}]},
+                "outlet_table": {"outlet_table": [{"index": 1, "name": "Outlet 1"}]},
+            },
+            id="missing",
+        ),
+        pytest.param(
+            {
+                "has_temperature": {"has_temperature": None},
+                "port_table": {
+                    "port_table": [{"port_idx": 1, "name": "Port 1", "port_poe": None}]
+                },
+                "outlet_table": {
+                    "outlet_table": [
+                        {"index": 1, "name": "Outlet 1", "has_metering": None}
+                    ]
+                },
+            },
+            id="null",
+        ),
+    ],
+)
+async def test_disabled_capability_loss_on_update(
+    hass: HomeAssistant,
+    config_entry_factory: ConfigEntryFactoryType,
+    entity_registry: er.EntityRegistry,
+    mock_websocket_message: WebsocketMessageMock,
+    device_payload: list[dict[str, Any]],
+    field: str,
+    unsupported: bool | list[dict[str, Any]],
+    sensor: str,
+    unique_id: str,
+    disabled_by: RegistryEntryDisabler,
+    capability_gaps: dict[str, dict[str, Any]],
+) -> None:
+    """Remove disabled sensors on capability loss and rediscover on recovery."""
+    original = deepcopy(device_payload[0])
+    config_entry = await config_entry_factory()
+    entry = entity_registry.async_update_entity(
+        f"sensor.device_{sensor}", disabled_by=disabled_by
+    )
+    assert entry.unique_id == unique_id
+    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    mock_websocket_message(
+        message=MessageKey.DEVICE, data={**DEVICE, **capability_gaps[field]}
+    )
+    await hass.async_block_till_done()
+    assert entity_registry.async_get(entry.entity_id) == entry
+    assert hass.states.get(entry.entity_id) is None
+
+    mock_websocket_message(
+        message=MessageKey.DEVICE, data={**original, field: deepcopy(unsupported)}
+    )
+    await hass.async_block_till_done()
+    assert entity_registry.async_get(entry.entity_id) is None
+    assert hass.states.get(entry.entity_id) is None
+
+    mock_websocket_message(message=MessageKey.DEVICE, data=original)
+    await hass.async_block_till_done()
+    assert entity_registry.async_get(entry.entity_id) is not None
+
+
+@pytest.mark.parametrize(
+    ("field", "telemetry", "unsupported", "sensor", "unique_id"), CAPABILITY_CASES
+)
 async def test_capability_loss_registry_scope(
     hass: HomeAssistant,
     config_entry_factory: ConfigEntryFactoryType,

@@ -227,12 +227,13 @@ class UnifiEntityLoader:
         domain: Platform | None,
     ) -> bool:
         """Validate if entity is allowed and supported before creating it."""
-        if (
-            description.key,
-            obj_id,
-        ) in self.known_objects or not description.allowed_fn(self.hub, obj_id):
+        if not description.allowed_fn(self.hub, obj_id):
             return False
         supported = description.supported_fn(self.hub, obj_id)
+        if (description.key, obj_id) in self.known_objects and (
+            supported or description.discovery_fn is None
+        ):
+            return False
         if description.discovery_fn is None:
             return supported
         if supported and description.discovery_fn(self.hub, obj_id):
@@ -250,6 +251,7 @@ class UnifiEntityLoader:
             return False
         if not supported:
             registry.async_remove(entity_id)
+            self.known_objects.discard((description.key, obj_id))
         return supported
 
     @callback
