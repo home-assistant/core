@@ -12,6 +12,7 @@ from homeassistant.components.homematicip_cloud.entity import (
 )
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from .helper import HomeFactory, async_manipulate_test_data, get_and_check_entity_basics
 
@@ -638,3 +639,36 @@ async def test_hmip_cover_shutter_group_availability(
     ha_state = hass.states.get(entity_id)
     assert ha_state.state != STATE_UNAVAILABLE
     assert ha_state.attributes[ATTR_GROUP_MEMBER_UNREACHABLE]
+
+
+async def test_hmip_cover_unique_ids(
+    hass: HomeAssistant,
+    default_mock_hap_factory: HomeFactory,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that every cover channel keeps its unique id."""
+    await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=None, test_groups=None
+    )
+
+    assert {
+        entry.entity_id: entry.unique_id
+        for entry in entity_registry.entities.values()
+        if entry.domain == "cover"
+    } == {
+        "cover.broll_1": "3014F711ACBCDABCADCA66_1_shutter",
+        "cover.garage_door": "3014F7110000000HOERMANN_1_garage_door",
+        "cover.garage_door_module": "3014F0000000000000FAF9B4_1_garage_door",
+        "cover.jalousie_schiebetur": "3014F71100000000000BBL24_1_slats",
+        "cover.jalousieaktor_1_fur_hutschienenmontage_4_fach_badezimmer": "3014F7110000000000022311_1_slats",
+        "cover.jalousieaktor_1_fur_hutschienenmontage_4_fach_schlafzimmer": "3014F7110000000000022311_2_slats",
+        "cover.jalousieaktor_1_fur_hutschienenmontage_4_fach_wohnzimmer_fenster": "3014F7110000000000022311_4_slats",
+        "cover.jalousieaktor_1_fur_hutschienenmontage_4_fach_wohnzimmer_tur": "3014F7110000000000022311_3_slats",
+        "cover.rollos_shuttergroup": "00000000-0000-0000-0000-000000000050_shutter",
+        "cover.sofa_links": "3014F711BADCAFE000000001_1_slats",
+        "cover.sonnenschutz_balkontur": "3014F71100BLIND_MODULE00_1_blind",
+        "cover.wired_jalousieaktor_4_fach_arbeitszimmer_rollo": "3014F71100000000000DRBL4_1_slats",
+        "cover.wired_jalousieaktor_4_fach_badezimmer_rollo": "3014F71100000000000DRBL4_4_slats",
+        "cover.wired_jalousieaktor_4_fach_schlafzimmer_rollo": "3014F71100000000000DRBL4_3_slats",
+        "cover.wired_jalousieaktor_4_fach_schlafzimmer_rollo_oberlicht": "3014F71100000000000DRBL4_2_slats",
+    }

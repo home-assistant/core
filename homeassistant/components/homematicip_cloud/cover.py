@@ -2,16 +2,7 @@
 
 from typing import Any, override
 
-from homematicip.base.enums import DoorCommand, DoorState
-from homematicip.device import (
-    BlindModule,
-    DinRailBlind4,
-    FullFlushBlind,
-    FullFlushShutter,
-    GarageDoorModuleTormatic,
-    HoermannDrivesModule,
-    WiredDinRailBlind4,
-)
+from homematicip.base.enums import DoorCommand, DoorState, FunctionalChannelType
 from homematicip.group import ExtendedLinkedShutterGroup
 
 from homeassistant.components.cover import (
@@ -31,6 +22,11 @@ HMIP_COVER_CLOSED = 1
 HMIP_SLATS_OPEN = 0
 HMIP_SLATS_CLOSED = 1
 
+SLATS_CHANNEL_TYPES = (
+    FunctionalChannelType.BLIND_CHANNEL,
+    FunctionalChannelType.MULTI_MODE_INPUT_BLIND_CHANNEL,
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -45,21 +41,50 @@ async def async_setup_entry(
         if isinstance(group, ExtendedLinkedShutterGroup)
     ]
     for device in hap.home.devices:
-        if isinstance(device, BlindModule):
+        channel_types = {
+            channel.functionalChannelType for channel in device.functionalChannels
+        }
+        if FunctionalChannelType.SHADING_CHANNEL in channel_types:
             entities.append(HomematicipBlindModule(hap, device))
-        elif isinstance(device, (DinRailBlind4, WiredDinRailBlind4)):
-            entities.extend(
-                HomematicipMultiCoverSlats(hap, device, channel=channel)
-                for channel in range(1, 5)
-            )
-        elif isinstance(device, FullFlushBlind):
-            entities.append(HomematicipCoverSlats(hap, device))
-        elif isinstance(device, FullFlushShutter):
-            entities.append(HomematicipCoverShutter(hap, device))
-        elif isinstance(device, (HoermannDrivesModule, GarageDoorModuleTormatic)):
+        if FunctionalChannelType.DOOR_CHANNEL in channel_types:
             entities.append(HomematicipGarageDoorModule(hap, device))
+        entities.extend(
+            _channel_covers(
+                hap, device, SLATS_CHANNEL_TYPES, HomematicipMultiCoverSlats
+            )
+        )
+        entities.extend(
+            _channel_covers(
+                hap,
+                device,
+                (FunctionalChannelType.SHUTTER_CHANNEL,),
+                HomematicipMultiCoverShutter,
+            )
+        )
 
     async_add_entities(entities)
+
+
+def _channel_covers(
+    hap: HomematicipHAP,
+    device,
+    channel_types: tuple[FunctionalChannelType, ...],
+    entity_class: type[HomematicipMultiCoverShutter],
+) -> list[HomematicipMultiCoverShutter]:
+    """Return one cover per channel of the given types."""
+    channels = [
+        channel
+        for channel in device.functionalChannels
+        if channel.functionalChannelType in channel_types
+    ]
+    # a lone channel is the device itself, so it keeps the device name
+    is_multi_channel = len(channels) > 1
+    return [
+        entity_class(
+            hap, device, channel=channel.index, is_multi_channel=is_multi_channel
+        )
+        for channel in channels
+    ]
 
 
 class HomematicipBlindModule(HomematicipGenericEntity, CoverEntity):
@@ -222,14 +247,6 @@ class HomematicipMultiCoverShutter(HomematicipGenericEntity, CoverEntity):
         await self._device.set_shutter_stop_async(self._channel)
 
 
-class HomematicipCoverShutter(HomematicipMultiCoverShutter, CoverEntity):
-    """Representation of the HomematicIP cover shutter."""
-
-    def __init__(self, hap: HomematicipHAP, device) -> None:
-        """Initialize the multi cover entity."""
-        super().__init__(hap, device, is_multi_channel=False)
-
-
 class HomematicipMultiCoverSlats(HomematicipMultiCoverShutter, CoverEntity):
     """Representation of the HomematicIP multi cover slats."""
 
@@ -287,14 +304,6 @@ class HomematicipMultiCoverSlats(HomematicipMultiCoverShutter, CoverEntity):
     async def async_stop_cover_tilt(self, **kwargs: Any) -> None:
         """Stop the device if in motion."""
         await self._device.set_shutter_stop_async(self._channel)
-
-
-class HomematicipCoverSlats(HomematicipMultiCoverSlats, CoverEntity):
-    """Representation of the HomematicIP cover slats."""
-
-    def __init__(self, hap: HomematicipHAP, device) -> None:
-        """Initialize the multi slats entity."""
-        super().__init__(hap, device, is_multi_channel=False)
 
 
 class HomematicipGarageDoorModule(HomematicipGenericEntity, CoverEntity):
