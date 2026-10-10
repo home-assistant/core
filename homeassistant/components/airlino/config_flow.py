@@ -10,13 +10,12 @@ from airlino_api import (
     AirlinoApiConnectionError,
     AirlinoApiError,
 )
-from probatio import Optional, Schema
+from probatio import Optional, Port, Schema
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
@@ -33,7 +32,7 @@ _LOGGER = logging.getLogger(__name__)
 STEP_USER_DATA_SCHEMA = Schema(
     {
         "host": str,
-        Optional("port", default=DEFAULT_PORT): cv.port,
+        Optional("port", default=DEFAULT_PORT): Port(),
     }
 )
 
