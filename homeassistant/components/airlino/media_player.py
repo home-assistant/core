@@ -464,7 +464,7 @@ class AirlinoMediaPlayer(
                 translation_key="https_unsupported",
             )
 
-        _LOGGER.debug("Playing media on AirLino: %s", media_id)
+        _LOGGER.debug("Playing media on AirLino")
         await self._async_call(self.coordinator.api.async_play_station, media_id)
         await self.coordinator.async_request_refresh()
 
