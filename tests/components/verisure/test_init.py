@@ -20,6 +20,7 @@ from homeassistant.components.verisure.const import (
     COOKIE_REFRESH_INTERVAL,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
+    DRY_RUN_FALLBACK_INTERVAL,
     RATE_LIMIT_BACKOFF,
 )
 from homeassistant.config_entries import ConfigEntryState
@@ -571,3 +572,471 @@ async def test_update_session_refresh_transient(
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert hass.states.get(ALARM_ENTITY_ID).state == STATE_UNAVAILABLE
+
+
+def _overview(door_window_state: str = "CLOSED") -> list:
+    """Build a minimal overview payload with a controllable door/window state."""
+    return [
+        {
+            "data": {
+                "installation": {
+                    "armState": {"status": "DISARMED", "statusType": "DISARMED"},
+                    "doorWindows": [
+                        {
+                            "device": {"deviceLabel": "door-1"},
+                            "state": door_window_state,
+                        }
+                    ],
+                }
+            }
+        }
+    ]
+
+
+DRY_RUN_TRANSACTION = {"data": {"armStateDryRun": "dry-run-txn"}}
+DRY_RUN_STATUS_CLEAN = {
+    "data": {
+        "installation": {
+            "armState": {
+                "dryRunStatus": {
+                    "status": {"status": "DONE"},
+                    "result": {"deviceViolations": []},
+                }
+            }
+        }
+    }
+}
+DRY_RUN_STATUS_VIOLATION = {
+    "data": {
+        "installation": {
+            "armState": {
+                "dryRunStatus": {
+                    "status": {"status": "DONE"},
+                    "result": {
+                        "deviceViolations": [
+                            {
+                                "deviceLabel": "door-1",
+                                "violation": "DOOR_WINDOW_OPEN",
+                            }
+                        ]
+                    },
+                }
+            }
+        }
+    }
+}
+
+
+async def test_force_arm_required_checked_on_first_update(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_verisure: MagicMock,
+) -> None:
+    """The dry run runs on the first update, since there is no prior fingerprint."""
+    mock_verisure.request.side_effect = [
+        _overview("CLOSED"),
+        DRY_RUN_TRANSACTION,
+        DRY_RUN_STATUS_VIOLATION,
+    ]
+    await _async_setup(hass, mock_config_entry)
+
+    coordinator = mock_config_entry.runtime_data
+    assert coordinator.data["force_arm_required"] is True
+
+
+async def test_force_arm_required_not_rechecked_when_unchanged(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_verisure: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """The dry run does not rerun when the door/window state has not changed.
+
+    The mock only provides one overview response for the second update, with no
+    dry-run-shaped responses after it; if the coordinator incorrectly reran the
+    dry run, the mock would be consumed out of order and this test would fail.
+    """
+    mock_verisure.request.side_effect = [
+        _overview("CLOSED"),
+        DRY_RUN_TRANSACTION,
+        DRY_RUN_STATUS_VIOLATION,
+        _overview("CLOSED"),
+    ]
+    await _async_setup(hass, mock_config_entry)
+    coordinator = mock_config_entry.runtime_data
+    assert coordinator.data["force_arm_required"] is True
+
+    freezer.tick(DEFAULT_SCAN_INTERVAL + timedelta(seconds=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert coordinator.data["force_arm_required"] is True
+
+
+async def test_force_arm_required_rechecked_when_changed(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_verisure: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """The dry run reruns as soon as the door/window state changes."""
+    mock_verisure.request.side_effect = [
+        _overview("CLOSED"),
+        DRY_RUN_TRANSACTION,
+        DRY_RUN_STATUS_CLEAN,
+        _overview("OPEN"),
+        DRY_RUN_TRANSACTION,
+        DRY_RUN_STATUS_VIOLATION,
+    ]
+    await _async_setup(hass, mock_config_entry)
+    coordinator = mock_config_entry.runtime_data
+    assert coordinator.data["force_arm_required"] is False
+
+    freezer.tick(DEFAULT_SCAN_INTERVAL + timedelta(seconds=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert coordinator.data["force_arm_required"] is True
+
+
+async def test_force_arm_required_rechecked_after_fallback_interval(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_verisure: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """The dry run reruns after the fallback interval even if nothing changed.
+
+    This is the safety net for violation types not reflected in door/window
+    state, for example an offline or otherwise faulted device.
+    """
+    mock_verisure.request.side_effect = [
+        _overview("CLOSED"),
+        DRY_RUN_TRANSACTION,
+        DRY_RUN_STATUS_VIOLATION,
+        _overview("CLOSED"),
+        DRY_RUN_TRANSACTION,
+        DRY_RUN_STATUS_CLEAN,
+    ]
+    await _async_setup(hass, mock_config_entry)
+    coordinator = mock_config_entry.runtime_data
+    assert coordinator.data["force_arm_required"] is True
+
+    freezer.tick(DRY_RUN_FALLBACK_INTERVAL + timedelta(seconds=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert coordinator.data["force_arm_required"] is False
+
+
+DRY_RUN_STATUS_INCOMPLETE = {
+    "data": {
+        "installation": {
+            "armState": {
+                "dryRunStatus": {
+                    "status": {"status": "DONE"},
+                    "result": {},
+                }
+            }
+        }
+    }
+}
+
+
+async def test_force_arm_required_rate_limit_defers_next_check(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_verisure: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A rate limit during the periodic fallback check defers the next attempt.
+
+    The door/window state never changes here, so a rechecked dry run only
+    happens because the fallback interval elapsed. The mock only provides one
+    overview response for the third update, with no dry-run-shaped responses
+    after it; if the coordinator retried the dry run right away instead of
+    backing off, the mock would be consumed out of order and this test would
+    fail. The rate limit also clears the previously known readiness, since a
+    failed recheck no longer confirms the earlier answer still holds.
+    """
+    mock_verisure.request.side_effect = [
+        _overview("CLOSED"),
+        DRY_RUN_TRANSACTION,
+        DRY_RUN_STATUS_CLEAN,
+        _overview("CLOSED"),
+        RateLimitError("AUT_00021"),
+        _overview("CLOSED"),
+    ]
+    await _async_setup(hass, mock_config_entry)
+    coordinator = mock_config_entry.runtime_data
+    assert coordinator.data["force_arm_required"] is False
+
+    freezer.tick(DRY_RUN_FALLBACK_INTERVAL + timedelta(seconds=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert coordinator.data["force_arm_required"] is None
+
+    freezer.tick(DEFAULT_SCAN_INTERVAL + timedelta(seconds=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert coordinator.data["force_arm_required"] is None
+
+
+async def test_force_arm_required_rate_limit_defers_changed_fingerprint_recheck(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_verisure: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A rate limit also defers a recheck triggered by a changed fingerprint.
+
+    The fingerprint is only stored on success, so after the rate limit the
+    door/window state still looks "changed" on the next cycle too. The mock
+    only provides an overview response for that cycle, with no dry-run-shaped
+    responses after it; if the coordinator retried just because the
+    fingerprint still looked changed, instead of honoring the backoff
+    deadline, the mock would be consumed out of order and this test would
+    fail.
+    """
+    mock_verisure.request.side_effect = [
+        _overview("CLOSED"),
+        DRY_RUN_TRANSACTION,
+        DRY_RUN_STATUS_CLEAN,
+        _overview("OPEN"),
+        RateLimitError("AUT_00021"),
+        _overview("OPEN"),
+    ]
+    await _async_setup(hass, mock_config_entry)
+    coordinator = mock_config_entry.runtime_data
+    assert coordinator.data["force_arm_required"] is False
+
+    freezer.tick(DEFAULT_SCAN_INTERVAL + timedelta(seconds=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert coordinator.data["force_arm_required"] is None
+
+    freezer.tick(DEFAULT_SCAN_INTERVAL + timedelta(seconds=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert coordinator.data["force_arm_required"] is None
+
+
+DRY_RUN_STATUS_PENDING = {
+    "data": {
+        "installation": {
+            "armState": {
+                "dryRunStatus": {
+                    "status": {"status": "PENDING"},
+                }
+            }
+        }
+    }
+}
+
+
+async def test_force_arm_required_defers_after_exhausting_poll_attempts(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_verisure: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A dry run that never reaches DONE backs off instead of retrying immediately.
+
+    Without a deferred retry, a transaction that never completes would start
+    a brand new one on every one-minute cycle, indefinitely. The mock only
+    provides one overview response for the second update, with no
+    dry-run-shaped responses after it; if the coordinator started another
+    dry run right away instead of backing off, the mock would be consumed
+    out of order and this test would fail.
+    """
+    mock_verisure.request.side_effect = [
+        _overview("CLOSED"),
+        DRY_RUN_TRANSACTION,
+        *([DRY_RUN_STATUS_PENDING] * 30),
+        _overview("CLOSED"),
+    ]
+    with patch("homeassistant.components.verisure.coordinator.asyncio.sleep"):
+        await _async_setup(hass, mock_config_entry)
+        coordinator = mock_config_entry.runtime_data
+        assert coordinator.data["force_arm_required"] is None
+
+        freezer.tick(DEFAULT_SCAN_INTERVAL + timedelta(seconds=10))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert coordinator.data["force_arm_required"] is None
+
+
+async def test_force_arm_required_ignores_incomplete_dry_run_result(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_verisure: MagicMock,
+) -> None:
+    """A DONE dry run without a violations list is not treated as ready.
+
+    The result dict is missing "deviceViolations" entirely; treating that as
+    an empty list would incorrectly report the alarm as ready to arm.
+    """
+    mock_verisure.request.side_effect = [
+        _overview("CLOSED"),
+        DRY_RUN_TRANSACTION,
+        DRY_RUN_STATUS_INCOMPLETE,
+    ]
+    await _async_setup(hass, mock_config_entry)
+
+    coordinator = mock_config_entry.runtime_data
+    assert coordinator.data["force_arm_required"] is None
+
+
+DRY_RUN_STATUS_NULL_VIOLATIONS = {
+    "data": {
+        "installation": {
+            "armState": {
+                "dryRunStatus": {
+                    "status": {"status": "DONE"},
+                    "result": {"deviceViolations": None},
+                }
+            }
+        }
+    }
+}
+
+
+async def test_force_arm_required_ignores_null_device_violations(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_verisure: MagicMock,
+) -> None:
+    """A DONE dry run with deviceViolations set to null is not treated as ready.
+
+    The key is present but its value is not a list; bool(None) is False,
+    which would incorrectly report the alarm as ready to arm.
+    """
+    mock_verisure.request.side_effect = [
+        _overview("CLOSED"),
+        DRY_RUN_TRANSACTION,
+        DRY_RUN_STATUS_NULL_VIOLATIONS,
+    ]
+    await _async_setup(hass, mock_config_entry)
+
+    coordinator = mock_config_entry.runtime_data
+    assert coordinator.data["force_arm_required"] is None
+
+
+DRY_RUN_START_NULL_DATA = {"data": None}
+
+
+async def test_force_arm_required_ignores_null_data_starting_dry_run(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_verisure: MagicMock,
+) -> None:
+    """A GraphQL error response with data set to null does not crash setup.
+
+    vsure.request() can return an HTTP-200 GraphQL error payload with "data"
+    explicitly null rather than missing. dict.get("data", {}) only falls
+    back to {} when the key is absent, not when its value is null, so a
+    naive chained .get() would raise AttributeError instead of leaving
+    readiness unknown.
+    """
+    mock_verisure.request.side_effect = [
+        _overview("CLOSED"),
+        DRY_RUN_START_NULL_DATA,
+    ]
+    await _async_setup(hass, mock_config_entry)
+
+    coordinator = mock_config_entry.runtime_data
+    assert coordinator.data["force_arm_required"] is None
+
+
+DRY_RUN_STATUS_NULL_DRY_RUN_STATUS = {
+    "data": {"installation": {"armState": {"dryRunStatus": None}}}
+}
+
+
+async def test_force_arm_required_ignores_null_dry_run_status(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_verisure: MagicMock,
+) -> None:
+    """A poll response with dryRunStatus set to null does not crash setup."""
+    mock_verisure.request.side_effect = [
+        _overview("CLOSED"),
+        DRY_RUN_TRANSACTION,
+        DRY_RUN_STATUS_NULL_DRY_RUN_STATUS,
+    ]
+    await _async_setup(hass, mock_config_entry)
+
+    coordinator = mock_config_entry.runtime_data
+    assert coordinator.data["force_arm_required"] is None
+
+
+async def test_force_arm_required_failure_retried_next_cycle(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_verisure: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A failed dry run does not break the update and is retried next cycle.
+
+    The door/window state is unchanged between cycles; the retry happens
+    because a failed attempt does not update the stored fingerprint.
+    """
+    mock_verisure.request.side_effect = [
+        _overview("CLOSED"),
+        RequestError("offline"),
+        _overview("CLOSED"),
+        DRY_RUN_TRANSACTION,
+        DRY_RUN_STATUS_VIOLATION,
+    ]
+    await _async_setup(hass, mock_config_entry)
+    coordinator = mock_config_entry.runtime_data
+    assert coordinator.data["force_arm_required"] is None
+    assert hass.states.get(ALARM_ENTITY_ID).state == "disarmed"
+
+    freezer.tick(DEFAULT_SCAN_INTERVAL + timedelta(seconds=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert coordinator.data["force_arm_required"] is True
+
+
+async def test_force_arm_required_retries_after_failure_even_if_fingerprint_reverts(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_verisure: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A retry is still due if the door/window state reverts after a failure.
+
+    The fingerprint is only stored on success, so once the door closes again
+    it matches the earlier CLOSED baseline from before the failed OPEN check.
+    Without also gating on the last known readiness, that coincidental match
+    would look like nothing changed and silently skip the promised retry.
+    """
+    mock_verisure.request.side_effect = [
+        _overview("CLOSED"),
+        DRY_RUN_TRANSACTION,
+        DRY_RUN_STATUS_CLEAN,
+        _overview("OPEN"),
+        RequestError("offline"),
+        _overview("CLOSED"),
+        DRY_RUN_TRANSACTION,
+        DRY_RUN_STATUS_VIOLATION,
+    ]
+    await _async_setup(hass, mock_config_entry)
+    coordinator = mock_config_entry.runtime_data
+    assert coordinator.data["force_arm_required"] is False
+
+    freezer.tick(DEFAULT_SCAN_INTERVAL + timedelta(seconds=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert coordinator.data["force_arm_required"] is None
+
+    freezer.tick(DEFAULT_SCAN_INTERVAL + timedelta(seconds=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert coordinator.data["force_arm_required"] is True
