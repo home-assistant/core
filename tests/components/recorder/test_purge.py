@@ -1548,6 +1548,47 @@ async def test_purge_filtered_event_data(
 
 
 @pytest.mark.parametrize(
+    ("filter_attribute", "expected_events"),
+    [("include_event_data", 0), ("exclude_event_data", 1)],
+)
+async def test_purge_filtered_event_data_empty_payload(
+    hass: HomeAssistant,
+    recorder_mock: Recorder,
+    filter_attribute: str,
+    expected_events: int,
+) -> None:
+    """Test genuinely empty payloads are distinct from discarded oversized data."""
+    hass.bus.async_fire("empty_event")
+    await async_wait_recording_done(hass)
+    with session_scope(hass=hass, read_only=True) as session:
+        event = (
+            session.query(Events)
+            .filter(Events.event_type_id.in_(select_event_type_ids(("empty_event",))))
+            .one()
+        )
+        assert event.data_id is None
+        assert event.event_data is None
+
+    with patch.object(
+        recorder_mock,
+        filter_attribute,
+        {"empty_event": ((("command", "match"),),)},
+    ):
+        await hass.services.async_call(
+            DOMAIN, SERVICE_PURGE, {"keep_days": 10, "apply_filter": True}
+        )
+        await async_wait_purge_done(hass)
+
+    with session_scope(hass=hass, read_only=True) as session:
+        assert (
+            session.query(Events)
+            .filter(Events.event_type_id.in_(select_event_type_ids(("empty_event",))))
+            .count()
+            == expected_events
+        )
+
+
+@pytest.mark.parametrize(
     ("filter_attribute", "match_value"),
     [("include_event_data", "keep"), ("exclude_event_data", "drop")],
 )

@@ -707,7 +707,7 @@ def _purge_filtered_event_data(
         data = json_loads(shared_data) if shared_data else {}
         # Recorder discards oversized payloads as {}, so their original filter
         # matches cannot be reconstructed from the stored data.
-        if data == {}:
+        if shared_data is not None and data == {}:
             continue
         matches_exclude = _event_data_filter_matches(
             event_type, data, exclude_event_data
@@ -729,7 +729,10 @@ def _purge_filtered_event_data(
     database_engine = instance.database_engine
     assert database_engine is not None
     if unused_data_ids_set := _select_unused_event_data_ids(
-        instance, session, set(data_ids), database_engine
+        instance,
+        session,
+        {data_id for data_id in data_ids if data_id is not None},
+        database_engine,
     ):
         _purge_batch_data_ids(instance, session, unused_data_ids_set)
     return scan_state.complete
