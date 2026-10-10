@@ -1,6 +1,5 @@
 """Class for integration repositories."""
 
-from asyncio import CancelledError
 from collections.abc import Awaitable, Callable
 from functools import partial
 from pathlib import Path
@@ -412,10 +411,6 @@ class IntegrationRepository(Repository):
                 async_mount_config_dir(self.marketplace.hass)
             async_clear_custom_components_cache(self.marketplace.hass)
             found = await async_get_custom_components(self.marketplace.hass)
-        except Exception, CancelledError:
-            # A failed scan can leave an unfinished future in the discovery cache.
-            async_clear_custom_components_cache(self.marketplace.hass)
-            raise
         finally:
             if self.data.domain:
                 async_invalidate_translations(self.marketplace.hass, {self.data.domain})

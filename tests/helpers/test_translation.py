@@ -13,6 +13,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import translation
 from homeassistant.setup import async_setup_component
 
+from tests.common import MockModule, mock_integration
+
 
 @pytest.fixture(autouse=True)
 def _disable_translations_once(disable_translations_once: None) -> None:
@@ -957,3 +959,32 @@ async def test_invalidate_translations_before_first_load(hass: HomeAssistant) ->
     assert await translation.async_get_translations(
         hass, "en", "title", {"sensor"}
     ) == {"component.sensor.title": "Sensor"}
+
+
+@pytest.mark.parametrize(
+    ("domain", "expected"),
+    [
+        ("sensor", {"component.sensor.title": "Sensor"}),
+        ("nonexisting", {}),
+    ],
+)
+async def test_invalidate_translations_after_custom_integration_removal(
+    hass: HomeAssistant, domain: str, expected: dict[str, str]
+) -> None:
+    """Removed custom integrations fall back to core translations when available."""
+    custom = mock_integration(
+        hass, MockModule(domain, partial_manifest={"name": "Custom"}), built_in=False
+    )
+    hass.data[loader.DATA_CUSTOM_COMPONENTS] = {domain: custom}
+    assert await translation.async_get_translations(hass, "en", "title", {domain}) == {
+        f"component.{domain}.title": "Custom"
+    }
+
+    hass.data[loader.DATA_CUSTOM_COMPONENTS] = {}
+    translation.async_invalidate_translations(hass, {domain})
+
+    assert (
+        await translation.async_get_translations(hass, "en", "title", {domain})
+        == expected
+    )
+    assert await loader.async_get_integration(hass, domain) is custom

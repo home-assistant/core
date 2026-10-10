@@ -9,6 +9,7 @@ import pathlib
 import string
 from typing import Any
 
+from homeassistant import components as core_components
 from homeassistant.const import (
     EVENT_CORE_CONFIG_UPDATE,
     STATE_UNAVAILABLE,
@@ -251,6 +252,13 @@ class _TranslationCache:
                     integration := integrations.get(domain)
                 ) and not integration.is_built_in:
                     del integrations[domain]
+                    if integration := await self.hass.async_add_executor_job(
+                        Integration.resolve_from_root,
+                        self.hass,
+                        core_components,
+                        domain,
+                    ):
+                        integrations[domain] = integration
 
         translation_by_language_strings = await _async_get_component_strings(
             self.hass, languages, components, integrations
