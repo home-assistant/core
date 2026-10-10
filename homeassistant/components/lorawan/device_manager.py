@@ -190,6 +190,7 @@ class DeviceManager[DeviceT: Device, CoordinatorT: DataUpdateCoordinator[Any]]:
         self._listeners: list[Callable[[CoordinatorT], None]] = []
         self._unsubscribes: list[Unsubscribe] = []
         self._tasks: dict[str, asyncio.Task[None]] = {}
+        self._attach_locks: dict[str, asyncio.Lock] = {}
         self._closed = False
         self._started = False
 
@@ -222,23 +223,23 @@ class DeviceManager[DeviceT: Device, CoordinatorT: DataUpdateCoordinator[Any]]:
         if task := self._tasks.pop(entry_id, None):
             task.cancel()
         if entry_id not in self._hass.data[DATA_REGISTRY].connections:
-            if session := self._sessions.get(entry_id):
-                session.connection.detach()
-                for key, coordinator in tuple(self.coordinators.items()):
-                    if key[0] == entry_id:
-                        coordinator.async_set_update_error(
-                            ConnectionUnavailable("LoRaWAN connection is unavailable")
-                        )
+            self._detach_session(entry_id)
             return
         self._tasks[entry_id] = self._entry.async_create_task(
             self._hass, self._async_attach(entry_id), "Attach LoRaWAN connection"
         )
 
     async def _async_attach(self, entry_id: str) -> None:
+        # Cancellation cleanup must finish before a replacement reuses the session.
+        async with self._attach_locks.setdefault(entry_id, asyncio.Lock()):
+            await self._async_attach_locked(entry_id)
+
+    async def _async_attach_locked(self, entry_id: str) -> None:
         registration = self._hass.data[DATA_REGISTRY].connections.get(entry_id)
         if registration is None or self._closed:
             return
         session = self._sessions.get(entry_id)
+        created = session is None
         if session is None:
             connection = _CollectionConnection()
             collection = self._create_collection(connection)
@@ -261,7 +262,10 @@ class DeviceManager[DeviceT: Device, CoordinatorT: DataUpdateCoordinator[Any]]:
         try:
             await session.connection.attach(registration)
         except BaseException:
-            self._close_session(entry_id)
+            if created:
+                self._close_session(entry_id)
+            else:
+                self._detach_session(entry_id)
             raise
         if (
             self._closed
@@ -377,6 +381,15 @@ class DeviceManager[DeviceT: Device, CoordinatorT: DataUpdateCoordinator[Any]]:
                 coordinator.async_shutdown(),
                 "Stop LoRaWAN device coordinator",
             )
+
+    def _detach_session(self, entry_id: str) -> None:
+        if session := self._sessions.get(entry_id):
+            session.connection.detach()
+            for key, coordinator in tuple(self.coordinators.items()):
+                if key[0] == entry_id:
+                    coordinator.async_set_update_error(
+                        ConnectionUnavailable("LoRaWAN connection is unavailable")
+                    )
 
     def _close_session(self, entry_id: str) -> None:
         if session := self._sessions.pop(entry_id, None):

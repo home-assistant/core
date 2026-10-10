@@ -417,3 +417,127 @@ async def test_vendor_subscription_failure_cleanup(
     await registered_backend("later", [])
     await hass.async_block_till_done()
     assert not manager._sessions
+
+
+@pytest.mark.parametrize(
+    "method",
+    [
+        "tests.components.lorawan.helpers.ExampleDevices.async_setup",
+        "homeassistant.components.lorawan.device_manager._CollectionConnection.attach",
+    ],
+    ids=["collection_setup", "subscription"],
+)
+async def test_reconnect_waits_for_cancelled_attach(
+    hass: HomeAssistant, registered_backend: RegisterBackend, method: str
+) -> None:
+    """A cancelled attach cannot close the replacement connection's session."""
+    entry = MockConfigEntry(domain="test_vendor")
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    started = asyncio.Event()
+    cancelled = asyncio.Event()
+    finish_cleanup = asyncio.Event()
+
+    async def delayed_attach(*args: object) -> None:
+        started.set()
+        try:
+            await asyncio.Event().wait()
+        except asyncio.CancelledError:
+            cancelled.set()
+            await finish_cleanup.wait()
+            raise
+
+    with patch(method, side_effect=delayed_attach):
+        _, unregister = await registered_backend("network", [DESCRIPTOR])
+        await started.wait()
+        unregister()
+        await cancelled.wait()
+
+    backend, _ = await registered_backend("network", [DESCRIPTOR])
+    await asyncio.sleep(0)
+    finish_cleanup.set()
+    await hass.async_block_till_done()
+
+    coordinator = entry.runtime_data.coordinators[("network", DESCRIPTOR.dev_eui)]
+    assert not coordinator.data.closed
+    assert coordinator.last_update_success
+    backend.emit(inventory(replace(DESCRIPTOR, name="Replacement"), EventType.UPDATED))
+    assert coordinator.data.descriptor.name == "Replacement"
+    with patch.object(
+        backend, "async_send_downlink", new=AsyncMock(return_value="replacement")
+    ) as send:
+        await coordinator.data.async_send_downlink(
+            data=b"command", f_port=2, wait_for_ack=False
+        )
+        send.assert_awaited_once()
+    await hass.config_entries.async_unload(entry.entry_id)
+
+
+@pytest.mark.parametrize(
+    "error", [ConnectionUnavailable("replay failed"), asyncio.CancelledError()]
+)
+async def test_failed_reconnect_preserves_devices(
+    hass: HomeAssistant, registered_backend: RegisterBackend, error: BaseException
+) -> None:
+    """A failed reconnect retains the existing model and coordinator for recovery."""
+    _, unregister = await registered_backend("network", [DESCRIPTOR])
+    entry = MockConfigEntry(domain="test_vendor")
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    manager = entry.runtime_data
+    coordinator = manager.coordinators[("network", DESCRIPTOR.dev_eui)]
+    device = coordinator.data
+    unregister()
+
+    with patch.object(_CollectionConnection, "attach", side_effect=error):
+        _, unregister = await registered_backend("network", [DESCRIPTOR])
+        with pytest.raises(type(error)):
+            await manager._tasks["network"]
+
+    assert not device.closed
+    assert manager.coordinators[("network", DESCRIPTOR.dev_eui)] is coordinator
+    assert not coordinator.last_update_success
+    assert hass.states.get("sensor.greenhouse_temperature").state == "unavailable"
+    unregister()
+    await registered_backend("network", [DESCRIPTOR])
+    await hass.async_block_till_done()
+    assert manager.coordinators[("network", DESCRIPTOR.dev_eui)] is coordinator
+    assert coordinator.data is device
+    assert coordinator.last_update_success
+    await hass.config_entries.async_unload(entry.entry_id)
+
+
+async def test_reconnect_during_initial_setup(
+    hass: HomeAssistant, registered_backend: RegisterBackend
+) -> None:
+    """Initial setup and a replacement connection cannot attach concurrently."""
+    _, unregister = await registered_backend("network", [DESCRIPTOR])
+    entry = MockConfigEntry(domain="test_vendor")
+    entry.add_to_hass(hass)
+    started = asyncio.Event()
+    finish_setup = asyncio.Event()
+    setup = ExampleDevices.async_setup
+
+    async def delayed_setup(collection: ExampleDevices) -> None:
+        started.set()
+        await finish_setup.wait()
+        await setup(collection)
+
+    with patch.object(ExampleDevices, "async_setup", new=delayed_setup):
+        task = hass.async_create_task(hass.config_entries.async_setup(entry.entry_id))
+        await started.wait()
+        unregister()
+        backend, _ = await registered_backend(
+            "network", [replace(DESCRIPTOR, name="Replacement")]
+        )
+        await asyncio.sleep(0)
+        finish_setup.set()
+        assert await task
+        await hass.async_block_till_done()
+
+    coordinator = entry.runtime_data.coordinators[("network", DESCRIPTOR.dev_eui)]
+    assert coordinator.data.descriptor.name == "Replacement"
+    assert coordinator.last_update_success
+    backend.emit(inventory(replace(DESCRIPTOR, name="Updated"), EventType.UPDATED))
+    assert coordinator.data.descriptor.name == "Updated"
+    await hass.config_entries.async_unload(entry.entry_id)
