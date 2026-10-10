@@ -292,7 +292,7 @@ aioharmanluxury==0.2.3
 aioharmony==1.0.10
 
 # homeassistant.components.hassio
-aiohasupervisor==0.6.0
+aiohasupervisor==0.7.0
 
 # homeassistant.components.home_connect
 aiohomeconnect==0.39.1
@@ -1515,7 +1515,7 @@ lektricowifi==0.1
 letpot==0.7.0
 
 # homeassistant.components.lg_tv_rs232
-lg-rs232-tv==1.2.0
+lg-rs232-tv==1.3.0
 
 # homeassistant.components.foscam
 libpyfoscamcgi==0.0.9
@@ -3020,7 +3020,7 @@ ruuvitag-ble==0.4.0
 rxv==0.7.0
 
 # homeassistant.components.samsung_exlink
-samsung-exlink==1.1.2
+samsung-exlink==1.2.0
 
 # homeassistant.components.samsungtv
 samsungctl[websocket]==0.7.1
@@ -3291,7 +3291,7 @@ toonapi==0.3.0
 total-connect-client==2026.9
 
 # homeassistant.components.tplink_omada
-tplink-omada-client==1.5.10
+tplink-omada-client==1.5.13
 
 # homeassistant.components.transmission
 transmission-rpc==7.0.3
@@ -3496,7 +3496,7 @@ yalesmartalarmclient==0.4.3
 # homeassistant.components.august
 # homeassistant.components.yale
 # homeassistant.components.yalexs_ble
-yalexs-ble==4.0.1
+yalexs-ble==4.1.2
 
 # homeassistant.components.august
 # homeassistant.components.yale
