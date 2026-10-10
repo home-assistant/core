@@ -1,6 +1,6 @@
 """Support for tracking for iCloud devices."""
 
-from typing import TYPE_CHECKING, Any, override
+from typing import Any, override
 
 from homeassistant.components.device_tracker import TrackerEntity
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
@@ -70,24 +70,24 @@ class IcloudTrackerEntity(TrackerEntity):
     @override
     def location_accuracy(self) -> float:
         """Return the location accuracy of the device."""
-        if TYPE_CHECKING:
-            assert self._device.location is not None
+        if self._device.location is None:
+            return 0
         return self._device.location[DEVICE_LOCATION_HORIZONTAL_ACCURACY]
 
     @property
     @override
-    def latitude(self) -> float:
+    def latitude(self) -> float | None:
         """Return latitude value of the device."""
-        if TYPE_CHECKING:
-            assert self._device.location is not None
+        if self._device.location is None:
+            return None
         return self._device.location[DEVICE_LOCATION_LATITUDE]
 
     @property
     @override
-    def longitude(self) -> float:
+    def longitude(self) -> float | None:
         """Return longitude value of the device."""
-        if TYPE_CHECKING:
-            assert self._device.location is not None
+        if self._device.location is None:
+            return None
         return self._device.location[DEVICE_LOCATION_LONGITUDE]
 
     @property
