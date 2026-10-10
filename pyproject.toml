@@ -633,7 +633,11 @@ filterwarnings = [
 ]
 
 [tool.coverage.run]
-source = ["homeassistant"]
+# Measure only imported files; pass --cov=homeassistant to also report
+# never-imported files as 0% (one CI bucket does that).
+include = ["homeassistant/*"]
+# --cov=<package> sets source, which overrides include on purpose
+disable_warnings = ["include-ignored"]
 
 [tool.coverage.report]
 exclude_lines = [
