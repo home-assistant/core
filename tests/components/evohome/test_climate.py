@@ -220,6 +220,31 @@ async def test_ctl_invalid_system_mode(
     assert exc_info.value.translation_key == "invalid_system_mode"
 
 
+@pytest.mark.parametrize("install", ["default"])
+async def test_ctl_authentication_failed(
+    hass: HomeAssistant,
+    ctl_id: str,
+) -> None:
+    """Test an authentication failure is raised, rather than only logged."""
+
+    # AuthenticationFailedError is a subclass of ApiCallFailedError, which is only logged
+    with (
+        patch(
+            "evohomeasync2.control_system.ControlSystem.set_mode",
+            side_effect=evo_exc.AuthenticationFailedError("Authentication failed"),
+        ),
+        pytest.raises(evo_exc.AuthenticationFailedError),
+    ):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_TURN_OFF,
+            {
+                ATTR_ENTITY_ID: ctl_id,
+            },
+            blocking=True,
+        )
+
+
 @pytest.mark.parametrize("install", TEST_INSTALLS)
 async def test_ctl_turn_on(
     hass: HomeAssistant,
