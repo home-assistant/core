@@ -2,6 +2,7 @@
 
 from typing import Any
 
+from aiohttp import ClientError
 from daikin_onecta.exceptions import OnectaError
 from daikin_onecta.models import Site
 
@@ -32,6 +33,7 @@ TO_REDACT = {
     "refresh_token",
     "serialNumber",
     "serial_number",
+    "sgtin",
     "ssid",
     "token",
     "unique_id",
@@ -56,7 +58,7 @@ async def async_get_config_entry_diagnostics(
     coordinator = entry.runtime_data
     try:
         sites = await coordinator.api.get_sites()
-    except OnectaError as err:
+    except (OnectaError, ClientError, TimeoutError) as err:
         site_diagnostics: dict[str, Any] = {
             "error": {
                 "type": type(err).__name__,
