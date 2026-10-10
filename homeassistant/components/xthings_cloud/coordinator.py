@@ -128,15 +128,15 @@ class XthingsCloudCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 "WebSocket received status for unknown device: %s", device_uuid
             )
             return
-        if (
-            "is_locked" in status
-            and self.data[device_uuid]["type"] == "lock"
-            and isinstance(status["is_locked"], (bool, int))
-        ):
-            self._websocket_lock_states[device_uuid] = (
-                status["is_locked"],
-                dt_util.utcnow(),
-            )
+        if self.data[device_uuid]["type"] == "lock":
+            lock_state = status.get("is_locked")
+            if not isinstance(lock_state, (bool, int)):
+                lock_state = status.get("locked")
+            if isinstance(lock_state, (bool, int)):
+                self._websocket_lock_states[device_uuid] = (
+                    lock_state,
+                    dt_util.utcnow(),
+                )
         device_data = self.data[device_uuid]
         device_data.setdefault("status", {}).update(status)
         LOGGER.debug("WebSocket updated device status: %s", device_uuid)
