@@ -18,12 +18,12 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import (
     AIRTHINGS_CLOUD_DOCUMENTATION_URL,
+    CONNECTIVITY_ISSUE_PREFIX,
     DEFAULT_SCAN_INTERVAL,
     DEVICE_MODEL,
     DEVICE_SPECIFIC_SCAN_INTERVAL,
     DOMAIN,
     UNSUPPORTED_CONNECTIVITY_MODES,
-    connectivity_mode_issue_id,
     get_connectivity_mode,
 )
 
@@ -136,7 +136,7 @@ class AirthingsBLEDataUpdateCoordinator(DataUpdateCoordinator[AirthingsDevice]):
         if mode is None:
             return
 
-        issue_id = connectivity_mode_issue_id(self.config_entry.entry_id)
+        issue_id = f"{CONNECTIVITY_ISSUE_PREFIX}{self.config_entry.entry_id}"
         if mode not in UNSUPPORTED_CONNECTIVITY_MODES:
             ir.async_delete_issue(self.hass, DOMAIN, issue_id)
             return
