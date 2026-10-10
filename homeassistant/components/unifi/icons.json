@@ -41,6 +41,15 @@
       "port_link_speed": {
         "default": "mdi:speedometer"
       },
+      "wan_status": {
+        "default": "mdi:wan",
+        "state": {
+          "disabled": "mdi:cancel",
+          "no_link": "mdi:ethernet-off",
+          "offline": "mdi:web-off",
+          "online": "mdi:web"
+        }
+      },
       "wlan_clients": {
         "default": "mdi:account-multiple"
       }

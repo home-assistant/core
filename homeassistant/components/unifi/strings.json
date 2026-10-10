@@ -165,6 +165,15 @@
       "wan_latency": {
         "name": "{target} {wan} latency"
       },
+      "wan_status": {
+        "name": "Status",
+        "state": {
+          "disabled": "[%key:common::state::disabled%]",
+          "no_link": "No link",
+          "offline": "Offline",
+          "online": "Online"
+        }
+      },
       "wired_client_link_speed": {
         "name": "Link speed"
       },
@@ -210,12 +219,14 @@
         "data": {
           "block_client": "Network access controlled clients",
           "track_clients": "Track network clients",
-          "track_devices": "Track network devices (Ubiquiti devices)"
+          "track_devices": "Track network devices (Ubiquiti devices)",
+          "track_wan_networks": "Track WAN networks"
         },
         "data_description": {
           "block_client": "Select clients whose network access you want to control via switches.",
           "track_clients": "Create device tracker entities for network clients.",
-          "track_devices": "Create device tracker entities for Ubiquiti network devices."
+          "track_devices": "Create device tracker entities for Ubiquiti network devices.",
+          "track_wan_networks": "Create a device per WAN network, with its status."
         },
         "sections": {
           "more_options": {
