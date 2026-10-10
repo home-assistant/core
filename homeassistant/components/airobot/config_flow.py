@@ -401,7 +401,10 @@ class AirobotConfigFlow(BaseConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                if identity is not None and reconfigure_entry.unique_id is not None:
+                if reconfigure_entry.unique_id is not None:
+                    # A unit that hides its MAC can't be confirmed as this one
+                    if identity is None:
+                        return self.async_abort(reason="unidentified_ventilation_unit")
                     await self.async_set_unique_id(format_mac(identity.mac_address))
                     self._abort_if_unique_id_mismatch(reason="wrong_ventilation_unit")
                 return self.async_update_reload_and_abort(

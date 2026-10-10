@@ -951,6 +951,51 @@ async def test_reconfigure_ventilation_wrong_unit(
     assert mock_vu_config_entry.data[CONF_HOST] == "192.168.1.200"
 
 
+@pytest.mark.parametrize(
+    ("unique_id", "expected_reason", "expected_host"),
+    [
+        # A unit verified by MAC can't be swapped for one that hides its identity
+        pytest.param(
+            "aa:bb:cc:dd:ee:ff",
+            "unidentified_ventilation_unit",
+            "192.168.1.200",
+            id="mac_keyed_entry",
+        ),
+        # An entry that was never identified has nothing to compare against
+        pytest.param(
+            None, "reconfigure_successful", "192.168.1.201", id="host_keyed_entry"
+        ),
+    ],
+)
+async def test_reconfigure_ventilation_without_identity(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_vu_client: AsyncMock,
+    unique_id: str | None,
+    expected_reason: str,
+    expected_host: str,
+) -> None:
+    """Test reconfiguring to a unit that doesn't report its identity."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "192.168.1.200", CONF_DEVICE_TYPE: DEVICE_TYPE_VENTILATION},
+        unique_id=unique_id,
+        title="Airobot Ventilation",
+    )
+    entry.add_to_hass(hass)
+    mock_vu_client.async_get_identity.side_effect = VUReadError("Illegal address")
+
+    result = await entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "192.168.1.201"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == expected_reason
+    assert entry.data[CONF_HOST] == expected_host
+
+
 async def test_reauth_ventilation_unsupported(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
