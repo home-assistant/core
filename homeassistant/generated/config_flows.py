@@ -104,6 +104,7 @@ FLOWS = {
         "bayesian",
         "besen",
         "bitvis",
+        "blanco",
         "blebox",
         "blink",
         "blue_current",
