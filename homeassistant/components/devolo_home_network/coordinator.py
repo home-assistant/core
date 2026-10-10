@@ -106,7 +106,7 @@ class DevoloFirmwareUpdateCoordinator(DevoloDataUpdateCoordinator[UpdateFirmware
         hass: HomeAssistant,
         logger: Logger,
         *,
-        config_entry: ConfigEntry,
+        config_entry: DevoloHomeNetworkConfigEntry,
         name: str = REGULAR_FIRMWARE,
         update_interval: timedelta | None = FIRMWARE_UPDATE_INTERVAL,
     ) -> None:
@@ -134,7 +134,7 @@ class DevoloLedSettingsGetCoordinator(DevoloDataUpdateCoordinator[bool]):
         hass: HomeAssistant,
         logger: Logger,
         *,
-        config_entry: ConfigEntry,
+        config_entry: DevoloHomeNetworkConfigEntry,
         name: str = SWITCH_LEDS,
         update_interval: timedelta | None = SHORT_UPDATE_INTERVAL,
     ) -> None:
@@ -162,7 +162,7 @@ class DevoloLogicalNetworkCoordinator(DevoloDataUpdateCoordinator[LogicalNetwork
         hass: HomeAssistant,
         logger: Logger,
         *,
-        config_entry: ConfigEntry,
+        config_entry: DevoloHomeNetworkConfigEntry,
         name: str = CONNECTED_PLC_DEVICES,
         update_interval: timedelta | None = LONG_UPDATE_INTERVAL,
     ) -> None:
@@ -190,7 +190,7 @@ class DevoloUptimeGetCoordinator(DevoloDataUpdateCoordinator[int]):
         hass: HomeAssistant,
         logger: Logger,
         *,
-        config_entry: ConfigEntry,
+        config_entry: DevoloHomeNetworkConfigEntry,
         name: str = LAST_RESTART,
         update_interval: timedelta | None = SHORT_UPDATE_INTERVAL,
     ) -> None:
@@ -220,7 +220,7 @@ class DevoloWifiConnectedStationsGetCoordinator(
         hass: HomeAssistant,
         logger: Logger,
         *,
-        config_entry: ConfigEntry,
+        config_entry: DevoloHomeNetworkConfigEntry,
         name: str = CONNECTED_WIFI_CLIENTS,
         update_interval: timedelta | None = SHORT_UPDATE_INTERVAL,
     ) -> None:
@@ -251,7 +251,7 @@ class DevoloWifiGuestAccessGetCoordinator(
         hass: HomeAssistant,
         logger: Logger,
         *,
-        config_entry: ConfigEntry,
+        config_entry: DevoloHomeNetworkConfigEntry,
         name: str = SWITCH_GUEST_WIFI,
         update_interval: timedelta | None = SHORT_UPDATE_INTERVAL,
     ) -> None:
@@ -283,7 +283,7 @@ class DevoloWifiNeighborAPsGetCoordinator(
         hass: HomeAssistant,
         logger: Logger,
         *,
-        config_entry: ConfigEntry,
+        config_entry: DevoloHomeNetworkConfigEntry,
         name: str = NEIGHBORING_WIFI_NETWORKS,
         update_interval: timedelta | None = LONG_UPDATE_INTERVAL,
     ) -> None:

@@ -112,7 +112,7 @@ class GreeAcClimateEntity(
     """Gree AC climate entity controlled via infrared emitter."""
 
     _attr_name = None
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_target_temperature_step = 1.0
     _attr_min_temp = float(MIN_TEMP)
     _attr_max_temp = float(MAX_TEMP)
@@ -133,7 +133,7 @@ class GreeAcClimateEntity(
         configured_modes = entry.data.get(CONF_HVAC_MODES, DEFAULT_HVAC_MODES)
         self._attr_hvac_modes = [HVACMode.OFF] + [HVACMode(m) for m in configured_modes]
         self._attr_hvac_mode = HVACMode.OFF
-        self._attr_target_temperature = float(MIN_TEMP)
+        self._attr_native_target_temperature = float(MIN_TEMP)
         self._attr_fan_mode = FAN_AUTO
 
     @property
@@ -161,12 +161,12 @@ class GreeAcClimateEntity(
             if (fan_mode := last_state.attributes.get(ATTR_FAN_MODE)) in _HA_FAN_TO_LIB:
                 self._attr_fan_mode = fan_mode
             if (temperature := last_state.attributes.get(ATTR_TEMPERATURE)) is not None:
-                self._attr_target_temperature = float(
+                self._attr_native_target_temperature = float(
                     round(
                         TemperatureConverter.convert(
                             float(temperature),
                             self.hass.config.units.temperature_unit,
-                            self.temperature_unit,
+                            self.native_temperature_unit,
                         )
                     )
                 )
@@ -251,7 +251,7 @@ class GreeAcClimateEntity(
         if hvac_mode is not None:
             self._attr_hvac_mode = hvac_mode
 
-        self._attr_target_temperature = float(temp)
+        self._attr_native_target_temperature = float(temp)
         self.async_write_ha_state()
 
     @override

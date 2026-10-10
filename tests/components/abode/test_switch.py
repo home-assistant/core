@@ -2,6 +2,7 @@
 
 from unittest.mock import patch
 
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.abode.const import DOMAIN
@@ -122,9 +123,44 @@ async def test_entity_id_tracking_after_entity_id_change(
     """Test a renamed switch is tracked by its new entity id only."""
     config_entry = await setup_platform(hass, SWITCH_DOMAIN)
 
-    # Changing the entity_id removes and re-adds the same entity object.
+    # The entity_id is changed in place.
     entity_registry.async_update_entity(DEVICE_ID, new_entity_id="switch.renamed")
     await hass.async_block_till_done()
 
     assert DEVICE_ID not in config_entry.runtime_data.entity_ids
     assert "switch.renamed" in config_entry.runtime_data.entity_ids
+
+
+async def test_trigger_automation_after_entity_id_change(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the trigger automation service follows an entity_id change."""
+    config_entry = await setup_platform(hass, SWITCH_DOMAIN)
+    entity_registry.async_update_entity(
+        AUTOMATION_ID, new_entity_id="switch.renamed_automation"
+    )
+    await hass.async_block_till_done()
+
+    with patch("jaraco.abode.automation.Automation.trigger") as mock:
+        await hass.services.async_call(
+            DOMAIN,
+            "trigger_automation",
+            {ATTR_ENTITY_ID: AUTOMATION_ID},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        mock.assert_not_called()
+
+        await hass.services.async_call(
+            DOMAIN,
+            "trigger_automation",
+            {ATTR_ENTITY_ID: "switch.renamed_automation"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        mock.assert_called_once()
+
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
+    assert "Unable to remove unknown dispatcher" not in caplog.text

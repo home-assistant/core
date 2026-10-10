@@ -653,11 +653,11 @@
       "title": "Device for template helper {name} needs to be selected again"
     },
     "config_format_actions": {
-      "description": "There is an actions option in the template configuration that does not pair with a trigger option. This will be an configuration validation error in 2026.5.\n\n Please add a trigger to the configuration or remove the actions option from the configuration.\n\n```\n{config}\n```",
+      "description": "There is an actions option in the template configuration that does not pair with a trigger option. This will be a configuration validation error in 2026.5.\n\nPlease add a trigger to the configuration or remove the actions option from the configuration.\n\n```\n{config}\n```",
       "title": "Template actions option requires a trigger"
     },
     "config_format_triggers": {
-      "description": "A trigger template configuration needs a trigger and at least one domain when defining an entity. This will be an configuration validation error in Home Assistant Core 2026.5.\n\n Please remove the orphaned trigger from the configuration.\n\n```\n{config}\n```",
+      "description": "A trigger template configuration needs a trigger and at least one domain when defining an entity. This will be a configuration validation error in Home Assistant Core 2026.5.\n\nPlease remove the orphaned trigger from the configuration.\n\n```\n{config}\n```",
       "title": "Incomplete template configuration"
     }
   },

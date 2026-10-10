@@ -308,3 +308,97 @@ def async_deprecate_sense_setting_mirrors(
                 "sense_setting_mirror_deprecated_no_replacement",
                 breaks_in=SENSE_SETTING_MIRROR_BREAKS_IN,
             )
+
+
+# Release that removes the deprecated light mirrors.
+LIGHT_SETTING_MIRROR_BREAKS_IN = "2027.1.0"
+
+# Light mirrors keyed by their own (platform, key), pointing at the (platform,
+# key) of the control that replaces them and the repair text. ``None`` is the
+# light entity itself, whose unique_id is the bare MAC.
+_LIGHT_MIRROR_REPLACEMENTS: dict[tuple[str, str], tuple[Platform, str | None, str]] = {
+    (Platform.BINARY_SENSOR, "light"): (
+        Platform.LIGHT,
+        None,
+        "setting_mirror_deprecated",
+    ),
+    (Platform.BINARY_SENSOR, "status_light"): (
+        Platform.SWITCH,
+        "status_light",
+        "setting_mirror_deprecated",
+    ),
+    (Platform.SENSOR, "sensitivity"): (
+        Platform.NUMBER,
+        "sensitivity",
+        "setting_mirror_deprecated",
+    ),
+    # The sensor shows the raw mode, the select its own option names.
+    (Platform.SENSOR, "light_motion"): (
+        Platform.SELECT,
+        "light_motion",
+        "setting_mirror_deprecated_light_mode",
+    ),
+}
+
+
+@callback
+def async_deprecate_light_setting_mirrors(
+    hass: HomeAssistant, entry: UFPConfigEntry, bootstrap: Bootstrap
+) -> None:
+    """Deprecate the read-only mirrors of the light controls.
+
+    The light and its controls write through the public API, which the local
+    user's write permission does not gate, so they are now available to every
+    user and the ``PermRequired.NO_WRITE`` mirrors only duplicate them.
+
+    Runs after platform setup so the repair can name the replacement.
+
+    Added in 2026.11.0
+    """
+    _async_deprecate_setting_mirrors(
+        hass,
+        entry,
+        {light.mac for light in bootstrap.lights.values()},
+        _LIGHT_MIRROR_REPLACEMENTS,
+        LIGHT_SETTING_MIRROR_BREAKS_IN,
+    )
+
+
+@callback
+def _async_deprecate_setting_mirrors(
+    hass: HomeAssistant,
+    entry: UFPConfigEntry,
+    macs: set[str],
+    replacements: dict[tuple[str, str], tuple[Platform, str | None, str]],
+    breaks_in: str,
+) -> None:
+    """Raise a repair for each used mirror, pointing at its replacement.
+
+    The mirror keys are shared across device types, so the match is scoped to
+    ``macs``.
+    """
+    if not macs:
+        return
+    registry = er.async_get(hass)
+    for entity in er.async_entries_for_config_entry(registry, entry.entry_id):
+        mac, _, key = entity.unique_id.partition("_")
+        mirror = (entity.domain, key)
+        if mirror not in replacements or mac not in macs:
+            continue
+        platform, replacement_key, translation_key = replacements[mirror]
+        replacement_id = registry.async_get_entity_id(
+            platform,
+            DOMAIN,
+            mac if replacement_key is None else f"{mac}_{replacement_key}",
+        )
+        # Nothing to point the repair at before the replacement exists.
+        if replacement_id is None:
+            continue
+        _async_repair_if_used(
+            hass,
+            entity,
+            f"setting_mirror_deprecated_{entity.unique_id}",
+            translation_key,
+            {"replacement": replacement_id},
+            breaks_in=breaks_in,
+        )
