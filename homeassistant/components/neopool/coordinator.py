@@ -183,9 +183,10 @@ class NeoPoolCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     async def _read_timers_into_data(self, data: dict[str, Any]) -> None:
         """Read every enabled timer block and merge derived fields into data.
 
-        Exposes the enable flag (the light platform's manual-mode guard) and
-        the start/stop endpoints consumed by the time platform. Further derived
-        keys will be added by follow-up platform PRs that consume them.
+        Exposes the enable flag (the light platform's manual-mode guard), the
+        start/stop endpoints consumed by the time platform, and the repeat
+        period consumed by the select platform. Further derived keys will be
+        added by follow-up platform PRs that consume them.
         """
         enabled = self._get_enabled_timers(data)
         if not enabled:
@@ -194,6 +195,7 @@ class NeoPoolCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         for t_name, t in timers.items():
             data[f"{t_name}_enable"] = t["enable"]
             data[f"{t_name}_start"] = t["on"]  # seconds since midnight
+            data[f"{t_name}_period"] = t["period"]
             data[f"{t_name}_stop"] = t.get("stop")
 
     @override

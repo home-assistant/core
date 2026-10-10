@@ -2,7 +2,7 @@
 
 from typing import TYPE_CHECKING, Any, override
 
-from boschshcpy import SHCMotionDetector, SHCMotionDetector2
+from boschshcpy import SHCMotionDetector, SHCMotionDetector2, SHCSmokeDetector
 
 from homeassistant.components.event import EventDeviceClass, EventEntity
 from homeassistant.const import ATTR_DEVICE_ID, ATTR_ID, ATTR_NAME
@@ -47,6 +47,15 @@ async def async_setup_entry(
         )
         for motion_detector in session.device_helper.motion_detectors2
     )
+    entities.extend(
+        SmokeDetectorEvent(
+            hass=hass,
+            device=smoke_detector,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+        )
+        for smoke_detector in session.device_helper.smoke_detectors
+    )
 
     async_add_entities(entities)
 
@@ -75,6 +84,17 @@ class MotionDetectorEvent(SHCEntity, EventEntity):
         # Seeded from the device's current value in async_added_to_hass so a
         # pre-existing timestamp isn't replayed as a new event on startup.
         self._last_fired_timestamp = ""
+
+    @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Opt in to in-place entity_id changes.
+
+        Can be removed when backwards compatibility is disabled for core
+        integrations, i.e. once all core integrations have been migrated
+        to in-place entity ID change.
+        """
+        super().async_entity_id_changed(old_entity_id)
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -112,4 +132,83 @@ class MotionDetectorEvent(SHCEntity, EventEntity):
             ATTR_LAST_TIME_TRIGGERED: timestamp,
         }
         self._trigger_event("motion", event_attributes)
+        self.async_write_ha_state()
+
+
+class SmokeDetectorEvent(SHCEntity, EventEntity):
+    """Representation of a SHC smoke detector alarm event."""
+
+    _attr_name = None
+    _attr_translation_key = "smoke_detector_alarm"
+    _attr_event_types = [
+        "idle_off",
+        "primary_alarm",
+        "secondary_alarm",
+        "intrusion_alarm",
+        "intrusion_alarm_on_requested",
+        "intrusion_alarm_off_requested",
+    ]
+    _device: SHCSmokeDetector
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        device: SHCSmokeDetector,
+        parent_id: str,
+        entry_id: str,
+    ) -> None:
+        """Initialize the smoke detector alarm event entity."""
+        super().__init__(
+            hass=hass, device=device, parent_id=parent_id, entry_id=entry_id
+        )
+        # Dedup guard: Alarm replays the current state on unrelated
+        # long-poll updates for the same device, same as LatestMotion above.
+        self._last_fired_state = ""
+
+    @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Opt in to in-place entity_id changes.
+
+        Can be removed when backwards compatibility is disabled for core
+        integrations, i.e. once all core integrations have been migrated
+        to in-place entity ID change.
+        """
+        super().async_entity_id_changed(old_entity_id)
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Subscribe to SHC events."""
+        await super().async_added_to_hass()
+        self._last_fired_state = self._device.alarmstate.name.lower()
+        for service in self._device.device_services:
+            if service.id == "Alarm":
+                service.register_event(self._device.id, self._event_callback)
+
+    @override
+    async def async_will_remove_from_hass(self) -> None:
+        """Unregister the Alarm event callback."""
+        await super().async_will_remove_from_hass()
+        # register_event() has no public unsubscribe counterpart.
+        for service in self._device.device_services:
+            if service.id == "Alarm":
+                service._event_callbacks.pop(self._device.id, None)  # noqa: SLF001
+
+    def _event_callback(self) -> None:
+        """Handle an Alarm update from the SHC polling thread."""
+        alarm_state = self._device.alarmstate.name.lower()
+        if alarm_state == self._last_fired_state:
+            return
+        self._last_fired_state = alarm_state
+        self.hass.loop.call_soon_threadsafe(self._dispatch_event, alarm_state)
+
+    @callback
+    def _dispatch_event(self, alarm_state: str) -> None:
+        """Trigger the event and write state on the event loop."""
+        event_attributes: dict[str, Any] = {
+            ATTR_DEVICE_ID: self.device_id,
+            ATTR_ID: self._device.id,
+            ATTR_NAME: self._device.name,
+        }
+        self._trigger_event(alarm_state, event_attributes)
         self.async_write_ha_state()

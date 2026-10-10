@@ -49,7 +49,7 @@ DEFAULT_DISTANCE = 5
 
 API_KEY_SCHEMA = probatio.Schema(
     {
-        probatio.Required(CONF_API_KEY): cv.string,
+        probatio.Required(probatio.Secret(CONF_API_KEY)): cv.string,
     }
 )
 

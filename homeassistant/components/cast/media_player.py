@@ -378,6 +378,13 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
         await super()._async_disconnect()
 
         self._attr_available = False
+
+    @override
+    async def _async_stop(self, event: Event) -> None:
+        """Disconnect socket and mark the entity unavailable on stop."""
+        await super()._async_stop(event)
+
+        # Not in _async_disconnect, which also runs while the entity is removed
         self.async_write_ha_state()
 
     @override

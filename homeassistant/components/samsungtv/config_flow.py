@@ -30,6 +30,7 @@ from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, callback
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.selector import TextSelector, TextSelectorConfig
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.ssdp import (
     ATTR_UPNP_MANUFACTURER,
@@ -66,7 +67,7 @@ from .const import (
     UPNP_SVC_RENDERING_CONTROL,
 )
 
-DATA_SCHEMA = probatio.Schema({probatio.Required(CONF_HOST): str})
+DATA_SCHEMA = probatio.Schema({probatio.Required(CONF_HOST): TextSelector()})
 
 
 def _strip_uuid(udn: str) -> str:
@@ -391,7 +392,13 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="encrypted_pairing",
             errors=errors,
             description_placeholders={"device": self._title},
-            data_schema=probatio.Schema({probatio.Required(CONF_PIN): str}),
+            data_schema=probatio.Schema(
+                {
+                    probatio.Required(probatio.Secret(CONF_PIN)): TextSelector(
+                        TextSelectorConfig(autocomplete="one-time-code")
+                    )
+                }
+            ),
         )
 
     @callback
@@ -679,5 +686,11 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="reauth_confirm_encrypted",
             errors=errors,
             description_placeholders={"device": reauth_entry.title},
-            data_schema=probatio.Schema({probatio.Required(CONF_PIN): str}),
+            data_schema=probatio.Schema(
+                {
+                    probatio.Required(probatio.Secret(CONF_PIN)): TextSelector(
+                        TextSelectorConfig(autocomplete="one-time-code")
+                    )
+                }
+            ),
         )

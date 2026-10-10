@@ -210,6 +210,14 @@
           }),
           'tool_name': 'test_tool',
         }),
+        dict({
+          'external': False,
+          'id': 'call_call_2',
+          'tool_args': dict({
+            'param2': 'call2',
+          }),
+          'tool_name': 'test_tool',
+        }),
       ]),
     }),
     dict({
@@ -221,6 +229,17 @@
       }),
       'role': 'tool_result',
       'tool_call_id': 'call_call_1',
+      'tool_name': 'test_tool',
+    }),
+    dict({
+      'agent_id': 'conversation.gpt_3_5_turbo',
+      'created': HAFakeDatetime(2024, 5, 24, 12, 0, tzinfo=datetime.timezone.utc),
+      'result': dict({
+        'data': 'value2',
+        'error': False,
+      }),
+      'role': 'tool_result',
+      'tool_call_id': 'call_call_2',
       'tool_name': 'test_tool',
     }),
     dict({
@@ -286,12 +305,25 @@
           'id': 'call_call_1',
           'type': 'function',
         }),
+        dict({
+          'function': dict({
+            'arguments': '{"param2":"call2"}',
+            'name': 'test_tool',
+          }),
+          'id': 'call_call_2',
+          'type': 'function',
+        }),
       ]),
     }),
     dict({
       'content': '{"data":"value1","error":false}',
       'role': 'tool',
       'tool_call_id': 'call_call_1',
+    }),
+    dict({
+      'content': '{"data":"value2","error":false}',
+      'role': 'tool',
+      'tool_call_id': 'call_call_2',
     }),
     dict({
       'content': 'I have successfully called the function',

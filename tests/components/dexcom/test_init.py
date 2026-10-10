@@ -31,6 +31,11 @@ async def test_setup_entry_account_error(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result is False
+    assert entry.state is ConfigEntryState.SETUP_ERROR
+    assert (
+        entry.reason
+        == "Failed to log in to Dexcom, the account credentials are invalid"
+    )
 
 
 async def test_setup_entry_session_error(hass: HomeAssistant) -> None:

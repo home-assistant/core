@@ -100,7 +100,7 @@ def get_knx_module(hass: HomeAssistant) -> KNXModule:
 SERVICE_KNX_EVENT_REGISTER_SCHEMA = probatio.Schema(
     {
         probatio.Required(KNX_ADDRESS): probatio.All(
-            cv.ensure_list,
+            probatio.EnsureList(),
             [ga_validator],
         ),
         probatio.Optional(CONF_TYPE): dpt_base_type_validator,
@@ -214,7 +214,7 @@ SERVICE_KNX_SEND_SCHEMA = probatio.Any(
     probatio.Schema(
         {
             probatio.Required(KNX_ADDRESS): probatio.All(
-                cv.ensure_list,
+                probatio.EnsureList(),
                 [ga_validator],
             ),
             probatio.Required(SERVICE_KNX_ATTR_PAYLOAD): cv.match_all,
@@ -226,7 +226,7 @@ SERVICE_KNX_SEND_SCHEMA = probatio.Any(
         # without type given payload is treated as raw bytes
         {
             probatio.Required(KNX_ADDRESS): probatio.All(
-                cv.ensure_list,
+                probatio.EnsureList(),
                 [ga_validator],
             ),
             probatio.Required(SERVICE_KNX_ATTR_PAYLOAD): probatio.Any(
@@ -283,7 +283,7 @@ async def service_send_to_knx_bus(call: ServiceCall) -> None:
 SERVICE_KNX_READ_SCHEMA = probatio.Schema(
     {
         probatio.Required(KNX_ADDRESS): probatio.All(
-            cv.ensure_list,
+            probatio.EnsureList(),
             [ga_validator],
         )
     }

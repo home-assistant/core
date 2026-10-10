@@ -204,6 +204,7 @@ homeassistant.components.energieleser.*
 homeassistant.components.energy.*
 homeassistant.components.energyid.*
 homeassistant.components.energyzero.*
+homeassistant.components.engie_be.*
 homeassistant.components.enigma2.*
 homeassistant.components.enphase_envoy.*
 homeassistant.components.eq3btsmart.*
@@ -384,6 +385,7 @@ homeassistant.components.lyngdorf.*
 homeassistant.components.madvr.*
 homeassistant.components.manual.*
 homeassistant.components.marantz_infrared.*
+homeassistant.components.marketplace.*
 homeassistant.components.mastodon.*
 homeassistant.components.matrix.*
 homeassistant.components.matter.*
@@ -648,6 +650,7 @@ homeassistant.components.velbus.*
 homeassistant.components.velux.*
 homeassistant.components.victron_gx.*
 homeassistant.components.vistapool.*
+homeassistant.components.vitesy.*
 homeassistant.components.vivotek.*
 homeassistant.components.vizio.*
 homeassistant.components.vlc_telnet.*

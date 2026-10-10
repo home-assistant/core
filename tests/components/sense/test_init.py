@@ -133,6 +133,8 @@ async def test_setup_get_monitor_data_retry_exceptions(
         socket.gaierror(),
         SenseWebsocketException("ws error"),
         SenseAPIException(),
+        # Returned for a 404 while the monitor reconnects, after authenticating
+        SenseAuthenticationException("API Return Code: 404"),
     ],
 )
 async def test_setup_get_realtime_retry_exceptions(

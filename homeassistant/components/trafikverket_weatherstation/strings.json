@@ -72,9 +72,6 @@
       "visible_distance": {
         "name": "Visible distance"
       },
-      "wind_direction": {
-        "name": "Wind direction"
-      },
       "wind_height": {
         "name": "Wind measurement height"
       },

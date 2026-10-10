@@ -51,7 +51,7 @@ STEP_USER_DATA_SCHEMA = probatio.Schema(
         probatio.Optional(CONF_SSL, default=False): cv.boolean,
         probatio.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
         probatio.Optional(CONF_GROUP, default=GROUPS[0]): probatio.In(GROUPS),
-        probatio.Required(CONF_PASSWORD): TextSelector(
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.PASSWORD,
                 autocomplete="current-password",
@@ -66,7 +66,7 @@ STEP_DISCOVERY_CONFIRM_DATA_SCHEMA = probatio.Schema(
         probatio.Optional(CONF_SSL, default=False): cv.boolean,
         probatio.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
         probatio.Optional(CONF_GROUP, default=GROUPS[0]): probatio.In(GROUPS),
-        probatio.Required(CONF_PASSWORD): TextSelector(
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.PASSWORD,
                 autocomplete="current-password",
@@ -251,7 +251,7 @@ class SmaConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="reauth_confirm",
             data_schema=probatio.Schema(
                 {
-                    probatio.Required(CONF_PASSWORD): TextSelector(
+                    probatio.Required(probatio.Secret(CONF_PASSWORD)): TextSelector(
                         TextSelectorConfig(
                             type=TextSelectorType.PASSWORD,
                             autocomplete="current-password",
@@ -280,25 +280,12 @@ class SmaConfigFlow(ConfigFlow, domain=DOMAIN):
             self._discovery_data[CONF_MAC],
         )
 
-        existing_entries_with_host = [
-            entry
-            for entry in self._async_current_entries(include_ignore=False)
-            if entry.data.get(CONF_HOST) == self._data[CONF_HOST]
-            and not entry.data.get(CONF_MAC)
-        ]
-
-        # If we have an existing entry with the same host but no MAC address,
-        # we update the entry with the MAC address and reload it.
-        if existing_entries_with_host:
-            entry = existing_entries_with_host[0]
-            self.async_update_reload_and_abort(
-                entry, data_updates={CONF_MAC: self._data[CONF_MAC]}
-            )
-
         if not (match := HOSTNAME_SERIAL.match(discovery_info.hostname)):
             return self.async_abort(reason="not_supported")
         await self.async_set_unique_id(match.group(1))
-        self._abort_if_unique_id_configured(updates={CONF_HOST: self._data[CONF_HOST]})
+        self._abort_if_unique_id_configured(
+            updates={CONF_HOST: self._data[CONF_HOST], CONF_MAC: self._data[CONF_MAC]}
+        )
 
         return await self.async_step_discovery_confirm()
 

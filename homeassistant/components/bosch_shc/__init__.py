@@ -16,9 +16,14 @@ from homeassistant.helpers import device_registry as dr
 from .const import CONF_SSL_CERTIFICATE, CONF_SSL_KEY, DOMAIN
 
 PLATFORMS = [
+    Platform.ALARM_CONTROL_PANEL,
     Platform.BINARY_SENSOR,
+    Platform.BUTTON,
     Platform.COVER,
     Platform.EVENT,
+    Platform.LIGHT,
+    Platform.NUMBER,
+    Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
     Platform.VALVE,

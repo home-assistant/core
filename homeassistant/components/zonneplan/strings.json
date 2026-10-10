@@ -7,6 +7,7 @@
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "rate_limited": "Too many requests to the Zonneplan API. Wait a minute and try again.",
       "timeout_connect": "Timeout while communicating with the Zonneplan API",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
@@ -51,7 +52,35 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "backup_power_active": {
+        "name": "Backup power active"
+      },
+      "dynamic_load_balancing_overload_active": {
+        "name": "Load balancing overload"
+      },
+      "electricity_price_low": {
+        "name": "Electricity price low"
+      },
+      "grid_congestion_active": {
+        "name": "Grid congestion"
+      },
+      "home_optimization_active": {
+        "name": "Home optimization active"
+      }
+    },
     "sensor": {
+      "backup_power_capacity": {
+        "name": "Backup power capacity"
+      },
+      "battery_state": {
+        "name": "Battery state",
+        "state": {
+          "charging": "Charging",
+          "discharging": "Discharging",
+          "operative": "Operative"
+        }
+      },
       "current_electricity_price": {
         "name": "Current electricity price"
       },
@@ -65,6 +94,18 @@
       },
       "current_sustainability_score": {
         "name": "Current sustainability score"
+      },
+      "cycle_count": {
+        "name": "Charge cycles"
+      },
+      "earned_today": {
+        "name": "Earned today"
+      },
+      "electricity_cost_this_month": {
+        "name": "Electricity cost this month"
+      },
+      "electricity_delivered_this_month": {
+        "name": "Electricity used this month"
       },
       "electricity_price_low_today_end_time": {
         "name": "Electricity price low today end time"
@@ -85,6 +126,21 @@
           "incoming": "Incoming"
         }
       },
+      "electricity_produced_this_month": {
+        "name": "Electricity returned this month"
+      },
+      "energy_charged_today": {
+        "name": "Energy charged today"
+      },
+      "energy_discharged_today": {
+        "name": "Energy discharged today"
+      },
+      "gas_cost_this_month": {
+        "name": "Gas cost this month"
+      },
+      "gas_delivered_this_month": {
+        "name": "Gas used this month"
+      },
       "gas_price_today": {
         "name": "Gas price daily"
       },
@@ -94,6 +150,14 @@
       "highest_electricity_price_tomorrow": {
         "name": "Highest electricity price tomorrow"
       },
+      "inverter_state": {
+        "name": "Inverter state",
+        "state": {
+          "charging": "[%key:component::zonneplan::entity::sensor::battery_state::state::charging%]",
+          "discharging": "[%key:component::zonneplan::entity::sensor::battery_state::state::discharging%]",
+          "operative": "[%key:component::zonneplan::entity::sensor::battery_state::state::operative%]"
+        }
+      },
       "lowest_electricity_price_today": {
         "name": "Lowest electricity price today"
       },
@@ -102,15 +166,27 @@
       },
       "next_hour_electricity_price": {
         "name": "Next hour electricity price"
+      },
+      "total_earned": {
+        "name": "Total earned"
       }
     }
   },
   "exceptions": {
+    "api_error": {
+      "message": "Unexpected error from the Zonneplan API"
+    },
+    "battery_not_found": {
+      "message": "The Zonneplan API returned no data for the home battery"
+    },
     "cannot_connect": {
       "message": "Error communicating with the Zonneplan API"
     },
     "invalid_auth": {
       "message": "An error occurred while trying to authenticate"
+    },
+    "rate_limited": {
+      "message": "The Zonneplan API rate limit was reached"
     },
     "timeout_connect": {
       "message": "Timeout while communicating with the Zonneplan API"
