@@ -21,7 +21,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from .const import CONF_BLID, CONF_CONTINUOUS, DOMAIN, PLATFORMS, ROOMBA_SESSION
+from .const import CONF_BLID, DOMAIN, PLATFORMS, ROOMBA_SESSION
 from .models import RoombaConfigEntry, RoombaData
 
 _LOGGER = logging.getLogger(__name__)
