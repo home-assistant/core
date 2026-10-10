@@ -1,8 +1,9 @@
 """Provide common Netatmo fixtures."""
 
-from collections.abc import Generator
+from collections.abc import Callable, Generator
 from functools import partial
 from time import time
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from pyatmo.const import ALL_SCOPES
@@ -90,17 +91,28 @@ def mock_config_entry_fixture(hass: HomeAssistant) -> MockConfigEntry:
 
 
 @pytest.fixture(name="netatmo_auth")
-def netatmo_auth(hass: HomeAssistant) -> Generator[None]:
-    """Restrict loaded platforms to list given."""
+def netatmo_auth(
+    hass: HomeAssistant, request: pytest.FixtureRequest
+) -> Generator[None]:
+    """Mock the Netatmo auth client used during config entry setup.
+
+    Parametrize indirectly with a `msg_callback(payload: dict) -> None` to
+    have it applied to every fixture payload `fake_post_request` returns,
+    e.g. to model a device value changing between polls.
+    """
+    msg_callback: Callable[[dict[str, Any]], None] | None = getattr(
+        request, "param", None
+    )
+    post_request = partial(
+        fake_post_request,
+        hass,
+        **({"msg_callback": msg_callback} if msg_callback is not None else {}),
+    )
     with patch(
         "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
     ) as mock_auth:
-        mock_auth.return_value.async_post_request.side_effect = partial(
-            fake_post_request, hass
-        )
-        mock_auth.return_value.async_post_api_request.side_effect = partial(
-            fake_post_request, hass
-        )
+        mock_auth.return_value.async_post_request.side_effect = post_request
+        mock_auth.return_value.async_post_api_request.side_effect = post_request
         mock_auth.return_value.async_get_image.side_effect = fake_get_image
         mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
         mock_auth.return_value.async_dropwebhook.side_effect = AsyncMock()
