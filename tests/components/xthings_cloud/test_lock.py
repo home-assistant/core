@@ -1,5 +1,6 @@
 """Tests for Xthings Cloud lock platform."""
 
+from copy import deepcopy
 from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
@@ -96,6 +97,11 @@ async def test_updating_state(
     assert state is not None
     assert state.state == LockState.LOCKED.value
 
+    polling_response = deepcopy(mock_api_client.async_get_devices.return_value)
+    mock_api_client.async_get_devices.side_effect = [
+        deepcopy(polling_response),
+        deepcopy(polling_response),
+    ]
     mock_websocket.call_args[1]["on_device_status"](
         "dev_lock_001",
         {
@@ -119,7 +125,6 @@ async def test_updating_state(
     assert state is not None
     assert state.state == LockState.UNLOCKED.value
 
-    get_device_by_id(mock_api_client, "dev_lock_001")["status"]["is_locked"] = 2
     freezer.tick(timedelta(seconds=DEFAULT_SCAN_INTERVAL))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
