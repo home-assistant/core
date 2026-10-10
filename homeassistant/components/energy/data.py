@@ -256,6 +256,10 @@ class DeviceConsumption(TypedDict):
     # that includes this device's consumption in its total
     included_in_stat: NotRequired[str]
 
+    # An optional boolean that makes this device the
+    # total consumption of the house
+    is_home_total: NotRequired[bool]
+
 
 class EnergyPreferences(TypedDict):
     """Dictionary holding the energy data."""
@@ -621,6 +625,17 @@ def _validate_grid_stat_uniqueness(value: list[SourceType]) -> list[SourceType]:
     return value
 
 
+def _validate_single_home_total(
+    value: list[DeviceConsumption],
+) -> list[DeviceConsumption]:
+    totals = [d for d in value if d.get("is_home_total")]
+    if len(totals) > 1:
+        raise probatio.Invalid("Only one device can be the home total")
+    if totals and "included_in_stat" in totals[0]:
+        raise probatio.Invalid("The home total cannot be included in another device")
+    return value
+
+
 ENERGY_SOURCE_SCHEMA = probatio.All(
     probatio.Schema(
         [
@@ -646,7 +661,12 @@ DEVICE_CONSUMPTION_SCHEMA = probatio.Schema(
         probatio.Optional("stat_rate"): str,
         probatio.Optional("name"): str,
         probatio.Optional("included_in_stat"): str,
+        probatio.Optional("is_home_total"): bool,
     }
+)
+
+ENERGY_DEVICES_SCHEMA = probatio.All(
+    [DEVICE_CONSUMPTION_SCHEMA], _validate_single_home_total
 )
 
 

@@ -1236,3 +1236,65 @@ async def test_fossil_energy_consumption_missing_sum(
     response = await client.receive_json()
     assert response["success"]
     assert response["result"] == {}
+
+
+def _prefs(devices: list[dict[str, Any]]) -> dict[str, Any]:
+    return {
+        "energy_sources": [],
+        "device_consumption": devices,
+        "device_consumption_water": [],
+    }
+
+
+async def test_save_home_total_device(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test a device can be flagged as the home total."""
+    client = await hass_ws_client(hass)
+    devices = [
+        {"stat_consumption": "sensor.fridge_energy", "is_home_total": False},
+        {"stat_consumption": "sensor.boiler_energy"},
+        {"stat_consumption": "sensor.home_total_energy", "is_home_total": True},
+    ]
+
+    await client.send_json({"id": 5, "type": "energy/save_prefs", **_prefs(devices)})
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"]["device_consumption"][2]["is_home_total"] is True
+
+    await client.send_json({"id": 6, "type": "energy/get_prefs"})
+    msg = await client.receive_json()
+    assert msg["result"]["device_consumption"][2]["is_home_total"] is True
+
+
+@pytest.mark.parametrize(
+    "devices",
+    [
+        [
+            {"stat_consumption": "sensor.a", "is_home_total": True},
+            {"stat_consumption": "sensor.b", "is_home_total": True},
+        ],
+        [
+            {"stat_consumption": "sensor.a"},
+            {
+                "stat_consumption": "sensor.b",
+                "is_home_total": True,
+                "included_in_stat": "sensor.a",
+            },
+        ],
+    ],
+    ids=["two_totals", "total_with_parent"],
+)
+async def test_save_home_total_invalid(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    devices: list[dict[str, Any]],
+) -> None:
+    """Test invalid home total configurations are rejected."""
+    client = await hass_ws_client(hass)
+
+    await client.send_json({"id": 5, "type": "energy/save_prefs", **_prefs(devices)})
+    msg = await client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == "invalid_format"
