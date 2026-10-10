@@ -3,6 +3,7 @@
 from typing import Any, Final
 
 import probatio
+from pyseventeentrack.errors import SeventeenTrackError
 from pyseventeentrack.package import PACKAGE_STATUS_MAP, Package
 
 from homeassistant.const import ATTR_CONFIG_ENTRY_ID, ATTR_FRIENDLY_NAME, ATTR_LOCATION
@@ -13,17 +14,20 @@ from homeassistant.core import (
     SupportsResponse,
     callback,
 )
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, selector, service
 from homeassistant.util import slugify
 
 from .const import (
     ATTR_DESTINATION_COUNTRY,
+    ATTR_FIRST_CARRIER,
     ATTR_INFO_TEXT,
     ATTR_ORIGIN_COUNTRY,
     ATTR_PACKAGE_FRIENDLY_NAME,
     ATTR_PACKAGE_STATE,
     ATTR_PACKAGE_TRACKING_NUMBER,
     ATTR_PACKAGE_TYPE,
+    ATTR_SECOND_CARRIER,
     ATTR_STATUS,
     ATTR_TIMESTAMP,
     ATTR_TRACKING_INFO_LANGUAGE,
@@ -32,6 +36,7 @@ from .const import (
     SERVICE_ADD_PACKAGE,
     SERVICE_ARCHIVE_PACKAGE,
     SERVICE_GET_PACKAGES,
+    SERVICE_SET_CARRIER,
 )
 from .coordinator import SeventeenTrackConfigEntry
 
@@ -64,6 +69,15 @@ SERVICE_ARCHIVE_PACKAGE_SCHEMA: Final = probatio.Schema(
     {
         probatio.Required(ATTR_CONFIG_ENTRY_ID): cv.string,
         probatio.Required(ATTR_PACKAGE_TRACKING_NUMBER): cv.string,
+    }
+)
+
+SERVICE_SET_CARRIER_SCHEMA: Final = probatio.Schema(
+    {
+        probatio.Required(ATTR_CONFIG_ENTRY_ID): cv.string,
+        probatio.Required(ATTR_PACKAGE_TRACKING_NUMBER): cv.string,
+        probatio.Required(ATTR_FIRST_CARRIER): cv.positive_int,
+        probatio.Optional(ATTR_SECOND_CARRIER): cv.positive_int,
     }
 )
 
@@ -120,6 +134,28 @@ async def _archive_package(call: ServiceCall) -> None:
     await seventeen_coordinator.client.profile.archive_package(tracking_number)
 
 
+async def _set_carrier(call: ServiceCall) -> None:
+    """Set the carrier of a package in 17Track."""
+    entry: SeventeenTrackConfigEntry = service.async_get_config_entry(
+        call.hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY_ID]
+    )
+
+    try:
+        await entry.runtime_data.client.profile.set_carrier_by_tracking_number(
+            call.data[ATTR_PACKAGE_TRACKING_NUMBER],
+            call.data[ATTR_FIRST_CARRIER],
+            call.data.get(ATTR_SECOND_CARRIER),
+        )
+    except (SeventeenTrackError, ValueError) as err:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="set_carrier_failed",
+            translation_placeholders={"error": str(err)},
+        ) from err
+
+    await entry.runtime_data.async_request_refresh()
+
+
 def _package_to_dict(package: Package) -> dict[str, Any]:
     result = {
         ATTR_DESTINATION_COUNTRY: package.destination_country,
@@ -161,4 +197,11 @@ def async_setup_services(hass: HomeAssistant) -> None:
         SERVICE_ARCHIVE_PACKAGE,
         _archive_package,
         schema=SERVICE_ARCHIVE_PACKAGE_SCHEMA,
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_SET_CARRIER,
+        _set_carrier,
+        schema=SERVICE_SET_CARRIER_SCHEMA,
     )

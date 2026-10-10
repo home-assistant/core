@@ -46,6 +46,11 @@
       }
     }
   },
+  "exceptions": {
+    "set_carrier_failed": {
+      "message": "Failed to set the carrier: {error}"
+    }
+  },
   "options": {
     "step": {
       "init": {
@@ -116,6 +121,28 @@
         }
       },
       "name": "Get packages"
+    },
+    "set_carrier": {
+      "description": "Sets the carrier used to track a package.",
+      "fields": {
+        "config_entry_id": {
+          "description": "The package carrier will be set for the selected service.",
+          "name": "[%key:component::seventeentrack::services::get_packages::fields::config_entry_id::name%]"
+        },
+        "first_carrier": {
+          "description": "The 17track carrier code of the first carrier.",
+          "name": "First carrier"
+        },
+        "package_tracking_number": {
+          "description": "The tracking number of the package.",
+          "name": "[%key:component::seventeentrack::services::archive_package::fields::package_tracking_number::name%]"
+        },
+        "second_carrier": {
+          "description": "The 17track carrier code of the last-mile carrier. Only supported when the first carrier is a postal service. Keeps the current value if not specified.",
+          "name": "Second carrier"
+        }
+      },
+      "name": "Set carrier"
     }
   }
 }
