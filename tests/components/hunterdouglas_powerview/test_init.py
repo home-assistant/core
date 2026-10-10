@@ -69,6 +69,7 @@ async def test_remove_phantom_shade_via_websocket(
     """Test a shade the hub no longer reports can be deleted from the UI."""
     assert await async_setup_component(hass, "config", {})
     entry = await _setup_entry(hass)
+    hub = _get_hub_device(device_registry, entry)
     phantom = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, "99999")},
@@ -107,7 +108,7 @@ async def test_remove_device_blocked_when_entry_not_loaded(
     """Test removal is refused (not an error) when the entry has no runtime data."""
     entry = MockConfigEntry(domain=DOMAIN, data={"host": "1.2.3.4"}, unique_id=MOCK_MAC)
     entry.add_to_hass(hass)
-    device_registry.async_get_or_create(
+    hub = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id, identifiers={(DOMAIN, MOCK_SERIAL)}
     )
     shade = device_registry.async_get_or_create(
