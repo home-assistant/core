@@ -1,6 +1,7 @@
 """Test Growatt Server services."""
 
 import datetime as dt
+import json
 from unittest.mock import MagicMock, patch
 
 import growattServer
@@ -1655,13 +1656,25 @@ async def test_write_ac_discharge_times_classic_auth_updates_coordinator_cache(
     assert coordinator.data["forcedDischargeStopSwitch1"] == 1
 
 
-async def test_read_ac_charge_times_classic_auth_transport_error(
+@pytest.mark.parametrize(
+    "error",
+    [
+        pytest.param(RequestException("connection reset"), id="transport"),
+        # Captured from Growatt: an unauthenticated getMixSetParams returns
+        # HTTP 200 with an empty body, so response.json() raises.
+        pytest.param(
+            json.JSONDecodeError("Expecting value", "", 0), id="unauthenticated"
+        ),
+    ],
+)
+async def test_read_ac_charge_times_classic_auth_read_error(
     hass: HomeAssistant,
     mock_config_entry_classic: MockConfigEntry,
     mock_growatt_classic_api: MagicMock,
     device_registry: dr.DeviceRegistry,
+    error: Exception,
 ) -> None:
-    """Test a transport failure reading classic Mix settings raises HomeAssistantError."""
+    """Test a failed classic Mix settings read raises HomeAssistantError."""
     await _setup_mix_integration(
         hass, mock_config_entry_classic, mock_growatt_classic_api
     )
@@ -1671,9 +1684,7 @@ async def test_read_ac_charge_times_classic_auth_transport_error(
     )
     assert device_entry is not None
 
-    mock_growatt_classic_api.get_mix_inverter_settings.side_effect = RequestException(
-        "connection reset"
-    )
+    mock_growatt_classic_api.get_mix_inverter_settings.side_effect = error
 
     with pytest.raises(HomeAssistantError) as excinfo:
         await hass.services.async_call(
