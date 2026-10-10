@@ -1,6 +1,5 @@
 """Test the Insteon All-Link Database APIs."""
 
-import asyncio
 from typing import Any
 from unittest.mock import patch
 
@@ -327,6 +326,8 @@ async def test_bad_address(
         assert msg["error"]["message"] == INSTEON_DEVICE_NOT_FOUND
 
 
+# pyinsteon's status request handler sleeps in a task of its own
+@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_notify_on_aldb_loading(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator, aldb_data
 ) -> None:
@@ -338,25 +339,19 @@ async def test_notify_on_aldb_loading(
         msg = await ws_client.receive_json()
         assert msg["success"]
 
-        await asyncio.sleep(0.1)
         msg = await ws_client.receive_json()
         assert msg["event"]["type"] == "status"
         assert not msg["event"]["is_loading"]
 
         device = devices["333333"]
         device.aldb._update_status(ALDBStatus.LOADING)
-        await asyncio.sleep(0.1)
         msg = await ws_client.receive_json()
         assert msg["event"]["type"] == "status"
         assert msg["event"]["is_loading"]
 
         device.aldb._update_status(ALDBStatus.LOADED)
-        await asyncio.sleep(0.1)
         msg = await ws_client.receive_json()
         assert msg["event"]["type"] == "status"
         assert not msg["event"]["is_loading"]
 
         await ws_client.client.session.close()
-
-        # Allow lingering tasks to complete
-        await asyncio.sleep(0.1)
