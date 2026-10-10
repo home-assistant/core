@@ -784,22 +784,22 @@ _POLAR_TRIGGER_CASES = [
     (
         "sun.midnight_sun_started",
         datetime(2015, 4, 1, 12, tzinfo=dt_util.UTC),
-        datetime(2015, 4, 18, 22, 56, 36, tzinfo=dt_util.UTC),
+        datetime(2015, 4, 19, 22, 56, 23, tzinfo=dt_util.UTC),
     ),
     (
         "sun.midnight_sun_ended",
         datetime(2015, 8, 1, 12, tzinfo=dt_util.UTC),
-        datetime(2015, 8, 25, 22, 59, 19, tzinfo=dt_util.UTC),
+        datetime(2015, 8, 24, 22, 59, 36, tzinfo=dt_util.UTC),
     ),
     (
         "sun.polar_night_started",
         datetime(2015, 10, 1, 12, tzinfo=dt_util.UTC),
-        datetime(2015, 10, 28, 10, 41, 13, tzinfo=dt_util.UTC),
+        datetime(2015, 10, 27, 10, 41, 18, tzinfo=dt_util.UTC),
     ),
     (
         "sun.polar_night_ended",
         datetime(2015, 2, 1, 12, tzinfo=dt_util.UTC),
-        datetime(2015, 2, 15, 11, 11, 34, tzinfo=dt_util.UTC),
+        datetime(2015, 2, 16, 11, 11, 31, tzinfo=dt_util.UTC),
     ),
 ]
 
@@ -857,10 +857,10 @@ async def test_midnight_sun_trigger_offset_catches_pending_crossing(
     await hass.config.async_set_time_zone(time_zone)
     await hass.config.async_update(latitude=latitude, longitude=longitude, elevation=0)
 
-    # Midnight sun starts at the 2015-04-18 22:56 solar midnight; a 3-day "after"
-    # offset pushes the fire time to 2015-04-21. now sits between the two.
-    now = datetime(2015, 4, 20, 12, tzinfo=dt_util.UTC)
-    expected = datetime(2015, 4, 21, 22, 56, 36, tzinfo=dt_util.UTC)
+    # Midnight sun starts at the 2015-04-19 22:56 solar midnight; a 3-day "after"
+    # offset pushes the fire time to 2015-04-22. now sits between the two.
+    now = datetime(2015, 4, 21, 12, tzinfo=dt_util.UTC)
+    expected = datetime(2015, 4, 22, 22, 56, 23, tzinfo=dt_util.UTC)
     with freeze_time(now):
         await _arm_automation(
             hass,
@@ -912,10 +912,26 @@ def test_next_polar_transition_large_before_offset() -> None:
     observer = astral.Observer(*_SVALBARD[:2], 0)
     now = datetime(2015, 2, 27, 12, tzinfo=dt_util.UTC)
     # The 2015-04-18 crossing's fire (60 days earlier) is already past, so the
-    # next fire derives from the 2016-04-17 22:56:39 solar-midnight crossing.
-    expected = datetime(2016, 2, 17, 22, 56, 39, tzinfo=dt_util.UTC)
+    # next fire derives from the 2016-04-18 22:56:27 solar-midnight crossing.
+    expected = datetime(2016, 2, 18, 22, 56, 27, tzinfo=dt_util.UTC)
     result = _next_polar_transition(
         observer, "midnight", now, target_above=True, offset=timedelta(days=-60)
+    )
+    assert result == expected
+
+
+def test_next_polar_transition_uses_geometric_elevation() -> None:
+    """Test the midnight-sun crossing is found from the geometric elevation.
+
+    Near the polar circle the ~0.5 deg refraction gap shifts the crossing day: at
+    Kotzebue the first solar midnight above the (geometric) horizon is 2015-06-04,
+    three days later than the apparent elevation would report (2015-06-01).
+    """
+    observer = astral.Observer(*_KOTZEBUE[:2], 0)
+    now = datetime(2015, 1, 1, tzinfo=dt_util.UTC)
+    expected = datetime(2015, 6, 4, 10, 48, 44, tzinfo=dt_util.UTC)
+    result = _next_polar_transition(
+        observer, "midnight", now, target_above=True, offset=timedelta(0)
     )
     assert result == expected
 
