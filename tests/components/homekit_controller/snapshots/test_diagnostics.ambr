@@ -23,7 +23,7 @@
             'icon': None,
             'original_device_class': 'identify',
             'original_icon': None,
-            'original_name': 'Koogeek-LS1-20833F Identify',
+            'original_name': 'Identify',
             'state': dict({
               'attributes': dict({
                 'device_class': 'identify',
@@ -348,7 +348,7 @@
           'icon': None,
           'original_device_class': 'identify',
           'original_icon': None,
-          'original_name': 'Koogeek-LS1-20833F Identify',
+          'original_name': 'Identify',
           'state': dict({
             'attributes': dict({
               'device_class': 'identify',

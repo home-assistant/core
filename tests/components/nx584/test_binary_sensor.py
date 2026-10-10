@@ -7,6 +7,7 @@ from nx584 import client as nx584_client
 import pytest
 import requests
 
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.nx584 import binary_sensor as nx584
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -104,7 +105,13 @@ async def _test_assert_graceful_fail(
     hass: HomeAssistant, config: dict[str, Any]
 ) -> None:
     """Test the failing."""
-    assert not await async_setup_component(hass, "nx584", config)
+    assert await async_setup_component(
+        hass,
+        BINARY_SENSOR_DOMAIN,
+        {BINARY_SENSOR_DOMAIN: {"platform": "nx584", **config}},
+    )
+    await hass.async_block_till_done()
+    assert hass.states.async_entity_ids(BINARY_SENSOR_DOMAIN) == []
 
 
 @pytest.mark.usefixtures("client")
@@ -122,6 +129,7 @@ async def test_nx584_sensor_setup_bad_config(
 ) -> None:
     """Test the setup with bad configuration."""
     await _test_assert_graceful_fail(hass, config)
+    assert not nx584_client.Client.called
 
 
 @pytest.mark.usefixtures("client")

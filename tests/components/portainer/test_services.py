@@ -17,6 +17,7 @@ from homeassistant.components.portainer.services import (
     PortainerServiceArgument,
     _async_get_device_and_entry,
 )
+from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import (
@@ -508,3 +509,33 @@ async def test_service_portainer_exceptions(
             blocking=True,
         )
     mock_portainer_client.images_prune.assert_called_once()
+
+
+async def test_service_invalid_auth_starts_reauth(
+    hass: HomeAssistant,
+    device_registry: DeviceRegistry,
+    mock_portainer_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test an invalid API key in an action starts a reauth flow."""
+    await setup_integration(hass, mock_config_entry)
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_DEVICE_IDENTIFIER), mock_config_entry.entry_id
+    )
+    assert device is not None
+    mock_portainer_client.images_prune.side_effect = PortainerAuthenticationError(
+        "auth"
+    )
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            DOMAIN,
+            PortainerService.PRUNE_IMAGES,
+            {ATTR_DEVICE_ID: device.id},
+            blocking=True,
+        )
+    await hass.async_block_till_done()
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH

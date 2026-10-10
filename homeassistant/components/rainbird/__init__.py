@@ -16,7 +16,11 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -92,7 +96,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: RainbirdConfigEntry) -> 
         raise ConfigEntryNotReady from err
 
     if not (await _async_fix_unique_id(hass, controller, entry)):
-        return False
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="duplicate_entry",
+        )
     if mac_address := entry.data.get(CONF_MAC):
         _async_fix_entity_unique_id(
             er.async_get(hass),
