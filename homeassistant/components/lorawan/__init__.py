@@ -30,7 +30,7 @@ CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Load discovery matchers and release registrations when HA stops."""
+    """Set up the LoRaWAN integration."""
     registry = hass.data[DATA_REGISTRY] = ConnectionRegistry(
         await async_get_lorawan(hass)
     )
