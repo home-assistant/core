@@ -2,6 +2,7 @@
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
+from functools import partial
 from itertools import chain
 from typing import Any, override
 
@@ -397,8 +398,7 @@ class TeslemetryChargeOnSolarLowerLimitNumberEntity(
                 return
 
             sent_value = await async_set_charge_on_solar(
-                self.hass,
-                self.config_entry,
+                partial(handle_vehicle_command, self.hass, self.config_entry),
                 self.api,
                 enabled=True,
                 lower_charge_limit=value,

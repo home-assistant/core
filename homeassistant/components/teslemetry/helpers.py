@@ -1,8 +1,8 @@
 """Teslemetry helper functions."""
 
 import asyncio
-from collections.abc import Awaitable
-from typing import TYPE_CHECKING, Any, cast
+from collections.abc import Awaitable, Callable
+from typing import Any, cast
 
 from aiohttp import ClientError
 from aiopowerwall import PowerwallAuthenticationError, PowerwallClient
@@ -18,9 +18,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import BLE_PARENT_KEY, BLE_PARENT_LOCK_KEY, DOMAIN, LOGGER, VEHICLE_KEY_FILE
-
-if TYPE_CHECKING:
-    from . import TeslemetryConfigEntry
 
 
 class PowerwallKeyRejectedError(Exception):
@@ -157,8 +154,7 @@ async def handle_vehicle_command(command: Awaitable[dict[str, Any]]) -> Any:
 
 
 async def async_set_charge_on_solar(
-    hass: HomeAssistant,
-    entry: TeslemetryConfigEntry,
+    send: Callable[[Awaitable[dict[str, Any]]], Awaitable[Any]],
     api: Vehicle,
     *,
     enabled: bool,
@@ -171,14 +167,12 @@ async def async_set_charge_on_solar(
     """
     if charge_limit_soc is not None:
         lower_charge_limit = min(lower_charge_limit, charge_limit_soc)
-    await handle_vehicle_command(
-        hass,
-        entry,
+    await send(
         api.charge_on_solar(
             enabled=enabled,
             lower_charge_limit=lower_charge_limit,
             upper_charge_limit=charge_limit_soc,
-        ),
+        )
     )
     return lower_charge_limit
 
