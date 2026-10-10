@@ -1,5 +1,9 @@
 """Tests for stale shade cleanup in the PowerView coordinator."""
 
+from unittest.mock import AsyncMock, patch
+
+from aiopvapi.helpers.aiorequest import PvApiMaintenance
+
 from datetime import timedelta
 
 from freezegun.api import FrozenDateTimeFactory
@@ -8,10 +12,40 @@ import pytest
 from homeassistant.components.hunterdouglas_powerview.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .const import MOCK_MAC
 
 from tests.common import MockConfigEntry, async_fire_time_changed
+
+
+@pytest.mark.usefixtures("mock_hunterdouglas_hub")
+@pytest.mark.parametrize("api_version", [1, 2, 3])
+@pytest.mark.parametrize(
+    "get_shades_kwargs",
+    [
+        {"side_effect": PvApiMaintenance},
+        {"side_effect": TimeoutError},
+        {"return_value": None},
+    ],
+    ids=["maintenance", "hub_error", "no_data"],
+)
+async def test_refresh_failures(
+    hass: HomeAssistant, get_shades_kwargs: dict
+) -> None:
+    """Test the coordinator marks the update failed on each error path."""
+    entry = MockConfigEntry(domain=DOMAIN, data={"host": "1.2.3.4"}, unique_id=MOCK_MAC)
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    coordinator = entry.runtime_data.coordinator
+    with patch.object(
+        coordinator.shades, "get_shades", AsyncMock(**get_shades_kwargs)
+    ):
+        await coordinator.async_refresh()
+
+    assert not coordinator.last_update_success
 
 
 @pytest.mark.usefixtures("mock_hunterdouglas_hub")
