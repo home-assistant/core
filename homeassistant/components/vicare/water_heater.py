@@ -16,7 +16,6 @@ from PyViCare.PyViCareUtils import (
     PyViCareNotSupportedFeatureError,
     PyViCareRateLimitError,
 )
-from requests.exceptions import ConnectionError as RequestConnectionError
 
 from homeassistant.components.water_heater import (
     WaterHeaterEntity,
@@ -71,7 +70,6 @@ HA_TO_VICARE_HVAC_DHW = {
 
 
 VICARE_API_ERRORS = (
-    RequestConnectionError,
     PyViCareDeviceCommunicationError,
     PyViCareInternalServerError,
     PyViCareInvalidDataError,

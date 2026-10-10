@@ -5,8 +5,11 @@ from unittest.mock import patch
 
 import probatio
 import pytest
-from PyViCare.PyViCareUtils import PyViCareCommandError, PyViCareRateLimitError
-from requests.exceptions import ConnectionError as RequestConnectionError
+from PyViCare.PyViCareUtils import (
+    PyViCareCommandError,
+    PyViCareInternalServerError,
+    PyViCareRateLimitError,
+)
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.vicare.const import DOMAIN
@@ -221,9 +224,11 @@ async def test_set_circulation_schedule_invalid_slot(
             id="command_error",
         ),
         pytest.param(
-            RequestConnectionError("unreachable"),
+            PyViCareInternalServerError(
+                {"statusCode": 0, "message": "unreachable", "viErrorId": "n/a"}
+            ),
             "Unable to communicate with the ViCare API",
-            id="connection_error",
+            id="server_error",
         ),
         pytest.param(
             PyViCareRateLimitError(
@@ -276,7 +281,9 @@ async def test_get_circulation_schedule_api_error(
         patch.object(
             mock_vicare.devices[0].service,
             "getProperty",
-            side_effect=RequestConnectionError("unreachable"),
+            side_effect=PyViCareInternalServerError(
+                {"statusCode": 0, "message": "unreachable", "viErrorId": "n/a"}
+            ),
         ),
         pytest.raises(HomeAssistantError) as exc_info,
     ):
