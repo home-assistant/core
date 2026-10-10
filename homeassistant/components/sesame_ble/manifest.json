@@ -1,0 +1,29 @@
+{
+  "domain": "sesame_ble",
+  "name": "Candy House Sesame BLE",
+  "bluetooth": [
+    {
+      "manufacturer_id": 1447
+    },
+    {
+      "manufacturer_id": 1370
+    },
+    {
+      "manufacturer_id": 1445
+    },
+    {
+      "manufacturer_id": 1338
+    },
+    {
+      "service_uuid": "0000fd81-0000-1000-8000-00805f9b34fb"
+    }
+  ],
+  "codeowners": ["@deece"],
+  "config_flow": true,
+  "dependencies": ["bluetooth", "bluetooth_adapters", "file_upload", "qrcode"],
+  "documentation": "https://www.home-assistant.io/integrations/sesame_ble",
+  "integration_type": "device",
+  "iot_class": "local_push",
+  "quality_scale": "bronze",
+  "requirements": ["pysesame-ble==0.1.1"]
+}

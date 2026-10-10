@@ -1019,6 +1019,26 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
         "service_uuid": "ef090000-11d6-42ba-93b8-9dd7ec090aa9",
     },
     {
+        "domain": "sesame_ble",
+        "manufacturer_id": 1447,
+    },
+    {
+        "domain": "sesame_ble",
+        "manufacturer_id": 1370,
+    },
+    {
+        "domain": "sesame_ble",
+        "manufacturer_id": 1445,
+    },
+    {
+        "domain": "sesame_ble",
+        "manufacturer_id": 1338,
+    },
+    {
+        "domain": "sesame_ble",
+        "service_uuid": "0000fd81-0000-1000-8000-00805f9b34fb",
+    },
+    {
         "domain": "shelly",
         "local_name": "Shelly*",
     },
