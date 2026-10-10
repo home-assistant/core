@@ -30,6 +30,7 @@ async def test_stale_shade_devices_removed_on_refresh(
     existing = {
         d.id for d in dr.async_entries_for_config_entry(device_registry, entry.entry_id)
     }
+    hub = next(device for device in entries if device.via_device_id is None)
     phantom = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, "99999")},
