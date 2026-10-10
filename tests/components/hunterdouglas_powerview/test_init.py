@@ -61,6 +61,30 @@ async def test_setup_not_primary_hub(hass: HomeAssistant) -> None:
 
 @pytest.mark.usefixtures("mock_hunterdouglas_hub")
 @pytest.mark.parametrize("api_version", [1, 2, 3])
+async def test_stale_shade_devices_removed_on_setup(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """Test ghost devices are removed during setup, without any coordinator poll."""
+    entry = MockConfigEntry(domain=DOMAIN, data={"host": "1.2.3.4"}, unique_id=MOCK_MAC)
+    entry.add_to_hass(hass)
+    hub = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id, identifiers={(DOMAIN, MOCK_SERIAL)}
+    )
+    phantom = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, "99999")},
+        via_device_id=hub.id,
+    )
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert device_registry.async_get(phantom.id) is None
+    assert device_registry.async_get(hub.id) is not None
+
+
+@pytest.mark.usefixtures("mock_hunterdouglas_hub")
+@pytest.mark.parametrize("api_version", [1, 2, 3])
 async def test_remove_phantom_shade_via_websocket(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
