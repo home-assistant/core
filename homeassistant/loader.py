@@ -61,6 +61,41 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
+LORAWAN_SCHEMA = probatio.All(
+    [
+        probatio.All(
+            probatio.ExactSequence(
+                (
+                    probatio.All(str, probatio.Length(min=1)),
+                    probatio.Any(
+                        probatio.All(
+                            probatio.Check(
+                                lambda value: type(value) is int,
+                                "Expected an integer brand ID",
+                            ),
+                            probatio.Range(min=0),
+                        ),
+                        probatio.All(str, probatio.Length(min=1)),
+                    ),
+                )
+            ),
+            probatio.Coerce(tuple),
+        )
+    ],
+    probatio.Length(min=1),
+    probatio.Unique(),
+)
+LORAWAN_MANIFEST_SCHEMA = probatio.Schema(
+    {
+        probatio.Required("lorawan"): LORAWAN_SCHEMA,
+        probatio.Required("config_flow"): True,
+        probatio.Required("dependencies"): probatio.All(
+            [str], probatio.Contains("lorawan")
+        ),
+    },
+    extra=probatio.ALLOW_EXTRA,
+)
+
 #
 # Integration.get_component will check preload platforms and
 # try to import the code to avoid a thundering heard of import
@@ -677,29 +712,15 @@ async def async_get_lorawan(
         vendors = integration.lorawan
         if vendors is None:
             continue
-        if (
-            not isinstance(vendors, list)
-            or not vendors
-            or any(
-                not isinstance(vendor, list | tuple)
-                or len(vendor) != 2
-                or not isinstance(vendor[0], str)
-                or not vendor[0]
-                or type(vendor[1]) not in (int, str)
-                or (isinstance(vendor[1], int) and vendor[1] < 0)
-                or vendor[1] == ""
-                for vendor in vendors
-            )
-            or len({tuple(vendor) for vendor in vendors}) != len(vendors)
-            or not integration.config_flow
-            or "lorawan" not in integration.dependencies
-        ):
+        try:
+            vendors = LORAWAN_MANIFEST_SCHEMA(integration.manifest)["lorawan"]
+        except probatio.Invalid:
             _LOGGER.warning(
                 "Ignoring invalid LoRaWAN discovery registration for %s",
                 integration.domain,
             )
             continue
-        registrations[integration.domain] = [(stack, brand) for stack, brand in vendors]
+        registrations[integration.domain] = vendors
     return registrations
 
 

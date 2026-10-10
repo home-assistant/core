@@ -17,25 +17,10 @@ from probatio.humanize import humanize_error
 
 from homeassistant.const import Platform
 from homeassistant.helpers import config_validation as cv
+from homeassistant.loader import LORAWAN_SCHEMA
 from script.util import sort_manifest as util_sort_manifest
 
 from .model import Config, Integration, IntegrationType, ScaledQualityScaleTiers
-
-
-def validate_lorawan_brand(value: Any) -> tuple[str, int | str]:
-    """Validate one stack and native brand ID discovery matcher."""
-    if (
-        not isinstance(value, list | tuple)
-        or len(value) != 2
-        or not isinstance(value[0], str)
-        or not value[0]
-        or type(value[1]) not in (int, str)
-        or (isinstance(value[1], int) and value[1] < 0)
-        or value[1] == ""
-    ):
-        raise probatio.Invalid("Expected a stack name and a nonempty brand ID")
-    return value[0], value[1]
-
 
 DOCUMENTATION_URL_SCHEMA = "https"
 DOCUMENTATION_URL_HOST = "www.home-assistant.io"
@@ -227,9 +212,7 @@ INTEGRATION_MANIFEST_SCHEMA = probatio.Schema(
         ),
         probatio.Optional("config_flow"): bool,
         probatio.Optional("mqtt"): [str],
-        probatio.Optional("lorawan"): probatio.All(
-            [validate_lorawan_brand], probatio.Length(min=1), probatio.Unique()
-        ),
+        probatio.Optional("lorawan"): LORAWAN_SCHEMA,
         probatio.Optional("zeroconf"): [
             probatio.Any(
                 str,
