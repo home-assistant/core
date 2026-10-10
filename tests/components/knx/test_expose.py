@@ -672,7 +672,7 @@ async def test_ui_expose_stores_only_set_options(
     hass_ws_client: WebSocketGenerator,
     hass_storage: dict[str, Any],
 ) -> None:
-    """Test options left at their default are not stored."""
+    """Test options left unset or at their default are not stored."""
     entity_id = "light.test"
     await knx.setup_integration()
     ws_client = await hass_ws_client(hass)
@@ -686,10 +686,15 @@ async def test_ui_expose_stores_only_set_options(
                     {
                         "ga": {"write": "1/1/1", "dpt": "5.010"},
                         "attribute": None,
-                        "cooldown": 0,
+                        "cooldown": None,
                         "send_on_init": False,
                         "respond_to_read": True,
                         "value_template": None,
+                    },
+                    {
+                        "ga": {"write": "1/1/3", "dpt": "5.010"},
+                        "cooldown": 0,
+                        "periodic_send": 0,
                     },
                     {
                         "ga": {"write": "1/1/2", "dpt": "5.010"},
@@ -712,6 +717,12 @@ async def test_ui_expose_stores_only_set_options(
     assert hass_storage[KNX_CONFIG_STORAGE_KEY]["data"]["expose"][entity_id] == {
         "options": [
             {"ga": {"write": "1/1/1", "dpt": "5.010"}},
+            # explicitly set numbers are kept, even when they act like unset
+            {
+                "ga": {"write": "1/1/3", "dpt": "5.010"},
+                "cooldown": 0.0,
+                "periodic_send": 0.0,
+            },
             {
                 "ga": {"write": "1/1/2", "dpt": "5.010"},
                 "attribute": "brightness",

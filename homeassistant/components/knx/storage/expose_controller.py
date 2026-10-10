@@ -79,9 +79,10 @@ class ExposeOption:
     ]
     attribute: str | None = None
     default: Any = None
-    cooldown: Annotated[float, cv.positive_float] = 0  # frontend renders to duration
+    # frontend renders to duration
+    cooldown: Annotated[float | None, probatio.Maybe(cv.positive_float)] = None
     send_on_init: bool = False
-    periodic_send: Annotated[float, cv.positive_float] = 0
+    periodic_send: Annotated[float | None, probatio.Maybe(cv.positive_float)] = None
     respond_to_read: bool = True
     value_template: Annotated[
         str | None, probatio.Maybe(validate_expose_template_no_coerce)
@@ -129,10 +130,10 @@ def _to_expose_options(hass: HomeAssistant, option: ExposeOption) -> KnxExposeOp
         group_address=parse_device_group_address(option.ga.write),
         dpt=dpt,
         attribute=option.attribute,
-        cooldown=option.cooldown,
+        cooldown=option.cooldown or 0,
         default=option.default,
         send_on_init=option.send_on_init,
-        periodic_send=option.periodic_send,
+        periodic_send=option.periodic_send or 0,
         respond_to_read=option.respond_to_read,
         value_template=value_template,
     )
