@@ -186,7 +186,7 @@ class GreeAcClimateEntity(
             self._runtime_data.ac_state,
             power=self._attr_hvac_mode is not HVACMode.OFF,
             mode=HA_MODE_TO_LIB[last_active_hvac_mode],
-            temperature=int(self._attr_target_temperature or MIN_TEMP),
+            temperature=int(self._attr_native_target_temperature or MIN_TEMP),
             fan=_HA_FAN_TO_LIB[self._attr_fan_mode or FAN_AUTO],
         )
 
@@ -289,5 +289,5 @@ class GreeAcClimateWithReceiver(GreeAcClimateEntity, InfraredReceiverConsumerEnt
             LIB_MODE_TO_HA[state.mode] if state.power else HVACMode.OFF
         )
         self._attr_fan_mode = _LIB_FAN_TO_HA[state.fan]
-        self._attr_target_temperature = float(state.temperature)
+        self._attr_native_target_temperature = float(state.temperature)
         self.async_write_ha_state()
