@@ -1,6 +1,8 @@
 """Support for the SpaceAPI."""
 
 from contextlib import suppress
+from http import HTTPStatus
+import logging
 import math
 from typing import Any
 
@@ -9,6 +11,7 @@ import probatio
 
 from homeassistant import core as ha
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_ICON,
@@ -16,6 +19,7 @@ from homeassistant.const import (
     ATTR_NAME,
     ATTR_STATE,
     CONF_ADDRESS,
+    CONF_API_VERSION,
     CONF_EMAIL,
     CONF_ENTITY_ID,
     CONF_LOCATION,
@@ -25,7 +29,9 @@ from homeassistant.const import (
     EntityStateAttribute,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
@@ -105,12 +111,16 @@ CONF_SPACE = "space"
 CONF_TEMPERATURE = "temperature"
 
 DATA_SPACEAPI = "data_spaceapi"
+DATA_VIEW_REGISTERED = "data_spaceapi_view_registered"
 DOMAIN = "spaceapi"
+
+_LOGGER = logging.getLogger(__name__)
 
 ISSUE_REPORT_CHANNELS = [CONF_EMAIL, CONF_ISSUE_MAIL, CONF_ML, CONF_TWITTER]
 
 SENSOR_TYPES = [CONF_HUMIDITY, CONF_TEMPERATURE]
 SPACEAPI_VERSION = "0.13"
+SPACEAPI_VERSION_15 = "15"
 
 URL_API_SPACEAPI = "/api/spaceapi"
 
@@ -209,46 +219,117 @@ SENSOR_SCHEMA = probatio.Schema(
     {probatio.In(SENSOR_TYPES): [cv.entity_id], cv.string: [cv.entity_id]}
 )
 
+
+def _validate_config(config: dict[str, Any]) -> dict[str, Any]:
+    """Validate requirements that depend on the selected SpaceAPI version."""
+    if config.get(CONF_API_VERSION, SPACEAPI_VERSION) == SPACEAPI_VERSION:
+        if not config.get(CONF_ISSUE_REPORT_CHANNELS):
+            raise probatio.Invalid("At least one issue report channel is required")
+    return config
+
+
 CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: probatio.Schema(
-            {
-                probatio.Required(CONF_CONTACT): CONTACT_SCHEMA,
-                probatio.Required(CONF_ISSUE_REPORT_CHANNELS): probatio.All(
-                    probatio.EnsureList(), [probatio.In(ISSUE_REPORT_CHANNELS)]
-                ),
-                probatio.Optional(CONF_LOCATION): LOCATION_SCHEMA,
-                probatio.Required(CONF_LOGO): cv.url,
-                probatio.Required(CONF_SPACE): cv.string,
-                probatio.Required(CONF_STATE): STATE_SCHEMA,
-                probatio.Required(CONF_URL): cv.string,
-                probatio.Optional(CONF_SENSORS): SENSOR_SCHEMA,
-                probatio.Optional(CONF_SPACEFED): SPACEFED_SCHEMA,
-                probatio.Optional(CONF_CAM): probatio.All(
-                    probatio.EnsureList(), [cv.url], probatio.NonEmpty()
-                ),
-                probatio.Optional(CONF_STREAM): STREAM_SCHEMA,
-                probatio.Optional(CONF_FEEDS): FEEDS_SCHEMA,
-                probatio.Optional(CONF_CACHE): CACHE_SCHEMA,
-                probatio.Optional(CONF_PROJECTS): probatio.All(
-                    probatio.EnsureList(), [cv.url]
-                ),
-                probatio.Optional(CONF_RADIO_SHOW): probatio.All(
-                    probatio.EnsureList(), [RADIO_SHOW_SCHEMA]
-                ),
-            }
+        DOMAIN: probatio.All(
+            probatio.Schema(
+                {
+                    probatio.Optional(
+                        CONF_API_VERSION, default=SPACEAPI_VERSION
+                    ): probatio.In([SPACEAPI_VERSION, SPACEAPI_VERSION_15]),
+                    probatio.Required(CONF_CONTACT): CONTACT_SCHEMA,
+                    probatio.Optional(CONF_ISSUE_REPORT_CHANNELS): probatio.All(
+                        probatio.EnsureList(),
+                        [probatio.In(ISSUE_REPORT_CHANNELS)],
+                        probatio.NonEmpty(),
+                    ),
+                    probatio.Optional(CONF_LOCATION): LOCATION_SCHEMA,
+                    probatio.Required(CONF_LOGO): cv.url,
+                    probatio.Required(CONF_SPACE): cv.string,
+                    probatio.Required(CONF_STATE): STATE_SCHEMA,
+                    probatio.Required(CONF_URL): cv.string,
+                    probatio.Optional(CONF_SENSORS): SENSOR_SCHEMA,
+                    probatio.Optional(CONF_SPACEFED): SPACEFED_SCHEMA,
+                    probatio.Optional(CONF_CAM): probatio.All(
+                        probatio.EnsureList(), [cv.url], probatio.NonEmpty()
+                    ),
+                    probatio.Optional(CONF_STREAM): STREAM_SCHEMA,
+                    probatio.Optional(CONF_FEEDS): FEEDS_SCHEMA,
+                    probatio.Optional(CONF_CACHE): CACHE_SCHEMA,
+                    probatio.Optional(CONF_PROJECTS): probatio.All(
+                        probatio.EnsureList(), [cv.url]
+                    ),
+                    probatio.Optional(CONF_RADIO_SHOW): probatio.All(
+                        probatio.EnsureList(), [RADIO_SHOW_SCHEMA]
+                    ),
+                }
+            ),
+            _validate_config,
         )
     },
     extra=probatio.ALLOW_EXTRA,
 )
 
 
-def setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Register the SpaceAPI with the HTTP interface."""
-    hass.data[DATA_SPACEAPI] = config[DOMAIN]
-    hass.http.register_view(APISpaceApiView)
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Import YAML configuration into a config entry."""
+    if DOMAIN not in config:
+        return True
 
+    _create_yaml_migration_issue(hass)
+    if not hass.config_entries.async_entries(DOMAIN):
+        hass.async_create_task(_async_import_yaml_config(hass, config[DOMAIN]))
     return True
+
+
+async def _async_import_yaml_config(
+    hass: HomeAssistant, config: dict[str, Any]
+) -> None:
+    """Create a config entry from YAML configuration."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data=config,
+    )
+    if (
+        result["type"] is FlowResultType.ABORT
+        and result["reason"] != "already_configured"
+    ):
+        _LOGGER.error(
+            "Failed to import SpaceAPI YAML configuration: %s", result["reason"]
+        )
+
+
+def _create_yaml_migration_issue(hass: HomeAssistant) -> None:
+    """Tell users to remove their imported SpaceAPI configuration from YAML."""
+    async_create_issue(
+        hass,
+        DOMAIN,
+        "deprecated_yaml",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+    )
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up SpaceAPI from a config entry."""
+    hass.data[DATA_SPACEAPI] = entry.data
+    _register_view(hass)
+    return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload SpaceAPI config entry data."""
+    hass.data.pop(DATA_SPACEAPI, None)
+    return True
+
+
+def _register_view(hass: HomeAssistant) -> None:
+    """Register the API view once."""
+    if DATA_VIEW_REGISTERED not in hass.data:
+        hass.http.register_view(APISpaceApiView)
+        hass.data[DATA_VIEW_REGISTERED] = True
 
 
 class APISpaceApiView(HomeAssistantView):
@@ -296,7 +377,11 @@ class APISpaceApiView(HomeAssistantView):
     def get(self, request: web.Request) -> web.Response:
         """Get SpaceAPI data."""
         hass = request.app[KEY_HASS]
-        spaceapi: dict[str, Any] = hass.data[DATA_SPACEAPI]
+        if (spaceapi := hass.data.get(DATA_SPACEAPI)) is None:
+            return self.json(
+                {"error": "SpaceAPI is not configured"},
+                status_code=HTTPStatus.SERVICE_UNAVAILABLE,
+            )
 
         location = {
             ATTR_LAT: hass.config.latitude,
@@ -312,12 +397,14 @@ class APISpaceApiView(HomeAssistantView):
 
         state_entity_id = spaceapi[CONF_STATE][ATTR_ENTITY_ID]
 
-        state: dict[str, bool | int | float | str | dict[str, str]]
+        state: dict[str, bool | int | float | str | dict[str, str] | None]
         if (space_state := hass.states.get(state_entity_id)) is not None:
             state = {
                 ATTR_OPEN: space_state.state != "off",
                 ATTR_LASTCHANGE: dt_util.as_timestamp(space_state.last_updated),
             }
+        elif spaceapi.get(CONF_API_VERSION) == SPACEAPI_VERSION_15:
+            state = {ATTR_OPEN: None, ATTR_LASTCHANGE: 0}
         else:
             state = {
                 ATTR_OPEN: "null",
@@ -331,15 +418,19 @@ class APISpaceApiView(HomeAssistantView):
             }
 
         data = {
-            ATTR_API: SPACEAPI_VERSION,
             ATTR_CONTACT: spaceapi[CONF_CONTACT],
-            ATTR_ISSUE_REPORT_CHANNELS: spaceapi[CONF_ISSUE_REPORT_CHANNELS],
             ATTR_LOCATION: location,
             ATTR_LOGO: spaceapi[CONF_LOGO],
             ATTR_SPACE: spaceapi[CONF_SPACE],
             ATTR_STATE: state,
             ATTR_URL: spaceapi[CONF_URL],
         }
+
+        if spaceapi.get(CONF_API_VERSION, SPACEAPI_VERSION) == SPACEAPI_VERSION_15:
+            data["api_compatibility"] = ["14", SPACEAPI_VERSION_15]
+        else:
+            data[ATTR_API] = SPACEAPI_VERSION
+            data[ATTR_ISSUE_REPORT_CHANNELS] = spaceapi[CONF_ISSUE_REPORT_CHANNELS]
 
         with suppress(KeyError):
             data[ATTR_CAM] = spaceapi[CONF_CAM]
