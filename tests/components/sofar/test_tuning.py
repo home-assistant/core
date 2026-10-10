@@ -39,7 +39,7 @@ async def _poll_after_grid_failed(
     entry.runtime_data.readings._poll = first_attempt
     freezer.tick(timedelta(seconds=SCAN_INTERVAL))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
 
 @pytest.mark.parametrize(
