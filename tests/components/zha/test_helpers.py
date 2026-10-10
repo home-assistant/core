@@ -1,24 +1,31 @@
 """Tests for ZHA helpers."""
 
+import asyncio
+from collections.abc import Callable, Coroutine
 import logging
 from typing import Any
 
 from probatio import to_field_list
 import pytest
+from zha.application.const import ATTR_TYPE, ZHA_GW_MSG
 from zigpy.application import ControllerApplication
 from zigpy.types.basic import uint16_t
 from zigpy.zcl.clusters import lighting
 
 from homeassistant.components.zha import const as zha_const
 from homeassistant.components.zha.helpers import (
+    ZHA_GW_MSG_LOG_ENTRY,
+    ZHA_GW_MSG_LOG_OUTPUT,
     cluster_command_schema_to_vol_schema,
     convert_to_zcl_values,
     create_zha_config,
     exclude_none_values,
     get_zha_data,
+    get_zha_gateway_proxy,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
@@ -218,3 +225,51 @@ async def test_create_zha_config_remove_unused(
 
     # Does not error out
     create_zha_config(hass, ha_zha_data)
+
+
+async def test_debug_mode_log_filter(
+    hass: HomeAssistant, setup_zha: Callable[..., Coroutine[None]]
+) -> None:
+    """Test a debug mode session filters relayed logs only until it ends."""
+    await setup_zha()
+    gateway_proxy = get_zha_gateway_proxy(hass)
+
+    relayed: list[str] = []
+    marker_relayed = asyncio.Event()
+
+    @callback
+    def collect(data: dict[str, Any]) -> None:
+        if data[ATTR_TYPE] != ZHA_GW_MSG_LOG_OUTPUT:
+            return
+        message = data[ZHA_GW_MSG_LOG_ENTRY]["message"][0]
+        if message.startswith("test "):
+            relayed.append(message)
+        if message == "test marker":
+            marker_relayed.set()
+
+    unsub = async_dispatcher_connect(hass, ZHA_GW_MSG, collect)
+
+    async def log_and_wait(*messages: str) -> None:
+        # The relay is a queue, so the marker arrives after everything before it
+        marker_relayed.clear()
+        for message in (*messages, "test marker"):
+            logging.getLogger("zha").debug(message)
+        async with asyncio.timeout(5):
+            await marker_relayed.wait()
+
+    def drop_filtered(record: logging.LogRecord) -> bool:
+        return record.getMessage() != "test filtered"
+
+    gateway_proxy.async_enable_debug_mode(drop_filtered)
+    await log_and_wait("test filtered", "test kept")
+    gateway_proxy.async_disable_debug_mode(drop_filtered)
+    assert relayed == ["test kept", "test marker"]
+
+    # A later session without the filter relays everything again
+    relayed.clear()
+    gateway_proxy.async_enable_debug_mode()
+    await log_and_wait("test filtered")
+    gateway_proxy.async_disable_debug_mode()
+    assert relayed == ["test filtered", "test marker"]
+
+    unsub()
