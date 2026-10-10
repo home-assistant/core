@@ -3,13 +3,14 @@
 from dataclasses import dataclass
 import logging
 
+from airlino_api import DEFAULT_API_VERSION, DEFAULT_PORT, AirlinoApi
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .api import AirlinoApi
-from .const import DEFAULT_API_VERSION, DEFAULT_PORT, is_supported_api_version
+from .const import is_supported_api_version
 from .coordinator import AirlinoDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)

@@ -2,12 +2,13 @@
 
 from typing import Any, override
 
+from airlino_api import AirlinoApi, AirlinoApiConnectionError, AirlinoApiError
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
-from .api import AirlinoApi, AirlinoApiConnectionError, AirlinoApiError
 from .const import DOMAIN, LOGGER, UPDATE_INTERVAL
 
 

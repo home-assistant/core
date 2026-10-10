@@ -5,13 +5,14 @@ from ipaddress import IPv4Address
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
-import aiohttp
-import pytest
-
-from homeassistant.components.airlino.api import (
+from airlino_api import (
+    DEFAULT_API_VERSION,
+    DEFAULT_PORT,
     AirlinoApiConnectionError,
     AirlinoApiError,
 )
+import pytest
+
 from homeassistant.components.airlino.config_flow import (
     CannotConnect,
     CannotIdentify,
@@ -20,11 +21,7 @@ from homeassistant.components.airlino.config_flow import (
     _txt_str,
     validate_input,
 )
-from homeassistant.components.airlino.const import (
-    DEFAULT_API_VERSION,
-    DEFAULT_PORT,
-    DOMAIN,
-)
+from homeassistant.components.airlino.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
@@ -469,7 +466,6 @@ async def test_validate_input_raises_unsupported_when_no_version_works(
     [
         AirlinoApiError("failed", status=500),
         AirlinoApiConnectionError("offline"),
-        aiohttp.ClientError("offline"),
     ],
 )
 async def test_validate_input_maps_connection_errors(

@@ -3,7 +3,13 @@
 import logging
 from typing import override
 
-import aiohttp
+from airlino_api import (
+    DEFAULT_API_VERSION,
+    DEFAULT_PORT,
+    AirlinoApi,
+    AirlinoApiConnectionError,
+    AirlinoApiError,
+)
 from probatio import Optional, Schema
 
 from homeassistant import config_entries
@@ -13,10 +19,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from .api import AirlinoApi, AirlinoApiConnectionError, AirlinoApiError
 from .const import (
-    DEFAULT_API_VERSION,
-    DEFAULT_PORT,
     DOMAIN,
     MIN_API_VERSION,
     VALID_MODELS,
@@ -68,7 +71,7 @@ async def validate_input(
             if err.status == 404:
                 raise UnsupportedApiVersion from err
             raise CannotConnect from err
-        except (AirlinoApiConnectionError, aiohttp.ClientError) as err:
+        except AirlinoApiConnectionError as err:
             raise CannotConnect from err
 
         mac = _get_mac(network_info)
