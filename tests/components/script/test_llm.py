@@ -1,10 +1,12 @@
 """Tests for the script LLM tools platform."""
 
+from unittest.mock import patch
+
 import pytest
 
 from homeassistant.components import llm as llm_component
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
-from homeassistant.components.script import llm as script_llm
+from homeassistant.components.script import ScriptConfig, llm as script_llm
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import entity_registry as er, llm
 from homeassistant.setup import async_setup_component
@@ -93,6 +95,120 @@ async def test_script_tool_call(hass: HomeAssistant) -> None:
         hass, llm.ToolInput("script__test_script", {"beer": 1}), llm_context
     )
     assert response == llm.ToolResult(data={"result": {"drinks": 2}})
+
+
+async def test_script_tool_forwards_device_id(hass: HomeAssistant) -> None:
+    """Test that ScriptTool forwards the calling device_id to the script."""
+    llm_context = _llm_context()
+    result = await llm_component.async_get_tools(hass, llm_context, "assist")
+    tool = next(tool for tool in result.tools if tool.name == "script__test_script")
+
+    with patch(
+        "homeassistant.core.ServiceRegistry.async_call",
+        side_effect=hass.services.async_call,
+    ) as mock_service_call:
+        await tool.async_call(
+            hass, llm.ToolInput("script__test_script", {"beer": 1}), llm_context
+        )
+
+    mock_service_call.assert_awaited_once_with(
+        "script",
+        "test_script",
+        {"beer": 1},
+        context=llm_context.context,
+        blocking=True,
+        return_response=True,
+    )
+
+    llm_context.device_id = "abc123"
+
+    with patch(
+        "homeassistant.core.ServiceRegistry.async_call",
+        side_effect=hass.services.async_call,
+    ) as mock_service_call:
+        await tool.async_call(
+            hass, llm.ToolInput("script__test_script", {"beer": 1}), llm_context
+        )
+
+    mock_service_call.assert_awaited_once_with(
+        "script",
+        "test_script",
+        {"beer": 1, "device_id": "abc123"},
+        context=llm_context.context,
+        blocking=True,
+        return_response=True,
+    )
+
+    # The script does not declare a device_id field, so an LLM-supplied
+    # value for it is not trusted over the real calling device_id.
+    with patch(
+        "homeassistant.core.ServiceRegistry.async_call",
+        side_effect=hass.services.async_call,
+    ) as mock_service_call:
+        await tool.async_call(
+            hass,
+            llm.ToolInput("script__test_script", {"beer": 1, "device_id": "spoofed"}),
+            llm_context,
+        )
+
+    mock_service_call.assert_awaited_once_with(
+        "script",
+        "test_script",
+        {"beer": 1, "device_id": "abc123"},
+        context=llm_context.context,
+        blocking=True,
+        return_response=True,
+    )
+
+
+async def test_script_tool_does_not_overwrite_declared_device_id_field(
+    hass: HomeAssistant,
+) -> None:
+    """Test that a script-declared device_id field is not overwritten."""
+    config = {
+        "script": {
+            "test_script": ScriptConfig(
+                {
+                    "description": "This is a test script",
+                    "sequence": [],
+                    "mode": "single",
+                    "max": 2,
+                    "max_exceeded": "WARNING",
+                    "trace": {"stored_traces": 5},
+                    "fields": {"device_id": {"selector": {"text": {}}}},
+                }
+            )
+        }
+    }
+    with patch(
+        "homeassistant.helpers.entity_component.EntityComponent.async_prepare_reload",
+        return_value=config,
+    ):
+        await hass.services.async_call("script", "reload", blocking=True)
+
+    llm_context = _llm_context()
+    llm_context.device_id = "abc123"
+    result = await llm_component.async_get_tools(hass, llm_context, "assist")
+    tool = next(tool for tool in result.tools if tool.name == "script__test_script")
+
+    with patch(
+        "homeassistant.core.ServiceRegistry.async_call",
+        side_effect=hass.services.async_call,
+    ) as mock_service_call:
+        await tool.async_call(
+            hass,
+            llm.ToolInput("script__test_script", {"device_id": "living_room_tablet"}),
+            llm_context,
+        )
+
+    mock_service_call.assert_awaited_once_with(
+        "script",
+        "test_script",
+        {"device_id": "living_room_tablet"},
+        context=llm_context.context,
+        blocking=True,
+        return_response=True,
+    )
 
 
 async def test_script_tool_name_not_started_with_digit(hass: HomeAssistant) -> None:
