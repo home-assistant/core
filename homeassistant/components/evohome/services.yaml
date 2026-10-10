@@ -4,6 +4,7 @@
 set_system_mode:
   fields:
     entity_id:
+      required: true
       selector:
         entity:
           integration: evohome
