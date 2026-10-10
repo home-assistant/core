@@ -15,9 +15,9 @@ from homeassistant.components.media_player import (
     MediaType,
     async_process_play_media_url,
 )
-from homeassistant.const import ATTR_MANUFACTURER, CONF_NAME
+from homeassistant.const import ATTR_MANUFACTURER, CONF_MAC, CONF_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import PanasonicVieraConfigEntry
@@ -45,8 +45,9 @@ async def async_setup_entry(
     remote = config_entry.runtime_data
     name = config[CONF_NAME]
     device_info = config[ATTR_DEVICE_INFO]
+    mac = config.get(CONF_MAC)
 
-    tv_device = PanasonicVieraTVEntity(remote, name, device_info)
+    tv_device = PanasonicVieraTVEntity(remote, name, device_info, mac)
     async_add_entities([tv_device])
 
 
@@ -71,12 +72,13 @@ class PanasonicVieraTVEntity(MediaPlayerEntity):
     _attr_name = None
     _attr_device_class = MediaPlayerDeviceClass.TV
 
-    def __init__(self, remote, name, device_info):
+    def __init__(self, remote, name, device_info, mac=None) -> None:
         """Initialize the entity."""
         self._remote = remote
         if device_info is not None:
             self._attr_device_info = DeviceInfo(
                 identifiers={(DOMAIN, device_info[ATTR_UDN])},
+                connections={(CONNECTION_NETWORK_MAC, mac)} if mac else set(),
                 manufacturer=device_info.get(ATTR_MANUFACTURER, DEFAULT_MANUFACTURER),
                 model=device_info.get(ATTR_MODEL_NUMBER, DEFAULT_MODEL_NUMBER),
                 name=name,
