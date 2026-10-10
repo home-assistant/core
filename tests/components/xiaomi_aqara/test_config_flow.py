@@ -8,6 +8,7 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.xiaomi_aqara import config_flow, const
+from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_PORT, CONF_PROTOCOL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -82,6 +83,17 @@ def get_mock_discovery(
         gateway_discovery.discover_gateways = Mock(side_effect=gaierror)
 
     return gateway_discovery
+
+
+async def _async_finish_user_flow(
+    hass: HomeAssistant, flow_id: str, user_input: dict[str, str]
+) -> ConfigFlowResult:
+    """Submit the user step again and finish the flow."""
+    result = await hass.config_entries.flow.async_configure(flow_id, user_input)
+    assert result["step_id"] == "settings"
+    return await hass.config_entries.flow.async_configure(
+        flow_id, {CONF_NAME: TEST_NAME}
+    )
 
 
 async def test_config_flow_user_success(hass: HomeAssistant) -> None:
@@ -286,6 +298,11 @@ async def test_config_flow_user_discovery_error(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "discovery_error"}
 
+    result = await _async_finish_user_flow(
+        hass, result["flow_id"], {const.CONF_INTERFACE: config_flow.DEFAULT_INTERFACE}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_config_flow_user_invalid_interface(hass: HomeAssistant) -> None:
     """Test a failed config flow initialized by the user with an invalid interface."""
@@ -311,6 +328,11 @@ async def test_config_flow_user_invalid_interface(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {const.CONF_INTERFACE: "invalid_interface"}
+
+    result = await _async_finish_user_flow(
+        hass, result["flow_id"], {const.CONF_INTERFACE: config_flow.DEFAULT_INTERFACE}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_config_flow_user_invalid_host(hass: HomeAssistant) -> None:
@@ -342,6 +364,17 @@ async def test_config_flow_user_invalid_host(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
     assert result["errors"] == {"host": "invalid_host"}
 
+    result = await _async_finish_user_flow(
+        hass,
+        result["flow_id"],
+        {
+            const.CONF_INTERFACE: config_flow.DEFAULT_INTERFACE,
+            CONF_HOST: TEST_HOST,
+            CONF_MAC: TEST_MAC,
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_config_flow_user_invalid_mac(hass: HomeAssistant) -> None:
     """Test a failed config flow initialized by the user with an invalid mac."""
@@ -371,6 +404,17 @@ async def test_config_flow_user_invalid_mac(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"mac": "invalid_mac"}
+
+    result = await _async_finish_user_flow(
+        hass,
+        result["flow_id"],
+        {
+            const.CONF_INTERFACE: config_flow.DEFAULT_INTERFACE,
+            CONF_HOST: TEST_HOST,
+            CONF_MAC: TEST_MAC,
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_config_flow_user_invalid_key(hass: HomeAssistant) -> None:
@@ -406,6 +450,15 @@ async def test_config_flow_user_invalid_key(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "settings"
     assert result["errors"] == {const.CONF_KEY: "invalid_key"}
+
+    mock_gateway_discovery.gateways[TEST_HOST].write_to_hub.return_value = True
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {const.CONF_KEY: TEST_KEY, CONF_NAME: TEST_NAME},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_zeroconf_success(hass: HomeAssistant) -> None:

@@ -182,9 +182,25 @@ async def test_connection_errors(
     assert result["step_id"] == "user"
     assert result["errors"] == errors
 
+    _mock_login_requests(requests_mock).request(
+        ANY,
+        f"{FIXTURE_USER_INPUT[CONF_URL]}api/user/login",
+        text="<response>OK</response>",
+    )
+    with (
+        patch("homeassistant.components.huawei_lte.async_setup"),
+        patch("homeassistant.components.huawei_lte.async_setup_entry"),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=FIXTURE_USER_INPUT | data_patch,
+        )
+        await hass.async_block_till_done()
 
-@pytest.fixture
-def login_requests_mock(requests_mock: requests_mock.Mocker) -> requests_mock.Mocker:
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+def _mock_login_requests(requests_mock: requests_mock.Mocker) -> requests_mock.Mocker:
     """Set up a requests_mock with base mocks for login tests."""
     https_url = urlunparse(
         urlparse(FIXTURE_USER_INPUT[CONF_URL])._replace(scheme="https")
@@ -205,6 +221,12 @@ def login_requests_mock(requests_mock: requests_mock.Mocker) -> requests_mock.Mo
             text="<response>OK</response>",
         )
     return requests_mock
+
+
+@pytest.fixture
+def login_requests_mock(requests_mock: requests_mock.Mocker) -> requests_mock.Mocker:
+    """Set up a requests_mock with base mocks for login tests."""
+    return _mock_login_requests(requests_mock)
 
 
 @pytest.mark.parametrize(
@@ -276,7 +298,11 @@ def login_requests_mock(requests_mock: requests_mock.Mocker) -> requests_mock.Mo
     ],
 )
 async def test_login_error(
-    hass: HomeAssistant, login_requests_mock, request_outcome, fixture_override, errors
+    hass: HomeAssistant,
+    login_requests_mock: requests_mock.Mocker,
+    request_outcome: dict[str, Any],
+    fixture_override: dict[str, str],
+    errors: dict[str, str],
 ) -> None:
     """Test we show user form with appropriate error on response failure."""
     login_requests_mock.request(
@@ -300,6 +326,23 @@ async def test_login_error(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == errors
+
+    login_requests_mock.request(
+        ANY,
+        f"{FIXTURE_USER_INPUT[CONF_URL]}api/user/login",
+        text="<response>OK</response>",
+    )
+    with (
+        patch("homeassistant.components.huawei_lte.async_setup"),
+        patch("homeassistant.components.huawei_lte.async_setup_entry"),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=FIXTURE_USER_INPUT,
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.parametrize("scheme", ["http", "https"])

@@ -44,8 +44,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: QbusConfigEntry) -> bool
     _LOGGER.debug("%s - Loading entry", entry.unique_id)
 
     if not await async_wait_for_mqtt_client(hass):
-        # pylint: disable-next=home-assistant-log-and-raise
-        _LOGGER.error("MQTT integration not available")
         raise ConfigEntryNotReady("MQTT integration not available")
 
     coordinator = QbusControllerCoordinator(hass, entry)

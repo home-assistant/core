@@ -292,7 +292,7 @@ aioharmanluxury==0.2.3
 aioharmony==1.0.10
 
 # homeassistant.components.hassio
-aiohasupervisor==0.6.0
+aiohasupervisor==0.7.0
 
 # homeassistant.components.home_connect
 aiohomeconnect==0.39.1
@@ -852,7 +852,7 @@ deluge-client==1.10.2
 demetriek==2.0.0
 
 # homeassistant.components.denon_rs232
-denon-rs232==4.2.3
+denon-rs232==4.3.0
 
 # homeassistant.components.denonavr
 denonavr==1.3.3
@@ -1212,7 +1212,7 @@ gpiozero==1.6.2
 gps3==0.33.3
 
 # homeassistant.components.gree
-greeclimate==2.1.4
+greeclimate==3.2.1
 
 # homeassistant.components.greencell
 greencell_client==1.0.3
@@ -1515,7 +1515,7 @@ lektricowifi==0.1
 letpot==0.7.0
 
 # homeassistant.components.lg_tv_rs232
-lg-rs232-tv==1.2.0
+lg-rs232-tv==1.3.0
 
 # homeassistant.components.foscam
 libpyfoscamcgi==0.0.9
@@ -1533,7 +1533,7 @@ librouteros==4.2.2
 libsoundtouch==0.8
 
 # homeassistant.components.lifx
-lifx-async==7.8.1
+lifx-async==7.10.1
 
 # homeassistant.components.osramlightify
 lightify==1.0.7.3
@@ -2015,7 +2015,7 @@ py-schluter==0.1.7
 py-sucks==0.9.11
 
 # homeassistant.components.synology_dsm
-py-synologydsm-api==2.10.3
+py-synologydsm-api==2.11.0
 
 # homeassistant.components.unifi_access
 py-unifi-access==1.6.1
@@ -2670,7 +2670,7 @@ pysqueezebox==0.14.0
 pystiebeleltron==0.9.0
 
 # homeassistant.components.suez_water
-pysuezV2==2.0.7
+pysuezV2==2.0.8
 
 # homeassistant.components.switchbee
 pyswitchbee==1.8.3
@@ -2891,7 +2891,7 @@ pyvolumio==0.1.5
 pywaze==1.2.4
 
 # homeassistant.components.weatherflow
-pyweatherflowudp==1.6.3
+pyweatherflowudp==1.7.0
 
 # homeassistant.components.html5
 pywebpush==2.3.0
@@ -2972,7 +2972,7 @@ renault-api==0.5.15
 renson-endura-delta==1.7.2
 
 # homeassistant.components.reolink
-reolink-aio==0.21.17
+reolink-aio==0.21.18
 
 # homeassistant.components.radio_frequency
 rf-protocols==4.3.0
@@ -3020,7 +3020,7 @@ ruuvitag-ble==0.4.0
 rxv==0.7.0
 
 # homeassistant.components.samsung_exlink
-samsung-exlink==1.1.2
+samsung-exlink==1.2.0
 
 # homeassistant.components.samsungtv
 samsungctl[websocket]==0.7.1
@@ -3205,7 +3205,7 @@ synology-srm==0.2.0
 systembridgeconnector==5.5.0
 
 # homeassistant.components.tailscale
-tailscale==0.7.0
+tailscale==1.0.0
 
 # homeassistant.components.tapsaff
 tapsaff==0.2.1
@@ -3291,7 +3291,7 @@ toonapi==0.3.0
 total-connect-client==2026.9
 
 # homeassistant.components.tplink_omada
-tplink-omada-client==1.5.10
+tplink-omada-client==1.5.13
 
 # homeassistant.components.transmission
 transmission-rpc==7.0.3
@@ -3455,7 +3455,7 @@ whoisdomain==2.20260806.3
 wiffi==1.1.2
 
 # homeassistant.components.wiim
-wiim==0.1.7
+wiim==0.2.1
 
 # homeassistant.components.wirelesstag
 wirelesstagpy==0.8.1
@@ -3496,7 +3496,7 @@ yalesmartalarmclient==0.4.3
 # homeassistant.components.august
 # homeassistant.components.yale
 # homeassistant.components.yalexs_ble
-yalexs-ble==4.0.1
+yalexs-ble==4.1.2
 
 # homeassistant.components.august
 # homeassistant.components.yale

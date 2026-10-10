@@ -66,6 +66,20 @@ async def test_form_timeout(hass: HomeAssistant) -> None:
         assert result2["type"] is FlowResultType.FORM
         assert result2["errors"] == {"base": "cannot_connect"}
 
+        mock_airtouch.Status = AirTouchStatus.OK
+        mock_airtouch.GetGroups = Mock(return_value=[AirTouchGroup()])
+
+        with patch(
+            "homeassistant.components.airtouch4.async_setup_entry",
+            return_value=True,
+        ):
+            result3 = await hass.config_entries.flow.async_configure(
+                result["flow_id"], {"host": "0.0.0.1"}
+            )
+            await hass.async_block_till_done()
+
+        assert result3["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_form_library_error_message(hass: HomeAssistant) -> None:
     """Test we handle an unknown error message from the library."""
@@ -85,6 +99,20 @@ async def test_form_library_error_message(hass: HomeAssistant) -> None:
         assert result2["type"] is FlowResultType.FORM
         assert result2["errors"] == {"base": "cannot_connect"}
 
+        mock_airtouch.Status = AirTouchStatus.OK
+        mock_airtouch.GetGroups = Mock(return_value=[AirTouchGroup()])
+
+        with patch(
+            "homeassistant.components.airtouch4.async_setup_entry",
+            return_value=True,
+        ):
+            result3 = await hass.config_entries.flow.async_configure(
+                result["flow_id"], {"host": "0.0.0.1"}
+            )
+            await hass.async_block_till_done()
+
+        assert result3["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_form_connection_refused(hass: HomeAssistant) -> None:
     """Test we handle a connection error."""
@@ -103,6 +131,20 @@ async def test_form_connection_refused(hass: HomeAssistant) -> None:
         )
         assert result2["type"] is FlowResultType.FORM
         assert result2["errors"] == {"base": "cannot_connect"}
+
+        mock_airtouch.Status = AirTouchStatus.OK
+        mock_airtouch.GetGroups = Mock(return_value=[AirTouchGroup()])
+
+        with patch(
+            "homeassistant.components.airtouch4.async_setup_entry",
+            return_value=True,
+        ):
+            result3 = await hass.config_entries.flow.async_configure(
+                result["flow_id"], {"host": "0.0.0.1"}
+            )
+            await hass.async_block_till_done()
+
+        assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_no_units(hass: HomeAssistant) -> None:
@@ -127,3 +169,16 @@ async def test_form_no_units(hass: HomeAssistant) -> None:
 
         assert result2["type"] is FlowResultType.FORM
         assert result2["errors"] == {"base": "no_units"}
+
+        mock_airtouch.GetGroups = Mock(return_value=[AirTouchGroup()])
+
+        with patch(
+            "homeassistant.components.airtouch4.async_setup_entry",
+            return_value=True,
+        ):
+            result3 = await hass.config_entries.flow.async_configure(
+                result["flow_id"], {"host": "0.0.0.1"}
+            )
+            await hass.async_block_till_done()
+
+        assert result3["type"] is FlowResultType.CREATE_ENTRY

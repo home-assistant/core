@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, patch
 
 from goodwe import InverterError
 from goodwe.const import GOODWE_UDP_PORT
+import pytest
 
 from homeassistant.components.goodwe.const import (
     CONF_MODEL_FAMILY,
@@ -80,6 +81,7 @@ async def test_manual_setup_already_exists(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("mock_inverter")
 async def test_manual_setup_device_offline(hass: HomeAssistant) -> None:
     """Test manually setting up, device offline."""
     result = await hass.config_entries.flow.async_init(
@@ -100,3 +102,9 @@ async def test_manual_setup_device_offline(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {CONF_HOST: "connection_error"}
+
+    with patch("homeassistant.components.goodwe.async_setup_entry", return_value=True):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: TEST_HOST}
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
