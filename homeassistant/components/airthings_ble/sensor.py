@@ -28,12 +28,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONNECTIVITY_MODE_MAP
-from .coordinator import (
-    AirthingsBLEConfigEntry,
-    AirthingsBLEDataUpdateCoordinator,
-    get_connectivity_mode,
-)
+from .const import CONNECTIVITY_MODE_MAP, get_connectivity_mode
+from .coordinator import AirthingsBLEConfigEntry, AirthingsBLEDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 

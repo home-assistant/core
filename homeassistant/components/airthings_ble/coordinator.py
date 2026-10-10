@@ -17,28 +17,17 @@ from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
-    CONNECTIVITY_MODE_MAP,
+    AIRTHINGS_CLOUD_DOCUMENTATION_URL,
     DEFAULT_SCAN_INTERVAL,
     DEVICE_MODEL,
     DEVICE_SPECIFIC_SCAN_INTERVAL,
     DOMAIN,
     UNSUPPORTED_CONNECTIVITY_MODES,
     connectivity_mode_issue_id,
+    get_connectivity_mode,
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-AIRTHINGS_CLOUD_DOCUMENTATION_URL = (
-    "https://www.home-assistant.io/integrations/airthings"
-)
-
-
-def get_connectivity_mode(value: str | float | None) -> str | None:
-    """Get connectivity mode."""
-    if not isinstance(value, str):
-        return None
-    return CONNECTIVITY_MODE_MAP.get(value)
-
 
 type AirthingsBLEConfigEntry = ConfigEntry[AirthingsBLEDataUpdateCoordinator]
 
@@ -129,18 +118,19 @@ class AirthingsBLEDataUpdateCoordinator(DataUpdateCoordinator[AirthingsDevice]):
             )
 
         device_registry = dr.async_get(self.hass)
-        if (
-            device := device_registry.async_get_device_by_connection(
-                (dr.CONNECTION_BLUETOOTH, data.address), self.config_entry.entry_id
-            )
-        ) and device.sw_version != data.sw_version:
+        device = device_registry.async_get_device_by_connection(
+            (dr.CONNECTION_BLUETOOTH, data.address), self.config_entry.entry_id
+        )
+        if device and device.sw_version != data.sw_version:
             device_registry.async_update_device(device.id, sw_version=data.sw_version)
 
-        self._async_update_connectivity_mode_issue(data)
+        self._async_update_connectivity_mode_issue(data, device)
         return data
 
     @callback
-    def _async_update_connectivity_mode_issue(self, data: AirthingsDevice) -> None:
+    def _async_update_connectivity_mode_issue(
+        self, data: AirthingsDevice, device: dr.DeviceEntry | None
+    ) -> None:
         """Create or delete the issue for an unsupported connectivity mode."""
         mode = get_connectivity_mode(data.sensors.get("connectivity_mode"))
         if mode is None:
@@ -151,9 +141,6 @@ class AirthingsBLEDataUpdateCoordinator(DataUpdateCoordinator[AirthingsDevice]):
             ir.async_delete_issue(self.hass, DOMAIN, issue_id)
             return
 
-        device = dr.async_get(self.hass).async_get_device_by_connection(
-            (dr.CONNECTION_BLUETOOTH, data.address), self.config_entry.entry_id
-        )
         scan_interval = DEVICE_SPECIFIC_SCAN_INTERVAL.get(
             data.model.value, DEFAULT_SCAN_INTERVAL
         )
@@ -162,6 +149,7 @@ class AirthingsBLEDataUpdateCoordinator(DataUpdateCoordinator[AirthingsDevice]):
             DOMAIN,
             issue_id,
             is_fixable=False,
+            is_persistent=True,
             severity=ir.IssueSeverity.WARNING,
             translation_key=f"connectivity_{mode}",
             translation_placeholders={

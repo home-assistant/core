@@ -421,6 +421,18 @@ async def test_device_registry_sw_version_updates_on_refresh(
     assert device.sw_version == "G-BLE-2.2.3-master+0"
 
 
+def _with_mode(
+    device_info: AirthingsDevice, connectivity_mode: str | None
+) -> AirthingsDevice:
+    """Return device data reporting the given connectivity mode."""
+    device_info = deepcopy(device_info)
+    if connectivity_mode is None:
+        del device_info.sensors["connectivity_mode"]
+    else:
+        device_info.sensors["connectivity_mode"] = connectivity_mode
+    return device_info
+
+
 async def _setup_device(
     hass: HomeAssistant,
     service_info: BluetoothServiceInfoBleak,
@@ -447,35 +459,6 @@ async def _setup_device(
     return entry
 
 
-async def _setup_corentium_home_2(
-    hass: HomeAssistant, connectivity_mode: str | None
-) -> MockConfigEntry:
-    """Set up a Corentium Home 2 reporting the given connectivity mode."""
-    return await _setup_device(
-        hass,
-        CORENTIUM_HOME_2_SERVICE_INFO,
-        CORENTIUM_HOME_2_DEVICE_INFO,
-        connectivity_mode,
-    )
-
-
-def _with_mode(
-    device_info: AirthingsDevice, connectivity_mode: str | None
-) -> AirthingsDevice:
-    """Return device data reporting the given connectivity mode."""
-    device_info = deepcopy(device_info)
-    if connectivity_mode is None:
-        del device_info.sensors["connectivity_mode"]
-    else:
-        device_info.sensors["connectivity_mode"] = connectivity_mode
-    return device_info
-
-
-def _corentium_home_2_with_mode(connectivity_mode: str | None) -> AirthingsDevice:
-    """Return Corentium Home 2 data reporting the given connectivity mode."""
-    return _with_mode(CORENTIUM_HOME_2_DEVICE_INFO, connectivity_mode)
-
-
 def _issue_translation_keys(issue_registry: ir.IssueRegistry) -> list[str | None]:
     """Return the translation keys of the Airthings BLE issues."""
     return [
@@ -488,11 +471,13 @@ def _issue_translation_keys(issue_registry: ir.IssueRegistry) -> list[str | None
 @pytest.mark.parametrize(
     ("connectivity_mode", "expected_issues"),
     [
-        ("SmartLink", ["connectivity_smartlink"]),
-        ("Not configured", ["connectivity_not_configured"]),
-        ("Bluetooth", []),
-        ("unknown", []),
-        (None, []),
+        pytest.param("SmartLink", ["connectivity_smartlink"], id="smartlink"),
+        pytest.param(
+            "Not configured", ["connectivity_not_configured"], id="not_configured"
+        ),
+        pytest.param("Bluetooth", [], id="bluetooth"),
+        pytest.param("unknown", [], id="unknown"),
+        pytest.param(None, [], id="not_reported"),
     ],
 )
 async def test_connectivity_mode_issue(
@@ -502,7 +487,12 @@ async def test_connectivity_mode_issue(
     expected_issues: list[str],
 ) -> None:
     """Test an issue is created only for unsupported connectivity modes."""
-    entry = await _setup_corentium_home_2(hass, connectivity_mode)
+    entry = await _setup_device(
+        hass,
+        CORENTIUM_HOME_2_SERVICE_INFO,
+        CORENTIUM_HOME_2_DEVICE_INFO,
+        connectivity_mode,
+    )
 
     assert entry.state is ConfigEntryState.LOADED
     assert _issue_translation_keys(issue_registry) == expected_issues
@@ -541,6 +531,7 @@ async def test_connectivity_mode_issue_details(
     assert issue is not None
     assert issue.severity is ir.IssueSeverity.WARNING
     assert not issue.is_fixable
+    assert issue.is_persistent
     assert issue.translation_key == "connectivity_smartlink"
     assert issue.translation_placeholders == {
         "device_name": device_info.friendly_name(),
@@ -557,7 +548,9 @@ async def test_connectivity_mode_issue_uses_name_set_by_user(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the connectivity mode issue uses the name the user gave the device."""
-    entry = await _setup_corentium_home_2(hass, "SmartLink")
+    entry = await _setup_device(
+        hass, CORENTIUM_HOME_2_SERVICE_INFO, CORENTIUM_HOME_2_DEVICE_INFO, "SmartLink"
+    )
     device = device_registry.async_get_device_by_connection(
         (dr.CONNECTION_BLUETOOTH, CORENTIUM_HOME_2_DEVICE_INFO.address),
         entry.entry_id,
@@ -565,7 +558,7 @@ async def test_connectivity_mode_issue_uses_name_set_by_user(
     assert device is not None
     device_registry.async_update_device(device.id, name_by_user="Living room")
 
-    with patch_airthings_ble(_corentium_home_2_with_mode("SmartLink")):
+    with patch_airthings_ble(_with_mode(CORENTIUM_HOME_2_DEVICE_INFO, "SmartLink")):
         freezer.tick(
             DEVICE_SPECIFIC_SCAN_INTERVAL[AirthingsDeviceType.CORENTIUM_HOME_2.value]
         )
@@ -582,11 +575,28 @@ async def test_connectivity_mode_issue_uses_name_set_by_user(
 @pytest.mark.parametrize(
     ("initial_mode", "new_mode", "expected_issues"),
     [
-        ("SmartLink", "Bluetooth", []),
-        ("Not configured", "Bluetooth", []),
-        ("Not configured", "SmartLink", ["connectivity_smartlink"]),
-        ("SmartLink", "unknown", ["connectivity_smartlink"]),
-        ("SmartLink", None, ["connectivity_smartlink"]),
+        pytest.param("SmartLink", "Bluetooth", [], id="smartlink_to_bluetooth"),
+        pytest.param(
+            "Not configured", "Bluetooth", [], id="not_configured_to_bluetooth"
+        ),
+        pytest.param(
+            "Not configured",
+            "SmartLink",
+            ["connectivity_smartlink"],
+            id="not_configured_to_smartlink",
+        ),
+        pytest.param(
+            "SmartLink",
+            "unknown",
+            ["connectivity_smartlink"],
+            id="smartlink_to_unknown",
+        ),
+        pytest.param(
+            "SmartLink",
+            None,
+            ["connectivity_smartlink"],
+            id="smartlink_to_not_reported",
+        ),
     ],
 )
 async def test_connectivity_mode_issue_updated_on_refresh(
@@ -598,11 +608,13 @@ async def test_connectivity_mode_issue_updated_on_refresh(
     expected_issues: list[str],
 ) -> None:
     """Test the connectivity mode issue follows the mode reported on refresh."""
-    await _setup_corentium_home_2(hass, initial_mode)
+    await _setup_device(
+        hass, CORENTIUM_HOME_2_SERVICE_INFO, CORENTIUM_HOME_2_DEVICE_INFO, initial_mode
+    )
 
     assert len(_issue_translation_keys(issue_registry)) == 1
 
-    with patch_airthings_ble(_corentium_home_2_with_mode(new_mode)):
+    with patch_airthings_ble(_with_mode(CORENTIUM_HOME_2_DEVICE_INFO, new_mode)):
         freezer.tick(
             DEVICE_SPECIFIC_SCAN_INTERVAL[AirthingsDeviceType.CORENTIUM_HOME_2.value]
         )
@@ -617,7 +629,9 @@ async def test_connectivity_mode_issue_kept_on_reload(
     issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test the connectivity mode issue survives a reload that cannot read the device."""
-    entry = await _setup_corentium_home_2(hass, "SmartLink")
+    entry = await _setup_device(
+        hass, CORENTIUM_HOME_2_SERVICE_INFO, CORENTIUM_HOME_2_DEVICE_INFO, "SmartLink"
+    )
 
     with (
         patch_async_ble_device_from_address(CORENTIUM_HOME_2_SERVICE_INFO.device),
@@ -635,7 +649,9 @@ async def test_connectivity_mode_issue_deleted_on_remove(
     issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test the connectivity mode issue is deleted when the entry is removed."""
-    entry = await _setup_corentium_home_2(hass, "SmartLink")
+    entry = await _setup_device(
+        hass, CORENTIUM_HOME_2_SERVICE_INFO, CORENTIUM_HOME_2_DEVICE_INFO, "SmartLink"
+    )
 
     assert _issue_translation_keys(issue_registry) == ["connectivity_smartlink"]
 
