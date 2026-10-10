@@ -1,0 +1,89 @@
+# serializer version: 1
+# name: test_devices
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': '0',
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'neosol',
+          '0012ABCD',
+        ),
+      }),
+      'labels': set({
+      }),
+      'manufacturer': 'Profalux',
+      'model': None,
+      'model_id': None,
+      'name': 'Neosol dongle',
+      'name_by_user': None,
+      'serial_number': '0012ABCD',
+      'sw_version': 'Rev10',
+      'via_device_id': None,
+    }),
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'neosol',
+          '0012ABCD_0',
+        ),
+      }),
+      'labels': set({
+      }),
+      'manufacturer': 'Profalux',
+      'model': None,
+      'model_id': None,
+      'name': 'Shutter 0',
+      'name_by_user': None,
+      'serial_number': None,
+      'sw_version': None,
+      'via_device_id': <ANY>,
+    }),
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'neosol',
+          '0012ABCD_1',
+        ),
+      }),
+      'labels': set({
+      }),
+      'manufacturer': 'Profalux',
+      'model': None,
+      'model_id': None,
+      'name': 'Shutter 1',
+      'name_by_user': None,
+      'serial_number': None,
+      'sw_version': None,
+      'via_device_id': <ANY>,
+    }),
+  ])
+# ---

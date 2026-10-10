@@ -1,0 +1,99 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: This integration does not register any service actions.
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: This integration does not register any service actions.
+  docs-conditions:
+    status: exempt
+    comment: This integration does not have any conditions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: This integration does not have any triggers.
+  entity-event-setup:
+    status: exempt
+    comment: |
+      The dongle only transmits, so entities subscribe to nothing beyond the
+      coordinator, which CoordinatorEntity already handles.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions: done
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: This integration does not have an options flow.
+  docs-installation-parameters: done
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates: done
+  reauthentication-flow:
+    status: exempt
+    comment: The dongle is a local serial device and requires no authentication.
+  test-coverage: done
+
+  # Gold
+  devices: done
+  diagnostics: todo
+  discovery-update-info:
+    status: exempt
+    comment: |
+      The integration takes a single config entry, so Home Assistant aborts a
+      rediscovery before the flow runs. The stored port is a /dev/serial/by-id path,
+      which survives a move to another USB port anyway.
+  discovery: done
+  docs-data-update: todo
+  docs-examples: todo
+  docs-known-limitations: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: todo
+  dynamic-devices: todo
+  entity-category:
+    status: exempt
+    comment: The shutters are primary entities, none is diagnostic or configuration.
+  entity-device-class: done
+  entity-disabled-by-default:
+    status: exempt
+    comment: A shutter exposes a single entity, which is the point of the integration.
+  entity-translations: done
+  exception-translations: done
+  icon-translations:
+    status: exempt
+    comment: The cover entity uses the icon of its device class.
+  reconfiguration-flow: todo
+  repair-issues:
+    status: exempt
+    comment: |
+      Nothing the user can act on can go wrong beyond the dongle being unplugged,
+      which the config entry retry already reports.
+  stale-devices:
+    status: exempt
+    comment: |
+      Channels are provisioned at the factory and their usage counter never goes back
+      down, so a paired shutter never disappears from the dongle.
+
+  # Platinum
+  async-dependency: done
+  inject-websession:
+    status: exempt
+    comment: This integration talks to a local serial port, not over HTTP.
+  strict-typing: done
