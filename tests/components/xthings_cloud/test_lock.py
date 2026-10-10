@@ -95,12 +95,19 @@ async def test_updating_state(
     mock_websocket.call_args[1]["on_device_status"](
         "dev_lock_001",
         {
-            "locked": False,
+            "is_locked": 1,
             "jammed": False,
             "battery": 80,
         },
     )
     await hass.async_block_till_done()
+
+    state = hass.states.get("lock.front_door_lock")
+    assert state is not None
+    assert state.state == LockState.UNLOCKED.value
+
+    get_device_by_id(mock_api_client, "dev_lock_001")["status"]["is_locked"] = 2
+    await mock_config_entry.runtime_data.async_refresh()
 
     state = hass.states.get("lock.front_door_lock")
     assert state is not None

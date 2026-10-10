@@ -43,6 +43,7 @@ class XthingsCloudCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
         self.client = client
         self.websocket: XthingsCloudWebSocket | None = None
+        self._websocket_lock_states: dict[str, int | bool] = {}
 
     async def _async_ensure_token_valid(self) -> None:
         """Ensure the token is valid, refresh if expired.
@@ -80,7 +81,11 @@ class XthingsCloudCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             ) from err
         except XthingsCloudApiError as err:
             raise UpdateFailed(f"Failed to fetch data: {err}") from err
-        return {device["id"]: device for device in devices}
+        data = {device["id"]: device for device in devices}
+        for device_id, is_locked in self._websocket_lock_states.items():
+            if device_id in data:
+                data[device_id].setdefault("status", {})["is_locked"] = is_locked
+        return data
 
     async def async_start_websocket(self) -> None:
         """Start WebSocket connection."""
@@ -111,6 +116,8 @@ class XthingsCloudCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 "WebSocket received status for unknown device: %s", device_uuid
             )
             return
+        if "is_locked" in status:
+            self._websocket_lock_states[device_uuid] = status["is_locked"]
         device_data = self.data[device_uuid]
         device_data.setdefault("status", {}).update(status)
         LOGGER.debug("WebSocket updated device status: %s", device_uuid)
