@@ -15,8 +15,11 @@ from lorawan_connection import (
 )
 import pytest
 
-from homeassistant.components.lorawan import DeviceManager, async_get_connections
-from homeassistant.components.lorawan.connection import RegisteredConnection
+from homeassistant.components.lorawan import DeviceManager
+from homeassistant.components.lorawan.connection import (
+    DATA_REGISTRY,
+    RegisteredConnection,
+)
 from homeassistant.components.lorawan.device_manager import _CollectionConnection
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -58,7 +61,7 @@ async def test_multiple_connections_reconnect(
     assert hass.states.get("sensor.bedroom_temperature").state == "unknown"
     assert entry.state is ConfigEntryState.LOADED
     assert not model.closed
-    assert "network" not in async_get_connections(hass)
+    assert "network" not in hass.data[DATA_REGISTRY].connections
     unregister()
     first, _ = await registered_backend("network", [DESCRIPTOR])
     await hass.async_block_till_done()

@@ -17,10 +17,10 @@ from lorawan_connection.mock import MockConnection
 import pytest
 
 from homeassistant.components.lorawan import (
-    async_get_connections,
     async_register_connection,
     async_subscribe_connections,
 )
+from homeassistant.components.lorawan.connection import DATA_REGISTRY
 from homeassistant.config_entries import SOURCE_INTEGRATION_DISCOVERY
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
@@ -41,7 +41,7 @@ async def test_subscribe_and_reconnect(
     changed = Mock()
     unsubscribe = async_subscribe_connections(hass, listener=changed)
     changed.assert_called_once_with("network", first)
-    assert async_get_connections(hass) == {"network": first}
+    assert hass.data[DATA_REGISTRY].connections["network"].connection is first
     events = Mock()
     stop_events = await first.async_subscribe(
         brands=frozenset({("example", 123)}), listener=events
@@ -55,7 +55,7 @@ async def test_subscribe_and_reconnect(
     assert first.downlinks[queue_id].data == b"command"
     first.disconnect()
     changed.assert_called_with("network", None)
-    assert async_get_connections(hass) == {}
+    assert not hass.data[DATA_REGISTRY].connections
     unregister()
     second, unregister_second = await registered_backend("network", [DESCRIPTOR])
     changed.assert_called_with("network", second)
@@ -158,7 +158,7 @@ async def test_duplicate_registration(
     entry = hass.config_entries.async_get_entry("network")
     with pytest.raises(ValueError, match="already registered"):
         await async_register_connection(hass, entry, connection=MockConnection())
-    assert async_get_connections(hass) == {"network": backend}
+    assert hass.data[DATA_REGISTRY].connections["network"].connection is backend
 
 
 @pytest.mark.parametrize(
@@ -177,7 +177,7 @@ async def test_registration_failure(
     with pytest.raises(type(error)):
         await async_register_connection(hass, provider_entry, connection=backend)
     stop_disconnect.assert_called_once_with()
-    assert not async_get_connections(hass)
+    assert not hass.data[DATA_REGISTRY].connections
 
     unsubscribe = await async_register_connection(
         hass, provider_entry, connection=MockConnection()
@@ -249,7 +249,7 @@ async def test_disconnect_during_registration(
     discover.assert_not_called()
     stop_events.assert_called_once_with()
     stop_disconnect.assert_called_once_with()
-    assert not async_get_connections(hass)
+    assert not hass.data[DATA_REGISTRY].connections
 
     with patch(
         "homeassistant.components.lorawan.connection.discovery_flow.async_create_flow"
@@ -282,7 +282,7 @@ async def test_shutdown_releases_subscriptions(
     async_subscribe_connections(hass, changed)
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
-    assert not async_get_connections(hass)
+    assert not hass.data[DATA_REGISTRY].connections
     changed.assert_called_with("network", None)
     with patch(
         "homeassistant.components.lorawan.connection.discovery_flow.async_create_flow"

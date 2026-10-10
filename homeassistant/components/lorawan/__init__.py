@@ -9,7 +9,6 @@ from homeassistant.loader import async_get_lorawan
 from .connection import (
     DATA_REGISTRY,
     ConnectionRegistry,
-    async_get_connections,
     async_register_connection,
     async_subscribe_connections,
 )
@@ -20,7 +19,6 @@ from .entity import LoRaWANEntity
 __all__ = [
     "DeviceManager",
     "LoRaWANEntity",
-    "async_get_connections",
     "async_register_connection",
     "async_subscribe_connections",
     "device_identifier",

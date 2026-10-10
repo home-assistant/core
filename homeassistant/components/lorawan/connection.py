@@ -47,15 +47,6 @@ DATA_REGISTRY: HassKey[ConnectionRegistry] = HassKey("lorawan")
 
 
 @callback
-def async_get_connections(hass: HomeAssistant) -> dict[str, Connection]:
-    """Return connected backends keyed by their provider config entry ID."""
-    return {
-        entry_id: registered.connection
-        for entry_id, registered in hass.data[DATA_REGISTRY].connections.items()
-    }
-
-
-@callback
 def async_subscribe_connections(
     hass: HomeAssistant, listener: Callable[[str, Connection | None], None]
 ) -> Unsubscribe:
