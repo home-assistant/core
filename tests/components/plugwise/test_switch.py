@@ -167,15 +167,23 @@ async def test_deprecated_dhw_comfort_switch_warning(
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
 
-    assert any(
-        "The deprecated function async_turn_on was called" in record.message
-        and "DHW mode select" in record.message
-        and "2027.4.0" in record.message
+    assert not any(
+        "incorrectly returns a coroutine object" in record.message
         for record in caplog.records
     )
-    mock_smile_anna.set_switch_state.assert_called_once_with(
+    assert mock_smile_anna.set_switch_state.call_count == 2
+    mock_smile_anna.set_switch_state.assert_any_call(
         "36b937e44ad145bab165fa0fe99d742d", None, "dhw_cm_switch", STATE_ON
+    )
+    mock_smile_anna.set_switch_state.assert_any_call(
+        "36b937e44ad145bab165fa0fe99d742d", None, "dhw_cm_switch", STATE_OFF
     )
 
 
