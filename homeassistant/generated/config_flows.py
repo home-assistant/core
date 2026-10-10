@@ -313,6 +313,7 @@ FLOWS = {
         "gree_infrared",
         "green_planet_energy",
         "greencell",
+        "gridx",
         "growatt_server",
         "guardian",
         "guntamatic",
