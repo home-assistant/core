@@ -11,6 +11,7 @@ from reolink_aio.baichuan import DEFAULT_BC_PORT
 from reolink_aio.exceptions import (
     ApiError,
     CredentialsInvalidError,
+    LoginAccountDeviceError,
     LoginFirmwareError,
     LoginPrivacyModeError,
     ReolinkError,
@@ -282,6 +283,14 @@ class ReolinkFlowHandler(ConfigFlow, domain=DOMAIN):
                 return await self.async_step_privacy()
             except CredentialsInvalidError:
                 errors[CONF_PASSWORD] = "invalid_auth"
+            except LoginAccountDeviceError:
+                errors["base"] = "account_device"
+                placeholders["account_device_link"] = (
+                    "https://www.home-assistant.io/integrations/reolink/#cant-set-up-the-integration"
+                )
+                placeholders["reolink_account_device_link"] = (
+                    "https://support.reolink.com/articles/61043321354265-Introduction-to-Reolink-Local-Device-and-Account-Device/#h_01KZQW3H9DPM7R1S131Z1K0F1Q"
+                )
             except LoginFirmwareError:
                 errors["base"] = "update_needed"
                 placeholders["current_firmware"] = host.api.sw_version
