@@ -28,6 +28,7 @@ from homeassistant.setup import async_setup_component
 from .const import NEARBY_STATIONS
 
 from tests.common import MockConfigEntry
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 MOCK_USER_DATA = {
     CONF_NAME: "Home",
@@ -154,6 +155,88 @@ async def test_user_errors(
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
         assert result["errors"] == errors
+
+    with (
+        patch(
+            "homeassistant.components.tankerkoenig.async_setup_entry", return_value=True
+        ),
+        patch(
+            "homeassistant.components.tankerkoenig.config_flow.Tankerkoenig.nearby_stations",
+            return_value=NEARBY_STATIONS,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=MOCK_USER_DATA
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "select_station"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=MOCK_STATIONS_DATA
+        )
+        assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+@pytest.mark.parametrize(
+    ("response", "errors"),
+    [
+        pytest.param(
+            {
+                "json": {
+                    "ok": False,
+                    "message": "Key existiert nicht oder ist deaktiviert",  # codespell:ignore oder,ist
+                }
+            },
+            {CONF_API_KEY: "invalid_auth"},
+            id="key_does_not_exist",
+        ),
+        pytest.param(
+            {
+                "json": {
+                    "ok": False,
+                    "message": "apikey nicht angegeben, falsch, oder im falschen Format",  # codespell:ignore oder
+                }
+            },
+            {CONF_API_KEY: "invalid_auth"},
+            id="apikey_invalid",
+        ),
+        pytest.param(
+            {"json": {"ok": False, "message": "Interner Fehler"}},
+            {"base": "cannot_connect"},
+            id="api_error",
+        ),
+        pytest.param(
+            {
+                "text": "<html>Wartungsarbeiten</html>",
+                "headers": {"Content-Type": "text/html"},
+            },
+            {"base": "cannot_connect"},
+            id="unexpected_content_type",
+        ),
+    ],
+)
+async def test_user_api_error_responses(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    response: dict[str, Any],
+    errors: dict[str, Any],
+) -> None:
+    """Test error responses from the API are mapped to form errors."""
+    aioclient_mock.get(
+        "https://creativecommons.tankerkoenig.de/json/list.php",
+        **{"headers": {"Content-Type": "application/json"}, **response},
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=MOCK_USER_DATA
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == errors
 
     with (
         patch(
