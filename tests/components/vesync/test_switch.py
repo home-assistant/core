@@ -168,6 +168,19 @@ async def test_turn_on_off_display_raises_error(
             SERVICE_TURN_OFF,
             "pyvesync.devices.vesynchumidifier.VeSyncSuperior6000S.toggle_drying_mode",
         ),
+        # light_detection switch for purifier
+        (
+            "Air Purifier Vital 200S",
+            "switch.air_purifier_vital_200s_light_detection",
+            SERVICE_TURN_ON,
+            "pyvesync.devices.vesyncpurifier.VeSyncAirBaseV2.toggle_light_detection",
+        ),
+        (
+            "Air Purifier Vital 200S",
+            "switch.air_purifier_vital_200s_light_detection",
+            SERVICE_TURN_OFF,
+            "pyvesync.devices.vesyncpurifier.VeSyncAirBaseV2.toggle_light_detection",
+        ),
     ],
 )
 async def test_switch_operations(
