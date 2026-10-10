@@ -51,6 +51,7 @@ class DaikinFirmwareUpdateEntity(DaikinManagementPointEntity, UpdateEntity):
         """Initialise the update entity."""
         super().__init__(device, coordinator, gateway_mp.embedded_id)
         self._coordinator = coordinator
+        self._pending_install: tuple[int, str | None] | None = None
         self.entity_description = UPDATE_DESCRIPTIONS["FirmwareUpdate"]
 
         self._attr_unique_id = f"{device.id}_{self._embedded_id}_firmware"
@@ -73,18 +74,25 @@ class DaikinFirmwareUpdateEntity(DaikinManagementPointEntity, UpdateEntity):
             ),
             "firmware_install_failed",
         )
-        self._attr_in_progress = True
+        self._pending_install = (
+            self.coordinator.cloud_update_sequence,
+            self._attr_installed_version,
+        )
+        self._attr_supported_features |= UpdateEntityFeature.PROGRESS
 
         self.async_write_ha_state()
 
-    # ------------------------------------------------------------------
-    # Internal helpers
-    # ------------------------------------------------------------------
+    @property
+    @override
+    def in_progress(self) -> bool | None:
+        """Keep a requested install pending until the cloud reports its outcome."""
+        return self._pending_install is not None or super().in_progress
 
     def _update_from_management_point(self, management_point: ManagementPoint) -> None:
         """Pull the latest values out of a typed management point."""
         firmware = management_point.firmware
         if firmware is None:
+            self._pending_install = None
             self._attr_installed_version = None
             self._attr_latest_version = None
             self._attr_release_url = None
@@ -123,6 +131,16 @@ class DaikinFirmwareUpdateEntity(DaikinManagementPointEntity, UpdateEntity):
         if firmware.has_update_status:
             self._attr_in_progress = firmware.in_progress
             self._attr_supported_features |= UpdateEntityFeature.PROGRESS
+
+        if self._pending_install is not None:
+            requested_sequence, installed_version = self._pending_install
+            if self.coordinator.cloud_update_sequence > requested_sequence and (
+                firmware.has_update_status
+                or self._attr_installed_version != installed_version
+            ):
+                self._pending_install = None
+            else:
+                self._attr_supported_features |= UpdateEntityFeature.PROGRESS
 
     @callback
     @override

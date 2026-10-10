@@ -52,6 +52,7 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
     ) -> None:
         """Initialize."""
         self._daikin_api = daikin_api
+        self._cloud_update_sequence = 0
 
         super().__init__(
             hass,
@@ -65,6 +66,11 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
     def api(self) -> DaikinApi:
         """Return the Daikin API client."""
         return self._daikin_api
+
+    @property
+    def cloud_update_sequence(self) -> int:
+        """Identify fresh cloud responses separately from local write notifications."""
+        return self._cloud_update_sequence
 
     async def _async_update_data_from_cloud(self) -> dict[str, DaikinOnectaDevice]:
         """Fetch the latest device state from Daikin."""
@@ -114,6 +120,7 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
             if cloud_devices is None:
                 self.update_interval = _POST_WRITE_COOLDOWN
             else:
+                self._cloud_update_sequence += 1
                 has_new_topology = previous_devices is not None and bool(
                     self._topology(cloud_devices)
                     - self._topology(

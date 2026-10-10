@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 from daikin_onecta.client import OnectaClient
 from daikin_onecta.exceptions import OnectaConnectionError
+from daikin_onecta.models import Characteristic
 import pytest
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
@@ -833,7 +834,32 @@ async def test_firmware_install_executes_command(
     config_entry.runtime_data.api.async_execute_command.assert_awaited_once()
     state = hass.states.get("update.johnny_maaike_firmware_update")
     assert state is not None
-    assert state.attributes["in_progress"] is False
+    assert state.attributes["in_progress"] is True
+
+    coordinator = config_entry.runtime_data
+    coordinator.async_update_listeners()
+    assert hass.states.get(state.entity_id).attributes["in_progress"] is True
+
+    # Even a fresh poll without status or version evidence may still be stale.
+    gateways = _load_gateway_devices("dx4_firmwareavailable")
+    coordinator.api.get_cloud_device_details = AsyncMock(return_value=gateways)
+    await coordinator.async_refresh()
+    assert hass.states.get(state.entity_id).attributes["in_progress"] is True
+
+    gateway_point = gateways[0].management_point(gateways[0].gateway_embedded_id)
+    gateway_point.firmware_update_status = Characteristic(value="in-progress")
+    await coordinator.async_refresh()
+    assert hass.states.get(state.entity_id).attributes["in_progress"] is True
+
+    gateway_point.firmware_update_status = None
+    gateway_point.firmware_version = Characteristic(value="new-version")
+    gateway_point.software_version = Characteristic(value="new-version")
+    await coordinator.async_refresh()
+    assert hass.states.get(state.entity_id).attributes["in_progress"] is False
+    assert (
+        hass.states.get(state.entity_id).attributes["installed_version"]
+        == "new-version"
+    )
 
 
 @pytest.mark.parametrize("update_supported", [False, True])
