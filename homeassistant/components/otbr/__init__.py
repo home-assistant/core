@@ -21,11 +21,12 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
 from . import homeassistant_hardware, websocket_api
-from .const import DOMAIN
+from .const import API_TIMEOUT, DOMAIN
 from .types import OTBRConfigEntry
 from .util import (
     GetBorderAgentIdNotSupported,
     OTBRData,
+    async_get_dataset_lock,
     update_issues,
     update_unique_id,
 )
@@ -46,12 +47,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: OTBRConfigEntry) -> bool:
     """Set up an Open Thread Border Router config entry."""
-    api = python_otbr_api.OTBR(entry.data["url"], async_get_clientsession(hass), 10)
+    api = python_otbr_api.OTBR(
+        entry.data["url"], async_get_clientsession(hass), API_TIMEOUT
+    )
 
     otbrdata = OTBRData(entry.data["url"], api, entry.entry_id)
     try:
         border_agent_id = await otbrdata.get_border_agent_id()
-        dataset_tlvs = await otbrdata.get_active_dataset_tlvs()
         extended_address = await otbrdata.get_extended_address()
     except GetBorderAgentIdNotSupported as err:
         ir.async_create_issue(
@@ -74,15 +76,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: OTBRConfigEntry) -> bool
     ) as err:
         raise ConfigEntryNotReady("Unable to connect") from err
     await update_unique_id(hass, entry, border_agent_id)
-    if dataset_tlvs:
-        await update_issues(hass, otbrdata, dataset_tlvs)
-        await async_add_dataset(
-            hass,
-            DOMAIN,
-            dataset_tlvs.hex(),
-            preferred_border_agent_id=border_agent_id.hex(),
-            preferred_extended_address=extended_address.hex(),
-        )
+    # Held from the dataset read to the store write: a migration decides what
+    # a network is known as from the store. The reads above stay outside, so
+    # an unreachable router does not hold every other writer up.
+    async with async_get_dataset_lock(hass):
+        try:
+            dataset_tlvs = await otbrdata.get_active_dataset_tlvs()
+        except (
+            HomeAssistantError,
+            aiohttp.ClientError,
+            TimeoutError,
+        ) as err:
+            raise ConfigEntryNotReady("Unable to connect") from err
+        if dataset_tlvs:
+            await update_issues(hass, otbrdata, dataset_tlvs)
+            await async_add_dataset(
+                hass,
+                DOMAIN,
+                dataset_tlvs.hex(),
+                preferred_border_agent_id=border_agent_id.hex(),
+                preferred_extended_address=extended_address.hex(),
+            )
 
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
     entry.runtime_data = otbrdata

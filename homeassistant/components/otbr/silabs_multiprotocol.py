@@ -6,18 +6,15 @@ import logging
 from typing import TYPE_CHECKING, Any, Concatenate
 
 import aiohttp
-from python_otbr_api import tlv_parser
-from python_otbr_api.tlv_parser import MeshcopTLVType
 
 from homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon import (
     is_multiprotocol_url,
 )
-from homeassistant.components.thread import async_add_dataset
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import DOMAIN
-from .util import OTBRData
+from .util import OTBRData, async_get_dataset_lock
 
 if TYPE_CHECKING:
     from . import OTBRConfigEntry
@@ -68,24 +65,13 @@ async def async_change_channel(
 ) -> None:
     """Set the channel to be used.
 
-    Does nothing if not configured.
+    Does nothing if not configured. Refused, like every dataset write, while
+    the mesh is mid-change: a pending dataset is in place, or a migration
+    started from Home Assistant is still propagating. The dataset the mesh
+    moves to is stored by the change itself.
     """
-    await data.set_channel(channel, delay)
-
-    # Import the new dataset
-    dataset_tlvs = await data.get_pending_dataset_tlvs()
-    if dataset_tlvs is None:
-        # The activation timer may have expired already
-        dataset_tlvs = await data.get_active_dataset_tlvs()
-    if dataset_tlvs is None:
-        # Don't try to import a None dataset
-        return
-
-    dataset = tlv_parser.parse_tlv(dataset_tlvs.hex())
-    dataset.pop(MeshcopTLVType.DELAYTIMER, None)
-    dataset.pop(MeshcopTLVType.PENDINGTIMESTAMP, None)
-    dataset_tlvs_str = tlv_parser.encode_tlv(dataset)
-    await async_add_dataset(hass, DOMAIN, dataset_tlvs_str)
+    async with async_get_dataset_lock(hass):
+        await data.set_channel(hass, channel, delay)
 
 
 @async_get_otbr_data(None)

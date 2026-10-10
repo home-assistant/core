@@ -564,6 +564,15 @@ class DatasetStore:
         """Schedule saving the dataset store."""
         self._store.async_delay_save(self._data_to_save, SAVE_DELAY)
 
+    async def async_save(self) -> None:
+        """Write the dataset store now, ahead of any scheduled save.
+
+        Used when the stored dataset has already taken effect outside Home
+        Assistant, such as a mesh migrating to it: a crash inside the save
+        delay must not leave the store behind the network.
+        """
+        await self._store.async_save(self._data_to_save())
+
     @callback
     def _data_to_save(self) -> dict[str, list[dict[str, str | None]]]:
         """Return data of datasets to store in a file."""
