@@ -145,12 +145,17 @@ async def test_unload_entry(hass: HomeAssistant, mock_farmad_client: MagicMock) 
 async def test_token_rotation(
     hass: HomeAssistant, mock_farmad_client: MagicMock
 ) -> None:
-    """Test rotated tokens are written back to the config entry."""
+    """Test rotated tokens are stored and a missing refresh token keeps the old one."""
     entry = await init_integration(hass)
     await mock_farmad_client.call_args.kwargs["on_token_refresh"](
         "new-access-token", "new-refresh-token"
     )
     assert entry.data[CONF_ACCESS_TOKEN] == "new-access-token"
+    assert entry.data[CONF_REFRESH_TOKEN] == "new-refresh-token"
+    await mock_farmad_client.call_args.kwargs["on_token_refresh"](
+        "newer-access-token", None
+    )
+    assert entry.data[CONF_ACCESS_TOKEN] == "newer-access-token"
     assert entry.data[CONF_REFRESH_TOKEN] == "new-refresh-token"
 
 
@@ -497,6 +502,26 @@ async def test_order_medication_errors(
 
     assert exc_info.value.translation_key == translation_key
     assert client.async_clear_draft_basket.await_count == clear_count
+
+
+async def test_order_medication_update_draft_error(
+    hass: HomeAssistant, mock_farmad_client: MagicMock
+) -> None:
+    """Test a failed draft update clears the draft and raises a translated error."""
+    await init_integration(hass)
+    client = mock_farmad_client.return_value
+    client.async_get_draft_basket.return_value = DraftBasket(
+        id=API_DRAFT_ID, comment=None, items=()
+    )
+    client.async_update_draft_basket.side_effect = FarmadError("mock")
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN, SERVICE_ORDER_MEDICATION, ORDER_DATA, blocking=True
+        )
+
+    assert exc_info.value.translation_key == "order_failed"
+    client.async_clear_draft_basket.assert_awaited_once_with(API_APB)
 
 
 async def test_order_medication_clear_draft_fails(

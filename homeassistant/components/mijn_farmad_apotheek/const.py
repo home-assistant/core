@@ -5,6 +5,8 @@ from typing import Final
 DOMAIN: Final = "mijn_farmad_apotheek"
 CONF_REFRESH_TOKEN: Final = "refresh_token"
 
+SEARCH_RESULT_LIMIT: Final = 25
+
 SERVICE_ORDER_MEDICATION: Final = "order_medication"
 SERVICE_SEARCH_MEDICATION: Final = "search_medication"
 

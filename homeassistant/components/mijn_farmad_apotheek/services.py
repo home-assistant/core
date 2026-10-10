@@ -1,8 +1,8 @@
 """Actions for the Mijn Farmad Apotheek integration."""
 
-from contextlib import suppress
+import logging
 import re
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Final
 
 from aiofarmad import (
     CatalogProduct,
@@ -41,12 +41,17 @@ from .const import (
     ATTR_QUERY,
     ATTR_STOCK,
     DOMAIN,
+    SEARCH_RESULT_LIMIT,
     SERVICE_ORDER_MEDICATION,
     SERVICE_SEARCH_MEDICATION,
 )
 
 if TYPE_CHECKING:
     from . import FarmadConfigEntry, FarmadData
+
+_LOGGER = logging.getLogger(__name__)
+
+CNK_PATTERN: Final = re.compile(r"[0-9]{7}")
 
 NON_EMPTY_STRING = probatio.All(cv.string, probatio.Length(min=1))
 
@@ -158,7 +163,7 @@ async def _async_resolve_product(
     """Resolve a product from the order history or a search by CNK code."""
     if (description := data.products.get(product_input)) is not None:
         return product_input, description
-    if re.fullmatch(r"[0-9]{7}", product_input) is None:
+    if CNK_PATTERN.fullmatch(product_input) is None:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="invalid_product",
@@ -182,8 +187,10 @@ async def _async_clear_draft(data: FarmadData, apb: str) -> None:
     removes nothing the user added. A failed clear is ignored because
     the next order reports the leftover draft.
     """
-    with suppress(FarmadError):
+    try:
         await data.client.async_clear_draft_basket(apb)
+    except FarmadError:
+        _LOGGER.debug("Clearing the draft basket of pharmacy %s failed", apb)
 
 
 async def _async_write_draft(
@@ -257,7 +264,7 @@ async def _async_search_medication(call: ServiceCall) -> ServiceResponse:
     apb = _resolve_apb(data, call.data.get(ATTR_APB))
     try:
         products = await data.client.async_search_products_in_apb(
-            apb, call.data[ATTR_QUERY], limit=25
+            apb, call.data[ATTR_QUERY], limit=SEARCH_RESULT_LIMIT
         )
     except FarmadError as err:
         raise _translate_error(err, apb, "search_failed") from err
