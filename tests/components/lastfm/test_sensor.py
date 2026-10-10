@@ -95,9 +95,11 @@ async def test_sensor_now_playing_with_hidden_listening_information(
     state = hass.states.get("sensor.lastfm_testaccount1")
     assert state.state == "artist - title"
     assert state.attributes[ATTR_LAST_PLAYED] is None
-    assert (
-        "user testaccount1 has hidden their recent listening information" in caplog.text
+    warning = (
+        "LastFM user testaccount1 has hidden their recent listening information "
+        "(https://www.last.fm/settings/privacy)"
     )
+    assert warning in caplog.messages
 
     with patch("pylast.User", return_value=hidden_now_playing_user) as mock_user:
         freezer.tick(timedelta(seconds=30))
@@ -107,12 +109,7 @@ async def test_sensor_now_playing_with_hidden_listening_information(
     mock_user.assert_called()
     assert config_entry.runtime_data.last_update_success
 
-    assert (
-        caplog.text.count(
-            "user testaccount1 has hidden their recent listening information"
-        )
-        == 1
-    )
+    assert caplog.messages.count(warning) == 1
 
 
 @pytest.mark.parametrize(

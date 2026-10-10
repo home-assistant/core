@@ -139,8 +139,7 @@ class LastFMDataUpdateCoordinator(DataUpdateCoordinator[dict[str, LastFMUserData
                 self._warned_hidden_users.add(username)
                 LOGGER.warning(
                     "LastFM user %s has hidden their recent listening information "
-                    "(https://www.last.fm/settings/privacy); now playing and last "
-                    "played track are unavailable",
+                    "(https://www.last.fm/settings/privacy)",
                     username,
                 )
         else:
