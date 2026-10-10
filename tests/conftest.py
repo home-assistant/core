@@ -1678,6 +1678,16 @@ def recorder_db_url(
 
     db_url = cast(str, pytestconfig.getoption("dburl"))
     drop_existing_db = pytestconfig.getoption("drop_existing_db")
+    if db_url.startswith(("mysql://", "postgresql://")) and (
+        worker := os.environ.get("PYTEST_XDIST_WORKER")
+    ):
+        import sqlalchemy as sa  # noqa: PLC0415
+
+        # One database per xdist worker so the workers can run in parallel.
+        url = sa.make_url(db_url)
+        db_url = url.set(database=f"{url.database}-{worker}").render_as_string(
+            hide_password=False
+        )
 
     def drop_db() -> None:
         import sqlalchemy as sa  # noqa: PLC0415
