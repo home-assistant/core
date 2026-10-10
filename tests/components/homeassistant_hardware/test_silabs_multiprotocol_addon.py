@@ -1,5 +1,6 @@
 """Test the Home Assistant Hardware silabs multiprotocol addon manager."""
 
+import asyncio
 from collections.abc import Generator
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
@@ -658,6 +659,94 @@ async def test_option_flow_addon_installed_same_device_reconfigure_expected_user
     assert result["step_id"] == "notify_channel_change"
     assert result["description_placeholders"] == {"delay_minutes": "5"}
 
+    result = await hass.config_entries.options.async_configure(result["flow_id"], {})
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+    for domain in ("otbr", "zha"):
+        assert mock_multiprotocol_platforms[domain].change_channel_calls == [(14, 300)]
+    assert multipan_manager._channel == 14
+
+
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
+@pytest.mark.parametrize(
+    ("error", "error_key"),
+    [
+        (
+            HomeAssistantError("This network is still mid-change"),
+            "channel_change_refused",
+        ),
+        (
+            silabs_multiprotocol_addon.ChannelChangeOutcomeUnknownError(
+                "The border router could not be read"
+            ),
+            "channel_change_unknown",
+        ),
+    ],
+)
+async def test_option_flow_change_channel_refused(
+    hass: HomeAssistant,
+    addon_info,
+    addon_store_info,
+    addon_installed,
+    error: HomeAssistantError,
+    error_key: str,
+) -> None:
+    """A refused or undetermined channel change is shown on the form; nothing is stored.
+
+    The border router refuses a change while its network is mid-change, or
+    cannot tell whether it went through; the form returns with the reason,
+    and the next attempt goes through.
+    """
+    addon_info.return_value.options["device"] = "/dev/ttyTEST123"
+
+    multipan_manager = await silabs_multiprotocol_addon.get_multiprotocol_addon_manager(
+        hass
+    )
+    multipan_manager._channel = 11
+
+    config_entry = MockConfigEntry(
+        data={}, domain=TEST_DOMAIN, options={}, title="Test HW"
+    )
+    config_entry.add_to_hass(hass)
+
+    mock_multiprotocol_platforms = {}
+    for domain in ("otbr", "zha"):
+        mock_multiprotocol_platform = MockMultiprotocolPlatform()
+        mock_multiprotocol_platforms[domain] = mock_multiprotocol_platform
+        mock_multiprotocol_platform.channel = 11
+        hass.config.components.add(domain)
+        mock_platform(
+            hass, f"{domain}.silabs_multiprotocol", mock_multiprotocol_platform
+        )
+        hass.bus.async_fire(EVENT_COMPONENT_LOADED, {ATTR_COMPONENT: domain})
+    await hass.async_block_till_done()
+    mock_multiprotocol_platforms["otbr"].async_change_channel = AsyncMock(
+        side_effect=error
+    )
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {"next_step_id": "reconfigure_addon"}
+    )
+    assert result["step_id"] == "change_channel"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {"channel": "14"}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "change_channel"
+    assert result["errors"] == {"base": error_key}
+    assert result["description_placeholders"] == {"error": str(error)}
+    assert get_suggested(result["data_schema"].schema, "channel") == "11"
+    assert multipan_manager._channel == 11
+    assert mock_multiprotocol_platforms["zha"].change_channel_calls == []
+
+    del mock_multiprotocol_platforms["otbr"].async_change_channel
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {"channel": "14"}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "notify_channel_change"
     result = await hass.config_entries.options.async_configure(result["flow_id"], {})
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
@@ -1449,6 +1538,7 @@ async def test_import_channel(
 )
 async def test_change_channel(
     hass: HomeAssistant,
+    hass_storage: dict[str, Any],
     mock_multiprotocol_platform: MockMultiprotocolPlatform,
     platform_using_multipan: bool,
     expected_calls: list[int],
@@ -1461,6 +1551,105 @@ async def test_change_channel(
 
     await multipan_manager.async_change_channel(15, 10)
     assert mock_multiprotocol_platform.change_channel_calls == expected_calls
+    # On disk at once, not after the save delay
+    assert hass_storage[silabs_multiprotocol_addon.STORAGE_KEY]["data"]["channel"] == 15
+
+
+async def test_change_channel_refused_by_a_platform(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """A platform refusing the change leaves the channel and the other radios alone.
+
+    The platform asked first has started its change in the background, as
+    ZHA does; it is cancelled, so that radio does not move on its own.
+    """
+    multipan_manager = await silabs_multiprotocol_addon.get_multiprotocol_addon_manager(
+        hass
+    )
+    multipan_manager._channel = 15
+    started: list[asyncio.Task] = []
+
+    async def start_change(
+        hass: HomeAssistant, channel: int, delay: float
+    ) -> asyncio.Task:
+        started.append(hass.async_create_task(asyncio.sleep(delay)))
+        return started[-1]
+
+    for domain, change in (
+        ("zha", start_change),
+        ("otbr", AsyncMock(side_effect=HomeAssistantError("mid-change"))),
+    ):
+        platform = MockMultiprotocolPlatform()
+        platform.async_change_channel = change
+        hass.config.components.add(domain)
+        mock_platform(hass, f"{domain}.silabs_multiprotocol", platform)
+        hass.bus.async_fire(EVENT_COMPONENT_LOADED, {ATTR_COMPONENT: domain})
+    await hass.async_block_till_done()
+
+    with pytest.raises(HomeAssistantError):
+        await multipan_manager.async_change_channel(14, 300)
+    await hass.async_block_till_done()
+
+    assert multipan_manager.async_get_channel() == 15
+    assert silabs_multiprotocol_addon.STORAGE_KEY not in hass_storage
+    assert [task.cancelled() for task in started] == [True]
+
+
+async def test_change_channel_with_a_failing_follow_up(
+    hass: HomeAssistant, mock_multiprotocol_platform: MockMultiprotocolPlatform
+) -> None:
+    """A platform's follow-up work failing does not undo an accepted change."""
+    multipan_manager = await silabs_multiprotocol_addon.get_multiprotocol_addon_manager(
+        hass
+    )
+
+    async def fail_later() -> None:
+        raise HomeAssistantError("import failed")
+
+    mock_multiprotocol_platform.async_change_channel = AsyncMock(
+        side_effect=lambda hass, channel, delay: hass.async_create_task(fail_later())
+    )
+
+    tasks = await multipan_manager.async_change_channel(14, 300)
+
+    assert multipan_manager.async_get_channel() == 14
+    with pytest.raises(HomeAssistantError):
+        await tasks[0]
+
+
+async def test_change_channel_outlives_a_cancelled_caller(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    mock_multiprotocol_platform: MockMultiprotocolPlatform,
+) -> None:
+    """The change runs on when its caller is cancelled, as a closed dialog does.
+
+    It settles before the cancellation is passed on: the write under way is
+    not torn down half-way, and what the platforms accepted is stored.
+    """
+    multipan_manager = await silabs_multiprotocol_addon.get_multiprotocol_addon_manager(
+        hass
+    )
+    answered = asyncio.Event()
+
+    async def slow_change(hass: HomeAssistant, channel: int, delay: float) -> None:
+        await answered.wait()
+
+    mock_multiprotocol_platform.async_change_channel = slow_change
+
+    caller = hass.async_create_task(multipan_manager.async_change_channel(14, 300))
+    await asyncio.sleep(0)
+    caller.cancel()
+    await asyncio.sleep(0)
+    assert not caller.done()
+    assert multipan_manager.async_get_channel() != 14
+
+    answered.set()
+    with pytest.raises(asyncio.CancelledError):
+        await caller
+
+    assert multipan_manager.async_get_channel() == 14
+    assert hass_storage[silabs_multiprotocol_addon.STORAGE_KEY]["data"]["channel"] == 14
 
 
 async def test_load_preferences(hass: HomeAssistant) -> None:
