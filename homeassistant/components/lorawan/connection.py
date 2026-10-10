@@ -68,8 +68,7 @@ def async_subscribe_connections(
     unsubscribe = subscribe(registry.changed, lambda change: listener(*change))
     try:
         for entry_id, registered in tuple(registry.connections.items()):
-            if registry.connections.get(entry_id) is registered:
-                listener(entry_id, registered.connection)
+            listener(entry_id, registered.connection)
     except BaseException:
         unsubscribe()
         raise
