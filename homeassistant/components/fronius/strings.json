@@ -433,6 +433,16 @@
         "name": "DC voltage {mppt_no}"
       }
     },
+    "select": {
+      "battery_forced_mode": {
+        "name": "Battery forced mode",
+        "state": {
+          "charge": "Charge",
+          "discharge": "Discharge",
+          "off": "[%key:common::state::off%]"
+        }
+      }
+    },
     "switch": {
       "ac_power_limit_enabled": {
         "name": "AC power limiting"

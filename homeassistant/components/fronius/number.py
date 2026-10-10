@@ -54,7 +54,7 @@ MODBUS_NUMBER_ENTITY_DESCRIPTIONS: list[FroniusNumberEntityDescription] = [
         field="charge_limit",
         enable_field="charge_limit_enabled",
         native_unit_of_measurement=PERCENTAGE,
-        native_min_value=-100,
+        native_min_value=0,
         native_max_value=100,
         native_step=1,
         entity_category=EntityCategory.CONFIG,
@@ -65,7 +65,7 @@ MODBUS_NUMBER_ENTITY_DESCRIPTIONS: list[FroniusNumberEntityDescription] = [
         field="discharge_limit",
         enable_field="discharge_limit_enabled",
         native_unit_of_measurement=PERCENTAGE,
-        native_min_value=-100,
+        native_min_value=0,
         native_max_value=100,
         native_step=1,
         entity_category=EntityCategory.CONFIG,
@@ -141,7 +141,6 @@ class ModbusSetpointNumber(FroniusEntity, NumberEntity):
         """Write the setpoint to the device."""
         await self.coordinator.async_write(
             self.entity_description.component_fn,
-            self.entity_description.field,
-            value,
+            {self.entity_description.field: value},
             enable_field=self.entity_description.enable_field,
         )

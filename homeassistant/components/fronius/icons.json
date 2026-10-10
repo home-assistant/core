@@ -75,6 +75,15 @@
         "default": "mdi:current-dc"
       }
     },
+    "select": {
+      "battery_forced_mode": {
+        "default": "mdi:battery-sync",
+        "state": {
+          "charge": "mdi:battery-charging-high",
+          "discharge": "mdi:battery-arrow-down"
+        }
+      }
+    },
     "switch": {
       "ac_power_limit_enabled": {
         "default": "mdi:speedometer-slow"

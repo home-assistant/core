@@ -132,5 +132,5 @@ class ModbusControlSwitch(FroniusEntity, SwitchEntity):
 
     async def _async_write(self, value: bool) -> None:
         await self.coordinator.async_write(
-            self.entity_description.component_fn, self.entity_description.field, value
+            self.entity_description.component_fn, {self.entity_description.field: value}
         )

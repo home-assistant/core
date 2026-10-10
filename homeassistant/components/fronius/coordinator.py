@@ -10,6 +10,7 @@ from fronius_modbus import (
     Controls,
     FroniusModbusInverter,
     Mppt,
+    Storage,
     SunSpecError,
     SunSpecMapShiftError,
 )
@@ -36,6 +37,12 @@ from .const import (
 )
 from .entity import FroniusEntity, FroniusEntityDescription, ModbusComponentFn
 from .number import MODBUS_NUMBER_ENTITY_DESCRIPTIONS
+from .select import (
+    BATTERY_FORCED_MODE_CHARGE,
+    BATTERY_FORCED_MODE_DISCHARGE,
+    BATTERY_FORCED_MODE_OFF,
+    MODBUS_SELECT_ENTITY_DESCRIPTIONS,
+)
 from .sensor import (
     INVERTER_ENTITY_DESCRIPTIONS,
     LOGGER_ENTITY_DESCRIPTIONS,
@@ -289,6 +296,7 @@ class FroniusModbusSettingsUpdateCoordinator(FroniusModbusCoordinatorBase):
     default_interval = timedelta(minutes=5)
     valid_descriptions = {
         Platform.NUMBER: MODBUS_NUMBER_ENTITY_DESCRIPTIONS,
+        Platform.SELECT: MODBUS_SELECT_ENTITY_DESCRIPTIONS,
         Platform.SWITCH: MODBUS_SWITCH_ENTITY_DESCRIPTIONS,
     }
 
@@ -425,12 +433,13 @@ class FroniusModbusSettingsUpdateCoordinator(FroniusModbusCoordinatorBase):
     async def async_write(
         self,
         component_fn: ModbusComponentFn,
-        field: str,
-        value: float | bool,
+        writes: Mapping[str, float | bool],
         *,
         enable_field: str | None = None,
     ) -> None:
-        """Write a setpoint to the device and refresh what it reports back.
+        """Write settings to the device and refresh what it reports back.
+
+        ``writes`` maps fields to values and is written in order.
 
         The model is refreshed first so its header check catches a shifted
         register map before anything is written - the register addresses
@@ -461,7 +470,8 @@ class FroniusModbusSettingsUpdateCoordinator(FroniusModbusCoordinatorBase):
                     and component.revert_seconds != self._revert_seconds
                 ):
                     await component.write("revert_seconds", self._revert_seconds)
-                await component.write(field, value)
+                for field, value in writes.items():
+                    await component.write(field, value)
                 if enable_field is not None and getattr(component, enable_field):
                     await component.write(enable_field, True)
         except (ModbusError, SunSpecError) as err:
@@ -495,8 +505,27 @@ class FroniusModbusSettingsUpdateCoordinator(FroniusModbusCoordinatorBase):
             )
             values["battery_minimum_reserve"] = storage.minimum_reserve
             values["battery_grid_charging"] = storage.grid_charging
+            values["battery_forced_mode"] = _battery_forced_mode(storage)
 
         return self._as_device_data(values)
+
+
+def _battery_forced_mode(storage: Storage) -> str | None:
+    """Return which way an active negative battery limit forces the power.
+
+    A negative rate forces the opposite direction - whoever wrote it, so a
+    battery forced by another controller shows as forced too.
+    """
+    charge, discharge = storage.charge_limit, storage.discharge_limit
+    charge_on = storage.charge_limit_enabled
+    discharge_on = storage.discharge_limit_enabled
+    if charge is None or discharge is None or charge_on is None or discharge_on is None:
+        return None
+    if discharge_on and discharge < 0:
+        return BATTERY_FORCED_MODE_CHARGE
+    if charge_on and charge < 0:
+        return BATTERY_FORCED_MODE_DISCHARGE
+    return BATTERY_FORCED_MODE_OFF
 
 
 class FroniusLoggerUpdateCoordinator(FroniusCoordinatorBase):
