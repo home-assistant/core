@@ -1611,9 +1611,17 @@
       "description": "The stored configuration of the following KNX {platform} entities is invalid, so they were not set up:\n\n{entities}\n\nCorrect or delete them. Check the logs for details.",
       "title": "Invalid KNX entity configuration"
     },
+    "expose_validation_error": {
+      "description": "The stored expose configuration of the following entities is invalid, so it was not set up:\n\n{entities}\n\nCorrect or delete it in the KNX panel. Check the logs for details.",
+      "title": "Invalid KNX expose configuration"
+    },
     "telegram_storage_error": {
       "description": "The configured KNX telegram storage backend failed to initialize. As a result, KNX telegrams are currently not being stored. Check the logs for details on the error and ensure your database is accessible.",
       "title": "KNX telegram storage error"
+    },
+    "time_server_validation_error": {
+      "description": "The stored KNX time server configuration is invalid, so the time server was not started. Correct it in the KNX panel.",
+      "title": "Invalid KNX time server configuration"
     }
   },
   "options": {

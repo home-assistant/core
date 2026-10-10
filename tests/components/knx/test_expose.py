@@ -666,6 +666,66 @@ async def test_ui_expose_with_options(
     await knx.assert_write(GROUP_ADDRESS_1, (50,))
 
 
+async def test_ui_expose_stores_only_set_options(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    hass_ws_client: WebSocketGenerator,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test options left at their default are not stored."""
+    entity_id = "light.test"
+    await knx.setup_integration()
+    ws_client = await hass_ws_client(hass)
+
+    await ws_client.send_json_auto_id(
+        {
+            "type": "knx/update_expose",
+            "entity_id": entity_id,
+            "data": {
+                "options": [
+                    {
+                        "ga": {"write": "1/1/1", "dpt": "5.010"},
+                        "attribute": None,
+                        "cooldown": 0,
+                        "send_on_init": False,
+                        "respond_to_read": True,
+                        "value_template": None,
+                    },
+                    {
+                        "ga": {"write": "1/1/2", "dpt": "5.010"},
+                        "attribute": "brightness",
+                        "cooldown": 2.5,
+                        "default": 0,
+                        "periodic_send": 60,
+                        "respond_to_read": False,
+                        "value_template": "{{ value }}",
+                    },
+                ],
+                "notes": "test",
+            },
+        }
+    )
+    res = await ws_client.receive_json()
+    assert res["success"], res
+    assert res["result"]["success"] is True, res["result"]
+
+    assert hass_storage[KNX_CONFIG_STORAGE_KEY]["data"]["expose"][entity_id] == {
+        "options": [
+            {"ga": {"write": "1/1/1", "dpt": "5.010"}},
+            {
+                "ga": {"write": "1/1/2", "dpt": "5.010"},
+                "attribute": "brightness",
+                "default": 0,
+                "cooldown": 2.5,
+                "periodic_send": 60.0,
+                "respond_to_read": False,
+                "value_template": "{{ value }}",
+            },
+        ],
+        "notes": "test",
+    }
+
+
 @pytest.mark.freeze_time("2022-1-7 9:13:14")  # UTC -> +1h = Vienna in winter (9 -> 0xA)
 @pytest.mark.parametrize(
     ("time_type", "raw"),
