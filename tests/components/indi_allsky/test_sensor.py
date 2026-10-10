@@ -517,7 +517,7 @@ async def test_exposure_complete_triggers_sensor_fetch_and_queues_trailing(
     # Let the first fetch finish; second fetch should run and then complete
     mock_indi_allsky_client.fetch_sensors.side_effect = None
     unblock_fetch.set()
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert mock_indi_allsky_client.fetch_sensors.call_count == 2
 
@@ -536,7 +536,7 @@ async def test_periodic_sensor_polling(
 
     freezer.tick(timedelta(minutes=10))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     mock_indi_allsky_client.fetch_sensors.assert_called_once()
 
@@ -566,6 +566,6 @@ async def test_periodic_sensor_polling_disabled(
 
     freezer.tick(timedelta(minutes=10))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     mock_indi_allsky_client.fetch_sensors.assert_not_called()
