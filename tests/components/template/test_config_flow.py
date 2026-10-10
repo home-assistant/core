@@ -677,7 +677,7 @@ async def test_config_flow_device(
             ["open", "closed"],
             {"one": "open", "two": "closed"},
             {"set_cover_position": []},
-            {"set_cover_position": []},
+            {"set_cover_position": [], "supported_speeds": ["slow", "fast"]},
             "state",
             None,
         ),

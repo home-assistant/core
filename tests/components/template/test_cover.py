@@ -1420,10 +1420,20 @@ async def test_flow_preview(
         hass,
         hass_ws_client,
         cover.DOMAIN,
-        {"name": "My template", "state": "{{ 'open' }}", "set_cover_position": []},
+        {
+            "name": "My template",
+            "state": "{{ 'open' }}",
+            "set_cover_position": [],
+            "supported_speeds": TEST_SPEEDS,
+        },
     )
 
     assert state["state"] == CoverState.OPEN
+    assert state["attributes"]["supported_speeds"] == TEST_SPEEDS
+    assert (
+        state["attributes"]["supported_features"] & CoverEntityFeature.SPEED
+        == CoverEntityFeature.SPEED
+    )
 
 
 @pytest.mark.parametrize(
