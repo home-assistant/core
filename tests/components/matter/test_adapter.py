@@ -601,3 +601,44 @@ async def test_device_registry_bridged_device_split_off_with_changed_bridge_seri
     assert bridged_entry.id != bridge_entry.id
     assert bridged_entry.via_device_id == bridge_entry.id
     assert (DOMAIN, "serial_glg5mxh") in bridged_entry.identifiers
+
+
+@pytest.mark.usefixtures("matter_node")
+@pytest.mark.parametrize("node_fixture", ["mock_nested_aggregator_bridge"])
+async def test_bridged_device_behind_nested_aggregator(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test a bridged device exposed behind a nested Aggregator endpoint.
+
+    Some bridges expose a bridged endpoint that is itself an Aggregator with
+    its own bridged children. Those children must be represented as HA devices
+    nested under that Aggregator's device, not merged into the top-level bridge device.
+    """
+    entry_id = hass.config_entries.async_entries(DOMAIN)[0].entry_id
+    bridge_identifier = identifier_for(matter_client, matter_node, 0)
+    aggregator_identifier = identifier_for(matter_client, matter_node, 1102)
+
+    bridge_entry = device_registry.async_get_device_by_identifier(
+        bridge_identifier, entry_id
+    )
+    assert bridge_entry is not None
+
+    aggregator_entry = device_registry.async_get_device_by_identifier(
+        aggregator_identifier, entry_id
+    )
+    assert aggregator_entry is not None
+    assert aggregator_entry.id != bridge_entry.id
+    assert aggregator_entry.via_device_id == bridge_entry.id
+
+    for child_endpoint_id in (11021, 11022, 11023, 11024):
+        child_identifier = identifier_for(matter_client, matter_node, child_endpoint_id)
+        assert child_identifier != bridge_identifier
+        child_entry = device_registry.async_get_device_by_identifier(
+            child_identifier, entry_id
+        )
+        assert child_entry is not None
+        assert child_entry.id != bridge_entry.id
+        assert child_entry.via_device_id == aggregator_entry.id
