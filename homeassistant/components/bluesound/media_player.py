@@ -36,7 +36,12 @@ from homeassistant.util import dt as dt_util
 
 from .const import ATTR_BLUESOUND_GROUP, ATTR_MASTER, DOMAIN
 from .coordinator import BluesoundCoordinator
-from .utils import dispatcher_unjoin_signal, format_unique_id, id_to_paired_player
+from .utils import (
+    DISPATCHER_ENTITY_ID_CHANGED_SIGNAL,
+    dispatcher_unjoin_signal,
+    format_unique_id,
+    id_to_paired_player,
+)
 
 if TYPE_CHECKING:
     from . import BluesoundConfigEntry
@@ -142,13 +147,26 @@ class BluesoundPlayer(CoordinatorEntity[BluesoundCoordinator], MediaPlayerEntity
                 self.async_remove_follower,
             )
         )
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                DISPATCHER_ENTITY_ID_CHANGED_SIGNAL,
+                self._async_handle_entity_id_changed,
+            )
+        )
 
     @callback
     @override
     def async_entity_id_changed(self, old_entity_id: str) -> None:
-        """Rebuild the group members, which contain the entity_id."""
+        """Let every player rebuild its group members, which contain entity_ids."""
         super().async_entity_id_changed(old_entity_id)
+        async_dispatcher_send(self.hass, DISPATCHER_ENTITY_ID_CHANGED_SIGNAL)
+
+    @callback
+    def _async_handle_entity_id_changed(self) -> None:
+        """Rebuild the group members, which may list a renamed player."""
         self._group_members = self.rebuild_group_members()
+        self.async_write_ha_state()
 
     @override
     async def async_will_remove_from_hass(self) -> None:
