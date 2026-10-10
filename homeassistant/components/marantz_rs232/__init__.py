@@ -18,21 +18,18 @@ async def async_setup_entry(
     """Set up Marantz RS-232 from a config entry."""
     port = entry.data[CONF_DEVICE]
     receiver = MarantzV2007Receiver(port)
+    entry.async_on_unload(receiver.disconnect)
 
     try:
         await receiver.connect()
         await receiver.query_state()
         await receiver.query_multi_room_a()
     except ValueError as err:
-        if receiver.connected:
-            await receiver.disconnect()
         raise ConfigEntryError(
             translation_domain=DOMAIN,
             translation_key="invalid_serial_port",
         ) from err
     except (ConnectionError, OSError, TimeoutError) as err:
-        if receiver.connected:
-            await receiver.disconnect()
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="communication_error",
@@ -66,9 +63,4 @@ async def async_unload_entry(
     hass: HomeAssistant, entry: MarantzRS232ConfigEntry
 ) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-    if unload_ok:
-        await entry.runtime_data.disconnect()
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

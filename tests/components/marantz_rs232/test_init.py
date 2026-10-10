@@ -1,5 +1,6 @@
 """Tests for Marantz RS-232 setup and teardown."""
 
+import asyncio
 import logging
 from unittest.mock import patch
 
@@ -49,6 +50,85 @@ async def test_setup_failure(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
     assert not mock_receiver.connected
     assert mock_config_entry.error_reason_translation_key == "communication_error"
+
+
+@pytest.mark.parametrize("method", ["query_state", "query_multi_room_a"])
+async def test_unexpected_query_failure(
+    hass: HomeAssistant,
+    mock_receiver: MarantzV2007Receiver,
+    mock_config_entry: MockConfigEntry,
+    method: str,
+) -> None:
+    """Close the connection when an initial query raises an unexpected error."""
+    getattr(mock_receiver, method).side_effect = RuntimeError("Unexpected query error")
+    mock_config_entry.add_to_hass(hass)
+    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    mock_receiver.disconnect.assert_awaited_once()
+    assert not mock_receiver.connected
+
+
+async def test_platform_forwarding_failure(
+    hass: HomeAssistant,
+    mock_receiver: MarantzV2007Receiver,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Close the connection and remove subscriptions when platform forwarding fails."""
+    mock_config_entry.add_to_hass(hass)
+    with patch.object(
+        hass.config_entries,
+        "async_forward_entry_setups",
+        side_effect=RuntimeError("Unexpected platform error"),
+    ):
+        assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    mock_receiver.disconnect.assert_awaited_once()
+    assert not mock_receiver.connected
+    assert not mock_receiver._subscribers
+
+
+async def test_cancelled_setup(
+    hass: HomeAssistant,
+    mock_receiver: MarantzV2007Receiver,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Close the connection when setup is cancelled during the initial query."""
+    query_started = asyncio.Event()
+
+    async def query_state() -> None:
+        query_started.set()
+        await asyncio.Event().wait()
+
+    mock_receiver.query_state.side_effect = query_state
+    mock_config_entry.add_to_hass(hass)
+    task = hass.async_create_task(
+        hass.config_entries.async_setup(mock_config_entry.entry_id)
+    )
+    await query_started.wait()
+    assert mock_receiver.connected
+    task.cancel()
+    with pytest.raises(asyncio.CancelledError):
+        await task
+    await hass.async_block_till_done()
+    mock_receiver.disconnect.assert_awaited_once()
+    assert not mock_receiver.connected
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_failed_unload(
+    hass: HomeAssistant,
+    mock_receiver: MarantzV2007Receiver,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Keep the connection open when the platform cannot unload."""
+    with patch.object(
+        hass.config_entries, "async_unload_platforms", return_value=False
+    ):
+        assert not await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    mock_receiver.disconnect.assert_not_awaited()
+    assert mock_receiver.connected
 
 
 @pytest.mark.usefixtures("init_integration")
