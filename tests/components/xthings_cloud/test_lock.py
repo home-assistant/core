@@ -1,7 +1,9 @@
 """Tests for Xthings Cloud lock platform."""
 
+from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -11,13 +13,14 @@ from homeassistant.components.lock import (
     SERVICE_UNLOCK,
     LockState,
 )
+from homeassistant.components.xthings_cloud.const import DEFAULT_SCAN_INTERVAL
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import get_device_by_id, setup_integration
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 async def test_locks(
@@ -83,6 +86,7 @@ async def test_updating_state(
     mock_config_entry: MockConfigEntry,
     mock_api_client: AsyncMock,
     mock_websocket: AsyncMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test updating state."""
     with patch("homeassistant.components.xthings_cloud.PLATFORMS", [Platform.LOCK]):
@@ -107,7 +111,9 @@ async def test_updating_state(
     assert state.state == LockState.UNLOCKED.value
 
     get_device_by_id(mock_api_client, "dev_lock_001")["status"]["is_locked"] = 2
-    await mock_config_entry.runtime_data.async_refresh()
+    freezer.tick(timedelta(seconds=DEFAULT_SCAN_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
     state = hass.states.get("lock.front_door_lock")
     assert state is not None
