@@ -27,6 +27,9 @@
     }
   },
   "services": {
+    "stop_transition": {
+      "service": "mdi:stop"
+    },
     "toggle": {
       "service": "mdi:lightbulb"
     },
