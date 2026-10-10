@@ -1,0 +1,20 @@
+{
+  "fase1": {
+    "vrms": "230.5",
+    "irms": "1.2",
+    "p_activa": "277",
+    "p_aparent": "290",
+    "frecuencia": "50.0",
+    "factor_potencia": "0.95",
+    "energia_activa": "1587"
+  },
+  "fase4": {
+    "vrms": "230.5",
+    "irms": "1.2",
+    "p_activa": "277",
+    "p_aparent": "290",
+    "frecuencia": "50.0",
+    "factor_potencia": "0.95",
+    "energia_activa": "1587"
+  }
+}
