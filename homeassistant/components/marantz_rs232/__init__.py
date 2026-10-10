@@ -49,7 +49,7 @@ async def async_setup_entry(
             and not reconnect_requested
         ):
             reconnect_requested = True
-            LOGGER.info("Marantz receiver at %s is unavailable; reconnecting", port)
+            LOGGER.info("Marantz receiver is unavailable; reconnecting")
             hass.config_entries.async_schedule_reload(entry.entry_id)
 
     entry.async_on_unload(receiver.subscribe(_on_disconnect))
