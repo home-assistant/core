@@ -9,7 +9,7 @@ from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import AnyDeviceEntry, DeviceEntry
 
-from .coordinator import MieleConfigEntry
+from .coordinator import MieleConfigEntry, MieleDataUpdateCoordinator
 
 TO_REDACT = {"access_token", "refresh_token", "fabNumber"}
 
@@ -25,6 +25,21 @@ def redact_identifiers(in_data: dict[str, Any]) -> dict[str, Any]:
     for key, value in in_data.items():
         out_data[hash_identifier(key)] = value
     return out_data
+
+
+def _unknown_program_ids(
+    coordinator: MieleDataUpdateCoordinator, device_id: str
+) -> list[dict[str, int | str | None]]:
+    """Return unknown program IDs observed in appliance state updates."""
+    return [
+        {
+            "value_raw": program_id,
+            "value_localized": value_localized,
+        }
+        for program_id, value_localized in sorted(
+            coordinator.unknown_program_ids.get(device_id, {}).items()
+        )
+    ]
 
 
 async def async_get_config_entry_diagnostics(
@@ -55,6 +70,14 @@ async def async_get_config_entry_diagnostics(
                 for device_id, action_data in (
                     config_entry.runtime_data.coordinator.data.actions.items()
                 )
+            }
+        ),
+        "unknown_program_ids": redact_identifiers(
+            {
+                device_id: _unknown_program_ids(
+                    config_entry.runtime_data.coordinator, device_id
+                )
+                for device_id in config_entry.runtime_data.coordinator.unknown_program_ids
             }
         ),
     }
@@ -98,7 +121,7 @@ async def async_get_device_diagnostics(
         "actions": {
             hash_identifier(device_id): coordinator.data.actions[device_id].raw
         },
-        "programs": "Not implemented",
+        "unknown_program_ids": _unknown_program_ids(coordinator, device_id),
     }
     miele_data["missing_code_warnings"] = (
         sorted(completed_warnings) if len(completed_warnings) > 0 else ["None"]
