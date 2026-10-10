@@ -228,21 +228,21 @@ class AirobotConfigFlow(BaseConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured(updates={CONF_HOST: discovery_info.ip})
             # Entries added manually on firmware without the identity registers
             # have no unique ID and are keyed by host; upgrade them with the
-            # discovered MAC so later IP changes are tracked like other entries
+            # discovered MAC so later IP changes are tracked like other entries.
+            # An entry keyed to another MAC belongs to a different unit.
             for entry in self._async_current_entries(include_ignore=False):
                 if (
                     entry.data.get(CONF_DEVICE_TYPE) == DEVICE_TYPE_VENTILATION
                     and entry.data.get(CONF_HOST) == discovery_info.ip
+                    and entry.unique_id is None
                 ):
-                    if entry.unique_id is None:
-                        # Reload so the entities move to MAC unique IDs now
-                        return self.async_update_reload_and_abort(
-                            entry,
-                            unique_id=self._discovered_mac,
-                            data_updates={CONF_MAC: self._discovered_mac},
-                            reason="already_configured",
-                        )
-                    return self.async_abort(reason="already_configured")
+                    # Reload so the entities move to MAC unique IDs now
+                    return self.async_update_reload_and_abort(
+                        entry,
+                        unique_id=self._discovered_mac,
+                        data_updates={CONF_MAC: self._discovered_mac},
+                        reason="already_configured",
+                    )
             return await self.async_step_vu_dhcp_confirm()
 
         # Extract device_id from hostname (format: airobot-thermostat-t01xxxxxx)

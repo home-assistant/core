@@ -681,7 +681,7 @@ async def test_dhcp_discovery_ventilation_host_of_other_unit(
     mock_setup_entry: AsyncMock,
     mock_vu_client: AsyncMock,
 ) -> None:
-    """Test DHCP discovery leaves an entry for another unit at the same host."""
+    """Test DHCP discovery offers a unit found at another unit's host."""
     vu_entry = MockConfigEntry(
         domain=DOMAIN,
         data={
@@ -704,8 +704,9 @@ async def test_dhcp_discovery_ventilation_host_of_other_unit(
         ),
     )
 
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
+    # The entry at that host belongs to a different unit, so offer this one
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "vu_dhcp_confirm"
     assert vu_entry.unique_id == "11:22:33:44:55:66"
 
 

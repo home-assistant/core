@@ -207,6 +207,9 @@
     },
     "switch_turn_on_failed": {
       "message": "Failed to turn on {switch}."
+    },
+    "wrong_ventilation_unit": {
+      "message": "A different ventilation unit answered at {host}."
     }
   }
 }

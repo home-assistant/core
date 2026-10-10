@@ -14,9 +14,10 @@ from pyairobotrest.exceptions import AirobotAuthError, AirobotConnectionError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -95,25 +96,41 @@ class AirobotVUCoordinator(DataUpdateCoordinator[AirobotVUData]):
             config_entry=entry,
         )
         self.client = AirobotModbusClient(unit)
+        self._verify_identity = True
+        entry.async_on_unload(unit.on_connection_lost(self._async_link_lost))
 
-    @override
-    async def _async_setup(self) -> None:
-        """Read the unit's identity, which never changes."""
+    @callback
+    def _async_link_lost(self) -> None:
+        """Check the unit's identity again once the link reconnects."""
+        self._verify_identity = True
+
+    async def _async_verify_identity(self) -> None:
+        """Make sure the configured unit is the one answering at the host."""
         try:
-            self.identity = await self.client.async_get_identity()
+            identity = await self.client.async_get_identity()
         except AirobotReadError:
             # Firmware without the undocumented identity registers
-            self.identity = None
-        except VUError as err:
+            identity = None
+        mac = self.config_entry.unique_id
+        if (
+            identity is not None
+            and mac is not None
+            and format_mac(identity.mac_address) != mac
+        ):
             raise UpdateFailed(
                 translation_domain=DOMAIN,
-                translation_key="connection_failed",
-            ) from err
+                translation_key="wrong_ventilation_unit",
+                translation_placeholders={"host": self.config_entry.data[CONF_HOST]},
+            )
+        self.identity = identity
+        self._verify_identity = False
 
     @override
     async def _async_update_data(self) -> AirobotVUData:
         """Fetch data from the Modbus device."""
         try:
+            if self._verify_identity:
+                await self._async_verify_identity()
             return await self.client.async_get_data()
         except VUError as err:
             raise UpdateFailed(
