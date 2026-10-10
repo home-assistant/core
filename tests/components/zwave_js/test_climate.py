@@ -47,6 +47,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from .common import (
     CLIMATE_DANFOSS_LC13_ENTITY,
@@ -391,6 +392,142 @@ async def test_thermostat_v2(
     )
     await hass.async_block_till_done()
     assert "Error while refreshing value" in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("requested_temperature", "sent_temperature"),
+    [
+        pytest.param(23.3, 74.0, id="whole_fahrenheit_below"),
+        pytest.param(21.1, 70.0, id="whole_fahrenheit_above"),
+        pytest.param(23.9, 75.0, id="long_float"),
+        pytest.param(25, 77.0, id="exact"),
+    ],
+)
+async def test_setpoint_thermostat_fahrenheit_rounding(
+    hass: HomeAssistant,
+    client: MagicMock,
+    climate_radio_thermostat_ct100_plus: Node,
+    integration: MockConfigEntry,
+    requested_temperature: float,
+    sent_temperature: float,
+) -> None:
+    """Test setpoints are rounded to a resolution the Fahrenheit device can encode.
+
+    An unrounded unit conversion (e.g. 23.3 C -> 73.94 F) produces a Z-Wave
+    payload some nodes mis-parse, so it must be rounded to the nearest half
+    degree before being sent.
+    """
+    client.async_send_command.reset_mock()
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {
+            ATTR_ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY,
+            ATTR_TEMPERATURE: requested_temperature,
+        },
+        blocking=True,
+    )
+
+    args = client.async_send_command.call_args_list[0][0][0]
+    assert args["command"] == "node.set_value"
+    assert args["valueId"] == {
+        "commandClass": 67,
+        "endpoint": 1,
+        "property": "setpoint",
+        "propertyKey": 1,
+    }
+    assert args["value"] == sent_temperature
+
+
+async def test_setpoint_thermostat_fahrenheit_range_rounding(
+    hass: HomeAssistant,
+    client: MagicMock,
+    climate_radio_thermostat_ct100_plus: Node,
+    integration: MockConfigEntry,
+) -> None:
+    """Test dual setpoints are rounded to a resolution the device can encode."""
+    node = climate_radio_thermostat_ct100_plus
+
+    # Switch the device into heat_cool mode so both setpoints are writable.
+    event = Event(
+        type="value updated",
+        data={
+            "source": "node",
+            "event": "value updated",
+            "nodeId": 13,
+            "args": {
+                "commandClassName": "Thermostat Mode",
+                "commandClass": 64,
+                "endpoint": 1,
+                "property": "mode",
+                "propertyName": "mode",
+                "newValue": 3,
+                "prevValue": 1,
+            },
+        },
+    )
+    node.receive_event(event)
+
+    client.async_send_command.reset_mock()
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {
+            ATTR_ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY,
+            ATTR_TARGET_TEMP_LOW: 23.3,
+            ATTR_TARGET_TEMP_HIGH: 25.9,
+        },
+        blocking=True,
+    )
+
+    assert len(client.async_send_command.call_args_list) == 2
+    args = client.async_send_command.call_args_list[0][0][0]
+    assert args["command"] == "node.set_value"
+    assert args["valueId"] == {
+        "commandClass": 67,
+        "endpoint": 1,
+        "property": "setpoint",
+        "propertyKey": 1,
+    }
+    assert args["value"] == 74.0
+
+    args = client.async_send_command.call_args_list[1][0][0]
+    assert args["command"] == "node.set_value"
+    assert args["valueId"] == {
+        "commandClass": 67,
+        "endpoint": 1,
+        "property": "setpoint",
+        "propertyKey": 2,
+    }
+    assert args["value"] == 78.5
+
+
+async def test_setpoint_thermostat_celsius_rounding(
+    hass: HomeAssistant,
+    client: MagicMock,
+    climate_heatit_z_trm3: Node,
+    integration: MockConfigEntry,
+) -> None:
+    """Test setpoints on a Celsius device are rounded to a tenth of a degree."""
+    hass.config.units = US_CUSTOMARY_SYSTEM
+    client.async_send_command.reset_mock()
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {
+            ATTR_ENTITY_ID: CLIMATE_FLOOR_THERMOSTAT_ENTITY,
+            ATTR_TEMPERATURE: 70,
+        },
+        blocking=True,
+    )
+
+    args = client.async_send_command.call_args_list[0][0][0]
+    assert args["command"] == "node.set_value"
+    assert args["valueId"]["commandClass"] == 67
+    assert args["value"] == 21.1
 
 
 async def test_thermostat_v2_turn_on_after_off(
