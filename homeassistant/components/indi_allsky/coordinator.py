@@ -261,8 +261,7 @@ class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[IndiAllSkyData]):
     async def _async_update_data(self) -> IndiAllSkyData:
         """Fetch INDI Allsky metadata and verify connection."""
         try:
-            if self.latest_exposure is None:
-                await self.client.fetch_image("latestimage")
+            await self.client.fetch_image("latestimage")
             if not self.client.is_connected:
                 await self.client.connect()
             if self.latest_sensor is None:
