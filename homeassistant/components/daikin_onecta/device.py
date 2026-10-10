@@ -62,7 +62,14 @@ class DaikinOnectaDevice:
             else set()
         )
         model, serial_number, sw_version = self._gateway_metadata()
-        dr.async_get(hass).async_get_or_create(
+        registry = dr.async_get(hass)
+        if (
+            existing_entry := registry.async_get_device_by_identifier(
+                (DOMAIN, self.id), config_entry.entry_id
+            )
+        ) is not None and existing_entry.connections != connections:
+            registry.async_update_device(existing_entry.id, new_connections=connections)
+        registry.async_get_or_create(
             config_entry_id=config_entry.entry_id,
             identifiers={(DOMAIN, self.id)},
             connections=connections,
@@ -76,10 +83,17 @@ class DaikinOnectaDevice:
 
     def _device_registry_metadata(
         self,
-    ) -> tuple[str, str | None, str | None, str | None, str | None]:
+    ) -> tuple[str, str | None, str | None, str | None, str | None, str | None]:
         """Return the cloud fields mirrored in the device registry."""
         model, serial_number, sw_version = self._gateway_metadata()
-        return self.name, self.device.device_model, model, serial_number, sw_version
+        return (
+            self.name,
+            self.device.device_model,
+            model,
+            serial_number,
+            sw_version,
+            self.device.mac_address,
+        )
 
     def _gateway_metadata(self) -> tuple[str | None, str | None, str | None]:
         """Return model, serial number, and firmware from the gateway point."""

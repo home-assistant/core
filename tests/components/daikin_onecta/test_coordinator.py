@@ -1,5 +1,6 @@
 """Test the Daikin Onecta coordinator."""
 
+from copy import deepcopy
 from datetime import UTC, datetime, time, timedelta
 from math import ceil
 from types import SimpleNamespace
@@ -12,6 +13,7 @@ from daikin_onecta import (
     OnectaConnectionError,
     OnectaRateLimitError,
 )
+from daikin_onecta.models import Characteristic
 from daikin_onecta.rate_limit import RateLimit
 import pytest
 
@@ -28,6 +30,8 @@ from homeassistant.exceptions import (
 )
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import UpdateFailed
+
+from .test_climate_snapshots import _load_gateway_devices
 
 from tests.common import MockConfigEntry
 
@@ -122,6 +126,39 @@ async def test_device_registry_refreshes_without_climate_entity(
     assert entry is not None
     assert entry.name == "New name"
     assert entry.model_id == "New model"
+
+
+@pytest.mark.parametrize(
+    ("mac_address", "expected_connections"),
+    [
+        ("02:00:00:00:00:01", {(dr.CONNECTION_NETWORK_MAC, "02:00:00:00:00:01")}),
+        (None, set()),
+    ],
+)
+async def test_device_registry_updates_changed_mac_address(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    config_entry: MockConfigEntry,
+    mac_address: str | None,
+    expected_connections: set[tuple[str, str]],
+) -> None:
+    """Detect MAC-only changes and replace, rather than retain, stale connections."""
+    gateway = DaikinOnectaDevice(_load_gateway_devices("ururu")[0])
+    gateway.async_update_device_registry(hass, config_entry)
+    replacement = deepcopy(gateway.device)
+    replacement.gateway_management_point.characteristics["macAddress"] = Characteristic(
+        value=mac_address
+    )
+
+    assert gateway.set_device_data(replacement)
+    gateway.async_update_device_registry(hass, config_entry)
+
+    entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, gateway.id), config_entry.entry_id
+    )
+    assert entry is not None
+    assert entry.connections == expected_connections
+    assert not gateway.set_device_data(deepcopy(replacement))
 
 
 def _patch_polling_schedule(
