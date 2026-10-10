@@ -1,16 +1,21 @@
 """Test media player conditions."""
 
+from contextlib import AbstractContextManager, nullcontext as does_not_raise
 from typing import Any
 
+import probatio
 import pytest
 
 from homeassistant.components.media_player import (
+    ATTR_INPUT_SOURCE,
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
 )
 from homeassistant.components.media_player.condition import CONDITIONS
 from homeassistant.components.media_player.const import MediaPlayerState
+from homeassistant.const import CONF_ENTITY_ID, CONF_OPTIONS, CONF_TARGET
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.condition import async_validate_condition_config
 
 from tests.components.common import (
     ConditionStateDescription,
@@ -105,6 +110,7 @@ _CONDITION_TARGET_SUPPORT: dict[str, TargetSupport] = {
     "is_on": TargetSupport.STANDARD,
     "is_paused": TargetSupport.STANDARD,
     "is_playing": TargetSupport.STANDARD,
+    "is_source": TargetSupport.STANDARD,
     "is_unmuted": TargetSupport.STANDARD,
     "is_volume": TargetSupport.STANDARD,
 }
@@ -119,6 +125,7 @@ _CONDITION_TARGET_SUPPORT: dict[str, TargetSupport] = {
         ("media_player.is_not_playing", {}, True, True),
         ("media_player.is_paused", {}, True, True),
         ("media_player.is_playing", {}, True, True),
+        ("media_player.is_source", {ATTR_INPUT_SOURCE: ["HDMI 1"]}, True, True),
         ("media_player.is_unmuted", {}, True, True),
         ("media_player.is_volume", _IS_VOLUME_THRESHOLD, True, True),
     ],
@@ -191,6 +198,22 @@ def test_condition_target_support() -> None:
             condition="media_player.is_playing",
             target_states=[MediaPlayerState.PLAYING],
             other_states=other_states(MediaPlayerState.PLAYING),
+        ),
+        *parametrize_condition_states_any(
+            condition="media_player.is_source",
+            condition_options={ATTR_INPUT_SOURCE: ["HDMI 1", "HDMI 2"]},
+            target_states=[
+                (MediaPlayerState.PLAYING, {ATTR_INPUT_SOURCE: "HDMI 1"}),
+                (MediaPlayerState.PLAYING, {ATTR_INPUT_SOURCE: "HDMI 2"}),
+            ],
+            other_states=[
+                (MediaPlayerState.PLAYING, {ATTR_INPUT_SOURCE: "TV"}),
+            ],
+            extra_excluded_states=[
+                # States without a source attribute — filtered by _should_include
+                MediaPlayerState.PLAYING,
+                MediaPlayerState.OFF,
+            ],
         ),
         *parametrize_muted_condition_states_any(
             "media_player.is_unmuted", target_muted=False
@@ -274,6 +297,22 @@ async def test_media_player_state_condition_behavior_any(
             target_states=[MediaPlayerState.PLAYING],
             other_states=other_states(MediaPlayerState.PLAYING),
         ),
+        *parametrize_condition_states_all(
+            condition="media_player.is_source",
+            condition_options={ATTR_INPUT_SOURCE: ["HDMI 1", "HDMI 2"]},
+            target_states=[
+                (MediaPlayerState.PLAYING, {ATTR_INPUT_SOURCE: "HDMI 1"}),
+                (MediaPlayerState.PLAYING, {ATTR_INPUT_SOURCE: "HDMI 2"}),
+            ],
+            other_states=[
+                (MediaPlayerState.PLAYING, {ATTR_INPUT_SOURCE: "TV"}),
+            ],
+            extra_excluded_states=[
+                # States without a source attribute — filtered by _should_include
+                MediaPlayerState.PLAYING,
+                MediaPlayerState.OFF,
+            ],
+        ),
         *parametrize_muted_condition_states_all(
             "media_player.is_unmuted", target_muted=False
         ),
@@ -307,3 +346,50 @@ async def test_media_player_state_condition_behavior_all(
         condition_options=condition_options,
         states=states,
     )
+
+
+@pytest.mark.parametrize(
+    ("condition", "condition_options", "expected_result"),
+    [
+        # Valid configurations
+        (
+            "media_player.is_source",
+            {ATTR_INPUT_SOURCE: ["HDMI 1", "HDMI 2"]},
+            does_not_raise(),
+        ),
+        (
+            "media_player.is_source",
+            {ATTR_INPUT_SOURCE: "HDMI 1"},
+            does_not_raise(),
+        ),
+        # Invalid configurations
+        (
+            "media_player.is_source",
+            # Empty source list
+            {ATTR_INPUT_SOURCE: []},
+            pytest.raises(probatio.Invalid),
+        ),
+        (
+            "media_player.is_source",
+            # Missing source
+            {},
+            pytest.raises(probatio.Invalid),
+        ),
+    ],
+)
+async def test_media_player_is_source_condition_validation(
+    hass: HomeAssistant,
+    condition: str,
+    condition_options: dict[str, Any],
+    expected_result: AbstractContextManager,
+) -> None:
+    """Test media_player is_source condition config validation."""
+    with expected_result:
+        await async_validate_condition_config(
+            hass,
+            {
+                "condition": condition,
+                CONF_TARGET: {CONF_ENTITY_ID: "media_player.test"},
+                CONF_OPTIONS: condition_options,
+            },
+        )

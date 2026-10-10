@@ -1,18 +1,29 @@
 """Provides conditions for media players."""
 
 from datetime import datetime
-from typing import Any, override
+from typing import TYPE_CHECKING, Any, override
 
+import probatio
+
+from homeassistant.const import CONF_OPTIONS
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.automation import DomainSpec
 from homeassistant.helpers.condition import (
+    ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL,
     Condition,
+    ConditionConfig,
     EntityConditionBase,
     EntityNumericalConditionBase,
+    EntityStateConditionBase,
     make_entity_state_condition,
 )
 
-from .const import DOMAIN, MediaPlayerEntityStateAttribute, MediaPlayerState
+from .const import (
+    ATTR_INPUT_SOURCE,
+    DOMAIN,
+    MediaPlayerEntityStateAttribute,
+    MediaPlayerState,
+)
 
 VOLUME_DOMAIN_SPECS: dict[str, DomainSpec] = {
     DOMAIN: DomainSpec(value_source=MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL),
@@ -104,6 +115,39 @@ class MediaPlayerIsVolumeCondition(EntityNumericalConditionBase):
         )
 
 
+IS_SOURCE_CONDITION_SCHEMA = ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL.extend(
+    {
+        probatio.Required(CONF_OPTIONS): {
+            probatio.Required(ATTR_INPUT_SOURCE): probatio.All(
+                probatio.EnsureList(), probatio.NonEmpty(), [str]
+            ),
+        },
+    }
+)
+
+
+class MediaPlayerIsSourceCondition(EntityStateConditionBase):
+    """Condition for the media player's selected source."""
+
+    _domain_specs = {DOMAIN: DomainSpec(value_source=ATTR_INPUT_SOURCE)}
+    _schema = IS_SOURCE_CONDITION_SCHEMA
+
+    def __init__(self, hass: HomeAssistant, config: ConditionConfig) -> None:
+        """Initialize the source condition."""
+        super().__init__(hass, config)
+        if TYPE_CHECKING:
+            assert config.options is not None
+        self._states = set(config.options[ATTR_INPUT_SOURCE])
+
+    @override
+    def _should_include(self, state: State) -> bool:
+        """Skip media players that do not expose a source attribute."""
+        return (
+            super()._should_include(state)
+            and state.attributes.get(ATTR_INPUT_SOURCE) is not None
+        )
+
+
 CONDITIONS: dict[str, type[Condition]] = {
     "is_muted": MediaPlayerIsMutedCondition,
     "is_not_playing": make_entity_state_condition(
@@ -129,6 +173,7 @@ CONDITIONS: dict[str, type[Condition]] = {
     ),
     "is_paused": make_entity_state_condition(DOMAIN, MediaPlayerState.PAUSED),
     "is_playing": make_entity_state_condition(DOMAIN, MediaPlayerState.PLAYING),
+    "is_source": MediaPlayerIsSourceCondition,
     "is_unmuted": MediaPlayerIsUnmutedCondition,
     "is_volume": MediaPlayerIsVolumeCondition,
 }
