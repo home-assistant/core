@@ -1,15 +1,17 @@
 """DataUpdateCoordinator for Airlino."""
 
-from typing import Any, override
+from typing import TYPE_CHECKING, Any, override
 
 from airlino_api import AirlinoApi, AirlinoApiConnectionError, AirlinoApiError
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, LOGGER, UPDATE_INTERVAL
+
+if TYPE_CHECKING:
+    from . import AirlinoConfigEntry
 
 
 class AirlinoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
@@ -18,7 +20,7 @@ class AirlinoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     def __init__(
         self,
         hass: HomeAssistant,
-        entry: ConfigEntry,
+        entry: AirlinoConfigEntry,
         api: AirlinoApi,
     ) -> None:
         """Initialize the coordinator."""
@@ -65,10 +67,10 @@ class AirlinoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 translation_key="update_failed",
                 translation_placeholders={"err": str(err)},
             ) from err
-        if not was_online:
+        if previous is not None and not was_online:
             LOGGER.info("AirLino is available again")
-        sender: dict[str, Any] | None = None
-        receiver: dict[str, Any] | None = None
+        sender: dict[str, Any] | None = previous.get("sender") if previous else None
+        receiver: dict[str, Any] | None = previous.get("receiver") if previous else None
         try:
             sender = await self.api.async_get_sender_status()
             receiver = await self.api.async_get_receiver_state()

@@ -77,8 +77,6 @@ rules:
     comment: Only a single device per config entry.
 
   # Platinum
-  async-dependency:
-    status: exempt
-    comment: no external dependencies.
+  async-dependency: done
   inject-websession: todo
   strict-typing: todo

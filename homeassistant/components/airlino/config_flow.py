@@ -16,6 +16,7 @@ from homeassistant import config_entries
 from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
@@ -32,7 +33,7 @@ _LOGGER = logging.getLogger(__name__)
 STEP_USER_DATA_SCHEMA = Schema(
     {
         "host": str,
-        Optional("port", default=DEFAULT_PORT): int,
+        Optional("port", default=DEFAULT_PORT): cv.port,
     }
 )
 
@@ -220,7 +221,13 @@ class AirlinoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="unknown")
 
         await self.async_set_unique_id(info["mac"])
-        self._abort_if_unique_id_configured()
+        self._abort_if_unique_id_configured(
+            updates={
+                CONF_HOST: self._host,
+                "port": self._port,
+                "api_version": self._api_version,
+            }
+        )
 
         self.context["title_placeholders"] = {"name": info["title"]}
         return await self.async_step_confirm()

@@ -28,6 +28,7 @@ from homeassistant.components.media_player import (
     async_process_play_media_url,
 )
 from homeassistant.components.media_source import is_media_source_id
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -127,7 +128,7 @@ class AirlinoMediaPlayer(
 
         The device cannot be turned on remotely, so when it is unreachable (e.g. in standby) it is shown as unavailable.
         """
-        return self.coordinator.data.get("online", False)
+        return super().available and self.coordinator.data.get("online", False)
 
     @override
     @property
@@ -138,7 +139,7 @@ class AirlinoMediaPlayer(
         return DeviceInfo(
             identifiers={(DOMAIN, self._attr_unique_id)},
             name=device.get("devicename") or self._device_name,
-            manufacturer="Lintech GmbH",
+            manufacturer="LinTech GmbH",
             model=device.get("model"),
             sw_version=device.get("firmware"),
         )
@@ -154,7 +155,8 @@ class AirlinoMediaPlayer(
         return [
             (entry, entry.runtime_data)
             for entry in self.hass.config_entries.async_entries(DOMAIN)
-            if isinstance(getattr(entry, "runtime_data", None), AirlinoRuntimeData)
+            if entry.state is ConfigEntryState.LOADED
+            and isinstance(getattr(entry, "runtime_data", None), AirlinoRuntimeData)
         ]
 
     def _sender_uuid(self, coordinator: AirlinoDataUpdateCoordinator) -> str | None:
@@ -218,9 +220,10 @@ class AirlinoMediaPlayer(
                 translation_key="sender_uuid_missing",
             )
 
-        if not (sender_status or {}).get("enabled"):
-            await self._async_call(self.coordinator.api.async_enable_sender)
+        requested_runtimes: list[tuple[str, AirlinoRuntimeData]] = []
         for entity_id in group_members:
+            if entity_id == self.entity_id:
+                continue
             runtime = await self._async_find_runtime_by_entity_id(entity_id)
             if runtime is None:
                 raise HomeAssistantError(
@@ -237,6 +240,11 @@ class AirlinoMediaPlayer(
                     translation_key="device_unavailable",
                     translation_placeholders={"entity_id": entity_id},
                 )
+            requested_runtimes.append((entity_id, runtime))
+
+        if not (sender_status or {}).get("enabled"):
+            await self._async_call(self.coordinator.api.async_enable_sender)
+        for _, runtime in requested_runtimes:
             receiver_state: dict[str, Any] = await self._async_call(
                 runtime.api.async_get_receiver_state
             )
@@ -459,6 +467,7 @@ class AirlinoMediaPlayer(
         if self.state == MediaPlayerState.PLAYING:
             return
         await self._async_call(self.coordinator.api.async_play)
+        await self.coordinator.async_request_refresh()
 
     @override
     async def async_media_pause(self) -> None:
@@ -467,12 +476,14 @@ class AirlinoMediaPlayer(
         if self.state != MediaPlayerState.PLAYING:
             return
         await self._async_call(self.coordinator.api.async_playpause)
+        await self.coordinator.async_request_refresh()
 
     @override
     async def async_media_play_pause(self) -> None:
         """Toggle between play and pause."""
         self._ensure_not_multiroom_receiver()
         await self._async_call(self.coordinator.api.async_playpause)
+        await self.coordinator.async_request_refresh()
 
     @override
     async def async_media_stop(self) -> None:
@@ -508,8 +519,10 @@ class AirlinoMediaPlayer(
     async def async_volume_up(self) -> None:
         """Increase the volume."""
         await self._async_call(self.coordinator.api.async_volume_up)
+        await self.coordinator.async_request_refresh()
 
     @override
     async def async_volume_down(self) -> None:
         """Decrease the volume."""
         await self._async_call(self.coordinator.api.async_volume_down)
+        await self.coordinator.async_request_refresh()
