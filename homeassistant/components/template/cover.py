@@ -7,11 +7,13 @@ import probatio
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
+    ATTR_SPEED,
     ATTR_TILT_POSITION,
     DEVICE_CLASSES_SCHEMA,
     DOMAIN as COVER_DOMAIN,
     ENTITY_ID_FORMAT,
     CoverEntity,
+    CoverEntityCapabilityAttribute,
     CoverEntityFeature,
     CoverEntityStateAttribute,
     CoverState,
@@ -50,6 +52,7 @@ CLOSED_STATE = "closed"
 CLOSING_STATE = "closing"
 
 CONF_POSITION = "position"
+CONF_SUPPORTED_SPEEDS = "supported_speeds"
 CONF_TILT = "tilt"
 OPEN_ACTION = "open_cover"
 CLOSE_ACTION = "close_cover"
@@ -84,6 +87,9 @@ COVER_COMMON_SCHEMA = probatio.Schema(
         probatio.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
         probatio.Optional(CONF_POSITION): cv.template,
         probatio.Optional(CONF_STATE): cv.template,
+        probatio.Optional(CONF_SUPPORTED_SPEEDS): probatio.All(
+            probatio.EnsureList(), [cv.string]
+        ),
         probatio.Optional(CONF_TILT): cv.template,
         probatio.Optional(POSITION_ACTION): cv.SCRIPT_SCHEMA,
         probatio.Optional(STOP_ACTION): cv.SCRIPT_SCHEMA,
@@ -92,7 +98,8 @@ COVER_COMMON_SCHEMA = probatio.Schema(
 )
 
 _BLOCKED_ATTRIBUTES = tcv.BlockedTemplateAttributes(
-    attributes=CoverEntityStateAttribute, device_class=True
+    attributes=(CoverEntityCapabilityAttribute, CoverEntityStateAttribute),
+    device_class=True,
 )
 
 COVER_YAML_SCHEMA = probatio.All(
@@ -239,6 +246,7 @@ class AbstractTemplateCover(AbstractTemplateEntity, CoverEntity, RestoreEntity):
             optimistic_option=CONF_TILT_OPTIMISTIC,
         )
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)
+        self._attr_supported_speeds = config.get(CONF_SUPPORTED_SPEEDS) or None
 
         # The config requires (open and close scripts) or a set position script,
         # therefore the base supported features will always include them.
@@ -255,6 +263,8 @@ class AbstractTemplateCover(AbstractTemplateEntity, CoverEntity, RestoreEntity):
             if (action_config := config.get(action_id)) is not None:
                 self.add_script(action_id, action_config, name, DOMAIN)
                 self._attr_supported_features |= supported_feature
+        if self._attr_supported_speeds:
+            self._attr_supported_features |= CoverEntityFeature.SPEED
 
     @property
     @override
@@ -283,15 +293,25 @@ class AbstractTemplateCover(AbstractTemplateEntity, CoverEntity, RestoreEntity):
             self._attr_is_opening = False
             self._attr_is_closing = False
 
+    def _speed_variables(self, kwargs: dict[str, Any]) -> dict[str, Any]:
+        """Return the speed script variable if speeds are configured."""
+        # Without speeds, a variable named speed from the config is kept
+        if not self._attr_supported_speeds:
+            return {}
+        return {"speed": kwargs.get(ATTR_SPEED)}
+
     @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Move the cover up."""
+        speed_variables = self._speed_variables(kwargs)
         if open_script := self._action_scripts.get(OPEN_ACTION):
-            await self.async_run_script(open_script, context=self._context)
+            await self.async_run_script(
+                open_script, run_variables=speed_variables, context=self._context
+            )
         elif position_script := self._action_scripts.get(POSITION_ACTION):
             await self.async_run_script(
                 position_script,
-                run_variables={"position": 100},
+                run_variables={"position": 100, **speed_variables},
                 context=self._context,
             )
         if self._attr_assumed_state:
@@ -301,12 +321,15 @@ class AbstractTemplateCover(AbstractTemplateEntity, CoverEntity, RestoreEntity):
     @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Move the cover down."""
+        speed_variables = self._speed_variables(kwargs)
         if close_script := self._action_scripts.get(CLOSE_ACTION):
-            await self.async_run_script(close_script, context=self._context)
+            await self.async_run_script(
+                close_script, run_variables=speed_variables, context=self._context
+            )
         elif position_script := self._action_scripts.get(POSITION_ACTION):
             await self.async_run_script(
                 position_script,
-                run_variables={"position": 0},
+                run_variables={"position": 0, **speed_variables},
                 context=self._context,
             )
         if self._attr_assumed_state:
@@ -325,7 +348,7 @@ class AbstractTemplateCover(AbstractTemplateEntity, CoverEntity, RestoreEntity):
         position = kwargs[ATTR_POSITION]
         await self.async_run_script(
             self._action_scripts[POSITION_ACTION],
-            run_variables={"position": position},
+            run_variables={"position": position, **self._speed_variables(kwargs)},
             context=self._context,
         )
         if self._attr_assumed_state:

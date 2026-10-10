@@ -158,6 +158,7 @@ BINARY_SENSOR_OPTIONS = {
                         "data": {"position": "{{ position }}"},
                     }
                 ],
+                "supported_speeds": ["slow", "fast"],
             },
             {
                 "device_class": "garage",
@@ -168,8 +169,9 @@ BINARY_SENSOR_OPTIONS = {
                         "data": {"position": "{{ position }}"},
                     }
                 ],
+                "supported_speeds": ["slow", "fast"],
             },
-            {},
+            {"supported_speeds": ["slow", "fast"]},
         ),
         (
             "event",

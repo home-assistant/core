@@ -81,6 +81,7 @@ from .cover import (
     CLOSE_ACTION,
     CONF_OPEN_AND_CLOSE,
     CONF_POSITION,
+    CONF_SUPPORTED_SPEEDS,
     OPEN_ACTION,
     POSITION_ACTION,
     STOP_ACTION,
@@ -267,6 +268,14 @@ def generate_schema(domain: str, flow_type: str) -> probatio.Schema:
             probatio.Optional(STOP_ACTION): selector.ActionSelector(),
             probatio.Optional(CONF_POSITION): selector.TemplateSelector(),
             probatio.Optional(POSITION_ACTION): selector.ActionSelector(),
+            probatio.Optional(CONF_SUPPORTED_SPEEDS): selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=[],
+                    multiple=True,
+                    custom_value=True,
+                    mode=selector.SelectSelectorMode.DROPDOWN,
+                )
+            ),
         }
         if flow_type == "config":
             schema |= {
