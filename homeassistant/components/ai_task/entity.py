@@ -19,6 +19,7 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.util import dt as dt_util
 
 from .const import DEFAULT_SYSTEM_PROMPT, DOMAIN, AITaskEntityFeature
+from .evaluation import EvaluationTask, EvaluationTaskResult
 from .task import GenDataTask, GenDataTaskResult, GenImageTask, GenImageTaskResult
 
 
@@ -28,6 +29,13 @@ class AITaskEntity(RestoreEntity):
     _attr_should_poll = False
     _attr_supported_features = AITaskEntityFeature(0)
     __last_activity: str | None = None
+
+    _attr_max_attachments: int | None = None
+
+    @property
+    def max_attachments(self) -> int | None:
+        """Return the maximum number of attachments, if limited."""
+        return self._attr_max_attachments
 
     @property
     @final
@@ -139,4 +147,19 @@ class AITaskEntity(RestoreEntity):
         chat_log: ChatLog,
     ) -> GenImageTaskResult:
         """Handle a gen image task."""
+        raise NotImplementedError
+
+    @final
+    async def internal_async_evaluate(
+        self, task: EvaluationTask, context: Context | None = None
+    ) -> EvaluationTaskResult:
+        """Run an evaluation task."""
+        if context is not None:
+            self.async_set_context(context)
+        self.__last_activity = dt_util.utcnow().isoformat()
+        self.async_write_ha_state()
+        return await self._async_evaluate(task)
+
+    async def _async_evaluate(self, task: EvaluationTask) -> EvaluationTaskResult:
+        """Handle an evaluation task."""
         raise NotImplementedError

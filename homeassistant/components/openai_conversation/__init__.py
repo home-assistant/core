@@ -20,12 +20,14 @@ from .const import (
     CONF_CHAT_MODEL,
     CONF_REASONING_SUMMARY,
     DEFAULT_AI_TASK_NAME,
+    DEFAULT_EVALUATION_NAME,
     DEFAULT_NAME,
     DEFAULT_STT_NAME,
     DEFAULT_TTS_NAME,
     DOMAIN,
     LOGGER,
     RECOMMENDED_AI_TASK_OPTIONS,
+    RECOMMENDED_EVALUATION_OPTIONS,
     RECOMMENDED_REASONING_SUMMARY,
     RECOMMENDED_STT_OPTIONS,
     RECOMMENDED_TTS_OPTIONS,
@@ -251,6 +253,22 @@ async def async_migrate_entry(hass: HomeAssistant, entry: OpenAIConfigEntry) -> 
                         entry, subentry, data=data
                     )
         hass.config_entries.async_update_entry(entry, minor_version=7)
+
+    if entry.version == 2 and entry.minor_version == 7:
+        if not any(
+            subentry.subentry_type == "ai_task_evaluate"
+            for subentry in entry.subentries.values()
+        ):
+            hass.config_entries.async_add_subentry(
+                entry,
+                ConfigSubentry(
+                    data=MappingProxyType(RECOMMENDED_EVALUATION_OPTIONS),
+                    subentry_type="ai_task_evaluate",
+                    title=DEFAULT_EVALUATION_NAME,
+                    unique_id=None,
+                ),
+            )
+        hass.config_entries.async_update_entry(entry, minor_version=8)
 
     LOGGER.debug(
         "Migration to version %s:%s successful", entry.version, entry.minor_version

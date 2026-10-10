@@ -5,6 +5,9 @@
     }
   },
   "services": {
+    "evaluate": {
+      "service": "mdi:check-decagram-outline"
+    },
     "generate_data": {
       "service": "mdi:file-star-four-points-outline"
     },

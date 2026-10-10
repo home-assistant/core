@@ -59,3 +59,32 @@ generate_image:
           accept:
             - "*"
           multiple: true
+evaluate:
+  fields:
+    task_name:
+      required: true
+      example: "Check delivery"
+      selector:
+        text:
+    entity_id:
+      selector:
+        entity:
+          filter:
+            domain: ai_task
+            supported_features:
+              - ai_task.AITaskEntityFeature.EVALUATE
+    state:
+      example: "Your package was left at the front door."
+      selector:
+        object:
+    questions:
+      required: true
+      example: '{"delivered": {"type": "noul", "instructions": "Has the package arrived?"}}'
+      selector:
+        object:
+    attachments:
+      selector:
+        media:
+          accept:
+            - "*"
+          multiple: true
