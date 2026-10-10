@@ -1298,3 +1298,21 @@ async def test_save_home_total_invalid(
 
     assert not msg["success"]
     assert msg["error"]["code"] == "invalid_format"
+
+
+async def test_save_water_device_rejects_home_total(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test the electricity-only flag is rejected on water devices."""
+    client = await hass_ws_client(hass)
+    prefs = _prefs([]) | {
+        "device_consumption_water": [
+            {"stat_consumption": "sensor.water", "is_home_total": True}
+        ]
+    }
+
+    await client.send_json({"id": 5, "type": "energy/save_prefs", **prefs})
+    msg = await client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == "invalid_format"

@@ -256,8 +256,10 @@ class DeviceConsumption(TypedDict):
     # that includes this device's consumption in its total
     included_in_stat: NotRequired[str]
 
-    # An optional boolean that makes this device the
-    # total consumption of the house
+
+class EnergyDeviceConsumption(DeviceConsumption):
+    """Electricity device consumption."""
+
     is_home_total: NotRequired[bool]
 
 
@@ -265,7 +267,7 @@ class EnergyPreferences(TypedDict):
     """Dictionary holding the energy data."""
 
     energy_sources: list[SourceType]
-    device_consumption: list[DeviceConsumption]
+    device_consumption: list[EnergyDeviceConsumption]
     device_consumption_water: NotRequired[list[DeviceConsumption]]
 
 
@@ -655,18 +657,18 @@ ENERGY_SOURCE_SCHEMA = probatio.All(
     _validate_grid_stat_uniqueness,
 )
 
-DEVICE_CONSUMPTION_SCHEMA = probatio.Schema(
-    {
-        probatio.Required("stat_consumption"): str,
-        probatio.Optional("stat_rate"): str,
-        probatio.Optional("name"): str,
-        probatio.Optional("included_in_stat"): str,
-        probatio.Optional("is_home_total"): bool,
-    }
+_DEVICE_CONSUMPTION_FIELDS = {
+    probatio.Required("stat_consumption"): str,
+    probatio.Optional("stat_rate"): str,
+    probatio.Optional("name"): str,
+    probatio.Optional("included_in_stat"): str,
+}
+DEVICE_CONSUMPTION_SCHEMA = probatio.Schema(_DEVICE_CONSUMPTION_FIELDS)
+ENERGY_DEVICE_CONSUMPTION_SCHEMA = probatio.Schema(
+    {**_DEVICE_CONSUMPTION_FIELDS, probatio.Optional("is_home_total"): bool}
 )
-
 ENERGY_DEVICES_SCHEMA = probatio.All(
-    [DEVICE_CONSUMPTION_SCHEMA], _validate_single_home_total
+    [ENERGY_DEVICE_CONSUMPTION_SCHEMA], _validate_single_home_total
 )
 
 
