@@ -406,7 +406,10 @@ async def test_reconfigure_flow_exception_then_recover(
     result = await mock_config_entry.start_reconfigure_flow(hass)
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={CONF_APP_SECRET: NEW_APP_SECRET, CONF_API_URL: TEST_API_URL},
+        user_input={
+            CONF_APP_SECRET: NEW_APP_SECRET,
+            CONF_API_URL: USER_INPUT[CONF_API_URL],
+        },
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -440,7 +443,10 @@ async def test_reconfigure_unique_id_mismatch(
     result = await mock_config_entry.start_reconfigure_flow(hass)
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={CONF_APP_SECRET: NEW_APP_SECRET, CONF_API_URL: TEST_API_URL},
+        user_input={
+            CONF_APP_SECRET: NEW_APP_SECRET,
+            CONF_API_URL: USER_INPUT[CONF_API_URL],
+        },
     )
 
     assert result["type"] is FlowResultType.ABORT
