@@ -40,7 +40,12 @@ from .const import (
     DOMAIN,
 )
 from .coordinator import ReolinkDeviceCoordinator, ReolinkFirmwareCoordinator
-from .exceptions import PasswordIncompatible, ReolinkException, UserNotAdmin
+from .exceptions import (
+    PasswordIncompatible,
+    ReolinkException,
+    ReolinkSetupException,
+    UserNotAdmin,
+)
 from .host import ReolinkHost
 from .services import async_setup_services
 from .util import ReolinkConfigEntry, ReolinkData, get_device_uid_and_ch, get_store
@@ -84,6 +89,13 @@ async def async_setup_entry(
     except (UserNotAdmin, PasswordIncompatible) as err:
         await host.stop()
         raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key=err.translation_key,
+            translation_placeholders=err.translation_placeholders,
+        ) from err
+    except ReolinkSetupException as err:
+        await host.stop()
+        raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key=err.translation_key,
             translation_placeholders=err.translation_placeholders,

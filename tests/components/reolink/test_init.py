@@ -148,6 +148,12 @@ async def test_failures_parametrized(
     [
         pytest.param("is_admin", False, "user_not_admin", id="user_not_admin"),
         pytest.param(
+            "valid_password",
+            MagicMock(return_value=False),
+            "password_incompatible",
+            id="password_incompatible",
+        ),
+        pytest.param(
             "get_host_data",
             AsyncMock(side_effect=CredentialsInvalidError("Test error")),
             "authentication_failed",
@@ -171,6 +177,20 @@ async def test_setup_auth_failed_reason(
     assert config_entry.state is ConfigEntryState.SETUP_ERROR
     assert config_entry.error_reason_translation_key == translation_key
     assert any(config_entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
+
+
+async def test_setup_no_mac_address(
+    hass: HomeAssistant,
+    reolink_host: MagicMock,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test the setup retry keeps the reason when the MAC address is missing."""
+    reolink_host.mac_address = None
+    assert not await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert config_entry.error_reason_translation_key == "no_mac_address"
 
 
 @pytest.mark.parametrize(
