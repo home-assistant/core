@@ -133,11 +133,20 @@
       "header_exist": {
         "name": "Header"
       },
+      "heating": {
+        "name": "Heating"
+      },
+      "keep_warm": {
+        "name": "Keep warm"
+      },
       "led_status": {
         "name": "LED"
       },
       "night_mode": {
         "name": "Night mode"
+      },
+      "protection": {
+        "name": "Protection"
       },
       "rinse_aid": {
         "name": "Rinse aid"
@@ -958,6 +967,9 @@
       "prompt_tone": {
         "name": "Prompt tone"
       },
+      "protection": {
+        "name": "Protection"
+      },
       "pump": {
         "name": "Pump"
       },
@@ -976,8 +988,17 @@
       "sound": {
         "name": "Sound"
       },
+      "sterilization": {
+        "name": "Sterilization"
+      },
       "tbh": {
         "name": "TBH"
+      },
+      "variable_heating": {
+        "name": "Variable heating"
+      },
+      "whole_tank_heating": {
+        "name": "Whole tank heating"
       },
       "zone1_curve": {
         "name": "Zone 1 curve"
