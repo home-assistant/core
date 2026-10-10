@@ -405,6 +405,7 @@ async def async_setup_entry(
             *session.device_helper.micromodule_dimmers,
             *session.device_helper.light_switches_bsm,
         )
+        if "ChildProtection" in switch.device_service_ids
     )
 
     presence_simulation_system = session.device_helper.presence_simulation_system

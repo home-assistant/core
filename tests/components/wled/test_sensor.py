@@ -6,9 +6,10 @@ from unittest.mock import MagicMock, patch
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
+from wled import Wifi
 
 from homeassistant.components.wled.const import SCAN_INTERVAL
-from homeassistant.const import STATE_UNKNOWN, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -58,34 +59,41 @@ async def test_disabled_by_default_sensors(
     assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
 
-@pytest.mark.parametrize(
-    "key",
-    [
-        "bssid",
-        "channel",
-        "rssi",
-        "signal",
-    ],
-)
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_no_wifi_support(
+async def test_no_wifi_sensors_when_wired(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_wled: MagicMock,
-    key: str,
+    caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test missing Wi-Fi information from WLED device."""
-    # Remove Wi-Fi info
+    """Test the Wi-Fi sensors are only added once the device uses Wi-Fi."""
+    # A wired device reports no signal strength.
     device = mock_wled.update.return_value
-    device.info.wifi = None
+    wifi = device.info.wifi
+    device.info.wifi = Wifi.from_dict({"bssid": "00:00:00:00:00:00", "rssi": 0})
 
-    # Setup
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert (state := hass.states.get(f"sensor.wled_rgb_light_wi_fi_{key}"))
-    assert state.state == STATE_UNKNOWN
+    for key in ("bssid", "channel", "rssi", "signal"):
+        assert hass.states.get(f"sensor.wled_rgb_light_wi_fi_{key}") is None
+
+    # The device is connected over Wi-Fi now.
+    device.info.wifi = wifi
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    for key in ("bssid", "channel", "rssi", "signal"):
+        assert hass.states.get(f"sensor.wled_rgb_light_wi_fi_{key}")
+
+    # Later updates don't add them again.
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert "does not generate unique IDs" not in caplog.text
 
 
 async def test_no_current_measurement(

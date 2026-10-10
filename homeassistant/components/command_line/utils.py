@@ -243,6 +243,13 @@ def render_template_args(
 
     prog, args = command.split(" ", 1)
     args_compiled = Template(args, hass)
+    if args_compiled.is_static:
+        # Rendering would still strip a trailing newline (from a YAML block
+        # scalar), making a plain command look like a substituted template.
+        issue_id = build_shell_template_issue_id(platform, name)
+        _update_issue(hass, issue_id, prog, platform, name, create=False)
+        LOGGER.debug("Running command: %s", command)
+        return command
 
     try:
         # parse_result=False keeps the output a string; the args are executed as a

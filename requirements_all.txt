@@ -212,7 +212,7 @@ aioaseko==1.0.0
 aioasuswrt==1.5.4
 
 # homeassistant.components.husqvarna_automower
-aioautomower==3.0.0
+aioautomower==3.1.0
 
 # homeassistant.components.axle_energy
 aioaxlevpp==0.1.1
@@ -309,7 +309,7 @@ aiohue==4.9.0
 aioimaplib==2.0.1
 
 # homeassistant.components.immich
-aioimmich==0.17.0
+aioimmich==0.18.0
 
 # homeassistant.components.indi_allsky
 aioindiallsky==0.1.3
@@ -884,7 +884,7 @@ dropmqttapi==1.0.3
 dsmr-parser==1.11.1
 
 # homeassistant.components.dwd_weather_warnings
-dwdwfsapi==1.0.7
+dwdwfsapi==1.1.0
 
 # homeassistant.components.dynalite
 dynalite-devices==0.1.47
@@ -1312,7 +1312,7 @@ hole==0.9.2
 holidays==0.106
 
 # homeassistant.components.frontend
-home-assistant-frontend==20260930.2
+home-assistant-frontend==20260930.3
 
 # homeassistant.components.conversation
 home-assistant-intents==2026.10.6
@@ -1641,7 +1641,7 @@ mitsubishi-comfort==0.6.0
 moat-ble==0.1.1
 
 # homeassistant.components.modbus
-modbus-connection[tmodbus]==4.12.3
+modbus-connection[tmodbus]==4.12.4
 
 # homeassistant.components.moehlenhoff_alpha2
 moehlenhoff-alpha2==1.4.0
@@ -2026,7 +2026,7 @@ pyControl4==2.0.2
 pyDuotecno==2024.10.1
 
 # homeassistant.components.electrasmart
-pyElectra==1.2.4
+pyElectra==1.2.5
 
 # homeassistant.components.emby
 pyEmby==1.10
@@ -2301,7 +2301,7 @@ pyhomeworks==1.1.2
 pyialarm==2.2.0
 
 # homeassistant.components.icloud
-pyicloud==2.6.5
+pyicloud==2.7.0
 
 # homeassistant.components.imou
 pyimouapi==1.4.0
@@ -2753,7 +2753,7 @@ python-izone==1.3.10
 python-join-api==0.1.1
 
 # homeassistant.components.tplink
-python-kasa[speedups]==0.10.2
+python-kasa[speedups]==0.11.0.1
 
 # homeassistant.components.linkplay
 python-linkplay==0.2.14
@@ -2887,7 +2887,7 @@ pyvlx==0.2.36
 pyvolumio==0.1.5
 
 # homeassistant.components.waze_travel_time
-pywaze==1.2.3
+pywaze==1.2.4
 
 # homeassistant.components.weatherflow
 pyweatherflowudp==1.6.3
@@ -2971,7 +2971,7 @@ renault-api==0.5.15
 renson-endura-delta==1.7.2
 
 # homeassistant.components.reolink
-reolink-aio==0.21.17
+reolink-aio==0.21.18
 
 # homeassistant.components.radio_frequency
 rf-protocols==4.3.0
@@ -3120,7 +3120,7 @@ soco==0.31.2
 sofar-modbus==0.17.0
 
 # homeassistant.components.solaredge
-solaredge-web==0.4.0
+solaredge-web==0.5.0
 
 # homeassistant.components.solaredge_modbus
 solaredged==0.5.0
@@ -3201,7 +3201,7 @@ synology-srm==0.2.0
 systembridgeconnector==5.4.3
 
 # homeassistant.components.tailscale
-tailscale==0.7.0
+tailscale==1.0.0
 
 # homeassistant.components.tapsaff
 tapsaff==0.2.1
@@ -3287,7 +3287,7 @@ toonapi==0.3.0
 total-connect-client==2026.9
 
 # homeassistant.components.tplink_omada
-tplink-omada-client==1.5.10
+tplink-omada-client==1.5.13
 
 # homeassistant.components.transmission
 transmission-rpc==7.0.3
@@ -3457,7 +3457,7 @@ wiim==0.1.7
 wirelesstagpy==0.8.1
 
 # homeassistant.components.wled
-wled==1.1.0
+wled==1.1.1
 
 # homeassistant.components.wolflink
 wolf-comm==0.0.52
@@ -3538,7 +3538,7 @@ zeversolar==0.3.2
 zha-quirks==2.3.0
 
 # homeassistant.components.zha
-zha==2.3.0
+zha==2.3.1
 
 # homeassistant.components.zhong_hong
 zhong-hong-hvac==1.0.21
