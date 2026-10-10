@@ -161,10 +161,6 @@ async def test_legacy_websocket_locked_state(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test legacy WebSocket lock state reconciliation."""
-    status = get_device_by_id(mock_api_client, "dev_lock_001")["status"]
-    status.pop("is_locked")
-    status["locked"] = True
-
     with patch("homeassistant.components.xthings_cloud.PLATFORMS", [Platform.LOCK]):
         await setup_integration(hass, mock_config_entry)
 

@@ -133,6 +133,8 @@ class XthingsCloudCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             if not isinstance(lock_state, (bool, int)):
                 lock_state = status.get("locked")
             if isinstance(lock_state, (bool, int)):
+                if isinstance(lock_state, bool):
+                    status["is_locked"] = lock_state
                 self._websocket_lock_states[device_uuid] = (
                     lock_state,
                     dt_util.utcnow(),
