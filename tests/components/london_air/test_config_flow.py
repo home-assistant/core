@@ -281,11 +281,13 @@ async def test_reconfigure_removes_location(
         )
         == 2
     )
+    initial_device_entries = dr.async_entries_for_config_entry(
+        device_registry, mock_config_entry.entry_id
+    )
+    assert len(initial_device_entries) == 2
     initial_identifiers = {
         identifier
-        for device in dr.async_entries_for_config_entry(
-            device_registry, mock_config_entry.entry_id
-        )
+        for device in initial_device_entries
         for identifier in device.identifiers
     }
     assert (DOMAIN, "Merton") in initial_identifiers
