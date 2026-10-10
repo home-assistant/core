@@ -158,8 +158,7 @@
           "position": "Position",
           "set_cover_position": "Actions on set position",
           "state": "[%key:component::template::common::state%]",
-          "stop_cover": "Actions on stop",
-          "supported_speeds": "Supported speeds"
+          "stop_cover": "Actions on stop"
         },
         "data_description": {
           "close_cover": "Defines actions to run when the cover is closed.",
@@ -168,16 +167,17 @@
           "position": "Defines a template to get the position of the cover. Value values are numbers between `0` (`closed`) and `100` (`open`).",
           "set_cover_position": "Defines actions to run when the cover is given a `set_cover_position` command. Receives variable `position`.",
           "state": "Defines a template to get the state of the cover. Valid output values from the template are `open`, `opening`, `closing` and `closed` which are directly mapped to the corresponding states. If both a state and a position are specified, only `opening` and `closing` are set from the state template.",
-          "stop_cover": "Defines actions to run when the cover is stopped.",
-          "supported_speeds": "List of speeds supported by the cover. If set, the actions on open, close and set position receive the requested speed in variable `speed`."
+          "stop_cover": "Defines actions to run when the cover is stopped."
         },
         "sections": {
           "additional_options": {
             "data": {
-              "availability": "[%key:component::template::common::availability%]"
+              "availability": "[%key:component::template::common::availability%]",
+              "supported_speeds": "Supported speeds"
             },
             "data_description": {
-              "availability": "[%key:component::template::common::availability_description%]"
+              "availability": "[%key:component::template::common::availability_description%]",
+              "supported_speeds": "List of speeds supported by the cover. If set, the actions on open, close and set position receive the requested speed in variable `speed`."
             },
             "name": "[%key:component::template::common::additional_options%]"
           }
@@ -802,8 +802,7 @@
           "position": "[%key:component::template::config::step::cover::data::position%]",
           "set_cover_position": "[%key:component::template::config::step::cover::data::set_cover_position%]",
           "state": "[%key:component::template::common::state%]",
-          "stop_cover": "[%key:component::template::config::step::cover::data::stop_cover%]",
-          "supported_speeds": "[%key:component::template::config::step::cover::data::supported_speeds%]"
+          "stop_cover": "[%key:component::template::config::step::cover::data::stop_cover%]"
         },
         "data_description": {
           "close_cover": "[%key:component::template::config::step::cover::data_description::close_cover%]",
@@ -812,16 +811,17 @@
           "position": "[%key:component::template::config::step::cover::data_description::position%]",
           "set_cover_position": "[%key:component::template::config::step::cover::data_description::set_cover_position%]",
           "state": "[%key:component::template::config::step::cover::data_description::state%]",
-          "stop_cover": "[%key:component::template::config::step::cover::data_description::stop_cover%]",
-          "supported_speeds": "[%key:component::template::config::step::cover::data_description::supported_speeds%]"
+          "stop_cover": "[%key:component::template::config::step::cover::data_description::stop_cover%]"
         },
         "sections": {
           "additional_options": {
             "data": {
-              "availability": "[%key:component::template::common::availability%]"
+              "availability": "[%key:component::template::common::availability%]",
+              "supported_speeds": "[%key:component::template::config::step::cover::sections::additional_options::data::supported_speeds%]"
             },
             "data_description": {
-              "availability": "[%key:component::template::common::availability_description%]"
+              "availability": "[%key:component::template::common::availability_description%]",
+              "supported_speeds": "[%key:component::template::config::step::cover::sections::additional_options::data_description::supported_speeds%]"
             },
             "name": "[%key:component::template::common::additional_options%]"
           }

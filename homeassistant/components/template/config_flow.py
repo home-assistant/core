@@ -268,6 +268,14 @@ def generate_schema(domain: str, flow_type: str) -> probatio.Schema:
             probatio.Optional(STOP_ACTION): selector.ActionSelector(),
             probatio.Optional(CONF_POSITION): selector.TemplateSelector(),
             probatio.Optional(POSITION_ACTION): selector.ActionSelector(),
+        }
+        if flow_type == "config":
+            schema |= {
+                probatio.Optional(CONF_DEVICE_CLASS): selector.DeviceClassSelector(
+                    selector.DeviceClassSelectorConfig(domain=Platform.COVER),
+                ),
+            }
+        additional_options |= {
             probatio.Optional(CONF_SUPPORTED_SPEEDS): selector.SelectSelector(
                 selector.SelectSelectorConfig(
                     options=[],
@@ -277,12 +285,6 @@ def generate_schema(domain: str, flow_type: str) -> probatio.Schema:
                 )
             ),
         }
-        if flow_type == "config":
-            schema |= {
-                probatio.Optional(CONF_DEVICE_CLASS): selector.DeviceClassSelector(
-                    selector.DeviceClassSelectorConfig(domain=Platform.COVER),
-                ),
-            }
 
     if domain == Platform.DEVICE_TRACKER:
         schema |= {
