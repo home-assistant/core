@@ -2,7 +2,13 @@
 
 from unittest.mock import AsyncMock
 
-from bsblan import BSBLANAuthError, BSBLANConnectionError, BSBLANError, Device
+from bsblan import (
+    BSBLANAuthError,
+    BSBLANConnectionError,
+    BSBLANError,
+    BSBLANMalformedResponseError,
+    Device,
+)
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -117,18 +123,40 @@ async def test_sensor_errors_fail_setup(
     assert mock_config_entry.state is expected_state
 
 
+@pytest.mark.parametrize(
+    ("bus", "exception"),
+    [
+        pytest.param("BSB", BSBLANError("Sensor failed"), id="bsb-generic"),
+        pytest.param(
+            "PPS",
+            BSBLANMalformedResponseError("Malformed sensor response"),
+            id="pps-malformed",
+        ),
+    ],
+)
 async def test_sensor_error_on_refresh_marks_entities_unavailable(
     hass: HomeAssistant,
     mock_bsblan: AsyncMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
+    bus: str,
+    exception: BSBLANError,
 ) -> None:
     """Test a failed sensor refresh does not expose stale values as available."""
+    mock_bsblan.device.return_value = Device.model_validate(
+        {**mock_bsblan.device.return_value.model_dump(), "bus": bus}
+    )
     await setup_with_selected_platforms(hass, mock_config_entry, [Platform.SENSOR])
-    mock_bsblan.sensor.side_effect = BSBLANError("Sensor failed")
+    state = hass.states.get(ENTITY_CURRENT_TEMP)
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE
+    mock_bsblan.sensor.reset_mock()
+    mock_bsblan.sensor.side_effect = exception
     freezer.tick(delta=20)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
+    mock_bsblan.sensor.assert_awaited_once()
+    assert not mock_config_entry.runtime_data.fast_coordinator.last_update_success
     state = hass.states.get(ENTITY_CURRENT_TEMP)
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
