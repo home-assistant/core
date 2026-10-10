@@ -333,9 +333,8 @@ class DeviceManager[DeviceT: Device, CoordinatorT: DataUpdateCoordinator[Any]]:
                 self._listeners.remove(listener)
 
         try:
-            for key, coordinator in tuple(self.coordinators.items()):
-                if self.coordinators.get(key) is coordinator:
-                    listener(coordinator)
+            for coordinator in tuple(self.coordinators.values()):
+                listener(coordinator)
         except BaseException:
             unsubscribe()
             raise

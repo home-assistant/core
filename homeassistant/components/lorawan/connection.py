@@ -155,7 +155,6 @@ async def async_register_connection(
     active = True
     change: ConnectionChange = (entry_id, connection)
     notify(registry.changed, change)
-    if active:
-        for domain in sorted(pending_discoveries):
-            discover(domain)
+    for domain in sorted(pending_discoveries):
+        discover(domain)
     return unregister
