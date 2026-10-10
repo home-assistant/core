@@ -204,10 +204,10 @@ async def test_connection_status_queued_before_invalidation(
         assert entity.mz_mgr is None
 
 
-async def test_invalidated_listener_does_not_schedule_callback(
+async def test_invalidated_listener_does_not_process_callback(
     hass: HomeAssistant,
 ) -> None:
-    """Test invalidated listeners do not schedule connection callbacks."""
+    """Test invalidated listeners do not process connection callbacks."""
     entry = MockConfigEntry(domain=DOMAIN)
     info = MagicMock()
     info.uuid = MagicMock()
@@ -221,7 +221,7 @@ async def test_invalidated_listener_does_not_schedule_callback(
     listener = CastStatusListener(entity, chromecast, mz_mgr)
     listener.invalidate()
 
-    with patch.object(hass.loop, "call_soon_threadsafe") as schedule:
+    with patch.object(entity, "new_connection_status") as handle_status:
         thread = Thread(
             target=listener.new_connection_status,
             args=(MagicMock(status="CONNECTED"),),
@@ -229,4 +229,6 @@ async def test_invalidated_listener_does_not_schedule_callback(
         thread.start()
         thread.join()
 
-        schedule.assert_not_called()
+        await hass.async_block_till_done()
+
+        handle_status.assert_not_called()
