@@ -1,0 +1,136 @@
+# serializer version: 1
+# name: test_evaluate[array]
+  dict({
+    'answers': dict({
+      'attention': dict({
+        'probabilities': list([
+          0.9,
+          0.05,
+          0.05,
+        ]),
+        'score': 0.15,
+        'type': 'score',
+      }),
+      'delivered': dict({
+        'noul': 0.97,
+        'type': 'noul',
+      }),
+      'location': dict({
+        'choice': 'door',
+        'probabilities': dict({
+          'door': 0.9,
+          'other': 0.1,
+        }),
+        'type': 'choice',
+      }),
+    }),
+  })
+# ---
+# name: test_evaluate[false]
+  dict({
+    'answers': dict({
+      'attention': dict({
+        'probabilities': list([
+          0.9,
+          0.05,
+          0.05,
+        ]),
+        'score': 0.15,
+        'type': 'score',
+      }),
+      'delivered': dict({
+        'noul': 0.97,
+        'type': 'noul',
+      }),
+      'location': dict({
+        'choice': 'door',
+        'probabilities': dict({
+          'door': 0.9,
+          'other': 0.1,
+        }),
+        'type': 'choice',
+      }),
+    }),
+  })
+# ---
+# name: test_evaluate[object]
+  dict({
+    'answers': dict({
+      'attention': dict({
+        'probabilities': list([
+          0.9,
+          0.05,
+          0.05,
+        ]),
+        'score': 0.15,
+        'type': 'score',
+      }),
+      'delivered': dict({
+        'noul': 0.97,
+        'type': 'noul',
+      }),
+      'location': dict({
+        'choice': 'door',
+        'probabilities': dict({
+          'door': 0.9,
+          'other': 0.1,
+        }),
+        'type': 'choice',
+      }),
+    }),
+  })
+# ---
+# name: test_evaluate[text]
+  dict({
+    'answers': dict({
+      'attention': dict({
+        'probabilities': list([
+          0.9,
+          0.05,
+          0.05,
+        ]),
+        'score': 0.15,
+        'type': 'score',
+      }),
+      'delivered': dict({
+        'noul': 0.97,
+        'type': 'noul',
+      }),
+      'location': dict({
+        'choice': 'door',
+        'probabilities': dict({
+          'door': 0.9,
+          'other': 0.1,
+        }),
+        'type': 'choice',
+      }),
+    }),
+  })
+# ---
+# name: test_evaluate[zero]
+  dict({
+    'answers': dict({
+      'attention': dict({
+        'probabilities': list([
+          0.9,
+          0.05,
+          0.05,
+        ]),
+        'score': 0.15,
+        'type': 'score',
+      }),
+      'delivered': dict({
+        'noul': 0.97,
+        'type': 'noul',
+      }),
+      'location': dict({
+        'choice': 'door',
+        'probabilities': dict({
+          'door': 0.9,
+          'other': 0.1,
+        }),
+        'type': 'choice',
+      }),
+    }),
+  })
+# ---

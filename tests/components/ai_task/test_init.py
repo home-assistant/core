@@ -32,10 +32,19 @@ async def test_preferences_storage_load(
     await preferences.async_load()
 
     # Initial state should be None for entity IDs
-    for key in AITaskPreferences.KEYS:
-        assert getattr(preferences, key) is None, f"Initial {key} should be None"
+    assert preferences.as_dict() == {
+        "gen_data_entity_id": None,
+        "gen_image_entity_id": None,
+        "evaluate_entity_id": None,
+        "allow_automatic_evaluation": False,
+    }
 
-    new_values = {key: f"ai_task.test_{key}" for key in AITaskPreferences.KEYS}
+    new_values = {
+        "gen_data_entity_id": "ai_task.data",
+        "gen_image_entity_id": "ai_task.image",
+        "evaluate_entity_id": "ai_task.decision",
+        "allow_automatic_evaluation": True,
+    }
 
     preferences.async_set_preferences(**new_values)
 
@@ -380,3 +389,25 @@ async def test_generate_image_service_no_entity(
             blocking=True,
             return_response=True,
         )
+
+
+async def test_preferences_existing_storage(hass: HomeAssistant) -> None:
+    """Existing installations do not opt in to automatic evaluation on upgrade."""
+    preferences = AITaskPreferences(hass)
+    await preferences._store.async_save(
+        {"gen_data_entity_id": "ai_task.data", "evaluate_entity_id": "ai_task.decision"}
+    )
+    await preferences.async_load()
+    assert preferences.gen_data_entity_id == "ai_task.data"
+    assert preferences.evaluate_entity_id == "ai_task.decision"
+    assert preferences.allow_automatic_evaluation is False
+
+    preferences.async_set_preferences(allow_automatic_evaluation=True)
+    await flush_store(preferences._store)
+    preferences.async_set_preferences(allow_automatic_evaluation=False)
+    await flush_store(preferences._store)
+
+    loaded = AITaskPreferences(hass)
+    await loaded.async_load()
+    assert loaded.allow_automatic_evaluation is False
+    assert loaded.evaluate_entity_id == "ai_task.decision"
