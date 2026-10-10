@@ -150,3 +150,16 @@ async def test_switch_connection_error(
     state = hass.states.get("switch.frenck_s_lametric_bluetooth")
     assert state
     assert state.state == STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize("device_fixture", ["device_sa5_bluetooth_unavailable"])
+async def test_no_bluetooth_switch_without_bluetooth(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a device without Bluetooth, like a SKY, gets no Bluetooth switch."""
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    entities = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+
+    assert entities
+    assert not any(entity.domain == SWITCH_DOMAIN for entity in entities)

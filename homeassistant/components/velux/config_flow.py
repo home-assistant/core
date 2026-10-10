@@ -19,7 +19,7 @@ from .const import DOMAIN, LOGGER, PYVLX_FROM_CONFIG_FLOW
 USER_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_HOST): cv.string,
-        probatio.Required(CONF_PASSWORD): cv.string,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): cv.string,
     }
 )
 
@@ -121,7 +121,7 @@ class VeluxConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="reauth_confirm",
             data_schema=probatio.Schema(
                 {
-                    probatio.Required(CONF_PASSWORD): cv.string,
+                    probatio.Required(probatio.Secret(CONF_PASSWORD)): cv.string,
                 }
             ),
             errors=errors,
@@ -222,7 +222,7 @@ class VeluxConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="discovery_confirm",
             data_schema=probatio.Schema(
                 {
-                    probatio.Required(CONF_PASSWORD): cv.string,
+                    probatio.Required(probatio.Secret(CONF_PASSWORD)): cv.string,
                 }
             ),
             errors=errors,

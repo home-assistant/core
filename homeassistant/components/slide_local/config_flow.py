@@ -131,7 +131,7 @@ class SlideConfigFlow(ConfigFlow, domain=DOMAIN):
                 probatio.Schema(
                     {
                         probatio.Required(CONF_HOST): str,
-                        probatio.Optional(CONF_PASSWORD): str,
+                        probatio.Optional(probatio.Secret(CONF_PASSWORD)): str,
                     }
                 ),
                 {CONF_HOST: self._host},

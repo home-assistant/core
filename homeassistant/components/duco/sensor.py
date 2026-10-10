@@ -285,7 +285,7 @@ async def async_setup_entry(
             if node.node_id not in known_nodes:
                 if node.general.node_type == NodeType.UNKNOWN:
                     # Do not add the node to known_nodes so that it is re-evaluated
-                    # on every coordinator update. This allows entities to be
+                    # when coordinator data changes. This allows entities to be
                     # created automatically once a firmware update or library
                     # update adds support for the device type.
                     _LOGGER.debug(

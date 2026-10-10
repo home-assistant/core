@@ -96,7 +96,7 @@ PLATFORM_SCHEMA_MODERN_TEMPLATE = (
             probatio.Required(CONF_COMMAND_OFF_TEMPLATE): cv.template,
             probatio.Required(CONF_COMMAND_ON_TEMPLATE): cv.template,
             probatio.Optional(CONF_EFFECT_LIST): probatio.All(
-                cv.ensure_list, [cv.string]
+                probatio.EnsureList(), [cv.string]
             ),
             probatio.Optional(CONF_EFFECT_TEMPLATE): cv.template,
             probatio.Optional(CONF_GREEN_TEMPLATE): cv.template,

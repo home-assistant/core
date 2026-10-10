@@ -7,6 +7,7 @@ import ring_doorbell
 
 from homeassistant import config_entries
 from homeassistant.components.ring import DOMAIN
+from homeassistant.components.ring.const import CONF_LISTEN_CREDENTIALS
 from homeassistant.const import CONF_DEVICE_ID, CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -45,6 +46,7 @@ async def test_form(
         CONF_USERNAME: "hello@home-assistant.io",
         CONF_TOKEN: {"access_token": "mock-token"},
     }
+    assert result2["result"].unique_id == "hello@home-assistant.io"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -56,8 +58,12 @@ async def test_form(
     ],
     ids=["invalid-auth", "unknown-error"],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_form_error(
-    hass: HomeAssistant, mock_ring_auth: Mock, error_type, errors_msg
+    hass: HomeAssistant,
+    mock_ring_auth: Mock,
+    error_type: type[Exception],
+    errors_msg: str,
 ) -> None:
     """Test we handle invalid auth."""
     result = await hass.config_entries.flow.async_init(
@@ -71,6 +77,14 @@ async def test_form_error(
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": errors_msg}
+
+    mock_ring_auth.async_fetch_token.side_effect = None
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"username": "hello@home-assistant.io", "password": "test-password"},
+    )
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_2fa(
@@ -128,6 +142,14 @@ async def test_reauth(
     mock_ring_auth: Mock,
 ) -> None:
     """Test reauth flow."""
+    listen_credentials = {"gcm": {"android_id": "stored-android-id"}}
+    hass.config_entries.async_update_entry(
+        mock_added_config_entry,
+        data={
+            **mock_added_config_entry.data,
+            CONF_LISTEN_CREDENTIALS: listen_credentials,
+        },
+    )
     mock_added_config_entry.async_start_reauth(hass)
     await hass.async_block_till_done()
 
@@ -165,6 +187,7 @@ async def test_reauth(
         CONF_DEVICE_ID: MOCK_HARDWARE_ID,
         CONF_USERNAME: "foo@bar.com",
         CONF_TOKEN: "new-foobar",
+        CONF_LISTEN_CREDENTIALS: listen_credentials,
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -283,6 +306,7 @@ async def test_dhcp_discovery(
         CONF_USERNAME: username,
         CONF_TOKEN: {"access_token": "mock-token"},
     }
+    assert result["result"].unique_id == username
 
     config_entry = hass.config_entries.async_entry_for_domain_unique_id(
         DOMAIN, username
@@ -311,6 +335,15 @@ async def test_reconfigure(
 ) -> None:
     """Test the reconfigure config flow."""
 
+    listen_credentials = {"gcm": {"android_id": "stored-android-id"}}
+    hass.config_entries.async_update_entry(
+        mock_added_config_entry,
+        data={
+            **mock_added_config_entry.data,
+            CONF_LISTEN_CREDENTIALS: listen_credentials,
+        },
+    )
+
     assert mock_added_config_entry.data[CONF_DEVICE_ID] == MOCK_HARDWARE_ID
 
     result = await mock_added_config_entry.start_reconfigure_flow(hass)
@@ -328,6 +361,7 @@ async def test_reconfigure(
     assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "reconfigure_successful"
     assert mock_added_config_entry.data[CONF_DEVICE_ID] == "new-hardware-id"
+    assert mock_added_config_entry.data[CONF_LISTEN_CREDENTIALS] == listen_credentials
 
 
 @pytest.mark.parametrize(

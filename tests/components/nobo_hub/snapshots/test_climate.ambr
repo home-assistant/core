@@ -72,6 +72,7 @@
       <ClimateEntityStateAttribute.TARGET_TEMP_HIGH: 'target_temp_high'>: 21,
       <ClimateEntityStateAttribute.TARGET_TEMP_LOW: 'target_temp_low'>: 17,
       <ClimateEntityCapabilityAttribute.TARGET_TEMP_STEP: 'target_temp_step'>: 1,
+      <ClimateEntityStateAttribute.TEMPERATURE_UNIT: 'temperature_unit'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.living_room_living_room',

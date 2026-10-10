@@ -70,6 +70,7 @@ async def warn_on_wrong_silabs_firmware(hass: HomeAssistant, device: str) -> boo
         return False
 
     app_type = await probe_silabs_firmware_type(
+        hass,
         device,
         application_probe_methods=[
             (ApplicationType.GECKO_BOOTLOADER, 115200),

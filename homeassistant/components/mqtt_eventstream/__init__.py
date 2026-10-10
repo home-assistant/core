@@ -40,7 +40,7 @@ CONFIG_SCHEMA = probatio.Schema(
                 probatio.Optional(
                     CONF_PUBLISH_EVENTSTREAM_RECEIVED, default=False
                 ): cv.boolean,
-                probatio.Optional(CONF_IGNORE_EVENT, default=[]): cv.ensure_list,
+                probatio.Optional(CONF_IGNORE_EVENT, default=[]): probatio.EnsureList(),
             }
         )
     },

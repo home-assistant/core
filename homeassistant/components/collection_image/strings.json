@@ -30,19 +30,38 @@
   "exceptions": {
     "image_read_error": {
       "message": "Error reading image from {path}: {error}"
+    },
+    "invalid_media_type": {
+      "message": "Selected media {id} has type {mime_type}, which is not an image, and cannot be shown by {entity}."
+    },
+    "no_images": {
+      "message": "No image files were found in the configured media. {entity} will now be unavailable. Reload the config entry after correcting the media source."
+    },
+    "unresolvable": {
+      "message": "Selected media id {id} failed to resolve for {entity}."
     }
   },
   "services": {
     "select_first": {
-      "description": "Update the image entity to the first image in the configured media.",
+      "description": "Updates the image entity to the first image in the configured media.",
       "name": "Select first"
     },
+    "select_image": {
+      "description": "Updates the image entity to the selected image.",
+      "fields": {
+        "image": {
+          "description": "The image to display.",
+          "name": "Image"
+        }
+      },
+      "name": "Select image"
+    },
     "select_last": {
-      "description": "Update the image entity to the last image in the configured media.",
+      "description": "Updates the image entity to the last image in the configured media.",
       "name": "Select last"
     },
     "select_next": {
-      "description": "Update the image entity to the next image in the configured media.",
+      "description": "Updates the image entity to the next image in the configured media.",
       "fields": {
         "wrap": {
           "description": "Advances to the first image after reaching the end of the list.",
@@ -52,7 +71,7 @@
       "name": "Select next"
     },
     "select_previous": {
-      "description": "Update the image entity to the previous image in the configured media.",
+      "description": "Updates the image entity to the previous image in the configured media.",
       "fields": {
         "wrap": {
           "description": "Advances to the last image after reaching the beginning of the list.",
@@ -62,7 +81,7 @@
       "name": "Select previous"
     },
     "shuffle": {
-      "description": "Update the image entity to a random image from the configured media.",
+      "description": "Updates the image entity to a random image from the configured media.",
       "name": "Shuffle"
     }
   },
