@@ -155,6 +155,7 @@ class MelCloudHomeTelemetryData:
     """Telemetry data fetched periodically for MELCloud Home units."""
 
     energy: dict[str, float | None]
+    energy_period_start: datetime
     outdoor_temperature: dict[str, float | None]
 
 
@@ -247,10 +248,8 @@ class MelCloudHomeTelemetryCoordinator(
                 translation_key="timeout_connect",
             ) from err
 
-        start_of_month = utcnow().replace(
-            day=1, hour=0, minute=0, second=0, microsecond=0
-        )
         now = utcnow()
+        start_of_month = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
 
         energy_coroutines: dict[str, Coroutine[None, None, float | None]] = {}
         outdoor_temperature_coroutine: dict[
@@ -289,6 +288,7 @@ class MelCloudHomeTelemetryCoordinator(
 
         return MelCloudHomeTelemetryData(
             energy=dict(zip(energy_coroutines, energy_values, strict=True)),
+            energy_period_start=start_of_month,
             outdoor_temperature=dict(
                 zip(
                     outdoor_temperature_coroutine,
