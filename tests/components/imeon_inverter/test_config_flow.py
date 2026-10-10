@@ -171,6 +171,7 @@ async def test_ssdp(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == f"Imeon {TEST_SERIAL}"
     assert result["data"] == TEST_USER_INPUT
+    assert result["result"].unique_id == TEST_SERIAL
 
 
 async def test_ssdp_already_exist(

@@ -13,7 +13,7 @@ from pylutron_caseta.smartbridge import Smartbridge
 from homeassistant import config_entries
 from homeassistant.const import ATTR_DEVICE_ID, CONF_HOST, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -179,9 +179,12 @@ async def async_setup_entry(
             ca_certs=ca_certs,
             on_connect_callback=_on_connect,
         )
-    except ssl.SSLError:
-        _LOGGER.error("Invalid certificate used to connect to bridge at %s", host)
-        return False
+    except ssl.SSLError as err:
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="invalid_certificate",
+            translation_placeholders={"host": host},
+        ) from err
 
     connect_task = hass.async_create_task(bridge.connect())
     for future, name, timeout in (
@@ -438,7 +441,10 @@ def async_get_lip_button(device_type: str, leap_button: int) -> int | None:
         leap_button_num_to_name := LEAP_TO_DEVICE_TYPE_SUBTYPE_MAP.get(device_type)
     ) is None:
         return None
-    return lip_buttons_name_to_num[leap_button_num_to_name[leap_button]]
+    # Some devices report button numbers their mapping doesn't list
+    if (button_name := leap_button_num_to_name.get(leap_button)) is None:
+        return None
+    return lip_buttons_name_to_num.get(button_name)
 
 
 @callback
@@ -473,7 +479,7 @@ def _async_subscribe_keypad_events(
         lip_button_number = async_get_lip_button(keypad_type, leap_button_number)
         button_type = LEAP_TO_DEVICE_TYPE_SUBTYPE_MAP.get(
             keypad_type, leap_to_keypad_button_names[keypad_device_id]
-        )[leap_button_number]
+        ).get(leap_button_number)
 
         hass.bus.async_fire(
             LUTRON_CASETA_BUTTON_EVENT,

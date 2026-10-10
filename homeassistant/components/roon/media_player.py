@@ -128,6 +128,14 @@ class RoonDevice(MediaPlayerEntity):
         self._server.add_player_id(self.entity_id, self.name)
 
     @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Re-register the player under the new entity_id."""
+        self._server.remove_player_id(old_entity_id)
+        self._server.add_player_id(self.entity_id, self.name)
+        super().async_entity_id_changed(old_entity_id)
+
+    @callback
     def async_update_callback(self, player_data):
         """Handle device updates."""
         self.update_data(player_data)

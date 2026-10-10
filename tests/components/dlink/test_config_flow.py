@@ -14,6 +14,7 @@ from .conftest import (
     CONF_DHCP_DATA,
     CONF_DHCP_FLOW,
     CONF_DHCP_FLOW_NEW_IP,
+    DHCP_FORMATTED_MAC,
     patch_config_flow,
 )
 
@@ -35,6 +36,7 @@ async def test_flow_user(hass: HomeAssistant, mocked_plug: MagicMock) -> None:
             result["flow_id"],
             user_input=CONF_DATA,
         )
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == DEFAULT_NAME
     assert result["data"] == CONF_DATA
@@ -138,6 +140,7 @@ async def test_dhcp(hass: HomeAssistant, mocked_plug: MagicMock) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == DEFAULT_NAME
     assert result["data"] == CONF_DATA
+    assert result["result"].unique_id == DHCP_FORMATTED_MAC
 
 
 async def test_dhcp_failed_legacy_auth(

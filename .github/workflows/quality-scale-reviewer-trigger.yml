@@ -1,4 +1,5 @@
 name: Quality scale reviewer (trigger)
+run-name: "#${{ github.event.pull_request.number }} ${{ github.event.pull_request.title }}"
 
 # Stage 1 of the Quality scale reviewer pipeline.
 #
