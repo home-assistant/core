@@ -3205,7 +3205,7 @@ synology-srm==0.2.0
 systembridgeconnector==5.5.0
 
 # homeassistant.components.tailscale
-tailscale==0.7.0
+tailscale==1.0.0
 
 # homeassistant.components.tapsaff
 tapsaff==0.2.1
