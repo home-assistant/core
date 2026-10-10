@@ -1419,13 +1419,10 @@ jobs:
     runs-on: ubuntu-24.04
     permissions:
       contents: read
+    # Partial runs are short, so start the tests in parallel with the lint jobs
     needs:
       - info
       - base
-      - gen-requirements-all
-      - hassfest
-      - prek
-      - mypy
     if: |
       needs.info.outputs.lint_only != 'true'
       && needs.info.outputs.tests_glob
