@@ -1,7 +1,6 @@
 """Platform for eQ-3 climate entities."""
 
 from datetime import timedelta
-import logging
 from typing import Any, override
 
 from eq3btsmart.const import (
@@ -23,7 +22,7 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_HALVES, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 import homeassistant.util.dt as dt_util
@@ -31,6 +30,7 @@ import homeassistant.util.dt as dt_util
 from . import Eq3ConfigEntry
 from .const import (
     DEFAULT_AWAY_HOURS,
+    DOMAIN,
     EQ_TO_HA_HVAC,
     HA_TO_EQ_HVAC,
     CurrentTemperatureSelector,
@@ -38,8 +38,6 @@ from .const import (
     TargetTemperatureSelector,
 )
 from .entity import Eq3Entity
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -195,13 +193,13 @@ class Eq3Climate(Eq3Entity, ClimateEntity):
 
         try:
             await self._thermostat.async_set_temperature(temperature)
-        # pylint: disable-next=home-assistant-action-swallowed-exception
-        except Eq3Exception:
-            _LOGGER.error(
-                "[%s] Failed setting temperature", self._eq3_config.mac_address
-            )
+        except Eq3Exception as ex:
             self._target_temperature = previous_temperature
             self.async_write_ha_state()
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="set_temperature_failed",
+            ) from ex
         except ValueError as ex:
             raise ServiceValidationError("Invalid temperature") from ex
 
@@ -214,9 +212,11 @@ class Eq3Climate(Eq3Entity, ClimateEntity):
 
         try:
             await self._thermostat.async_set_mode(HA_TO_EQ_HVAC[hvac_mode])
-        # pylint: disable-next=home-assistant-action-swallowed-exception
-        except Eq3Exception:
-            _LOGGER.error("[%s] Failed setting HVAC mode", self._eq3_config.mac_address)
+        except Eq3Exception as ex:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="set_hvac_mode_failed",
+            ) from ex
 
     @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
