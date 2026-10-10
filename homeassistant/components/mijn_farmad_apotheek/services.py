@@ -116,7 +116,7 @@ def _translate_error(
 ) -> HomeAssistantError:
     """Return the Home Assistant error for a library error.
 
-    The translation key applies to every error that is no
+    The translation key applies to every error that is not an
     authentication or authorization failure.
     """
     if isinstance(err, FarmadAuthenticationError):
