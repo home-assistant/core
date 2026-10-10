@@ -2,7 +2,7 @@
 
 from datetime import datetime, timedelta
 import logging
-from typing import Final, override
+from typing import TYPE_CHECKING, Final, override
 
 from irm_kmi_api import IrmKmiApiClientHa, IrmKmiApiError
 
@@ -85,6 +85,8 @@ class IrmKmiCoordinator(TimestampDataUpdateCoordinator[ProcessedCoordinatorData]
     async def process_api_data(self) -> ProcessedCoordinatorData:
         """From the API data, create the object that will be used in the entities."""
         tz = await dt_util.async_get_time_zone("Europe/Brussels")
+        if TYPE_CHECKING:
+            assert tz is not None
         lang = preferred_language(self.hass, self.config_entry)
 
         return ProcessedCoordinatorData(
