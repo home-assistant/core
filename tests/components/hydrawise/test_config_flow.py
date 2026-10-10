@@ -52,6 +52,7 @@ async def test_form(
         CONF_PASSWORD: "__password__",
         CONF_API_KEY: "__api-key__",
     }
+    assert result["result"].unique_id == f"hydrawise-{user.customer_id}"
     assert len(mock_setup_entry.mock_calls) == 1
     mock_auth.check.assert_awaited_once_with()
     mock_pydrawise.get_user.assert_awaited_once_with(fetch_zones=False)

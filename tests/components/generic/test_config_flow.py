@@ -6,6 +6,7 @@ import errno
 from http import HTTPStatus
 import os.path
 from pathlib import Path
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 import httpx2
@@ -28,7 +29,11 @@ from homeassistant.components.stream import (
     CONF_RTSP_TRANSPORT,
     CONF_USE_WALLCLOCK_AS_TIMESTAMPS,
 )
-from homeassistant.config_entries import ConfigFlowResult
+from homeassistant.config_entries import (
+    ConfigEntriesFlowManager,
+    ConfigFlowResult,
+    OptionsFlowManager,
+)
 from homeassistant.const import (
     CONF_AUTHENTICATION,
     CONF_PASSWORD,
@@ -61,6 +66,19 @@ TESTDATA_ONLYSTILL.pop(CONF_STREAM_SOURCE)
 
 TESTDATA_ONLYSTREAM = TESTDATA.copy()
 TESTDATA_ONLYSTREAM.pop(CONF_STILL_IMAGE_URL)
+
+
+async def _async_configure_and_confirm(
+    flow_manager: ConfigEntriesFlowManager | OptionsFlowManager,
+    flow_id: str,
+    user_input: dict[str, Any],
+) -> ConfigFlowResult:
+    """Submit the input and confirm the preview."""
+    result = await flow_manager.async_configure(flow_id, user_input)
+    assert result["step_id"] == "user_confirm"
+    return await flow_manager.async_configure(
+        result["flow_id"], user_input={CONF_CONFIRMED_OK: True}
+    )
 
 
 @respx.mock
@@ -362,6 +380,7 @@ async def test_form_still_template(
     )
     await hass.async_block_till_done()
     assert result2["step_id"] == expected_result
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2.get("errors") == expected_errors
 
 
@@ -439,6 +458,8 @@ async def test_form_only_stream(
         assert image_obj.content == fakeimgbytes_jpg
 
 
+@respx.mock
+@pytest.mark.usefixtures("fakeimg_png", "mock_setup_entry")
 async def test_form_still_and_stream_not_provided(
     hass: HomeAssistant, user_flow: ConfigFlowResult
 ) -> None:
@@ -455,6 +476,11 @@ async def test_form_still_and_stream_not_provided(
     )
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "no_still_image_or_stream_url"}
+
+    result3 = await _async_configure_and_confirm(
+        hass.config_entries.flow, user_flow["flow_id"], TESTDATA_ONLYSTILL
+    )
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 @respx.mock
@@ -488,12 +514,13 @@ async def test_form_still_and_stream_not_provided(
         ),
     ],
 )
+@pytest.mark.usefixtures("mock_create_stream", "mock_setup_entry")
 async def test_form_image_http_exceptions(
-    side_effect,
-    expected_message,
+    side_effect: Exception,
+    expected_message: dict[str, str],
     hass: HomeAssistant,
     user_flow: ConfigFlowResult,
-    mock_create_stream: MagicMock,
+    fakeimgbytes_png: bytes,
 ) -> None:
     """Test we handle image http exceptions."""
     respx.get("http://127.0.0.1/testurl/1").side_effect = [side_effect]
@@ -504,6 +531,12 @@ async def test_form_image_http_exceptions(
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == expected_message
+
+    respx.get("http://127.0.0.1/testurl/1").respond(stream=fakeimgbytes_png)
+    result3 = await _async_configure_and_confirm(
+        hass.config_entries.flow, user_flow["flow_id"], TESTDATA
+    )
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 @respx.mock
@@ -532,10 +565,11 @@ async def test_form_image_http_302(
 
 
 @respx.mock
+@pytest.mark.usefixtures("mock_create_stream", "mock_setup_entry")
 async def test_form_stream_invalidimage(
     hass: HomeAssistant,
     user_flow: ConfigFlowResult,
-    mock_create_stream: MagicMock,
+    fakeimgbytes_png: bytes,
 ) -> None:
     """Test we handle invalid image when a stream is specified."""
     respx.get("http://127.0.0.1/testurl/1").respond(stream=b"invalid")
@@ -547,12 +581,19 @@ async def test_form_stream_invalidimage(
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"still_image_url": "invalid_still_image"}
 
+    respx.get("http://127.0.0.1/testurl/1").respond(stream=fakeimgbytes_png)
+    result3 = await _async_configure_and_confirm(
+        hass.config_entries.flow, user_flow["flow_id"], TESTDATA
+    )
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+
 
 @respx.mock
+@pytest.mark.usefixtures("mock_create_stream", "mock_setup_entry")
 async def test_form_stream_invalidimage2(
     hass: HomeAssistant,
     user_flow: ConfigFlowResult,
-    mock_create_stream: MagicMock,
+    fakeimgbytes_png: bytes,
 ) -> None:
     """Test we handle invalid image when a stream is specified."""
     respx.get("http://127.0.0.1/testurl/1").respond(content=None)
@@ -564,12 +605,19 @@ async def test_form_stream_invalidimage2(
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"still_image_url": "unable_still_load_no_image"}
 
+    respx.get("http://127.0.0.1/testurl/1").respond(stream=fakeimgbytes_png)
+    result3 = await _async_configure_and_confirm(
+        hass.config_entries.flow, user_flow["flow_id"], TESTDATA
+    )
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+
 
 @respx.mock
+@pytest.mark.usefixtures("mock_create_stream", "mock_setup_entry")
 async def test_form_stream_invalidimage3(
     hass: HomeAssistant,
     user_flow: ConfigFlowResult,
-    mock_create_stream: MagicMock,
+    fakeimgbytes_png: bytes,
 ) -> None:
     """Test we handle invalid image when a stream is specified."""
     respx.get("http://127.0.0.1/testurl/1").respond(content=bytes([0xFF]))
@@ -581,9 +629,15 @@ async def test_form_stream_invalidimage3(
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"still_image_url": "invalid_still_image"}
 
+    respx.get("http://127.0.0.1/testurl/1").respond(stream=fakeimgbytes_png)
+    result3 = await _async_configure_and_confirm(
+        hass.config_entries.flow, user_flow["flow_id"], TESTDATA
+    )
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+
 
 @respx.mock
-@pytest.mark.usefixtures("fakeimg_png")
+@pytest.mark.usefixtures("fakeimg_png", "mock_setup_entry")
 async def test_form_stream_timeout(
     hass: HomeAssistant,
     user_flow: ConfigFlowResult,
@@ -604,9 +658,19 @@ async def test_form_stream_timeout(
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"stream_source": "timeout"}
 
+    part_recv = mock_create_stream.return_value.add_provider.return_value.part_recv
+    part_recv.return_value = True
+    result3 = await _async_configure_and_confirm(
+        hass.config_entries.flow, user_flow["flow_id"], TESTDATA
+    )
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+
 
 @respx.mock
-async def test_form_stream_not_set_up(hass: HomeAssistant, user_flow) -> None:
+@pytest.mark.usefixtures("mock_create_stream", "mock_setup_entry")
+async def test_form_stream_not_set_up(
+    hass: HomeAssistant, user_flow: ConfigFlowResult
+) -> None:
     """Test we handle if stream has not been set up."""
 
     with patch(
@@ -621,6 +685,11 @@ async def test_form_stream_not_set_up(hass: HomeAssistant, user_flow) -> None:
 
     assert result1["type"] is FlowResultType.FORM
     assert result1["errors"] == {"stream_source": "stream_not_set_up"}
+
+    result2 = await _async_configure_and_confirm(
+        hass.config_entries.flow, user_flow["flow_id"], TESTDATA_ONLYSTREAM
+    )
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
 
 
 @respx.mock
@@ -642,7 +711,7 @@ async def test_form_stream_other_error(hass: HomeAssistant, user_flow) -> None:
 
 
 @respx.mock
-@pytest.mark.usefixtures("fakeimg_png")
+@pytest.mark.usefixtures("fakeimg_png", "mock_create_stream", "mock_setup_entry")
 async def test_form_stream_permission_error(
     hass: HomeAssistant, user_flow: ConfigFlowResult
 ) -> None:
@@ -658,9 +727,14 @@ async def test_form_stream_permission_error(
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"stream_source": "stream_not_permitted"}
 
+    result3 = await _async_configure_and_confirm(
+        hass.config_entries.flow, user_flow["flow_id"], TESTDATA
+    )
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+
 
 @respx.mock
-@pytest.mark.usefixtures("fakeimg_png")
+@pytest.mark.usefixtures("fakeimg_png", "mock_create_stream", "mock_setup_entry")
 async def test_form_no_route_to_host(
     hass: HomeAssistant, user_flow: ConfigFlowResult
 ) -> None:
@@ -676,9 +750,14 @@ async def test_form_no_route_to_host(
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"stream_source": "stream_no_route_to_host"}
 
+    result3 = await _async_configure_and_confirm(
+        hass.config_entries.flow, user_flow["flow_id"], TESTDATA
+    )
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+
 
 @respx.mock
-@pytest.mark.usefixtures("fakeimg_png")
+@pytest.mark.usefixtures("fakeimg_png", "mock_create_stream", "mock_setup_entry")
 async def test_form_stream_io_error(
     hass: HomeAssistant, user_flow: ConfigFlowResult
 ) -> None:
@@ -693,6 +772,11 @@ async def test_form_stream_io_error(
         )
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"stream_source": "stream_io_error"}
+
+    result3 = await _async_configure_and_confirm(
+        hass.config_entries.flow, user_flow["flow_id"], TESTDATA
+    )
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 @respx.mock
@@ -713,10 +797,9 @@ async def test_form_oserror(hass: HomeAssistant, user_flow: ConfigFlowResult) ->
 
 
 @respx.mock
-@pytest.mark.usefixtures("fakeimg_png")
+@pytest.mark.usefixtures("fakeimg_png", "mock_create_stream")
 async def test_options_template_error(
     hass: HomeAssistant,
-    mock_create_stream: MagicMock,
     config_entry: MockConfigEntry,
 ) -> None:
     """Test the options flow with a template error."""
@@ -783,6 +866,12 @@ async def test_options_template_error(
     assert result7.get("type") is FlowResultType.FORM
     assert result7["errors"] == {"stream_source": "malformed_url"}
 
+    data[CONF_STREAM_SOURCE] = "http://127.0.0.1/testurl/2"
+    result8 = await _async_configure_and_confirm(
+        hass.config_entries.options, result7["flow_id"], data
+    )
+    assert result8["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_slug(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> None:
     """Test that the slug function generates an error in case of invalid template.
@@ -833,7 +922,8 @@ async def test_options_only_stream(
     assert result3["data"][CONF_CONTENT_TYPE] == "image/jpeg"
 
 
-@pytest.mark.usefixtures("mock_setup_entry")
+@respx.mock
+@pytest.mark.usefixtures("fakeimg_png", "mock_setup_entry")
 async def test_options_still_and_stream_not_provided(hass: HomeAssistant) -> None:
     """Test we show a suitable error if neither still or stream URL are provided."""
     data = TESTDATA_ONLYSTILL.copy()
@@ -859,9 +949,14 @@ async def test_options_still_and_stream_not_provided(hass: HomeAssistant) -> Non
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "no_still_image_or_stream_url"}
 
+    result3 = await _async_configure_and_confirm(
+        hass.config_entries.options, result2["flow_id"], TESTDATA_ONLYSTILL
+    )
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+
 
 @respx.mock
-@pytest.mark.usefixtures("fakeimg_png")
+@pytest.mark.usefixtures("fakeimg_png", "mock_create_stream")
 async def test_options_permission_error(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
@@ -878,6 +973,11 @@ async def test_options_permission_error(
         )
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"stream_source": "stream_not_permitted"}
+
+    result3 = await _async_configure_and_confirm(
+        hass.config_entries.options, result2["flow_id"], TESTDATA
+    )
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_migrate_existing_ids(

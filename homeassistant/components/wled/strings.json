@@ -113,6 +113,9 @@
       }
     },
     "switch": {
+      "audio_reactive": {
+        "name": "Audio reactive"
+      },
       "freeze": {
         "name": "Freeze"
       },
@@ -139,6 +142,9 @@
   "exceptions": {
     "connection_error": {
       "message": "Error communicating with WLED API: {error}"
+    },
+    "duplicate_mac_address": {
+      "message": "Multiple WLED configuration entries exist for MAC address {mac_address}, remove the duplicates to migrate."
     },
     "firmware_upgrade_failed": {
       "message": "Updating the WLED firmware failed: {error}"

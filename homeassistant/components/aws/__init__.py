@@ -19,6 +19,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.typing import ConfigType
 
@@ -131,7 +132,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if conf is None:
             # user removed config from configuration.yaml, abort setup
             hass.async_create_task(hass.config_entries.async_remove(entry.entry_id))
-            return False
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="config_removed",
+            )
 
         if conf != entry.data:
             # user changed config from configuration.yaml, use conf to setup
@@ -167,7 +171,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             )
         )
 
-    return validation
+    if not validation:
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="credential_validation_failed",
+        )
+
+    return True
 
 
 async def _validate_aws_credentials(hass, credential):

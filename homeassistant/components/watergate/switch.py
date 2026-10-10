@@ -10,6 +10,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import DOMAIN
 from .coordinator import WatergateConfigEntry, WatergateDataCoordinator
 from .entity import WatergateEntity
 
@@ -48,7 +49,10 @@ class SonicAutoShutOffSwitch(WatergateEntity, SwitchEntity):
         try:
             await self._api_client.async_update_auto_shut_off(enabled=True)
         except WatergateApiException as exc:
-            raise HomeAssistantError("Failed to update auto shut-off") from exc
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="auto_shut_off_update_failed",
+            ) from exc
         await self.coordinator.async_request_refresh()
 
     @override
@@ -57,5 +61,8 @@ class SonicAutoShutOffSwitch(WatergateEntity, SwitchEntity):
         try:
             await self._api_client.async_update_auto_shut_off(enabled=False)
         except WatergateApiException as exc:
-            raise HomeAssistantError("Failed to update auto shut-off") from exc
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="auto_shut_off_update_failed",
+            ) from exc
         await self.coordinator.async_request_refresh()
