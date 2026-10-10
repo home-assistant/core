@@ -6,7 +6,11 @@ from typing import Never, override
 from daikin_onecta.client import OnectaClient
 
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
+from homeassistant.helpers.device_registry import (
+    CONNECTION_NETWORK_MAC,
+    DeviceEntryType,
+    DeviceInfo,
+)
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -76,6 +80,25 @@ class DaikinOnectaEntity(CoordinatorEntity[OnectaDataUpdateCoordinator]):
             translation_domain=DOMAIN,
             translation_key=translation_key,
             translation_placeholders={"device": self._device.name},
+        )
+
+
+class DaikinOnectaAccountEntity(CoordinatorEntity[OnectaDataUpdateCoordinator]):
+    """Base entity backed by a Daikin Onecta account."""
+
+    _attr_has_entity_name = True
+
+    def __init__(self, coordinator: OnectaDataUpdateCoordinator) -> None:
+        """Initialize shared account state."""
+        super().__init__(coordinator)
+        self._account_id = (
+            coordinator.config_entry.unique_id or coordinator.config_entry.entry_id
+        )
+        self._attr_device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, f"account_{self._account_id}")},
+            manufacturer="Daikin",
+            name="Daikin Onecta account",
         )
 
 

@@ -406,7 +406,7 @@
       "message": "Daikin API rate limit exceeded"
     },
     "refresh_failed": {
-      "message": "Failed to refresh {device}"
+      "message": "Failed to refresh Daikin devices"
     },
     "preset_mode_unavailable": {
       "message": "The requested preset mode is unavailable for {device}"

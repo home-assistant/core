@@ -1,7 +1,7 @@
 # serializer version: 1
 # name: test_all_platform_entities[homehub][homehub]
   dict({
-    'button.homehub_refresh': dict({
+    'button.daikin_onecta_account_refresh': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -15,7 +15,7 @@
         'disabled_by': None,
         'domain': 'button',
         'entity_category': <EntityCategory.CONFIG: 'config'>,
-        'entity_id': 'button.homehub_refresh',
+        'entity_id': 'button.daikin_onecta_account_refresh',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -34,22 +34,22 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'refresh',
-        'unique_id': '6a84eb95-60ea-4c21-8376-a10b3886437f_refresh',
+        'unique_id': '1234567890_refresh',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'homehub Refresh',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Daikin Onecta account Refresh',
         }),
         'context': <ANY>,
-        'entity_id': 'button.homehub_refresh',
+        'entity_id': 'button.daikin_onecta_account_refresh',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': 'unknown',
       }),
     }),
-    'sensor.homehub_ratelimit_remaining_day': dict({
+    'sensor.daikin_onecta_account_ratelimit_remaining_day': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -65,7 +65,7 @@
         'disabled_by': None,
         'domain': 'sensor',
         'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-        'entity_id': 'sensor.homehub_ratelimit_remaining_day',
+        'entity_id': 'sensor.daikin_onecta_account_ratelimit_remaining_day',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -84,16 +84,16 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'ratelimitremainingday',
-        'unique_id': '6a84eb95-60ea-4c21-8376-a10b3886437f_rate_limit_remaining_day',
+        'unique_id': '1234567890_rate_limit_remaining_day',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'homehub Ratelimit remaining day',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Daikin Onecta account Ratelimit remaining day',
           <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
         }),
         'context': <ANY>,
-        'entity_id': 'sensor.homehub_ratelimit_remaining_day',
+        'entity_id': 'sensor.daikin_onecta_account_ratelimit_remaining_day',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,

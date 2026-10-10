@@ -21,7 +21,7 @@ from .const import (
 )
 from .coordinator import DaikinOnectaConfigEntry
 from .device import DaikinOnectaDevice
-from .entity import DaikinEntity, DaikinManagementPointEntity
+from .entity import DaikinManagementPointEntity, DaikinOnectaAccountEntity
 from .entity_descriptions import SENSOR_DESCRIPTIONS
 
 PARALLEL_UPDATES = 1
@@ -210,9 +210,9 @@ def _value_sensor_unique_id(
     return f"{device_id}_{embedded_id}_{value}"
 
 
-def _rate_limit_sensor_unique_id(device_id: str, limit_key: str) -> str:
+def _rate_limit_sensor_unique_id(account_id: str, limit_key: str) -> str:
     """Return a stable unique ID for a rate-limit sensor."""
-    return f"{device_id}_rate_limit_{limit_key}"
+    return f"{account_id}_rate_limit_{limit_key}"
 
 
 async def async_setup_entry(
@@ -222,9 +222,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up Daikin sensors based on config_entry."""
     coordinator: OnectaDataUpdateCoordinator = config_entry.runtime_data
-    sensors: list[SensorEntity] = []
+    sensors: list[SensorEntity] = [DaikinLimitSensor(coordinator, "remaining_day")]
     for device in (coordinator.data or {}).values():
-        sensors.append(DaikinLimitSensor(device, coordinator, "remaining_day"))
         for management_point in device.device.management_points:
             add_management_point_sensors(coordinator, device, management_point, sensors)
 
@@ -347,20 +346,19 @@ class DaikinValueSensor(DaikinManagementPointEntity, SensorEntity):
         return result if isinstance(result, str | int | float) else None
 
 
-class DaikinLimitSensor(DaikinEntity, SensorEntity):
+class DaikinLimitSensor(DaikinOnectaAccountEntity, SensorEntity):
     """Represent a Daikin API rate-limit value."""
 
     def __init__(
         self,
-        device: DaikinOnectaDevice,
         coordinator: OnectaDataUpdateCoordinator,
         limit_key: str,
     ) -> None:
         """Initialize a rate-limit sensor."""
-        super().__init__(device, coordinator, device.gateway_embedded_id or "gateway")
+        super().__init__(coordinator)
         self._limit_key = limit_key
         self._attr_unique_id = _rate_limit_sensor_unique_id(
-            self._device.id, self._limit_key
+            self._account_id, self._limit_key
         )
         self.entity_description = SENSOR_DESCRIPTIONS["RatelimitRemainingDay"]
         self.update_state()
@@ -368,12 +366,6 @@ class DaikinLimitSensor(DaikinEntity, SensorEntity):
     def update_state(self) -> None:
         """Refresh the rate-limit value."""
         self._attr_native_value = self.sensor_value()
-
-    @property
-    @override
-    def available(self) -> bool:
-        """Return coordinator availability without gateway cloud availability."""
-        return self.coordinator.last_update_success
 
     @callback
     @override

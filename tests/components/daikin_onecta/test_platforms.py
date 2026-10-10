@@ -33,6 +33,7 @@ from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION,
 )
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
     SERVICE_TURN_OFF as SWITCH_SERVICE_TURN_OFF,
@@ -52,6 +53,7 @@ from homeassistant.components.water_heater import (
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers import entity_registry as er
 
 from .test_climate_snapshots import _async_setup_fixture, _load_gateway_devices
 
@@ -105,6 +107,29 @@ def test_platform_availability_requires_coordinator_and_device(
     )()
 
     assert entity.available is expected
+
+
+async def test_account_entities_are_not_duplicated_for_multiple_gateways(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Create one account refresh and rate-limit entity for all gateways."""
+    hass.config_entries.async_update_entry(config_entry, unique_id="account-id")
+
+    await _async_setup_fixture(hass, config_entry, "climate_floorheatingairflow")
+
+    entries = er.async_entries_for_config_entry(entity_registry, config_entry.entry_id)
+    refresh_entries = [entry for entry in entries if entry.domain == BUTTON_DOMAIN]
+    rate_limit_entries = [
+        entry
+        for entry in entries
+        if entry.domain == SENSOR_DOMAIN
+        and entry.unique_id == "account-id_rate_limit_remaining_day"
+    ]
+
+    assert [entry.unique_id for entry in refresh_entries] == ["account-id_refresh"]
+    assert len(rate_limit_entries) == 1
 
 
 def test_unsupported_energy_aggregate_is_skipped() -> None:
@@ -182,7 +207,7 @@ async def test_refresh_button_requests_coordinator_refresh(
     await hass.services.async_call(
         BUTTON_DOMAIN,
         SERVICE_PRESS,
-        {ATTR_ENTITY_ID: "button.lounge_refresh"},
+        {ATTR_ENTITY_ID: "button.daikin_onecta_account_refresh"},
         blocking=True,
     )
 
@@ -205,13 +230,13 @@ async def test_refresh_button_reports_failed_refresh(
         await hass.services.async_call(
             BUTTON_DOMAIN,
             SERVICE_PRESS,
-            {ATTR_ENTITY_ID: "button.lounge_refresh"},
+            {ATTR_ENTITY_ID: "button.daikin_onecta_account_refresh"},
             blocking=True,
         )
 
     assert err.value.translation_domain == "daikin_onecta"
     assert err.value.translation_key == "refresh_failed"
-    assert err.value.translation_placeholders == {"device": "Lounge"}
+    assert err.value.translation_placeholders is None
     coordinator.async_refresh.assert_awaited_once()
 
 

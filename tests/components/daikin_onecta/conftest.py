@@ -22,6 +22,7 @@ def mock_config_entry_fixture(hass: HomeAssistant) -> MockConfigEntry:
     """Return a Daikin Onecta config entry."""
     entry = MockConfigEntry(
         domain=DOMAIN,
+        unique_id="1234567890",
         data={
             "auth_implementation": "cloud",
             "token": {

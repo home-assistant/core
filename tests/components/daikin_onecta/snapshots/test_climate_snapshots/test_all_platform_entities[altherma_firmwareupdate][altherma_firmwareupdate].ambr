@@ -535,7 +535,7 @@
         'state': 'off',
       }),
     }),
-    'button.climate_control_getr422_refresh': dict({
+    'button.daikin_onecta_account_refresh': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
           None,
@@ -549,7 +549,7 @@
         'disabled_by': None,
         'domain': 'button',
         'entity_category': <EntityCategory.CONFIG: 'config'>,
-        'entity_id': 'button.climate_control_getr422_refresh',
+        'entity_id': 'button.daikin_onecta_account_refresh',
         'has_entity_name': True,
         'hidden_by': None,
         'icon': None,
@@ -568,15 +568,15 @@
         'suggested_object_id': None,
         'supported_features': 0,
         'translation_key': 'refresh',
-        'unique_id': '29e9a6af-0a8e-49ac-bc19-361c1347ba95_refresh',
+        'unique_id': '1234567890_refresh',
         'unit_of_measurement': None,
       }),
       'state': StateSnapshot({
         'attributes': ReadOnlyDict({
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Climate control getr422 Refresh',
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Daikin Onecta account Refresh',
         }),
         'context': <ANY>,
-        'entity_id': 'button.climate_control_getr422_refresh',
+        'entity_id': 'button.daikin_onecta_account_refresh',
         'last_changed': <ANY>,
         'last_reported': <ANY>,
         'last_updated': <ANY>,
@@ -1767,57 +1767,6 @@
         'state': '5.7',
       }),
     }),
-    'sensor.climate_control_getr422_ratelimit_remaining_day': dict({
-      'entry': EntityRegistryEntrySnapshot({
-        'aliases': list([
-          None,
-        ]),
-        'area_id': None,
-        'capabilities': dict({
-          <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-        }),
-        'config_entry_id': <ANY>,
-        'config_subentry_id': <ANY>,
-        'device_class': None,
-        'device_id': <ANY>,
-        'disabled_by': None,
-        'domain': 'sensor',
-        'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-        'entity_id': 'sensor.climate_control_getr422_ratelimit_remaining_day',
-        'has_entity_name': True,
-        'hidden_by': None,
-        'icon': None,
-        'id': <ANY>,
-        'labels': set({
-        }),
-        'name': None,
-        'object_id_base': 'Ratelimit remaining day',
-        'options': dict({
-        }),
-        'original_device_class': None,
-        'original_icon': None,
-        'original_name': 'Ratelimit remaining day',
-        'platform': 'daikin_onecta',
-        'previous_unique_id': None,
-        'suggested_object_id': None,
-        'supported_features': 0,
-        'translation_key': 'ratelimitremainingday',
-        'unique_id': '29e9a6af-0a8e-49ac-bc19-361c1347ba95_rate_limit_remaining_day',
-        'unit_of_measurement': None,
-      }),
-      'state': StateSnapshot({
-        'attributes': ReadOnlyDict({
-          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Climate control getr422 Ratelimit remaining day',
-          <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-        }),
-        'context': <ANY>,
-        'entity_id': 'sensor.climate_control_getr422_ratelimit_remaining_day',
-        'last_changed': <ANY>,
-        'last_reported': <ANY>,
-        'last_updated': <ANY>,
-        'state': 'unknown',
-      }),
-    }),
     'sensor.climate_control_getr422_setpoint_mode': dict({
       'entry': EntityRegistryEntrySnapshot({
         'aliases': list([
@@ -2016,6 +1965,57 @@
         'last_reported': <ANY>,
         'last_updated': <ANY>,
         'state': '60.6',
+      }),
+    }),
+    'sensor.daikin_onecta_account_ratelimit_remaining_day': dict({
+      'entry': EntityRegistryEntrySnapshot({
+        'aliases': list([
+          None,
+        ]),
+        'area_id': None,
+        'capabilities': dict({
+          <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+        }),
+        'config_entry_id': <ANY>,
+        'config_subentry_id': <ANY>,
+        'device_class': None,
+        'device_id': <ANY>,
+        'disabled_by': None,
+        'domain': 'sensor',
+        'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+        'entity_id': 'sensor.daikin_onecta_account_ratelimit_remaining_day',
+        'has_entity_name': True,
+        'hidden_by': None,
+        'icon': None,
+        'id': <ANY>,
+        'labels': set({
+        }),
+        'name': None,
+        'object_id_base': 'Ratelimit remaining day',
+        'options': dict({
+        }),
+        'original_device_class': None,
+        'original_icon': None,
+        'original_name': 'Ratelimit remaining day',
+        'platform': 'daikin_onecta',
+        'previous_unique_id': None,
+        'suggested_object_id': None,
+        'supported_features': 0,
+        'translation_key': 'ratelimitremainingday',
+        'unique_id': '1234567890_rate_limit_remaining_day',
+        'unit_of_measurement': None,
+      }),
+      'state': StateSnapshot({
+        'attributes': ReadOnlyDict({
+          <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Daikin Onecta account Ratelimit remaining day',
+          <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+        }),
+        'context': <ANY>,
+        'entity_id': 'sensor.daikin_onecta_account_ratelimit_remaining_day',
+        'last_changed': <ANY>,
+        'last_reported': <ANY>,
+        'last_updated': <ANY>,
+        'state': 'unknown',
       }),
     }),
     'update.climate_control_getr422_firmware_update': dict({
