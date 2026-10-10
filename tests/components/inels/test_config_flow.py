@@ -53,6 +53,7 @@ async def test_mqtt_setup(hass: HomeAssistant, mqtt_mock: MqttMockHAClient) -> N
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TITLE
     assert result["result"].data == {}
+    assert result["result"].unique_id == DOMAIN
     mock_setup_entry.assert_called_once()
 
 
@@ -136,6 +137,7 @@ async def test_user_setup(hass: HomeAssistant, mqtt_mock: MqttMockHAClient) -> N
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TITLE
     assert result["result"].data == {}
+    assert result["result"].unique_id == DOMAIN
     mock_setup_entry.assert_called_once()
 
 

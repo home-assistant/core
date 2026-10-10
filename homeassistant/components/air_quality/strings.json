@@ -206,6 +206,21 @@
       },
       "name": "PM4 value"
     },
+    "is_radon_value": {
+      "description": "Tests the radon level of one or more entities.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::air_quality::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::air_quality::common::condition_for_name%]"
+        },
+        "threshold": {
+          "name": "[%key:component::air_quality::common::condition_threshold_name%]"
+        }
+      },
+      "name": "Radon value"
+    },
     "is_smoke_cleared": {
       "description": "Tests if one or more smoke sensors are cleared.",
       "fields": {

@@ -21,6 +21,7 @@ from homeassistant.components.person import (
     ATTR_USER_ID,
     DOMAIN,
 )
+from homeassistant.components.person.const import DATA_PERSON
 from homeassistant.const import (
     ATTR_EDITABLE,
     ATTR_ENTITY_PICTURE,
@@ -1099,7 +1100,7 @@ async def test_ws_list(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator, storage_setup
 ) -> None:
     """Test listing via WS."""
-    manager = hass.data[DOMAIN][1]
+    manager = hass.data[DATA_PERSON].storage_collection
 
     client = await hass_ws_client(hass)
 
@@ -1118,7 +1119,7 @@ async def test_ws_create(
     hass_read_only_user: MockUser,
 ) -> None:
     """Test creating via WS."""
-    manager = hass.data[DOMAIN][1]
+    manager = hass.data[DATA_PERSON].storage_collection
 
     client = await hass_ws_client(hass)
 
@@ -1150,7 +1151,7 @@ async def test_ws_create_requires_admin(
 ) -> None:
     """Test creating via WS requires admin."""
     hass_admin_user.groups = []
-    manager = hass.data[DOMAIN][1]
+    manager = hass.data[DATA_PERSON].storage_collection
 
     client = await hass_ws_client(hass)
 
@@ -1175,7 +1176,7 @@ async def test_ws_update(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator, storage_setup
 ) -> None:
     """Test updating via WS."""
-    manager = hass.data[DOMAIN][1]
+    manager = hass.data[DATA_PERSON].storage_collection
 
     client = await hass_ws_client(hass)
     persons = manager.async_items()
@@ -1228,7 +1229,7 @@ async def test_ws_update_require_admin(
 ) -> None:
     """Test updating via WS requires admin."""
     hass_admin_user.groups = []
-    manager = hass.data[DOMAIN][1]
+    manager = hass.data[DATA_PERSON].storage_collection
 
     client = await hass_ws_client(hass)
     original = dict(manager.async_items()[0])
@@ -1257,8 +1258,8 @@ async def test_ws_delete(
     storage_setup,
 ) -> None:
     """Test deleting via WS."""
-    manager = hass.data[DOMAIN][1]
-    entity = hass.data[DOMAIN][2].get_entity("person.tracked_person")
+    manager = hass.data[DATA_PERSON].storage_collection
+    entity = hass.data[DATA_PERSON].entity_component.get_entity("person.tracked_person")
 
     client = await hass_ws_client(hass)
     persons = manager.async_items()
@@ -1290,7 +1291,7 @@ async def test_ws_delete_require_admin(
 ) -> None:
     """Test deleting via WS requires admin."""
     hass_admin_user.groups = []
-    manager = hass.data[DOMAIN][1]
+    manager = hass.data[DATA_PERSON].storage_collection
 
     client = await hass_ws_client(hass)
 
@@ -1362,7 +1363,7 @@ async def test_update_person_when_user_removed(
     hass: HomeAssistant, storage_setup, hass_read_only_user: MockUser
 ) -> None:
     """Update person when user is removed."""
-    storage_collection = hass.data[DOMAIN][1]
+    storage_collection = hass.data[DATA_PERSON].storage_collection
 
     person = await storage_collection.async_create_item(
         {"name": "Hello", "user_id": hass_read_only_user.id}
@@ -1378,7 +1379,7 @@ async def test_removing_device_tracker(
     hass: HomeAssistant, entity_registry: er.EntityRegistry, storage_setup
 ) -> None:
     """Test we automatically remove removed device trackers."""
-    storage_collection = hass.data[DOMAIN][1]
+    storage_collection = hass.data[DATA_PERSON].storage_collection
     entry = entity_registry.async_get_or_create(
         "device_tracker", "mobile_app", "bla", suggested_object_id="pixel"
     )
@@ -1397,7 +1398,7 @@ async def test_add_user_device_tracker(
     hass: HomeAssistant, storage_setup, hass_read_only_user: MockUser
 ) -> None:
     """Test adding a device tracker to a person tied to a user."""
-    storage_collection = hass.data[DOMAIN][1]
+    storage_collection = hass.data[DATA_PERSON].storage_collection
     pers = await storage_collection.async_create_item(
         {
             "name": "Hello",

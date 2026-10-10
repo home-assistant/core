@@ -20,8 +20,10 @@ from boschshcpy import (
     SHCCamera360,
     SHCCameraEyes,
     SHCCameraOutdoorGen2,
+    SHCIntrusionSystem,
     SHCLightSwitchBSM,
     SHCMicromoduleBlinds,
+    SHCMicromoduleDimmer,
     SHCMicromoduleRelay,
     SHCMotionDetector,
     SHCMotionDetector2,
@@ -47,6 +49,7 @@ from boschshcpy.services_impl import (
     PirSensorConfigurationService,
     PresenceSimulationConfigurationService,
     ValveTappetService,
+    VibrationSensorService,
 )
 import pytest
 
@@ -137,6 +140,7 @@ def mock_session(device_buckets: dict[str, Any]) -> Generator[MagicMock]:
     session.information.updateState.name = "UP_TO_DATE"
     session.information.version = "2.0"
     session.device_helper = SimpleNamespace(**device_buckets)
+    session.intrusion_system = intrusion_system_device()
     with patch("homeassistant.components.bosch_shc.SHCSession", return_value=session):
         yield session
 
@@ -415,10 +419,53 @@ def thermostat_gen2_device(
     return device
 
 
+def intrusion_system_device(
+    arming_state: SHCIntrusionSystem.ArmingState = SHCIntrusionSystem.ArmingState.SYSTEM_DISARMED,
+    alarm_state: SHCIntrusionSystem.AlarmState = SHCIntrusionSystem.AlarmState.ALARM_OFF,
+    profile: SHCIntrusionSystem.Profile = SHCIntrusionSystem.Profile.FULL_PROTECTION,
+) -> SHCIntrusionSystem:
+    """Build a minimal double for session.intrusion_system."""
+    device = create_autospec(SHCIntrusionSystem, instance=True, spec_set=True)
+    device.id = "com.bosch.tt.intrusion.system"
+    device.name = "Intrusion Detection System"
+    device.root_device_id = "test-mac"
+    device.manufacturer = "Bosch"
+    device.device_model = "IDS"
+    device.deleted = False
+    device.system_availability = True
+    device.arming_state = arming_state
+    device.alarm_state = alarm_state
+    device.active_configuration_profile = profile
+    return device
+
+
+def micromodule_dimmer_device(
+    device_id: str = "hdm:ZigBee:dimmer1",
+    name: str = "Dimmer",
+    binarystate: bool = False,
+    brightness: int = 50,
+) -> SHCMicromoduleDimmer:
+    """Build a minimal device double for the micromodule_dimmers bucket."""
+    device = create_autospec(SHCMicromoduleDimmer, instance=True, spec_set=True)
+    device.name = name
+    device.id = device_id
+    device.root_device_id = "test-mac"
+    device.serial = f"serial-{device_id}"
+    device.manufacturer = "Bosch"
+    device.device_model = "MICROMODULE_DIMMER"
+    device.device_services = []
+    device.deleted = False
+    device.status = "AVAILABLE"
+    device.binarystate = binarystate
+    device.brightness = brightness
+    return device
+
+
 def micromodule_relay_device(
     device_id: str = "hdm:ZigBee:relay1",
     name: str = "Relay",
     child_lock: bool = False,
+    has_child_protection: bool = True,
     supports_switch_configuration: bool = False,
     swap_inputs: bool = False,
     swap_outputs: bool = False,
@@ -437,6 +484,7 @@ def micromodule_relay_device(
     device.deleted = False
     device.status = "AVAILABLE"
     device.child_lock = child_lock
+    device.device_service_ids = {"ChildProtection"} if has_child_protection else set()
     device.supports_switch_configuration = supports_switch_configuration
     device.swap_inputs = swap_inputs
     device.swap_outputs = swap_outputs
@@ -453,6 +501,7 @@ def light_switch_bsm_device(
     device_id: str = "hdm:ZigBee:lightswitch1",
     name: str = "Light switch",
     child_lock: bool = False,
+    has_child_protection: bool = True,
 ) -> SHCLightSwitchBSM:
     """Build a minimal device double for the light_switches_bsm bucket.
 
@@ -471,6 +520,7 @@ def light_switch_bsm_device(
     device.status = "AVAILABLE"
     device.switchstate = PowerSwitchService.State.OFF
     device.child_lock = child_lock
+    device.device_service_ids = {"ChildProtection"} if has_child_protection else set()
     return device
 
 
@@ -550,6 +600,9 @@ def shutter_contact2_plus_device(
     bypass: BypassService.State = BypassService.State.BYPASS_INACTIVE,
     bypass_infinite: bool = False,
     vibration_enabled: bool = False,
+    sensitivity: VibrationSensorService.SensitivityState = (
+        VibrationSensorService.SensitivityState.MEDIUM
+    ),
 ) -> SHCShutterContact2Plus:
     """Build a minimal device double for a vibration-capable Door/Window Contact II Plus."""
     device = create_autospec(SHCShutterContact2Plus, instance=True, spec_set=True)
@@ -565,6 +618,7 @@ def shutter_contact2_plus_device(
     device.bypass = bypass
     device.bypass_infinite = bypass_infinite
     device.enabled = vibration_enabled
+    device.sensitivity = sensitivity
     return device
 
 
@@ -581,10 +635,10 @@ class FakeLatestMotionService:
         """Register a callback for the given device id."""
         self._event_callbacks[event] = callback
 
-    def subscribe_callback(self, entity_id: str, callback: Any) -> None:
+    def subscribe_callback(self, entity: Any, callback: Any) -> None:
         """No-op: SHCEntity subscribes to every device service's generic callback."""
 
-    def unsubscribe_callback(self, entity_id: str) -> None:
+    def unsubscribe_callback(self, entity: Any) -> None:
         """No-op counterpart to subscribe_callback."""
 
 
@@ -601,10 +655,10 @@ class FakeAlarmService:
         """Register a callback for the given device id."""
         self._event_callbacks[event] = callback
 
-    def subscribe_callback(self, entity_id: str, callback: Any) -> None:
+    def subscribe_callback(self, entity: Any, callback: Any) -> None:
         """No-op: SHCEntity subscribes to every device service's generic callback."""
 
-    def unsubscribe_callback(self, entity_id: str) -> None:
+    def unsubscribe_callback(self, entity: Any) -> None:
         """No-op counterpart to subscribe_callback."""
 
 
@@ -635,6 +689,7 @@ def motion_detector2_device(
     tamper_protection_enabled: bool = False,
     supports_smart_sensitivity: bool = False,
     smart_sensitivity_enabled: bool = False,
+    supports_tamper_reset: bool = True,
     latestmotion: str = "",
     motion_sensitivity: PirSensorConfigurationService.MotionSensitivity
     | None = PirSensorConfigurationService.MotionSensitivity.MIDDLE,
@@ -654,6 +709,7 @@ def motion_detector2_device(
     device.tamper_protection_enabled = tamper_protection_enabled
     device.supports_smart_sensitivity = supports_smart_sensitivity
     device.smart_sensitivity_enabled = smart_sensitivity_enabled
+    device.supports_tamper_reset = supports_tamper_reset
     device.latestmotion = latestmotion
     if motion_sensitivity is None:
         del device.motion_sensitivity

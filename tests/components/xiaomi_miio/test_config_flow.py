@@ -145,6 +145,13 @@ async def test_config_flow_step_gateway_connect_error(hass: HomeAssistant) -> No
     assert result["step_id"] == "connect"
     assert result["errors"] == {"base": "cannot_connect"}
 
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_MODEL: TEST_MODEL},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_config_flow_gateway_success(hass: HomeAssistant) -> None:
     """Test a successful config flow."""
@@ -182,6 +189,7 @@ async def test_config_flow_gateway_success(hass: HomeAssistant) -> None:
         CONF_MODEL: TEST_MODEL,
         CONF_MAC: TEST_MAC,
     }
+    assert result["result"].unique_id == TEST_MAC
 
 
 async def test_config_flow_gateway_cloud_success(hass: HomeAssistant) -> None:
@@ -215,6 +223,7 @@ async def test_config_flow_gateway_cloud_success(hass: HomeAssistant) -> None:
         CONF_MODEL: TEST_MODEL,
         CONF_MAC: TEST_MAC,
     }
+    assert result["result"].unique_id == TEST_MAC
 
 
 async def test_config_flow_gateway_cloud_multiple_success(hass: HomeAssistant) -> None:
@@ -261,6 +270,7 @@ async def test_config_flow_gateway_cloud_multiple_success(hass: HomeAssistant) -
         CONF_MODEL: TEST_MODEL,
         CONF_MAC: TEST_MAC2,
     }
+    assert result["result"].unique_id == TEST_MAC2
 
 
 async def test_config_flow_gateway_cloud_incomplete(hass: HomeAssistant) -> None:
@@ -284,6 +294,17 @@ async def test_config_flow_gateway_cloud_incomplete(hass: HomeAssistant) -> None
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "cloud"
     assert result["errors"] == {"base": "cloud_credentials_incomplete"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            const.CONF_CLOUD_USERNAME: TEST_CLOUD_USER,
+            const.CONF_CLOUD_PASSWORD: TEST_CLOUD_PASS,
+            const.CONF_CLOUD_COUNTRY: TEST_CLOUD_COUNTRY,
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_config_flow_gateway_cloud_login_error(hass: HomeAssistant) -> None:
@@ -328,6 +349,7 @@ async def test_config_flow_gateway_cloud_login_error(hass: HomeAssistant) -> Non
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "cloud"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cloud_login_error"}
 
     with patch(
@@ -372,6 +394,7 @@ async def test_config_flow_gateway_cloud_no_devices(hass: HomeAssistant) -> None
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "cloud"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cloud_no_devices"}
 
     with patch(
@@ -470,6 +493,7 @@ async def test_zeroconf_gateway_success(hass: HomeAssistant) -> None:
         CONF_MODEL: TEST_MODEL,
         CONF_MAC: TEST_MAC,
     }
+    assert result["result"].unique_id == TEST_MAC
 
 
 async def test_zeroconf_unknown_device(hass: HomeAssistant) -> None:
@@ -564,6 +588,13 @@ async def test_config_flow_step_device_connect_error(hass: HomeAssistant) -> Non
     assert result["step_id"] == "connect"
     assert result["errors"] == {"base": "cannot_connect"}
 
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_MODEL: TEST_MODEL},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_config_flow_step_unknown_device(hass: HomeAssistant) -> None:
     """Test config flow, unknown device error."""
@@ -599,6 +630,13 @@ async def test_config_flow_step_unknown_device(hass: HomeAssistant) -> None:
     assert result["step_id"] == "connect"
     assert result["errors"] == {"base": "unknown_device"}
 
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_MODEL: TEST_MODEL},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_config_flow_step_device_manual_model_error(hass: HomeAssistant) -> None:
     """Test config flow, device connection error, model None."""
@@ -630,6 +668,7 @@ async def test_config_flow_step_device_manual_model_error(hass: HomeAssistant) -
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "connect"
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"base": "cannot_connect"}
 
     with patch(
@@ -952,6 +991,15 @@ async def test_options_flow_incomplete(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
     assert result["errors"] == {"base": "cloud_credentials_incomplete"}
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            const.CONF_CLOUD_SUBDEVICES: False,
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_reauth(hass: HomeAssistant) -> None:

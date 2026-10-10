@@ -8,13 +8,14 @@ from homeassistant.components.homeassistant import exposed_entities
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ENTITY_ID
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.helper_integration import (
     async_handle_source_entity_changes,
     async_remove_helper_devices,
 )
 
-from .const import CONF_INVERT, CONF_TARGET_DOMAIN
+from .const import CONF_INVERT, CONF_TARGET_DOMAIN, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,13 +38,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entity_id = er.async_validate_entity_id(
             entity_registry, entry.options[CONF_ENTITY_ID]
         )
-    except probatio.Invalid:
+    except probatio.Invalid as err:
         # The entity is identified by an unknown entity registry ID
-        _LOGGER.error(
-            "Failed to setup switch_as_x for unknown entity %s",
-            entry.options[CONF_ENTITY_ID],
-        )
-        return False
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="unknown_entity",
+            translation_placeholders={"entity_id": entry.options[CONF_ENTITY_ID]},
+        ) from err
 
     def set_source_entity_id_or_uuid(source_entity_id: str) -> None:
         hass.config_entries.async_update_entry(

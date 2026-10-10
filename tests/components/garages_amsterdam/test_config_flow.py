@@ -34,6 +34,7 @@ async def test_full_user_flow(
     assert result.get("type") is FlowResultType.CREATE_ENTRY
     assert result.get("title") == "IJDok"
     assert result.get("data") == {"garage_name": "IJDok"}
+    assert result["result"].unique_id == "IJDok"
     assert len(mock_garages_amsterdam.all_garages.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 

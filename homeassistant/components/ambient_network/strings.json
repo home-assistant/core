@@ -76,9 +76,6 @@
       "weekly_rain": {
         "name": "Weekly rain"
       },
-      "wind_direction": {
-        "name": "Wind direction"
-      },
       "wind_gust": {
         "name": "Wind gust"
       },
