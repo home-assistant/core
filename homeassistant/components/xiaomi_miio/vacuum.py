@@ -13,12 +13,13 @@ from homeassistant.components.vacuum import (
 )
 from homeassistant.const import CONF_DEVICE
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util.dt import as_utc
 
 from . import VacuumCoordinatorData
-from .const import CONF_FLOW_TYPE
+from .const import CONF_FLOW_TYPE, DOMAIN
 from .entity import XiaomiCoordinatedMiioEntity
 from .typing import XiaomiMiioConfigEntry
 
@@ -202,14 +203,15 @@ class MiroboVacuum(
         else:
             try:
                 fan_speed_int = int(fan_speed)
-            # pylint: disable-next=home-assistant-action-swallowed-exception
             except ValueError as exc:
-                _LOGGER.error(
-                    "Fan speed step not recognized (%s). Valid speeds are: %s",
-                    exc,
-                    self.fan_speed_list,
-                )
-                return
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="invalid_fan_speed",
+                    translation_placeholders={
+                        "fan_speed": fan_speed,
+                        "fan_speeds": ", ".join(self.fan_speed_list),
+                    },
+                ) from exc
         await self._try_command(
             "Unable to set fan speed: %s",
             self._device.set_fan_speed,  # type: ignore[attr-defined]

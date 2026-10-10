@@ -19,6 +19,7 @@ from homeassistant.components.knx.storage.const import CONF_DATA
 from homeassistant.components.knx.storage.entity_store_schema import (
     BaseEntityConfig,
     BinarySensorKnxConfig,
+    ButtonKnxConfig,
     ClimateKnxConfig,
     CoverKnxConfig,
     DateKnxConfig,
@@ -29,6 +30,7 @@ from homeassistant.components.knx.storage.entity_store_schema import (
     NotifyKnxConfig,
     NumberKnxConfig,
     SceneKnxConfig,
+    SelectKnxConfig,
     SensorKnxConfig,
     SwitchKnxConfig,
     TextKnxConfig,
@@ -743,6 +745,20 @@ async def test_load_skips_invalid_entity_config(
     }
 
 
+async def test_get_entity_configs_wrong_type(
+    hass: HomeAssistant, knx: KNXTestKit
+) -> None:
+    """Test requesting a config type the platform schema doesn't yield fails."""
+    await knx.setup_integration(
+        config_store_fixture="config_store_invalid.json", state_updater=False
+    )
+    config_store = hass.data[KNX_MODULE_KEY].config_store
+    with pytest.raises(
+        TypeError, match="light schema yields LightKnxConfig, not SwitchKnxConfig"
+    ):
+        config_store.get_entity_configs(Platform.LIGHT, SwitchKnxConfig)
+
+
 async def test_load_applies_schema_defaults_and_coercion(
     hass: HomeAssistant,
     knx: KNXTestKit,
@@ -759,7 +775,9 @@ async def test_load_applies_schema_defaults_and_coercion(
     )
     assert hass.states.get("light.missing_defaults") is not None
     config_store = hass.data[KNX_MODULE_KEY].config_store
-    light_config = config_store.get_entity_configs(Platform.LIGHT)[LIGHT_UID].knx
+    light_config = config_store.get_entity_configs(Platform.LIGHT, LightKnxConfig)[
+        LIGHT_UID
+    ].knx
     assert light_config.color_temp_min == 2700
     assert light_config.color_temp_max == 6000
 
@@ -1180,6 +1198,71 @@ TYPED_CONFIG_CASES = [
             "sync_state": True,
         },
         id="climate_setpoint_shift",
+    ),
+    pytest.param(
+        Platform.BUTTON,
+        ButtonKnxConfig,
+        {"ga_send": {"write": "1/2/3"}, "data": {"payload": "1F", "payload_length": 1}},
+        {
+            "ga_send": {"write": "1/2/3"},
+            "data": {"payload": "0x1f", "payload_length": 1},
+        },
+        id="button_raw",
+    ),
+    pytest.param(
+        Platform.BUTTON,
+        ButtonKnxConfig,
+        {"ga_send": {"write": "1/2/3", "dpt": "5.001"}, "data": {"value": 50}},
+        {"ga_send": {"write": "1/2/3", "dpt": "5.001"}, "data": {"value": 50}},
+        id="button_value",
+    ),
+    pytest.param(
+        Platform.SELECT,
+        SelectKnxConfig,
+        {"options_source": {"ga_enum": {"write": "1/2/3", "dpt": "20.102"}}},
+        {
+            "options_source": {
+                "ga_enum": {
+                    "write": "1/2/3",
+                    "state": None,
+                    "passive": [],
+                    "dpt": "20.102",
+                }
+            },
+            "respond_to_read": False,
+            "sync_state": True,
+        },
+        id="select_from_dpt",
+    ),
+    pytest.param(
+        Platform.SELECT,
+        SelectKnxConfig,
+        {
+            "options_source": {
+                "ga_custom": {"write": "1/2/3", "dpt": "5.010"},
+                "custom_options": [
+                    {"option": "a", "value": 1},
+                    {"option": "b", "payload": "2", "payload_length": 1},
+                ],
+            }
+        },
+        {
+            "options_source": {
+                "ga_custom": {
+                    "write": "1/2/3",
+                    "state": None,
+                    "passive": [],
+                    "dpt": "5.010",
+                },
+                "custom_options": [
+                    {"option": "a", "value": 1},
+                    {"option": "b", "payload": "0x2", "payload_length": 1},
+                ],
+            },
+            "respond_to_read": False,
+            "sync_state": True,
+        },
+        id="select_custom",
     ),
 ]
 
