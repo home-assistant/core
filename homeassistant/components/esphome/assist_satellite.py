@@ -500,6 +500,7 @@ class EsphomeAssistSatellite(
                     rate=format_to_use.sample_rate or None,
                     channels=format_to_use.num_channels or None,
                     width=format_to_use.sample_bytes or None,
+                    bitrate=format_to_use.bitrate or None,
                 )
 
                 if not is_media_tts:
@@ -698,6 +699,11 @@ class EsphomeAssistSatellite(
                 if supported_format.sample_rate > 0:
                     self._attr_tts_options[tts.ATTR_PREFERRED_SAMPLE_BYTES] = (
                         supported_format.sample_bytes
+                    )
+
+                if supported_format.bitrate > 0:
+                    self._attr_tts_options[tts.ATTR_PREFERRED_BITRATE] = (
+                        supported_format.bitrate
                     )
 
                 break
