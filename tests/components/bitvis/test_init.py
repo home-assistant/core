@@ -1,10 +1,13 @@
 """Tests for the Bitvis Power Hub integration."""
 
+from unittest.mock import patch
+
 from bitvis_protobuf import powerhub_pb2
 from bitvis_protobuf.parse import PayloadSample
 import pytest
 
-from homeassistant.components.bitvis.const import DATA_LISTENER_REGISTRY, DOMAIN
+from homeassistant.components.bitvis.const import DEFAULT_PORT, DOMAIN
+from homeassistant.components.bitvis.coordinator import async_get_listener_registry
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
@@ -24,13 +27,16 @@ async def test_setup_entry(
 
 
 async def test_unload_entry(
-    hass: HomeAssistant, init_integration: MockConfigEntry
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    patch_shared_listener: FakeListener,
 ) -> None:
     """Test that unloading stops the coordinator and unloads platforms."""
-    assert DATA_LISTENER_REGISTRY in hass.data
+    assert async_get_listener_registry(hass).has_listener(DEFAULT_PORT)
     assert await hass.config_entries.async_unload(init_integration.entry_id)
     assert init_integration.state is ConfigEntryState.NOT_LOADED
-    assert DATA_LISTENER_REGISTRY not in hass.data
+    patch_shared_listener.stop.assert_awaited_once()
+    assert not async_get_listener_registry(hass).has_listener(DEFAULT_PORT)
 
 
 async def test_two_entries_share_listener(
@@ -54,11 +60,61 @@ async def test_two_entries_share_listener(
 
     assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
     patch_shared_listener.stop.assert_not_called()
-    assert DATA_LISTENER_REGISTRY in hass.data
+    assert async_get_listener_registry(hass).has_listener(DEFAULT_PORT)
 
     assert await hass.config_entries.async_unload(mock_second_config_entry.entry_id)
     patch_shared_listener.stop.assert_awaited_once()
-    assert DATA_LISTENER_REGISTRY not in hass.data
+    assert not async_get_listener_registry(hass).has_listener(DEFAULT_PORT)
+
+
+async def test_setup_failure_after_refresh_stops_listener(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    patch_shared_listener: FakeListener,
+) -> None:
+    """Test a failure after first refresh still unregisters the UDP listener."""
+    mock_config_entry.add_to_hass(hass)
+
+    with patch.object(
+        hass.config_entries,
+        "async_forward_entry_setups",
+        side_effect=RuntimeError("platform import failed"),
+    ):
+        assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    patch_shared_listener.unregister.assert_called_once()
+    patch_shared_listener.stop.assert_awaited_once()
+    assert not async_get_listener_registry(hass).has_listener(DEFAULT_PORT)
+
+
+async def test_setup_failure_of_second_entry_keeps_shared_listener(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_second_config_entry: MockConfigEntry,
+    patch_shared_listener: FakeListener,
+) -> None:
+    """Test a failed second entry does not stop the shared listener."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    mock_second_config_entry.add_to_hass(hass)
+    with patch.object(
+        hass.config_entries,
+        "async_forward_entry_setups",
+        side_effect=RuntimeError("platform import failed"),
+    ):
+        assert not await hass.config_entries.async_setup(
+            mock_second_config_entry.entry_id
+        )
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_second_config_entry.state is ConfigEntryState.SETUP_ERROR
+    patch_shared_listener.stop.assert_not_called()
+    assert async_get_listener_registry(hass).has_listener(DEFAULT_PORT)
 
 
 async def test_unload_after_dynamic_entities(
