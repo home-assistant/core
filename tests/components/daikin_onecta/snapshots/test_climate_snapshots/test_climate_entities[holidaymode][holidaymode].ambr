@@ -9,7 +9,6 @@
         'area_id': None,
         'capabilities': dict({
           <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
-            <HVACMode.OFF: 'off'>,
             <HVACMode.HEAT: 'heat'>,
           ]),
           <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 30,
@@ -54,7 +53,6 @@
           <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 23,
           <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NDJ Room Temperature',
           <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
-            <HVACMode.OFF: 'off'>,
             <HVACMode.HEAT: 'heat'>,
           ]),
           <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 30,
