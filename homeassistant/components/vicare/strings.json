@@ -720,7 +720,7 @@
           "name": "[%key:common::time::friday%]"
         },
         "monday": {
-          "description": "Circulation slots for this day. Each slot has a from and to time on a 10-minute grid (use 24:00 for the end of the day) and a mode supported by the device. Days not passed keep their current schedule.",
+          "description": "Circulation slots for this day. Each slot has a from and to time on a 10-minute grid (use 00:00 or 24:00 as end time for the end of the day) and a mode supported by the device. Days not passed keep their current schedule.",
           "name": "[%key:common::time::monday%]"
         },
         "saturday": {

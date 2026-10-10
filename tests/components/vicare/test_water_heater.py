@@ -115,6 +115,7 @@ async def test_set_circulation_schedule(
                 {"from": "22:00", "to": "24:00", "mode": "on"},
             ],
             "tuesday": [{"from": "23:00:00", "to": "24:00:00", "mode": "on"}],
+            "wednesday": [{"from": "18:00", "to": "00:00", "mode": "on"}],
             "sunday": [],
         },
         blocking=True,
@@ -133,6 +134,9 @@ async def test_set_circulation_schedule(
                 ],
                 "tue": [
                     {"start": "23:00", "end": "24:00", "mode": "on", "position": 0}
+                ],
+                "wed": [
+                    {"start": "18:00", "end": "24:00", "mode": "on", "position": 0}
                 ],
                 "sun": [],
             }

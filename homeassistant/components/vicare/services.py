@@ -44,7 +44,9 @@ def _slot_time(value: Any) -> time:
 
 
 def _validate_slot(slot: dict[str, Any]) -> dict[str, Any]:
-    """Validate that a slot ends after it starts."""
+    """Validate that a slot ends after it starts, 00:00 as end is the end of day."""
+    if slot[ATTR_TO] == time.min:
+        slot[ATTR_TO] = time.max
     if slot[ATTR_TO] <= slot[ATTR_FROM]:
         raise probatio.Invalid(
             f"End time {slot[ATTR_TO]} must be after start time {slot[ATTR_FROM]}"
