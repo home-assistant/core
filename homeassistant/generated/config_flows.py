@@ -229,6 +229,7 @@ FLOWS = {
         "esphome",
         "essent",
         "eufylife_ble",
+        "eurotronic_comet_wifi",
         "eurotronic_cometblue",
         "evil_genius_labs",
         "ezviz",

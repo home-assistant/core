@@ -1,0 +1,5 @@
+{
+  "domain": "eurotronic",
+  "name": "Eurotronic",
+  "integrations": ["eurotronic_cometblue", "eurotronic_comet_wifi"]
+}
