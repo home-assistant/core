@@ -7,7 +7,7 @@ import probatio
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_DEVICE_ID, CONF_OPTIONS
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, async_noop, callback
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.trigger import (
@@ -134,7 +134,7 @@ class FuelBecameLowTrigger(Trigger):
             # A coordinator only polls while something listens to it, and the
             # stove might not have any enabled entities doing that.
             tracked_coordinator = coordinator
-            remove_coordinator_listener = coordinator.async_add_listener(lambda: None)
+            remove_coordinator_listener = coordinator.async_add_listener(async_noop)
 
         if entry.state is ConfigEntryState.LOADED:
             async_track_coordinator(entry.runtime_data)

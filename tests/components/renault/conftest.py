@@ -63,6 +63,28 @@ async def patch_renault_account(hass: HomeAssistant) -> AsyncGenerator[RenaultAc
         yield renault_account
 
 
+@pytest.fixture(name="account_ids")
+def get_account_ids() -> list[str]:
+    """Kamereon account ids returned by the Renault servers."""
+    return [MOCK_ACCOUNT_ID]
+
+
+@pytest.fixture(name="patch_get_api_accounts")
+def patch_get_api_accounts(
+    hass: HomeAssistant, account_ids: list[str]
+) -> Generator[None]:
+    """Mock the list of Kamereon accounts."""
+    websession = aiohttp_client.async_get_clientsession(hass)
+    with patch(
+        "renault_api.renault_client.RenaultClient.get_api_accounts",
+        return_value=[
+            RenaultAccount(account_id, websession=websession)
+            for account_id in account_ids
+        ],
+    ):
+        yield
+
+
 @pytest.fixture(name="patch_get_vehicles")
 def patch_get_vehicles(vehicle_type: str) -> Generator[None]:
     """Mock fixtures."""

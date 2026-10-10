@@ -77,7 +77,6 @@ class LibreHardwareMonitorCoordinator(DataUpdateCoordinator[LibreHardwareMonitor
                 "LibreHardwareMonitor connection failed, will retry", retry_after=25
             ) from err
         except LibreHardwareMonitorUnauthorizedError as err:
-            _LOGGER.error("Authentication against LibreHardwareMonitor instance failed")
             raise ConfigEntryAuthFailed("Authentication failed") from err
         except LibreHardwareMonitorNoDevicesError as err:
             raise UpdateFailed("No sensor data available, will retry") from err

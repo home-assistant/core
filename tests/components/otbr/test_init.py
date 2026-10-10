@@ -389,6 +389,8 @@ async def test_border_agent_id_not_supported(
     config_entry.add_to_hass(hass)
     get_border_agent_id.side_effect = python_otbr_api.GetBorderAgentIdNotSupportedError
     assert not await hass.config_entries.async_setup(config_entry.entry_id)
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert config_entry.reason == "The OTBR does not support Border Agent ID"
 
 
 async def test_config_entry_update(hass: HomeAssistant) -> None:

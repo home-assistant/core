@@ -17,7 +17,7 @@ from homeassistant.const import (  # noqa: F401
     SERVICE_RELOAD,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import collection, config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_point_in_utc_time
@@ -343,20 +343,24 @@ class Timer(collection.CollectionEntity, RestoreEntity):
     def async_change(self, duration: timedelta) -> None:
         """Change duration of a running timer."""
         if self._listener is None or self._end is None:
-            raise HomeAssistantError(
-                f"Timer {self.entity_id} is not running,"
-                " only active timers can be changed"
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="timer_not_running",
+                translation_placeholders={"entity_id": self.entity_id},
             )
         # Check against new remaining time before checking boundaries
         new_remaining = (self._end + duration) - dt_util.utcnow().replace(microsecond=0)
         if self._remaining and new_remaining > self._running_duration:
-            raise HomeAssistantError(
-                f"Not possible to change timer {self.entity_id} beyond duration"
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="change_beyond_duration",
+                translation_placeholders={"entity_id": self.entity_id},
             )
         if self._remaining and (self._remaining + duration) < timedelta():
-            raise HomeAssistantError(
-                f"Not possible to change timer"
-                f" {self.entity_id} to negative time remaining"
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="change_negative_remaining",
+                translation_placeholders={"entity_id": self.entity_id},
             )
 
         self._listener()

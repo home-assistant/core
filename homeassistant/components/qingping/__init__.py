@@ -11,6 +11,7 @@ from homeassistant.components.bluetooth.passive_update_processor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
@@ -40,3 +41,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: QingpingConfigEntry) -> 
 async def async_unload_entry(hass: HomeAssistant, entry: QingpingConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, entry: QingpingConfigEntry, device_entry: dr.AnyDeviceEntry
+) -> bool:
+    """Remove a config entry from a device."""
+    return not entry.runtime_data.available

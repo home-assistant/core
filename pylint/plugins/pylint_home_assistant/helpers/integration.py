@@ -39,6 +39,17 @@ def get_integration_dir(module: nodes.Module) -> Path | None:
     return None
 
 
+def get_tested_integration_dir(module: nodes.Module) -> Path | None:
+    """Return the integration directory that a ``tests/components`` module tests.
+
+    Returns ``None`` when *module* is not inside ``tests/components``.
+    """
+    test_dir = get_integration_dir(module)
+    if test_dir is None or test_dir.parent.parent.name != "tests":
+        return None
+    return test_dir.parents[2] / "homeassistant" / "components" / test_dir.name
+
+
 def read_manifest(module: nodes.Module) -> dict | None:
     """Read and cache ``manifest.json`` for the integration that owns *module*.
 
