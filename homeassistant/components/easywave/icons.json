@@ -1,0 +1,25 @@
+{
+  "triggers": {
+    "button_press_a": {
+      "trigger": "mdi:alpha-a-circle"
+    },
+    "button_press_b": {
+      "trigger": "mdi:alpha-b-circle"
+    },
+    "button_press_c": {
+      "trigger": "mdi:alpha-c-circle"
+    },
+    "button_press_d": {
+      "trigger": "mdi:alpha-d-circle"
+    },
+    "button_release": {
+      "trigger": "mdi:radiobox-blank"
+    },
+    "gateway_connected": {
+      "trigger": "mdi:lan-connect"
+    },
+    "gateway_disconnected": {
+      "trigger": "mdi:lan-disconnect"
+    }
+  }
+}

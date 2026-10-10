@@ -190,6 +190,7 @@ FLOWS = {
         "eafm",
         "earn_e_p1",
         "easyenergy",
+        "easywave",
         "ecobee",
         "ecoforest",
         "econet",
