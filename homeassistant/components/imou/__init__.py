@@ -5,8 +5,16 @@ from pyimouapi.ha_device import ImouHaDeviceManager
 from pyimouapi.openapi import ImouOpenApiClient
 
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
 
-from .const import API_URLS, CONF_API_URL, CONF_APP_ID, CONF_APP_SECRET, PLATFORMS
+from .const import (
+    DOMAIN,
+    API_URLS,
+    CONF_API_URL,
+    CONF_APP_ID,
+    CONF_APP_SECRET,
+    PLATFORMS,
+)
 from .coordinator import ImouConfigEntry, ImouDataUpdateCoordinator
 
 
@@ -40,3 +48,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ImouConfigEntry) -> bool
 async def async_unload_entry(hass: HomeAssistant, entry: ImouConfigEntry) -> bool:
     """Handle removal of an entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant,
+    entry: ImouConfigEntry,
+    device_entry: dr.DeviceEntry,
+) -> bool:
+    """Remove a config entry from a device."""
+    coordinator = entry.runtime_data
+    imou_device_keys = {
+        identifier[1]
+        for identifier in device_entry.identifiers
+        if identifier[0] == DOMAIN
+    }
+    return not imou_device_keys.intersection(coordinator.devices_by_key)
