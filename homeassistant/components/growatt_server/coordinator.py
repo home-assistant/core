@@ -29,7 +29,6 @@ from .const import (
     DEFAULT_URL,
     DOMAIN,
     LOGIN_INVALID_AUTH_CODE,
-    NULL_SENTINELS,
     V1_DEVICE_TYPES,
 )
 from .models import GrowattRuntimeData
@@ -43,6 +42,10 @@ SCAN_INTERVAL = datetime.timedelta(minutes=5)
 _MAX_POWER_READING_AGE = datetime.timedelta(minutes=10)
 
 _LOGGER = logging.getLogger(__name__)
+
+# Growatt reports an unset setting as the string "null" or as an empty string,
+# not by omitting the key.
+NULL_SENTINELS = (None, "null", "")
 
 
 def _latest_power_value(
@@ -751,6 +754,21 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         else:
             return f"{hour:02d}:{minute:02d}"
 
+    @staticmethod
+    def _encode_periods(periods: list[dict]) -> list[str]:
+        """Flatten schedule periods into classic mixSet positional params."""
+        return [
+            value
+            for period in periods
+            for value in (
+                str(period["start_time"].hour),
+                str(period["start_time"].minute),
+                str(period["end_time"].hour),
+                str(period["end_time"].minute),
+                "1" if period["enabled"] else "0",
+            )
+        ]
+
     async def update_ac_charge_times(
         self,
         charge_power: int,
@@ -772,32 +790,18 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             except growattServer.GrowattV1ApiError as err:
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
-                    translation_key="api_error_with_code",
-                    translation_placeholders={
-                        "error": err.error_msg,
-                        "code": str(err.error_code),
-                    },
+                    translation_key="api_error",
+                    translation_placeholders={"error": str(err)},
                 ) from err
         else:
-            if len(periods) != 3:
-                raise ValueError("periods must contain exactly 3 period definitions")
             # Classic (username/password) auth — same underlying mixSet endpoint,
-            # addressed via positional param1-18 instead of the V1 named payload.
+            # addressed via positional params instead of the V1 named payload.
             params = [
                 str(charge_power),
                 str(charge_stop_soc),
                 "1" if mains_enabled else "0",
+                *self._encode_periods(periods),
             ]
-            for period in periods:
-                params.extend(
-                    [
-                        str(period["start_time"].hour),
-                        str(period["start_time"].minute),
-                        str(period["end_time"].hour),
-                        str(period["end_time"].minute),
-                        "1" if period.get("enabled", False) else "0",
-                    ]
-                )
             try:
                 result = await self.hass.async_add_executor_job(
                     self.api.update_mix_inverter_setting,
@@ -833,9 +837,7 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 self.data[f"forcedChargeTimeStop{i}"] = period["end_time"].strftime(
                     "%H:%M"
                 )
-                self.data[f"forcedChargeStopSwitch{i}"] = (
-                    1 if period.get("enabled", False) else 0
-                )
+                self.data[f"forcedChargeStopSwitch{i}"] = 1 if period["enabled"] else 0
             self.async_set_updated_data(self.data)
 
     async def update_ac_discharge_times(
@@ -863,28 +865,16 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             except growattServer.GrowattV1ApiError as err:
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
-                    translation_key="api_error_with_code",
-                    translation_placeholders={
-                        "error": err.error_msg,
-                        "code": str(err.error_code),
-                    },
+                    translation_key="api_error",
+                    translation_placeholders={"error": str(err)},
                 ) from err
         else:
-            if len(periods) != 3:
-                raise ValueError("periods must contain exactly 3 period definitions")
-            # Classic (username/password) auth — same underlying mixSet endpoint,
-            # addressed via positional param1-17 instead of the V1 named payload.
-            params = [str(discharge_power), str(discharge_stop_soc)]
-            for period in periods:
-                params.extend(
-                    [
-                        str(period["start_time"].hour),
-                        str(period["start_time"].minute),
-                        str(period["end_time"].hour),
-                        str(period["end_time"].minute),
-                        "1" if period.get("enabled", False) else "0",
-                    ]
-                )
+            # Same mixSet endpoint as charge; discharge has no mains-enable param.
+            params = [
+                str(discharge_power),
+                str(discharge_stop_soc),
+                *self._encode_periods(periods),
+            ]
             try:
                 result = await self.hass.async_add_executor_job(
                     self.api.update_mix_inverter_setting,
@@ -920,7 +910,7 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     "%H:%M"
                 )
                 self.data[f"forcedDischargeStopSwitch{i}"] = (
-                    1 if period.get("enabled", False) else 0
+                    1 if period["enabled"] else 0
                 )
             self.async_set_updated_data(self.data)
 

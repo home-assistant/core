@@ -590,6 +590,9 @@
     }
   },
   "exceptions": {
+    "ac_schedule_device_not_configured": {
+      "message": "Device {serial_number} does not support AC charge and discharge actions. These actions require an SPH device with token authentication or a Mix device with username and password authentication."
+    },
     "api_error": {
       "message": "Growatt API error: {error}"
     },
@@ -603,7 +606,7 @@
       "message": "Error communicating with Growatt API: {error}"
     },
     "device_not_configured": {
-      "message": "Device {serial_number} is not supported by this action. Supported devices: {supported_devices}."
+      "message": "{device_type} device {serial_number} is not configured for actions."
     },
     "device_not_found": {
       "message": "Device {device_id} not found in the device registry."
@@ -665,8 +668,11 @@
     "mix_write_rejected": {
       "message": "The Growatt Mix device rejected the charge/discharge settings write."
     },
+    "no_ac_schedule_devices_configured": {
+      "message": "No devices supporting AC charge and discharge actions are configured. These actions require an SPH device with token authentication or a Mix device with username and password authentication."
+    },
     "no_devices_configured": {
-      "message": "No devices supported by this action are configured. Supported devices: {supported_devices}."
+      "message": "No {device_type} devices with token authentication are configured. Actions require {device_type} devices with V1 API access."
     },
     "rate_limited": {
       "message": "Growatt API rate limited, will retry: {error}"

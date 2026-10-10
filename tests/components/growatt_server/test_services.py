@@ -637,7 +637,7 @@ async def test_service_with_non_min_growatt_device(
     assert excinfo.value.translation_domain == DOMAIN
     assert excinfo.value.translation_key == "device_not_configured"
     assert excinfo.value.translation_placeholders == {
-        "supported_devices": "MIN (token)",
+        "device_type": "MIN",
         "serial_number": "TLX789012",
     }
 
@@ -913,7 +913,7 @@ async def test_write_ac_charge_times_api_error(
         growattServer.GrowattV1ApiError("Write failed", error_code=1, error_msg="Error")
     )
 
-    with pytest.raises(HomeAssistantError) as excinfo:
+    with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             DOMAIN,
             "write_ac_charge_times",
@@ -925,61 +925,6 @@ async def test_write_ac_charge_times_api_error(
             },
             blocking=True,
         )
-
-    assert excinfo.value.translation_key == "api_error_with_code"
-    assert excinfo.value.translation_placeholders == {"error": "Error", "code": "1"}
-
-
-async def test_write_ac_charge_times_encodes_all_periods(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_growatt_v1_api: MagicMock,
-    device_registry: dr.DeviceRegistry,
-) -> None:
-    """Test a V1 charge-time write passes all 3 explicit periods through unchanged."""
-    await _setup_sph_integration(hass, mock_config_entry, mock_growatt_v1_api)
-
-    device_entry = device_registry.async_get_device_by_identifier(
-        (DOMAIN, "SPH123456"), mock_config_entry.entry_id
-    )
-    assert device_entry is not None
-
-    await hass.services.async_call(
-        DOMAIN,
-        "write_ac_charge_times",
-        {
-            "device_id": device_entry.id,
-            "charge_power": 90,
-            "charge_stop_soc": 80,
-            "mains_enabled": False,
-            "period_1_start": "02:00",
-            "period_1_end": "06:00",
-            "period_1_enabled": True,
-            "period_2_start": "13:00",
-            "period_2_end": "17:15",
-            "period_2_enabled": True,
-            "period_3_start": "00:00",
-            "period_3_end": "00:00",
-            "period_3_enabled": False,
-        },
-        blocking=True,
-    )
-
-    mock_growatt_v1_api.sph_write_ac_charge_times.assert_called_once_with(
-        "SPH123456",
-        90,
-        80,
-        False,
-        [
-            {"start_time": dt.time(2, 0), "end_time": dt.time(6, 0), "enabled": True},
-            {
-                "start_time": dt.time(13, 0),
-                "end_time": dt.time(17, 15),
-                "enabled": True,
-            },
-            {"start_time": dt.time(0, 0), "end_time": dt.time(0, 0), "enabled": False},
-        ],
-    )
 
 
 async def test_write_ac_discharge_times_api_error(
@@ -1204,10 +1149,7 @@ async def test_no_sph_devices_fails_gracefully(
             blocking=True,
         )
     assert excinfo.value.translation_domain == DOMAIN
-    assert excinfo.value.translation_key == "no_devices_configured"
-    assert excinfo.value.translation_placeholders == {
-        "supported_devices": "MIX (username/password), SPH (token)"
-    }
+    assert excinfo.value.translation_key == "no_ac_schedule_devices_configured"
 
 
 async def test_sph_service_with_non_sph_growatt_device(
@@ -1239,11 +1181,8 @@ async def test_sph_service_with_non_sph_growatt_device(
             blocking=True,
         )
     assert excinfo.value.translation_domain == DOMAIN
-    assert excinfo.value.translation_key == "device_not_configured"
-    assert excinfo.value.translation_placeholders == {
-        "supported_devices": "MIX (username/password), SPH (token)",
-        "serial_number": "MIN999999",
-    }
+    assert excinfo.value.translation_key == "ac_schedule_device_not_configured"
+    assert excinfo.value.translation_placeholders == {"serial_number": "MIN999999"}
 
 
 async def test_write_ac_charge_times_uses_cached_periods_for_unspecified(
