@@ -385,6 +385,12 @@
       "integration_type": "virtual",
       "supported_by": "energyzero"
     },
+    "anylist": {
+      "name": "AnyList",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_push"
+    },
     "aosmith": {
       "name": "A. O. Smith",
       "integration_type": "hub",
