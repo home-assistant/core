@@ -35,6 +35,9 @@
     },
     "invalid_auth": {
       "message": "Invalid API token"
+    },
+    "unique_id_mismatch": {
+      "message": "The FortiGate at {host} does not match the configured device. Check the hostname or IP address."
     }
   },
   "issues": {

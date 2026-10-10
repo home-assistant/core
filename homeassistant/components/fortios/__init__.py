@@ -12,7 +12,11 @@ from homeassistant.components.device_tracker.legacy import (
 )
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 from homeassistant.helpers import issue_registry as ir
 
 from .client import FortiOSClient, UnsupportedVersion
@@ -26,7 +30,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: FortiOSConfigEntry) -> b
     """Set up FortiOS and its shared coordinator."""
     try:
         client = FortiOSClient(hass, dict(entry.data))
-        await client.connect()
+        serial = await client.connect()
     except FortiOSAuthenticationError as err:
         raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN, translation_key="invalid_auth"
@@ -35,6 +39,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: FortiOSConfigEntry) -> b
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN, translation_key="cannot_connect"
         ) from err
+    if serial != entry.unique_id:
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="unique_id_mismatch",
+            translation_placeholders={"host": entry.data[CONF_HOST]},
+        )
     coordinator = FortiOSCoordinator(hass, entry, client)
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator

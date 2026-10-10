@@ -53,7 +53,7 @@ async def async_setup_scanner(
         ir.async_create_issue(
             hass,
             DOMAIN,
-            f"yaml_import_{result['reason']}",
+            f"yaml_import_{config[CONF_HOST]}",
             is_fixable=False,
             severity=ir.IssueSeverity.ERROR,
             translation_key="yaml_import_failed",

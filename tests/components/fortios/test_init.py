@@ -11,12 +11,12 @@ from homeassistant.components.device_tracker.legacy import Device
 from homeassistant.components.fortios.client import FortiOSDevice
 from homeassistant.components.fortios.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import CONF_PLATFORM
+from homeassistant.const import CONF_HOST, CONF_PLATFORM
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
-from .conftest import MAC, USER_INPUT
+from .conftest import MAC, SERIAL, USER_INPUT
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -42,10 +42,10 @@ async def test_auth_failure(
 
 @pytest.mark.usefixtures("mock_device_tracker_conf")
 @pytest.mark.parametrize(
-    ("exception", "reason"),
+    "exception",
     [
-        (FortiOSAuthenticationError(), "invalid_auth"),
-        (FortiOSConnectionError(), "cannot_connect"),
+        FortiOSAuthenticationError(),
+        FortiOSConnectionError(),
     ],
 )
 async def test_yaml_import_failure(
@@ -53,7 +53,6 @@ async def test_yaml_import_failure(
     mock_client: MagicMock,
     issue_registry: ir.IssueRegistry,
     exception: Exception,
-    reason: str,
 ) -> None:
     """Failed YAML import produces a repair without instructing users to delete config."""
     mock_client.connect.side_effect = exception
@@ -61,7 +60,9 @@ async def test_yaml_import_failure(
         hass, "device_tracker", {"device_tracker": {CONF_PLATFORM: DOMAIN} | USER_INPUT}
     )
     await hass.async_block_till_done()
-    issue = issue_registry.async_get_issue(DOMAIN, f"yaml_import_{reason}")
+    issue = issue_registry.async_get_issue(
+        DOMAIN, f"yaml_import_{USER_INPUT[CONF_HOST]}"
+    )
     assert issue is not None
     assert issue.severity is ir.IssueSeverity.ERROR
     assert (
@@ -193,3 +194,66 @@ async def test_fixed_polling_interval(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
     assert mock_client.update.call_count == 2
+
+
+async def test_setup_serial_mismatch(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Reject a different FortiGate before polling, and allow recovery."""
+    mock_config_entry.add_to_hass(hass)
+    mock_client.connect.return_value = "FGT654321"
+    mock_client.serial = "FGT654321"
+    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.error_reason_translation_key == "unique_id_mismatch"
+    assert mock_config_entry.unique_id == SERIAL
+    assert mock_config_entry.data == USER_INPUT
+    assert hass.states.async_all("device_tracker") == []
+    assert hass.config_entries.flow.async_progress() == []
+    mock_client.update.assert_not_called()
+
+    mock_client.connect.return_value = SERIAL
+    mock_client.serial = SERIAL
+    assert await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    mock_client.update.assert_called_once()
+
+
+@pytest.mark.usefixtures("mock_device_tracker_conf")
+@pytest.mark.parametrize(
+    "exception", [FortiOSAuthenticationError(), FortiOSConnectionError()]
+)
+async def test_yaml_import_multiple_failures(
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+    issue_registry: ir.IssueRegistry,
+    exception: Exception,
+) -> None:
+    """Keep a separate failure repair for each FortiGate configured in YAML."""
+    mock_client.connect.side_effect = exception
+    other_host = "192.168.1.2"
+    assert await async_setup_component(
+        hass,
+        "device_tracker",
+        {
+            "device_tracker": [
+                {CONF_PLATFORM: DOMAIN} | USER_INPUT,
+                {CONF_PLATFORM: DOMAIN} | USER_INPUT | {CONF_HOST: other_host},
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+    first = issue_registry.async_get_issue(DOMAIN, "yaml_import_192.168.1.1")
+    second = issue_registry.async_get_issue(DOMAIN, f"yaml_import_{other_host}")
+    assert first is not None
+    assert second is not None
+    assert first.translation_placeholders == {"host": USER_INPUT[CONF_HOST]}
+    assert second.translation_placeholders == {"host": other_host}
+    assert (
+        issue_registry.async_get_issue("homeassistant", f"deprecated_yaml_{DOMAIN}")
+        is None
+    )
