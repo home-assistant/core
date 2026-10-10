@@ -853,7 +853,6 @@
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
       <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'eco',
       <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
-        'Reset',
         'eco',
         'away',
         'home',
@@ -893,7 +892,6 @@
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
       <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'eco',
       <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
-        'Reset',
         'eco',
         'away',
         'home',
@@ -1373,7 +1371,6 @@
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
       <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'eco',
       <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
-        'Reset',
         'eco',
         'away',
         'home',
@@ -1749,7 +1746,6 @@
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
       <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'eco',
       <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
-        'Reset',
         'eco',
         'away',
         'home',
@@ -2328,7 +2324,6 @@
       <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: None,
       <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
         'eco',
-        'Reset',
         'away',
         'home',
         'Custom',
@@ -2511,7 +2506,6 @@
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 7,
       <ClimateEntityStateAttribute.PRESET_MODE: 'preset_mode'>: 'eco',
       <ClimateEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
-        'Reset',
         'eco',
         'away',
         'home',
