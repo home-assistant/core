@@ -254,6 +254,16 @@ class ATAClimateEntity(MelCloudHomeATAUnitEntity, ClimateEntity):
 
     @property
     @override
+    def target_temperature_step(self) -> float | None:
+        """Return the target temperature step."""
+        if (
+            capabilities := self.unit.capabilities
+        ) is None or capabilities.has_half_degree_increments is None:
+            return super().target_temperature_step
+        return 0.5 if capabilities.has_half_degree_increments else 1.0
+
+    @property
+    @override
     def hvac_mode(self) -> HVACMode:
         """Return the current HVAC mode."""
         return (
@@ -441,6 +451,16 @@ class ATWZoneClimateEntity(MelCloudHomeATWZoneEntity, ClimateEntity):
             if value is not None:
                 return value
         return super().max_temp
+
+    @property
+    @override
+    def target_temperature_step(self) -> float | None:
+        """Return the target zone temperature step."""
+        if (
+            capabilities := self.unit.capabilities
+        ) is None or capabilities.has_half_degrees is None:
+            return super().target_temperature_step
+        return 0.5 if capabilities.has_half_degrees else 1.0
 
     @property
     @override

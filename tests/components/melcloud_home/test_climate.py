@@ -24,6 +24,7 @@ from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
     ATTR_SWING_HORIZONTAL_MODE,
     ATTR_SWING_MODE,
+    ATTR_TARGET_TEMP_STEP,
     DOMAIN as CLIMATE_DOMAIN,
     SERVICE_SET_FAN_MODE,
     SERVICE_SET_HVAC_MODE,
@@ -497,7 +498,52 @@ async def test_ata_no_capabilities_temperature_range(
     assert (state := hass.states.get(ATA_ENTITY_ID))
     assert state.attributes["min_temp"] == 7
     assert state.attributes["max_temp"] == 35
+    assert ATTR_TARGET_TEMP_STEP not in state.attributes
     assert HVACMode.FAN_ONLY in state.attributes["hvac_modes"]
+
+
+@pytest.mark.parametrize(
+    ("units_key", "capability", "entity_id"),
+    [
+        pytest.param(
+            "airToAirUnits", "hasHalfDegreeIncrements", ATA_ENTITY_ID, id="ata"
+        ),
+        pytest.param(
+            "airToWaterUnits", "hasHalfDegrees", ATW_ZONE1_ENTITY_ID, id="atw"
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    ("apply_capabilities", "expected_step"),
+    [
+        pytest.param(lambda caps, flag: {**caps, flag: True}, 0.5, id="half_degrees"),
+        pytest.param(lambda caps, flag: {**caps, flag: False}, 1.0, id="whole_degrees"),
+        pytest.param(lambda caps, flag: {**caps, flag: None}, None, id="flag_missing"),
+        pytest.param(lambda caps, flag: None, None, id="capabilities_missing"),
+    ],
+)
+async def test_target_temperature_step(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_melcloud_client: AsyncMock,
+    units_key: str,
+    capability: str,
+    entity_id: str,
+    apply_capabilities: Callable[[dict[str, Any], str], dict[str, Any] | None],
+    expected_step: float | None,
+) -> None:
+    """Test the target temperature step follows the unit's capabilities."""
+    context: dict[str, Any] = await async_load_json_object_fixture(
+        hass, "context.json", DOMAIN
+    )
+    unit = context["buildings"][0][units_key][0]
+    unit["capabilities"] = apply_capabilities(unit["capabilities"], capability)
+    mock_melcloud_client.get_context.return_value = UserContext.model_validate(context)
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert (state := hass.states.get(entity_id))
+    assert state.attributes.get(ATTR_TARGET_TEMP_STEP) == expected_step
 
 
 async def test_atw_zone_temperature_range(
