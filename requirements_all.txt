@@ -1515,7 +1515,7 @@ lektricowifi==0.1
 letpot==0.7.0
 
 # homeassistant.components.lg_tv_rs232
-lg-rs232-tv==1.2.0
+lg-rs232-tv==1.3.0
 
 # homeassistant.components.foscam
 libpyfoscamcgi==0.0.9
