@@ -3,13 +3,16 @@
 from collections.abc import Generator
 from contextlib import contextmanager
 from ipaddress import ip_address
+from operator import attrgetter
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
 from synology_dsm.api.file_station.models import SynoFileSharedFolder
 from synology_dsm.exceptions import (
+    SynologyDSMAPIErrorException,
     SynologyDSMException,
     SynologyDSMLogin2SAFailedException,
+    SynologyDSMLogin2SAForcedException,
     SynologyDSMLogin2SARequiredException,
     SynologyDSMLoginInvalidException,
     SynologyDSMRequestException,
@@ -648,6 +651,66 @@ async def test_unknown_failed(hass: HomeAssistant, service: MagicMock) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "unknown"}
+
+    with _patch_dsm(service):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=USER_INPUT
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+@pytest.mark.parametrize(
+    ("failing_call", "side_effect", "errors"),
+    [
+        pytest.param(
+            "login",
+            SynologyDSMLogin2SAForcedException(USERNAME),
+            {"base": "otp_enforced"},
+            id="otp_enforced",
+        ),
+        pytest.param(
+            "utilisation.update",
+            SynologyDSMAPIErrorException(
+                "SYNO.Core.System.Utilization", 105, "Insufficient user privilege"
+            ),
+            {"base": "insufficient_privilege"},
+            id="insufficient_privilege",
+        ),
+        pytest.param(
+            "utilisation.update",
+            SynologyDSMAPIErrorException("SYNO.Core.System.Utilization", 117, None),
+            {"base": "unknown"},
+            id="other_api_error",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_user_errors_after_connect(
+    hass: HomeAssistant,
+    service: MagicMock,
+    failing_call: str,
+    side_effect: Exception,
+    errors: dict[str, str],
+) -> None:
+    """Test errors raised by the NAS during login and initial data fetch."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    attrgetter(failing_call)(service).side_effect = side_effect
+
+    with _patch_dsm(service):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=USER_INPUT
+        )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == errors
+
+    attrgetter(failing_call)(service).side_effect = None
 
     with _patch_dsm(service):
         result = await hass.config_entries.flow.async_configure(

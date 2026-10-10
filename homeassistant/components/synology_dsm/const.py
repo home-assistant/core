@@ -7,6 +7,7 @@ from synology_dsm.api.surveillance_station.const import SNAPSHOT_PROFILE_BALANCE
 from synology_dsm.exceptions import (
     SynologyDSMAPIErrorException,
     SynologyDSMAPINoDataException,
+    SynologyDSMLogin2SAForcedException,
     SynologyDSMLogin2SARequiredException,
     SynologyDSMLoginDisabledAccountException,
     SynologyDSMLoginFailedException,
@@ -34,6 +35,7 @@ PLATFORMS = [
 ]
 EXCEPTION_DETAILS = "details"
 EXCEPTION_UNKNOWN = "unknown"
+ERROR_INSUFFICIENT_PRIVILEGE = 105
 
 ISSUE_MISSING_BACKUP_SETUP = "missing_backup_setup"
 
@@ -70,6 +72,7 @@ SERVICES = [
 ]
 
 SYNOLOGY_AUTH_FAILED_EXCEPTIONS = (
+    SynologyDSMLogin2SAForcedException,
     SynologyDSMLogin2SARequiredException,
     SynologyDSMLoginDisabledAccountException,
     SynologyDSMLoginInvalidException,
