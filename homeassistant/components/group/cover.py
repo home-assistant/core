@@ -1,5 +1,6 @@
 """Platform allowing several cover to be grouped into one cover."""
 
+import asyncio
 from typing import Any, override
 
 import probatio
@@ -35,7 +36,6 @@ from homeassistant.const import (
     EntityStateAttribute,
 )
 from homeassistant.core import HomeAssistant, State, callback
-from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
@@ -43,7 +43,6 @@ from homeassistant.helpers.entity_platform import (
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import DOMAIN
 from .entity import GroupEntity
 from .util import reduce_attribute
 
@@ -211,41 +210,42 @@ class CoverGroup(GroupEntity, CoverEntity):
         data: dict[str, Any],
         speed: str | None,
     ) -> None:
-        """Call a service, passing the speed on to the members.
+        """Call a service, passing the speed to the members that list it.
 
-        Members without speed support move at their default speed. Members
-        that list other speeds are not moved, and an error naming them is
-        raised after the other members were called, like a service call
-        that targets the members directly.
+        Other members move at their default speed.
         """
-        if speed is None:
+        # One call lets core reject a member without the action before any
+        # member moves
+        if speed is None or any(
+            (state := self.hass.states.get(entity_id))
+            and state.state != STATE_UNAVAILABLE
+            and not state.attributes.get(EntityStateAttribute.SUPPORTED_FEATURES, 0)
+            & feature
+            for entity_id in entity_ids
+        ):
             await self._async_call_members(service, entity_ids, data)
             return
 
-        # Unavailable members and members without the action are left to core
-        unsupported = sorted(
+        with_speed = {
             entity_id
             for entity_id in entity_ids
-            if (state := self.hass.states.get(entity_id))
-            and state.state != STATE_UNAVAILABLE
-            and state.attributes.get(EntityStateAttribute.SUPPORTED_FEATURES, 0)
-            & feature
-            and (speeds := self._member_speeds(entity_id))
-            and speed not in speeds
+            if speed in self._member_speeds(entity_id)
+        }
+        # Call all members before raising the first error, as core does
+        results = await asyncio.gather(
+            *(
+                self._async_call_members(service, members, member_data)
+                for members, member_data in (
+                    (entity_ids - with_speed, data),
+                    (with_speed, {**data, ATTR_SPEED: speed}),
+                )
+                if members
+            ),
+            return_exceptions=True,
         )
-        if movable := entity_ids.difference(unsupported):
-            await self._async_call_members(
-                service, movable, {**data, ATTR_SPEED: speed}
-            )
-        if unsupported:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="speed_not_supported",
-                translation_placeholders={
-                    "speed": speed,
-                    "entity_ids": ", ".join(unsupported),
-                },
-            )
+        for result in results:
+            if isinstance(result, BaseException):
+                raise result
 
     @override
     async def async_open_cover(self, **kwargs: Any) -> None:

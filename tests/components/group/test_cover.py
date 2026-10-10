@@ -1,6 +1,7 @@
 """The tests for the group cover platform."""
 
 import asyncio
+from contextlib import ExitStack
 from datetime import timedelta
 from typing import Any
 from unittest.mock import patch
@@ -18,7 +19,6 @@ from homeassistant.components.cover import (
     CoverEntityFeature,
     CoverState,
 )
-from homeassistant.components.group import DOMAIN
 from homeassistant.components.group.cover import DEFAULT_NAME
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
@@ -1119,6 +1119,22 @@ async def mock_speed_covers(hass: HomeAssistant) -> list[MockCover]:
             ],
             id="set_position_speed_of_two_members",
         ),
+        pytest.param(
+            SERVICE_CLOSE_COVER,
+            {ATTR_SPEED: "slow"},
+            [{ATTR_SPEED: "slow"}, {}, {}],
+            id="close_speed_of_one_member",
+        ),
+        pytest.param(
+            SERVICE_SET_COVER_POSITION,
+            {ATTR_POSITION: 30, ATTR_SPEED: "silent"},
+            [
+                {ATTR_POSITION: 30},
+                {ATTR_POSITION: 30, ATTR_SPEED: "silent"},
+                {ATTR_POSITION: 30},
+            ],
+            id="set_position_speed_of_one_member",
+        ),
         pytest.param(SERVICE_OPEN_COVER, {}, [{}, {}, {}], id="open_without_speed"),
         pytest.param(
             SERVICE_SET_COVER_POSITION,
@@ -1135,7 +1151,7 @@ async def test_speed_forwarded(
     data: dict[str, Any],
     expected_kwargs: list[dict[str, Any]],
 ) -> None:
-    """Test the speed is forwarded to the members."""
+    """Test the speed is forwarded to the members that list it."""
     state = hass.states.get(COVER_GROUP)
     assert state.attributes[CoverEntityCapabilityAttribute.SUPPORTED_SPEEDS] == [
         "slow",
@@ -1154,56 +1170,23 @@ async def test_speed_forwarded(
 
 
 @pytest.mark.parametrize(
-    ("service", "data", "expected_kwargs", "unsupported"),
+    "features",
     [
         pytest.param(
-            SERVICE_CLOSE_COVER,
-            {ATTR_SPEED: "slow"},
-            [{ATTR_SPEED: "slow"}, None, {}],
-            SILENT_FAST_COVER,
-            id="close",
+            CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE, id="with_action"
         ),
-        pytest.param(
-            SERVICE_SET_COVER_POSITION,
-            {ATTR_POSITION: 30, ATTR_SPEED: "silent"},
-            [None, {ATTR_POSITION: 30, ATTR_SPEED: "silent"}, {ATTR_POSITION: 30}],
-            SLOW_FAST_COVER,
-            id="set_position",
-        ),
+        pytest.param(CoverEntityFeature.OPEN, id="without_action"),
     ],
 )
-async def test_speed_not_supported_by_some_members(
+async def test_speed_unavailable_member(
     hass: HomeAssistant,
     mock_speed_covers: list[MockCover],
-    service: str,
-    data: dict[str, Any],
-    expected_kwargs: list[dict[str, Any] | None],
-    unsupported: str,
+    features: CoverEntityFeature,
 ) -> None:
-    """Test members that list other speeds are named in an error and not moved."""
-    with pytest.raises(ServiceValidationError) as exc_info:
-        await hass.services.async_call(
-            COVER_DOMAIN,
-            service,
-            {ATTR_ENTITY_ID: COVER_GROUP, **data},
-            blocking=True,
-        )
-
-    assert exc_info.value.translation_domain == DOMAIN
-    assert exc_info.value.translation_key == "speed_not_supported"
-    assert exc_info.value.translation_placeholders == {
-        "speed": data[ATTR_SPEED],
-        "entity_ids": unsupported,
-    }
-    assert [entity.last_kwargs for entity in mock_speed_covers] == expected_kwargs
-
-
-async def test_speed_unavailable_member(
-    hass: HomeAssistant, mock_speed_covers: list[MockCover]
-) -> None:
-    """Test an unavailable member that lists other speeds raises no error."""
+    """Test an unavailable member is not moved, with or without the action."""
     slow_fast, silent_fast, no_speed = mock_speed_covers
     silent_fast._values["available"] = False
+    silent_fast._values["supported_features"] = features
     silent_fast.async_write_ha_state()
     await hass.async_block_till_done()
     assert hass.states.get(SILENT_FAST_COVER).state == STATE_UNAVAILABLE
@@ -1225,6 +1208,7 @@ async def test_speed_unavailable_member(
     [
         pytest.param({}, id="without_speed"),
         pytest.param({ATTR_SPEED: "fast"}, id="with_speed"),
+        pytest.param({ATTR_SPEED: "slow"}, id="with_speed_of_member_without_action"),
     ],
 )
 async def test_speed_member_without_action(
@@ -1292,10 +1276,60 @@ async def test_speed_not_supported_by_any_member(
     assert [entity.last_kwargs for entity in mock_speed_covers] == [None, None, None]
 
 
+@pytest.mark.parametrize(
+    ("failing", "error", "expected_kwargs"),
+    [
+        pytest.param(
+            [SLOW_FAST_COVER], SLOW_FAST_COVER, [None, {}, {}], id="member_with_speed"
+        ),
+        pytest.param(
+            [NO_SPEED_COVER],
+            NO_SPEED_COVER,
+            [{ATTR_SPEED: "slow"}, {}, None],
+            id="member_without_speed",
+        ),
+        pytest.param(
+            [SLOW_FAST_COVER, NO_SPEED_COVER],
+            NO_SPEED_COVER,
+            [None, {}, None],
+            id="members_of_both_calls",
+        ),
+    ],
+)
 async def test_speed_member_failure(
+    hass: HomeAssistant,
+    mock_speed_covers: list[MockCover],
+    failing: list[str],
+    error: str,
+    expected_kwargs: list[dict[str, Any] | None],
+) -> None:
+    """Test all members are called before the first member error is raised."""
+    covers = {cover.entity_id: cover for cover in mock_speed_covers}
+    with ExitStack() as stack:
+        for entity_id in failing:
+            stack.enter_context(
+                patch.object(
+                    covers[entity_id],
+                    "async_open_cover",
+                    side_effect=HomeAssistantError(entity_id),
+                )
+            )
+        # The call without the speed comes first in the call order
+        with pytest.raises(HomeAssistantError, match=error):
+            await hass.services.async_call(
+                COVER_DOMAIN,
+                SERVICE_OPEN_COVER,
+                {ATTR_ENTITY_ID: COVER_GROUP, ATTR_SPEED: "slow"},
+                blocking=True,
+            )
+
+    assert [entity.last_kwargs for entity in mock_speed_covers] == expected_kwargs
+
+
+async def test_speed_member_not_delayed(
     hass: HomeAssistant, mock_speed_covers: list[MockCover]
 ) -> None:
-    """Test the group waits for all members before raising a member error."""
+    """Test a member that takes long does not delay the members with the speed."""
     slow_fast, _, no_speed = mock_speed_covers
     release = asyncio.Event()
 
@@ -1304,9 +1338,7 @@ async def test_speed_member_failure(
         no_speed.last_kwargs = kwargs
 
     with (
-        patch.object(
-            slow_fast, "async_open_cover", side_effect=HomeAssistantError("Failed")
-        ),
+        patch.object(slow_fast, "async_open_cover") as open_with_speed,
         patch.object(no_speed, "async_open_cover", side_effect=slow_open_cover),
     ):
         call = hass.async_create_task(
@@ -1319,13 +1351,88 @@ async def test_speed_member_failure(
         )
         for _ in range(10):
             await asyncio.sleep(0)
+
+        open_with_speed.assert_awaited_once_with(speed="slow")
         assert not call.done()
 
         release.set()
-        with pytest.raises(HomeAssistantError, match="Failed"):
-            await call
+        await call
 
     assert no_speed.last_kwargs == {}
+
+
+@pytest.mark.parametrize(
+    ("data", "fast_kwargs"),
+    [
+        pytest.param({}, {}, id="without_speed"),
+        pytest.param({ATTR_SPEED: "fast"}, {ATTR_SPEED: "fast"}, id="with_speed"),
+    ],
+)
+async def test_nested_group_member_without_action(
+    hass: HomeAssistant, data: dict[str, Any], fast_kwargs: dict[str, Any]
+) -> None:
+    """Test the other members move when a nested group rejects the action."""
+    features = (
+        CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE | CoverEntityFeature.SPEED
+    )
+    entities = [
+        MockCover(
+            name="Open only",
+            unique_id="open_only",
+            supported_features=CoverEntityFeature.OPEN,
+        ),
+        MockCover(
+            name="Slow",
+            unique_id="slow",
+            supported_features=features,
+            supported_speeds=["slow"],
+        ),
+        MockCover(
+            name="Fast",
+            unique_id="fast",
+            supported_features=features,
+            supported_speeds=["fast"],
+        ),
+        MockCover(
+            name="No speed",
+            unique_id="no_speed",
+            supported_features=CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE,
+        ),
+    ]
+    setup_test_component_platform(hass, COVER_DOMAIN, entities)
+    assert await async_setup_component(
+        hass,
+        COVER_DOMAIN,
+        {
+            COVER_DOMAIN: [
+                {"platform": "test"},
+                {
+                    "platform": "group",
+                    CONF_ENTITIES: ["cover.inner_group", "cover.fast", NO_SPEED_COVER],
+                    "name": "Outer Group",
+                },
+                {
+                    "platform": "group",
+                    CONF_ENTITIES: ["cover.open_only", "cover.slow"],
+                    "name": "Inner Group",
+                },
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    # Core rejects the member of the nested group after the call reached it
+    with pytest.raises(ServiceNotSupported):
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_CLOSE_COVER,
+            {ATTR_ENTITY_ID: OUTER_GROUP, **data},
+            blocking=True,
+        )
+
+    assert [entity.last_kwargs for entity in entities] == [None, None, fast_kwargs, {}]
 
 
 async def test_nested_group_speed(hass: HomeAssistant) -> None:

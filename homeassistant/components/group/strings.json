@@ -164,11 +164,6 @@
       }
     }
   },
-  "exceptions": {
-    "speed_not_supported": {
-      "message": "Speed {speed} is not supported by {entity_ids}."
-    }
-  },
   "issues": {
     "device_classes_not_matching": {
       "description": "Device classes `{device_classes}` on source entities `{source_entities}` need to be identical for sensor group `{entity_id}`.\n\nPlease correct the device classes on the source entities and reload the group sensor to fix this issue.",
