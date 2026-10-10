@@ -153,7 +153,7 @@ class TradfriLight(TradfriBaseEntity, LightEntity):
         # to 1 for the next set_state(True) command
         transition_time = None
         if ATTR_TRANSITION in kwargs:
-            transition_time = int(kwargs[ATTR_TRANSITION]) * 10
+            transition_time = int(kwargs[ATTR_TRANSITION] * 10)
 
             await self._api(
                 self._device_control.set_dimmer(
@@ -168,7 +168,7 @@ class TradfriLight(TradfriBaseEntity, LightEntity):
         """Instruct the light to turn on."""
         transition_time = None
         if ATTR_TRANSITION in kwargs:
-            transition_time = int(kwargs[ATTR_TRANSITION]) * 10
+            transition_time = int(kwargs[ATTR_TRANSITION] * 10)
 
         dimmer_command = None
         if ATTR_BRIGHTNESS in kwargs:
