@@ -11,6 +11,7 @@ from aiomelcloudhome import ATAUnit, ATWUnit, MELCloudHome, UserContext
 from aiomelcloudhome.exceptions import (
     MelCloudHomeAuthenticationError,
     MelCloudHomeConnectionError,
+    MelCloudHomeError,
     MelCloudHomeTimeoutError,
 )
 
@@ -136,6 +137,11 @@ class MelCloudHomeCoordinator(DataUpdateCoordinator[UserContext]):
                 translation_domain=DOMAIN,
                 translation_key="timeout_connect",
             ) from err
+        except MelCloudHomeError as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="api_error",
+            ) from err
 
         self.ata_units = {
             unit.id: unit
@@ -197,11 +203,7 @@ class MelCloudHomeTelemetryCoordinator(
         key = (name, unit_id)
         try:
             result = await coroutine
-        except (
-            MelCloudHomeAuthenticationError,
-            MelCloudHomeConnectionError,
-            MelCloudHomeTimeoutError,
-        ):
+        except MelCloudHomeError:
             if key not in self._unavailable_telemetry:
                 self._unavailable_telemetry.add(key)
                 _LOGGER.info("%s for %s is unavailable", name, unit_id)
@@ -253,6 +255,11 @@ class MelCloudHomeTelemetryCoordinator(
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="timeout_connect",
+            ) from err
+        except MelCloudHomeError as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="api_error",
             ) from err
 
         start_of_month = utcnow().replace(

@@ -6,6 +6,7 @@ from aiomelcloudhome import UserContext
 from aiomelcloudhome.exceptions import (
     MelCloudHomeAuthenticationError,
     MelCloudHomeConnectionError,
+    MelCloudHomeNotFoundError,
     MelCloudHomeTimeoutError,
 )
 from freezegun.api import FrozenDateTimeFactory
@@ -46,11 +47,32 @@ async def test_entry_setup_unload(
 
 
 @pytest.mark.parametrize(
-    ("exception", "setup_state"),
+    ("exception", "setup_state", "translation_key"),
     [
-        (MelCloudHomeAuthenticationError("bad creds"), ConfigEntryState.SETUP_ERROR),
-        (MelCloudHomeConnectionError("cannot connect"), ConfigEntryState.SETUP_RETRY),
-        (MelCloudHomeTimeoutError("timeout"), ConfigEntryState.SETUP_RETRY),
+        pytest.param(
+            MelCloudHomeAuthenticationError("bad creds"),
+            ConfigEntryState.SETUP_ERROR,
+            "invalid_auth",
+            id="auth",
+        ),
+        pytest.param(
+            MelCloudHomeConnectionError("cannot connect"),
+            ConfigEntryState.SETUP_RETRY,
+            "cannot_connect",
+            id="connection",
+        ),
+        pytest.param(
+            MelCloudHomeTimeoutError("timeout"),
+            ConfigEntryState.SETUP_RETRY,
+            "timeout_connect",
+            id="timeout",
+        ),
+        pytest.param(
+            MelCloudHomeNotFoundError("not found"),
+            ConfigEntryState.SETUP_RETRY,
+            "api_error",
+            id="api_error",
+        ),
     ],
 )
 async def test_entry_setup_retry_on_update_failure(
@@ -59,6 +81,7 @@ async def test_entry_setup_retry_on_update_failure(
     mock_melcloud_client: AsyncMock,
     exception: Exception,
     setup_state: ConfigEntryState,
+    translation_key: str,
 ) -> None:
     """Test setup retries when initial coordinator refresh fails."""
     mock_melcloud_client.get_context.side_effect = exception
@@ -68,6 +91,7 @@ async def test_entry_setup_retry_on_update_failure(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is setup_state
+    assert mock_config_entry.error_reason_translation_key == translation_key
 
 
 async def test_new_ata_unit_callback(
@@ -269,6 +293,7 @@ async def test_new_atw_unit_callback(
         pytest.param(MelCloudHomeAuthenticationError("bad creds"), id="auth"),
         pytest.param(MelCloudHomeConnectionError("cannot connect"), id="connection"),
         pytest.param(MelCloudHomeTimeoutError("timeout"), id="timeout"),
+        pytest.param(MelCloudHomeNotFoundError("not found"), id="api_error"),
     ],
 )
 async def test_energy_update_cycle_fails(
@@ -309,6 +334,7 @@ async def test_energy_update_cycle_fails(
         pytest.param(MelCloudHomeAuthenticationError("bad creds"), id="auth"),
         pytest.param(MelCloudHomeConnectionError("cannot connect"), id="connection"),
         pytest.param(MelCloudHomeTimeoutError("timeout"), id="timeout"),
+        pytest.param(MelCloudHomeNotFoundError("not found"), id="api_error"),
     ],
 )
 async def test_energy_telemetry_fetch_failure(
@@ -324,7 +350,7 @@ async def test_energy_telemetry_fetch_failure(
     mock_melcloud_client.get_energy_telemetry.side_effect = exception
     freezer.tick(TELEMETRY_UPDATE_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert (
         mock_config_entry.runtime_data.telemetry_coordinator.last_update_success is True
@@ -333,11 +359,22 @@ async def test_energy_telemetry_fetch_failure(
 
 
 @pytest.mark.parametrize(
-    "exception",
+    ("exception", "translation_key"),
     [
-        pytest.param(MelCloudHomeAuthenticationError("bad creds"), id="auth"),
-        pytest.param(MelCloudHomeConnectionError("cannot connect"), id="connection"),
-        pytest.param(MelCloudHomeTimeoutError("timeout"), id="timeout"),
+        pytest.param(
+            MelCloudHomeAuthenticationError("bad creds"), "invalid_auth", id="auth"
+        ),
+        pytest.param(
+            MelCloudHomeConnectionError("cannot connect"),
+            "cannot_connect",
+            id="connection",
+        ),
+        pytest.param(
+            MelCloudHomeTimeoutError("timeout"), "timeout_connect", id="timeout"
+        ),
+        pytest.param(
+            MelCloudHomeNotFoundError("not found"), "api_error", id="api_error"
+        ),
     ],
 )
 async def test_telemetry_coordinator_context_fetch_failure(
@@ -346,6 +383,7 @@ async def test_telemetry_coordinator_context_fetch_failure(
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
     exception: Exception,
+    translation_key: str,
 ) -> None:
     """Test that a failing telemetry coordinator refresh doesn't affect the main coordinator."""
     await setup_integration(hass, mock_config_entry)
@@ -375,6 +413,10 @@ async def test_telemetry_coordinator_context_fetch_failure(
     )
     assert room_temperature_sensor.state != STATE_UNAVAILABLE
 
+    telemetry_coordinator = mock_config_entry.runtime_data.telemetry_coordinator
+    assert telemetry_coordinator.last_exception is not None
+    assert telemetry_coordinator.last_exception.translation_key == translation_key
+
 
 @pytest.mark.parametrize(
     "exception",
@@ -382,6 +424,7 @@ async def test_telemetry_coordinator_context_fetch_failure(
         pytest.param(MelCloudHomeAuthenticationError("bad creds"), id="auth"),
         pytest.param(MelCloudHomeConnectionError("cannot connect"), id="connection"),
         pytest.param(MelCloudHomeTimeoutError("timeout"), id="timeout"),
+        pytest.param(MelCloudHomeNotFoundError("not found"), id="api_error"),
     ],
 )
 async def test_outdoor_temperature_update_cycle_fails(
