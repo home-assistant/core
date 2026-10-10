@@ -9,6 +9,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.components.fluss.const import UPDATE_INTERVAL
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -78,13 +79,13 @@ async def test_devices_without_wifi_permission_are_filtered(
     mock_api_client.async_get_device_status.assert_called_once_with("allowed")
 
 
-async def test_button_unavailable_on_status_error(
+async def test_button_available_on_status_error(
     hass: HomeAssistant,
     mock_api_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Buttons become unavailable when a status refresh errors."""
+    """Buttons stay usable when a status refresh errors."""
     await setup_integration(hass, mock_config_entry)
     assert hass.states.get("button.device_1").state != STATE_UNAVAILABLE
 
@@ -95,8 +96,25 @@ async def test_button_unavailable_on_status_error(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert hass.states.get("button.device_1").state == STATE_UNAVAILABLE
-    assert hass.states.get("button.device_2").state == STATE_UNAVAILABLE
+    assert hass.states.get("button.device_1").state != STATE_UNAVAILABLE
+    assert hass.states.get("button.device_2").state != STATE_UNAVAILABLE
+
+
+async def test_buttons_setup_with_failing_status(
+    hass: HomeAssistant,
+    mock_api_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A failing status call must not prevent setup from completing."""
+    mock_api_client.async_get_device_status.side_effect = FlussApiClientError(
+        "API usage limit exceeded"
+    )
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert hass.states.get("button.device_1").state != STATE_UNAVAILABLE
+    assert hass.states.get("button.device_2").state != STATE_UNAVAILABLE
 
 
 async def test_button_unavailable_when_internet_disconnected(
