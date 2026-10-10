@@ -5,5 +5,17 @@
     <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Station Somewhere Street 1 Status',
     <EntityStateAttribute.LATITUDE: 'latitude'>: 51.1,
     <EntityStateAttribute.LONGITUDE: 'longitude'>: 13.1,
+    'opening_times': list([
+      dict({
+        'days': 'Mo-Fr',
+        'end_time': '22:00:00',
+        'start_time': '06:00:00',
+      }),
+      dict({
+        'days': 'Sa-So',
+        'end_time': '20:00:00',
+        'start_time': '08:00:00',
+      }),
+    ]),
   })
 # ---

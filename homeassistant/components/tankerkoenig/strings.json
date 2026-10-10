@@ -59,6 +59,9 @@
           },
           "longitude": {
             "name": "[%key:common::config_flow::data::longitude%]"
+          },
+          "opening_times": {
+            "name": "Opening times"
           }
         }
       }
