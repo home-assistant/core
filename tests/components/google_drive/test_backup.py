@@ -253,7 +253,7 @@ async def test_agents_list_backups_fail(
     assert response["success"]
     assert response["result"]["backups"] == []
     assert response["result"]["agent_errors"] == {
-        TEST_AGENT_ID: "Failed to list backups: some error"
+        TEST_AGENT_ID: "Failed to list backups"
     }
 
 
@@ -564,7 +564,7 @@ async def test_agents_upload_fail(
         await hass.async_block_till_done()
 
     assert resp.status == 201
-    assert "Failed to upload backup: some error" in caplog.text
+    assert "Failed to upload backup" in caplog.text
 
 
 async def test_agents_delete(
@@ -613,7 +613,7 @@ async def test_agents_delete_fail(
 
     assert response["success"]
     assert response["result"] == {
-        "agent_errors": {TEST_AGENT_ID: "Failed to delete backup: some error"}
+        "agent_errors": {TEST_AGENT_ID: "Failed to delete backup"}
     }
 
 

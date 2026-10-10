@@ -79,6 +79,15 @@
     "authentication_failed": {
       "message": "Authentication failed"
     },
+    "backup_failed": {
+      "message": "Backup operation failed"
+    },
+    "backup_not_found": {
+      "message": "Backup {backup_id} not found"
+    },
+    "backup_timeout": {
+      "message": "Backup operation timed out"
+    },
     "connection_error": {
       "message": "[%key:component::onedrive::config::abort::connection_error%]"
     },
@@ -99,6 +108,9 @@
     },
     "filenames_do_not_exist": {
       "message": "The following files do not exist: {filenames}"
+    },
+    "hash_mismatch": {
+      "message": "Hash validation failed, backup file might be corrupt"
     },
     "invalid_destination_path": {
       "message": "Invalid destination path `{destination_path}`: must be non-empty, must not contain `:` or `..` path segments"

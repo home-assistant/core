@@ -48,6 +48,7 @@ from .const import (
 from .exceptions import (
     PasswordIncompatible,
     ReolinkException,
+    ReolinkSetupException,
     ReolinkWebhookException,
     UserNotAdmin,
 )
@@ -300,6 +301,8 @@ class ReolinkFlowHandler(ConfigFlow, domain=DOMAIN):
                     "https://www.home-assistant.io/more-info/no-url-available/#configuring-the-instance-url"
                 )
                 errors["base"] = "webhook_exception"
+            except ReolinkSetupException:
+                errors[CONF_HOST] = "no_mac_address"
             except (ReolinkError, ReolinkException) as err:
                 placeholders["error"] = str(err)
                 errors[CONF_HOST] = "cannot_connect"

@@ -59,11 +59,26 @@
     "authentication_not_valid": {
       "message": "OAuth session is not valid, reauthentication required"
     },
+    "backup_not_found": {
+      "message": "Backup {backup_id} not found"
+    },
+    "delete_backup_failed": {
+      "message": "Failed to delete backup"
+    },
+    "download_backup_failed": {
+      "message": "Failed to download backup"
+    },
     "failed_to_get_folder": {
       "message": "Failed to get {folder} folder"
     },
     "invalid_response_google_drive_error": {
       "message": "Invalid response from Google Drive: {error}"
+    },
+    "list_backups_failed": {
+      "message": "Failed to list backups"
+    },
+    "upload_backup_failed": {
+      "message": "Failed to upload backup"
     }
   }
 }
