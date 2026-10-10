@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Final
+from typing import Final, override
 
 from tiltpi import TiltHydrometerData
 
@@ -87,6 +87,7 @@ class TiltSensor(TiltEntity, SensorEntity):
         self._attr_unique_id = f"{hydrometer.mac_id}_{description.key}"
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the sensor value."""
         return self.entity_description.value_fn(self.current_hydrometer)

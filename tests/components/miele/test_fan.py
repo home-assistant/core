@@ -113,6 +113,32 @@ async def test_fan_set_speed(
     )
 
 
+async def test_fan_set_percentage_no_op_when_already_at_target(
+    hass: HomeAssistant,
+    mock_miele_client: MagicMock,
+    setup_platform: MockConfigEntry,
+) -> None:
+    """Test that set_percentage is a no-op when already at the target step."""
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        SERVICE_SET_PERCENTAGE,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PERCENTAGE: 50},
+        blocking=True,
+    )
+    mock_miele_client.send_action.assert_called_once_with(
+        "DummyAppliance_18", {"ventilationStep": 2}
+    )
+    mock_miele_client.send_action.reset_mock()
+
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        SERVICE_SET_PERCENTAGE,
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PERCENTAGE: 50},
+        blocking=True,
+    )
+    mock_miele_client.send_action.assert_not_called()
+
+
 async def test_fan_turn_on_w_percentage(
     hass: HomeAssistant,
     mock_miele_client: MagicMock,

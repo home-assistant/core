@@ -1,5 +1,7 @@
 """The homee button platform."""
 
+from typing import override
+
 from pyHomee.const import AttributeType
 from pyHomee.model import HomeeAttribute, HomeeNode
 
@@ -41,13 +43,14 @@ BUTTON_DESCRIPTIONS: dict[AttributeType, ButtonEntityDescription] = {
 
 
 async def add_button_entities(
+    hass: HomeAssistant,
     config_entry: HomeeConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
     nodes: list[HomeeNode],
 ) -> None:
     """Add homee button entities."""
     async_add_entities(
-        HomeeButton(attribute, config_entry, BUTTON_DESCRIPTIONS[attribute.type])
+        HomeeButton(hass, attribute, config_entry, BUTTON_DESCRIPTIONS[attribute.type])
         for node in nodes
         for attribute in node.attributes
         if attribute.type in BUTTON_DESCRIPTIONS and attribute.editable
@@ -61,7 +64,9 @@ async def async_setup_entry(
 ) -> None:
     """Add the homee platform for the button component."""
 
-    await setup_homee_platform(add_button_entities, async_add_entities, config_entry)
+    await setup_homee_platform(
+        hass, add_button_entities, async_add_entities, config_entry
+    )
 
 
 class HomeeButton(HomeeEntity, ButtonEntity):
@@ -69,12 +74,13 @@ class HomeeButton(HomeeEntity, ButtonEntity):
 
     def __init__(
         self,
+        hass: HomeAssistant,
         attribute: HomeeAttribute,
         entry: HomeeConfigEntry,
         description: ButtonEntityDescription,
     ) -> None:
         """Initialize a Homee button entity."""
-        super().__init__(attribute, entry)
+        super().__init__(hass, attribute, entry)
         self.entity_description = description
         if attribute.instance == 0:
             if attribute.type == AttributeType.IMPULSE:
@@ -85,6 +91,7 @@ class HomeeButton(HomeeEntity, ButtonEntity):
             self._attr_translation_key = f"{description.key}_instance"
             self._attr_translation_placeholders = {"instance": str(attribute.instance)}
 
+    @override
     async def async_press(self) -> None:
         """Handle the button press."""
         await self.async_set_homee_value(1)

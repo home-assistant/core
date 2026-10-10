@@ -4,6 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 import logging
+from typing import override
 
 from ultraheat_api.response import HeatMeterResponse
 
@@ -320,6 +321,7 @@ class HeatMeterSensor(
             self._attr_entity_registry_enabled_default = False
 
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)

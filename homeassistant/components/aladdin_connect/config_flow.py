@@ -2,11 +2,11 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from genie_partner_sdk.client import AladdinConnectClient
 import jwt
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
 from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
@@ -24,6 +24,7 @@ class OAuth2FlowHandler(
     VERSION = CONFIG_FLOW_VERSION
     MINOR_VERSION = CONFIG_FLOW_MINOR_VERSION
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -48,10 +49,11 @@ class OAuth2FlowHandler(
         if user_input is None:
             return self.async_show_form(
                 step_id="reauth_confirm",
-                data_schema=vol.Schema({}),
+                data_schema=probatio.Schema({}),
             )
         return await self.async_step_user()
 
+    @override
     async def async_oauth_create_entry(self, data: dict) -> ConfigFlowResult:
         """Create an oauth config entry or update existing entry for reauth."""
         try:
@@ -85,6 +87,7 @@ class OAuth2FlowHandler(
         return self.async_create_entry(title="Aladdin Connect", data=data)
 
     @property
+    @override
     def logger(self) -> logging.Logger:
         """Return logger."""
         return logging.getLogger(__name__)

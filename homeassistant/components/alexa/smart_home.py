@@ -1,7 +1,7 @@
 """Support for alexa Smart Home Skill API."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from aiohttp import web
 from yarl import URL
@@ -22,6 +22,7 @@ from .auth import Auth
 from .config import AbstractConfig
 from .const import (
     API_DIRECTIVE,
+    API_ENDPOINT,
     API_HEADER,
     CONF_ENDPOINT,
     CONF_ENTITY_CONFIG,
@@ -54,36 +55,43 @@ class AlexaConfig(AbstractConfig):
             self._auth = None
 
     @property
+    @override
     def supports_auth(self) -> bool:
         """Return if config supports auth."""
         return self._auth is not None
 
     @property
+    @override
     def should_report_state(self) -> bool:
         """Return if we should proactively report states."""
         return self._auth is not None and self.authorized
 
     @property
+    @override
     def endpoint(self) -> str | URL | None:
         """Endpoint for report state."""
         return self._config.get(CONF_ENDPOINT)
 
     @property
+    @override
     def entity_config(self) -> dict[str, Any]:
         """Return entity config."""
         return self._config.get(CONF_ENTITY_CONFIG) or {}
 
     @property
+    @override
     def locale(self) -> str | None:
         """Return config locale."""
         return self._config.get(CONF_LOCALE)
 
     @core.callback
+    @override
     def user_identifier(self) -> str:
         """Return an identifier for the user that represents this config."""
         return ""
 
     @core.callback
+    @override
     def should_expose(self, entity_id: str) -> bool:
         """If an entity should be exposed."""
         if not self._config[CONF_FILTER].empty_filter:
@@ -100,16 +108,19 @@ class AlexaConfig(AbstractConfig):
         return not auxiliary_entity
 
     @core.callback
+    @override
     def async_invalidate_access_token(self) -> None:
         """Invalidate access token."""
         assert self._auth is not None
         self._auth.async_invalidate_access_token()
 
+    @override
     async def async_get_access_token(self) -> str | None:
         """Get an access token."""
         assert self._auth is not None
         return await self._auth.async_get_access_token()
 
+    @override
     async def async_accept_grant(self, code: str) -> str | None:
         """Accept a grant."""
         assert self._auth is not None
@@ -155,8 +166,14 @@ class SmartHomeView(HomeAssistantView):
         message: dict[str, Any] = await request.json()
 
         if _LOGGER.isEnabledFor(logging.DEBUG):
+            endpoint_id = (
+                message.get(API_DIRECTIVE, {}).get(API_ENDPOINT, {}).get("endpointId")
+            )
             _LOGGER.debug(
-                "Received Alexa Smart Home request: %s",
+                "Received Alexa Smart Home request for entity %s: %s",
+                endpoint_id.replace("#", ".")
+                if isinstance(endpoint_id, str)
+                else endpoint_id,
                 async_redact_auth_data(message),
             )
 

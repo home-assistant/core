@@ -1,18 +1,29 @@
 """Diagnostics support for Alexa Devices integration."""
 
 from dataclasses import asdict
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from aioamazondevices.structures import AmazonDevice
 
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.helpers.device_registry import AnyDeviceEntry, DeviceEntry
 
 from .coordinator import AmazonConfigEntry
 
-TO_REDACT = {CONF_PASSWORD, CONF_USERNAME, CONF_NAME, "title"}
+TO_REDACT = {
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    "access_token",
+    "adp_token",
+    "device_private_key",
+    "refresh_token",
+    "store_authentication_cookie",
+    "title",
+    "website_cookies",
+}
 
 
 async def async_get_config_entry_diagnostics(
@@ -37,13 +48,18 @@ async def async_get_config_entry_diagnostics(
 
 
 async def async_get_device_diagnostics(
-    hass: HomeAssistant, entry: AmazonConfigEntry, device_entry: DeviceEntry
+    hass: HomeAssistant, entry: AmazonConfigEntry, device_entry: AnyDeviceEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a device."""
 
     coordinator = entry.runtime_data
 
-    assert device_entry.serial_number
+    if TYPE_CHECKING:
+        assert isinstance(device_entry, DeviceEntry)
+
+    if device_entry.serial_number is None:
+        # Service device has no serial number and no matching coordinator data
+        return {"service device": True}
 
     return build_device_data(coordinator.data[device_entry.serial_number])
 

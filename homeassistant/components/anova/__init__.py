@@ -13,9 +13,10 @@ from anova_wifi import (
 
 from homeassistant.const import CONF_DEVICES, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
 
+from .const import DOMAIN
 from .coordinator import AnovaConfigEntry, AnovaCoordinator, AnovaData
 
 PLATFORMS = [Platform.SENSOR]
@@ -33,10 +34,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: AnovaConfigEntry) -> boo
     try:
         await api.authenticate()
     except InvalidLogin as err:
-        _LOGGER.error(
-            "Login was incorrect - please log back in through the config flow. %s", err
-        )
-        return False
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="invalid_login",
+        ) from err
     assert api.jwt
     try:
         await api.create_websocket()
@@ -74,10 +75,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: AnovaConfigEntry) -> bo
 async def async_migrate_entry(hass: HomeAssistant, entry: AnovaConfigEntry) -> bool:
     """Migrate entry."""
     _LOGGER.debug("Migrating from version %s:%s", entry.version, entry.minor_version)
-
-    if entry.version > 1:
-        # This means the user has downgraded from a future version
-        return False
 
     if entry.version == 1 and entry.minor_version == 1:
         new_data = {**entry.data}

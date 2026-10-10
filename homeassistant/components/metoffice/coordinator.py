@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 import logging
-from typing import Literal
+from typing import Literal, override
 
 from datapoint.exceptions import APIException
 from datapoint.Forecast import Forecast
@@ -38,12 +38,12 @@ class MetOfficeRuntimeData:
 class MetOfficeUpdateCoordinator(TimestampDataUpdateCoordinator[Forecast]):
     """Coordinator for Met Office forecast data."""
 
-    config_entry: ConfigEntry
+    config_entry: MetOfficeConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        entry: ConfigEntry,
+        entry: MetOfficeConfigEntry,
         name: str,
         connection: Manager,
         latitude: float,
@@ -63,6 +63,7 @@ class MetOfficeUpdateCoordinator(TimestampDataUpdateCoordinator[Forecast]):
         self._longitude = longitude
         self._frequency = frequency
 
+    @override
     async def _async_update_data(self) -> Forecast:
         """Get data from Met Office."""
         return await self.hass.async_add_executor_job(
@@ -86,8 +87,7 @@ def fetch_data(
             latitude, longitude, frequency, convert_weather_code=False
         )
     except (ValueError, APIException) as err:
-        _LOGGER.error("Check Met Office connection: %s", err.args)
-        raise UpdateFailed from err
+        raise UpdateFailed(f"Check Met Office connection: {err}") from err
     except HTTPError as err:
         if err.response.status_code == 401:
             raise ConfigEntryAuthFailed from err

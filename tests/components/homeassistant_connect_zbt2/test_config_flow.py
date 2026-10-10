@@ -120,6 +120,7 @@ async def test_config_flow_zigbee(hass: HomeAssistant) -> None:
         "serial_number": usb_data.serial_number,
         "vid": usb_data.vid,
     }
+    assert create_result["result"].unique_id == usb_data.serial_number
 
     flows = hass.config_entries.flow.async_progress()
 
@@ -226,6 +227,7 @@ async def test_config_flow_thread(
         "serial_number": usb_data.serial_number,
         "vid": usb_data.vid,
     }
+    assert create_result["result"].unique_id == usb_data.serial_number
 
     flows = hass.config_entries.flow.async_progress()
 
@@ -324,9 +326,7 @@ async def test_options_flow(
                 ),
             ],
         ),
-        patch(
-            "homeassistant.components.homeassistant_hardware.util.parse_firmware_image"
-        ),
+        patch("universal_silabs_flasher.firmware.parse_firmware_image"),
     ):
         pick_result = await hass.config_entries.options.async_configure(
             result["flow_id"],

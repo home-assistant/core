@@ -3,8 +3,11 @@
 from unittest.mock import AsyncMock, Mock, patch
 
 from homeassistant.components import emulated_roku
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
+
+from tests.common import MockConfigEntry
 
 
 async def test_config_required_fields(hass: HomeAssistant) -> None:
@@ -69,42 +72,67 @@ async def test_config_already_registered_not_configured(hass: HomeAssistant) -> 
 
 async def test_setup_entry_successful(hass: HomeAssistant) -> None:
     """Test setup entry is successful."""
-    entry = Mock()
-    entry.data = {
-        emulated_roku.CONF_NAME: "Emulated Roku Test",
-        emulated_roku.CONF_LISTEN_PORT: 8060,
-        emulated_roku.CONF_HOST_IP: "1.2.3.5",
-        emulated_roku.CONF_ADVERTISE_IP: "1.2.3.4",
-        emulated_roku.CONF_ADVERTISE_PORT: 8071,
-        emulated_roku.CONF_UPNP_BIND_MULTICAST: False,
-    }
+    entry = MockConfigEntry(
+        domain=emulated_roku.DOMAIN,
+        data={
+            emulated_roku.CONF_NAME: "Emulated Roku Test",
+            emulated_roku.CONF_LISTEN_PORT: 8060,
+            emulated_roku.CONF_HOST_IP: "1.2.3.5",
+            emulated_roku.CONF_ADVERTISE_IP: "1.2.3.4",
+            emulated_roku.CONF_ADVERTISE_PORT: 8071,
+            emulated_roku.CONF_UPNP_BIND_MULTICAST: False,
+        },
+    )
+    entry.add_to_hass(hass)
 
     with patch(
         "homeassistant.components.emulated_roku.binding.EmulatedRokuServer",
         return_value=Mock(start=AsyncMock(), close=AsyncMock()),
     ) as instantiate:
-        # pylint: disable-next=home-assistant-tests-direct-async-setup-entry
-        assert await emulated_roku.async_setup_entry(hass, entry) is True
+        assert await hass.config_entries.async_setup(entry.entry_id) is True
 
     assert len(instantiate.mock_calls) == 1
 
 
+async def test_setup_entry_failed(hass: HomeAssistant) -> None:
+    """Test setup entry fails when the server can't be set up."""
+    entry = MockConfigEntry(
+        domain=emulated_roku.DOMAIN,
+        data={
+            emulated_roku.CONF_NAME: "Emulated Roku Test",
+            emulated_roku.CONF_LISTEN_PORT: 8060,
+        },
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.emulated_roku.EmulatedRoku.setup",
+        return_value=False,
+    ):
+        assert not await hass.config_entries.async_setup(entry.entry_id)
+
+    assert entry.state is ConfigEntryState.SETUP_ERROR
+    assert entry.reason == "Failed to set up Emulated Roku Emulated Roku Test"
+
+
 async def test_unload_entry(hass: HomeAssistant) -> None:
     """Test being able to unload an entry."""
-    entry = Mock()
-    entry.data = {
-        "name": "Emulated Roku Test",
-        "listen_port": 8060,
-        emulated_roku.CONF_HOST_IP: "1.2.3.5",
-    }
+    entry = MockConfigEntry(
+        domain=emulated_roku.DOMAIN,
+        data={
+            "name": "Emulated Roku Test",
+            "listen_port": 8060,
+            emulated_roku.CONF_HOST_IP: "1.2.3.5",
+        },
+    )
+    entry.add_to_hass(hass)
 
     with patch(
         "homeassistant.components.emulated_roku.binding.EmulatedRokuServer",
         return_value=Mock(start=AsyncMock(), close=AsyncMock()),
     ):
-        # pylint: disable-next=home-assistant-tests-direct-async-setup-entry
-        assert await emulated_roku.async_setup_entry(hass, entry) is True
+        assert await hass.config_entries.async_setup(entry.entry_id) is True
 
     await hass.async_block_till_done()
 
-    assert await emulated_roku.async_unload_entry(hass, entry)
+    assert await hass.config_entries.async_unload(entry.entry_id)

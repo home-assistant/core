@@ -1,6 +1,6 @@
 """EHEIM Digital climate."""
 
-from typing import Any
+from typing import Any, override
 
 from eheimdigital.device import EheimDigitalDevice
 from eheimdigital.heater import EheimDigitalHeater
@@ -69,7 +69,7 @@ class EheimDigitalHeaterClimate(EheimDigitalEntity[EheimDigitalHeater], ClimateE
     )
     _attr_target_temperature_step = PRECISION_HALVES
     _attr_preset_modes = [PRESET_NONE, HEATER_BIO_MODE, HEATER_SMART_MODE]
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_preset_mode = PRESET_NONE
     _attr_translation_key = "heater"
     _attr_name = None
@@ -83,6 +83,7 @@ class EheimDigitalHeaterClimate(EheimDigitalEntity[EheimDigitalHeater], ClimateE
         self._async_update_attrs()
 
     @exception_handler
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode."""
         if preset_mode in HEATER_PRESET_TO_HEATER_MODE:
@@ -91,12 +92,14 @@ class EheimDigitalHeaterClimate(EheimDigitalEntity[EheimDigitalHeater], ClimateE
             )
 
     @exception_handler
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set a new temperature."""
         if ATTR_TEMPERATURE in kwargs:
             await self._device.set_target_temperature(kwargs[ATTR_TEMPERATURE])
 
     @exception_handler
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the heating mode."""
         match hvac_mode:
@@ -105,18 +108,19 @@ class EheimDigitalHeaterClimate(EheimDigitalEntity[EheimDigitalHeater], ClimateE
             case HVACMode.AUTO:
                 await self._device.set_active(active=True)
 
+    @override
     def _async_update_attrs(self) -> None:
         if self._device.temperature_unit == HeaterUnit.CELSIUS:
             self._attr_min_temp = 18
             self._attr_max_temp = 32
-            self._attr_temperature_unit = UnitOfTemperature.CELSIUS
+            self._attr_native_temperature_unit = UnitOfTemperature.CELSIUS
         elif self._device.temperature_unit == HeaterUnit.FAHRENHEIT:
             self._attr_min_temp = 64
             self._attr_max_temp = 90
-            self._attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
+            self._attr_native_temperature_unit = UnitOfTemperature.FAHRENHEIT
 
-        self._attr_current_temperature = self._device.current_temperature
-        self._attr_target_temperature = self._device.target_temperature
+        self._attr_native_current_temperature = self._device.current_temperature
+        self._attr_native_target_temperature = self._device.target_temperature
 
         if self._device.is_heating:
             self._attr_hvac_action = HVACAction.HEATING

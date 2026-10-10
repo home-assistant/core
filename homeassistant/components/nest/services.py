@@ -1,6 +1,6 @@
 """Define services for the Nest integration."""
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.climate import (
     DOMAIN as CLIMATE_DOMAIN,
@@ -23,7 +23,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         SERVICE_SET_FAN_TIMER,
         entity_domain=CLIMATE_DOMAIN,
         schema={
-            vol.Required("duration"): cv.time_period,
+            probatio.Required("duration"): cv.time_period,
         },
         func="async_set_fan_timer",
         required_features=[ClimateEntityFeature.FAN_MODE],

@@ -1,7 +1,7 @@
 """Home Assistant Hardware base beta firmware switch entity."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
@@ -30,6 +30,7 @@ class BaseBetaFirmwareSwitch(SwitchEntity, RestoreEntity):
         self._coordinator = coordinator
         self._config_entry = config_entry
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added to hass."""
         await super().async_added_to_hass()
@@ -44,12 +45,14 @@ class BaseBetaFirmwareSwitch(SwitchEntity, RestoreEntity):
         # Apply the restored state to the coordinator
         await self._update_coordinator_prerelease()
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on beta firmware updates."""
         self._attr_is_on = True
         self.async_write_ha_state()
         await self._update_coordinator_prerelease()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off beta firmware updates."""
         self._attr_is_on = False

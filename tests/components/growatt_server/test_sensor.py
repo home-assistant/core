@@ -1,7 +1,7 @@
 """Tests for the Growatt Server sensor platform."""
 
-from datetime import timedelta
-from unittest.mock import patch
+from datetime import date, timedelta
+from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import growattServer
@@ -169,7 +169,7 @@ async def test_sensor_coordinator_updates(
     mock_growatt_v1_api.plant_energy_overview.return_value = {
         "today_energy": 25.0,  # Changed from 12.5
         "total_energy": 1250.0,
-        "current_power": 2500,
+        "current_power": 2.5,
     }
 
     # Trigger coordinator refresh
@@ -181,6 +181,98 @@ async def test_sensor_coordinator_updates(
     state = hass.states.get("sensor.test_plant_total_energy_today")
     assert state is not None
     assert state.state == "25.0"
+
+
+@pytest.mark.parametrize(
+    ("powers", "expected_state"),
+    [
+        pytest.param(
+            [
+                {"time": "2026-07-14 18:50", "power": 1000.0},
+                {"time": "2026-07-14 19:05", "power": 700.0},
+                {"time": "invalid", "power": 900.0},
+                {"time": "2026-07-14 18:55", "power": 880.6},
+                {"time": "2026-07-14 18:57", "power": None},
+            ],
+            "880.6",
+            id="newest-valid-reading",
+        ),
+        pytest.param(
+            [{"time": "2026-07-14 18:55", "power": 0.0}],
+            "0.0",
+            id="nighttime-zero",
+        ),
+        pytest.param(
+            [{"time": "2026-07-14 18:45", "power": 900.0}],
+            "2500.0",
+            id="stale-reading",
+        ),
+        pytest.param(
+            [
+                {"time": None, "power": 900.0},
+                {"time": "2026-02-30 12:00", "power": 900.0},
+            ],
+            "2500.0",
+            id="invalid-timestamps",
+        ),
+        pytest.param(
+            [
+                {"time": "2026-07-14 18:55", "power": "nan"},
+                {"time": "2026-07-14 18:56", "power": "inf"},
+            ],
+            "2500.0",
+            id="non-finite-power",
+        ),
+        pytest.param([], "2500.0", id="missing-readings"),
+    ],
+)
+@pytest.mark.freeze_time("2026-07-14 17:00:00+00:00")
+async def test_v1_total_output_power_uses_recent_plant_power(
+    hass: HomeAssistant,
+    mock_growatt_v1_api: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    powers: list[dict[str, str | float | None]],
+    expected_state: str,
+) -> None:
+    """Test V1 total output power uses the newest recent plant power reading."""
+    await hass.config.async_set_time_zone("Europe/Amsterdam")
+    mock_growatt_v1_api.plant_power_overview.return_value = {
+        "count": len(powers),
+        "powers": powers,
+    }
+
+    with patch("homeassistant.components.growatt_server.PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("sensor.test_plant_total_output_power")
+    assert state is not None
+    assert state.state == expected_state
+    mock_growatt_v1_api.plant_power_overview.assert_called_once_with(
+        "123456", date(2026, 7, 14)
+    )
+
+
+@pytest.mark.freeze_time("2026-07-14 17:00:00+00:00")
+async def test_v1_total_output_power_falls_back_on_power_api_error(
+    hass: HomeAssistant,
+    mock_growatt_v1_api: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test V1 total output power remains available when plant power fails."""
+    mock_growatt_v1_api.plant_power_overview.side_effect = (
+        growattServer.GrowattV1ApiError(
+            message="Rate limited",
+            error_code=growattServer.GrowattV1ApiErrorCode.RATE_LIMITED,
+            error_msg="Too many requests",
+        )
+    )
+
+    with patch("homeassistant.components.growatt_server.PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("sensor.test_plant_total_output_power")
+    assert state is not None
+    assert state.state == "2500.0"
 
 
 async def test_sensor_unavailable_on_coordinator_error(
@@ -284,7 +376,7 @@ async def test_midnight_bounce_suppression(
     mock_growatt_v1_api.plant_energy_overview.return_value = {
         "today_energy": 0.1,
         "total_energy": 1250.1,
-        "current_power": 500,
+        "current_power": 0.5,
     }
     freezer.tick(timedelta(minutes=5))
     async_fire_time_changed(hass)
@@ -339,7 +431,7 @@ async def test_normal_reset_no_bounce(
     mock_growatt_v1_api.plant_energy_overview.return_value = {
         "today_energy": 0.1,
         "total_energy": 1250.1,
-        "current_power": 500,
+        "current_power": 0.5,
     }
     freezer.tick(timedelta(minutes=5))
     async_fire_time_changed(hass)
@@ -353,7 +445,7 @@ async def test_normal_reset_no_bounce(
     mock_growatt_v1_api.plant_energy_overview.return_value = {
         "today_energy": 1.5,
         "total_energy": 1251.5,
-        "current_power": 2000,
+        "current_power": 2.0,
     }
     freezer.tick(timedelta(minutes=5))
     async_fire_time_changed(hass)
@@ -452,7 +544,7 @@ async def test_midnight_bounce_repeated(
     mock_growatt_v1_api.plant_energy_overview.return_value = {
         "today_energy": 0.2,
         "total_energy": 1250.2,
-        "current_power": 1000,
+        "current_power": 1.0,
     }
     freezer.tick(timedelta(minutes=5))
     async_fire_time_changed(hass)
@@ -486,7 +578,7 @@ async def test_non_total_increasing_sensor_unaffected_by_bounce_suppression(
     mock_growatt_v1_api.plant_energy_overview.return_value = {
         "today_energy": 12.5,
         "total_energy": 0,
-        "current_power": 2500,
+        "current_power": 2.5,
     }
     freezer.tick(timedelta(minutes=5))
     async_fire_time_changed(hass)
@@ -500,7 +592,7 @@ async def test_non_total_increasing_sensor_unaffected_by_bounce_suppression(
     mock_growatt_v1_api.plant_energy_overview.return_value = {
         "today_energy": 12.5,
         "total_energy": 1250.0,
-        "current_power": 2500,
+        "current_power": 2.5,
     }
     freezer.tick(timedelta(minutes=5))
     async_fire_time_changed(hass)

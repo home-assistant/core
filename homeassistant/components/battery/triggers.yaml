@@ -22,7 +22,8 @@
 .battery_threshold_number: &battery_threshold_number
   min: 0
   max: 100
-  mode: box
+  step: any
+  mode: slider
   unit_of_measurement: "%"
 
 .trigger_target_battery: &trigger_target_battery
@@ -43,13 +44,13 @@
       device_class: battery
   primary_entities_only: false
 
-low:
+became_low:
   fields:
     behavior: *trigger_behavior
     for: *trigger_for
   target: *trigger_target_battery
 
-not_low:
+no_longer_low:
   fields:
     behavior: *trigger_behavior
     for: *trigger_for

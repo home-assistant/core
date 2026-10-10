@@ -2,7 +2,7 @@
 
 import logging
 import os
-from typing import cast
+from typing import cast, override
 
 from watchdog.events import (
     DirCreatedEvent,
@@ -23,6 +23,7 @@ from watchdog.observers import Observer
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
@@ -37,7 +38,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     path: str = entry.options[CONF_FOLDER]
     patterns: list[str] = entry.options[CONF_PATTERNS]
     if not hass.config.is_allowed_path(path):
-        _LOGGER.error("Folder %s is not valid or allowed", path)
         async_create_issue(
             hass,
             DOMAIN,
@@ -52,7 +52,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             },
             learn_more_url="https://www.home-assistant.io/docs/configuration/basic/#allowlist_external_dirs",
         )
-        return False
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="path_not_allowed",
+            translation_placeholders={"path": path},
+        )
     await hass.async_add_executor_job(Watcher, path, patterns, hass, entry.entry_id)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
@@ -103,22 +107,27 @@ class EventHandler(PatternMatchingEventHandler):
             signal = f"folder_watcher-{self.entry_id}"
             dispatcher_send(self.hass, signal, event.event_type, fireable)
 
+    @override
     def on_modified(self, event: DirModifiedEvent | FileModifiedEvent) -> None:
         """File modified."""
         self.process(event)
 
+    @override
     def on_moved(self, event: DirMovedEvent | FileMovedEvent) -> None:
         """File moved."""
         self.process(event, moved=True)
 
+    @override
     def on_created(self, event: DirCreatedEvent | FileCreatedEvent) -> None:
         """File created."""
         self.process(event)
 
+    @override
     def on_deleted(self, event: DirDeletedEvent | FileDeletedEvent) -> None:
         """File deleted."""
         self.process(event)
 
+    @override
     def on_closed(self, event: FileClosedEvent) -> None:
         """File closed."""
         self.process(event)

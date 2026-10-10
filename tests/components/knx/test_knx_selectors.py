@@ -1,20 +1,28 @@
 """Test KNX selectors."""
 
-from typing import Any
+from dataclasses import dataclass
+from typing import Annotated, Any
 
+import probatio
 import pytest
-import voluptuous as vol
-from voluptuous_serialize import convert
 
 from homeassistant.components.knx.const import ColorTempModes
 from homeassistant.components.knx.storage.knx_selector import (
     AllSerializeFirst,
     GASelector,
+    GroupAddressConfig,
+    GroupAddressSelector,
     GroupSelect,
     GroupSelectOption,
     KNXSection,
     KNXSectionFlat,
     SyncStateSelector,
+    ga,
+    group_select,
+    knx_selector_in,
+    state_and_passive,
+    write_address,
+    write_and_passive,
 )
 from homeassistant.components.knx.storage.serialize import knx_serializer
 from homeassistant.helpers import selector
@@ -22,64 +30,64 @@ from homeassistant.helpers import selector
 INVALID = "invalid"
 
 
-@pytest.mark.parametrize(
-    ("selector_config", "data", "expected"),
-    [
-        # valid data
-        (
-            {},
-            {"write": "1/2/3"},
-            {"write": "1/2/3", "state": None, "passive": []},
-        ),
-        (
-            {},
-            {"state": "1/2/3"},
-            {"write": None, "state": "1/2/3", "passive": []},
-        ),
-        (
-            {},
-            {"passive": ["1/2/3"]},
-            {"write": None, "state": None, "passive": ["1/2/3"]},
-        ),
-        (
-            {},
-            {"write": "1", "state": 2, "passive": ["1/2/3"]},
-            {"write": "1", "state": 2, "passive": ["1/2/3"]},
-        ),
-        (
-            {"write": False},
-            {"state": "1/2/3"},
-            {"state": "1/2/3", "passive": []},
-        ),
-        (
-            {"write": False},
-            {"passive": ["1/2/3"]},
-            {"state": None, "passive": ["1/2/3"]},
-        ),
-        (
-            {"passive": False},
-            {"write": "1/2/3"},
-            {"write": "1/2/3", "state": None},
-        ),
-        # required keys
-        (
-            {"write_required": True},
-            {"write": "1/2/3"},
-            {"write": "1/2/3", "state": None, "passive": []},
-        ),
-        (
-            {"state_required": True},
-            {"state": "1/2/3"},
-            {"write": None, "state": "1/2/3", "passive": []},
-        ),
-        # dpt key
-        (
-            {"dpt": ColorTempModes},
-            {"write": "1/2/3", "dpt": "7.600"},
-            {"write": "1/2/3", "state": None, "passive": [], "dpt": "7.600"},
-        ),
-    ],
-)
+GA_SELECTOR_CASES = [
+    # valid data
+    (
+        {},
+        {"write": "1/2/3"},
+        {"write": "1/2/3", "state": None, "passive": []},
+    ),
+    (
+        {},
+        {"state": "1/2/3"},
+        {"write": None, "state": "1/2/3", "passive": []},
+    ),
+    (
+        {},
+        {"passive": ["1/2/3"]},
+        {"write": None, "state": None, "passive": ["1/2/3"]},
+    ),
+    (
+        {},
+        {"write": "1", "state": 2, "passive": ["1/2/3"]},
+        {"write": "1", "state": 2, "passive": ["1/2/3"]},
+    ),
+    (
+        {"write": False},
+        {"state": "1/2/3"},
+        {"state": "1/2/3", "passive": []},
+    ),
+    (
+        {"write": False},
+        {"passive": ["1/2/3"]},
+        {"state": None, "passive": ["1/2/3"]},
+    ),
+    (
+        {"passive": False},
+        {"write": "1/2/3"},
+        {"write": "1/2/3", "state": None},
+    ),
+    # required keys
+    (
+        {"write_required": True},
+        {"write": "1/2/3"},
+        {"write": "1/2/3", "state": None, "passive": []},
+    ),
+    (
+        {"state_required": True},
+        {"state": "1/2/3"},
+        {"write": None, "state": "1/2/3", "passive": []},
+    ),
+    # dpt key
+    (
+        {"dpt": ColorTempModes},
+        {"write": "1/2/3", "dpt": "7.600"},
+        {"write": "1/2/3", "state": None, "passive": [], "dpt": "7.600"},
+    ),
+]
+
+
+@pytest.mark.parametrize(("selector_config", "data", "expected"), GA_SELECTOR_CASES)
 def test_ga_selector(
     selector_config: dict[str, Any],
     data: dict[str, Any],
@@ -89,6 +97,51 @@ def test_ga_selector(
     selector = GASelector(**selector_config)
     result = selector(data)
     assert result == expected
+
+
+@pytest.mark.parametrize(("selector_config", "data", "expected"), GA_SELECTOR_CASES)
+def test_group_address_selector(
+    selector_config: dict[str, Any],
+    data: dict[str, Any],
+    expected: dict[str, Any],
+) -> None:
+    """Test GroupAddressSelector yields a typed value that renders back to storage."""
+    selector = GroupAddressSelector(**selector_config)
+    result = selector(data)
+    assert isinstance(result, GroupAddressConfig)
+    assert result.write == expected.get("write")
+    assert result.state == expected.get("state")
+    assert result.passive == expected.get("passive", [])
+    assert result.dpt == expected.get("dpt")
+    # storage form is what the dict based GASelector produces
+    assert selector.to_storage(result) == expected
+
+
+def test_group_address_selector_none() -> None:
+    """Test GroupAddressSelector passes an absent optional value through."""
+    selector = GroupAddressSelector()
+    assert selector(None) is None
+    assert selector.to_storage(None) is None
+
+
+def test_group_address_config_address_lists() -> None:
+    """Test combining write / state with passive addresses."""
+    config = GroupAddressConfig(write="1/2/3", state="1/2/4", passive=["1/2/5"])
+    assert write_and_passive(config) == ["1/2/3", "1/2/5"]
+    assert state_and_passive(config) == ["1/2/4", "1/2/5"]
+    assert write_and_passive(GroupAddressConfig(write="1/2/3")) == ["1/2/3"]
+    assert state_and_passive(GroupAddressConfig()) == [None]
+    assert state_and_passive(None) is None
+
+
+def test_knx_selector_in() -> None:
+    """Test finding a selector in annotation metadata."""
+    ga_selector = knx_selector_in([str, ga(write_required=True)])
+    assert isinstance(ga_selector, GroupAddressSelector)
+    assert ga_selector.write_required is True
+    ha_selector = selector.BooleanSelector()
+    assert knx_selector_in([bool, ha_selector]) is ha_selector
+    assert knx_selector_in([bool, probatio.Coerce(int)]) is None
 
 
 @pytest.mark.parametrize(
@@ -177,7 +230,7 @@ def test_ga_selector_invalid(
 ) -> None:
     """Test GASelector."""
     selector = GASelector(**selector_config)
-    with pytest.raises(vol.Invalid, match=error_str):
+    with pytest.raises(probatio.Invalid, match=error_str):
         selector(data)
 
 
@@ -186,10 +239,10 @@ def test_sync_state_selector() -> None:
     selector = SyncStateSelector()
     assert selector("expire 50") == "expire 50"
 
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         selector("invalid")
 
-    with pytest.raises(vol.Invalid, match="Sync state cannot be False"):
+    with pytest.raises(probatio.Invalid, match="Sync state cannot be False"):
         selector(False)
 
     false_allowed = SyncStateSelector(allow_false=True)
@@ -265,7 +318,9 @@ def test_ga_selector_serialization(
     ("schema", "serialized"),
     [
         (
-            AllSerializeFirst(vol.Schema({"key": int}), vol.Schema({"ignored": str})),
+            AllSerializeFirst(
+                probatio.Schema({"key": int}), probatio.Schema({"ignored": str})
+            ),
             [{"name": "key", "required": False, "type": "integer"}],
         ),
         (
@@ -324,10 +379,10 @@ def test_ga_selector_serialization(
             },
         ),
         (  # in a dict schema `name` and `required` keys are added
-            vol.Schema(
+            probatio.Schema(
                 {
                     "section_test": KNXSectionFlat(),
-                    vol.Optional("key"): selector.BooleanSelector(),
+                    probatio.Optional("key"): selector.BooleanSelector(),
                 }
             ),
             [
@@ -350,4 +405,63 @@ def test_ga_selector_serialization(
 )
 def test_serialization(schema: Any, serialized: dict[str, Any]) -> None:
     """Test serialization of the selector."""
-    assert convert(schema, custom_serializer=knx_serializer) == serialized
+    assert (
+        probatio.to_field_list(schema, custom_serializer=knx_serializer) == serialized
+    )
+
+
+def test_typed_group_select() -> None:
+    """Test a typed group select yields the matching option's dataclass."""
+
+    @dataclass(kw_only=True, slots=True)
+    class FirstOption:
+        key_a: int
+
+    @dataclass(kw_only=True, slots=True)
+    class SecondOption:
+        key_b: str
+
+    @dataclass(kw_only=True, slots=True)
+    class Config:
+        choice: Annotated[
+            FirstOption | SecondOption | None,
+            group_select(("option_a", FirstOption), ("option_b", SecondOption)),
+        ] = None
+
+    schema = probatio.DataclassSchema(Config)
+    assert schema({"choice": {"key_a": 1}}).choice == FirstOption(key_a=1)
+    assert schema({"choice": {"key_b": "x"}}).choice == SecondOption(key_b="x")
+    assert schema({}).choice is None
+    with pytest.raises(probatio.Invalid) as exc_info:
+        schema({"choice": {"key_b": 1}})
+    # error of the option whose keys match, not the extra keys of the other
+    assert exc_info.value.path == ["choice", "key_b"]
+
+    assert probatio.to_field_list(schema, custom_serializer=knx_serializer) == [
+        {
+            "type": "knx_group_select",
+            "collapsible": True,
+            "schema": [
+                {
+                    "type": "knx_group_select_option",
+                    "translation_key": "option_a",
+                    "schema": [{"name": "key_a", "required": True, "type": "integer"}],
+                },
+                {
+                    "type": "knx_group_select_option",
+                    "translation_key": "option_b",
+                    "schema": [{"name": "key_b", "required": True, "type": "string"}],
+                },
+            ],
+            "name": "choice",
+            "required": False,
+            "optional": True,
+            "default": None,
+        }
+    ]
+
+
+def test_write_address() -> None:
+    """Test the write address of an optional group address."""
+    assert write_address(GroupAddressConfig(write="1/2/3")) == "1/2/3"
+    assert write_address(None) is None

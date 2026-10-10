@@ -1,5 +1,7 @@
 """Support for System Bridge updates."""
 
+from typing import override
+
 from homeassistant.components.update import UpdateEntity
 from homeassistant.const import CONF_PORT
 from homeassistant.core import HomeAssistant
@@ -47,16 +49,29 @@ class SystemBridgeUpdateEntity(SystemBridgeEntity, UpdateEntity):
         )
 
     @property
+    @override
     def installed_version(self) -> str | None:
         """Version installed and in use."""
-        return self.coordinator.data.system.version
+        if (system := self.coordinator.data.system) is None:
+            return None
+        return system.version
 
     @property
+    @override
     def latest_version(self) -> str | None:
         """Latest version available for install."""
-        return self.coordinator.data.system.version_latest
+        if (system := self.coordinator.data.system) is None:
+            return None
+        return system.version_latest
 
     @property
+    @override
     def release_url(self) -> str | None:
         """URL to the full release notes of the latest version available."""
-        return f"https://github.com/timmo001/system-bridge/releases/tag/{self.coordinator.data.system.version_latest}"
+        if (system := self.coordinator.data.system) is None or (
+            version_latest := system.version_latest
+        ) is None:
+            return None
+        return (
+            f"https://github.com/timmo001/system-bridge/releases/tag/{version_latest}"
+        )

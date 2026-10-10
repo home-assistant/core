@@ -23,7 +23,10 @@ from homeassistant.components.inkbird.const import (
     CONF_DEVICE_TYPE,
     DOMAIN,
 )
-from homeassistant.components.inkbird.coordinator import FALLBACK_POLL_INTERVAL
+from homeassistant.components.inkbird.coordinator import (
+    ACTIVE_SCAN_DURATION,
+    FALLBACK_POLL_INTERVAL,
+)
 from homeassistant.components.sensor import ATTR_STATE_CLASS
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_UNIT_OF_MEASUREMENT
@@ -99,6 +102,26 @@ async def test_sensors(hass: HomeAssistant) -> None:
     assert entry.data[CONF_DEVICE_TYPE] == "IBS-TH"
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
+
+
+async def test_active_scan_duration(hass: HomeAssistant) -> None:
+    """Test the scan response only IBS-TH registers a wide active scan window."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="61DE521B-F0BF-9F44-64D4-75BBE1738105",
+        data={CONF_DEVICE_TYPE: "IBS-TH"},
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.bluetooth.update_coordinator.async_register_callback"
+    ) as mock_register_callback:
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_register_callback.call_args.kwargs["scan_duration"] == (
+        ACTIVE_SCAN_DURATION
+    )
 
 
 async def test_device_with_corrupt_name(hass: HomeAssistant) -> None:

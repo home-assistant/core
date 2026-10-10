@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from pypaperless.models import Statistic, Status
 from pypaperless.models.common import StatusType
@@ -286,6 +287,7 @@ class PaperlessSensor[CoordinatorT: PaperlessCoordinator](
     entity_description: PaperlessEntityDescription
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the current value of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)

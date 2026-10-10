@@ -1,9 +1,11 @@
 """Test the Ollama config flow."""
 
 import asyncio
+from collections.abc import Iterator
+from contextlib import contextmanager
 from unittest.mock import ANY, AsyncMock, patch
 
-from httpx import ConnectError
+from httpx2 import HTTPError
 from ollama import ResponseError
 import pytest
 
@@ -18,6 +20,22 @@ from homeassistant.data_entry_flow import FlowResultType
 from tests.common import MockConfigEntry
 
 TEST_MODEL = "test_model:latest"
+
+
+@contextmanager
+def _patch_success() -> Iterator[None]:
+    """Patch a successful connection and setup."""
+    with (
+        patch(
+            "homeassistant.components.ollama.config_flow.ollama.AsyncClient.list",
+            return_value={"models": [{"model": TEST_MODEL}]},
+        ),
+        patch(
+            "homeassistant.components.ollama.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        yield
 
 
 async def test_form(hass: HomeAssistant) -> None:
@@ -378,7 +396,8 @@ async def test_reauth_flow_success(
     ("side_effect", "error"),
     [
         (ResponseError(error="Unauthorized", status_code=401), "invalid_auth"),
-        (ConnectError(message="Connection failed"), "cannot_connect"),
+        (ConnectionError("Connection failed"), "cannot_connect"),
+        (TimeoutError(), "cannot_connect"),
     ],
 )
 async def test_reauth_flow_errors(hass: HomeAssistant, side_effect, error) -> None:
@@ -437,11 +456,14 @@ async def test_reauth_flow_errors(hass: HomeAssistant, side_effect, error) -> No
 @pytest.mark.parametrize(
     ("side_effect", "error"),
     [
-        (ConnectError(message=""), "cannot_connect"),
+        (ConnectionError("Failed to connect to Ollama"), "cannot_connect"),
+        (TimeoutError(), "cannot_connect"),
         (RuntimeError(), "unknown"),
     ],
 )
-async def test_form_errors(hass: HomeAssistant, side_effect, error) -> None:
+async def test_form_errors(
+    hass: HomeAssistant, side_effect: Exception, error: str
+) -> None:
     """Test we handle errors."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -458,11 +480,20 @@ async def test_form_errors(hass: HomeAssistant, side_effect, error) -> None:
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": error}
 
+    with _patch_success():
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {ollama.CONF_URL: "http://localhost:11434"}
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+
 
 @pytest.mark.parametrize(
     ("side_effect", "error"),
     [
-        (ConnectError(message=""), "cannot_connect"),
+        (ConnectionError(), "cannot_connect"),
+        (TimeoutError(), "cannot_connect"),
         (RuntimeError(), "unknown"),
     ],
 )
@@ -512,16 +543,33 @@ async def test_form_invalid_url(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_url"}
 
+    with _patch_success():
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {ollama.CONF_URL: "http://localhost:11434"}
+        )
+        await hass.async_block_till_done()
 
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+
+
+@pytest.mark.parametrize(
+    "side_effect",
+    [
+        TimeoutError(),
+        ConnectionError("Failed to connect to Ollama"),
+        HTTPError("HTTP error"),
+    ],
+)
 async def test_subentry_connection_error(
     hass: HomeAssistant,
     mock_init_component,
     mock_config_entry: MockConfigEntry,
+    side_effect: Exception,
 ) -> None:
     """Test subentry creation when connection to Ollama server fails."""
     with patch(
         "ollama.AsyncClient.list",
-        side_effect=ConnectError("Connection failed"),
+        side_effect=side_effect,
     ):
         new_flow = await hass.config_entries.subentries.async_init(
             (mock_config_entry.entry_id, "conversation"),
@@ -854,6 +902,14 @@ async def test_user_step_errors(
 
     assert result["type"] is FlowResultType.FORM
     assert result.get("errors") == {"base": error}
+
+    with _patch_success():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=user_input
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_user_step_trim_url(hass: HomeAssistant) -> None:

@@ -2,6 +2,7 @@
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
+from typing import override
 
 from pysabnzbd import SabnzbdApiException
 
@@ -62,10 +63,12 @@ class SabnzbdNumber(SabnzbdEntity, NumberEntity):
     entity_description: SabnzbdNumberEntityDescription
 
     @property
+    @override
     def native_value(self) -> float:
         """Return latest value for number."""
         return self.coordinator.data[self.entity_description.key]
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set the new number value."""
         try:

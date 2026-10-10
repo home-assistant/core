@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 from enum import StrEnum
+from typing import override
 
 from qbusmqttapi.discovery import QbusMqttOutput
 from qbusmqttapi.state import (
@@ -21,15 +22,14 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    CONCENTRATION_PARTS_PER_MILLION,
     LIGHT_LUX,
-    PERCENTAGE,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
     UnitOfLength,
     UnitOfPower,
     UnitOfPressure,
+    UnitOfRatio,
     UnitOfSoundPressure,
     UnitOfSpeed,
     UnitOfTemperature,
@@ -125,7 +125,7 @@ _GAUGE_VARIANT_DESCRIPTIONS = {
     "AIRQUALITY": SensorEntityDescription(
         key="airquality",
         device_class=SensorDeviceClass.CO2,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "CURRENT": SensorEntityDescription(
@@ -155,7 +155,7 @@ _GAUGE_VARIANT_DESCRIPTIONS = {
     "HUMIDITY": SensorEntityDescription(
         key="humidity",
         device_class=SensorDeviceClass.HUMIDITY,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "LIGHT": SensorEntityDescription(
@@ -328,6 +328,7 @@ class QbusGaugeVariantSensor(QbusEntity, SensorEntity):
         if allowed_units is not None and unit in allowed_units:
             self._attr_native_unit_of_measurement = unit
 
+    @override
     async def _handle_state_received(self, state: QbusMqttGaugeState) -> None:
         self._attr_native_value = state.read_value(GaugeStateProperty.CURRENT_VALUE)
 
@@ -351,9 +352,10 @@ class QbusHumiditySensor(QbusEntity, SensorEntity):
 
     _attr_device_class = SensorDeviceClass.HUMIDITY
     _attr_name = None
-    _attr_native_unit_of_measurement = PERCENTAGE
+    _attr_native_unit_of_measurement = UnitOfRatio.PERCENTAGE
     _attr_state_class = SensorStateClass.MEASUREMENT
 
+    @override
     async def _handle_state_received(self, state: QbusMqttHumidityState) -> None:
         self._attr_native_value = state.read_value()
 
@@ -367,6 +369,7 @@ class QbusThermoSensor(QbusEntity, SensorEntity):
     _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
     _attr_state_class = SensorStateClass.MEASUREMENT
 
+    @override
     async def _handle_state_received(self, state: QbusMqttThermoState) -> None:
         self._attr_native_value = state.read_current_temperature()
 
@@ -378,10 +381,11 @@ class QbusVentilationSensor(QbusEntity, SensorEntity):
 
     _attr_device_class = SensorDeviceClass.CO2
     _attr_name = None
-    _attr_native_unit_of_measurement = CONCENTRATION_PARTS_PER_MILLION
+    _attr_native_unit_of_measurement = UnitOfRatio.PARTS_PER_MILLION
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_suggested_display_precision = 0
 
+    @override
     async def _handle_state_received(self, state: QbusMqttVentilationState) -> None:
         self._attr_native_value = state.read_co2()
 
@@ -405,6 +409,7 @@ class QbusWeatherSensor(QbusEntity, SensorEntity):
         if description.key == "temperature":
             self._attr_name = None
 
+    @override
     async def _handle_state_received(self, state: QbusMqttWeatherState) -> None:
         if value := state.read_property(self.entity_description.property, None):
             self.native_value = (

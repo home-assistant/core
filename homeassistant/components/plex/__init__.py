@@ -1,4 +1,5 @@
 """Support to embed Plex."""
+# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 from functools import partial
 import logging
@@ -85,7 +86,7 @@ async def async_browse_media(hass, media_content_type, media_content_id, platfor
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Plex component."""
+    """Set up the Plex integration."""
     gdm = GDM()
 
     def gdm_scan():
@@ -160,13 +161,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 "Token not accepted, please reauthenticate Plex server"
                 f" '{entry.data[CONF_SERVER]}'"
             ) from error
-        _LOGGER.error(
-            "Login to %s failed, verify token and SSL settings: [%s]",
-            entry.data[CONF_SERVER],
-            error,
-        )
         # Retry as setups behind a proxy can return transient 404 or 502 errors
-        raise ConfigEntryNotReady from error
+        raise ConfigEntryNotReady(
+            f"Login to {entry.data[CONF_SERVER]} failed, verify token and SSL"
+            f" settings: [{error}]"
+        ) from error
 
     _LOGGER.debug(
         "Connected to: %s (%s)", plex_server.friendly_name, plex_server.url_in_use

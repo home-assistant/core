@@ -28,9 +28,8 @@ from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
-    DeviceEntry,
+    AnyDeviceEntry,
     DeviceEntryType,
-    format_mac,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
@@ -89,7 +88,7 @@ type SqueezeboxConfigEntry = ConfigEntry[SqueezeboxData]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the component."""
+    """Set up the integration."""
     async_setup_services(hass)
     return True
 
@@ -117,7 +116,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: SqueezeboxConfigEntry) -
                 "serverstatus", "-", "-", "prefs:libraryname"
             )
     except TimeoutError as err:  # Specifically catch timeout
-        _LOGGER.warning("Timeout connecting to LMS %s: %s", host, err)
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="init_timeout",
@@ -131,7 +129,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: SqueezeboxConfigEntry) -
         # including HTTP errors where it sets lms.http_status.
 
         if lms.http_status == HTTPStatus.UNAUTHORIZED:
-            _LOGGER.warning("Authentication failed for Squeezebox server %s", host)
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="init_auth_failed",
@@ -142,11 +139,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: SqueezeboxConfigEntry) -
 
         # For other errors where status is None
         # (e.g., server error, connection refused by server)
-        _LOGGER.warning(
-            "LMS %s returned no status or an error (HTTP status: %s). Retrying setup",
-            host,
-            lms.http_status,
-        )
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="init_get_status_failed",
@@ -161,7 +153,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: SqueezeboxConfigEntry) -
 
     # Check for essential keys in status before using them
     if STATUS_QUERY_UUID not in status:
-        _LOGGER.error("LMS %s status response missing UUID", host)
         # This is a non-recoverable error with the current server response
         raise ConfigEntryError(
             translation_domain=DOMAIN,
@@ -180,7 +171,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SqueezeboxConfigEntry) -
     version = (STATUS_QUERY_VERSION in status and status[STATUS_QUERY_VERSION]) or None
     # mac can be missing
     mac_connect = (
-        {(CONNECTION_NETWORK_MAC, format_mac(status[STATUS_QUERY_MAC]))}
+        {(CONNECTION_NETWORK_MAC, status[STATUS_QUERY_MAC])}
         if STATUS_QUERY_MAC in status
         else None
     )
@@ -273,9 +264,12 @@ async def async_unload_entry(hass: HomeAssistant, entry: SqueezeboxConfigEntry) 
 async def async_remove_config_entry_device(
     hass: HomeAssistant,
     config_entry: SqueezeboxConfigEntry,
-    device_entry: DeviceEntry,
+    device_entry: AnyDeviceEntry,
 ) -> bool:
     """Allow removal of a Squeezebox player only if its coordinator is unavailable."""
+    if not isinstance(device_entry, dr.DeviceEntry):
+        # This integration does not create child devices.
+        return False
     if device_entry.entry_type is DeviceEntryType.SERVICE:
         raise HomeAssistantError(
             f"Cannot remove Lyrion Music Server '{device_entry.name}' directly. "

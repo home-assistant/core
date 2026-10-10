@@ -3,10 +3,10 @@
 import asyncio
 from contextlib import suppress
 import logging
-from typing import Any
+from typing import Any, override
 
+import probatio
 import upb_lib
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_DEVICE, CONF_FILE_PATH
@@ -17,10 +17,10 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_SCHEMA = vol.Schema(
+DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_DEVICE): SerialPortSelector(),
-        vol.Required(CONF_FILE_PATH, default=""): str,
+        probatio.Required(CONF_DEVICE): SerialPortSelector(),
+        probatio.Required(CONF_FILE_PATH, default=""): str,
     }
 )
 
@@ -73,6 +73,7 @@ class UPBConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     MINOR_VERSION = 3
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

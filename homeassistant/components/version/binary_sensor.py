@@ -1,5 +1,7 @@
 """Binary sensor platform for Version."""
 
+from typing import override
+
 from awesomeversion import AwesomeVersion
 
 from homeassistant.components.binary_sensor import (
@@ -57,6 +59,7 @@ class VersionBinarySensor(VersionEntity, BinarySensorEntity):
     entity_description: BinarySensorEntityDescription
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
         version = self.coordinator.version

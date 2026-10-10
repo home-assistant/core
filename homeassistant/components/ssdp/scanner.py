@@ -367,7 +367,7 @@ class Scanner:
         callbacks = self._async_get_matching_callbacks(combined_headers)
 
         # If there are no changes from a search, do not trigger a config flow
-        if source is not SsdpSource.SEARCH_ALIVE:
+        if source != SsdpSource.SEARCH_ALIVE:
             matching_domains = self.integration_matchers.async_matching_domains(
                 CaseInsensitiveDict(combined_headers.as_dict(), **info_desc)
             )
@@ -375,7 +375,7 @@ class Scanner:
         if (
             not callbacks
             and not matching_domains
-            and source is not SsdpSource.ADVERTISEMENT_BYEBYE
+            and source != SsdpSource.ADVERTISEMENT_BYEBYE
         ):
             return
 
@@ -390,7 +390,7 @@ class Scanner:
 
         # Config flows should only be created for alive/update
         # messages from alive devices
-        if source is SsdpSource.ADVERTISEMENT_BYEBYE:
+        if source == SsdpSource.ADVERTISEMENT_BYEBYE:
             self._async_dismiss_discoveries(discovery_info)
             return
 
@@ -416,14 +416,13 @@ class Scanner:
         self, byebye_discovery_info: _SsdpServiceInfo
     ) -> None:
         """Dismiss all discoveries for the given address."""
-        for flow in self.hass.config_entries.flow.async_progress_by_init_data_type(
+        self.hass.config_entries.flow.async_dismiss_discovery_flows(
             _SsdpServiceInfo,
             lambda service_info: bool(
                 service_info.ssdp_st == byebye_discovery_info.ssdp_st
                 and service_info.ssdp_location == byebye_discovery_info.ssdp_location
             ),
-        ):
-            self.hass.config_entries.flow.async_abort(flow["flow_id"])
+        )
 
     async def _async_get_description_dict(
         self, location: str | None

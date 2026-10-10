@@ -1,6 +1,6 @@
 """Support for Aidot lights."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -78,24 +78,30 @@ class AidotLight(CoordinatorEntity[AidotDeviceUpdateCoordinator], LightEntity):
         self._attr_rgbw_color = self.coordinator.data.rgbw
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return super().available and self.coordinator.data.online
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Update."""
         self._update_status()
         super()._handle_coordinator_update()
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn the light on, applying brightness, color temperature, RGBW, or plain on."""
+        """Turn the light on, applying any requested brightness and color."""
+        # Brightness is independent of color: a scene sends both at once, and
+        # the color must not be dropped just because brightness came with it.
         if ATTR_BRIGHTNESS in kwargs:
             brightness = kwargs.get(ATTR_BRIGHTNESS, 255)
             await self.coordinator.device_client.async_set_brightness(brightness)
             self.coordinator.data.dimming = brightness
             self._attr_brightness = brightness
-        elif ATTR_COLOR_TEMP_KELVIN in kwargs:
+
+        if ATTR_COLOR_TEMP_KELVIN in kwargs:
             color_temp_kelvin = kwargs.get(ATTR_COLOR_TEMP_KELVIN)
             await self.coordinator.device_client.async_set_cct(color_temp_kelvin)
             self.coordinator.data.cct = color_temp_kelvin
@@ -107,13 +113,15 @@ class AidotLight(CoordinatorEntity[AidotDeviceUpdateCoordinator], LightEntity):
             self.coordinator.data.rgbw = rgbw_color
             self._attr_rgbw_color = rgbw_color
             self._attr_color_mode = ColorMode.RGBW
-        else:
+        elif ATTR_BRIGHTNESS not in kwargs:
+            # Nothing was requested to apply, so just switch it on.
             await self.coordinator.device_client.async_turn_on()
 
         self.coordinator.data.on = True
         self._attr_is_on = True
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         await self.coordinator.device_client.async_turn_off()

@@ -2,13 +2,12 @@
 
 import astroid
 from pylint.testutils import UnittestLinter
-from pylint.utils.ast_walker import ASTWalker
 from pylint_home_assistant.checkers.unused_test_fixture_args import (
     UnusedTestFixtureArgsChecker,
 )
 import pytest
 
-from . import assert_no_messages
+from . import assert_no_messages, walk_checker
 
 
 @pytest.fixture(name="unused_args_checker")
@@ -68,11 +67,9 @@ def test_no_warning(
 ) -> None:
     """Test cases that should not trigger a warning."""
     root_node = astroid.parse(code, "tests.components.test_integration.test_init")
-    walker = ASTWalker(linter)
-    walker.add_checker(unused_args_checker)
 
     with assert_no_messages(linter):
-        walker.walk(root_node)
+        walk_checker(linter, unused_args_checker, root_node)
 
 
 def test_unused_single_arg(
@@ -87,9 +84,7 @@ def test_something(hass: HomeAssistant, enable_bluetooth: None) -> None:
 """,
         "tests.components.test_integration.test_init",
     )
-    walker = ASTWalker(linter)
-    walker.add_checker(unused_args_checker)
-    walker.walk(root_node)
+    walk_checker(linter, unused_args_checker, root_node)
 
     messages = linter.release_messages()
     assert len(messages) == 1
@@ -115,9 +110,7 @@ def test_something(
 """,
         "tests.components.test_integration.test_init",
     )
-    walker = ASTWalker(linter)
-    walker.add_checker(unused_args_checker)
-    walker.walk(root_node)
+    walk_checker(linter, unused_args_checker, root_node)
 
     messages = linter.release_messages()
     assert len(messages) == 2
@@ -137,11 +130,9 @@ def test_something(unused: str) -> None:
 """,
         "homeassistant.components.test_integration",
     )
-    walker = ASTWalker(linter)
-    walker.add_checker(unused_args_checker)
 
     with assert_no_messages(linter):
-        walker.walk(root_node)
+        walk_checker(linter, unused_args_checker, root_node)
 
 
 def test_async_test_function(
@@ -156,9 +147,7 @@ async def test_something(hass: HomeAssistant, enable_bluetooth: None) -> None:
 """,
         "tests.components.test_integration.test_init",
     )
-    walker = ASTWalker(linter)
-    walker.add_checker(unused_args_checker)
-    walker.walk(root_node)
+    walk_checker(linter, unused_args_checker, root_node)
 
     messages = linter.release_messages()
     assert len(messages) == 1

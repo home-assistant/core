@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 import pytest
 
+from homeassistant.components.prusalink import DOMAIN
 from homeassistant.components.sensor import (
     ATTR_OPTIONS,
     ATTR_STATE_CLASS,
@@ -17,6 +18,7 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     PERCENTAGE,
     REVOLUTIONS_PER_MINUTE,
+    STATE_UNAVAILABLE,
     Platform,
     UnitOfLength,
     UnitOfTemperature,
@@ -37,7 +39,7 @@ def setup_sensor_platform_only():
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensors_no_job(hass: HomeAssistant, mock_config_entry, mock_api) -> None:
     """Test sensors while no job active."""
-    assert await async_setup_component(hass, "prusalink", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     state = hass.states.get("sensor.workshop_mock_title")
     assert state is not None
@@ -146,7 +148,7 @@ async def test_sensors_idle_job_mk3(
     mock_job_api_idle_mk3,
 ) -> None:
     """Test sensors while job state is idle (MK3)."""
-    assert await async_setup_component(hass, "prusalink", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     state = hass.states.get("sensor.workshop_mock_title")
     assert state is not None
@@ -260,7 +262,7 @@ async def test_sensors_active_job(
         "homeassistant.components.prusalink.sensor.utcnow",
         return_value=datetime(2022, 8, 27, 14, 0, 0, tzinfo=UTC),
     ):
-        assert await async_setup_component(hass, "prusalink", {})
+        assert await async_setup_component(hass, DOMAIN, {})
 
     state = hass.states.get("sensor.workshop_mock_title")
     assert state is not None
@@ -301,7 +303,7 @@ async def test_axis_x_y_sensors(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_api: None
 ) -> None:
     """Test X and Y axis position sensors."""
-    assert await async_setup_component(hass, "prusalink", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     state = hass.states.get("sensor.workshop_mock_title_x_position")
     assert state is not None
@@ -328,7 +330,7 @@ async def test_axis_x_y_not_created_when_absent(
     """X and Y sensors are not created when axis fields are absent from the response."""
     del mock_get_status_idle["printer"]["axis_x"]
     del mock_get_status_idle["printer"]["axis_y"]
-    assert await async_setup_component(hass, "prusalink", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     assert hass.states.get("sensor.workshop_mock_title_x_position") is None
     assert hass.states.get("sensor.workshop_mock_title_y_position") is None
@@ -339,7 +341,7 @@ async def test_min_extrusion_temp_sensor(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_api: None
 ) -> None:
     """Test minimum extrusion temperature sensor from info endpoint."""
-    assert await async_setup_component(hass, "prusalink", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     state = hass.states.get("sensor.workshop_mock_title_minimum_extrusion_temperature")
     assert state is not None
@@ -358,9 +360,68 @@ async def test_min_extrusion_temp_not_created_when_absent(
 ) -> None:
     """Min extrusion temp sensor is not created when the info field is absent."""
     del mock_info_api["min_extrusion_temp"]
-    assert await async_setup_component(hass, "prusalink", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     assert (
         hass.states.get("sensor.workshop_mock_title_minimum_extrusion_temperature")
         is None
     )
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_job_timestamps_not_derived_after_the_print(
+    hass: HomeAssistant,
+    mock_config_entry,
+    mock_api,
+    mock_get_status_printing,
+    mock_job_api_printing,
+    mock_job_api_attention,
+) -> None:
+    """Test the job timestamps stop being derived once the print has ended."""
+    # A finished print keeps reporting the job while the printer waits for the
+    # part to be removed, with the printing time frozen and nothing remaining.
+    mock_job_api_printing["time_remaining"] = 0
+
+    with patch(
+        "homeassistant.components.prusalink.sensor.utcnow",
+        return_value=datetime(2022, 8, 27, 14, 0, 0, tzinfo=UTC),
+    ):
+        assert await async_setup_component(hass, DOMAIN, {})
+
+    state = hass.states.get("sensor.workshop_mock_title")
+    assert state is not None
+    assert state.state == "attention"
+
+    # Deriving these from the wall clock now only produces a drifting start and
+    # a finish that is forever "just now".
+    state = hass.states.get("sensor.workshop_mock_title_print_start")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+    state = hass.states.get("sensor.workshop_mock_title_print_finish")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_job_timestamps_kept_while_paused(
+    hass: HomeAssistant,
+    mock_config_entry,
+    mock_api,
+    mock_get_status_printing,
+    mock_job_api_paused,
+) -> None:
+    """Test the job timestamps stay available while the job is paused."""
+    with patch(
+        "homeassistant.components.prusalink.sensor.utcnow",
+        return_value=datetime(2022, 8, 27, 14, 0, 0, tzinfo=UTC),
+    ):
+        assert await async_setup_component(hass, DOMAIN, {})
+
+    state = hass.states.get("sensor.workshop_mock_title_print_start")
+    assert state is not None
+    assert state.state == "2022-08-27T01:46:53+00:00"
+
+    state = hass.states.get("sensor.workshop_mock_title_print_finish")
+    assert state is not None
+    assert state.state == "2022-08-28T10:17:00+00:00"

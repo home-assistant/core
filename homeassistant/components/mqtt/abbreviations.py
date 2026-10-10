@@ -215,6 +215,8 @@ ABBREVIATIONS = {
     "stat_tpl": "state_template",
     "stat_val_tpl": "state_value_template",
     "step": "step",
+    "stop_cmd_t": "stop_command_topic",
+    "stop_cmd_tpl": "stop_command_template",
     "strt_mw_cmd_t": "start_mowing_command_topic",
     "strt_mw_cmd_tpl": "start_mowing_command_template",
     "stype": "subtype",
@@ -273,6 +275,7 @@ ABBREVIATIONS = {
     "l_ver_t": "latest_version_topic",
     "l_ver_tpl": "latest_version_template",
     "pl_inst": "payload_install",
+    "vis": "visible_by_default",
 }
 
 DEVICE_ABBREVIATIONS = {

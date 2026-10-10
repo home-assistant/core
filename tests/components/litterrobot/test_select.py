@@ -2,7 +2,8 @@
 
 from unittest.mock import AsyncMock, MagicMock
 
-from pylitterbot import LitterRobot3, LitterRobot4
+from pylitterbot import LitterRobot3, LitterRobot4, LitterRobot5
+from pylitterbot.robot.litterrobot4 import NightLightMode
 import pytest
 
 from homeassistant.components.select import (
@@ -11,12 +12,12 @@ from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION,
 )
-from homeassistant.const import ATTR_ENTITY_ID, EntityCategory
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
-from .conftest import setup_integration
+from .conftest import create_mock_account, setup_integration
 
 SELECT_ENTITY_ID = "select.test_clean_cycle_wait_time_minutes"
 
@@ -127,3 +128,101 @@ async def test_select_command_exception(
             {ATTR_ENTITY_ID: SELECT_ENTITY_ID, ATTR_OPTION: "7"},
             blocking=True,
         )
+
+
+async def test_litterrobot_5_globe_light(
+    hass: HomeAssistant,
+    mock_account_with_litterrobot_5: MagicMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Tests the Litter-Robot 5 globe light (night light mode) select entity."""
+    entity_id = "select.test_globe_light"
+    await setup_integration(hass, mock_account_with_litterrobot_5, SELECT_DOMAIN)
+
+    select = hass.states.get(entity_id)
+    assert select
+    assert len(select.attributes[ATTR_OPTIONS]) == 3
+    assert select.state == "auto"
+
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry
+    assert entity_entry.entity_category is EntityCategory.CONFIG
+
+    data = {ATTR_ENTITY_ID: entity_id}
+
+    robot: LitterRobot5 = mock_account_with_litterrobot_5.robots[0]
+
+    for option in select.attributes[ATTR_OPTIONS]:
+        data[ATTR_OPTION] = option
+
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            data,
+            blocking=True,
+        )
+
+    assert robot.set_night_light_mode.call_count == 3
+    robot.set_night_light_mode.assert_any_call(NightLightMode.OFF)
+    robot.set_night_light_mode.assert_any_call(NightLightMode.ON)
+    robot.set_night_light_mode.assert_any_call(NightLightMode.AUTO)
+
+
+async def test_litterrobot_5_panel_brightness(
+    hass: HomeAssistant,
+    mock_account_with_litterrobot_5: MagicMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Tests the Litter-Robot 5 panel brightness select entity."""
+    entity_id = "select.test_panel_brightness"
+    await setup_integration(hass, mock_account_with_litterrobot_5, SELECT_DOMAIN)
+
+    select = hass.states.get(entity_id)
+    assert select
+    assert len(select.attributes[ATTR_OPTIONS]) == 3
+    assert select.state == "medium"
+
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry
+    assert entity_entry.entity_category is EntityCategory.CONFIG
+
+    data = {ATTR_ENTITY_ID: entity_id}
+
+    robot: LitterRobot5 = mock_account_with_litterrobot_5.robots[0]
+    robot.set_panel_brightness = AsyncMock(return_value=True)
+
+    for count, option in enumerate(select.attributes[ATTR_OPTIONS]):
+        data[ATTR_OPTION] = option
+
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            data,
+            blocking=True,
+        )
+
+        assert robot.set_panel_brightness.call_count == count + 1
+
+
+async def test_globe_brightness_unmapped_level(hass: HomeAssistant) -> None:
+    """A brightness matching no level leaves the select unknown, not "None".
+
+    The LR5 firmware accepts any 0-100 brightness, so a value set outside the
+    discrete levels has no matching option. current_option must return None so
+    the entity reads as unknown, rather than the string "None".
+    """
+    mock_account = create_mock_account(
+        robot_data={
+            "nightLightSettings": {
+                "brightness": 60,
+                "color": "#FFFFFF",
+                "mode": "Auto",
+            }
+        },
+        v5=True,
+    )
+    await setup_integration(hass, mock_account, SELECT_DOMAIN)
+
+    select = hass.states.get("select.test_globe_brightness")
+    assert select
+    assert select.state == STATE_UNKNOWN

@@ -1,6 +1,6 @@
 """Support for the Airzone water heater."""
 
-from typing import Any, Final
+from typing import Any, Final, override
 
 from aioairzone.common import HotWaterOperation
 from aioairzone.const import (
@@ -87,25 +87,29 @@ class AirzoneWaterHeater(AirzoneHotWaterEntity, WaterHeaterEntity):
             OPERATION_LIB_TO_HASS[operation]
             for operation in self.get_airzone_value(AZD_OPERATIONS)
         ]
-        self._attr_temperature_unit = TEMP_UNIT_LIB_TO_HASS[
+        self._attr_native_temperature_unit = TEMP_UNIT_LIB_TO_HASS[
             self.get_airzone_value(AZD_TEMP_UNIT)
         ]
 
         self._async_update_attrs()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the water heater off."""
         await self._async_update_dhw_params({API_ACS_ON: 0})
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the water heater off."""
         await self._async_update_dhw_params({API_ACS_ON: 1})
 
+    @override
     async def async_set_operation_mode(self, operation_mode: str) -> None:
         """Set new target operation mode."""
         params = OPERATION_MODE_TO_DHW_PARAMS.get(operation_mode, {})
         await self._async_update_dhw_params(params)
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         params: dict[str, Any] = {}
@@ -114,6 +118,7 @@ class AirzoneWaterHeater(AirzoneHotWaterEntity, WaterHeaterEntity):
         await self._async_update_dhw_params(params)
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Update attributes when the coordinator updates."""
         self._async_update_attrs()
@@ -122,10 +127,10 @@ class AirzoneWaterHeater(AirzoneHotWaterEntity, WaterHeaterEntity):
     @callback
     def _async_update_attrs(self) -> None:
         """Update water heater attributes."""
-        self._attr_current_temperature = self.get_airzone_value(AZD_TEMP)
+        self._attr_native_current_temperature = self.get_airzone_value(AZD_TEMP)
         self._attr_current_operation = OPERATION_LIB_TO_HASS[
             self.get_airzone_value(AZD_OPERATION)
         ]
         self._attr_max_temp = self.get_airzone_value(AZD_TEMP_MAX)
         self._attr_min_temp = self.get_airzone_value(AZD_TEMP_MIN)
-        self._attr_target_temperature = self.get_airzone_value(AZD_TEMP_SET)
+        self._attr_native_target_temperature = self.get_airzone_value(AZD_TEMP_SET)

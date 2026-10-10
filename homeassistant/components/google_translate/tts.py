@@ -2,10 +2,10 @@
 
 from io import BytesIO
 import logging
-from typing import Any
+from typing import Any, override
 
 from gtts import gTTS, gTTSError
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.tts import (
     CONF_LANG,
@@ -37,8 +37,10 @@ SUPPORT_OPTIONS = ["tld"]
 
 PLATFORM_SCHEMA = TTS_PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_LANG, default=DEFAULT_LANG): vol.In(SUPPORT_LANGUAGES),
-        vol.Optional(CONF_TLD, default=DEFAULT_TLD): vol.In(SUPPORT_TLD),
+        probatio.Optional(CONF_LANG, default=DEFAULT_LANG): probatio.In(
+            SUPPORT_LANGUAGES
+        ),
+        probatio.Optional(CONF_TLD, default=DEFAULT_TLD): probatio.In(SUPPORT_TLD),
     }
 )
 
@@ -90,6 +92,7 @@ class GoogleTTSEntity(TextToSpeechEntity):
         )
         self._attr_default_language = self._lang
 
+    @override
     def get_tts_audio(
         self, message: str, language: str, options: dict[str, Any] | None = None
     ) -> TtsAudioType:
@@ -131,20 +134,24 @@ class GoogleProvider(Provider):
         self.name = "Google Translate"
 
     @property
+    @override
     def default_language(self) -> str:
         """Return the default language."""
         return self._lang
 
     @property
+    @override
     def supported_languages(self) -> list[str]:
         """Return list of supported languages."""
         return SUPPORT_LANGUAGES
 
     @property
+    @override
     def supported_options(self) -> list[str]:
         """Return a list of supported options."""
         return SUPPORT_OPTIONS
 
+    @override
     def get_tts_audio(
         self, message: str, language: str, options: dict[str, Any]
     ) -> TtsAudioType:

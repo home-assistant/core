@@ -1,6 +1,6 @@
 """Support for Balboa Spa lights."""
 
-from typing import Any, cast
+from typing import Any, cast, override
 
 from pybalboa import SpaControl
 from pybalboa.enums import OffOnState, UnknownState
@@ -40,15 +40,18 @@ class BalboaLightEntity(BalboaEntity, LightEntity):
             "index": f"{cast(int, control.index) + 1}"
         }
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         await self._control.set_state(OffOnState.OFF)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         await self._control.set_state(OffOnState.ON)
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if the light is on."""
         if self._control.state == UnknownState.UNKNOWN:

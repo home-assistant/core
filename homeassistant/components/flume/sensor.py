@@ -1,6 +1,6 @@
 """Sensor for displaying the number of result from Flume."""
 
-from typing import Any
+from typing import Any, override
 
 from pyflume import FlumeAuth, FlumeData
 from requests import Session
@@ -157,6 +157,7 @@ class FlumeSensor(FlumeEntity[FlumeDeviceDataUpdateCoordinator], SensorEntity):
     """Representation of the Flume sensor."""
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         sensor_key = self.entity_description.key

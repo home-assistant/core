@@ -3,9 +3,9 @@
 from datetime import datetime
 import logging
 import statistics
-from typing import Any
+from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
@@ -16,12 +16,12 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    ATTR_UNIT_OF_MEASUREMENT,
     CONF_NAME,
     CONF_TYPE,
     CONF_UNIQUE_ID,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    EntityStateAttribute,
 )
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -66,13 +66,13 @@ SENSOR_TYPE_TO_ATTR = {v: k for k, v in SENSOR_TYPES.items()}
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_TYPE, default=SENSOR_TYPES[ATTR_MAX_VALUE]): vol.All(
-            cv.string, vol.In(SENSOR_TYPES.values())
-        ),
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Required(CONF_ENTITY_IDS): cv.entity_ids,
-        vol.Optional(CONF_ROUND_DIGITS, default=2): vol.Coerce(int),
-        vol.Optional(CONF_UNIQUE_ID): cv.string,
+        probatio.Optional(
+            CONF_TYPE, default=SENSOR_TYPES[ATTR_MAX_VALUE]
+        ): probatio.All(cv.string, probatio.In(SENSOR_TYPES.values())),
+        probatio.Optional(CONF_NAME): cv.string,
+        probatio.Required(CONF_ENTITY_IDS): cv.entity_ids,
+        probatio.Optional(CONF_ROUND_DIGITS, default=2): probatio.Coerce(int),
+        probatio.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
 
@@ -244,6 +244,7 @@ class MinMaxSensor(SensorEntity):
         self.count_sensors = len(self._entity_ids)
         self.states: dict[str, Any] = {}
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle added to Hass."""
         self.async_on_remove(
@@ -264,6 +265,7 @@ class MinMaxSensor(SensorEntity):
         self._calc_values()
 
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
         if self._unit_of_measurement_mismatch:
@@ -272,6 +274,7 @@ class MinMaxSensor(SensorEntity):
         return value
 
     @property
+    @override
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit the value is expressed in."""
         if self._unit_of_measurement_mismatch:
@@ -279,6 +282,7 @@ class MinMaxSensor(SensorEntity):
         return self._unit_of_measurement
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the sensor."""
         attributes: dict[str, list[str] | str | None] = {
@@ -321,11 +325,11 @@ class MinMaxSensor(SensorEntity):
 
         if self._unit_of_measurement is None:
             self._unit_of_measurement = new_state.attributes.get(
-                ATTR_UNIT_OF_MEASUREMENT
+                EntityStateAttribute.UNIT_OF_MEASUREMENT
             )
 
         if self._unit_of_measurement != new_state.attributes.get(
-            ATTR_UNIT_OF_MEASUREMENT
+            EntityStateAttribute.UNIT_OF_MEASUREMENT
         ):
             _LOGGER.warning(
                 "Units of measurement do not match for entity %s", self.entity_id

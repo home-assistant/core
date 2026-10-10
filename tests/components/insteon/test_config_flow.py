@@ -4,8 +4,8 @@ from collections.abc import Callable
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
+from probatio import to_field_list
 import pytest
-from voluptuous_serialize import convert
 
 from homeassistant import config_entries
 from homeassistant.components.insteon.config_flow import (
@@ -15,7 +15,7 @@ from homeassistant.components.insteon.config_flow import (
     STEP_PLM_MANUALLY,
 )
 from homeassistant.components.insteon.const import CONF_HUB_VERSION, DOMAIN
-from homeassistant.config_entries import ConfigEntryState, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_DEVICE, CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -108,19 +108,10 @@ async def test_form_select_modem(hass: HomeAssistant) -> None:
 
 async def test_fail_on_existing(hass: HomeAssistant) -> None:
     """Test we fail if the integration is already configured."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        entry_id="abcde12345",
-        data={**MOCK_USER_INPUT_HUB_V2, CONF_HUB_VERSION: 2},
-        options={},
-    )
-    config_entry.add_to_hass(hass)
-    assert config_entry.state is ConfigEntryState.NOT_LOADED
+    MockConfigEntry(domain=DOMAIN).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        data={**MOCK_USER_INPUT_HUB_V2, CONF_HUB_VERSION: 2},
-        context={"source": config_entries.SOURCE_USER},
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
@@ -134,6 +125,7 @@ async def test_form_select_plm(hass: HomeAssistant) -> None:
     result2, mock_setup_entry = await _device_form(
         hass, result["flow_id"], mock_successful_connection, MOCK_USER_INPUT_PLM
     )
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["data"] == MOCK_USER_INPUT_PLM
 
@@ -168,6 +160,7 @@ async def test_form_select_plm_manual(hass: HomeAssistant) -> None:
         hass, result2["flow_id"], mock_successful_connection, MOCK_USER_INPUT_PLM
     )
     assert result2["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["data"] == MOCK_USER_INPUT_PLM
 
@@ -182,6 +175,7 @@ async def test_form_select_hub_v1(hass: HomeAssistant) -> None:
     result2, mock_setup_entry = await _device_form(
         hass, result["flow_id"], mock_successful_connection, MOCK_USER_INPUT_HUB_V1
     )
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["data"] == {
         **MOCK_USER_INPUT_HUB_V1,
@@ -199,6 +193,7 @@ async def test_form_select_hub_v2(hass: HomeAssistant) -> None:
     result2, mock_setup_entry = await _device_form(
         hass, result["flow_id"], mock_successful_connection, MOCK_USER_INPUT_HUB_V2
     )
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["data"] == {
         **MOCK_USER_INPUT_HUB_V2,
@@ -221,7 +216,7 @@ async def test_form_discovery_dhcp(hass: HomeAssistant) -> None:
         {"next_step_id": STEP_HUB_V2},
     )
     assert result2["type"] is FlowResultType.FORM
-    schema = convert(result2["data_schema"])
+    schema = to_field_list(result2["data_schema"])
     found_host = False
     for field in schema:
         if field["name"] == CONF_HOST:
@@ -241,6 +236,11 @@ async def test_failed_connection_plm(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
+    result3, _ = await _device_form(
+        hass, result2["flow_id"], mock_successful_connection, MOCK_USER_INPUT_PLM
+    )
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_failed_connection_plm_manually(hass: HomeAssistant) -> None:
     """Test a failed connection with the PLM."""
@@ -256,6 +256,11 @@ async def test_failed_connection_plm_manually(hass: HomeAssistant) -> None:
     assert result3["type"] is FlowResultType.FORM
     assert result3["errors"] == {"base": "cannot_connect"}
 
+    result4, _ = await _device_form(
+        hass, result3["flow_id"], mock_successful_connection, MOCK_USER_INPUT_PLM
+    )
+    assert result4["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_failed_connection_hub(hass: HomeAssistant) -> None:
     """Test a failed connection with a Hub."""
@@ -267,6 +272,11 @@ async def test_failed_connection_hub(hass: HomeAssistant) -> None:
     )
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
+
+    result3, _ = await _device_form(
+        hass, result2["flow_id"], mock_successful_connection, MOCK_USER_INPUT_HUB_V2
+    )
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_discovery_via_usb(hass: HomeAssistant) -> None:
@@ -280,7 +290,7 @@ async def test_discovery_via_usb(hass: HomeAssistant) -> None:
         manufacturer="test",
     )
     result = await hass.config_entries.flow.async_init(
-        "insteon", context={"source": config_entries.SOURCE_USB}, data=discovery_info
+        DOMAIN, context={"source": config_entries.SOURCE_USB}, data=discovery_info
     )
     await hass.async_block_till_done()
     assert result["type"] is FlowResultType.FORM
@@ -292,6 +302,7 @@ async def test_discovery_via_usb(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-config-flow-unique-id
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["data"] == {"device": "/dev/ttyINSTEON"}
 
@@ -312,7 +323,7 @@ async def test_discovery_via_usb_already_setup(hass: HomeAssistant) -> None:
         manufacturer="test",
     )
     result = await hass.config_entries.flow.async_init(
-        "insteon", context={"source": config_entries.SOURCE_USB}, data=discovery_info
+        DOMAIN, context={"source": config_entries.SOURCE_USB}, data=discovery_info
     )
     await hass.async_block_till_done()
 

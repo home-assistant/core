@@ -1,7 +1,7 @@
 """Support for the Swing2Sleep Smarla switch entities."""
 
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from pysmarlaapi.federwiege.services.classes import Property
 
@@ -60,14 +60,17 @@ class SmarlaSwitch(SmarlaBaseEntity, SwitchEntity):
     _property: Property[bool]
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return the entity value to represent the entity state."""
         return self._property.get()
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         self._property.set(True)
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         self._property.set(False)

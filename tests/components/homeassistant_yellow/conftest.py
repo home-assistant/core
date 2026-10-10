@@ -58,3 +58,17 @@ def mock_firmware_update_client() -> Generator[MagicMock]:
     ) as mock_client:
         mock_client.return_value.async_update_data = AsyncMock(return_value=None)
         yield mock_client
+
+
+@pytest.fixture(autouse=True)
+def mock_rpi_firmware_info() -> Generator[AsyncMock]:
+    """Skip the Raspberry Pi EEPROM firmware probe by default.
+
+    Tests that exercise the EEPROM update entity can override the return value.
+    """
+    with patch(
+        "homeassistant.components.homeassistant_yellow.update."
+        "async_get_raspberry_pi_firmware_info",
+        return_value=None,
+    ) as mock_info:
+        yield mock_info

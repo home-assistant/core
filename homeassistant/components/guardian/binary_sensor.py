@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.binary_sensor import (
     DOMAIN as BINARY_SENSOR_DOMAIN,
@@ -157,6 +157,7 @@ class PairedSensorBinarySensor(PairedSensorEntity, BinarySensorEntity):
         self._attr_is_on = True
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
         return self.entity_description.is_on_fn(self.coordinator.data)
@@ -179,6 +180,7 @@ class ValveControllerBinarySensor(ValveControllerEntity, BinarySensorEntity):
         self._attr_is_on = True
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
         return self.entity_description.is_on_fn(self.coordinator.data)

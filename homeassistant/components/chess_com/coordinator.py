@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from typing import override
 
 from chess_com_api import ChessComAPIError, ChessComClient, Player, PlayerStats
 
@@ -45,6 +46,7 @@ class ChessCoordinator(DataUpdateCoordinator[ChessData]):
         )
         self.client = ChessComClient(session=async_get_clientsession(hass))
 
+    @override
     async def _async_update_data(self) -> ChessData:
         """Update data from Chess.com."""
         try:

@@ -1,10 +1,31 @@
 """Constants for the schedule integration."""
 
+from enum import StrEnum
 import logging
-from typing import Final
+from typing import TYPE_CHECKING, Final
+
+from homeassistant.util.hass_dict import HassKey
+
+if TYPE_CHECKING:
+    from . import ScheduleData
 
 DOMAIN: Final = "schedule"
 LOGGER = logging.getLogger(__package__)
+
+DATA_SCHEDULE: HassKey[ScheduleData] = HassKey(DOMAIN)
+
+
+class ScheduleEntityCapabilityAttribute(StrEnum):
+    """Capability attributes for schedule entities."""
+
+    EDITABLE = "editable"
+
+
+class ScheduleEntityStateAttribute(StrEnum):
+    """State attributes for schedule entities."""
+
+    NEXT_EVENT = "next_event"
+
 
 CONF_DATA: Final = "data"
 CONF_FRIDAY: Final = "friday"

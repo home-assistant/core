@@ -1,6 +1,6 @@
 """Support for Qbus switch."""
 
-from typing import Any
+from typing import Any, override
 
 from qbusmqttapi.discovery import QbusMqttOutput
 from qbusmqttapi.state import QbusMqttOnOffState, StateType
@@ -53,6 +53,7 @@ class QbusSwitch(QbusEntity, SwitchEntity):
 
         self._attr_is_on = False
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         state = QbusMqttOnOffState(id=self._mqtt_output.id, type=StateType.STATE)
@@ -60,6 +61,7 @@ class QbusSwitch(QbusEntity, SwitchEntity):
 
         await self._async_publish_output_state(state)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         state = QbusMqttOnOffState(id=self._mqtt_output.id, type=StateType.STATE)
@@ -67,5 +69,6 @@ class QbusSwitch(QbusEntity, SwitchEntity):
 
         await self._async_publish_output_state(state)
 
+    @override
     async def _handle_state_received(self, state: QbusMqttOnOffState) -> None:
         self._attr_is_on = state.read_value()

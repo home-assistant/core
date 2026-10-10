@@ -1,5 +1,7 @@
 """binary sensors for Ukraine Alarm integration."""
 
+from typing import override
+
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -13,6 +15,8 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     ALERT_TYPE_AIR,
+    ALERT_TYPE_AIR_RED,
+    ALERT_TYPE_AIR_YELLOW,
     ALERT_TYPE_ARTILLERY,
     ALERT_TYPE_CHEMICAL,
     ALERT_TYPE_NUCLEAR,
@@ -33,6 +37,16 @@ BINARY_SENSOR_TYPES: tuple[BinarySensorEntityDescription, ...] = (
     BinarySensorEntityDescription(
         key=ALERT_TYPE_AIR,
         translation_key="air",
+        device_class=BinarySensorDeviceClass.SAFETY,
+    ),
+    BinarySensorEntityDescription(
+        key=ALERT_TYPE_AIR_RED,
+        translation_key="air_red",
+        device_class=BinarySensorDeviceClass.SAFETY,
+    ),
+    BinarySensorEntityDescription(
+        key=ALERT_TYPE_AIR_YELLOW,
+        translation_key="air_yellow",
         device_class=BinarySensorDeviceClass.SAFETY,
     ),
     BinarySensorEntityDescription(
@@ -108,6 +122,7 @@ class UkraineAlarmSensor(
         )
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
-        return self.coordinator.data.get(self.entity_description.key, None)
+        return self.coordinator.data[self.entity_description.key]

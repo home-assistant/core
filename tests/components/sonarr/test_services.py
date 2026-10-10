@@ -66,7 +66,7 @@ async def test_services_config_entry_not_loaded_state(
             return_response=True,
         )
 
-    assert exc_info.value.translation_key == "not_loaded"
+    assert exc_info.value.translation_key == "service_config_entry_not_loaded"
 
 
 @pytest.mark.parametrize(
@@ -94,7 +94,7 @@ async def test_services_integration_not_found(
             return_response=True,
         )
 
-    assert exc_info.value.translation_key == "integration_not_found"
+    assert exc_info.value.translation_key == "service_config_entry_not_found"
 
 
 async def test_service_get_series(
@@ -168,7 +168,7 @@ async def test_services_entry_not_loaded(
             return_response=True,
         )
 
-    assert exc_info.value.translation_key == "not_loaded"
+    assert exc_info.value.translation_key == "service_config_entry_not_loaded"
 
 
 async def test_service_get_queue_empty(

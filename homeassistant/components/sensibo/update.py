@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from pysensibo.model import SensiboDevice
 
@@ -88,11 +89,13 @@ class SensiboDeviceUpdate(SensiboDeviceBaseEntity, UpdateEntity):
         self._attr_title = self.device_data.model
 
     @property
+    @override
     def installed_version(self) -> str | None:
         """Return version currently installed."""
         return self.entity_description.value_version(self.device_data)
 
     @property
+    @override
     def latest_version(self) -> str | None:
         """Return latest available version."""
         return self.entity_description.value_available(self.device_data)

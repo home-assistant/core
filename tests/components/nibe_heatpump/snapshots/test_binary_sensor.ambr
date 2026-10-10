@@ -39,7 +39,7 @@
 # name: test_update[Model.F1255-49239-OFF][binary_sensor.eb101_installed_49239-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'F1255 EB101 Installed',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'F1255 EB101 Installed',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.eb101_installed_49239',
@@ -89,7 +89,7 @@
 # name: test_update[Model.F1255-49239-ON][binary_sensor.eb101_installed_49239-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'F1255 EB101 Installed',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'F1255 EB101 Installed',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.eb101_installed_49239',

@@ -1,5 +1,7 @@
 """Base Entity for JustNimbus sensors."""
 
+from typing import override
+
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -30,6 +32,7 @@ class JustNimbusEntity(
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return device availability."""
         return super().available and self.coordinator.data is not None

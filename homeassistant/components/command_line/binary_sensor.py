@@ -2,6 +2,7 @@
 
 import asyncio
 from datetime import datetime, timedelta
+from typing import override
 
 from homeassistant.components.binary_sensor import (
     DOMAIN as BINARY_SENSOR_DOMAIN,
@@ -58,7 +59,13 @@ async def async_setup_platform(
     )
     value_template: ValueTemplate | None = binary_sensor_config.get(CONF_VALUE_TEMPLATE)
 
-    data = CommandSensorData(hass, command, command_timeout)
+    data = CommandSensorData(
+        hass,
+        command,
+        command_timeout,
+        BINARY_SENSOR_DOMAIN,
+        binary_sensor_config.get(CONF_NAME, DEFAULT_NAME),
+    )
 
     trigger_entity_config = {
         CONF_NAME: Template(binary_sensor_config.get(CONF_NAME, DEFAULT_NAME), hass),
@@ -105,6 +112,7 @@ class CommandBinarySensor(ManualTriggerEntity, BinarySensorEntity):
         self._scan_interval = scan_interval
         self._process_updates: asyncio.Lock | None = None
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call when entity about to be added to hass."""
         await super().async_added_to_hass()

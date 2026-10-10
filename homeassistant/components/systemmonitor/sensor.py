@@ -10,7 +10,7 @@ import logging
 import socket
 import sys
 import time
-from typing import Any, Literal
+from typing import Any, Literal, override
 
 from psutil._common import POWER_TIME_UNKNOWN, POWER_TIME_UNLIMITED
 
@@ -192,7 +192,6 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         key="battery_empty",
         translation_key="battery_empty",
         device_class=SensorDeviceClass.TIMESTAMP,
-        state_class=SensorStateClass.MEASUREMENT,
         value_fn=battery_time_ends,
         none_is_unavailable=True,
         add_to_update=lambda entity: ("battery", ""),
@@ -888,21 +887,35 @@ class SystemMonitorSensor(CoordinatorEntity[SystemMonitorCoordinator], SensorEnt
         self.update_time: float | None = None
         self._attr_native_value = self.entity_description.value_fn(self)
 
+    @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Opt in to in-place entity_id changes.
+
+        Can be removed when backwards compatibility is disabled for core
+        integrations, i.e. once all core integrations have been migrated
+        to in-place entity ID change.
+        """
+        super().async_entity_id_changed(old_entity_id)
+
+    @override
     async def async_added_to_hass(self) -> None:
         """When added to hass."""
         self.coordinator.update_subscribers[
             self.entity_description.add_to_update(self)
-        ].add(self.entity_id)
+        ].add(self._attr_unique_id)
         return await super().async_added_to_hass()
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """When removed from hass."""
         self.coordinator.update_subscribers[
             self.entity_description.add_to_update(self)
-        ].remove(self.entity_id)
+        ].remove(self._attr_unique_id)
         return await super().async_will_remove_from_hass()
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         # Set the native value here so we can use it in available property
@@ -911,6 +924,7 @@ class SystemMonitorSensor(CoordinatorEntity[SystemMonitorCoordinator], SensorEnt
         super()._handle_coordinator_update()
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         if self.entity_description.none_is_unavailable:

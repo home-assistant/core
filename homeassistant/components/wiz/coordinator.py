@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from typing import override
 
 from pywizlight import wizlight
 
@@ -56,6 +57,7 @@ class WizCoordinator(DataUpdateCoordinator[float | None]):
         )
         self._bulb = bulb
 
+    @override
     async def _async_update_data(self) -> float | None:
         """Update the WiZ device."""
         ip_address = self._bulb.ip

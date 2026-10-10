@@ -1,7 +1,7 @@
 """Support for Envisalink zone bypass switches."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from pyenvisalink import EnvisalinkAlarmPanel
 
@@ -11,13 +11,8 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import (
-    CONF_ZONENAME,
-    CONF_ZONES,
-    DATA_EVL,
-    SIGNAL_ZONE_BYPASS_UPDATE,
-    ZONE_SCHEMA,
-)
+from . import ZONE_SCHEMA
+from .const import CONF_ZONENAME, CONF_ZONES, DATA_EVL, SIGNAL_ZONE_BYPASS_UPDATE
 from .entity import EnvisalinkEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -43,8 +38,8 @@ async def async_setup_platform(
         entity = EnvisalinkSwitch(
             zone_num,
             zone_name,
-            hass.data[DATA_EVL].alarm_state["zone"][zone_num],
-            hass.data[DATA_EVL],
+            hass.data[DATA_EVL].controller.alarm_state["zone"][zone_num],
+            hass.data[DATA_EVL].controller,
         )
         entities.append(entity)
 
@@ -66,6 +61,7 @@ class EnvisalinkSwitch(EnvisalinkEntity, SwitchEntity):
 
         super().__init__(zone_name, info, controller)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self.async_on_remove(
@@ -75,14 +71,17 @@ class EnvisalinkSwitch(EnvisalinkEntity, SwitchEntity):
         )
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the boolean response if the zone is bypassed."""
         return self._info["bypassed"]
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Send the bypass keypress sequence to toggle the zone bypass."""
         self._controller.toggle_zone_bypass(self._zone_number)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Send the bypass keypress sequence to toggle the zone bypass."""
         self._controller.toggle_zone_bypass(self._zone_number)

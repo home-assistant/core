@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 import logging
+from typing import override
 
 from growattServer import GrowattV1ApiError
 
@@ -158,6 +159,7 @@ class GrowattNumber(CoordinatorEntity[GrowattCoordinator], NumberEntity):
         )
 
     @property
+    @override
     def native_value(self) -> int | None:
         """Return the current value of the number."""
         value = self.coordinator.data.get(self.entity_description.api_key)
@@ -165,6 +167,7 @@ class GrowattNumber(CoordinatorEntity[GrowattCoordinator], NumberEntity):
             return None
         return int(value)
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set the value of the number."""
         # Use write_key if specified, otherwise fall back to api_key

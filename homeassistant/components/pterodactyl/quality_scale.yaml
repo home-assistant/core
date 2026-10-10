@@ -12,9 +12,15 @@ rules:
   docs-actions:
     status: exempt
     comment: Integration doesn't provide any service actions.
+  docs-conditions:
+    status: exempt
+    comment: This integration does not have any conditions.
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: This integration does not have any triggers.
   entity-event-setup:
     status: done
     comment: Handled by coordinator.
@@ -35,9 +41,7 @@ rules:
       the server host is used to identify that the same service is already configured.
 
   # Silver
-  action-exceptions:
-    status: exempt
-    comment: Integration doesn't provide any service actions.
+  action-exceptions: done
   config-entry-unloading: done
   docs-configuration-parameters:
     status: exempt

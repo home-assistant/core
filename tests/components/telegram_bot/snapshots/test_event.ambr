@@ -8,15 +8,15 @@
       'username': 'mock_bot',
     }),
     'chat_id': 123456,
-    'event_type': 'telegram_sent',
-    'event_types': list([
+    <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: 'telegram_sent',
+    <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
       'telegram_attachment',
       'telegram_callback',
       'telegram_command',
       'telegram_text',
       'telegram_sent',
     ]),
-    'friendly_name': 'Mock Title Update event',
+    <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Update event',
     'message_id': 12345,
   })
 # ---

@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from pyportainer import DockerContainerState, EndpointStatus, StackStatus
 
@@ -32,6 +33,7 @@ class PortainerContainerBinarySensorEntityDescription(BinarySensorEntityDescript
     """Class to hold Portainer container binary sensor description."""
 
     state_fn: Callable[[PortainerContainerData], bool | None]
+    supported_fn: Callable[[PortainerContainerData], bool]
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -53,7 +55,18 @@ CONTAINER_SENSORS: tuple[PortainerContainerBinarySensorEntityDescription, ...] =
         key="status",
         translation_key="status",
         state_fn=lambda data: data.container.state == DockerContainerState.RUNNING,
+        supported_fn=lambda data: data.container.state == DockerContainerState.RUNNING,
         device_class=BinarySensorDeviceClass.RUNNING,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    PortainerContainerBinarySensorEntityDescription(
+        key="container_out_of_memory",
+        translation_key="container_out_of_memory",
+        state_fn=lambda data: (
+            state.oom_killed if (state := data.container_inspect.state) else None
+        ),
+        supported_fn=lambda data: data.container_inspect.state is not None,
+        device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )
@@ -113,7 +126,7 @@ async def async_setup_entry(
             )
             for (endpoint, container) in containers
             for entity_description in CONTAINER_SENSORS
-            if entity_description.state_fn(container)
+            if entity_description.supported_fn(container)
         )
 
     def _async_add_new_stacks(
@@ -163,6 +176,7 @@ class PortainerEndpointSensor(PortainerEndpointEntity, BinarySensorEntity):
     entity_description: PortainerEndpointBinarySensorEntityDescription
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         return self.entity_description.state_fn(self.coordinator.data[self.device_id])
@@ -174,6 +188,7 @@ class PortainerContainerSensor(PortainerContainerEntity, BinarySensorEntity):
     entity_description: PortainerContainerBinarySensorEntityDescription
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         return self.entity_description.state_fn(self.container_data)
@@ -185,6 +200,7 @@ class PortainerStackSensor(PortainerStackEntity, BinarySensorEntity):
     entity_description: PortainerStackBinarySensorEntityDescription
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         return self.entity_description.state_fn(self.stack_data)

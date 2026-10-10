@@ -1,6 +1,6 @@
 """Test the Home Assistant Yellow integration."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -21,7 +21,7 @@ from homeassistant.components.usb import SerialDevice, async_scan_serial_ports
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, MockModule, mock_integration
@@ -260,6 +260,58 @@ async def test_setup_entry_wrong_board(hass: HomeAssistant) -> None:
 
     assert len(mock_get_os_info.mock_calls) == 1
     assert len(hass.config_entries.async_entries()) == 0
+
+
+@pytest.mark.parametrize(
+    ("hassio", "board", "reason"),
+    [
+        pytest.param(
+            False,
+            None,
+            "Home Assistant is not running on Home Assistant OS, the Home Assistant"
+            " Yellow entry will be removed",
+            id="no_hassio",
+        ),
+        pytest.param(
+            True,
+            "generic-x86-64",
+            "Home Assistant is not running on a Home Assistant Yellow"
+            " (generic-x86-64), the Home Assistant Yellow entry will be removed",
+            id="wrong_board",
+        ),
+    ],
+)
+async def test_setup_entry_error_reason(
+    hass: HomeAssistant, hassio: bool, board: str | None, reason: str
+) -> None:
+    """Test the setup error reason when the entry is about to be removed."""
+    config_entry = MockConfigEntry(
+        data={"firmware": ApplicationType.EZSP},
+        domain=DOMAIN,
+        options={},
+        title="Home Assistant Yellow",
+        version=1,
+        minor_version=2,
+    )
+    config_entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.homeassistant_yellow.is_hassio",
+            return_value=hassio,
+        ),
+        patch(
+            "homeassistant.components.homeassistant_yellow.get_os_info",
+            return_value={"board": board},
+        ),
+        patch.object(hass.config_entries, "async_remove", AsyncMock()) as mock_remove,
+    ):
+        assert not await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert config_entry.reason == reason
+    mock_remove.assert_awaited_once_with(config_entry.entry_id)
 
 
 async def test_setup_entry_wait_hassio(hass: HomeAssistant) -> None:
@@ -546,3 +598,46 @@ async def test_migrate_entry(
     assert config_entry.options == {}
     assert config_entry.minor_version == HomeAssistantYellowConfigFlow.MINOR_VERSION
     assert config_entry.version == HomeAssistantYellowConfigFlow.VERSION
+
+
+async def test_setup_entry_clears_sw_version(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test setup clears the redundant firmware version from the device."""
+    mock_integration(hass, MockModule("hassio"))
+    await async_setup_component(hass, HASSIO_DOMAIN, {})
+
+    config_entry = MockConfigEntry(
+        data={"firmware": "ezsp", "firmware_version": "7.3.1.0"},
+        domain=DOMAIN,
+        options={},
+        title="Home Assistant Yellow",
+        version=1,
+        minor_version=4,
+    )
+    config_entry.add_to_hass(hass)
+
+    device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, "yellow")},
+        sw_version="EmberZNet Zigbee 7.3.1.0",
+    )
+    assert device.sw_version == "EmberZNet Zigbee 7.3.1.0"
+
+    with (
+        patch(
+            "homeassistant.components.homeassistant_yellow.get_os_info",
+            return_value={"board": "yellow"},
+        ),
+        patch(
+            "homeassistant.components.homeassistant_yellow.multi_pan_addon_using_device",
+            return_value=False,
+        ),
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    device = device_registry.async_get(device.id)
+    assert device is not None
+    assert device.sw_version is None

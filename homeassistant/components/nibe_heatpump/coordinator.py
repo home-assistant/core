@@ -4,7 +4,7 @@ import asyncio
 from collections import defaultdict
 from collections.abc import Callable, Iterable
 from datetime import date, timedelta
-from typing import Any
+from typing import Any, override
 
 from nibe.coil import Coil, CoilData
 from nibe.connection import Connection
@@ -53,6 +53,7 @@ class ContextCoordinator[_DataTypeT, _ContextTypeT](DataUpdateCoordinator[_DataT
             update_callback()
 
     @callback
+    @override
     def async_add_listener(
         self, update_callback: CALLBACK_TYPE, context: Any = None
     ) -> Callable[[], None]:
@@ -179,6 +180,7 @@ class CoilCoordinator(ContextCoordinator[dict[int, CoilData], int]):
         """Read coil and update state using callbacks."""
         return await self.connection.read_coil(coil)
 
+    @override
     async def _async_update_data(self) -> dict[int, CoilData]:
         self.task = asyncio.current_task()
         try:
@@ -188,6 +190,7 @@ class CoilCoordinator(ContextCoordinator[dict[int, CoilData], int]):
 
     async def _async_update_data_internal(self) -> dict[int, CoilData]:
         result: dict[int, CoilData] = {}
+        read_error: ReadException | None = None
 
         def _get_coils() -> Iterable[Coil]:
             for address in sorted(self.context_callbacks.keys()):
@@ -206,16 +209,23 @@ class CoilCoordinator(ContextCoordinator[dict[int, CoilData], int]):
         try:
             async for data in self.connection.read_coils(_get_coils()):
                 result[data.coil.address] = data
-                self.seed.pop(data.coil.address, None)
         except ReadException as exception:
-            if not result:
-                raise UpdateFailed(f"Failed to update: {exception}") from exception
-            self.logger.debug(
-                "Some coils failed to update, and may be unsupported: %s", exception
-            )
+            read_error = exception
 
+        # Preserve broadcasts received while the polling batch was running.
+        for address in self.context_callbacks:
+            if seed := self.seed.pop(address, None):
+                result[address] = seed
+
+        if read_error is not None:
+            if not result:
+                raise UpdateFailed(f"Failed to update: {read_error}") from read_error
+            self.logger.debug(
+                "Some coils failed to update, and may be unsupported: %s", read_error
+            )
         return result
 
+    @override
     async def async_shutdown(self):
         """Make sure a coordinator is shut down as well as it's connection."""
         await super().async_shutdown()

@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from greeclimate.device import Device
 
@@ -125,16 +125,19 @@ class GreeSwitch(GreeEntity, SwitchEntity):
         super().__init__(coordinator, description.key)
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return if the state is turned on."""
         return self.entity_description.get_value_fn(self.coordinator.device)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         self.entity_description.set_value_fn(self.coordinator.device, True)
         await self.coordinator.push_state_update()
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         self.entity_description.set_value_fn(self.coordinator.device, False)

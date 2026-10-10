@@ -183,17 +183,21 @@ async def test_switch_auth_error(
     mock_config_entry: MockConfigEntry,
     mock_nextdns_client: AsyncMock,
 ) -> None:
-    """Tests that the turn on/off action starts re-auth flow."""
+    """Tests that the turn on/off action raises an error and starts re-auth flow."""
     await init_integration(hass, mock_config_entry)
 
     mock_nextdns_client.set_setting.side_effect = InvalidApiKeyError
 
-    await hass.services.async_call(
-        SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "switch.fake_profile_block_page"},
-        blocking=True,
-    )
+    with pytest.raises(
+        HomeAssistantError,
+        match="Authentication failed for NextDNS, please update your API key",
+    ):
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "switch.fake_profile_block_page"},
+            blocking=True,
+        )
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
@@ -207,3 +211,34 @@ async def test_switch_auth_error(
     assert "context" in flow
     assert flow["context"].get("source") == SOURCE_REAUTH
     assert flow["context"].get("entry_id") == mock_config_entry.entry_id
+
+
+async def test_switch_set_setting_failure(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_nextdns_client: AsyncMock,
+) -> None:
+    """Tests that the turn on action raises an error when the API reports failure."""
+    await init_integration(hass, mock_config_entry)
+
+    mock_nextdns_client.set_setting.return_value = False
+
+    state = hass.states.get("switch.fake_profile_block_page")
+    assert state
+    assert state.state == STATE_OFF
+
+    with pytest.raises(
+        HomeAssistantError,
+        match="An error occurred while changing the setting for"
+        " switch.fake_profile_block_page",
+    ):
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "switch.fake_profile_block_page"},
+            blocking=True,
+        )
+
+    state = hass.states.get("switch.fake_profile_block_page")
+    assert state
+    assert state.state == STATE_OFF

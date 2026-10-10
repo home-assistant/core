@@ -5,16 +5,14 @@
     "data_description_password": "Password for the FRITZ!Box.",
     "data_description_port": "Leave empty to use the default port.",
     "data_description_ssl": "Use SSL to connect to the FRITZ!Box.",
-    "data_description_username": "Username for the FRITZ!Box.",
+    "data_description_username": "Username for the FRITZ!Box. FRITZ!Powerline devices ignore this information and accept any value.",
     "data_feature_device_tracking": "Enable network device tracking"
   },
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
-      "ignore_ip6_link_local": "IPv6 link local address is not supported.",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      "ignore_ip6_link_local": "IPv6 link local address is not supported."
     },
     "error": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",

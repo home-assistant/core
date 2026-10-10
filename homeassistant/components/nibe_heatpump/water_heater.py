@@ -1,6 +1,7 @@
 """The Nibe Heat Pump sensors."""
 
 from datetime import date
+from typing import override
 
 from nibe.coil import Coil
 from nibe.coil_groups import WATER_HEATER_COILGROUPS, WaterHeaterCoilGroup
@@ -79,8 +80,8 @@ class WaterHeater(CoordinatorEntity[CoilCoordinator], WaterHeaterEntity):
         self._attr_device_info = coordinator.device_info
 
         self._attr_current_operation = None
-        self._attr_target_temperature_high = None
-        self._attr_target_temperature_low = None
+        self._attr_native_target_temperature_high = None
+        self._attr_native_target_temperature_low = None
         self._attr_operation_list = []
         self._operation_mode_to_lux: dict[str, str] = {}
 
@@ -119,9 +120,10 @@ class WaterHeater(CoordinatorEntity[CoilCoordinator], WaterHeaterEntity):
         _add_lux_mode(VALUES_TEMPORARY_LUX_ONE_TIME_INCREASE, STATE_HIGH_DEMAND)
         _add_lux_mode(VALUES_TEMPORARY_LUX_INACTIVE, STATE_HEAT_PUMP)
 
-        self._attr_temperature_unit = self._coil_current.unit
+        self._attr_native_temperature_unit = self._coil_current.unit
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         if not self.coordinator.data:
             return
@@ -136,20 +138,20 @@ class WaterHeater(CoordinatorEntity[CoilCoordinator], WaterHeaterEntity):
                 return None
             return self.coordinator.get_coil_value(coil)
 
-        self._attr_current_temperature = _get_float(self._coil_current)
+        self._attr_native_current_temperature = _get_float(self._coil_current)
 
         if (mode := _get_value(self._coil_hot_water_comfort_mode)) and isinstance(
             mode, str
         ):
-            self._attr_target_temperature_low = _get_float(
+            self._attr_native_target_temperature_low = _get_float(
                 self._coil_start_temperature.get(mode)
             )
-            self._attr_target_temperature_high = _get_float(
+            self._attr_native_target_temperature_high = _get_float(
                 self._coil_stop_temperature.get(mode)
             )
         else:
-            self._attr_target_temperature_low = None
-            self._attr_target_temperature_high = None
+            self._attr_native_target_temperature_low = None
+            self._attr_native_target_temperature_high = None
 
         if (
             _get_value(self._coil_temporary_lux)
@@ -162,6 +164,7 @@ class WaterHeater(CoordinatorEntity[CoilCoordinator], WaterHeaterEntity):
         super()._handle_coordinator_update()
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         if not self.coordinator.last_update_success:
@@ -177,6 +180,7 @@ class WaterHeater(CoordinatorEntity[CoilCoordinator], WaterHeaterEntity):
 
         return False
 
+    @override
     async def async_set_operation_mode(self, operation_mode: str) -> None:
         """Set new target operation mode."""
         if not self._coil_temporary_lux:

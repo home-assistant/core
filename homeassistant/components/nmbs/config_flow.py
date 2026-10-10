@@ -1,10 +1,10 @@
 """Config flow for NMBS integration."""
 
-from typing import Any
+from typing import Any, override
 
+import probatio
 from pyrail import iRail
 from pyrail.models import StationDetails
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_SHOW_ON_MAP
@@ -46,6 +46,7 @@ class NMBSConfigFlow(ConfigFlow, domain=DOMAIN):
             for station in self.stations
         ]
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -86,22 +87,22 @@ class NMBSConfigFlow(ConfigFlow, domain=DOMAIN):
                     data=user_input,
                 )
 
-        schema = vol.Schema(
+        schema = probatio.Schema(
             {
-                vol.Required(CONF_STATION_FROM): SelectSelector(
+                probatio.Required(CONF_STATION_FROM): SelectSelector(
                     SelectSelectorConfig(
                         options=choices,
                         mode=SelectSelectorMode.DROPDOWN,
                     )
                 ),
-                vol.Required(CONF_STATION_TO): SelectSelector(
+                probatio.Required(CONF_STATION_TO): SelectSelector(
                     SelectSelectorConfig(
                         options=choices,
                         mode=SelectSelectorMode.DROPDOWN,
                     )
                 ),
-                vol.Optional(CONF_EXCLUDE_VIAS): BooleanSelector(),
-                vol.Optional(CONF_SHOW_ON_MAP): BooleanSelector(),
+                probatio.Optional(CONF_EXCLUDE_VIAS): BooleanSelector(),
+                probatio.Optional(CONF_SHOW_ON_MAP): BooleanSelector(),
             },
         )
         return self.async_show_form(

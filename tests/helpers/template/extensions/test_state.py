@@ -740,6 +740,7 @@ async def test_expand(hass: HomeAssistant) -> None:
         mode=None,
         object_id=None,
         order=None,
+        context=None,
     )
 
     info = render_to_info(
@@ -800,6 +801,7 @@ async def test_expand(hass: HomeAssistant) -> None:
         mode=None,
         object_id=None,
         order=None,
+        context=None,
     )
 
     info = render_to_info(
@@ -880,6 +882,7 @@ async def test_expand(hass: HomeAssistant) -> None:
     hass.states.async_set(
         "person.person1",
         "test",
+        {"in_zones": ["zone.test"]},
     )
     await hass.async_block_till_done()
 
@@ -900,6 +903,7 @@ async def test_expand(hass: HomeAssistant) -> None:
     hass.states.async_set(
         "person.person2",
         "test",
+        {"in_zones": ["zone.test"]},
     )
     await hass.async_block_till_done()
 
@@ -1299,6 +1303,7 @@ async def test_closest_function_home_vs_group_entity_id(hass: HomeAssistant) -> 
         mode=None,
         object_id=None,
         order=None,
+        context=None,
     )
 
     info = render_to_info(hass, '{{ closest("group.location_group").entity_id }}')
@@ -1336,6 +1341,7 @@ async def test_closest_function_home_vs_group_state(hass: HomeAssistant) -> None
         mode=None,
         object_id=None,
         order=None,
+        context=None,
     )
 
     info = render_to_info(hass, '{{ closest("group.location_group").entity_id }}')

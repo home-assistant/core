@@ -338,13 +338,13 @@
 # name: test_calendar_events[state.GS012345_auto_on_off_schedule_axfz5bj]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'all_day': False,
-      'description': 'Machine is scheduled to turn on at the start time and off at the end time',
-      'end_time': '2024-01-14 07:30:00',
-      'friendly_name': 'GS012345 Auto on/off schedule (aXFz5bJ)',
-      'location': '',
-      'message': 'Machine My LaMarzocco on',
-      'start_time': '2024-01-14 07:00:00',
+      <CalendarEntityStateAttribute.ALL_DAY: 'all_day'>: False,
+      <CalendarEntityStateAttribute.DESCRIPTION: 'description'>: 'Machine is scheduled to turn on at the start time and off at the end time',
+      <CalendarEntityStateAttribute.END_TIME: 'end_time'>: '2024-01-14 07:30:00',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'GS012345 Auto on/off schedule (aXFz5bJ)',
+      <CalendarEntityStateAttribute.LOCATION: 'location'>: '',
+      <CalendarEntityStateAttribute.MESSAGE: 'message'>: 'Machine My LaMarzocco on',
+      <CalendarEntityStateAttribute.START_TIME: 'start_time'>: '2024-01-14 07:00:00',
     }),
     'context': <ANY>,
     'entity_id': 'calendar.gs012345_auto_on_off_schedule_axfz5bj',
@@ -357,13 +357,13 @@
 # name: test_calendar_events[state.GS012345_auto_on_off_schedule_os2oswx]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'all_day': False,
-      'description': 'Machine is scheduled to turn on at the start time and off at the end time',
-      'end_time': '2024-01-13 00:00:00',
-      'friendly_name': 'GS012345 Auto on/off schedule (Os2OswX)',
-      'location': '',
-      'message': 'Machine My LaMarzocco on',
-      'start_time': '2024-01-12 22:00:00',
+      <CalendarEntityStateAttribute.ALL_DAY: 'all_day'>: False,
+      <CalendarEntityStateAttribute.DESCRIPTION: 'description'>: 'Machine is scheduled to turn on at the start time and off at the end time',
+      <CalendarEntityStateAttribute.END_TIME: 'end_time'>: '2024-01-13 00:00:00',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'GS012345 Auto on/off schedule (Os2OswX)',
+      <CalendarEntityStateAttribute.LOCATION: 'location'>: '',
+      <CalendarEntityStateAttribute.MESSAGE: 'message'>: 'Machine My LaMarzocco on',
+      <CalendarEntityStateAttribute.START_TIME: 'start_time'>: '2024-01-12 22:00:00',
     }),
     'context': <ANY>,
     'entity_id': 'calendar.gs012345_auto_on_off_schedule_os2oswx',

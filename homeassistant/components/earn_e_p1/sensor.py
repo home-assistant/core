@@ -1,5 +1,7 @@
 """Sensor platform for the EARN-E P1 Meter integration."""
 
+from typing import override
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -15,7 +17,7 @@ from homeassistant.const import (
     UnitOfPower,
     UnitOfVolume,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
@@ -44,7 +46,26 @@ SENSOR_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         key="voltage_l1",
-        translation_key="voltage_l1",
+        translation_key="voltage_phase",
+        translation_placeholders={"phase": "1"},
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        device_class=SensorDeviceClass.VOLTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
+    ),
+    SensorEntityDescription(
+        key="voltage_l2",
+        translation_key="voltage_phase",
+        translation_placeholders={"phase": "2"},
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        device_class=SensorDeviceClass.VOLTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
+    ),
+    SensorEntityDescription(
+        key="voltage_l3",
+        translation_key="voltage_phase",
+        translation_placeholders={"phase": "3"},
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -52,7 +73,26 @@ SENSOR_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         key="current_l1",
-        translation_key="current_l1",
+        translation_key="current_phase",
+        translation_placeholders={"phase": "1"},
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
+    ),
+    SensorEntityDescription(
+        key="current_l2",
+        translation_key="current_phase",
+        translation_placeholders={"phase": "2"},
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
+    ),
+    SensorEntityDescription(
+        key="current_l3",
+        translation_key="current_phase",
+        translation_placeholders={"phase": "3"},
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
@@ -117,22 +157,34 @@ async def async_setup_entry(
 ) -> None:
     """Set up EARN-E P1 sensor entities."""
     coordinator = entry.runtime_data
-    added = False
+    pending_keys = {description.key for description in SENSOR_DESCRIPTIONS}
+    remove_listener: CALLBACK_TYPE | None = None
+
+    @callback
+    def _async_remove_listener() -> None:
+        nonlocal remove_listener
+        if remove_listener is not None:
+            remove_listener()
+            remove_listener = None
 
     @callback
     def _async_add_sensors() -> None:
-        nonlocal added
-        if added or coordinator.data is None:
+        if coordinator.data is None:
             return
-        added = True
-        async_add_entities(
-            EarnEP1Sensor(coordinator, description)
-            for description in SENSOR_DESCRIPTIONS
-            if description.key in coordinator.data
-        )
+        if new_keys := pending_keys & coordinator.data.keys():
+            pending_keys.difference_update(new_keys)
+            async_add_entities(
+                EarnEP1Sensor(coordinator, description)
+                for description in SENSOR_DESCRIPTIONS
+                if description.key in new_keys
+            )
+        if not pending_keys or coordinator.data_complete:
+            _async_remove_listener()
 
-    entry.async_on_unload(coordinator.async_add_listener(_async_add_sensors))
     _async_add_sensors()
+    if pending_keys and not coordinator.data_complete:
+        remove_listener = coordinator.async_add_listener(_async_add_sensors)
+        entry.async_on_unload(_async_remove_listener)
 
 
 class EarnEP1Sensor(EarnEP1Entity, SensorEntity):
@@ -149,11 +201,13 @@ class EarnEP1Sensor(EarnEP1Entity, SensorEntity):
         self._attr_unique_id = f"{coordinator.identifier}_{description.key}"
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if the sensor value is available."""
         return super().available and self.coordinator.data is not None
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the sensor value."""
         return self.coordinator.data.get(self.entity_description.key)

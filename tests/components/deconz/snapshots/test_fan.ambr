@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'preset_modes': None,
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: None,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -41,12 +41,12 @@
 # name: test_fans[light_payload0][fan.ceiling_fan-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Ceiling fan',
-      'percentage': 100,
-      'percentage_step': 1.0,
-      'preset_mode': None,
-      'preset_modes': None,
-      'supported_features': <FanEntityFeature: 49>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ceiling fan',
+      <FanEntityStateAttribute.PERCENTAGE: 'percentage'>: 100,
+      <FanEntityStateAttribute.PERCENTAGE_STEP: 'percentage_step'>: 1.0,
+      <FanEntityStateAttribute.PRESET_MODE: 'preset_mode'>: None,
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: None,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <FanEntityFeature: 49>,
     }),
     'context': <ANY>,
     'entity_id': 'fan.ceiling_fan',

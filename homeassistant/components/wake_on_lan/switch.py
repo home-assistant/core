@@ -2,9 +2,9 @@
 
 import logging
 import subprocess as sp
-from typing import Any
+from typing import Any, override
 
-import voluptuous as vol
+import probatio
 import wakeonlan
 
 from homeassistant.components.switch import (
@@ -18,7 +18,7 @@ from homeassistant.const import (
     CONF_MAC,
     CONF_NAME,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.script import Script
@@ -30,12 +30,12 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_MAC): cv.string,
-        vol.Optional(CONF_BROADCAST_ADDRESS): cv.string,
-        vol.Optional(CONF_BROADCAST_PORT): cv.port,
-        vol.Optional(CONF_HOST): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_OFF_ACTION): cv.SCRIPT_SCHEMA,
+        probatio.Required(CONF_MAC): cv.string,
+        probatio.Optional(CONF_BROADCAST_ADDRESS): cv.string,
+        probatio.Optional(CONF_BROADCAST_PORT): probatio.Port(),
+        probatio.Optional(CONF_HOST): cv.string,
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(CONF_OFF_ACTION): cv.SCRIPT_SCHEMA,
     }
 )
 
@@ -98,10 +98,12 @@ class WolSwitch(SwitchEntity):
         self._attr_unique_id = dr.format_mac(mac_address)
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if switch is on."""
         return self._state
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         service_kwargs: dict[str, Any] = {}
@@ -123,16 +125,24 @@ class WolSwitch(SwitchEntity):
             self._state = True
             self.schedule_update_ha_state()
 
+    @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Opt in to in-place entity_id changes.
+
+        Can be removed when backwards compatibility is disabled for core
+        integrations, i.e. once all core integrations have been migrated
+        to in-place entity ID change.
+        """
+        super().async_entity_id_changed(old_entity_id)
+
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Clean up script when removing from Home Assistant."""
-        if self._off_script is None:
-            return
-        if self.registry_entry and self.registry_entry.entity_id != self.entity_id:
-            # Entity ID change, do not unload the script as it will be reused.
-            await self._off_script.async_stop()
-            return
-        await self._off_script.async_unload()
+        if self._off_script is not None:
+            await self._off_script.async_unload()
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off if an off action is present."""
         if self._off_script is not None:

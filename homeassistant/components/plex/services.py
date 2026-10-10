@@ -4,7 +4,7 @@ import json
 import logging
 
 from plexapi.exceptions import NotFound
-import voluptuous as vol
+import probatio
 from yarl import URL
 
 from homeassistant.core import HomeAssistant, ServiceCall, callback
@@ -16,8 +16,8 @@ from .helpers import get_plex_data
 from .models import PlexMediaSearchResult
 from .server import PlexServer
 
-REFRESH_LIBRARY_SCHEMA = vol.Schema(
-    {vol.Optional("server_name"): str, vol.Required("library_name"): str}
+REFRESH_LIBRARY_SCHEMA = probatio.Schema(
+    {probatio.Optional("server_name"): str, probatio.Required("library_name"): str}
 )
 
 _LOGGER = logging.getLogger(__package__)
@@ -25,7 +25,7 @@ _LOGGER = logging.getLogger(__package__)
 
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
-    """Set up services for the Plex component."""
+    """Set up services for the Plex integration."""
 
     async def async_refresh_library_service(service_call: ServiceCall) -> None:
         await hass.async_add_executor_job(refresh_library, hass, service_call)

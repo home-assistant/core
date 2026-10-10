@@ -6,9 +6,11 @@ from mill import Mill
 from mill_local import Mill as MillLocal
 
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_USERNAME, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, async_noop
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.typing import ConfigType
 
 from .const import CLOUD, CONNECTION_TYPE, DOMAIN, LOCAL
 from .coordinator import (
@@ -16,10 +18,19 @@ from .coordinator import (
     MillDataUpdateCoordinator,
     MillHistoricDataUpdateCoordinator,
 )
+from .services import async_setup_services
 
 PLATFORMS = [Platform.CLIMATE, Platform.NUMBER, Platform.SENSOR]
 
 __all__ = ["CLOUD", "CONNECTION_TYPE", "DOMAIN", "LOCAL"]
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Mill integration."""
+    async_setup_services(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: MillConfigEntry) -> bool:
@@ -43,7 +54,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: MillConfigEntry) -> bool
             entry,
             mill_data_connection=mill_data_connection,
         )
-        historic_data_coordinator.async_add_listener(lambda: None)
+        historic_data_coordinator.async_add_listener(async_noop)
         await historic_data_coordinator.async_config_entry_first_refresh()
     try:
         if not await mill_data_connection.connect():

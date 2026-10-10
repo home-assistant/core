@@ -41,9 +41,9 @@
     'attributes': ReadOnlyDict({
       'affected_areas': 'Gemeinde Oberreichenbach, Gemeinde Neuweiler, Stadt Nagold, Stadt Neubulach, Gemeinde Schömberg, Gemeinde Simmersfeld, Gemeinde Simmozheim, Gemeinde Rohrdorf, Gemeinde Ostelsheim, Gemeinde Ebhausen, Gemeinde Egenhausen, Gemeinde Dobel, Stadt Bad Liebenzell, Stadt Solingen, Stadt Haiterbach, Stadt Bad Herrenalb, Gemeinde Höfen an der Enz, Gemeinde Gechingen, Gemeinde Enzklösterle, Gemeinde Gutach (Schwarzwaldbahn) und 3392 weitere.',
       'description': 'Es treten Sturmböen mit Geschwindigkeiten zwischen 70 km/h (20m/s, 38kn, Bft 8) und 85 km/h (24m/s, 47kn, Bft 9) aus westlicher Richtung auf. In Schauernähe sowie in exponierten Lagen muss mit schweren Sturmböen bis 90 km/h (25m/s, 48kn, Bft 10) gerechnet werden.',
-      'device_class': 'safety',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'safety',
       'expires': '3021-11-22T05:19:00+01:00',
-      'friendly_name': 'Aach Warning 1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aach Warning 1',
       'headline': 'Ausfall Notruf 112',
       'id': 'mow.DE-NW-BN-SE030-20201014-30-000',
       'recommended_actions': 'ACHTUNG! Hinweis auf mögliche Gefahren: Es können zum Beispiel einzelne Äste herabstürzen. Achte besonders auf herabfallende Gegenstände.',
@@ -101,8 +101,8 @@
 # name: test_binary_sensors[binary_sensor.aach_warning_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'safety',
-      'friendly_name': 'Aach Warning 2',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'safety',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aach Warning 2',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.aach_warning_2',
@@ -152,8 +152,8 @@
 # name: test_binary_sensors[binary_sensor.aach_warning_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'safety',
-      'friendly_name': 'Aach Warning 3',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'safety',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aach Warning 3',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.aach_warning_3',
@@ -203,8 +203,8 @@
 # name: test_binary_sensors[binary_sensor.aach_warning_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'safety',
-      'friendly_name': 'Aach Warning 4',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'safety',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aach Warning 4',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.aach_warning_4',
@@ -254,8 +254,8 @@
 # name: test_binary_sensors[binary_sensor.aach_warning_5-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'safety',
-      'friendly_name': 'Aach Warning 5',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'safety',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Aach Warning 5',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.aach_warning_5',

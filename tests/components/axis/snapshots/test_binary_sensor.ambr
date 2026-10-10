@@ -39,8 +39,8 @@
 # name: test_binary_sensors[event0][binary_sensor.home_daynight_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'light',
-      'friendly_name': 'home DayNight 1',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'light',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'home DayNight 1',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.home_daynight_1',
@@ -90,8 +90,8 @@
 # name: test_binary_sensors[event10][binary_sensor.home_object_analytics_device1scenario8-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'motion',
-      'friendly_name': 'home Object Analytics Device1Scenario8',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'motion',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'home Object Analytics Device1Scenario8',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.home_object_analytics_device1scenario8',
@@ -141,8 +141,8 @@
 # name: test_binary_sensors[event1][binary_sensor.home_sound_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'sound',
-      'friendly_name': 'home Sound 1',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'sound',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'home Sound 1',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.home_sound_1',
@@ -192,8 +192,8 @@
 # name: test_binary_sensors[event2][binary_sensor.home_pir_sensor-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
-      'friendly_name': 'home PIR sensor',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'home PIR sensor',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.home_pir_sensor',
@@ -243,8 +243,8 @@
 # name: test_binary_sensors[event3][binary_sensor.home_pir_0-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'motion',
-      'friendly_name': 'home PIR 0',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'motion',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'home PIR 0',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.home_pir_0',
@@ -294,8 +294,8 @@
 # name: test_binary_sensors[event4][binary_sensor.home_fence_guard_profile_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'motion',
-      'friendly_name': 'home Fence Guard Profile 1',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'motion',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'home Fence Guard Profile 1',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.home_fence_guard_profile_1',
@@ -345,8 +345,8 @@
 # name: test_binary_sensors[event5][binary_sensor.home_motion_guard_profile_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'motion',
-      'friendly_name': 'home Motion Guard Profile 1',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'motion',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'home Motion Guard Profile 1',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.home_motion_guard_profile_1',
@@ -396,8 +396,8 @@
 # name: test_binary_sensors[event6][binary_sensor.home_loitering_guard_profile_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'motion',
-      'friendly_name': 'home Loitering Guard Profile 1',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'motion',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'home Loitering Guard Profile 1',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.home_loitering_guard_profile_1',
@@ -447,8 +447,8 @@
 # name: test_binary_sensors[event7][binary_sensor.home_vmd4_profile_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'motion',
-      'friendly_name': 'home VMD4 Profile 1',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'motion',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'home VMD4 Profile 1',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.home_vmd4_profile_1',
@@ -498,8 +498,8 @@
 # name: test_binary_sensors[event8][binary_sensor.home_object_analytics_scenario_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'motion',
-      'friendly_name': 'home Object Analytics Scenario 1',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'motion',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'home Object Analytics Scenario 1',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.home_object_analytics_scenario_1',
@@ -549,8 +549,8 @@
 # name: test_binary_sensors[event9][binary_sensor.home_vmd4_camera1profile9-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'motion',
-      'friendly_name': 'home VMD4 Camera1Profile9',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'motion',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'home VMD4 Camera1Profile9',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.home_vmd4_camera1profile9',

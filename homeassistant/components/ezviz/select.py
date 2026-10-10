@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import cast
+from typing import cast, override
 
 from pyezvizapi.constants import (
     BatteryCameraWorkMode,
@@ -66,15 +66,18 @@ ALARM_SOUND_MODE_SELECT_TYPE = EzvizSelectEntityDescription(
 
 def battery_work_mode_current_option(ezvizSelect: EzvizSelect) -> str | None:
     """Return the selected entity option to represent the entity state."""
-    battery_work_mode = getattr(
-        BatteryCameraWorkMode,
-        ezvizSelect.data[ezvizSelect.entity_description.key],
-        BatteryCameraWorkMode.UNKNOWN,
-    )
-    if battery_work_mode == BatteryCameraWorkMode.UNKNOWN:
+    value = ezvizSelect.data[ezvizSelect.entity_description.key]
+    # pyezvizapi >= 1.0.4 reports the raw mode number instead of its name.
+    try:
+        battery_work_mode = (
+            BatteryCameraWorkMode(value)
+            if isinstance(value, int)
+            else BatteryCameraWorkMode[value]
+        )
+    except KeyError, ValueError:
         return None
-
-    return battery_work_mode.name.lower()
+    option = battery_work_mode.name.lower()
+    return option if option in (ezvizSelect.entity_description.options or ()) else None
 
 
 def battery_work_mode_select_option(
@@ -152,11 +155,13 @@ class EzvizSelect(EzvizEntity, SelectEntity):
         self.entity_description = description
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the selected entity option to represent the entity state."""
         desc = cast(EzvizSelectEntityDescription, self.entity_description)
         return desc.current_option(self)
 
+    @override
     def select_option(self, option: str) -> None:
         """Change the selected option."""
         desc = cast(EzvizSelectEntityDescription, self.entity_description)

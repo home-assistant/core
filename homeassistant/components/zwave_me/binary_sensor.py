@@ -1,5 +1,7 @@
 """Representation of a sensorBinary."""
 
+from typing import override
+
 from zwave_me_ws import ZWaveMeData
 
 from homeassistant.components.binary_sensor import (
@@ -69,6 +71,7 @@ class ZWaveMeBinarySensor(ZWaveMeEntity, BinarySensorEntity):
         self.entity_description = description
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the state of the sensor."""
         return self.device.level == "on"

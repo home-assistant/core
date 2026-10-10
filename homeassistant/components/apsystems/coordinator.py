@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 from datetime import timedelta
+from typing import override
 
 from APsystemsEZ1 import (
     APsystemsEZ1M,
@@ -59,6 +60,7 @@ class ApSystemsDataCoordinator(DataUpdateCoordinator[ApSystemsSensorData]):
         )
         self.api = api
 
+    @override
     async def _async_setup(self) -> None:
         try:
             device_info = await self.api.get_device_info()
@@ -69,6 +71,7 @@ class ApSystemsDataCoordinator(DataUpdateCoordinator[ApSystemsSensorData]):
         self.device_version = device_info.devVer
         self.battery_system = device_info.isBatterySystem
 
+    @override
     async def _async_update_data(self) -> ApSystemsSensorData:
         try:
             output_data = await self.api.get_output_data()

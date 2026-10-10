@@ -60,8 +60,8 @@ async def test_entities(
     """Test the media player entity is created with correct attributes."""
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
-    device_entry = device_registry.async_get_device(
-        identifiers={("marantz_infrared", mock_config_entry.entry_id)}
+    device_entry = device_registry.async_get_device_by_identifier(
+        ("marantz_infrared", mock_config_entry.entry_id), mock_config_entry.entry_id
     )
     assert device_entry
     entity_entries = er.async_entries_for_config_entry(
@@ -204,7 +204,7 @@ async def test_media_player_availability_follows_ir_entity(
 ) -> None:
     """Test media player becomes unavailable when IR entity is unavailable."""
     await assert_availability_follows_source_entity(
-        hass, MEDIA_PLAYER_ENTITY_ID, MOCK_INFRARED_EMITTER_ENTITY_ID
+        hass, MEDIA_PLAYER_ENTITY_ID, [MOCK_INFRARED_EMITTER_ENTITY_ID]
     )
 
 

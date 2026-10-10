@@ -4,7 +4,7 @@ from asyncio import Semaphore
 from dataclasses import dataclass
 from datetime import timedelta
 from logging import Logger
-from typing import Any
+from typing import Any, override
 
 from devolo_plc_api import Device
 from devolo_plc_api.device_api import (
@@ -44,6 +44,9 @@ type DevoloHomeNetworkConfigEntry = ConfigEntry[DevoloHomeNetworkData]
 class DevoloDataUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
     """Class to manage fetching data from devolo Home Network devices."""
 
+    config_entry: DevoloHomeNetworkConfigEntry
+    expensive = False
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -63,6 +66,7 @@ class DevoloDataUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
             update_interval=update_interval,
         )
 
+    @override
     async def _async_update_data(self) -> _DataT:
         """Fetch the latest data from the source."""
         self.update_sw_version()
@@ -85,8 +89,8 @@ class DevoloDataUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
         """Update device registry with new firmware version."""
         device_registry = dr.async_get(self.hass)
         if (
-            device_entry := device_registry.async_get_device(
-                identifiers={(DOMAIN, self.device.serial_number)}
+            device_entry := device_registry.async_get_device_by_identifier(
+                (DOMAIN, self.device.serial_number), self.config_entry.entry_id
             )
         ) and device_entry.sw_version != self.device.firmware_version:
             device_registry.async_update_device(
@@ -102,7 +106,7 @@ class DevoloFirmwareUpdateCoordinator(DevoloDataUpdateCoordinator[UpdateFirmware
         hass: HomeAssistant,
         logger: Logger,
         *,
-        config_entry: ConfigEntry,
+        config_entry: DevoloHomeNetworkConfigEntry,
         name: str = REGULAR_FIRMWARE,
         update_interval: timedelta | None = FIRMWARE_UPDATE_INTERVAL,
     ) -> None:
@@ -130,7 +134,7 @@ class DevoloLedSettingsGetCoordinator(DevoloDataUpdateCoordinator[bool]):
         hass: HomeAssistant,
         logger: Logger,
         *,
-        config_entry: ConfigEntry,
+        config_entry: DevoloHomeNetworkConfigEntry,
         name: str = SWITCH_LEDS,
         update_interval: timedelta | None = SHORT_UPDATE_INTERVAL,
     ) -> None:
@@ -158,7 +162,7 @@ class DevoloLogicalNetworkCoordinator(DevoloDataUpdateCoordinator[LogicalNetwork
         hass: HomeAssistant,
         logger: Logger,
         *,
-        config_entry: ConfigEntry,
+        config_entry: DevoloHomeNetworkConfigEntry,
         name: str = CONNECTED_PLC_DEVICES,
         update_interval: timedelta | None = LONG_UPDATE_INTERVAL,
     ) -> None:
@@ -186,7 +190,7 @@ class DevoloUptimeGetCoordinator(DevoloDataUpdateCoordinator[int]):
         hass: HomeAssistant,
         logger: Logger,
         *,
-        config_entry: ConfigEntry,
+        config_entry: DevoloHomeNetworkConfigEntry,
         name: str = LAST_RESTART,
         update_interval: timedelta | None = SHORT_UPDATE_INTERVAL,
     ) -> None:
@@ -216,7 +220,7 @@ class DevoloWifiConnectedStationsGetCoordinator(
         hass: HomeAssistant,
         logger: Logger,
         *,
-        config_entry: ConfigEntry,
+        config_entry: DevoloHomeNetworkConfigEntry,
         name: str = CONNECTED_WIFI_CLIENTS,
         update_interval: timedelta | None = SHORT_UPDATE_INTERVAL,
     ) -> None:
@@ -247,7 +251,7 @@ class DevoloWifiGuestAccessGetCoordinator(
         hass: HomeAssistant,
         logger: Logger,
         *,
-        config_entry: ConfigEntry,
+        config_entry: DevoloHomeNetworkConfigEntry,
         name: str = SWITCH_GUEST_WIFI,
         update_interval: timedelta | None = SHORT_UPDATE_INTERVAL,
     ) -> None:
@@ -272,12 +276,14 @@ class DevoloWifiNeighborAPsGetCoordinator(
 ):
     """Class to manage fetching data from the WifiNeighborAPsGet endpoint."""
 
+    expensive = True
+
     def __init__(
         self,
         hass: HomeAssistant,
         logger: Logger,
         *,
-        config_entry: ConfigEntry,
+        config_entry: DevoloHomeNetworkConfigEntry,
         name: str = NEIGHBORING_WIFI_NETWORKS,
         update_interval: timedelta | None = LONG_UPDATE_INTERVAL,
     ) -> None:

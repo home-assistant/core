@@ -1,6 +1,6 @@
 """Support for Modbus Register sensors."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
@@ -25,12 +25,12 @@ from homeassistant.helpers.update_coordinator import (
 
 from . import get_hub
 from .const import (
-    _LOGGER,
     CONF_SCALE,
     CONF_SLAVE_COUNT,
     CONF_VIRTUAL_COUNT,
     DEFAULT_OFFSET,
     DEFAULT_SCALE,
+    LOGGER,
 )
 from .entity import ModbusStructEntity
 from .modbus import ModbusHub
@@ -100,7 +100,7 @@ class ModbusRegisterSensor(ModbusStructEntity, RestoreSensor, SensorEntity):
         name = self._attr_name or "modbus_sensor"
         self._coordinator = DataUpdateCoordinator(
             hass,
-            _LOGGER,
+            LOGGER,
             config_entry=None,
             name=name,
         )
@@ -109,6 +109,18 @@ class ModbusRegisterSensor(ModbusStructEntity, RestoreSensor, SensorEntity):
             SlaveSensor(self._coordinator, idx, entry) for idx in range(slave_count)
         ]
 
+    @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Opt in to in-place entity_id changes.
+
+        Can be removed when backwards compatibility is disabled for core
+        integrations, i.e. once all core integrations have been migrated
+        to in-place entity ID change.
+        """
+        super().async_entity_id_changed(old_entity_id)
+
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await self.async_base_added_to_hass()
@@ -116,6 +128,7 @@ class ModbusRegisterSensor(ModbusStructEntity, RestoreSensor, SensorEntity):
         if state:
             self._attr_native_value = state.native_value
 
+    @override
     async def _async_update(self) -> None:
         """Update the state of the sensor."""
         raw_result = await self._hub.async_pb_call(
@@ -162,6 +175,7 @@ class SlaveSensor(
     """Modbus slave register sensor."""
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return self._attr_available
@@ -185,6 +199,18 @@ class SlaveSensor(
         self._attr_available = False
         super().__init__(coordinator)
 
+    @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Opt in to in-place entity_id changes.
+
+        Can be removed when backwards compatibility is disabled for core
+        integrations, i.e. once all core integrations have been migrated
+        to in-place entity ID change.
+        """
+        super().async_entity_id_changed(old_entity_id)
+
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         if state := await self.async_get_last_state():
@@ -192,6 +218,7 @@ class SlaveSensor(
         await super().async_added_to_hass()
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         result = self.coordinator.data

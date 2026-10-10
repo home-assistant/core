@@ -3,8 +3,9 @@
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 import logging
-from typing import Any, TypeVar
+from typing import Any, TypeVar, override
 
+from aiohttp import ClientSession
 from airos.airos6 import AirOS6, AirOS6Data
 from airos.airos8 import AirOS8, AirOS8Data
 from airos.exceptions import (
@@ -39,6 +40,8 @@ class AirOSRuntimeData:
 
     status: AirOSDataUpdateCoordinator
     firmware: AirOSFirmwareUpdateCoordinator | None
+    session: ClientSession
+    owns_session: bool = False
 
 
 async def async_fetch_airos_data(
@@ -50,7 +53,6 @@ async def async_fetch_airos_data(
         await airos_device.login()
         return await update_method()
     except AirOSConnectionAuthenticationError as err:
-        _LOGGER.exception("Error authenticating with airOS device")
         raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN, translation_key="invalid_auth"
         ) from err
@@ -59,13 +61,11 @@ async def async_fetch_airos_data(
         AirOSDeviceConnectionError,
         TimeoutError,
     ) as err:
-        _LOGGER.error("Error connecting to airOS device: %s", err)
         raise UpdateFailed(
             translation_domain=DOMAIN,
             translation_key="cannot_connect",
         ) from err
     except AirOSDataMissingError as err:
-        _LOGGER.error("Expected data not returned by airOS device: %s", err)
         raise UpdateFailed(
             translation_domain=DOMAIN,
             translation_key="error_data_missing",
@@ -95,6 +95,7 @@ class AirOSDataUpdateCoordinator(DataUpdateCoordinator[AirOSDataDetect]):
             update_interval=SCAN_INTERVAL,
         )
 
+    @override
     async def _async_update_data(self) -> AirOSDataDetect:
         """Fetch status data from AirOS."""
         return await async_fetch_airos_data(self.airos_device, self.airos_device.status)
@@ -121,6 +122,7 @@ class AirOSFirmwareUpdateCoordinator(DataUpdateCoordinator[AirOSUpdateData]):
             update_interval=UPDATE_SCAN_INTERVAL,
         )
 
+    @override
     async def _async_update_data(self) -> AirOSUpdateData:
         """Fetch firmware data from AirOS."""
         return await async_fetch_airos_data(

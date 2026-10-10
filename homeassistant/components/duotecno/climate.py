@@ -1,6 +1,6 @@
 """Support for Duotecno climate devices."""
 
-from typing import Any, Final
+from typing import Any, Final, override
 
 from duotecno.unit import SensUnit
 
@@ -49,32 +49,37 @@ class DuotecnoClimate(DuotecnoEntity, ClimateEntity):
         | ClimateEntityFeature.TURN_OFF
         | ClimateEntityFeature.TURN_ON
     )
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_hvac_modes = list(HVACMODE_REVERSE)
     _attr_preset_modes = list(PRESETMODES)
     _attr_translation_key = "duotecno"
 
     @property
-    def current_temperature(self) -> float | None:
+    @override
+    def native_current_temperature(self) -> float | None:
         """Get the current temperature."""
         return self._unit.get_cur_temp()
 
     @property
-    def target_temperature(self) -> float | None:
+    @override
+    def native_target_temperature(self) -> float | None:
         """Get the target temperature."""
         return self._unit.get_target_temp()
 
     @property
+    @override
     def hvac_mode(self) -> HVACMode:
         """Get the current hvac_mode."""
         return HVACMODE[self._unit.get_state()]
 
     @property
+    @override
     def preset_mode(self) -> str:
         """Get the preset mode."""
         return PRESETMODES_REVERSE[self._unit.get_preset()]
 
     @api_call
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperatures."""
         if (temp := kwargs.get(ATTR_TEMPERATURE)) is None:
@@ -82,11 +87,13 @@ class DuotecnoClimate(DuotecnoEntity, ClimateEntity):
         await self._unit.set_temp(temp)
 
     @api_call
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode."""
         await self._unit.set_preset(PRESETMODES[preset_mode])
 
     @api_call
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Duotecno does not support setting this, we can only display it."""
         if hvac_mode == HVACMode.OFF:

@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'smart_charge',
         'max_charge',
         'paused',
@@ -45,8 +45,8 @@
 # name: test_selects[select.ohme_home_pro_charge_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Ohme Home Pro Charge mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ohme Home Pro Charge mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'smart_charge',
         'max_charge',
         'paused',
@@ -67,7 +67,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Nissan Leaf',
         'Tesla Model 3',
       ]),
@@ -105,8 +105,8 @@
 # name: test_selects[select.ohme_home_pro_vehicle-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Ohme Home Pro Vehicle',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ohme Home Pro Vehicle',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'Nissan Leaf',
         'Tesla Model 3',
       ]),

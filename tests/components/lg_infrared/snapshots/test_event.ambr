@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'aspect',
         'back',
         'blue',
@@ -94,8 +94,8 @@
 # name: test_entities[event.lg_tv_received_command-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'event_type': None,
-      'event_types': list([
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'aspect',
         'back',
         'blue',
@@ -149,7 +149,7 @@
         'yellow',
         'unknown',
       ]),
-      'friendly_name': 'LG TV Received command',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LG TV Received command',
     }),
     'context': <ANY>,
     'entity_id': 'event.lg_tv_received_command',

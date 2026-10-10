@@ -1,4 +1,4 @@
-"""SMLIGHT SLZB Zigbee device integration."""
+"""SMLIGHT SLZB device integration."""
 
 from pysmlight import Api2
 
@@ -8,6 +8,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
+from .bluetooth import async_setup_ble_scanner
 from .const import DOMAIN
 from .coordinator import (
     SmConfigEntry,
@@ -37,7 +38,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: SmConfigEntry) -> bool:
-    """Set up SMLIGHT Zigbee from a config entry."""
+    """Set up SMLIGHT from a config entry."""
     client = Api2(host=entry.data[CONF_HOST], session=async_get_clientsession(hass))
 
     data_coordinator = SmDataUpdateCoordinator(hass, entry, client)
@@ -46,13 +47,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmConfigEntry) -> bool:
     await data_coordinator.async_config_entry_first_refresh()
     await firmware_coordinator.async_config_entry_first_refresh()
 
-    if data_coordinator.data.info.legacy_api < 2:
+    info = data_coordinator.data.info
+
+    if info.legacy_api < 2:
         entry.async_create_background_task(
             hass, client.sse.client(), "smlight-sse-client"
         )
 
+    if info.ble is not None and (
+        unload_callback := await async_setup_ble_scanner(hass, entry, client, info)
+    ):
+        entry.async_on_unload(unload_callback)
+
     entry.runtime_data = SmlightData(
-        data=data_coordinator, firmware=firmware_coordinator
+        data=data_coordinator,
+        firmware=firmware_coordinator,
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -60,5 +69,5 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmConfigEntry) -> bool:
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: SmConfigEntry) -> bool:
-    """Unload a config entry."""
+    """Unload SMLIGHT config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

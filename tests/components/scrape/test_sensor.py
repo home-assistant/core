@@ -722,7 +722,7 @@ async def test_templates_with_yaml(hass: HomeAssistant) -> None:
                 CONF_RESOURCE: "https://www.home-assistant.io",
                 CONF_METHOD: "GET",
                 "auth": {},
-                "advanced": {
+                "additional": {
                     CONF_VERIFY_SSL: DEFAULT_VERIFY_SSL,
                     CONF_TIMEOUT: 10,
                     CONF_ENCODING: DEFAULT_ENCODING,
@@ -733,7 +733,7 @@ async def test_templates_with_yaml(hass: HomeAssistant) -> None:
                     "data": {
                         CONF_SELECT: ".current-version h1",
                         CONF_INDEX: 0,
-                        "advanced": {
+                        "additional": {
                             CONF_VALUE_TEMPLATE: "{{ value.split(':')[1] }}",
                             CONF_AVAILABILITY: '{{ states("sensor.input1")=="on" }}',
                             CONF_ICON: (

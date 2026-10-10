@@ -6,6 +6,10 @@ set -e
 
 cd "$(realpath "$(dirname "$0")/..")"
 
+if [ ! -n "$VIRTUAL_ENV" ]; then
+  source .venv/bin/activate
+fi
+
 echo "Installing development dependencies..."
 uv pip install \
   -e . \

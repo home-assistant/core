@@ -23,8 +23,8 @@ from tests.common import MockConfigEntry
 def _get_device_id(hass: HomeAssistant, mock_config_entry: MockConfigEntry) -> str:
     """Return the device registry ID for the given config entry."""
     device_registry = dr.async_get(hass)
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, mock_config_entry.unique_id)}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_config_entry.unique_id), mock_config_entry.entry_id
     )
     assert device_entry is not None
     return device_entry.id
@@ -34,7 +34,7 @@ def _get_device_id(hass: HomeAssistant, mock_config_entry: MockConfigEntry) -> s
 @pytest.mark.parametrize(
     ("service_name", "power", "target_soc"),
     [
-        ("charge", 1200, 60),
+        ("charge", 5000, 60),
         ("discharge", 1200, 40),
     ],
 )
@@ -72,6 +72,25 @@ async def test_service_charge_discharge(
         mock_indevolt.charge.assert_called_once_with(power, target_soc)
     else:
         mock_indevolt.discharge.assert_called_once_with(power, target_soc)
+
+    # Verify sensor states were updated optimistically
+    expected_rt_command = "charging" if service_name == "charge" else "discharging"
+
+    assert (state := hass.states.get("sensor.cms_sf2000_energy_mode")) is not None
+    assert state.state == "real_time_control"
+
+    assert (state := hass.states.get("sensor.cms_sf2000_real_time_mode")) is not None
+    assert state.state == expected_rt_command
+
+    assert (
+        state := hass.states.get("sensor.cms_sf2000_real_time_target_soc")
+    ) is not None
+    assert int(float(state.state)) == target_soc
+
+    assert (
+        state := hass.states.get("sensor.cms_sf2000_real_time_power_limit")
+    ) is not None
+    assert int(float(state.state)) == power
 
 
 @pytest.mark.parametrize("generation", [1], indirect=True)

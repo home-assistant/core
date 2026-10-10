@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+from typing import override
 
 from aiomodernforms import ModernFormsDevice, ModernFormsError
 from aiomodernforms.models import Device as ModernFormsDeviceState
@@ -14,7 +15,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DOMAIN
 
-SCAN_INTERVAL = timedelta(seconds=5)
+SCAN_INTERVAL = timedelta(seconds=15)
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -24,12 +25,12 @@ type ModernFormsConfigEntry = ConfigEntry[ModernFormsDataUpdateCoordinator]
 class ModernFormsDataUpdateCoordinator(DataUpdateCoordinator[ModernFormsDeviceState]):
     """Class to manage fetching Modern Forms data from single endpoint."""
 
-    config_entry: ConfigEntry
+    config_entry: ModernFormsConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: ModernFormsConfigEntry,
     ) -> None:
         """Initialize global Modern Forms data updater."""
         self.modern_forms = ModernFormsDevice(
@@ -44,6 +45,7 @@ class ModernFormsDataUpdateCoordinator(DataUpdateCoordinator[ModernFormsDeviceSt
             update_interval=SCAN_INTERVAL,
         )
 
+    @override
     async def _async_update_data(self) -> ModernFormsDevice:
         """Fetch data from Modern Forms."""
         try:

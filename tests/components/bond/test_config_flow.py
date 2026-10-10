@@ -59,6 +59,7 @@ async def test_user_form(hass: HomeAssistant) -> None:
         CONF_HOST: "some host",
         CONF_ACCESS_TOKEN: "test-token",
     }
+    assert result2["result"].unique_id == "ZXXX12345"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -174,6 +175,20 @@ async def test_user_form_invalid_auth(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_auth"}
 
+    with (
+        patch_bond_version(return_value={"bondid": "ZXXX12345"}),
+        patch_bond_bridge(),
+        patch_bond_device_ids(),
+        _patch_async_setup_entry(),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: "some host", CONF_ACCESS_TOKEN: "test-token"},
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_user_form_cannot_connect(hass: HomeAssistant) -> None:
     """Test we handle cannot connect error."""
@@ -194,6 +209,20 @@ async def test_user_form_cannot_connect(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
+    with (
+        patch_bond_version(return_value={"bondid": "ZXXX12345"}),
+        patch_bond_bridge(),
+        patch_bond_device_ids(),
+        _patch_async_setup_entry(),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: "some host", CONF_ACCESS_TOKEN: "test-token"},
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_user_form_old_firmware(hass: HomeAssistant) -> None:
     """Test we handle unsupported old firmware."""
@@ -213,6 +242,20 @@ async def test_user_form_old_firmware(hass: HomeAssistant) -> None:
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "old_firmware"}
+
+    with (
+        patch_bond_version(return_value={"bondid": "ZXXX12345"}),
+        patch_bond_bridge(),
+        patch_bond_device_ids(),
+        _patch_async_setup_entry(),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: "some host", CONF_ACCESS_TOKEN: "test-token"},
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_user_form_unexpected_client_error(hass: HomeAssistant) -> None:
@@ -303,6 +346,7 @@ async def test_zeroconf_form(hass: HomeAssistant) -> None:
         CONF_HOST: "127.0.0.1",
         CONF_ACCESS_TOKEN: "test-token",
     }
+    assert result2["result"].unique_id == "ZXXX12345"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -446,6 +490,7 @@ async def test_zeroconf_form_token_unavailable(hass: HomeAssistant) -> None:
         CONF_HOST: "127.0.0.1",
         CONF_ACCESS_TOKEN: "test-token",
     }
+    assert result2["result"].unique_id == "ZXXX12345"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -530,6 +575,7 @@ async def test_zeroconf_form_with_token_available(hass: HomeAssistant) -> None:
         CONF_HOST: "127.0.0.1",
         CONF_ACCESS_TOKEN: "discovered-token",
     }
+    assert result2["result"].unique_id == "ZXXX12345"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -732,6 +778,42 @@ async def test_zeroconf_already_configured_no_reload_same_host(
     assert len(mock_setup_entry.mock_calls) == 0
 
 
+async def test_zeroconf_already_configured_keeps_valid_host(
+    hass: HomeAssistant,
+) -> None:
+    """Test zeroconf keeps the stored host when the bridge still announces it."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="already-registered-bond-id",
+        data={CONF_HOST: "127.0.0.3", CONF_ACCESS_TOKEN: "correct-token"},
+    )
+    entry.add_to_hass(hass)
+
+    with (
+        _patch_async_setup_entry() as mock_setup_entry,
+        patch_bond_token(return_value={"token": "correct-token"}),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_ZEROCONF},
+            data=ZeroconfServiceInfo(
+                ip_address=ip_address("127.0.0.2"),
+                ip_addresses=[ip_address("127.0.0.2"), ip_address("127.0.0.3")],
+                hostname="mock_hostname",
+                name="already-registered-bond-id.some-other-tail-info",
+                port=None,
+                properties={},
+                type="mock_type",
+            ),
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.data[CONF_HOST] == "127.0.0.3"
+    assert len(mock_setup_entry.mock_calls) == 0
+
+
 async def test_zeroconf_form_unexpected_error(hass: HomeAssistant) -> None:
     """Test we handle unexpected error gracefully."""
     await _help_test_form_unexpected_error(
@@ -775,6 +857,19 @@ async def _help_test_form_unexpected_error(
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
+
+    with (
+        patch_bond_version(return_value={"bondid": "ZXXX12345"}),
+        patch_bond_bridge(),
+        patch_bond_device_ids(),
+        _patch_async_setup_entry(),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 def _patch_async_setup_entry():

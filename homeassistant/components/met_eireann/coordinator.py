@@ -3,7 +3,7 @@
 from collections.abc import Mapping
 from datetime import timedelta
 import logging
-from typing import Any, Self
+from typing import Any, Self, override
 
 import meteireann
 
@@ -49,9 +49,11 @@ class MetEireannWeatherData:
 class MetEireannUpdateCoordinator(DataUpdateCoordinator[MetEireannWeatherData]):
     """Coordinator for Met Éireann weather data."""
 
-    config_entry: ConfigEntry
+    config_entry: MetEireannConfigEntry
 
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    def __init__(
+        self, hass: HomeAssistant, config_entry: MetEireannConfigEntry
+    ) -> None:
         """Initialize the coordinator."""
         super().__init__(
             hass,
@@ -68,6 +70,7 @@ class MetEireannUpdateCoordinator(DataUpdateCoordinator[MetEireannWeatherData]):
         )
         self._weather_data = MetEireannWeatherData(config_entry.data, raw_weather_data)
 
+    @override
     async def _async_update_data(self) -> MetEireannWeatherData:
         """Fetch data from Met Éireann."""
         try:

@@ -1,7 +1,7 @@
 """Hue BLE light platform."""
 
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from HueBLE import HueBleLight
 
@@ -79,11 +79,13 @@ class HueBLELight(LightEntity):
         self._attr_supported_color_modes = get_available_color_modes(self._api)
         self._update_updatable_attributes()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Run when this Entity has been added to HA."""
 
         self._api.add_callback_on_state_changed(self._state_change_callback)
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from HA."""
 
@@ -111,6 +113,7 @@ class HueBLELight(LightEntity):
         """Fetch latest state from light and make available via properties."""
         await self._api.poll_state()
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Set properties then turn the light on."""
 
@@ -134,6 +137,7 @@ class HueBLELight(LightEntity):
 
         await self._api.set_power(True)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn light off then set properties."""
 
@@ -141,6 +145,7 @@ class HueBLELight(LightEntity):
         await self._api.set_power(False)
 
     @property
+    @override
     def color_mode(self) -> ColorMode:
         """Color mode of the light."""
 

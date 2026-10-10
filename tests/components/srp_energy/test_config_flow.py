@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+from homeassistant.components.recorder import Recorder
 from homeassistant.components.srp_energy.const import CONF_IS_TOU, DOMAIN
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.const import (
@@ -33,7 +34,7 @@ from tests.common import MockConfigEntry
 
 @pytest.mark.usefixtures("mock_srp_energy_config_flow")
 async def test_show_form(
-    hass: HomeAssistant, capsys: pytest.CaptureFixture[str]
+    recorder_mock: Recorder, hass: HomeAssistant, capsys: pytest.CaptureFixture[str]
 ) -> None:
     """Test show configuration form."""
     result = await hass.config_entries.flow.async_init(
@@ -61,6 +62,7 @@ async def test_show_form(
         assert result["data"][CONF_USERNAME] == ACCNT_USERNAME
         assert result["data"][CONF_PASSWORD] == ACCNT_PASSWORD
         assert result["data"][CONF_IS_TOU] == ACCNT_IS_TOU
+        assert result["result"].unique_id == ACCNT_ID
 
         captured = capsys.readouterr()
         assert "myaccount.srpnet.com" not in captured.err
@@ -68,6 +70,7 @@ async def test_show_form(
         assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("recorder_mock", "mock_setup_entry")
 async def test_form_invalid_account(
     hass: HomeAssistant,
     mock_srp_energy_config_flow: MagicMock,
@@ -86,7 +89,15 @@ async def test_form_invalid_account(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_account"}
 
+    mock_srp_energy_config_flow.validate.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        flow_id=result["flow_id"], user_input=TEST_CONFIG_HOME
+    )
 
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+@pytest.mark.usefixtures("recorder_mock", "mock_setup_entry")
 async def test_form_invalid_auth(
     hass: HomeAssistant,
     mock_srp_energy_config_flow: MagicMock,
@@ -105,8 +116,16 @@ async def test_form_invalid_auth(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_auth"}
 
+    mock_srp_energy_config_flow.validate.return_value = True
+    result = await hass.config_entries.flow.async_configure(
+        flow_id=result["flow_id"], user_input=TEST_CONFIG_HOME
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_form_unknown_error(
+    recorder_mock: Recorder,
     hass: HomeAssistant,
     mock_srp_energy_config_flow: MagicMock,
 ) -> None:
@@ -126,7 +145,7 @@ async def test_form_unknown_error(
 
 
 async def test_flow_entry_already_configured(
-    hass: HomeAssistant, init_integration: MockConfigEntry
+    recorder_mock: Recorder, hass: HomeAssistant, init_integration: MockConfigEntry
 ) -> None:
     """Test user input for config_entry that already exists."""
     # Verify mock config setup from fixture
@@ -150,7 +169,7 @@ async def test_flow_entry_already_configured(
 
 
 async def test_flow_multiple_configs(
-    hass: HomeAssistant, init_integration: MockConfigEntry
+    recorder_mock: Recorder, hass: HomeAssistant, init_integration: MockConfigEntry
 ) -> None:
     """Test multiple config entries."""
     # Verify mock config setup from fixture
@@ -175,6 +194,7 @@ async def test_flow_multiple_configs(
     assert result["data"][CONF_USERNAME] == ACCNT_USERNAME
     assert result["data"][CONF_PASSWORD] == ACCNT_PASSWORD
     assert result["data"][CONF_IS_TOU] == ACCNT_IS_TOU
+    assert result["result"].unique_id == ACCNT_ID_2
 
     # Verify multiple configs
     entries = hass.config_entries.async_entries()
@@ -183,7 +203,7 @@ async def test_flow_multiple_configs(
 
 
 async def test_reconfigure(
-    hass: HomeAssistant, init_integration: MockConfigEntry
+    recorder_mock: Recorder, hass: HomeAssistant, init_integration: MockConfigEntry
 ) -> None:
     """Test reconfiguring an existing entry."""
 
@@ -216,6 +236,7 @@ async def test_reconfigure(
 
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure_error(
+    recorder_mock: Recorder,
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
     mock_srp_energy_config_flow: MagicMock,
@@ -262,6 +283,7 @@ async def test_reconfigure_error(
 
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure_unknown_error(
+    recorder_mock: Recorder,
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
     mock_srp_energy_config_flow: MagicMock,

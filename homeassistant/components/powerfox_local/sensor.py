@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from powerfox import LocalResponse
 
@@ -105,6 +106,7 @@ class PowerfoxLocalSensorEntity(PowerfoxLocalEntity, SensorEntity):
         self._attr_unique_id = f"{coordinator.device_id}_{description.key}"
 
     @property
+    @override
     def native_value(self) -> float | int | None:
         """Return the state of the entity."""
         return self.entity_description.value_fn(self.coordinator.data)

@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 import switchbot
 from switchbot import LockStatus, SwitchbotModel
@@ -106,6 +107,28 @@ BINARY_SENSOR_TYPES: dict[str, SwitchbotBinarySensorEntityDescription] = {
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
     ),
+    "duress_alarm": SwitchbotBinarySensorEntityDescription(
+        key="duress_alarm",
+        translation_key="duress_alarm",
+        device_class=BinarySensorDeviceClass.SAFETY,
+    ),
+    "high_temperature": SwitchbotBinarySensorEntityDescription(
+        key="high_temperature",
+        translation_key="high_temperature",
+        device_class=BinarySensorDeviceClass.HEAT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    "lockout_alarm": SwitchbotBinarySensorEntityDescription(
+        key="lockout_alarm",
+        translation_key="lockout_alarm",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+    ),
+    "low_temperature": SwitchbotBinarySensorEntityDescription(
+        key="low_temperature",
+        translation_key="low_temperature",
+        device_class=BinarySensorDeviceClass.COLD,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
     "tamper_alarm": SwitchbotBinarySensorEntityDescription(
         key="tamper_alarm",
         device_class=BinarySensorDeviceClass.TAMPER,
@@ -152,6 +175,7 @@ class SwitchBotBinarySensor(SwitchbotEntity, BinarySensorEntity):
             )
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self._device, self._sensor)

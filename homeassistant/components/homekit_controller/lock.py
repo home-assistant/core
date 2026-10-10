@@ -1,6 +1,6 @@
 """Support for HomeKit Controller locks."""
 
-from typing import Any
+from typing import Any, override
 
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import Service, ServicesTypes
@@ -54,6 +54,7 @@ async def async_setup_entry(
 class HomeKitLock(HomeKitEntity, LockEntity):
     """Representation of a HomeKit Controller Lock."""
 
+    @override
     def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity cares about."""
         return [
@@ -63,6 +64,7 @@ class HomeKitLock(HomeKitEntity, LockEntity):
         ]
 
     @property
+    @override
     def is_locked(self) -> bool | None:
         """Return true if device is locked."""
         value = self.service.value(CharacteristicsTypes.LOCK_MECHANISM_CURRENT_STATE)
@@ -71,6 +73,7 @@ class HomeKitLock(HomeKitEntity, LockEntity):
         return CURRENT_STATE_MAP[value] == LockState.LOCKED
 
     @property
+    @override
     def is_locking(self) -> bool:
         """Return true if device is locking."""
         current_value = self.service.value(
@@ -85,6 +88,7 @@ class HomeKitLock(HomeKitEntity, LockEntity):
         )
 
     @property
+    @override
     def is_unlocking(self) -> bool:
         """Return true if device is unlocking."""
         current_value = self.service.value(
@@ -99,15 +103,18 @@ class HomeKitLock(HomeKitEntity, LockEntity):
         )
 
     @property
+    @override
     def is_jammed(self) -> bool:
         """Return true if device is jammed."""
         value = self.service.value(CharacteristicsTypes.LOCK_MECHANISM_CURRENT_STATE)
         return CURRENT_STATE_MAP[value] == LockState.JAMMED
 
+    @override
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the device."""
         await self._set_lock_state(LockState.LOCKED)
 
+    @override
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the device."""
         await self._set_lock_state(LockState.UNLOCKED)
@@ -123,6 +130,7 @@ class HomeKitLock(HomeKitEntity, LockEntity):
         await self._accessory.async_request_update()
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the optional state attributes."""
         attributes = {}

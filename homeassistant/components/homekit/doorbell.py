@@ -1,7 +1,7 @@
 """Extend the doorbell functions."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from pyhap.util import callback as pyhap_callback
 
@@ -70,6 +70,7 @@ class HomeDoorbellAccessory(HomeAccessory):
 
     @ha_callback
     @pyhap_callback  # type: ignore[untyped-decorator]
+    @override
     def run(self) -> None:
         """Handle doorbell event."""
         if self._char_doorbell_detected:

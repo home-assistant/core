@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
-from typing import Any, cast
+from typing import Any, cast, override
 
 from kasa import Device, Module
 from kasa.smart.modules.temperaturecontrol import ThermostatState
@@ -134,7 +134,7 @@ class TPLinkClimateEntity(CoordinatedTPLinkModuleEntity, ClimateEntity):
             )
 
         if temperature_feature := self._thermostat_module.get_feature("temperature"):
-            self._attr_temperature_unit = UNIT_MAPPING[
+            self._attr_native_temperature_unit = UNIT_MAPPING[
                 cast(str, temperature_feature.unit)
             ]
         else:
@@ -142,9 +142,10 @@ class TPLinkClimateEntity(CoordinatedTPLinkModuleEntity, ClimateEntity):
                 "Unable to get correct temperature unit for %s, defaulting to celsius",
                 device.host,
             )
-            self._attr_temperature_unit = UnitOfTemperature.CELSIUS
+            self._attr_native_temperature_unit = UnitOfTemperature.CELSIUS
 
     @async_refresh_after
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set target temperature."""
         await self._thermostat_module.set_target_temperature(
@@ -152,6 +153,7 @@ class TPLinkClimateEntity(CoordinatedTPLinkModuleEntity, ClimateEntity):
         )
 
     @async_refresh_after
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set hvac mode (heat/off)."""
         if hvac_mode is HVACMode.HEAT:
@@ -160,20 +162,25 @@ class TPLinkClimateEntity(CoordinatedTPLinkModuleEntity, ClimateEntity):
             await self._thermostat_module.set_state(False)
 
     @async_refresh_after
+    @override
     async def async_turn_on(self) -> None:
         """Turn heating on."""
         await self._thermostat_module.set_state(True)
 
     @async_refresh_after
+    @override
     async def async_turn_off(self) -> None:
         """Turn heating off."""
         await self._thermostat_module.set_state(False)
 
     @callback
+    @override
     def _async_update_attrs(self) -> bool:
         """Update the entity's attributes."""
-        self._attr_current_temperature = self._thermostat_module.temperature
-        self._attr_target_temperature = self._thermostat_module.target_temperature
+        self._attr_native_current_temperature = self._thermostat_module.temperature
+        self._attr_native_target_temperature = (
+            self._thermostat_module.target_temperature
+        )
 
         self._attr_hvac_mode = (
             HVACMode.HEAT if self._thermostat_module.state else HVACMode.OFF

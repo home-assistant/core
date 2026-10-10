@@ -26,6 +26,7 @@ from homeassistant.helpers.event import (
     async_track_state_change_event,
     async_track_time_interval,
 )
+from homeassistant.util import dt as dt_util
 
 from .const import (
     CONF_DEVICE_NAME,
@@ -75,31 +76,42 @@ async def async_setup_entry(hass: HomeAssistant, entry: EnergyIDConfigEntry) -> 
         is_claimed = await client.authenticate()
     except TimeoutError as err:
         raise ConfigEntryNotReady(
-            f"Timeout authenticating with EnergyID: {err}"
+            translation_domain=DOMAIN,
+            translation_key="auth_timeout",
         ) from err
     except ClientResponseError as err:
         # 401/403 = invalid credentials, trigger reauth
         if err.status in (401, 403):
-            raise ConfigEntryAuthFailed(f"Invalid credentials: {err}") from err
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="invalid_credentials",
+            ) from err
         # Other HTTP errors are likely temporary
         raise ConfigEntryNotReady(
-            f"HTTP error authenticating with EnergyID: {err}"
+            translation_domain=DOMAIN,
+            translation_key="auth_http_error",
         ) from err
     except ClientError as err:
         # Network/connection errors are temporary
         raise ConfigEntryNotReady(
-            f"Connection error authenticating with EnergyID: {err}"
+            translation_domain=DOMAIN,
+            translation_key="auth_connection_error",
         ) from err
     except Exception as err:
         # Unknown errors - log and retry (safer than forcing reauth)
+        # pylint: disable-next=home-assistant-log-and-raise
         _LOGGER.exception("Unexpected error during EnergyID authentication")
         raise ConfigEntryNotReady(
-            f"Unexpected error authenticating with EnergyID: {err}"
+            translation_domain=DOMAIN,
+            translation_key="auth_unexpected_error",
         ) from err
 
     if not is_claimed:
         # Device exists but not claimed = user needs to claim it = auth issue
-        raise ConfigEntryAuthFailed("Device is not claimed. Please re-authenticate.")
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="device_not_claimed",
+        )
 
     _LOGGER.debug("EnergyID device '%s' authenticated successfully", client.device_name)
 
@@ -221,8 +233,7 @@ def update_listeners(hass: HomeAssistant, entry: EnergyIDConfigEntry) -> None:
             ):
                 try:
                     value = float(current_state.state)
-                    # pylint: disable-next=home-assistant-enforce-utcnow
-                    timestamp = current_state.last_updated or dt.datetime.now(dt.UTC)
+                    timestamp = current_state.last_updated or dt_util.utcnow()
                     client.get_or_create_sensor(energyid_key).update(value, timestamp)
                 except ValueError, TypeError:
                     _LOGGER.debug(

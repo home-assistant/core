@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from pybotvac import Robot
 from pybotvac.exceptions import NeatoRobotException
@@ -63,8 +63,7 @@ class NeatoConnectedVacuum(NeatoEntity, StateVacuumEntity):
     """Representation of a Neato Connected Vacuum."""
 
     _attr_supported_features = (
-        VacuumEntityFeature.BATTERY
-        | VacuumEntityFeature.PAUSE
+        VacuumEntityFeature.PAUSE
         | VacuumEntityFeature.RETURN_HOME
         | VacuumEntityFeature.STOP
         | VacuumEntityFeature.START
@@ -172,8 +171,6 @@ class NeatoConnectedVacuum(NeatoEntity, StateVacuumEntity):
             self._attr_activity = VacuumActivity.ERROR
             self._status_state = ERRORS.get(self._state["error"])
 
-        self._attr_battery_level = self._state["details"]["charge"]
-
         if self._mapdata is None or not self._mapdata.get(self._robot_serial, {}).get(
             "maps", []
         ):
@@ -228,6 +225,7 @@ class NeatoConnectedVacuum(NeatoEntity, StateVacuumEntity):
                     )
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the vacuum cleaner."""
         data: dict[str, Any] = {}
@@ -258,6 +256,7 @@ class NeatoConnectedVacuum(NeatoEntity, StateVacuumEntity):
         return data
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Device info for neato robot."""
         device_info = self._attr_device_info
@@ -267,6 +266,7 @@ class NeatoConnectedVacuum(NeatoEntity, StateVacuumEntity):
             device_info["sw_version"] = self._robot_stats["firmware"]
         return device_info
 
+    @override
     def start(self) -> None:
         """Start cleaning or resume cleaning."""
         if self._state:
@@ -281,6 +281,7 @@ class NeatoConnectedVacuum(NeatoEntity, StateVacuumEntity):
                     "Neato vacuum connection error for '%s': %s", self.entity_id, ex
                 )
 
+    @override
     def pause(self) -> None:
         """Pause the vacuum."""
         try:
@@ -291,6 +292,7 @@ class NeatoConnectedVacuum(NeatoEntity, StateVacuumEntity):
                 "Neato vacuum connection error for '%s': %s", self.entity_id, ex
             )
 
+    @override
     def return_to_base(self, **kwargs: Any) -> None:
         """Set the vacuum cleaner to return to the dock."""
         try:
@@ -304,6 +306,7 @@ class NeatoConnectedVacuum(NeatoEntity, StateVacuumEntity):
                 "Neato vacuum connection error for '%s': %s", self.entity_id, ex
             )
 
+    @override
     def stop(self, **kwargs: Any) -> None:
         """Stop the vacuum cleaner."""
         try:
@@ -314,6 +317,7 @@ class NeatoConnectedVacuum(NeatoEntity, StateVacuumEntity):
                 "Neato vacuum connection error for '%s': %s", self.entity_id, ex
             )
 
+    @override
     def locate(self, **kwargs: Any) -> None:
         """Locate the robot by making it emit a sound."""
         try:
@@ -324,6 +328,7 @@ class NeatoConnectedVacuum(NeatoEntity, StateVacuumEntity):
                 "Neato vacuum connection error for '%s': %s", self.entity_id, ex
             )
 
+    @override
     def clean_spot(self, **kwargs: Any) -> None:
         """Run a spot cleaning starting from the base."""
         try:

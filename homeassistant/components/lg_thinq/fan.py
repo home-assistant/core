@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 import logging
-from typing import Any
+from typing import Any, override
 
 from thinqconnect import DeviceType
 from thinqconnect.devices.const import Property as ThinQProperty
@@ -134,6 +134,7 @@ class ThinQFanEntity(ThinQEntity, FanEntity):
         self._attr_speed_count = len(self._ordered_named_fan_speeds)
         self._operation_id = entity_description.operation_key
 
+    @override
     def _update_status(self) -> None:
         """Update status itself."""
         super()._update_status()
@@ -164,6 +165,7 @@ class ThinQFanEntity(ThinQEntity, FanEntity):
             self.preset_mode,
         )
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode of the fan."""
         _LOGGER.debug(
@@ -176,6 +178,7 @@ class ThinQFanEntity(ThinQEntity, FanEntity):
             self.coordinator.api.post(self.property_id, preset_mode)
         )
 
+    @override
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed percentage of the fan."""
         if percentage == 0:
@@ -194,6 +197,7 @@ class ThinQFanEntity(ThinQEntity, FanEntity):
         )
         await self.async_call_api(self.coordinator.api.post(self.property_id, value))
 
+    @override
     async def async_turn_on(
         self,
         percentage: int | None = None,
@@ -213,6 +217,7 @@ class ThinQFanEntity(ThinQEntity, FanEntity):
             self.coordinator.api.async_turn_on(self._operation_id)
         )
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the fan off."""
         _LOGGER.debug(
@@ -259,6 +264,7 @@ class ThinQHoodFanEntity(ThinQEntity, FanEntity):
         """Return the speed range excluding off (0)."""
         return (self._min_speed + 1, self._max_speed)
 
+    @override
     def _update_status(self) -> None:
         """Update status itself."""
         super()._update_status()
@@ -285,6 +291,7 @@ class ThinQHoodFanEntity(ThinQEntity, FanEntity):
             self._max_speed,
         )
 
+    @override
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed percentage of the fan."""
         if percentage == 0:
@@ -302,6 +309,7 @@ class ThinQHoodFanEntity(ThinQEntity, FanEntity):
         )
         await self.async_call_api(self.coordinator.api.post(self.property_id, speed))
 
+    @override
     async def async_turn_on(
         self,
         percentage: int | None = None,
@@ -323,6 +331,7 @@ class ThinQHoodFanEntity(ThinQEntity, FanEntity):
         )
         await self.async_call_api(self.coordinator.api.post(self.property_id, speed))
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the fan off."""
         _LOGGER.debug(

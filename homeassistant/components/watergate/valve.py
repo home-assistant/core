@@ -1,5 +1,9 @@
 """Support for Watergate Valve."""
 
+from typing import override
+
+from watergate_local_api import WatergateApiException
+
 from homeassistant.components.sensor import Any, HomeAssistant
 from homeassistant.components.valve import (
     ValveDeviceClass,
@@ -8,8 +12,10 @@ from homeassistant.components.valve import (
     ValveState,
 )
 from homeassistant.core import callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import DOMAIN
 from .coordinator import WatergateConfigEntry, WatergateDataCoordinator
 from .entity import WatergateEntity
 
@@ -47,21 +53,25 @@ class SonicValve(WatergateEntity, ValveEntity):
         )
 
     @property
+    @override
     def is_closed(self) -> bool:
         """Return if the valve is closed or not."""
         return self._valve_state == ValveState.CLOSED
 
     @property
+    @override
     def is_opening(self) -> bool | None:
         """Return if the valve is opening or not."""
         return self._valve_state == ValveState.OPENING
 
     @property
+    @override
     def is_closing(self) -> bool | None:
         """Return if the valve is closing or not."""
         return self._valve_state == ValveState.CLOSING
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle data update."""
         self._attr_available = self.coordinator.data is not None
@@ -72,19 +82,34 @@ class SonicValve(WatergateEntity, ValveEntity):
         )
         self.async_write_ha_state()
 
+    @override
     async def async_open_valve(self, **kwargs: Any) -> None:
         """Open the valve."""
-        await self._api_client.async_set_valve_state(ValveState.OPEN)
+        try:
+            await self._api_client.async_set_valve_state(ValveState.OPEN)
+        except WatergateApiException as exc:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="valve_action_failed",
+            ) from exc
         self._valve_state = ValveState.OPENING
         self.async_write_ha_state()
 
+    @override
     async def async_close_valve(self, **kwargs: Any) -> None:
         """Close the valve."""
-        await self._api_client.async_set_valve_state(ValveState.CLOSED)
+        try:
+            await self._api_client.async_set_valve_state(ValveState.CLOSED)
+        except WatergateApiException as exc:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="valve_action_failed",
+            ) from exc
         self._valve_state = ValveState.CLOSING
         self.async_write_ha_state()
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return super().available and self.coordinator.data.state is not None

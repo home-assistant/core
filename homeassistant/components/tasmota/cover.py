@@ -1,6 +1,6 @@
 """Support for Tasmota covers."""
 
-from typing import Any
+from typing import Any, override
 
 from hatasmota import const as tasmota_const, shutter as tasmota_shutter
 from hatasmota.entity import TasmotaEntity as HATasmotaEntity
@@ -81,6 +81,18 @@ class TasmotaCover(
                 | CoverEntityFeature.SET_TILT_POSITION
             )
 
+    @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Opt in to in-place entity_id changes.
+
+        Can be removed when backwards compatibility is disabled for core
+        integrations, i.e. once all core integrations have been migrated
+        to in-place entity ID change.
+        """
+        super().async_entity_id_changed(old_entity_id)
+
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to MQTT events."""
         self._tasmota_entity.set_on_state_callback(self.cover_state_updated)
@@ -95,6 +107,7 @@ class TasmotaCover(
         self.async_write_ha_state()
 
     @property
+    @override
     def current_cover_position(self) -> int | None:
         """Return current position of cover.
 
@@ -103,6 +116,7 @@ class TasmotaCover(
         return self._position
 
     @property
+    @override
     def current_cover_tilt_position(self) -> int | None:
         """Return current tilt position of cover.
 
@@ -111,52 +125,63 @@ class TasmotaCover(
         return self._tilt_position
 
     @property
+    @override
     def is_opening(self) -> bool:
         """Return if the cover is opening or not."""
         return self._direction == tasmota_const.SHUTTER_DIRECTION_UP
 
     @property
+    @override
     def is_closing(self) -> bool:
         """Return if the cover is closing or not."""
         return self._direction == tasmota_const.SHUTTER_DIRECTION_DOWN
 
     @property
+    @override
     def is_closed(self) -> bool | None:
         """Return if the cover is closed or not."""
         if self._position is None:
             return None
         return self._position == 0
 
+    @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         await self._tasmota_entity.open()
 
+    @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
         await self._tasmota_entity.close()
 
+    @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         position = kwargs[ATTR_POSITION]
         await self._tasmota_entity.set_position(position)
 
+    @override
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
         await self._tasmota_entity.stop()
 
+    @override
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Open the cover tilt."""
         await self._tasmota_entity.open_tilt()
 
+    @override
     async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Close cover tilt."""
         await self._tasmota_entity.close_tilt()
 
+    @override
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover tilt to a specific position."""
         tilt = kwargs[ATTR_TILT_POSITION]
         await self._tasmota_entity.set_tilt_position(tilt)
 
+    @override
     async def async_stop_cover_tilt(self, **kwargs: Any) -> None:
         """Stop the cover tilt."""
         await self._tasmota_entity.stop()

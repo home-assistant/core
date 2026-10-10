@@ -1,7 +1,7 @@
 {
   "domain": "sharkiq",
   "name": "Shark IQ",
-  "codeowners": ["@JeffResc", "@funkybunch", "@TheOneOgre"],
+  "codeowners": ["@JeffResc", "@funkybunch"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/sharkiq",
   "integration_type": "hub",

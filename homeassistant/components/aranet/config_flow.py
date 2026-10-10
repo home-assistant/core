@@ -1,10 +1,10 @@
 """Config flow for Aranet integration."""
 
-from typing import Any
+from typing import Any, override
 
 from aranet4.client import Aranet4Advertisement, Version as AranetVersion
 from bluetooth_data_tools import human_readable_name
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.bluetooth import (
     BluetoothServiceInfoBleak,
@@ -46,6 +46,7 @@ class AranetConfigFlow(ConfigFlow, domain=DOMAIN):
         if not adv.manufacturer_data.integrations:
             raise AbortFlow("integrations_disabled")
 
+    @override
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak
     ) -> ConfigFlowResult:
@@ -75,6 +76,7 @@ class AranetConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="bluetooth_confirm", description_placeholders=placeholders
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -107,9 +109,9 @@ class AranetConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_ADDRESS): vol.In(
+                    probatio.Required(CONF_ADDRESS): probatio.In(
                         {
                             addr: dev[0]
                             for (addr, dev) in self._discovered_devices.items()

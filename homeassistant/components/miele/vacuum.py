@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from enum import IntEnum
 import logging
-from typing import Any, Final
+from typing import Any, Final, override
 
 from aiohttp import ClientResponseError
 from pymiele import MieleEnum
@@ -165,6 +165,7 @@ class MieleVacuum(MieleEntity, StateVacuumEntity):
     _attr_name = None
 
     @property
+    @override
     def activity(self) -> VacuumActivity | None:
         """Return activity."""
         return VACUUM_PHASE_TO_ACTIVITY.get(
@@ -172,11 +173,13 @@ class MieleVacuum(MieleEntity, StateVacuumEntity):
         )
 
     @property
+    @override
     def fan_speed(self) -> str | None:
         """Return the fan speed."""
         return PROGRAM_TO_SPEED.get(self.device.state_program_id)
 
     @property
+    @override
     def available(self) -> bool:
         """Return the availability of the entity."""
 
@@ -198,22 +201,27 @@ class MieleVacuum(MieleEntity, StateVacuumEntity):
                 },
             ) from err
 
+    @override
     async def async_clean_spot(self, **kwargs: Any) -> None:
         """Clean spot."""
         await self.send(self._device_id, {PROGRAM_ID: FanProgram.spot})
 
+    @override
     async def async_start(self, **kwargs: Any) -> None:
         """Start cleaning."""
         await self.send(self._device_id, {PROCESS_ACTION: MieleActions.START})
 
+    @override
     async def async_stop(self, **kwargs: Any) -> None:
         """Stop cleaning."""
         await self.send(self._device_id, {PROCESS_ACTION: MieleActions.STOP})
 
+    @override
     async def async_pause(self, **kwargs: Any) -> None:
         """Pause cleaning."""
         await self.send(self._device_id, {PROCESS_ACTION: MieleActions.PAUSE})
 
+    @override
     async def async_set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
         """Set fan speed."""
         await self.send(self._device_id, {PROGRAM_ID: PROGRAM_MAP[fan_speed]})

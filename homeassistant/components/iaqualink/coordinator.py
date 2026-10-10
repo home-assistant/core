@@ -1,16 +1,15 @@
 """Data update coordinator for iaqualink."""
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any, override
 
-import httpx
+import httpx2
 from iaqualink.exception import (
     AqualinkServiceException,
     AqualinkServiceThrottledException,
     AqualinkServiceUnauthorizedException,
 )
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -18,14 +17,22 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import DOMAIN, UPDATE_INTERVAL_BY_SYSTEM_TYPE, UPDATE_INTERVAL_DEFAULT
 from .utils import error_detail
 
+if TYPE_CHECKING:
+    from . import AqualinkConfigEntry
+
 _LOGGER = logging.getLogger(__name__)
 
 
 class AqualinkDataUpdateCoordinator(DataUpdateCoordinator[None]):
     """Data coordinator for Aqualink systems."""
 
+    config_entry: AqualinkConfigEntry
+
     def __init__(
-        self, hass: HomeAssistant, config_entry: ConfigEntry, system: Any
+        self,
+        hass: HomeAssistant,
+        config_entry: AqualinkConfigEntry,
+        system: Any,
     ) -> None:
         """Initialize the coordinator."""
         update_interval = UPDATE_INTERVAL_BY_SYSTEM_TYPE.get(
@@ -40,6 +47,7 @@ class AqualinkDataUpdateCoordinator(DataUpdateCoordinator[None]):
         )
         self.system = system
 
+    @override
     async def _async_update_data(self) -> None:
         """Refresh internal state for a system."""
         try:
@@ -52,7 +60,7 @@ class AqualinkDataUpdateCoordinator(DataUpdateCoordinator[None]):
                 self.system.serial,
             )
             return
-        except (AqualinkServiceException, TimeoutError, httpx.HTTPError) as err:
+        except (AqualinkServiceException, TimeoutError, httpx2.HTTPError) as err:
             raise UpdateFailed(
                 "Unable to update iAquaLink system "
                 f"{self.system.serial}: {error_detail(err)}"

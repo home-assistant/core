@@ -9,13 +9,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.automation import DomainSpec
 from homeassistant.helpers.trigger import Trigger, make_entity_target_state_trigger
 
-_OCCUPANCY_DOMAIN_SPECS = {
-    BINARY_SENSOR_DOMAIN: DomainSpec(device_class=BinarySensorDeviceClass.OCCUPANCY)
+OCCUPANCY_DOMAIN_SPECS: dict[str, DomainSpec] = {
+    BINARY_SENSOR_DOMAIN: DomainSpec(device_class=BinarySensorDeviceClass.OCCUPANCY),
 }
 
 TRIGGERS: dict[str, type[Trigger]] = {
-    "detected": make_entity_target_state_trigger(_OCCUPANCY_DOMAIN_SPECS, STATE_ON),
-    "cleared": make_entity_target_state_trigger(_OCCUPANCY_DOMAIN_SPECS, STATE_OFF),
+    "detected": make_entity_target_state_trigger(OCCUPANCY_DOMAIN_SPECS, STATE_ON),
+    "cleared": make_entity_target_state_trigger(OCCUPANCY_DOMAIN_SPECS, STATE_OFF),
 }
 
 

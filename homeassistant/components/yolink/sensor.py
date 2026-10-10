@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from yolink.const import (
     ATTR_DEVICE_CO_SMOKE_SENSOR,
@@ -43,14 +43,13 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    CONCENTRATION_PARTS_PER_MILLION,
-    PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     EntityCategory,
     UnitOfConductivity,
     UnitOfEnergy,
     UnitOfLength,
     UnitOfPower,
+    UnitOfRatio,
     UnitOfTemperature,
     UnitOfVolume,
 )
@@ -73,6 +72,8 @@ from .const import (
     DEV_MODEL_TH_SENSOR_YS8014_UC,
     DEV_MODEL_TH_SENSOR_YS8017_EC,
     DEV_MODEL_TH_SENSOR_YS8017_UC,
+    DEV_MODEL_WATER_METER_YS5018_EC,
+    DEV_MODEL_WATER_METER_YS5018_UC,
 )
 from .coordinator import YoLinkConfigEntry, YoLinkCoordinator
 from .entity import YoLinkEntity
@@ -214,7 +215,7 @@ SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
     YoLinkSensorEntityDescription(
         key="battery",
         device_class=SensorDeviceClass.BATTERY,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
         exists_fn=lambda device: device.device_type in BATTERY_POWER_SENSOR,
@@ -224,7 +225,7 @@ SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
     YoLinkSensorEntityDescription(
         key="humidity",
         device_class=SensorDeviceClass.HUMIDITY,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         exists_fn=lambda device: (
             device.device_type
@@ -251,6 +252,22 @@ SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
                 ATTR_DEVICE_MULTI_FUNCTIONAL_SENSOR,
             ]
         ),
+        value=parse_data_temperature,
+    ),
+    YoLinkSensorEntityDescription(
+        key="temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+        exists_fn=lambda device: (
+            device.device_type == ATTR_DEVICE_WATER_METER_CONTROLLER
+            and device.device_model_name
+            in [
+                DEV_MODEL_WATER_METER_YS5018_EC,
+                DEV_MODEL_WATER_METER_YS5018_UC,
+            ]
+        ),
+        should_update_entity=lambda value: value is not None,
         value=parse_data_temperature,
     ),
     # mcu temperature
@@ -404,7 +421,7 @@ SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
     YoLinkSensorEntityDescription(
         key="co",
         device_class=SensorDeviceClass.CO,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
         state_class=SensorStateClass.MEASUREMENT,
         exists_fn=lambda device: (
             device.device_type == ATTR_DEVICE_MULTI_FUNCTIONAL_SENSOR
@@ -460,6 +477,7 @@ class YoLinkSensorEntity(YoLinkEntity, SensorEntity):
         )
 
     @callback
+    @override
     def update_entity_state(self, state: dict) -> None:
         """Update HA Entity State."""
         if (
@@ -473,6 +491,7 @@ class YoLinkSensorEntity(YoLinkEntity, SensorEntity):
         self.async_write_ha_state()
 
     @property
+    @override
     def available(self) -> bool:
         """Return true is device is available."""
         return super().available and self.coordinator.dev_online

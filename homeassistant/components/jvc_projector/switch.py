@@ -1,7 +1,7 @@
 """Switch platform for the jvc_projector integration."""
 
 from dataclasses import dataclass
-from typing import Any, Final
+from typing import Any, Final, override
 
 from jvcprojector import Command, command as cmd
 
@@ -24,11 +24,13 @@ class JvcProjectorSwitchDescription(SwitchEntityDescription):
 SWITCHES: Final[tuple[JvcProjectorSwitchDescription, ...]] = (
     JvcProjectorSwitchDescription(
         key="low_latency_mode",
+        translation_key="low_latency_mode",
         command=cmd.LowLatencyMode,
         entity_registry_enabled_default=False,
     ),
     JvcProjectorSwitchDescription(
         key="eshift",
+        translation_key="eshift",
         command=cmd.EShift,
         entity_registry_enabled_default=False,
     ),
@@ -63,18 +65,21 @@ class JvcProjectorSwitchEntity(JvcProjectorEntity, SwitchEntity):
         self.command: type[Command] = description.command
 
         self.entity_description = description
-        self._attr_translation_key = description.key
+        self._attr_translation_key = description.translation_key
         self._attr_unique_id = f"{self._attr_unique_id}_{description.key}"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return True if the entity is on."""
         return self.coordinator.data.get(self.command.name) == STATE_ON
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         await self.coordinator.device.set(self.command, STATE_ON)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         await self.coordinator.device.set(self.command, STATE_OFF)

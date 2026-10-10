@@ -1,5 +1,7 @@
 """Support for Aurora Forecast binary sensor."""
 
+from typing import override
+
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -28,6 +30,7 @@ class AuroraSensor(AuroraEntity, BinarySensorEntity):
     """Implementation of an aurora sensor."""
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if aurora is visible."""
         return self.coordinator.data > self.coordinator.threshold

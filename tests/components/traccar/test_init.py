@@ -7,7 +7,7 @@ from aiohttp.test_utils import TestClient
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components import traccar, zone
+from homeassistant.components import zone
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.components.device_tracker.legacy import Device
 from homeassistant.components.traccar import DOMAIN, TRACKER_UPDATE
@@ -201,6 +201,34 @@ async def test_enter_with_attrs_as_query(
     assert state.attributes["altitude"] == 123
 
 
+async def test_enter_with_attrs_as_form(
+    hass: HomeAssistant, client: TestClient, webhook_id: str
+) -> None:
+    """Test when the attributes are posted as a form, like Traccar Client 10 does."""
+    url = f"/api/webhook/{webhook_id}"
+    data = {
+        "id": "123",
+        "lat": "1.0",
+        "lon": "1.1",
+        "timestamp": "1788110243",
+        "accuracy": "100.0",
+        "altitude": "88.0",
+        "batt": "77",
+        "speed": "0.0",
+        "bearing": "0.0",
+    }
+
+    req = await client.post(url, data=data)
+    await hass.async_block_till_done()
+    assert req.status == HTTPStatus.OK
+    state = hass.states.get(f"{DEVICE_TRACKER_DOMAIN}.{data['id']}")
+    assert state.state == STATE_NOT_HOME
+    assert state.attributes["latitude"] == 1.0
+    assert state.attributes["longitude"] == 1.1
+    assert state.attributes["gps_accuracy"] == 100.0
+    assert state.attributes["battery_level"] == 77.0
+
+
 async def test_enter_with_attrs_as_payload(
     hass: HomeAssistant, client, webhook_id
 ) -> None:
@@ -287,6 +315,6 @@ async def test_load_unload_entry(hass: HomeAssistant, client, webhook_id) -> Non
 
     entry = hass.config_entries.async_entries(DOMAIN)[0]
 
-    assert await traccar.async_unload_entry(hass, entry)
+    assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
     assert not hass.data[DATA_DISPATCHER][TRACKER_UPDATE]

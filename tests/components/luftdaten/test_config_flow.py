@@ -130,3 +130,4 @@ async def test_step_user(
         CONF_SENSOR_ID: 12345,
         CONF_SHOW_ON_MAP: True,
     }
+    assert result2["result"].unique_id == "12345"

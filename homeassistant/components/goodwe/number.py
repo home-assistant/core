@@ -3,6 +3,7 @@
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 import logging
+from typing import override
 
 from goodwe import Inverter, InverterError
 
@@ -124,16 +125,24 @@ class InverterNumberEntity(NumberEntity):
     ) -> None:
         """Initialize the number inverter setting entity."""
         self.entity_description = description
-        self._attr_unique_id = f"{DOMAIN}-{description.key}-{inverter.serial_number}"
+        # Legacy format, kept as migrating existing unique IDs is not worth the risk
+        self._attr_unique_id = f"{DOMAIN}-{description.key}-{inverter.serial_number}"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
         self._attr_device_info = device_info
         self._attr_native_value = float(current_value)
         self._inverter: Inverter = inverter
+        # Larger inverters can export more than the default maximum; inverter
+        # families that don't report their rated power leave it at 0
+        if description.native_unit_of_measurement == UnitOfPower.WATT:
+            self._attr_native_max_value = max(
+                description.native_max_value, inverter.rated_power
+            )
 
     async def async_update(self) -> None:
         """Get the current value from inverter."""
         value = await self.entity_description.getter(self._inverter)
         self._attr_native_value = float(value)
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
         await self.entity_description.setter(self._inverter, int(value))

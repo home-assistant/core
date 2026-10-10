@@ -7,10 +7,20 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components import hue
+from homeassistant.components.hue import DOMAIN
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
+from homeassistant.util.json import JsonArrayType
+
+from .conftest import setup_platform
 
 from tests.common import MockConfigEntry, async_get_persistent_notifications
+
+# The `Wall switch with 2 controls` device and its zigbee mac
+WALL_SWITCH_ID = "3ff06175-29e8-44a8-8fe7-af591b0025da"
+WALL_SWITCH_ZIGBEE_MAC = "00:17:88:01:0b:aa:bb:99"
 
 
 @pytest.fixture
@@ -48,7 +58,9 @@ async def test_setup_with_no_config(hass: HomeAssistant) -> None:
 async def test_unload_entry(hass: HomeAssistant, mock_bridge_setup) -> None:
     """Test being able to unload an entry."""
     entry = MockConfigEntry(
-        domain=hue.DOMAIN, data={"host": "0.0.0.0", "api_version": 2}
+        domain=hue.DOMAIN,
+        data={"host": "0.0.0.0", "api_version": 2},
+        minor_version=2,
     )
     entry.add_to_hass(hass)
 
@@ -62,14 +74,16 @@ async def test_unload_entry(hass: HomeAssistant, mock_bridge_setup) -> None:
         return True
 
     mock_bridge_setup.async_reset = mock_reset
-    assert await hue.async_unload_entry(hass, entry)
+    assert await hass.config_entries.async_unload(entry.entry_id)
     assert not hasattr(entry, "runtime_data")
 
 
 async def test_setting_unique_id(hass: HomeAssistant, mock_bridge_setup) -> None:
     """Test we set unique ID if not set yet."""
     entry = MockConfigEntry(
-        domain=hue.DOMAIN, data={"host": "0.0.0.0", "api_version": 2}
+        domain=hue.DOMAIN,
+        data={"host": "0.0.0.0", "api_version": 2},
+        minor_version=2,
     )
     entry.add_to_hass(hass)
     assert await async_setup_component(hass, hue.DOMAIN, {}) is True
@@ -84,6 +98,7 @@ async def test_fixing_unique_id_no_other(
         domain=hue.DOMAIN,
         data={"host": "0.0.0.0", "api_version": 2},
         unique_id="invalid-id",
+        minor_version=2,
     )
     entry.add_to_hass(hass)
     assert await async_setup_component(hass, hue.DOMAIN, {}) is True
@@ -99,11 +114,13 @@ async def test_fixing_unique_id_other_ignored(
         data={"host": "0.0.0.0", "api_version": 2},
         unique_id="mock-id",
         source=config_entries.SOURCE_IGNORE,
+        minor_version=2,
     ).add_to_hass(hass)
     entry = MockConfigEntry(
         domain=hue.DOMAIN,
         data={"host": "0.0.0.0", "api_version": 2},
         unique_id="invalid-id",
+        minor_version=2,
     )
     entry.add_to_hass(hass)
     assert await async_setup_component(hass, hue.DOMAIN, {}) is True
@@ -120,17 +137,67 @@ async def test_fixing_unique_id_other_correct(
         domain=hue.DOMAIN,
         data={"host": "0.0.0.0", "api_version": 2},
         unique_id="mock-id",
+        minor_version=2,
     )
     correct_entry.add_to_hass(hass)
     entry = MockConfigEntry(
         domain=hue.DOMAIN,
         data={"host": "0.0.0.0", "api_version": 2},
         unique_id="invalid-id",
+        minor_version=2,
     )
     entry.add_to_hass(hass)
     assert await async_setup_component(hass, hue.DOMAIN, {}) is True
     await hass.async_block_till_done()
     assert hass.config_entries.async_entries() == [correct_entry]
+
+
+async def test_fixing_unique_id_other_correct_setup_error(
+    hass: HomeAssistant, mock_bridge_setup
+) -> None:
+    """Test setup error reason when another entry has the correct ID."""
+    MockConfigEntry(
+        domain=hue.DOMAIN,
+        data={"host": "0.0.0.0", "api_version": 2},
+        unique_id="mock-id",
+        minor_version=2,
+    ).add_to_hass(hass)
+    entry = MockConfigEntry(
+        domain=hue.DOMAIN,
+        data={"host": "0.0.0.0", "api_version": 2},
+        unique_id="invalid-id",
+        minor_version=2,
+    )
+    entry.add_to_hass(hass)
+
+    with patch.object(hass.config_entries, "async_remove", AsyncMock()) as mock_remove:
+        assert await async_setup_component(hass, hue.DOMAIN, {}) is True
+        await hass.async_block_till_done()
+
+    assert entry.state is config_entries.ConfigEntryState.SETUP_ERROR
+    assert entry.reason == (
+        "Another entry already exists for this Hue bridge, this entry will be removed"
+    )
+    mock_remove.assert_awaited_once_with(entry.entry_id)
+
+
+async def test_bridge_initialization_failed(
+    hass: HomeAssistant, mock_bridge_setup
+) -> None:
+    """Test setup fails when the bridge can't be initialized."""
+    mock_bridge_setup.async_initialize_bridge.return_value = False
+    entry = MockConfigEntry(
+        domain=hue.DOMAIN,
+        data={"host": "0.0.0.0", "api_version": 2},
+        minor_version=2,
+    )
+    entry.add_to_hass(hass)
+
+    assert await async_setup_component(hass, hue.DOMAIN, {}) is True
+    await hass.async_block_till_done()
+
+    assert entry.state is config_entries.ConfigEntryState.SETUP_ERROR
+    assert entry.reason == "Failed to set up the Hue bridge at 0.0.0.0"
 
 
 async def test_security_vuln_check(hass: HomeAssistant) -> None:
@@ -162,10 +229,28 @@ async def test_security_vuln_check(hass: HomeAssistant) -> None:
             ),
         ),
     ):
-        assert await async_setup_component(hass, "hue", {})
+        assert await async_setup_component(hass, DOMAIN, {})
 
     await hass.async_block_till_done()
 
     notifications = async_get_persistent_notifications(hass)
     assert "hue_hub_firmware" in notifications
     assert "CVE-2020-6007" in notifications["hue_hub_firmware"]["message"]
+
+
+async def test_zigbee_connection(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_bridge_v2: Mock,
+    v2_resources_test_data: JsonArrayType,
+) -> None:
+    """Test that the zigbee mac is added as a zigbee connection."""
+    await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
+    await setup_platform(hass, mock_bridge_v2, Platform.LIGHT)
+
+    device = device_registry.async_get_device_by_identifier(
+        identifier=(hue.DOMAIN, WALL_SWITCH_ID),
+        config_entry_id=mock_bridge_v2.config_entry.entry_id,
+    )
+    assert device is not None
+    assert device.connections == {(dr.CONNECTION_ZIGBEE, WALL_SWITCH_ZIGBEE_MAC)}

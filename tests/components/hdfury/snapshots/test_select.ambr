@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         '0',
         '1',
         '2',
@@ -48,8 +48,8 @@
 # name: test_select_entities[select.hdfury_vrroom_02_operation_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'HDFury VRROOM-02 Operation mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HDFury VRROOM-02 Operation mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         '0',
         '1',
         '2',
@@ -73,7 +73,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         '0',
         '1',
         '2',
@@ -114,8 +114,8 @@
 # name: test_select_entities[select.hdfury_vrroom_02_port_select_tx0-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'HDFury VRROOM-02 Port select TX0',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HDFury VRROOM-02 Port select TX0',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         '0',
         '1',
         '2',
@@ -138,7 +138,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         '0',
         '1',
         '2',
@@ -179,8 +179,8 @@
 # name: test_select_entities[select.hdfury_vrroom_02_port_select_tx1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'HDFury VRROOM-02 Port select TX1',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HDFury VRROOM-02 Port select TX1',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         '0',
         '1',
         '2',

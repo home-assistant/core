@@ -3,6 +3,7 @@
 from abc import abstractmethod
 from dataclasses import dataclass
 from datetime import timedelta
+from typing import override
 
 from pypaperless import Paperless
 from pypaperless.exceptions import (
@@ -58,6 +59,7 @@ class PaperlessCoordinator[DataT](DataUpdateCoordinator[DataT]):
             update_interval=update_interval,
         )
 
+    @override
     async def _async_update_data(self) -> DataT:
         """Update data via internal method."""
         try:
@@ -106,6 +108,7 @@ class PaperlessStatisticCoordinator(PaperlessCoordinator[Statistic]):
             update_interval=UPDATE_INTERVAL_STATISTICS,
         )
 
+    @override
     async def _async_update_data_internal(self) -> Statistic:
         """Fetch statistics data from API endpoint."""
         return await self.api.statistics()
@@ -129,6 +132,7 @@ class PaperlessStatusCoordinator(PaperlessCoordinator[Status]):
             update_interval=UPDATE_INTERVAL_STATUS,
         )
 
+    @override
     async def _async_update_data_internal(self) -> Status:
         """Fetch status data from API endpoint."""
         return await self.api.status()

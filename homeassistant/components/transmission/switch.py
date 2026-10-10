@@ -3,7 +3,7 @@
 import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.core import HomeAssistant
@@ -63,10 +63,12 @@ class TransmissionSwitch(TransmissionEntity, SwitchEntity):
     entity_description: TransmissionSwitchEntityDescription
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if device is on."""
         return bool(self.entity_description.is_on_func(self.coordinator))
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         await self.hass.async_add_executor_job(
@@ -75,6 +77,7 @@ class TransmissionSwitch(TransmissionEntity, SwitchEntity):
         await asyncio.sleep(AFTER_WRITE_SLEEP)
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         await self.hass.async_add_executor_job(

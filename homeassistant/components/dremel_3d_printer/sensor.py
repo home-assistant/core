@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from typing import override
 
 from dremel3dpy import Dremel3DPrinter
 
@@ -248,6 +249,7 @@ class Dremel3DPrinterSensor(Dremel3DPrinterEntity, SensorEntity):
     entity_description: Dremel3DPrinterSensorEntityDescription
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if the entity is available."""
         return super().available and self.entity_description.available_fn(
@@ -255,6 +257,7 @@ class Dremel3DPrinterSensor(Dremel3DPrinterEntity, SensorEntity):
         )
 
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Return the sensor state."""
         return self.entity_description.value_fn(self._api, self.entity_description.key)

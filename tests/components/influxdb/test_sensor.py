@@ -8,8 +8,8 @@ from unittest.mock import MagicMock, patch
 
 from influxdb.exceptions import InfluxDBClientError, InfluxDBServerError
 from influxdb_client.rest import ApiException
+from probatio import Invalid
 import pytest
-from voluptuous import Invalid
 
 from homeassistant.components import sensor
 from homeassistant.components.influxdb.const import (

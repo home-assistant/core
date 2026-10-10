@@ -2,12 +2,12 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any, cast
+from typing import Any, cast, override
 
 from onedrive_personal_sdk.clients.client import OneDriveClient
 from onedrive_personal_sdk.exceptions import OneDriveException
 from onedrive_personal_sdk.models.items import AppRoot, ItemUpdate
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
@@ -31,7 +31,7 @@ from .const import (
 )
 from .coordinator import OneDriveConfigEntry
 
-FOLDER_NAME_SCHEMA = vol.Schema({vol.Required(CONF_FOLDER_NAME): str})
+FOLDER_NAME_SCHEMA = probatio.Schema({probatio.Required(CONF_FOLDER_NAME): str})
 
 
 class OneDriveConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
@@ -49,11 +49,13 @@ class OneDriveConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         self.step_data: dict[str, Any] = {}
 
     @property
+    @override
     def logger(self) -> logging.Logger:
         """Return logger."""
         return logging.getLogger(__name__)
 
     @property
+    @override
     def extra_authorize_data(self) -> dict[str, Any]:
         """Extra data that needs to be appended to the authorize url."""
         return {"scope": " ".join(OAUTH_SCOPES)}
@@ -67,6 +69,7 @@ class OneDriveConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             else "Apps"
         )
 
+    @override
     async def async_oauth_create_entry(
         self,
         data: dict[str, Any],
@@ -221,6 +224,7 @@ class OneDriveConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: OneDriveConfigEntry,
     ) -> OneDriveOptionsFlowHandler:
@@ -238,9 +242,9 @@ class OneDriveOptionsFlowHandler(OptionsFlow):
         if user_input:
             return self.async_create_entry(title="", data=user_input)
 
-        options_schema = vol.Schema(
+        options_schema = probatio.Schema(
             {
-                vol.Optional(
+                probatio.Optional(
                     CONF_DELETE_PERMANENTLY,
                     default=self.config_entry.options.get(
                         CONF_DELETE_PERMANENTLY, False

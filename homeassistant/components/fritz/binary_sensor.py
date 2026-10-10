@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-import logging
+from typing import override
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -13,11 +13,10 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import LOGGER
 from .coordinator import FritzConfigEntry
 from .entity import FritzBoxBaseCoordinatorEntity, FritzEntityDescription
 from .models import ConnectionInfo
-
-_LOGGER = logging.getLogger(__name__)
 
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
@@ -56,7 +55,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up entry."""
-    _LOGGER.debug("Setting up FRITZ!Box binary sensors")
+    LOGGER.debug("Setting up FRITZ!Box binary sensors")
     avm_wrapper = entry.runtime_data
 
     connection_info = await avm_wrapper.async_get_connection_info()
@@ -76,6 +75,7 @@ class FritzBoxBinarySensor(FritzBoxBaseCoordinatorEntity, BinarySensorEntity):
     entity_description: FritzBinarySensorEntityDescription
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         if isinstance(

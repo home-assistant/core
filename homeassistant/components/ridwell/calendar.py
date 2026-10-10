@@ -1,6 +1,7 @@
 """Support for Ridwell calendars."""
 
 import datetime
+from typing import override
 
 from aioridwell.model import PickupCategory, RidwellAccount, RidwellPickupEvent
 
@@ -91,12 +92,14 @@ class RidwellCalendar(RidwellEntity, CalendarEntity):
         self._event: CalendarEvent | None = None
 
     @property
+    @override
     def event(self) -> CalendarEvent | None:
         """Return the next upcoming event."""
         return async_get_calendar_event_from_pickup_event(
             self.next_pickup_event, self.coordinator.config_entry
         )
 
+    @override
     async def async_get_events(
         self,
         hass: HomeAssistant,

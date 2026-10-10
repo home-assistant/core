@@ -2,7 +2,6 @@
 
 import asyncio
 from collections import defaultdict
-import logging
 
 import pyvera as veraApi
 from requests.exceptions import RequestException
@@ -25,8 +24,6 @@ from .common import (
 )
 from .config_flow import fix_device_id_list, new_options
 from .const import CONF_CONTROLLER, DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
@@ -62,14 +59,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: VeraConfigEntry) -> bool
     controller = veraApi.VeraController(base_url, subscription_registry)
 
     try:
-        all_devices = await hass.async_add_executor_job(controller.get_devices)
 
-        # pylint: disable-next=home-assistant-sequential-executor-jobs
-        all_scenes = await hass.async_add_executor_job(controller.get_scenes)
+        def _get_devices_and_scenes():
+            """Get devices and scenes from the Vera controller."""
+            return controller.get_devices(), controller.get_scenes()
+
+        all_devices, all_scenes = await hass.async_add_executor_job(
+            _get_devices_and_scenes
+        )
     except RequestException as exception:
         # There was a network related error connecting to the Vera controller.
-        _LOGGER.exception("Error communicating with Vera API")
-        raise ConfigEntryNotReady from exception
+        raise ConfigEntryNotReady(
+            f"Error communicating with Vera API: {exception}"
+        ) from exception
 
     # Exclude devices unwanted by user.
     devices = [device for device in all_devices if device.device_id not in exclude_ids]

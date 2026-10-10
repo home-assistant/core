@@ -2,6 +2,7 @@
 
 import logging
 from time import sleep
+from typing import override
 
 from aurorapy.client import AuroraError, AuroraSerialClient, AuroraTimeoutError
 from serial import SerialException
@@ -119,6 +120,7 @@ class AuroraAbbDataUpdateCoordinator(DataUpdateCoordinator[dict[str, float]]):
 
         return data
 
+    @override
     async def _async_update_data(self) -> dict[str, float]:
         """Update inverter data in the executor."""
         return await self.hass.async_add_executor_job(self._update_data)

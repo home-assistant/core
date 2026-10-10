@@ -14,13 +14,13 @@ import platform
 import sys
 import threading
 from time import monotonic
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 # Import cryptography early since import openssl is not thread-safe
 # _frozen_importlib._DeadlockError: deadlock detected by
 # _ModuleLock('cryptography.hazmat.backends.openssl.backend')
 import cryptography.hazmat.backends.openssl.backend  # noqa: F401
-import voluptuous as vol
+import probatio
 import yarl
 
 from . import (
@@ -47,7 +47,7 @@ from .components import (
     file_upload as file_upload_pre_import,  # noqa: F401
     group as group_pre_import,  # noqa: F401
     history as history_pre_import,  # noqa: F401
-    http,  # not named pre_import since it has requirements
+    http as http_import,  # noqa: F401 - not named pre_import since it has requirements
     image_upload as image_upload_import,  # noqa: F401 - not named pre_import since it has requirements
     logbook as logbook_pre_import,  # noqa: F401
     lovelace as lovelace_pre_import,  # noqa: F401
@@ -66,6 +66,7 @@ from .const import (
     BASE_PLATFORMS,
     FORMAT_DATETIME,
     KEY_DATA_LOGGING as DATA_LOGGING,
+    KEY_DATA_LOGGING_DISABLED_REASON as DATA_LOGGING_DISABLED_REASON,
     SIGNAL_BOOTSTRAP_INTEGRATIONS,
 )
 from .core_config import async_process_ha_core_config
@@ -107,7 +108,7 @@ from .setup import (
 from .util.async_ import create_eager_task
 from .util.hass_dict import HassKey
 from .util.logging import async_activate_log_queue_handler
-from .util.package import async_get_user_site, is_docker_env, is_virtual_env
+from .util.package import is_docker_env
 from .util.system_info import is_official_image
 
 with contextlib.suppress(ImportError):
@@ -115,7 +116,7 @@ with contextlib.suppress(ImportError):
     from anyio._backends import _asyncio  # noqa: F401
 
 with contextlib.suppress(ImportError):
-    # httpx will import trio if it is installed which does
+    # httpcore2 will import trio if it is installed which does
     # blocking I/O in the event loop. We want to avoid that.
     import trio  # noqa: F401
 
@@ -129,6 +130,11 @@ SETUP_ORDER_SORT_KEY = partial(contains, BASE_PLATFORMS)
 
 
 ERROR_LOG_FILENAME = "home-assistant.log"
+ENV_DISABLE_LOG_FILE = "HA_DISABLE_LOG_FILE"
+ENV_DUPLICATE_LOG_FILE = "HA_DUPLICATE_LOG_FILE"
+ENV_SUPERVISOR = "SUPERVISOR"
+LOG_FILE_DISABLED_REASON_ENVIRONMENT = "environment"
+LOG_FILE_DISABLED_REASON_SUPERVISOR = "supervisor"
 
 # hass.data key for logging information.
 DATA_REGISTRIES_LOADED: HassKey[None] = HassKey("bootstrap_registries_loaded")
@@ -218,6 +224,7 @@ DEFAULT_INTEGRATIONS = {
     "hardware",
     "labs",
     "logger",
+    "marketplace",
     "network",
     "system_health",
     #
@@ -258,6 +265,7 @@ DEFAULT_INTEGRATIONS = {
     "occupancy",
     "power",
     "temperature",
+    "vibration",
     "window",
 }
 DEFAULT_INTEGRATIONS_RECOVERY_MODE = {
@@ -356,9 +364,6 @@ async def async_setup_hass(
                 err,
             )
         else:
-            if not is_virtual_env():
-                await async_mount_local_lib_path(runtime_config.config_dir)
-
             if hass.config.safe_mode:
                 _LOGGER.info("Starting in safe mode")
 
@@ -408,12 +413,7 @@ async def async_setup_hass(
         _LOGGER.info("Starting in recovery mode")
         hass.config.recovery_mode = True
 
-        http_conf = (await http.async_get_last_config(hass)) or {}
-
-        await async_from_config_dict(
-            {"recovery_mode": {}, "http": http_conf},
-            hass,
-        )
+        await async_from_config_dict({"recovery_mode": {}}, hass)
 
     if runtime_config.open_ui:
         hass.add_job(open_hass_ui, hass)
@@ -474,25 +474,29 @@ async def async_load_base_functionality(hass: core.HomeAssistant) -> bool:
 
     recovery = hass.config.recovery_mode
     device_registry.async_setup(hass)
+    load_tasks: list[asyncio.Future[Any]] = [
+        create_eager_task(get_internal_store_manager(hass).async_initialize()),
+        create_eager_task(area_registry.async_load(hass, load_empty=recovery)),
+        create_eager_task(category_registry.async_load(hass, load_empty=recovery)),
+        create_eager_task(device_registry.async_load(hass, load_empty=recovery)),
+        create_eager_task(entity_registry.async_load(hass, load_empty=recovery)),
+        create_eager_task(floor_registry.async_load(hass, load_empty=recovery)),
+        create_eager_task(issue_registry.async_load(hass, load_empty=recovery)),
+        create_eager_task(label_registry.async_load(hass, load_empty=recovery)),
+        hass.async_add_executor_job(_init_blocking_io_modules_in_executor),
+        create_eager_task(template.async_load_custom_templates(hass)),
+        create_eager_task(restore_state.async_load(hass, load_empty=recovery)),
+        create_eager_task(hass.config_entries.async_initialize()),
+        create_eager_task(async_get_system_info(hass)),
+        create_eager_task(condition.async_setup(hass)),
+        create_eager_task(trigger.async_setup(hass)),
+    ]
     try:
-        await asyncio.gather(
-            create_eager_task(get_internal_store_manager(hass).async_initialize()),
-            create_eager_task(area_registry.async_load(hass, load_empty=recovery)),
-            create_eager_task(category_registry.async_load(hass, load_empty=recovery)),
-            create_eager_task(device_registry.async_load(hass, load_empty=recovery)),
-            create_eager_task(entity_registry.async_load(hass, load_empty=recovery)),
-            create_eager_task(floor_registry.async_load(hass, load_empty=recovery)),
-            create_eager_task(issue_registry.async_load(hass, load_empty=recovery)),
-            create_eager_task(label_registry.async_load(hass, load_empty=recovery)),
-            hass.async_add_executor_job(_init_blocking_io_modules_in_executor),
-            create_eager_task(template.async_load_custom_templates(hass)),
-            create_eager_task(restore_state.async_load(hass, load_empty=recovery)),
-            create_eager_task(hass.config_entries.async_initialize()),
-            create_eager_task(async_get_system_info(hass)),
-            create_eager_task(condition.async_setup(hass)),
-            create_eager_task(trigger.async_setup(hass)),
-        )
+        await asyncio.gather(*load_tasks)
     except UnsupportedStorageVersionError as err:
+        for task in load_tasks:
+            task.cancel()
+
         # If we're already in recovery mode, we don't want to handle the exception
         # and activate recovery mode again, as that would lead to an infinite loop.
         if recovery:
@@ -553,7 +557,7 @@ async def async_from_config_dict(
 
     try:
         await async_process_ha_core_config(hass, core_config)
-    except vol.Invalid as config_err:
+    except probatio.Invalid as config_err:
         conf_util.async_log_schema_error(config_err, core.DOMAIN, core_config, hass)
         async_notify_setup_error(hass, core.DOMAIN)
         return None
@@ -624,7 +628,7 @@ async def async_enable_logging(
     logging.getLogger("requests").setLevel(logging.WARNING)
     logging.getLogger("urllib3").setLevel(logging.WARNING)
     logging.getLogger("aiohttp.access").setLevel(logging.WARNING)
-    logging.getLogger("httpx").setLevel(logging.WARNING)
+    logging.getLogger("httpx2").setLevel(logging.WARNING)
 
     sys.excepthook = lambda *args: logging.getLogger().exception(
         "Uncaught exception", exc_info=args
@@ -642,10 +646,12 @@ async def async_enable_logging(
     logger.setLevel(logging.INFO if verbose else logging.WARNING)
 
     if log_file is None:
+        disabled_log_file_reason = _log_file_disabled_reason()
         default_log_path = hass.config.path(ERROR_LOG_FILENAME)
-        if "SUPERVISOR" in os.environ and "HA_DUPLICATE_LOG_FILE" not in os.environ:
+        if disabled_log_file_reason:
             # Rename the default log file if it exists, since previous versions created
-            # it even on Supervisor
+            # it before Supervisor disabled duplicate file logging or
+            # HA_DISABLE_LOG_FILE disabled the log file.
             def rename_old_file() -> None:
                 """Rename old log file in executor."""
                 if os.path.isfile(default_log_path):
@@ -657,6 +663,7 @@ async def async_enable_logging(
         else:
             err_log_path = default_log_path
     else:
+        disabled_log_file_reason = None
         err_log_path = os.path.abspath(log_file)
 
     if err_log_path:
@@ -669,8 +676,32 @@ async def async_enable_logging(
 
         # Save the log file location for access by other components.
         hass.data[DATA_LOGGING] = err_log_path
+    elif disabled_log_file_reason == LOG_FILE_DISABLED_REASON_ENVIRONMENT:
+        hass.data[DATA_LOGGING_DISABLED_REASON] = disabled_log_file_reason
 
     async_activate_log_queue_handler(hass)
+
+
+def _log_file_disabled_reason() -> str | None:
+    """Return why the log file is disabled."""
+    if ENV_SUPERVISOR in os.environ and ENV_DUPLICATE_LOG_FILE not in os.environ:
+        return LOG_FILE_DISABLED_REASON_SUPERVISOR
+
+    disable_log_file = os.environ.get(ENV_DISABLE_LOG_FILE)
+    if disable_log_file is None:
+        return None
+
+    try:
+        if cv.boolean(disable_log_file):
+            return LOG_FILE_DISABLED_REASON_ENVIRONMENT
+    except probatio.Invalid:
+        _LOGGER.warning(
+            "Ignoring invalid %s value: %s. Expected a boolean value: "
+            "1/0, true/false, yes/no, on/off, or enable/disable",
+            ENV_DISABLE_LOG_FILE,
+            disable_log_file,
+        )
+    return None
 
 
 def _create_log_file(
@@ -697,6 +728,7 @@ def _create_log_file(
 class _RotatingFileHandlerWithoutShouldRollOver(RotatingFileHandler):
     """RotatingFileHandler that does not check if it should roll over on every log."""
 
+    @override
     def shouldRollover(self, record: logging.LogRecord) -> bool:
         """Never roll over.
 
@@ -705,17 +737,6 @@ class _RotatingFileHandlerWithoutShouldRollOver(RotatingFileHandler):
         the result of this check is always False.
         """
         return False
-
-
-async def async_mount_local_lib_path(config_dir: str) -> str:
-    """Add local library to Python Path.
-
-    This function is a coroutine.
-    """
-    deps_dir = os.path.join(config_dir, "deps")
-    if (lib_dir := await async_get_user_site(deps_dir)) not in sys.path:
-        sys.path.insert(0, lib_dir)
-    return deps_dir
 
 
 def _get_domains(hass: core.HomeAssistant, config: dict[str, Any]) -> set[str]:
@@ -733,7 +754,7 @@ def _get_domains(hass: core.HomeAssistant, config: dict[str, Any]) -> set[str]:
         domains.update(DEFAULT_INTEGRATIONS_RECOVERY_MODE)
 
     # Add domains depending on if the Supervisor is used or not
-    if "SUPERVISOR" in os.environ:
+    if ENV_SUPERVISOR in os.environ:
         domains.update(DEFAULT_INTEGRATIONS_SUPERVISOR)
 
     return domains

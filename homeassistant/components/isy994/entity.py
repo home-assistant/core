@@ -1,6 +1,6 @@
 """Representation of ISYEntity Types."""
 
-from typing import Any, cast
+from typing import Any, cast, override
 
 from pyisy.constants import (
     ATTR_ACTION,
@@ -25,7 +25,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity, EntityDescription
 
-from .const import DOMAIN
+from .const import DOMAIN, EVENT_ISY994_CONTROL
 
 
 class ISYEntity(Entity):
@@ -51,14 +51,17 @@ class ISYEntity(Entity):
         self._change_handler: EventListener | None = None
         self._control_handler: EventListener | None = None
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to the node change events."""
         self._change_handler = self._node.status_events.subscribe(self.async_on_update)
+        self.async_on_remove(self._change_handler.unsubscribe)
 
         if hasattr(self._node, "control_events"):
             self._control_handler = self._node.control_events.subscribe(
                 self.async_on_control
             )
+            self.async_on_remove(self._control_handler.unsubscribe)
 
     @callback
     def async_on_update(self, event: NodeProperty) -> None:
@@ -81,7 +84,7 @@ class ISYEntity(Entity):
             # New state attributes may be available, update the state.
             self.async_write_ha_state()
 
-        self.hass.bus.async_fire("isy994_control", event_data)
+        self.hass.bus.async_fire(EVENT_ISY994_CONTROL, event_data)
 
 
 class ISYNodeEntity(ISYEntity):
@@ -99,11 +102,13 @@ class ISYNodeEntity(ISYEntity):
             self._attr_name = None
 
     @property
+    @override
     def available(self) -> bool:
         """Return entity availability."""
         return getattr(self._node, TAG_ENABLED, True)
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Get the state attributes for the device.
 
@@ -188,6 +193,7 @@ class ISYProgramEntity(ISYEntity):
         self._actions = actions
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Get the state attributes for the device."""
         attr = {}
@@ -240,6 +246,7 @@ class ISYAuxControlEntity(Entity):
         self._change_handler: EventListener = None
         self._availability_handler: EventListener = None
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to the node control change events."""
         self._change_handler = self._node.control_events.subscribe(
@@ -247,6 +254,7 @@ class ISYAuxControlEntity(Entity):
             event_filter={ATTR_CONTROL: self._control},
             key=self.unique_id,
         )
+        self.async_on_remove(self._change_handler.unsubscribe)
         self._availability_handler = self._node.isy.nodes.status_events.subscribe(
             self.async_on_update,
             event_filter={
@@ -255,6 +263,7 @@ class ISYAuxControlEntity(Entity):
             },
             key=self.unique_id,
         )
+        self.async_on_remove(self._availability_handler.unsubscribe)
 
     @callback
     def async_on_update(self, event: NodeProperty | NodeChangedEvent, key: str) -> None:
@@ -262,6 +271,7 @@ class ISYAuxControlEntity(Entity):
         self.async_write_ha_state()
 
     @property
+    @override
     def available(self) -> bool:
         """Return entity availability."""
         return cast(bool, self._node.enabled)

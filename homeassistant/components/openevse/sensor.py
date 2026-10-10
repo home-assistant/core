@@ -4,23 +4,17 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 import logging
+from typing import override
 
 from openevsehttp.__main__ import OpenEVSE
-import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
-    ATTR_CONNECTIONS,
-    ATTR_SERIAL_NUMBER,
-    CONF_HOST,
-    CONF_MONITORED_VARIABLES,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS,
     EntityCategory,
@@ -33,23 +27,40 @@ from homeassistant.const import (
     UnitOfTemperature,
     UnitOfTime,
 )
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import config_validation as cv, issue_registry as ir
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
-from homeassistant.helpers.entity_platform import (
-    AddConfigEntryEntitiesCallback,
-    AddEntitiesCallback,
-)
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import StateType
+from homeassistant.util import slugify
 
-from .const import DOMAIN, INTEGRATION_TITLE
-from .coordinator import OpenEVSEConfigEntry, OpenEVSEDataUpdateCoordinator
+from .coordinator import OpenEVSEConfigEntry
+from .entity import OpenEVSEEntity
 
 _LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
+
+
+STATUS_OPTIONS: list[str] = [
+    "charging",
+    "connected",
+    "diode_check_failed",
+    "disabled",
+    "gfci_fault",
+    "gfci_self_test_failure",
+    "no_ground",
+    "not_connected",
+    "over_temperature",
+    "sleeping",
+    "stuck_relay",
+    "vent_required",
+]
+
+
+def _map_status(status: str | None) -> str | None:
+    """Map raw status string to enum option."""
+    if status is not None and (slug := slugify(status)) in STATUS_OPTIONS:
+        return slug
+    return None
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -64,7 +75,9 @@ SENSOR_TYPES: tuple[OpenEVSESensorDescription, ...] = (
     OpenEVSESensorDescription(
         key="status",
         translation_key="status",
-        value_fn=lambda ev: ev.status,
+        device_class=SensorDeviceClass.ENUM,
+        options=STATUS_OPTIONS,
+        value_fn=lambda ev: _map_status(ev.status),
     ),
     OpenEVSESensorDescription(
         key="service_level",
@@ -75,7 +88,7 @@ SENSOR_TYPES: tuple[OpenEVSESensorDescription, ...] = (
             "1": "level_1",
             "2": "level_2",
             "a": "automatic",
-        }.get(ev.service_level.lower()),
+        }.get(str(ev.service_level).lower()),
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
@@ -356,66 +369,6 @@ SENSOR_TYPES: tuple[OpenEVSESensorDescription, ...] = (
     ),
 )
 
-SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
-
-PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_MONITORED_VARIABLES, default=["status"]): vol.All(
-            cv.ensure_list, [vol.In(SENSOR_KEYS)]
-        ),
-    }
-)
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up the openevse platform."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data=config,
-    )
-
-    if (
-        result.get("type") is FlowResultType.ABORT
-        and result.get("reason") != "already_configured"
-    ):
-        ir.async_create_issue(
-            hass,
-            DOMAIN,
-            f"deprecated_yaml_import_issue_{result.get('reason')}",
-            breaks_in_ha_version="2026.6.0",
-            is_fixable=False,
-            issue_domain=DOMAIN,
-            severity=ir.IssueSeverity.WARNING,
-            translation_key=f"deprecated_yaml_import_issue_{result.get('reason')}",
-            translation_placeholders={
-                "domain": DOMAIN,
-                "integration_title": INTEGRATION_TITLE,
-            },
-        )
-        return
-
-    ir.async_create_issue(
-        hass,
-        HOMEASSISTANT_DOMAIN,
-        "deprecated_yaml",
-        breaks_in_ha_version="2026.7.0",
-        is_fixable=False,
-        issue_domain=DOMAIN,
-        severity=ir.IssueSeverity.WARNING,
-        translation_key="deprecated_yaml",
-        translation_placeholders={
-            "domain": DOMAIN,
-            "integration_title": INTEGRATION_TITLE,
-        },
-    )
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -431,35 +384,13 @@ async def async_setup_entry(
     )
 
 
-class OpenEVSESensor(CoordinatorEntity[OpenEVSEDataUpdateCoordinator], SensorEntity):
+class OpenEVSESensor(OpenEVSEEntity, SensorEntity):
     """Implementation of an OpenEVSE sensor."""
 
-    _attr_has_entity_name = True
     entity_description: OpenEVSESensorDescription
 
-    def __init__(
-        self,
-        coordinator: OpenEVSEDataUpdateCoordinator,
-        description: OpenEVSESensorDescription,
-        identifier: str,
-        unique_id: str | None,
-    ) -> None:
-        """Initialize the sensor."""
-        super().__init__(coordinator)
-        self.entity_description = description
-        self._attr_unique_id = f"{identifier}-{description.key}"
-
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, identifier)},
-            manufacturer="OpenEVSE",
-        )
-        if unique_id:
-            self._attr_device_info[ATTR_CONNECTIONS] = {
-                (CONNECTION_NETWORK_MAC, unique_id)
-            }
-            self._attr_device_info[ATTR_SERIAL_NUMBER] = unique_id
-
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.charger)

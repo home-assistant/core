@@ -4,7 +4,7 @@ from collections.abc import AsyncIterator, Callable, Coroutine
 from functools import wraps
 import logging
 from time import time
-from typing import Any, Concatenate
+from typing import Any, Concatenate, override
 
 from aiohttp import ClientTimeout
 from onedrive_personal_sdk.clients.large_file_upload import LargeFileUploadClient
@@ -26,6 +26,7 @@ from homeassistant.components.backup import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.json import json_dumps
+from homeassistant.util.async_ import gather_with_limited_concurrency
 from homeassistant.util.json import json_loads_object
 
 from . import OneDriveConfigEntry
@@ -36,6 +37,7 @@ MAX_CHUNK_SIZE = 60 * 1024 * 1024  # largest chunk possible, must be <= 60 MiB
 TARGET_CHUNKS = 20
 TIMEOUT = ClientTimeout(connect=10, total=43200)  # 12 hours
 CACHE_TTL = 300
+METADATA_DOWNLOAD_CONCURRENCY = 10
 
 
 async def async_get_backup_agents(
@@ -129,6 +131,7 @@ class OneDriveBackupAgent(BackupAgent):
         self._cache_expiration = time()
 
     @handle_backup_errors
+    @override
     async def async_download_backup(
         self, backup_id: str, **kwargs: Any
     ) -> AsyncIterator[bytes]:
@@ -142,6 +145,7 @@ class OneDriveBackupAgent(BackupAgent):
         return stream.iter_chunked(1024)
 
     @handle_backup_errors
+    @override
     async def async_upload_backup(
         self,
         *,
@@ -210,6 +214,7 @@ class OneDriveBackupAgent(BackupAgent):
         self._cache_expiration = time()
 
     @handle_backup_errors
+    @override
     async def async_delete_backup(
         self,
         backup_id: str,
@@ -226,11 +231,13 @@ class OneDriveBackupAgent(BackupAgent):
         self._cache_expiration = time()
 
     @handle_backup_errors
+    @override
     async def async_list_backups(self, **kwargs: Any) -> list[AgentBackup]:
         """List backups."""
         return list((await self._list_cached_metadata_files()).values())
 
     @handle_backup_errors
+    @override
     async def async_get_backup(self, backup_id: str, **kwargs: Any) -> AgentBackup:
         """Return a backup."""
         return await self._find_backup_by_id(backup_id)
@@ -259,7 +266,7 @@ class OneDriveBackupAgent(BackupAgent):
             item.name for item in items if item.name and item.name.endswith(".tar")
         }
 
-        metadata_files: dict[str, AgentBackup] = {}
+        metadata_item_ids: list[str] = []
         for item in items:
             if item.name and item.name.endswith(".metadata.json"):
                 # Check if corresponding backup file exists
@@ -271,10 +278,15 @@ class OneDriveBackupAgent(BackupAgent):
                         item.name,
                     )
                     continue
-                if metadata := await _download_metadata(item.id):
-                    metadata_files[metadata.backup_id] = metadata
+                metadata_item_ids.append(item.id)
 
-        self._cache_backup_metadata = metadata_files
+        metadata_contents = await gather_with_limited_concurrency(
+            METADATA_DOWNLOAD_CONCURRENCY,
+            *(_download_metadata(item_id) for item_id in metadata_item_ids),
+        )
+        self._cache_backup_metadata = {
+            metadata.backup_id: metadata for metadata in metadata_contents if metadata
+        }
         self._cache_expiration = time() + CACHE_TTL
         return self._cache_backup_metadata
 

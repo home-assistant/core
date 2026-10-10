@@ -4,7 +4,6 @@ from pathlib import Path
 
 import astroid
 from pylint.testutils import MessageTest, UnittestLinter
-from pylint.utils.ast_walker import ASTWalker
 from pylint_home_assistant.checkers.quality_scale.config_entry_unloading import (
     ConfigEntryUnloadingChecker,
 )
@@ -12,7 +11,7 @@ from pylint_home_assistant.helpers.quality_scale import clear_quality_scale_cach
 import pytest
 import yaml
 
-from tests.pylint import assert_adds_messages, assert_no_messages
+from tests.pylint import assert_adds_messages, assert_no_messages, walk_checker
 
 
 @pytest.fixture(name="unloading_checker")
@@ -56,11 +55,8 @@ async def async_unload_entry(hass, entry):
     )
     root_node.file = str(integration_dir / "__init__.py")
 
-    walker = ASTWalker(linter)
-    walker.add_checker(unloading_checker)
-
     with assert_no_messages(linter):
-        walker.walk(root_node)
+        walk_checker(linter, unloading_checker, root_node)
 
 
 def test_unload_entry_missing_fires(
@@ -81,9 +77,6 @@ async def async_setup_entry(hass, entry):
     )
     root_node.file = str(integration_dir / "__init__.py")
 
-    walker = ASTWalker(linter)
-    walker.add_checker(unloading_checker)
-
     with assert_adds_messages(
         linter,
         MessageTest(
@@ -93,7 +86,7 @@ async def async_setup_entry(hass, entry):
             col_offset=0,
         ),
     ):
-        walker.walk(root_node)
+        walk_checker(linter, unloading_checker, root_node)
 
 
 @pytest.mark.parametrize(
@@ -146,8 +139,5 @@ async def async_setup_entry(hass, entry):
     )
     root_node.file = str(integration_dir / "__init__.py")
 
-    walker = ASTWalker(linter)
-    walker.add_checker(unloading_checker)
-
     with assert_no_messages(linter):
-        walker.walk(root_node)
+        walk_checker(linter, unloading_checker, root_node)

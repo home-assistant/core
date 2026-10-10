@@ -1,6 +1,7 @@
 """Support for OctoPrint number entities."""
 
 import logging
+from typing import override
 
 from pyoctoprintapi import OctoprintClient
 
@@ -110,6 +111,7 @@ class OctoPrintTemperatureNumber(
             self._attr_translation_placeholders = {"n": tool[4:]}
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the current target temperature."""
         if not self.coordinator.data["printer"]:
@@ -120,6 +122,7 @@ class OctoPrintTemperatureNumber(
 
         return None
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set the target temperature."""
 

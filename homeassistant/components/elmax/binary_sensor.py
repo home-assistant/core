@@ -1,5 +1,7 @@
 """Elmax sensor platform."""
 
+from typing import override
+
 from elmax_api.model.panel import PanelStatus
 
 from homeassistant.components.binary_sensor import (
@@ -60,6 +62,7 @@ class ElmaxSensor(ElmaxEntity, BinarySensorEntity):
     _attr_device_class = BinarySensorDeviceClass.DOOR
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
         return self.coordinator.get_zone_state(self._device.endpoint_id).opened

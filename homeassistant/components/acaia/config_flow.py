@@ -1,11 +1,11 @@
 """Config flow for Acaia integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
+from aioacaia.discovery import is_new_scale
 from aioacaia.exceptions import AcaiaDeviceNotFound, AcaiaError, AcaiaUnknownDevice
-from aioacaia.helpers import is_new_scale
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.bluetooth import (
     BluetoothServiceInfoBleak,
@@ -34,6 +34,7 @@ class AcaiaConfigFlow(ConfigFlow, domain=DOMAIN):
         self._discovered: dict[str, Any] = {}
         self._discovered_devices: dict[str, str] = {}
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -81,9 +82,9 @@ class AcaiaConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_ADDRESS): SelectSelector(
+                    probatio.Required(CONF_ADDRESS): SelectSelector(
                         SelectSelectorConfig(
                             options=options,
                             mode=SelectSelectorMode.DROPDOWN,
@@ -94,6 +95,7 @@ class AcaiaConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak
     ) -> ConfigFlowResult:

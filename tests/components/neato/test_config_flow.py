@@ -41,7 +41,7 @@ async def test_full_flow(
     )
 
     result = await hass.config_entries.flow.async_init(
-        "neato", context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
@@ -93,7 +93,7 @@ async def test_abort_if_already_setup(hass: HomeAssistant) -> None:
 
     # Should fail
     result = await hass.config_entries.flow.async_init(
-        "neato", context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"

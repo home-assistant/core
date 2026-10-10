@@ -147,7 +147,8 @@ async def test_stt_process_audio_stream_success(
     assert call_args.kwargs["model"] == TEST_CHAT_MODEL
 
     contents = call_args.kwargs["contents"]
-    assert contents[0] == TEST_PROMPT
+    assert TEST_PROMPT in contents[0]
+    assert "en-US" in contents[0]
     assert isinstance(contents[1], types.Part)
     assert contents[1].inline_data.mime_type == f"audio/{audio_format.value}"
     if call_convert_to_wav:
@@ -190,16 +191,48 @@ async def test_stt_process_audio_stream_api_error(
     assert result.text is None
 
 
+@pytest.mark.parametrize(
+    ("response", "expected_log"),
+    [
+        pytest.param(
+            types.GenerateContentResponse(candidates=[]),
+            "STT response contained no text (finish_reason=None)",
+            id="empty_response",
+        ),
+        pytest.param(
+            types.GenerateContentResponse(
+                candidates=[{"finish_reason": "STOP", "content": {"role": "model"}}]
+            ),
+            "STT response contained no text (finish_reason=FinishReason.STOP)",
+            id="blank_text_response",
+        ),
+        pytest.param(
+            types.GenerateContentResponse(
+                candidates=[],
+                prompt_feedback={
+                    "block_reason": "SAFETY",
+                    # Not populated by the Gemini API in practice (only
+                    # Vertex AI); included to prove it is not what gets
+                    # logged.
+                    "block_reason_message": "Blocked for safety reasons",
+                },
+            ),
+            "STT response contained no text (block_reason=BlockedReason.SAFETY)",
+            id="blocked_prompt",
+        ),
+    ],
+)
 @pytest.mark.usefixtures("setup_integration")
-async def test_stt_process_audio_stream_empty_response(
+async def test_stt_process_audio_stream_no_text_response(
     hass: HomeAssistant,
     mock_genai_client: AsyncMock,
+    caplog: pytest.LogCaptureFixture,
+    response: types.GenerateContentResponse,
+    expected_log: str,
 ) -> None:
-    """Test STT processing with an empty response from the API."""
+    """Test STT logs when the API response contains no text."""
     entity = hass.data[stt.DOMAIN].get_entity("stt.google_ai_stt")
-    mock_genai_client.aio.models.generate_content.return_value = (
-        types.GenerateContentResponse(candidates=[])
-    )
+    mock_genai_client.aio.models.generate_content.return_value = response
 
     metadata = stt.SpeechMetadata(
         language="en-US",
@@ -215,6 +248,7 @@ async def test_stt_process_audio_stream_empty_response(
 
     assert result.result == stt.SpeechResultState.ERROR
     assert result.text is None
+    assert expected_log in caplog.text
 
 
 @pytest.mark.usefixtures("mock_genai_client")
@@ -256,7 +290,34 @@ async def test_stt_uses_default_prompt(
 
     call_args = mock_genai_client.aio.models.generate_content.call_args
     contents = call_args.kwargs["contents"]
-    assert contents[0] == DEFAULT_STT_PROMPT
+    assert DEFAULT_STT_PROMPT in contents[0]
+    assert "en-US" in contents[0]
+
+
+@pytest.mark.usefixtures("setup_integration")
+async def test_stt_includes_language_in_prompt(
+    hass: HomeAssistant,
+    mock_genai_client: AsyncMock,
+) -> None:
+    """Test that metadata language is included in the prompt sent to the model."""
+    entity = hass.data[stt.DOMAIN].get_entity("stt.google_ai_stt")
+
+    metadata = stt.SpeechMetadata(
+        language="he-IL",
+        format=stt.AudioFormats.OGG,
+        codec=stt.AudioCodecs.OPUS,
+        bit_rate=stt.AudioBitRates.BITRATE_16,
+        sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
+        channel=stt.AudioChannels.CHANNEL_MONO,
+    )
+    audio_stream = _async_get_audio_stream(b"test_audio_bytes")
+
+    await entity.async_process_audio_stream(metadata, audio_stream)
+
+    call_args = mock_genai_client.aio.models.generate_content.call_args
+    contents = call_args.kwargs["contents"]
+    prompt = contents[0]
+    assert "he-IL" in prompt
 
 
 @pytest.mark.usefixtures("mock_genai_client")

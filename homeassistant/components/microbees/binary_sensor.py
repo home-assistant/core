@@ -1,5 +1,7 @@
 """BinarySensor integration microBees."""
 
+from typing import override
+
 from microBeesPy import Sensor
 
 from homeassistant.components.binary_sensor import (
@@ -67,11 +69,13 @@ class MBBinarySensor(MicroBeesEntity, BinarySensorEntity):
         self.entity_description = entity_description
 
     @property
+    @override
     def name(self) -> str:
         """Name of the BinarySensor."""
         return self.sensor.name
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the state of the BinarySensor."""
         return self.sensor.value

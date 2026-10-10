@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'away',
         'full',
         'vacation',
@@ -45,8 +45,8 @@
 # name: test_adam_2_select_entities[platforms0-True-m_adam_cooling][select.adam_gateway_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Adam Gateway mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Adam Gateway mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'away',
         'full',
         'vacation',
@@ -67,7 +67,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'bleeding_cold',
         'heating',
         'off',
@@ -108,8 +108,8 @@
 # name: test_adam_2_select_entities[platforms0-True-m_adam_cooling][select.adam_regulation_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Adam Regulation mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Adam Regulation mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'bleeding_cold',
         'heating',
         'off',
@@ -132,12 +132,12 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'off',
         'Badkamer',
         'Vakantie',
         'Weekschema',
         'Test',
-        'off',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -173,13 +173,13 @@
 # name: test_adam_2_select_entities[platforms0-True-m_adam_cooling][select.bathroom_thermostat_schedule-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Bathroom Thermostat schedule',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bathroom Thermostat schedule',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'off',
         'Badkamer',
         'Vakantie',
         'Weekschema',
         'Test',
-        'off',
       ]),
     }),
     'context': <ANY>,
@@ -197,7 +197,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'active',
         'off',
         'passive',
@@ -236,8 +236,8 @@
 # name: test_adam_2_select_entities[platforms0-True-m_adam_cooling][select.bathroom_zone_profile-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Bathroom Zone profile',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bathroom Zone profile',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'active',
         'off',
         'passive',
@@ -258,12 +258,12 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'off',
         'Badkamer',
         'Vakantie',
         'Weekschema',
         'Test',
-        'off',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -299,13 +299,13 @@
 # name: test_adam_2_select_entities[platforms0-True-m_adam_cooling][select.living_room_thermostat_schedule-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Living room Thermostat schedule',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living room Thermostat schedule',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'off',
         'Badkamer',
         'Vakantie',
         'Weekschema',
         'Test',
-        'off',
       ]),
     }),
     'context': <ANY>,
@@ -323,7 +323,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'active',
         'off',
         'passive',
@@ -362,8 +362,8 @@
 # name: test_adam_2_select_entities[platforms0-True-m_adam_cooling][select.living_room_zone_profile-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Living room Zone profile',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living room Zone profile',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'active',
         'off',
         'passive',
@@ -384,13 +384,13 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'off',
         'CV Roan',
         'Bios Schema met Film Avond',
         'GF7  Woonkamer',
         'Badkamer Schema',
         'CV Jessie',
-        'off',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -426,14 +426,14 @@
 # name: test_adam_select_entities[platforms0][select.badkamer_thermostat_schedule-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Badkamer Thermostat schedule',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Badkamer Thermostat schedule',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'off',
         'CV Roan',
         'Bios Schema met Film Avond',
         'GF7  Woonkamer',
         'Badkamer Schema',
         'CV Jessie',
-        'off',
       ]),
     }),
     'context': <ANY>,
@@ -451,13 +451,13 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'off',
         'CV Roan',
         'Bios Schema met Film Avond',
         'GF7  Woonkamer',
         'Badkamer Schema',
         'CV Jessie',
-        'off',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -493,18 +493,75 @@
 # name: test_adam_select_entities[platforms0][select.bios_thermostat_schedule-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Bios Thermostat schedule',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bios Thermostat schedule',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'off',
         'CV Roan',
         'Bios Schema met Film Avond',
         'GF7  Woonkamer',
         'Badkamer Schema',
         'CV Jessie',
-        'off',
       ]),
     }),
     'context': <ANY>,
     'entity_id': 'select.bios_thermostat_schedule',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_adam_select_entities[platforms0][select.garage_thermostat_schedule-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'off',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.garage_thermostat_schedule',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thermostat schedule',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thermostat schedule',
+    'platform': 'plugwise',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'select_schedule',
+    'unique_id': '446ac08dd04d4eff8ac57489757b7314-select_schedule',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_adam_select_entities[platforms0][select.garage_thermostat_schedule-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garage Thermostat schedule',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'off',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.garage_thermostat_schedule',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -518,13 +575,13 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'off',
         'CV Roan',
         'Bios Schema met Film Avond',
         'GF7  Woonkamer',
         'Badkamer Schema',
         'CV Jessie',
-        'off',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -560,14 +617,14 @@
 # name: test_adam_select_entities[platforms0][select.jessie_thermostat_schedule-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Jessie Thermostat schedule',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Jessie Thermostat schedule',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'off',
         'CV Roan',
         'Bios Schema met Film Avond',
         'GF7  Woonkamer',
         'Badkamer Schema',
         'CV Jessie',
-        'off',
       ]),
     }),
     'context': <ANY>,
@@ -585,13 +642,13 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'off',
         'CV Roan',
         'Bios Schema met Film Avond',
         'GF7  Woonkamer',
         'Badkamer Schema',
         'CV Jessie',
-        'off',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -627,14 +684,14 @@
 # name: test_adam_select_entities[platforms0][select.woonkamer_thermostat_schedule-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Woonkamer Thermostat schedule',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Woonkamer Thermostat schedule',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'off',
         'CV Roan',
         'Bios Schema met Film Avond',
         'GF7  Woonkamer',
         'Badkamer Schema',
         'CV Jessie',
-        'off',
       ]),
     }),
     'context': <ANY>,
@@ -643,5 +700,131 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'GF7  Woonkamer',
+  })
+# ---
+# name: test_anna_entities_with_dhw_mode_select[platforms0-True-anna_loria_cooling_active][select.anna_thermostat_schedule-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'off',
+        'Winter',
+        'Test ',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.anna_thermostat_schedule',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Thermostat schedule',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Thermostat schedule',
+    'platform': 'plugwise',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'select_schedule',
+    'unique_id': '582dfbdace4d4aeb832923ce7d1ddda0-select_schedule',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_anna_entities_with_dhw_mode_select[platforms0-True-anna_loria_cooling_active][select.anna_thermostat_schedule-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Anna Thermostat schedule',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'off',
+        'Winter',
+        'Test ',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.anna_thermostat_schedule',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Winter',
+  })
+# ---
+# name: test_anna_entities_with_dhw_mode_select[platforms0-True-anna_loria_cooling_active][select.opentherm_dhw_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'off',
+        'auto',
+        'boost',
+        'eco',
+        'comfort',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.opentherm_dhw_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'DHW mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'DHW mode',
+    'platform': 'plugwise',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'select_dhw_mode',
+    'unique_id': 'bfb5ee0a88e14e5f97bfa725a760cc49-select_dhw_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_anna_entities_with_dhw_mode_select[platforms0-True-anna_loria_cooling_active][select.opentherm_dhw_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'OpenTherm DHW mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'off',
+        'auto',
+        'boost',
+        'eco',
+        'comfort',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.opentherm_dhw_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'auto',
   })
 # ---

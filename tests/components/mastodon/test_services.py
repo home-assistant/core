@@ -10,6 +10,7 @@ from mastodon.Mastodon import (
     MastodonUnauthorizedError,
     MediaAttachment,
 )
+import probatio
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -31,11 +32,13 @@ from homeassistant.components.mastodon.const import (
     ATTR_HEADER_MIME_TYPE,
     ATTR_HIDE_NOTIFICATIONS,
     ATTR_IDEMPOTENCY_KEY,
+    ATTR_IN_REPLY_TO,
     ATTR_LANGUAGE,
     ATTR_MEDIA,
     ATTR_MEDIA_DESCRIPTION,
     ATTR_NOTE,
     ATTR_QUOTE_APPROVAL_POLICY,
+    ATTR_QUOTED_STATUS,
     ATTR_STATUS,
     ATTR_VISIBILITY,
     DOMAIN,
@@ -385,6 +388,8 @@ async def test_unmute_account_failure_api_error(
                 "language": None,
                 "media_ids": None,
                 "sensitive": None,
+                "in_reply_to_id": None,
+                "quoted_status_id": None,
             },
         ),
         (
@@ -398,6 +403,8 @@ async def test_unmute_account_failure_api_error(
                 "language": None,
                 "media_ids": None,
                 "sensitive": None,
+                "in_reply_to_id": None,
+                "quoted_status_id": None,
             },
         ),
         (
@@ -415,6 +422,8 @@ async def test_unmute_account_failure_api_error(
                 "language": None,
                 "media_ids": None,
                 "sensitive": None,
+                "in_reply_to_id": None,
+                "quoted_status_id": None,
             },
         ),
         (
@@ -433,6 +442,8 @@ async def test_unmute_account_failure_api_error(
                 "language": "nl",
                 "media_ids": "1",
                 "sensitive": None,
+                "in_reply_to_id": None,
+                "quoted_status_id": None,
             },
         ),
         (
@@ -452,6 +463,8 @@ async def test_unmute_account_failure_api_error(
                 "language": "en",
                 "media_ids": "1",
                 "sensitive": None,
+                "in_reply_to_id": None,
+                "quoted_status_id": None,
             },
         ),
         (
@@ -465,6 +478,8 @@ async def test_unmute_account_failure_api_error(
                 "idempotency_key": None,
                 "media_ids": None,
                 "sensitive": None,
+                "in_reply_to_id": None,
+                "quoted_status_id": None,
             },
         ),
         (
@@ -481,6 +496,8 @@ async def test_unmute_account_failure_api_error(
                 "quote_approval_policy": None,
                 "media_ids": None,
                 "sensitive": None,
+                "in_reply_to_id": None,
+                "quoted_status_id": None,
             },
         ),
         (
@@ -494,16 +511,50 @@ async def test_unmute_account_failure_api_error(
                 "language": None,
                 "media_ids": None,
                 "sensitive": None,
+                "in_reply_to_id": None,
+                "quoted_status_id": None,
+            },
+        ),
+        (
+            {ATTR_STATUS: "test toot", ATTR_IN_REPLY_TO: "1234567890"},
+            {
+                "status": "test toot",
+                "spoiler_text": None,
+                "visibility": None,
+                "quote_approval_policy": None,
+                "idempotency_key": None,
+                "language": None,
+                "media_ids": None,
+                "sensitive": None,
+                "in_reply_to_id": "1234567890",
+                "quoted_status_id": None,
+            },
+        ),
+        (
+            {ATTR_STATUS: "test toot", ATTR_QUOTED_STATUS: "1234567890"},
+            {
+                "status": "test toot",
+                "spoiler_text": None,
+                "visibility": None,
+                "quote_approval_policy": None,
+                "idempotency_key": None,
+                "language": None,
+                "media_ids": None,
+                "sensitive": None,
+                "in_reply_to_id": None,
+                "quoted_status_id": "1234567890",
             },
         ),
     ],
 )
+@pytest.mark.parametrize("return_response", [True, False])
 async def test_service_post(
     hass: HomeAssistant,
     mock_mastodon_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     payload: dict[str, str],
     kwargs: dict[str, str | None],
+    return_response: bool,
 ) -> None:
     """Test the post service."""
 
@@ -515,7 +566,7 @@ async def test_service_post(
             mock_mastodon_client, "media_post", return_value=MediaAttachment(id="1")
         ),
     ):
-        await hass.services.async_call(
+        response = await hass.services.async_call(
             DOMAIN,
             SERVICE_POST,
             {
@@ -523,12 +574,13 @@ async def test_service_post(
             }
             | payload,
             blocking=True,
-            return_response=False,
+            return_response=return_response,
         )
 
     mock_mastodon_client.status_post.assert_called_with(**kwargs)
 
     mock_mastodon_client.status_post.reset_mock()
+    assert bool(response) is return_response
 
 
 @pytest.mark.parametrize(
@@ -637,9 +689,9 @@ async def test_post_path_not_whitelisted(
         )
 
 
+@pytest.mark.usefixtures("mock_mastodon_client")
 async def test_idempotency_key_too_short(
     hass: HomeAssistant,
-    mock_mastodon_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test post service error when idempotency key is too short."""
@@ -650,8 +702,8 @@ async def test_idempotency_key_too_short(
     payload = {"status": "test toot", "idempotency_key": "abc"}
 
     with pytest.raises(
-        ServiceValidationError,
-        match="Idempotency key must be at least 4 characters long",
+        probatio.error.MultipleInvalid,
+        match="length of value must be at least 4 at 'idempotency_key'",
     ):
         await hass.services.async_call(
             DOMAIN,

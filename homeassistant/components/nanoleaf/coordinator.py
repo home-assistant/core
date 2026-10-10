@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+from typing import override
 
 from aionanoleaf2 import InvalidToken, Nanoleaf, Unavailable
 
@@ -33,6 +34,7 @@ class NanoleafCoordinator(DataUpdateCoordinator[None]):
         )
         self.nanoleaf = nanoleaf
 
+    @override
     async def _async_update_data(self) -> None:
         try:
             await self.nanoleaf.get_info()

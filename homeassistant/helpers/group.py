@@ -1,7 +1,7 @@
 """Helper for groups."""
 
 from collections.abc import Iterable
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from propcache.api import cached_property
 
@@ -44,6 +44,13 @@ class Group:
         entity = self._entity
         del get_group_entities(entity.hass)[entity.entity_id]
 
+    @callback
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Called when the entity's entity_id has been changed."""
+        entity = self._entity
+        group_entities = get_group_entities(entity.hass)
+        group_entities[entity.entity_id] = group_entities.pop(old_entity_id)
+
 
 class GenericGroup(Group):
     """Generic entity group.
@@ -57,6 +64,7 @@ class GenericGroup(Group):
         self._member_entity_ids = member_entity_ids
 
     @cached_property
+    @override
     def member_entity_ids(self) -> list[str]:
         """Return the list of member entity IDs."""
         return self._member_entity_ids
@@ -79,6 +87,7 @@ class IntegrationSpecificGroup(Group):
         self._member_unique_ids = member_unique_ids
 
     @cached_property
+    @override
     def member_entity_ids(self) -> list[str]:
         """Return the list of member entity IDs."""
         entity_registry = er.async_get(self._entity.hass)
@@ -110,6 +119,7 @@ class IntegrationSpecificGroup(Group):
             del self.member_entity_ids
 
     @callback
+    @override
     def async_added_to_hass(self) -> None:
         """Called when the entity is added to hass."""
         super().async_added_to_hass()

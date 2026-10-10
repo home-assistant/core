@@ -1,5 +1,7 @@
 """Outside temperature sensor for Fujitsu FGlair HVAC systems."""
 
+from typing import override
+
 from ayla_iot_unofficial.fujitsu_hvac import FujitsuHVAC
 
 from homeassistant.components.sensor import (
@@ -45,6 +47,7 @@ class FGLairOutsideTemperature(FGLairEntity, SensorEntity):
         self._attr_unique_id = f"{device.device_serial_number}_outside_temperature"
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the sensed outdoor temperature un celsius."""
         return self.device.outdoor_temperature  # type: ignore[no-any-return]

@@ -2,6 +2,7 @@
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
+from typing import override
 
 from homeassistant.components.button import (
     ButtonDeviceClass,
@@ -66,6 +67,7 @@ class FreeboxButton(ButtonEntity):
         self._attr_device_info = router.device_info
         self._attr_unique_id = f"{router.mac} {description.key}"
 
+    @override
     async def async_press(self) -> None:
         """Press the button."""
         await self.entity_description.async_press(self._router)

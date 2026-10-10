@@ -3,7 +3,11 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from verisure import Error as VerisureError, LoginError as VerisureLoginError
+from verisure import (
+    Error as VerisureError,
+    LoginError as VerisureLoginError,
+    RateLimitError,
+)
 
 from homeassistant import config_entries
 from homeassistant.components.verisure.const import (
@@ -54,6 +58,7 @@ async def test_full_user_flow_single_installation(
         CONF_EMAIL: "verisure_my_pages@example.com",
         CONF_PASSWORD: "SuperS3cr3t!",
     }
+    assert result2["result"].unique_id == "12345"
 
     assert len(mock_verisure_config_flow.login.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
@@ -97,6 +102,7 @@ async def test_full_user_flow_multiple_installations(
         CONF_EMAIL: "verisure_my_pages@example.com",
         CONF_PASSWORD: "SuperS3cr3t!",
     }
+    assert result3["result"].unique_id == "54321"
 
     assert len(mock_verisure_config_flow.login.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
@@ -224,8 +230,8 @@ async def test_full_user_flow_multiple_installations_with_mfa(
 @pytest.mark.parametrize(
     ("side_effect", "error"),
     [
-        (VerisureLoginError, "invalid_auth"),
-        (VerisureError, "unknown"),
+        (VerisureLoginError("Login failed"), "invalid_auth"),
+        (VerisureError("Unknown error"), "unknown"),
     ],
 )
 async def test_verisure_errors(
@@ -424,7 +430,7 @@ async def test_reauth_flow_with_mfa(
         CONF_PASSWORD: "correct horse battery staple!",
     }
 
-    assert len(mock_verisure_config_flow.login.mock_calls) == 2
+    assert len(mock_verisure_config_flow.login.mock_calls) == 1
     assert len(mock_verisure_config_flow.request_mfa.mock_calls) == 1
     assert len(mock_verisure_config_flow.validate_mfa.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
@@ -433,8 +439,8 @@ async def test_reauth_flow_with_mfa(
 @pytest.mark.parametrize(
     ("side_effect", "error"),
     [
-        (VerisureLoginError, "invalid_auth"),
-        (VerisureError, "unknown"),
+        (VerisureLoginError("Login failed"), "invalid_auth"),
+        (VerisureError("Unknown error"), "unknown"),
     ],
 )
 async def test_reauth_flow_errors(
@@ -515,7 +521,7 @@ async def test_reauth_flow_errors(
         for k1, v1 in mock_verisure_config_flow.get_installations.return_value.items()
     }
 
-    await hass.config_entries.flow.async_configure(
+    result6 = await hass.config_entries.flow.async_configure(
         result5["flow_id"],
         {
             "code": "654321",
@@ -523,16 +529,213 @@ async def test_reauth_flow_errors(
     )
     await hass.async_block_till_done()
 
+    assert result6.get("type") is FlowResultType.ABORT
+    assert result6.get("reason") == "reauth_successful"
     assert mock_config_entry.data == {
         CONF_GIID: "12345",
         CONF_EMAIL: "verisure_my_pages@example.com",
         CONF_PASSWORD: "SuperS3cr3t!",
     }
 
-    assert len(mock_verisure_config_flow.login.mock_calls) == 4
+    assert len(mock_verisure_config_flow.login.mock_calls) == 3
     assert len(mock_verisure_config_flow.request_mfa.mock_calls) == 2
     assert len(mock_verisure_config_flow.validate_mfa.mock_calls) == 2
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.parametrize(
+    ("password", "error"),
+    [
+        pytest.param("a" * 30, "invalid_auth", id="at_limit"),
+        pytest.param("a" * 31, "invalid_auth_password_too_long", id="over_limit"),
+    ],
+)
+async def test_user_flow_invalid_auth_password_length(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_verisure_config_flow: MagicMock,
+    password: str,
+    error: str,
+) -> None:
+    """Test a rejected login hints at the password length when it is too long."""
+    mock_verisure_config_flow.get_installations.return_value = {
+        k1: {k2: {k3: [v3[0]] for k3, v3 in v2.items()} for k2, v2 in v1.items()}
+        for k1, v1 in mock_verisure_config_flow.get_installations.return_value.items()
+    }
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    mock_verisure_config_flow.login.side_effect = VerisureLoginError("Login failed")
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"email": "verisure_my_pages@example.com", "password": password},
+    )
+    await hass.async_block_till_done()
+
+    assert result2.get("type") is FlowResultType.FORM
+    assert result2.get("step_id") == "user"
+    assert result2.get("errors") == {"base": error}
+
+    mock_verisure_config_flow.login.side_effect = None
+    result3 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"],
+        {"email": "verisure_my_pages@example.com", "password": "SuperS3cr3t!"},
+    )
+    await hass.async_block_till_done()
+
+    assert result3.get("type") is FlowResultType.CREATE_ENTRY
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.parametrize(
+    ("password", "error"),
+    [
+        pytest.param("a" * 30, "invalid_auth", id="at_limit"),
+        pytest.param("a" * 31, "invalid_auth_password_too_long", id="over_limit"),
+    ],
+)
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reauth_flow_invalid_auth_password_length(
+    hass: HomeAssistant,
+    mock_verisure_config_flow: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    password: str,
+    error: str,
+) -> None:
+    """Test a rejected reauth login hints at the password length when too long."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    mock_verisure_config_flow.login.side_effect = VerisureLoginError("Login failed")
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"email": "verisure_my_pages@example.com", "password": password},
+    )
+    await hass.async_block_till_done()
+
+    assert result2.get("type") is FlowResultType.FORM
+    assert result2.get("step_id") == "reauth_confirm"
+    assert result2.get("errors") == {"base": error}
+
+    mock_verisure_config_flow.login.side_effect = None
+    result3 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"],
+        {"email": "verisure_my_pages@example.com", "password": "SuperS3cr3t!"},
+    )
+    await hass.async_block_till_done()
+
+    assert result3.get("type") is FlowResultType.ABORT
+    assert result3.get("reason") == "reauth_successful"
+    assert mock_config_entry.data == {
+        CONF_GIID: "12345",
+        CONF_EMAIL: "verisure_my_pages@example.com",
+        CONF_PASSWORD: "SuperS3cr3t!",
+    }
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_user_flow_mfa_rate_limited(
+    hass: HomeAssistant,
+    mock_verisure_config_flow: MagicMock,
+) -> None:
+    """MFA step-up rate limits surface a dedicated config flow error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    mock_verisure_config_flow.login.side_effect = VerisureLoginError(
+        "Multifactor authentication enabled, disable or create MFA cookie"
+    )
+    mock_verisure_config_flow.request_mfa.side_effect = RateLimitError(
+        '{"errorCode": "ACC_00002","tooManyStepUpTokens": "true"}'
+    )
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "email": "verisure_my_pages@example.com",
+            "password": "SuperS3cr3t!",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result2.get("type") is FlowResultType.FORM
+    assert result2.get("step_id") == "user"
+    assert result2.get("errors") == {"base": "mfa_rate_limited"}
+
+    mock_verisure_config_flow.request_mfa.side_effect = None
+    result3 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"],
+        {
+            "email": "verisure_my_pages@example.com",
+            "password": "SuperS3cr3t!",
+        },
+    )
+    assert result3.get("step_id") == "mfa"
+
+    result4 = await hass.config_entries.flow.async_configure(
+        result3["flow_id"], {"code": "123456"}
+    )
+    assert result4.get("step_id") == "installation"
+
+    result5 = await hass.config_entries.flow.async_configure(
+        result4["flow_id"], {"giid": "12345"}
+    )
+    await hass.async_block_till_done()
+
+    assert result5.get("type") is FlowResultType.CREATE_ENTRY
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reauth_flow_mfa_rate_limited(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_verisure_config_flow: MagicMock,
+) -> None:
+    """Reauth MFA step-up rate limits surface a dedicated config flow error."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    mock_verisure_config_flow.login.side_effect = VerisureLoginError(
+        "Multifactor authentication enabled, disable or create MFA cookie"
+    )
+    mock_verisure_config_flow.request_mfa.side_effect = RateLimitError(
+        '{"errorCode": "ACC_00002","tooManyStepUpTokens": "true"}'
+    )
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "email": "verisure_my_pages@example.com",
+            "password": "SuperS3cr3t!",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result2.get("type") is FlowResultType.FORM
+    assert result2.get("step_id") == "reauth_confirm"
+    assert result2.get("errors") == {"base": "mfa_rate_limited"}
+
+    mock_verisure_config_flow.request_mfa.side_effect = None
+    result3 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"],
+        {
+            "email": "verisure_my_pages@example.com",
+            "password": "SuperS3cr3t!",
+        },
+    )
+    assert result3.get("step_id") == "reauth_mfa"
+
+    result4 = await hass.config_entries.flow.async_configure(
+        result3["flow_id"], {"code": "123456"}
+    )
+    await hass.async_block_till_done()
+
+    assert result4.get("type") is FlowResultType.ABORT
+    assert result4.get("reason") == "reauth_successful"
 
 
 async def test_options_flow(hass: HomeAssistant) -> None:

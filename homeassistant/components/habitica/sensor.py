@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from enum import StrEnum
 import logging
-from typing import Any
+from typing import Any, override
 from uuid import UUID
 
 from habiticalib import ContentData, GroupData, HabiticaClass, TaskData, UserData, ha
@@ -439,6 +439,7 @@ class HabiticaSensor(HabiticaBase, SensorEntity):
     entity_description: HabiticaSensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Return the state of the device."""
 
@@ -449,6 +450,7 @@ class HabiticaSensor(HabiticaBase, SensorEntity):
         )
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, float | None] | None:
         """Return entity specific state attributes."""
         if self.user is not None and (func := self.entity_description.attributes_fn):
@@ -456,6 +458,7 @@ class HabiticaSensor(HabiticaBase, SensorEntity):
         return None
 
     @property
+    @override
     def entity_picture(self) -> str | None:
         """Return the entity picture to use in the frontend, if any."""
         if (
@@ -492,6 +495,7 @@ class HabiticaPartySensor(HabiticaPartyBase, SensorEntity):
     entity_description: HabiticaPartySensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Return the state of the device."""
 
@@ -500,6 +504,7 @@ class HabiticaPartySensor(HabiticaPartyBase, SensorEntity):
         )
 
     @property
+    @override
     def entity_picture(self) -> str | None:
         """Return the entity picture to use in the frontend, if any."""
         pic = self.entity_description.entity_picture
@@ -519,6 +524,7 @@ class HabiticaPartySensor(HabiticaPartyBase, SensorEntity):
         )
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return entity specific state attributes."""
         if func := self.entity_description.attributes_fn:

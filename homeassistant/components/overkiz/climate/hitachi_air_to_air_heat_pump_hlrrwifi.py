@@ -1,6 +1,6 @@
 """Support for HitachiAirToAirHeatPump."""
 
-from typing import Any, cast
+from typing import Any, cast, override
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
 
@@ -87,7 +87,7 @@ class HitachiAirToAirHeatPumpHLRRWIFI(OverkizEntity, ClimateEntity):
     _attr_preset_modes = [PRESET_NONE, PRESET_HOLIDAY_MODE]
     _attr_swing_modes = [*SWING_MODES_TO_OVERKIZ]
     _attr_target_temperature_step = 1.0
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_translation_key = DOMAIN
 
     def __init__(
@@ -111,22 +111,24 @@ class HitachiAirToAirHeatPumpHLRRWIFI(OverkizEntity, ClimateEntity):
             self._attr_device_info["manufacturer"] = "Hitachi"
 
     @property
+    @override
     def hvac_mode(self) -> HVACMode:
         """Return hvac operation ie. heat, cool mode."""
         if (
-            main_op_state := self.device.states[MAIN_OPERATION_STATE]
+            main_op_state := self.device.states.get(MAIN_OPERATION_STATE)
         ) and main_op_state.value_as_str:
             if main_op_state.value_as_str.lower() == OverkizCommandParam.OFF:
                 return HVACMode.OFF
 
         if (
-            mode_change_state := self.device.states[MODE_CHANGE_STATE]
+            mode_change_state := self.device.states.get(MODE_CHANGE_STATE)
         ) and mode_change_state.value_as_str:
             sanitized_value = mode_change_state.value_as_str.lower()
             return OVERKIZ_TO_HVAC_MODES[sanitized_value]
 
         return HVACMode.OFF
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         if hvac_mode == HVACMode.OFF:
@@ -138,61 +140,72 @@ class HitachiAirToAirHeatPumpHLRRWIFI(OverkizEntity, ClimateEntity):
             )
 
     @property
+    @override
     def fan_mode(self) -> str | None:
         """Return the fan setting."""
-        if (state := self.device.states[FAN_SPEED_STATE]) and state.value_as_str:
+        if (state := self.device.states.get(FAN_SPEED_STATE)) and state.value_as_str:
             return OVERKIZ_TO_FAN_MODES[state.value_as_str]
 
         return None
 
     @property
+    @override
     def fan_modes(self) -> list[str] | None:
         """Return the list of available fan modes."""
         return [*FAN_MODES_TO_OVERKIZ]
 
+    @override
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
         await self._global_control(fan_mode=FAN_MODES_TO_OVERKIZ[fan_mode])
 
     @property
+    @override
     def swing_mode(self) -> str | None:
         """Return the swing setting."""
-        if (state := self.device.states[SWING_STATE]) and state.value_as_str:
+        if (state := self.device.states.get(SWING_STATE)) and state.value_as_str:
             return OVERKIZ_TO_SWING_MODES[state.value_as_str]
 
         return None
 
+    @override
     async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set new target swing operation."""
         await self._global_control(swing_mode=SWING_MODES_TO_OVERKIZ[swing_mode])
 
     @property
-    def target_temperature(self) -> int | None:
+    @override
+    def native_target_temperature(self) -> int | None:
         """Return the temperature."""
         if (
-            temperature := self.device.states[OverkizState.CORE_TARGET_TEMPERATURE]
+            temperature := self.device.states.get(OverkizState.CORE_TARGET_TEMPERATURE)
         ) and temperature.value_as_int:
             return temperature.value_as_int
 
         return None
 
     @property
-    def current_temperature(self) -> int | None:
+    @override
+    def native_current_temperature(self) -> int | None:
         """Return current temperature."""
-        if (state := self.device.states[ROOM_TEMPERATURE_STATE]) and state.value_as_int:
+        if (
+            state := self.device.states.get(ROOM_TEMPERATURE_STATE)
+        ) and state.value_as_int:
             return state.value_as_int
 
         return None
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new temperature."""
         temperature = cast(float, kwargs.get(ATTR_TEMPERATURE))
         await self._global_control(target_temperature=int(temperature))
 
     @property
+    @override
     def preset_mode(self) -> str | None:
         """Return the current preset mode, e.g., home, away, temp."""
-        if (state := self.device.states[LEAVE_HOME_STATE]) and state.value_as_str:
+        if (state := self.device.states.get(LEAVE_HOME_STATE)) and state.value_as_str:
             if state.value_as_str == OverkizCommandParam.ON:
                 return PRESET_HOLIDAY_MODE
 
@@ -201,6 +214,7 @@ class HitachiAirToAirHeatPumpHLRRWIFI(OverkizEntity, ClimateEntity):
 
         return None
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         if preset_mode == PRESET_HOLIDAY_MODE:
@@ -222,7 +236,7 @@ class HitachiAirToAirHeatPumpHLRRWIFI(OverkizEntity, ClimateEntity):
         """
         if value:
             return value
-        state = self.device.states[state_name]
+        state = self.device.states.get(state_name)
         if state and state.value_as_str:
             return state.value_as_str
         return fallback_value
@@ -245,7 +259,7 @@ class HitachiAirToAirHeatPumpHLRRWIFI(OverkizEntity, ClimateEntity):
         main_operation = self._control_backfill(
             main_operation, MAIN_OPERATION_STATE, OverkizCommandParam.ON
         )
-        target_temperature = target_temperature or self.target_temperature
+        target_temperature = target_temperature or self.native_target_temperature
 
         fan_mode = self._control_backfill(
             fan_mode,

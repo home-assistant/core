@@ -129,6 +129,22 @@ set_user:
     active:
       selector:
         boolean:
+    credential_type:
+      selector:
+        select:
+          options:
+            - pin_code
+            - password
+    credential_slot:
+      selector:
+        number:
+          min: 1
+          max: 65535
+          step: 1
+          mode: box
+    credential_data:
+      selector:
+        text:
 
 delete_user:
   target:

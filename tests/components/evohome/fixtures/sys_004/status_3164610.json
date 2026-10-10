@@ -19,7 +19,11 @@
             }
           ],
           "activeFaults": [],
-          "systemModeStatus": { "mode": "Auto", "isPermanent": true }
+          "systemModeStatus": {
+            "mode": "Away",
+            "timeUntil": "2023-06-29T23:00:00Z",
+            "isPermanent": false
+          }
         }
       ],
       "activeFaults": [

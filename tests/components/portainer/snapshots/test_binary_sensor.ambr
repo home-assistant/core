@@ -1,4 +1,55 @@
 # serializer version: 1
+# name: test_all_entities[binary_sensor.dashy_dashy_1_qgza68hnz4n1qvyz3iohynx05_out_of_memory-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.dashy_dashy_1_qgza68hnz4n1qvyz3iohynx05_out_of_memory',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Out of memory',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Out of memory',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'container_out_of_memory',
+    'unique_id': 'portainer_test_entry_123_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05_container_out_of_memory',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.dashy_dashy_1_qgza68hnz4n1qvyz3iohynx05_out_of_memory-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05 Out of memory',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.dashy_dashy_1_qgza68hnz4n1qvyz3iohynx05_out_of_memory',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_all_entities[binary_sensor.dashy_dashy_1_qgza68hnz4n1qvyz3iohynx05_status-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -39,8 +90,8 @@
 # name: test_all_entities[binary_sensor.dashy_dashy_1_qgza68hnz4n1qvyz3iohynx05_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'running',
-      'friendly_name': 'dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05 Status',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05 Status',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.dashy_dashy_1_qgza68hnz4n1qvyz3iohynx05_status',
@@ -90,8 +141,8 @@
 # name: test_all_entities[binary_sensor.dashy_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'running',
-      'friendly_name': 'dashy Status',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'dashy Status',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.dashy_status',
@@ -99,6 +150,57 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
+  })
+# ---
+# name: test_all_entities[binary_sensor.focused_einstein_out_of_memory-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.focused_einstein_out_of_memory',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Out of memory',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Out of memory',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'container_out_of_memory',
+    'unique_id': 'portainer_test_entry_123_focused_einstein_container_out_of_memory',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.focused_einstein_out_of_memory-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'focused_einstein Out of memory',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.focused_einstein_out_of_memory',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
   })
 # ---
 # name: test_all_entities[binary_sensor.focused_einstein_status-entry]
@@ -141,8 +243,8 @@
 # name: test_all_entities[binary_sensor.focused_einstein_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'running',
-      'friendly_name': 'focused_einstein Status',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'focused_einstein Status',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.focused_einstein_status',
@@ -150,6 +252,57 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
+  })
+# ---
+# name: test_all_entities[binary_sensor.funny_chatelet_out_of_memory-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.funny_chatelet_out_of_memory',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Out of memory',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Out of memory',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'container_out_of_memory',
+    'unique_id': 'portainer_test_entry_123_funny_chatelet_container_out_of_memory',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.funny_chatelet_out_of_memory-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'funny_chatelet Out of memory',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.funny_chatelet_out_of_memory',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
   })
 # ---
 # name: test_all_entities[binary_sensor.funny_chatelet_status-entry]
@@ -192,8 +345,8 @@
 # name: test_all_entities[binary_sensor.funny_chatelet_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'running',
-      'friendly_name': 'funny_chatelet Status',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'funny_chatelet Status',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.funny_chatelet_status',
@@ -243,8 +396,8 @@
 # name: test_all_entities[binary_sensor.my_environment_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'running',
-      'friendly_name': 'my-environment Status',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'my-environment Status',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.my_environment_status',
@@ -252,6 +405,57 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
+  })
+# ---
+# name: test_all_entities[binary_sensor.practical_morse_out_of_memory-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.practical_morse_out_of_memory',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Out of memory',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Out of memory',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'container_out_of_memory',
+    'unique_id': 'portainer_test_entry_123_practical_morse_container_out_of_memory',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.practical_morse_out_of_memory-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'practical_morse Out of memory',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.practical_morse_out_of_memory',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
   })
 # ---
 # name: test_all_entities[binary_sensor.practical_morse_status-entry]
@@ -294,8 +498,8 @@
 # name: test_all_entities[binary_sensor.practical_morse_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'running',
-      'friendly_name': 'practical_morse Status',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'practical_morse Status',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.practical_morse_status',
@@ -303,6 +507,57 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
+  })
+# ---
+# name: test_all_entities[binary_sensor.serene_banach_out_of_memory-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.serene_banach_out_of_memory',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Out of memory',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Out of memory',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'container_out_of_memory',
+    'unique_id': 'portainer_test_entry_123_serene_banach_container_out_of_memory',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.serene_banach_out_of_memory-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'serene_banach Out of memory',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.serene_banach_out_of_memory',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
   })
 # ---
 # name: test_all_entities[binary_sensor.serene_banach_status-entry]
@@ -345,8 +600,8 @@
 # name: test_all_entities[binary_sensor.serene_banach_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'running',
-      'friendly_name': 'serene_banach Status',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'serene_banach Status',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.serene_banach_status',
@@ -354,6 +609,57 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
+  })
+# ---
+# name: test_all_entities[binary_sensor.stoic_turing_out_of_memory-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.stoic_turing_out_of_memory',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Out of memory',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Out of memory',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'container_out_of_memory',
+    'unique_id': 'portainer_test_entry_123_stoic_turing_container_out_of_memory',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.stoic_turing_out_of_memory-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'stoic_turing Out of memory',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.stoic_turing_out_of_memory',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
   })
 # ---
 # name: test_all_entities[binary_sensor.stoic_turing_status-entry]
@@ -396,8 +702,8 @@
 # name: test_all_entities[binary_sensor.stoic_turing_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'running',
-      'friendly_name': 'stoic_turing Status',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'stoic_turing Status',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.stoic_turing_status',
@@ -447,8 +753,8 @@
 # name: test_all_entities[binary_sensor.webstack_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'running',
-      'friendly_name': 'webstack Status',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'webstack Status',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.webstack_status',

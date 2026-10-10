@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Generic, cast
+from typing import Any, Generic, cast, override
 
 from ring_doorbell import (
     RingCapability,
@@ -89,6 +89,7 @@ class RingSensor(RingEntity[RingDeviceT], SensorEntity):
         self._attr_native_value = self.entity_description.value_fn(self._device)
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Call update method."""
 
@@ -130,6 +131,13 @@ def _get_last_event_attrs(
             "recording_status": last_event.get("recording", {}).get("status"),
             "category": last_event.get("kind"),
         }
+    return None
+
+
+def _get_last_recording(history_data: list[dict[str, Any]]) -> dict[str, Any] | None:
+    for entry in history_data:
+        if entry.get("recording", {}).get("status") == "ready":
+            return entry
     return None
 
 
@@ -178,6 +186,20 @@ SENSOR_TYPES: tuple[RingSensorEntityDescription[Any], ...] = (
             else None
         ),
         exists_fn=lambda device: device.has_capability(RingCapability.HISTORY),
+    ),
+    RingSensorEntityDescription[RingDoorBell](
+        key="last_recording",
+        translation_key="last_recording",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_registry_enabled_default=False,
+        value_fn=lambda device: (
+            last_event["created_at"]
+            if (last_event := _get_last_recording(device.last_history))
+            else None
+        ),
+        exists_fn=lambda device: (
+            isinstance(device, RingDoorBell) and device.has_subscription
+        ),
     ),
     RingSensorEntityDescription[RingGeneric](
         key="last_ding",

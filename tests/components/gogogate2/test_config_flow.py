@@ -6,6 +6,7 @@ from unittest.mock import MagicMock, patch
 from ismartgate import GogoGate2Api, ISmartGateApi
 from ismartgate.common import ApiError
 from ismartgate.const import GogoGate2ApiErrorCode
+import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.gogogate2.const import (
@@ -29,28 +30,48 @@ from homeassistant.helpers.service_info.zeroconf import (
     ZeroconfServiceInfo,
 )
 
-from . import _mocked_ismartgate_closed_door_response
+from . import (
+    _mocked_gogogate_open_door_response,
+    _mocked_ismartgate_closed_door_response,
+)
 
 from tests.common import MockConfigEntry
 
 MOCK_MAC_ADDR = "AA:BB:CC:DD:EE:FF"
 
 
+@pytest.mark.parametrize(
+    ("side_effect", "error"),
+    [
+        pytest.param(
+            ApiError(GogoGate2ApiErrorCode.CREDENTIALS_INCORRECT, "blah"),
+            "invalid_auth",
+            id="invalid_auth",
+        ),
+        pytest.param(
+            Exception("Generic connection error."),
+            "cannot_connect",
+            id="generic_exception",
+        ),
+        pytest.param(ApiError(0, "blah"), "cannot_connect", id="api_error"),
+    ],
+)
 @patch("homeassistant.components.gogogate2.async_setup_entry", return_value=True)
 @patch("homeassistant.components.gogogate2.common.GogoGate2Api")
 async def test_auth_fail(
-    gogogate2api_mock, async_setup_entry_mock, hass: HomeAssistant
+    gogogate2api_mock: MagicMock,
+    async_setup_entry_mock: MagicMock,
+    hass: HomeAssistant,
+    side_effect: Exception,
+    error: str,
 ) -> None:
     """Test authorization failures."""
     api: GogoGate2Api = MagicMock(spec=GogoGate2Api)
     gogogate2api_mock.return_value = api
 
-    api.reset_mock()
-    api.async_info.side_effect = ApiError(
-        GogoGate2ApiErrorCode.CREDENTIALS_INCORRECT, "blah"
-    )
+    api.async_info.side_effect = side_effect
     result = await hass.config_entries.flow.async_init(
-        "gogogate2", context={"source": SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -63,15 +84,10 @@ async def test_auth_fail(
     )
     assert result
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {
-        "base": "invalid_auth",
-    }
+    assert result["errors"] == {"base": error}
 
-    api.reset_mock()
-    api.async_info.side_effect = Exception("Generic connection error.")
-    result = await hass.config_entries.flow.async_init(
-        "gogogate2", context={"source": SOURCE_USER}
-    )
+    api.async_info.side_effect = None
+    api.async_info.return_value = _mocked_gogogate_open_door_response()
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
@@ -81,27 +97,7 @@ async def test_auth_fail(
             CONF_PASSWORD: "password0",
         },
     )
-    assert result
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
-
-    api.reset_mock()
-    api.async_info.side_effect = ApiError(0, "blah")
-    result = await hass.config_entries.flow.async_init(
-        "gogogate2", context={"source": SOURCE_USER}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={
-            CONF_DEVICE: DEVICE_TYPE_GOGOGATE2,
-            CONF_IP_ADDRESS: "127.0.0.2",
-            CONF_USERNAME: "user0",
-            CONF_PASSWORD: "password0",
-        },
-    )
-    assert result
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_homekit_unique_id_already_setup(hass: HomeAssistant) -> None:

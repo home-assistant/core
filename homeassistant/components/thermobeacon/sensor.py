@@ -1,5 +1,7 @@
 """Support for ThermoBeacon sensors."""
 
+from typing import override
+
 from thermobeacon_ble import (
     SensorDeviceClass as ThermoBeaconSensorDeviceClass,
     SensorUpdate,
@@ -133,6 +135,7 @@ class ThermoBeaconBluetoothSensorEntity(
     """Representation of a ThermoBeacon sensor."""
 
     @property
+    @override
     def native_value(self) -> int | float | None:
         """Return the native value."""
         return self.processor.entity_data.get(self.entity_key)

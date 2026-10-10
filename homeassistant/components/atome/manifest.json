@@ -6,5 +6,5 @@
   "iot_class": "cloud_polling",
   "loggers": ["pyatome"],
   "quality_scale": "legacy",
-  "requirements": ["pyAtome==0.1.1"]
+  "requirements": ["pyAtome==0.1.2"]
 }

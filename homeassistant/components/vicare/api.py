@@ -2,7 +2,7 @@
 
 from asyncio import run_coroutine_threadsafe
 import logging
-from typing import Any
+from typing import Any, override
 
 from PyViCare.PyViCareAbstractOAuthManager import AbstractViCareOAuthManager
 import requests
@@ -17,6 +17,7 @@ _DEFAULT_TIMEOUT = 31
 class _TimeoutSession(requests.Session):
     """requests.Session that applies a default timeout when callers omit one."""
 
+    @override
     def request(  # type: ignore[override]
         self, method: str, url: str, **kwargs: Any
     ) -> requests.Response:

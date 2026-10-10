@@ -39,7 +39,7 @@
 # name: test_switches[switch.energy_site_allow_charging_from_grid-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Energy Site Allow charging from grid',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Energy Site Allow charging from grid',
     }),
     'context': <ANY>,
     'entity_id': 'switch.energy_site_allow_charging_from_grid',
@@ -89,7 +89,7 @@
 # name: test_switches[switch.energy_site_storm_watch-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Energy Site Storm watch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Energy Site Storm watch',
     }),
     'context': <ANY>,
     'entity_id': 'switch.energy_site_storm_watch',
@@ -139,8 +139,8 @@
 # name: test_switches[switch.test_charge-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'switch',
-      'friendly_name': 'Test Charge',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Charge',
     }),
     'context': <ANY>,
     'entity_id': 'switch.test_charge',
@@ -190,8 +190,8 @@
 # name: test_switches[switch.test_defrost_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'switch',
-      'friendly_name': 'Test Defrost mode',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Defrost mode',
     }),
     'context': <ANY>,
     'entity_id': 'switch.test_defrost_mode',
@@ -241,8 +241,8 @@
 # name: test_switches[switch.test_sentry_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'switch',
-      'friendly_name': 'Test Sentry mode',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Sentry mode',
     }),
     'context': <ANY>,
     'entity_id': 'switch.test_sentry_mode',
@@ -292,8 +292,8 @@
 # name: test_switches[switch.test_steering_wheel_heater-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'switch',
-      'friendly_name': 'Test Steering wheel heater',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Steering wheel heater',
     }),
     'context': <ANY>,
     'entity_id': 'switch.test_steering_wheel_heater',
@@ -343,8 +343,8 @@
 # name: test_switches[switch.test_valet_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'switch',
-      'friendly_name': 'Test Valet mode',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Valet mode',
     }),
     'context': <ANY>,
     'entity_id': 'switch.test_valet_mode',
@@ -357,8 +357,8 @@
 # name: test_switches[turn_off]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'switch',
-      'friendly_name': 'Test Charge',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Charge',
     }),
     'context': <ANY>,
     'entity_id': 'switch.test_charge',
@@ -371,8 +371,8 @@
 # name: test_switches[turn_on]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'switch',
-      'friendly_name': 'Test Charge',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Charge',
     }),
     'context': <ANY>,
     'entity_id': 'switch.test_charge',

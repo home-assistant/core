@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
-from typing import cast
+from typing import cast, override
 
 from pylamarzocco.const import BackFlushStatus, MachineState, ModelName, WidgetType
 from pylamarzocco.models import (
@@ -111,7 +111,10 @@ ENTITIES: tuple[LaMarzoccoSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         available_fn=(
             lambda coordinator: (
-                not coordinator.websocket_terminated
+                (
+                    not coordinator.websocket_terminated
+                    or coordinator.device.bluetooth_shot_counter_active
+                )
                 and cast(
                     MachineStatus,
                     coordinator.device.dashboard.config[WidgetType.CM_MACHINE_STATUS],
@@ -119,6 +122,7 @@ ENTITIES: tuple[LaMarzoccoSensorEntityDescription, ...] = (
                 is MachineState.BREWING
             )
         ),
+        bt_shot_timer=True,
     ),
     LaMarzoccoSensorEntityDescription(
         key="steam_boiler_ready_time",
@@ -223,6 +227,7 @@ class LaMarzoccoSensorEntity(LaMarzoccoEntity, SensorEntity):
     entity_description: LaMarzoccoSensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> StateType | datetime | None:
         """Return  value of the sensor."""
         return self.entity_description.value_fn(
@@ -236,6 +241,7 @@ class LaMarzoccoStatisticSensorEntity(LaMarzoccoSensorEntity):
     _unavailable_when_machine_off = False
 
     @property
+    @override
     def native_value(self) -> StateType | datetime | None:
         """Return the value of the sensor."""
         return self.entity_description.value_fn(

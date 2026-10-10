@@ -2,7 +2,7 @@
 
 import json
 import logging
-from typing import Any
+from typing import Any, override
 
 from aiohttp.client import ClientSession
 from pyfreedompro import put_state
@@ -62,15 +62,15 @@ class Device(CoordinatorEntity[FreedomproDataUpdateCoordinator], ClimateEntity):
 
     _attr_has_entity_name = True
     _attr_hvac_modes = SUPPORTED_HVAC_MODES
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_name = None
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.TURN_OFF
         | ClimateEntityFeature.TURN_ON
     )
-    _attr_current_temperature = 0
-    _attr_target_temperature = 0
+    _attr_native_current_temperature = 0
+    _attr_native_target_temperature = 0
     _attr_hvac_mode = HVACMode.OFF
 
     def __init__(
@@ -96,6 +96,7 @@ class Device(CoordinatorEntity[FreedomproDataUpdateCoordinator], ClimateEntity):
         )
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         device = next(
@@ -109,18 +110,20 @@ class Device(CoordinatorEntity[FreedomproDataUpdateCoordinator], ClimateEntity):
         if device is not None and "state" in device:
             state = device["state"]
             if "currentTemperature" in state:
-                self._attr_current_temperature = state["currentTemperature"]
+                self._attr_native_current_temperature = state["currentTemperature"]
             if "targetTemperature" in state:
-                self._attr_target_temperature = state["targetTemperature"]
+                self._attr_native_target_temperature = state["targetTemperature"]
             if "heatingCoolingState" in state:
                 self._attr_hvac_mode = HVAC_MAP[state["heatingCoolingState"]]
         super()._handle_coordinator_update()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
         self._handle_coordinator_update()
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Async function to set mode to climate."""
 
@@ -133,6 +136,7 @@ class Device(CoordinatorEntity[FreedomproDataUpdateCoordinator], ClimateEntity):
         )
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Async function to set temperature to climate."""
         payload = {}

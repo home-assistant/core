@@ -39,7 +39,7 @@
 # name: test_switches[switch.transmission_switch-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Transmission Switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Transmission Switch',
     }),
     'context': <ANY>,
     'entity_id': 'switch.transmission_switch',
@@ -89,7 +89,7 @@
 # name: test_switches[switch.transmission_turtle_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Transmission Turtle mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Transmission Turtle mode',
     }),
     'context': <ANY>,
     'entity_id': 'switch.transmission_turtle_mode',

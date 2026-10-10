@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 import dataclasses
-from typing import Any
+from typing import Any, override
 
 from pymelcloud import DEVICE_TYPE_ATA, DEVICE_TYPE_ATW
 from pymelcloud.atw_device import Zone
@@ -26,7 +26,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import MelCloudConfigEntry, MelCloudDeviceUpdateCoordinator
-from .entity import MelCloudEntity
+from .entity import MelCloudDescriptionEntity
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
@@ -307,26 +307,13 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class MelDeviceSensor(MelCloudEntity, SensorEntity):
+class MelDeviceSensor(MelCloudDescriptionEntity, SensorEntity):
     """Representation of a Sensor."""
 
     entity_description: MelcloudSensorEntityDescription
 
-    def __init__(
-        self,
-        coordinator: MelCloudDeviceUpdateCoordinator,
-        description: MelcloudSensorEntityDescription,
-    ) -> None:
-        """Initialize the sensor."""
-        super().__init__(coordinator)
-        self.entity_description = description
-
-        self._attr_unique_id = (
-            f"{coordinator.device.serial}-{coordinator.device.mac}-{description.key}"
-        )
-        self._attr_device_info = coordinator.device_info
-
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator)
@@ -353,6 +340,7 @@ class AtwZoneSensor(MelDeviceSensor):
         self._zone = zone
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return zone based state."""
         return self.entity_description.value_fn(self._zone)

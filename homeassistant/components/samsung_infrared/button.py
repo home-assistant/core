@@ -1,6 +1,7 @@
 """Button platform for Samsung IR integration."""
 
 from dataclasses import dataclass
+from typing import override
 
 from infrared_protocols.codes.samsung.tv import SamsungTVCode
 
@@ -167,10 +168,13 @@ class SamsungIrButton(SamsungIrEntity, InfraredEmitterConsumerEntity, ButtonEnti
         description: SamsungIrButtonEntityDescription,
     ) -> None:
         """Initialize Samsung IR button."""
-        super().__init__(entry, unique_id_suffix=description.key)
+        super().__init__(
+            entry, unique_id_suffix=description.key, device_name="Samsung TV"
+        )
         self._infrared_emitter_entity_id = infrared_emitter_entity_id
         self.entity_description = description
 
+    @override
     async def async_press(self) -> None:
         """Press the button."""
         await self._send_command(self.entity_description.command_code.to_command())

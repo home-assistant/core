@@ -2,8 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-
-from pyrituals import Diffuser
+from typing import override
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -14,7 +13,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import RitualsConfigEntry
+from .coordinator import RitualsConfigEntry, RitualsData
 from .entity import DiffuserEntity
 
 PARALLEL_UPDATES = 0
@@ -24,8 +23,8 @@ PARALLEL_UPDATES = 0
 class RitualsBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Class describing Rituals binary sensor entities."""
 
-    is_on_fn: Callable[[Diffuser], bool]
-    has_fn: Callable[[Diffuser], bool]
+    is_on_fn: Callable[[RitualsData], bool | None]
+    has_fn: Callable[[RitualsData], bool]
 
 
 ENTITY_DESCRIPTIONS = (
@@ -33,8 +32,8 @@ ENTITY_DESCRIPTIONS = (
         key="charging",
         device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
         entity_category=EntityCategory.DIAGNOSTIC,
-        is_on_fn=lambda diffuser: diffuser.charging,
-        has_fn=lambda diffuser: diffuser.has_battery,
+        is_on_fn=lambda data: data.sensors.battery_charging,
+        has_fn=lambda data: data.hub.has_battery,
     ),
 )
 
@@ -51,7 +50,7 @@ async def async_setup_entry(
         RitualsBinarySensorEntity(coordinator, description)
         for coordinator in coordinators.values()
         for description in ENTITY_DESCRIPTIONS
-        if description.has_fn(coordinator.diffuser)
+        if description.has_fn(coordinator.data)
     )
 
 
@@ -61,6 +60,7 @@ class RitualsBinarySensorEntity(DiffuserEntity, BinarySensorEntity):
     entity_description: RitualsBinarySensorEntityDescription
 
     @property
-    def is_on(self) -> bool:
+    @override
+    def is_on(self) -> bool | None:
         """Return the state of the binary sensor."""
-        return self.entity_description.is_on_fn(self.coordinator.diffuser)
+        return self.entity_description.is_on_fn(self.coordinator.data)

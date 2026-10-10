@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -72,6 +73,7 @@ class SystemNexa2Sensor(SystemNexa2Entity, SensorEntity):
         self.entity_description = entity_description
 
     @property
+    @override
     def native_value(self) -> str | int | None:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator)

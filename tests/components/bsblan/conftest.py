@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from bsblan import (
     Device,
+    HeatingTimeSwitchPrograms,
     HotWaterConfig,
     HotWaterSchedule,
     HotWaterState,
@@ -107,8 +108,16 @@ def mock_bsblan() -> Generator[MagicMock]:
         bsblan.hot_water_schedule.return_value = HotWaterSchedule.model_validate_json(
             load_fixture("dhw_schedule.json", DOMAIN)
         )
+        bsblan.heating_schedule.return_value = (
+            HeatingTimeSwitchPrograms.model_validate_json(
+                load_fixture("heating_schedule.json", DOMAIN)
+            )
+        )
         # mock get_temperature_unit property
         bsblan.get_temperature_unit = "°C"
+        # Default to a modern JSON-API version (>= v2) so setup uses the full
+        # feature set and does not raise the outdated-firmware repair issue.
+        bsblan.json_api_version = "3.0"
         # Default: single circuit (for config flow tests)
         bsblan.get_available_circuits.return_value = [1]
 

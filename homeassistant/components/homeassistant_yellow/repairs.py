@@ -1,6 +1,6 @@
 """Repairs for the Home Assistant Yellow integration."""
 
-from typing import cast
+from typing import cast, override
 
 from homeassistant.components.homeassistant_hardware.repair_helpers import (
     ISSUE_MULTI_PAN_MIGRATION,
@@ -27,6 +27,7 @@ class YellowMultiPanMigrationRepairFlow(
         HomeAssistantYellowMultiPanOptionsFlowHandler.__init__(self, hass, config_entry)
         self._repair_config_entry = config_entry
 
+    @override
     async def async_step_main_menu(  # type: ignore[override]
         self, _: None = None
     ) -> RepairsFlowResult:

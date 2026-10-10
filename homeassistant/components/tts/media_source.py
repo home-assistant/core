@@ -1,7 +1,7 @@
 """Text-to-speech media source."""
 
 import json
-from typing import TypedDict
+from typing import TypedDict, override
 
 from yarl import URL
 
@@ -15,7 +15,7 @@ from homeassistant.components.media_source import (
     generate_media_source_id as ms_generate_media_source_id,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 from .const import DATA_COMPONENT, DATA_TTS_MANAGER, DOMAIN, MEDIA_SOURCE_STREAM_PATH
 from .helper import get_engine_instance
@@ -41,7 +41,10 @@ def generate_media_source_id(
     from . import async_resolve_engine  # noqa: PLC0415
 
     if (engine := async_resolve_engine(hass, engine)) is None:
-        raise HomeAssistantError("Invalid TTS provider selected")
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="invalid_provider",
+        )
 
     engine_instance = get_engine_instance(hass, engine)
     # We raise above if the engine is not resolved, so engine_instance can't be None
@@ -130,6 +133,7 @@ class TTSMediaSource(MediaSource):
         super().__init__(DOMAIN)
         self.hass = hass
 
+    @override
     async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
         """Resolve media to a url."""
         manager = self.hass.data[DATA_TTS_MANAGER]
@@ -150,8 +154,11 @@ class TTSMediaSource(MediaSource):
         if stream is None:
             raise Unresolvable("Stream not found")
 
-        return PlayMedia(stream.url, stream.content_type)
+        return PlayMedia(
+            stream.url, stream.content_type, path=stream.async_get_media_path()
+        )
 
+    @override
     async def async_browse_media(
         self,
         item: MediaSourceItem,

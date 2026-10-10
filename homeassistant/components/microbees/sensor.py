@@ -1,5 +1,7 @@
 """sensor integration microBees."""
 
+from typing import override
+
 from microBeesPy import Sensor
 
 from homeassistant.components.sensor import (
@@ -8,13 +10,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import (
-    CONCENTRATION_PARTS_PER_MILLION,
-    LIGHT_LUX,
-    PERCENTAGE,
-    UnitOfPower,
-    UnitOfTemperature,
-)
+from homeassistant.const import LIGHT_LUX, UnitOfPower, UnitOfRatio, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -40,14 +36,14 @@ SENSOR_TYPES = {
     14: SensorEntityDescription(
         device_class=SensorDeviceClass.CO2,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
         key="carbon_dioxide",
         suggested_display_precision=1,
     ),
     16: SensorEntityDescription(
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         key="humidity",
         suggested_display_precision=1,
     ),
@@ -94,11 +90,13 @@ class MBSensor(MicroBeesEntity, SensorEntity):
         self.entity_description = entity_description
 
     @property
+    @override
     def name(self) -> str:
         """Name of the sensor."""
         return self.sensor.name
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the state of the sensor."""
         return self.sensor.value

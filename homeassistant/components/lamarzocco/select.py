@@ -2,7 +2,7 @@
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any, cast
+from typing import Any, cast, override
 
 from pylamarzocco.const import (
     DoseMode,
@@ -13,7 +13,7 @@ from pylamarzocco.const import (
     WidgetType,
 )
 from pylamarzocco.devices import LaMarzoccoMachine
-from pylamarzocco.exceptions import RequestNotSuccessful
+from pylamarzocco.exceptions import LaMarzoccoError
 from pylamarzocco.models import BrewByWeightDoses, PreBrewing, SteamBoilerLevel
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
@@ -185,10 +185,12 @@ class LaMarzoccoSelectEntity(LaMarzoccoEntity, SelectEntity):
     entity_description: LaMarzoccoSelectEntityDescription
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the current selected option."""
         return self.entity_description.current_option_fn(self.coordinator.device)
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         if option != self.current_option:
@@ -196,7 +198,7 @@ class LaMarzoccoSelectEntity(LaMarzoccoEntity, SelectEntity):
                 await self.entity_description.select_option_fn(
                     self.coordinator.device, option
                 )
-            except RequestNotSuccessful as exc:
+            except (LaMarzoccoError, TimeoutError) as exc:
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
                     translation_key="select_option_error",

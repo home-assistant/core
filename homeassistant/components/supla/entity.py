@@ -1,6 +1,7 @@
 """Base class for SUPLA channels."""
 
 import logging
+from typing import override
 
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -25,21 +26,25 @@ class SuplaEntity(CoordinatorEntity[SuplaCoordinator]):
         return self.coordinator.data.get(self.channel_id)
 
     @property
+    @override
     def unique_id(self) -> str:
         """Return a unique ID."""
         uid = self.channel_data["iodevice"]["gUIDString"].lower()
         channel_number = self.channel_data["channelNumber"]
-        return f"supla-{uid}-{channel_number}"
+        # Legacy format, kept as migrating existing unique IDs is not worth the risk
+        return f"supla-{uid}-{channel_number}"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
 
     @property
+    @override
     def name(self) -> str | None:
         """Return the name of the device."""
         return self.channel_data["caption"]
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
-        if self.channel_data is None:
+        if not super().available or self.channel_data is None:
             return False
         if (state := self.channel_data.get("state")) is None:
             return False

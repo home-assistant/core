@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from refoss_ha.controller.electricity import ElectricityXMix
 
@@ -23,7 +24,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .bridge import RefossConfigEntry, RefossDataUpdateCoordinator
-from .const import _LOGGER, CHANNEL_DISPLAY_NAME, DISPATCH_DEVICE_DISCOVERED, SENSOR_EM
+from .const import CHANNEL_DISPLAY_NAME, DISPATCH_DEVICE_DISCOVERED, LOGGER, SENSOR_EM
 from .entity import RefossEntity
 
 
@@ -134,7 +135,7 @@ async def async_setup_entry(
             for channel in device.channels
             for description in descriptions
         )
-        _LOGGER.debug("Device %s add sensor entity success", device.dev_name)
+        LOGGER.debug("Device %s add sensor entity success", device.dev_name)
 
     for coordinator in config_entry.runtime_data.coordinators:
         init_device(coordinator)
@@ -164,6 +165,7 @@ class RefossSensor(RefossEntity, SensorEntity):
         self._attr_translation_placeholders = {"channel_name": channel_name}
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the native value."""
         value = self.coordinator.device.get_value(

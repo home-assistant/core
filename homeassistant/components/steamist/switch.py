@@ -1,6 +1,6 @@
 """Support for Steamist switches."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -35,15 +35,18 @@ class SteamistSwitchEntity(SteamistEntity, SwitchEntity):
     """Representation of a Steamist steam switch."""
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return if the steam is active."""
         return self._status.active
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the steam on."""
         await self.coordinator.client.async_turn_on_steam()
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the steam off."""
         await self.coordinator.client.async_turn_off_steam()

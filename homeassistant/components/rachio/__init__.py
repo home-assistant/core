@@ -9,10 +9,17 @@ from requests.exceptions import ConnectTimeout
 from homeassistant.components import cloud
 from homeassistant.const import CONF_API_KEY, CONF_WEBHOOK_ID, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_CLOUDHOOK_URL, CONF_MANUAL_RUN_MINS
+from .const import CONF_CLOUDHOOK_URL, CONF_MANUAL_RUN_MINS, DOMAIN
 from .device import RachioConfigEntry, RachioPerson
+from .services import async_setup_services
 from .webhooks import (
     async_get_or_create_registered_webhook_id_and_url,
     async_register_webhook,
@@ -22,6 +29,14 @@ from .webhooks import (
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.CALENDAR, Platform.SWITCH]
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Rachio integration."""
+    async_setup_services(hass)
+    return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: RachioConfigEntry) -> bool:
@@ -71,16 +86,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: RachioConfigEntry) -> bo
         await person.async_setup(hass)
     except ConfigEntryAuthFailed as error:
         # Reauth is not yet implemented
-        _LOGGER.error("Authentication failed: %s", error)
-        return False
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="authentication_failed",
+        ) from error
     except ConnectTimeout as error:
-        _LOGGER.error("Could not reach the Rachio API: %s", error)
-        raise ConfigEntryNotReady from error
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+        ) from error
 
     # Check for Rachio controller devices
     if not person.controllers and not person.base_stations:
-        _LOGGER.error("No Rachio devices found in account %s", person.username)
-        return False
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="no_devices_found",
+        )
     _LOGGER.debug(
         (
             "%d Rachio device(s) found; The url %s must be accessible from the internet"

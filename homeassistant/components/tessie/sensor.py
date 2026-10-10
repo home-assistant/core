@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from itertools import chain
-from typing import cast
+from typing import cast, override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -543,11 +543,13 @@ class TessieVehicleSensorEntity(TessieEntity, SensorEntity):
         super().__init__(vehicle, description.key, description.data_key)
 
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.get())
 
     @property
+    @override
     def available(self) -> bool:
         """Return if sensor is available."""
         return super().available and self.entity_description.available_fn(self.get())
@@ -568,6 +570,7 @@ class TessieEnergyLiveSensorEntity(TessieEnergyEntity, SensorEntity):
         assert data.live_coordinator is not None
         super().__init__(data, data.live_coordinator, description.key)
 
+    @override
     def _async_update_attrs(self) -> None:
         """Update the attributes of the sensor."""
         self._attr_native_value = self.entity_description.value_fn(self._value)
@@ -587,6 +590,7 @@ class TessieEnergyInfoSensorEntity(TessieEnergyEntity, SensorEntity):
         self.entity_description = description
         super().__init__(data, data.info_coordinator, description.key)
 
+    @override
     def _async_update_attrs(self) -> None:
         """Update the attributes of the sensor."""
         self._attr_available = self._value is not None
@@ -612,6 +616,7 @@ class TessieWallConnectorSensorEntity(TessieWallConnectorEntity, SensorEntity):
             description.key,
         )
 
+    @override
     def _async_update_attrs(self) -> None:
         """Update the attributes of the sensor."""
         self._attr_available = self._value is not None
@@ -632,6 +637,7 @@ class TessieEnergyHistorySensorEntity(TessieEnergyHistoryEntity, SensorEntity):
         self.entity_description = description
         super().__init__(data, description.key)
 
+    @override
     def _async_update_attrs(self) -> None:
         """Update the attributes of the sensor."""
         self._attr_available = self._value is not None

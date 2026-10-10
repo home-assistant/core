@@ -2,15 +2,17 @@
 
 from asyncio import timeout
 from logging import getLogger
-from typing import Any
+from typing import TYPE_CHECKING, Any, override
 
 from switchbot_api import Device, Remote, SwitchBotAPI, SwitchBotConnectionError
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
+
+if TYPE_CHECKING:
+    from . import SwitchbotCloudConfigEntry
 
 _LOGGER = getLogger(__name__)
 
@@ -20,7 +22,7 @@ type Status = dict[str, Any] | None
 class SwitchBotCoordinator(DataUpdateCoordinator[Status]):
     """SwitchBot Cloud coordinator."""
 
-    config_entry: ConfigEntry
+    config_entry: SwitchbotCloudConfigEntry
     _api: SwitchBotAPI
     _device_id: str
     _manageable_by_webhook: bool
@@ -29,7 +31,7 @@ class SwitchBotCoordinator(DataUpdateCoordinator[Status]):
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: SwitchbotCloudConfigEntry,
         api: SwitchBotAPI,
         device: Device | Remote,
         manageable_by_webhook: bool,
@@ -60,6 +62,7 @@ class SwitchBotCoordinator(DataUpdateCoordinator[Status]):
         """Return update_by_webhook value."""
         return self._manageable_by_webhook
 
+    @override
     async def _async_update_data(self) -> Status:
         """Fetch data from API endpoint."""
         if not self._should_poll:

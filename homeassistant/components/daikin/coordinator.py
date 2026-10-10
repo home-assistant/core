@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+from typing import override
 
 from pydaikin.daikin_base import Appliance
 from pydaikin.exceptions import DaikinException
@@ -33,6 +34,7 @@ class DaikinCoordinator(DataUpdateCoordinator[None]):
         )
         self.device = device
 
+    @override
     async def _async_update_data(self) -> None:
         try:
             await self.device.update_status()

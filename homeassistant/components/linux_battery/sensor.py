@@ -2,10 +2,10 @@
 
 import logging
 import os
-from typing import Any
+from typing import Any, override
 
 from batinfo import Batteries
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
@@ -55,9 +55,9 @@ SYSTEMS = ["android", "linux"]
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_BATTERY, default=DEFAULT_BATTERY): cv.positive_int,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_SYSTEM, default=DEFAULT_SYSTEM): vol.In(SYSTEMS),
+        probatio.Optional(CONF_BATTERY, default=DEFAULT_BATTERY): cv.positive_int,
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(CONF_SYSTEM, default=DEFAULT_SYSTEM): probatio.In(SYSTEMS),
     }
 )
 
@@ -101,6 +101,7 @@ class LinuxBatterySensor(SensorEntity):
         self._system = system
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the sensor."""
         if self._system == "android":

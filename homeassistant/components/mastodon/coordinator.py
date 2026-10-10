@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 from datetime import timedelta
+from typing import override
 
 from mastodon import Mastodon
 from mastodon.Mastodon import (
@@ -51,6 +52,7 @@ class MastodonCoordinator(DataUpdateCoordinator[Account]):
         )
         self.client = client
 
+    @override
     async def _async_update_data(self) -> Account:
         try:
             account: Account = await self.hass.async_add_executor_job(

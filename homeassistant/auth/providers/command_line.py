@@ -4,9 +4,9 @@ import asyncio
 from collections.abc import Mapping
 import logging
 import os
-from typing import Any
+from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import CONF_COMMAND
 from homeassistant.exceptions import HomeAssistantError
@@ -19,13 +19,15 @@ CONF_META = "meta"
 
 CONFIG_SCHEMA = AUTH_PROVIDER_SCHEMA.extend(
     {
-        vol.Required(CONF_COMMAND): vol.All(
+        probatio.Required(CONF_COMMAND): probatio.All(
             str, os.path.normpath, msg="must be an absolute path"
         ),
-        vol.Optional(CONF_ARGS, default=None): vol.Any(vol.DefaultTo(list), [str]),
-        vol.Optional(CONF_META, default=False): bool,
+        probatio.Optional(CONF_ARGS, default=None): probatio.Any(
+            probatio.DefaultTo(list), [str]
+        ),
+        probatio.Optional(CONF_META, default=False): bool,
     },
-    extra=vol.PREVENT_EXTRA,
+    extra=probatio.PREVENT_EXTRA,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -57,6 +59,7 @@ class CommandLineAuthProvider(AuthProvider):
         super().__init__(*args, **kwargs)
         self._user_meta: dict[str, dict[str, Any]] = {}
 
+    @override
     async def async_login_flow(
         self, context: AuthFlowContext | None
     ) -> CommandLineLoginFlow:
@@ -105,6 +108,7 @@ class CommandLineAuthProvider(AuthProvider):
                     meta[key] = value
             self._user_meta[username] = meta
 
+    @override
     async def async_get_or_create_credentials(
         self, flow_result: Mapping[str, str]
     ) -> Credentials:
@@ -117,6 +121,7 @@ class CommandLineAuthProvider(AuthProvider):
         # Create new credentials.
         return self.async_create_credentials({"username": username})
 
+    @override
     async def async_user_meta_for_credentials(
         self, credentials: Credentials
     ) -> UserMeta:
@@ -136,6 +141,7 @@ class CommandLineAuthProvider(AuthProvider):
 class CommandLineLoginFlow(LoginFlow[CommandLineAuthProvider]):
     """Handler for the login flow."""
 
+    @override
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
     ) -> AuthFlowResult:
@@ -157,10 +163,10 @@ class CommandLineLoginFlow(LoginFlow[CommandLineAuthProvider]):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required("username"): str,
-                    vol.Required("password"): str,
+                    probatio.Required("username"): str,
+                    probatio.Required("password"): str,
                 }
             ),
             errors=errors,

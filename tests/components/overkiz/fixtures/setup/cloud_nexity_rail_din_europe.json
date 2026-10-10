@@ -5541,6 +5541,384 @@
       "type": 2,
       "oid": "c3f46ee2-69f2-4343-8f98-755319e45ca6",
       "uiClass": "TemperatureSensor"
+    },
+    {
+      "creationTime": 1611818018000,
+      "lastUpdateTime": 1611818018000,
+      "label": "Living Room Air Inlet",
+      "deviceURL": "io://1234-5678-1698/10001",
+      "shortcut": false,
+      "controllableName": "io:VentilationPointAirInletIOComponent",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "advancedRefresh",
+            "nparams": 2
+          },
+          {
+            "commandName": "identify",
+            "nparams": 0
+          },
+          {
+            "commandName": "off",
+            "nparams": 0
+          },
+          {
+            "commandName": "on",
+            "nparams": 0
+          },
+          {
+            "commandName": "setAirInput",
+            "nparams": 1
+          },
+          {
+            "commandName": "wink",
+            "nparams": 1
+          }
+        ],
+        "states": [
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:AirInputState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["good", "low", "normal", "verylow"],
+            "qualifiedName": "core:DiscreteRSSILevelState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:Memorized1PositionState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:NameState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:PriorityLockTimerState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:RSSILevelState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:SecuredPositionState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["available", "unavailable"],
+            "qualifiedName": "core:StatusState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": [
+              "comfortLevel1",
+              "comfortLevel2",
+              "comfortLevel3",
+              "comfortLevel4",
+              "environmentProtection",
+              "humanProtection",
+              "userLevel1",
+              "userLevel2"
+            ],
+            "qualifiedName": "io:PriorityLockLevelState"
+          }
+        ],
+        "widgetName": "VentilationInlet",
+        "uiClass": "VentilationSystem",
+        "qualifiedName": "io:VentilationPointAirInletIOComponent",
+        "type": "ACTUATOR"
+      },
+      "states": [
+        {
+          "name": "core:NameState",
+          "type": 3,
+          "value": "Living Room Air Inlet"
+        },
+        {
+          "name": "core:StatusState",
+          "type": 3,
+          "value": "available"
+        },
+        {
+          "name": "core:AirInputState",
+          "type": 1,
+          "value": 40
+        },
+        {
+          "name": "core:RSSILevelState",
+          "type": 1,
+          "value": 88
+        }
+      ],
+      "attributes": [
+        {
+          "name": "core:Manufacturer",
+          "type": 3,
+          "value": "Somfy"
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "0d6a3908-f08d-446a-bd88-5a9f4849c526",
+      "widget": "VentilationInlet",
+      "type": 1,
+      "oid": "vent-10001",
+      "uiClass": "VentilationSystem"
+    },
+    {
+      "creationTime": 1611818018000,
+      "lastUpdateTime": 1611818018000,
+      "label": "Living Room Air Outlet",
+      "deviceURL": "io://1234-5678-1698/10002",
+      "shortcut": false,
+      "controllableName": "io:VentilationPointAirOutletIOComponent",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "advancedRefresh",
+            "nparams": 2
+          },
+          {
+            "commandName": "identify",
+            "nparams": 0
+          },
+          {
+            "commandName": "off",
+            "nparams": 0
+          },
+          {
+            "commandName": "on",
+            "nparams": 0
+          },
+          {
+            "commandName": "setAirOutput",
+            "nparams": 1
+          },
+          {
+            "commandName": "wink",
+            "nparams": 1
+          }
+        ],
+        "states": [
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:AirOutputState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["good", "low", "normal", "verylow"],
+            "qualifiedName": "core:DiscreteRSSILevelState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:Memorized1PositionState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:NameState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:PriorityLockTimerState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:RSSILevelState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:SecuredPositionState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["available", "unavailable"],
+            "qualifiedName": "core:StatusState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": [
+              "comfortLevel1",
+              "comfortLevel2",
+              "comfortLevel3",
+              "comfortLevel4",
+              "environmentProtection",
+              "humanProtection",
+              "userLevel1",
+              "userLevel2"
+            ],
+            "qualifiedName": "io:PriorityLockLevelState"
+          }
+        ],
+        "widgetName": "VentilationOutlet",
+        "uiClass": "VentilationSystem",
+        "qualifiedName": "io:VentilationPointAirOutletIOComponent",
+        "type": "ACTUATOR"
+      },
+      "states": [
+        {
+          "name": "core:NameState",
+          "type": 3,
+          "value": "Living Room Air Outlet"
+        },
+        {
+          "name": "core:StatusState",
+          "type": 3,
+          "value": "available"
+        },
+        {
+          "name": "core:AirOutputState",
+          "type": 1,
+          "value": 0
+        },
+        {
+          "name": "core:RSSILevelState",
+          "type": 1,
+          "value": 88
+        }
+      ],
+      "attributes": [
+        {
+          "name": "core:Manufacturer",
+          "type": 3,
+          "value": "Somfy"
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "0d6a3908-f08d-446a-bd88-5a9f4849c526",
+      "widget": "VentilationOutlet",
+      "type": 1,
+      "oid": "vent-10002",
+      "uiClass": "VentilationSystem"
+    },
+    {
+      "creationTime": 1611818018000,
+      "lastUpdateTime": 1611818018000,
+      "label": "Living Room Air Transfer",
+      "deviceURL": "io://1234-5678-1698/10003",
+      "shortcut": false,
+      "controllableName": "io:VentilationPointAirTransferIOComponent",
+      "definition": {
+        "commands": [
+          {
+            "commandName": "advancedRefresh",
+            "nparams": 2
+          },
+          {
+            "commandName": "identify",
+            "nparams": 0
+          },
+          {
+            "commandName": "off",
+            "nparams": 0
+          },
+          {
+            "commandName": "on",
+            "nparams": 0
+          },
+          {
+            "commandName": "setAirTransfer",
+            "nparams": 1
+          },
+          {
+            "commandName": "wink",
+            "nparams": 1
+          }
+        ],
+        "states": [
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:AirTransferState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["good", "low", "normal", "verylow"],
+            "qualifiedName": "core:DiscreteRSSILevelState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:Memorized1PositionState"
+          },
+          {
+            "type": "DataState",
+            "qualifiedName": "core:NameState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:PriorityLockTimerState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:RSSILevelState"
+          },
+          {
+            "type": "ContinuousState",
+            "qualifiedName": "core:SecuredPositionState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": ["available", "unavailable"],
+            "qualifiedName": "core:StatusState"
+          },
+          {
+            "type": "DiscreteState",
+            "values": [
+              "comfortLevel1",
+              "comfortLevel2",
+              "comfortLevel3",
+              "comfortLevel4",
+              "environmentProtection",
+              "humanProtection",
+              "userLevel1",
+              "userLevel2"
+            ],
+            "qualifiedName": "io:PriorityLockLevelState"
+          }
+        ],
+        "widgetName": "VentilationTransfer",
+        "uiClass": "VentilationSystem",
+        "qualifiedName": "io:VentilationPointAirTransferIOComponent",
+        "type": "ACTUATOR"
+      },
+      "states": [
+        {
+          "name": "core:NameState",
+          "type": 3,
+          "value": "Living Room Air Transfer"
+        },
+        {
+          "name": "core:StatusState",
+          "type": 3,
+          "value": "available"
+        },
+        {
+          "name": "core:AirTransferState",
+          "type": 1,
+          "value": 75
+        },
+        {
+          "name": "core:RSSILevelState",
+          "type": 1,
+          "value": 88
+        }
+      ],
+      "attributes": [
+        {
+          "name": "core:Manufacturer",
+          "type": 3,
+          "value": "Somfy"
+        }
+      ],
+      "available": true,
+      "enabled": true,
+      "placeOID": "0d6a3908-f08d-446a-bd88-5a9f4849c526",
+      "widget": "VentilationTransfer",
+      "type": 1,
+      "oid": "vent-10003",
+      "uiClass": "VentilationSystem"
     }
   ],
   "zones": [],

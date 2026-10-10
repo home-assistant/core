@@ -1,11 +1,11 @@
 """Climate platform for the Ouman EH-800 integration."""
 
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from ouman_eh_800_api import (
     EnumControlOumanEndpoint,
-    IntControlOumanEndpoint,
+    FloatControlOumanEndpoint,
     L1BaseEndpoints,
     L1RoomSensor,
     L2BaseEndpoints,
@@ -57,7 +57,7 @@ class OumanEh800ClimateEntityDescription(
 
     operation_mode_endpoint: EnumControlOumanEndpoint
     current_temperature_endpoint: NumberOumanEndpoint
-    target_temperature_endpoint: IntControlOumanEndpoint
+    target_temperature_endpoint: FloatControlOumanEndpoint
     valve_position_endpoint: NumberOumanEndpoint
 
 
@@ -93,7 +93,7 @@ async def async_setup_entry(
     async_add_entities(
         OumanEh800ClimateEntity(coordinator, description)
         for description in CLIMATE_DESCRIPTIONS
-        if description.target_temperature_endpoint in coordinator.data
+        if description.target_temperature_endpoint in coordinator.data.values
     )
 
 
@@ -103,8 +103,8 @@ class OumanEh800ClimateEntity(OumanEh800Entity, ClimateEntity):
     entity_description: OumanEh800ClimateEntityDescription
 
     _attr_name = None
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
-    _attr_target_temperature_step = 1
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_target_temperature_step = 0.1
     _attr_hvac_modes = [HVACMode.HEAT, HVACMode.OFF]
     _attr_preset_modes = list(_PRESET_TO_OPERATION_MODE)
     _attr_supported_features = (
@@ -120,20 +120,21 @@ class OumanEh800ClimateEntity(OumanEh800Entity, ClimateEntity):
         description: OumanEh800ClimateEntityDescription,
     ) -> None:
         """Initialize the climate entity."""
-        super().__init__(
-            coordinator, description.target_temperature_endpoint, description
-        )
+        super().__init__(coordinator, description)
         target_endpoint = description.target_temperature_endpoint
         self._attr_min_temp = float(target_endpoint.min_val)
         self._attr_max_temp = float(target_endpoint.max_val)
 
     @property
     def _operation_mode(self) -> OperationMode:
-        value = self.coordinator.data[self.entity_description.operation_mode_endpoint]
+        value = self.coordinator.data.values[
+            self.entity_description.operation_mode_endpoint
+        ]
         assert isinstance(value, OperationMode)
         return value
 
     @property
+    @override
     def hvac_mode(self) -> HVACMode:
         """Return HEAT only when the climate setpoint is controlling the circuit."""
         if self._operation_mode in _HEAT_OPERATION_MODES:
@@ -141,49 +142,55 @@ class OumanEh800ClimateEntity(OumanEh800Entity, ClimateEntity):
         return HVACMode.OFF
 
     @property
+    @override
     def hvac_action(self) -> HVACAction:
         """Return HEATING when the mixing valve is open, IDLE when closed, OFF otherwise."""
         if self.hvac_mode is HVACMode.OFF:
             return HVACAction.OFF
-        valve_position = self.coordinator.data[
+        valve_position = self.coordinator.data.values[
             self.entity_description.valve_position_endpoint
         ]
         assert isinstance(valve_position, float)
         return HVACAction.HEATING if valve_position > 0 else HVACAction.IDLE
 
     @property
+    @override
     def preset_mode(self) -> str | None:
         """Return the current heating sub-mode, or None when shut down."""
         mode = self._operation_mode
         return mode.name.lower() if mode in _HEAT_OPERATION_MODES else None
 
     @property
-    def current_temperature(self) -> float:
+    @override
+    def native_current_temperature(self) -> float:
         """Return the current room temperature."""
-        value = self.coordinator.data[
+        value = self.coordinator.data.values[
             self.entity_description.current_temperature_endpoint
         ]
         assert isinstance(value, float)
         return value
 
     @property
-    def target_temperature(self) -> float:
+    @override
+    def native_target_temperature(self) -> float:
         """Return the user-set room temperature setpoint."""
-        value = self.coordinator.data[
+        value = self.coordinator.data.values[
             self.entity_description.target_temperature_endpoint
         ]
         assert isinstance(value, float)
         return value
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set a new room temperature setpoint and optionally the HVAC mode."""
         if (hvac_mode := kwargs.get(ATTR_HVAC_MODE)) is not None:
             await self.async_set_hvac_mode(hvac_mode)
         await self.coordinator.async_set_endpoint_value(
             self.entity_description.target_temperature_endpoint,
-            int(kwargs[ATTR_TEMPERATURE]),
+            kwargs[ATTR_TEMPERATURE],
         )
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Switch between heating (default sub-mode) and shutdown."""
         new_mode = (
@@ -195,6 +202,7 @@ class OumanEh800ClimateEntity(OumanEh800Entity, ClimateEntity):
             self.entity_description.operation_mode_endpoint, new_mode
         )
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Switch the heating sub-mode."""
         await self.coordinator.async_set_endpoint_value(

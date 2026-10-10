@@ -3,7 +3,7 @@
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import Any
+from typing import Any, override
 
 from aioguardian import Client
 
@@ -139,33 +139,39 @@ class ValveControllerValve(ValveControllerEntity, ValveEntity):
         self._client = data.client
 
     @property
+    @override
     def is_closing(self) -> bool:
         """Return if the valve is closing or not."""
         return self.entity_description.is_closing_fn(self.coordinator.data)
 
     @property
+    @override
     def is_closed(self) -> bool:
         """Return if the valve is closed or not."""
         return self.entity_description.is_closed_fn(self.coordinator.data)
 
     @property
+    @override
     def is_opening(self) -> bool:
         """Return if the valve is opening or not."""
         return self.entity_description.is_opening_fn(self.coordinator.data)
 
     @convert_exceptions_to_homeassistant_error
+    @override
     async def async_close_valve(self) -> None:
         """Close the valve."""
         await self.entity_description.close_coro_fn(self._client)
         await self.coordinator.async_request_refresh()
 
     @convert_exceptions_to_homeassistant_error
+    @override
     async def async_open_valve(self) -> None:
         """Open the valve."""
         await self.entity_description.open_coro_fn(self._client)
         await self.coordinator.async_request_refresh()
 
     @convert_exceptions_to_homeassistant_error
+    @override
     async def async_stop_valve(self) -> None:
         """Stop the valve."""
         await self.entity_description.halt_coro_fn(self._client)

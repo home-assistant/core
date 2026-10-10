@@ -1,5 +1,7 @@
 """Platform for Device tracker integration."""
 
+from typing import override
+
 from fing_agent_api.models import Device
 
 from homeassistant.components.device_tracker import ScannerEntity
@@ -77,21 +79,25 @@ class FingTrackedDevice(CoordinatorEntity[FingDataUpdateCoordinator], ScannerEnt
         self._attr_icon = get_icon_from_type(self._device.type)
 
     @property
+    @override
     def is_connected(self) -> bool:
         """Return true if the device is connected to the network."""
         return self._device.active
 
     @property
+    @override
     def ip_address(self) -> str | None:
         """Return the primary ip address of the device."""
         return self._device.ip[0] if self._device.ip else None
 
     @property
+    @override
     def entity_registry_enabled_default(self) -> bool:
         """Enable entity by default."""
         return True
 
     @property
+    @override
     def unique_id(self) -> str | None:
         """Return the unique ID of the entity."""
         return self._attr_unique_id
@@ -110,6 +116,7 @@ class FingTrackedDevice(CoordinatorEntity[FingDataUpdateCoordinator], ScannerEnt
         )
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         updated_device_data = self.coordinator.data.devices.get(self._device.mac)

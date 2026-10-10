@@ -1,6 +1,7 @@
 """Support for ESPHome Alarm Control Panel."""
 
 from functools import partial
+from typing import override
 
 from aioesphomeapi import (
     AlarmControlPanelCommand,
@@ -81,6 +82,7 @@ class EsphomeAlarmControlPanel(
     """An Alarm Control Panel implementation for ESPHome."""
 
     @callback
+    @override
     def _on_static_info_update(self, static_info: EntityInfo) -> None:
         """Set attrs from static info."""
         super()._on_static_info_update(static_info)
@@ -100,11 +102,13 @@ class EsphomeAlarmControlPanel(
 
     @property
     @esphome_state_property
+    @override
     def alarm_state(self) -> AlarmControlPanelState | None:
         """Return the state of the device."""
         return _ESPHOME_ACP_STATE_TO_HASS_STATE.from_esphome(self._state.state)
 
     @convert_api_error_ha_error
+    @override
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         self._client.alarm_control_panel_command(
@@ -115,6 +119,7 @@ class EsphomeAlarmControlPanel(
         )
 
     @convert_api_error_ha_error
+    @override
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
         self._client.alarm_control_panel_command(
@@ -125,6 +130,7 @@ class EsphomeAlarmControlPanel(
         )
 
     @convert_api_error_ha_error
+    @override
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         self._client.alarm_control_panel_command(
@@ -135,6 +141,7 @@ class EsphomeAlarmControlPanel(
         )
 
     @convert_api_error_ha_error
+    @override
     async def async_alarm_arm_night(self, code: str | None = None) -> None:
         """Send arm away command."""
         self._client.alarm_control_panel_command(
@@ -145,6 +152,7 @@ class EsphomeAlarmControlPanel(
         )
 
     @convert_api_error_ha_error
+    @override
     async def async_alarm_arm_custom_bypass(self, code: str | None = None) -> None:
         """Send arm away command."""
         self._client.alarm_control_panel_command(
@@ -155,6 +163,7 @@ class EsphomeAlarmControlPanel(
         )
 
     @convert_api_error_ha_error
+    @override
     async def async_alarm_arm_vacation(self, code: str | None = None) -> None:
         """Send arm away command."""
         self._client.alarm_control_panel_command(
@@ -165,6 +174,7 @@ class EsphomeAlarmControlPanel(
         )
 
     @convert_api_error_ha_error
+    @override
     async def async_alarm_trigger(self, code: str | None = None) -> None:
         """Send alarm trigger command."""
         self._client.alarm_control_panel_command(

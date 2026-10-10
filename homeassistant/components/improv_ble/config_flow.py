@@ -5,7 +5,7 @@ from collections.abc import AsyncGenerator, Callable, Coroutine
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
 import logging
-from typing import Any
+from typing import Any, override
 
 from bleak import BleakError
 from improv_ble_client import (
@@ -17,7 +17,7 @@ from improv_ble_client import (
     device_filter,
     errors as improv_ble_errors,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import bluetooth
 from homeassistant.config_entries import (
@@ -28,7 +28,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import AbortFlow
+from homeassistant.data_entry_flow import AbortFlow, UnknownFlow
 from homeassistant.helpers.device_registry import format_mac
 
 from . import async_get_provisioning_futures
@@ -36,10 +36,10 @@ from .const import DOMAIN, PROVISIONING_TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_PROVISION_SCHEMA = vol.Schema(
+STEP_PROVISION_SCHEMA = probatio.Schema(
     {
-        vol.Required("ssid"): str,
-        vol.Optional("password"): str,
+        probatio.Required("ssid"): str,
+        probatio.Optional("password"): str,
     }
 )
 
@@ -74,6 +74,7 @@ class ImprovBLEConfigFlow(ConfigFlow, domain=DOMAIN):
         # Populated by bluetooth, reauth_confirm and user steps
         self._discovery_info: bluetooth.BluetoothServiceInfoBleak | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -99,9 +100,9 @@ class ImprovBLEConfigFlow(ConfigFlow, domain=DOMAIN):
         if not self._discovered_devices:
             return self.async_abort(reason="no_devices_found")
 
-        data_schema = vol.Schema(
+        data_schema = probatio.Schema(
             {
-                vol.Required(CONF_ADDRESS): vol.In(
+                probatio.Required(CONF_ADDRESS): probatio.In(
                     {
                         service_info.address: (
                             f"{service_info.name} ({service_info.address})"
@@ -194,6 +195,7 @@ class ImprovBLEConfigFlow(ConfigFlow, domain=DOMAIN):
         self._remove_bluetooth_callback()
         self._remove_bluetooth_callback = None
 
+    @override
     async def async_step_bluetooth(
         self, discovery_info: bluetooth.BluetoothServiceInfoBleak
     ) -> ConfigFlowResult:
@@ -405,11 +407,17 @@ class ImprovBLEConfigFlow(ConfigFlow, domain=DOMAIN):
 
                     if next_flow_id:
                         _LOGGER.debug("Received next flow ID: %s", next_flow_id)
-                        self._provision_result = self.async_abort(
-                            reason="provision_successful",
-                            next_flow=(FlowType.CONFIG_FLOW, next_flow_id),
-                        )
-                        return
+                        try:
+                            self._provision_result = self.async_abort(
+                                reason="provision_successful",
+                                next_flow=(FlowType.CONFIG_FLOW, next_flow_id),
+                            )
+                        except UnknownFlow:
+                            # The other integration aborted its flow, for example
+                            # because the device is already configured
+                            _LOGGER.debug("Next flow %s is gone", next_flow_id)
+                        else:
+                            return
 
                     if redirect_url:
                         self._provision_result = self.async_abort(
@@ -524,6 +532,7 @@ class ImprovBLEConfigFlow(ConfigFlow, domain=DOMAIN):
             raise AbortFlow("unknown") from err
 
     @callback
+    @override
     def async_remove(self) -> None:
         """Notification that the flow has been removed."""
         self._unregister_bluetooth_callback()

@@ -2,7 +2,6 @@
 
 import asyncio
 from collections.abc import Callable
-import contextlib
 from datetime import timedelta
 from enum import IntEnum
 import io
@@ -20,18 +19,21 @@ from opendisplay import (
     Rotation,
 )
 from PIL import Image as PILImage, ImageOps
-import voluptuous as vol
+import probatio
 
-from homeassistant.components.bluetooth import async_ble_device_from_address
+from homeassistant.components import camera, image as image_component
+from homeassistant.components.bluetooth import (
+    BluetoothReachabilityIntent,
+    async_address_reachability_diagnostics,
+    async_ble_device_from_address,
+)
 from homeassistant.components.http.auth import async_sign_path
 from homeassistant.components.media_source import async_resolve_media
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import config_validation as cv, service
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH
 from homeassistant.helpers.network import get_url
 from homeassistant.helpers.selector import MediaSelector, MediaSelectorConfig
 
@@ -54,26 +56,30 @@ def _str_to_int_enum(enum_class: type[IntEnum]) -> Callable[[str], Any]:
 
     def validate(value: str) -> IntEnum:
         if (result := members.get(value)) is None:
-            raise vol.Invalid(f"Invalid value: {value}")
+            raise probatio.Invalid(f"Invalid value: {value}")
         return result
 
     return validate
 
 
-SCHEMA_UPLOAD_IMAGE = vol.Schema(
+SCHEMA_UPLOAD_IMAGE = probatio.Schema(
     {
-        vol.Required(ATTR_DEVICE_ID): cv.string,
-        vol.Required(ATTR_IMAGE): MediaSelector(
+        probatio.Required(ATTR_DEVICE_ID): cv.string,
+        probatio.Required(ATTR_IMAGE): MediaSelector(
             MediaSelectorConfig(accept=["image/*"])
         ),
-        vol.Optional(ATTR_ROTATION, default=Rotation.ROTATE_0): vol.All(
-            vol.Coerce(int), vol.Coerce(Rotation)
+        probatio.Optional(ATTR_ROTATION, default=Rotation.ROTATE_0): probatio.All(
+            probatio.Coerce(int), probatio.Coerce(Rotation)
         ),
-        vol.Optional(ATTR_DITHER_MODE, default="burkes"): _str_to_int_enum(DitherMode),
-        vol.Optional(ATTR_REFRESH_MODE, default="full"): _str_to_int_enum(RefreshMode),
-        vol.Optional(ATTR_FIT_MODE, default="contain"): _str_to_int_enum(FitMode),
-        vol.Optional(ATTR_TONE_COMPRESSION): vol.All(
-            vol.Coerce(float), vol.Range(min=0.0, max=100.0)
+        probatio.Optional(ATTR_DITHER_MODE, default="burkes"): _str_to_int_enum(
+            DitherMode
+        ),
+        probatio.Optional(ATTR_REFRESH_MODE, default="full"): _str_to_int_enum(
+            RefreshMode
+        ),
+        probatio.Optional(ATTR_FIT_MODE, default="contain"): _str_to_int_enum(FitMode),
+        probatio.Optional(ATTR_TONE_COMPRESSION): probatio.All(
+            probatio.Coerce(float), probatio.Range(min=0.0, max=100.0)
         ),
     }
 )
@@ -81,38 +87,11 @@ SCHEMA_UPLOAD_IMAGE = vol.Schema(
 
 def _get_entry_for_device(call: ServiceCall) -> OpenDisplayConfigEntry:
     """Return the config entry for the device targeted by a service call."""
-    device_id: str = call.data[ATTR_DEVICE_ID]
-    device_registry = dr.async_get(call.hass)
-
-    if (device := device_registry.async_get(device_id)) is None:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="invalid_device_id",
-            translation_placeholders={"device_id": device_id},
-        )
-
-    mac_address = next(
-        (conn[1] for conn in device.connections if conn[0] == CONNECTION_BLUETOOTH),
-        None,
+    config_entry: OpenDisplayConfigEntry
+    _, config_entry = service.async_get_device_and_config_entry(
+        call.hass, DOMAIN, call.data[ATTR_DEVICE_ID]
     )
-    if mac_address is None:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="invalid_device_id",
-            translation_placeholders={"device_id": device_id},
-        )
-
-    entry = call.hass.config_entries.async_entry_for_domain_unique_id(
-        DOMAIN, mac_address
-    )
-    if entry is None or entry.state is not ConfigEntryState.LOADED:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="device_not_found",
-            translation_placeholders={"address": mac_address},
-        )
-
-    return entry
+    return config_entry
 
 
 def _load_image(path: str) -> PILImage.Image:
@@ -150,6 +129,31 @@ async def _async_download_image(hass: HomeAssistant, url: str) -> PILImage.Image
     return await hass.async_add_executor_job(_load_image_from_bytes, data)
 
 
+async def _async_get_pil_image(
+    hass: HomeAssistant, image_data: dict[str, Any]
+) -> PILImage.Image:
+    """Return a PIL Image for the selected media."""
+    media_content_id: str = image_data["media_content_id"]
+
+    # Camera and image entities resolve to never-ending MJPEG streams,
+    # so fetch a single snapshot from the entity instead.
+    for integration in camera, image_component:
+        media_source_prefix = f"media-source://{integration.DOMAIN}/"
+        if not media_content_id.startswith(media_source_prefix):
+            continue
+
+        entity_id = media_content_id.removeprefix(media_source_prefix)
+        snapshot = await integration.async_get_image(hass, entity_id)
+        return await hass.async_add_executor_job(
+            _load_image_from_bytes, snapshot.content
+        )
+
+    media = await async_resolve_media(hass, media_content_id, None)
+    if media.path is not None:
+        return await hass.async_add_executor_job(_load_image, str(media.path))
+    return await _async_download_image(hass, media.url)
+
+
 async def _async_upload_image(call: ServiceCall) -> None:
     """Handle the upload_image service call."""
     entry = _get_entry_for_device(call)
@@ -171,28 +175,24 @@ async def _async_upload_image(call: ServiceCall) -> None:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="device_not_found",
-            translation_placeholders={"address": address},
+            translation_placeholders={
+                "address": address,
+                "reason": async_address_reachability_diagnostics(
+                    call.hass,
+                    address.upper(),
+                    BluetoothReachabilityIntent.CONNECTION,
+                ),
+            },
         )
 
     current = asyncio.current_task()
     if (prev := entry.runtime_data.upload_task) is not None and not prev.done():
         prev.cancel()
-        # pylint: disable-next=home-assistant-action-swallowed-exception
-        with contextlib.suppress(asyncio.CancelledError):
-            await prev
+        await asyncio.wait({prev})
     entry.runtime_data.upload_task = current
 
     try:
-        media = await async_resolve_media(
-            call.hass, image_data["media_content_id"], None
-        )
-
-        if media.path is not None:
-            pil_image = await call.hass.async_add_executor_job(
-                _load_image, str(media.path)
-            )
-        else:
-            pil_image = await _async_download_image(call.hass, media.url)
+        pil_image = await _async_get_pil_image(call.hass, image_data)
 
         raw_key = entry.data.get(CONF_ENCRYPTION_KEY)
         if raw_key is not None and len(raw_key) != 32:

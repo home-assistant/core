@@ -10,6 +10,8 @@ Media identifiers can look like:
     for the syntax.
 """
 
+from typing import override
+
 from homeassistant.components.media_player import BrowseError, MediaClass, MediaType
 from homeassistant.components.media_source import (
     BrowseMediaSource,
@@ -40,6 +42,7 @@ class DmsMediaSource(MediaSource):
 
         self.hass = hass
 
+    @override
     async def async_resolve_media(self, item: MediaSourceItem) -> DidlPlayMedia:
         """Resolve a media item to a playable item."""
         dms_data = get_domain_data(self.hass)
@@ -59,6 +62,7 @@ class DmsMediaSource(MediaSource):
 
         return await source.async_resolve_media(media_id)
 
+    @override
     async def async_browse_media(self, item: MediaSourceItem) -> BrowseMediaSource:
         """Browse media."""
         dms_data = get_domain_data(self.hass)

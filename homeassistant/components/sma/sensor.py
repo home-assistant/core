@@ -1,5 +1,7 @@
 """SMA Solar Webconnect interface."""
 
+from typing import override
+
 from pysma.sensor import Sensor
 
 from homeassistant.components.sensor import (
@@ -864,8 +866,11 @@ class SMAsensor(CoordinatorEntity[SMADataUpdateCoordinator], SensorEntity):
         super().__init__(coordinator)
         if description is not None:
             self.entity_description = description
+            sensor_name = description.name
         else:
-            self._attr_name = pysma_sensor.name
+            sensor_name = pysma_sensor.name
+        device_name = coordinator.data.sma_device_info.name
+        self._attr_name = f"{device_name or 'SMA'} {sensor_name}"
 
         protocol = "https" if entry.data[CONF_SSL] else "http"
         url = f"{protocol}://{entry.data[CONF_HOST]}"
@@ -879,7 +884,7 @@ class SMAsensor(CoordinatorEntity[SMADataUpdateCoordinator], SensorEntity):
             identifiers={(DOMAIN, entry.unique_id)},
             manufacturer=coordinator.data.sma_device_info.manufacturer,
             model=coordinator.data.sma_device_info.type,
-            name=coordinator.data.sma_device_info.name,
+            name=device_name,
             sw_version=coordinator.data.sma_device_info.sw_version,
             serial_number=coordinator.data.sma_device_info.serial,
         )
@@ -892,16 +897,7 @@ class SMAsensor(CoordinatorEntity[SMADataUpdateCoordinator], SensorEntity):
         self._sensor.enabled = False
 
     @property
-    def name(self) -> str:
-        """Return the name of the sensor prefixed with the device name."""
-        if self._attr_device_info is None or not (
-            name_prefix := self._attr_device_info.get("name")
-        ):
-            name_prefix = "SMA"
-
-        return f"{name_prefix} {super().name}"
-
-    @property
+    @override
     def available(self) -> bool:
         """Return if the device is available."""
         return (
@@ -910,15 +906,18 @@ class SMAsensor(CoordinatorEntity[SMADataUpdateCoordinator], SensorEntity):
         )
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self._sensor.value
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
         self._sensor.enabled = True
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
         await super().async_will_remove_from_hass()

@@ -3,6 +3,7 @@
 import pytest
 
 from homeassistant.components import light
+from homeassistant.components.light import DOMAIN
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.state import async_reproduce_state
 
@@ -39,8 +40,8 @@ async def test_reproducing_states(
     hass.states.async_set("light.entity_rgb", "on", VALID_RGB_COLOR)
     hass.states.async_set("light.entity_xy", "on", VALID_XY_COLOR)
 
-    turn_on_calls = async_mock_service(hass, "light", "turn_on")
-    turn_off_calls = async_mock_service(hass, "light", "turn_off")
+    turn_on_calls = async_mock_service(hass, DOMAIN, "turn_on")
+    turn_off_calls = async_mock_service(hass, DOMAIN, "turn_off")
 
     # These calls should do nothing as entities already in desired state
     await async_reproduce_state(
@@ -155,7 +156,7 @@ async def test_filter_color_modes(
         **VALID_BRIGHTNESS,
     }
 
-    turn_on_calls = async_mock_service(hass, "light", "turn_on")
+    turn_on_calls = async_mock_service(hass, DOMAIN, "turn_on")
 
     await async_reproduce_state(
         hass, [State("light.entity", "on", {**all_colors, "color_mode": color_mode})]
@@ -205,7 +206,7 @@ async def test_filter_color_modes_missing_attributes(
     )
     expected_fallback_log = "using color_temp (mireds) as fallback"
 
-    turn_on_calls = async_mock_service(hass, "light", "turn_on")
+    turn_on_calls = async_mock_service(hass, DOMAIN, "turn_on")
 
     all_colors = {
         **VALID_COLOR_TEMP_KELVIN,
@@ -261,7 +262,7 @@ async def test_filter_none(hass: HomeAssistant, saved_state) -> None:
     """Test filtering of parameters which are None."""
     hass.states.async_set("light.entity", "off", {})
 
-    turn_on_calls = async_mock_service(hass, "light", "turn_on")
+    turn_on_calls = async_mock_service(hass, DOMAIN, "turn_on")
 
     await async_reproduce_state(hass, [State("light.entity", "on", saved_state)])
 

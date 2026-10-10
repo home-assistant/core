@@ -2,9 +2,10 @@
 
 from collections import Counter
 import logging
+from typing import override
 
+import probatio
 from py_nextbus import NextBusClient
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_STOP
@@ -84,6 +85,7 @@ class NextBusFlowHandler(ConfigFlow, domain=DOMAIN):
         self.data: dict[str, str] = {}
         self._client = NextBusClient()
 
+    @override
     async def async_step_user(
         self,
         user_input: dict[str, str] | None = None,
@@ -107,9 +109,9 @@ class NextBusFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="agency",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_AGENCY): _dict_to_select_selector(
+                    probatio.Required(CONF_AGENCY): _dict_to_select_selector(
                         self._agency_tags
                     ),
                 }
@@ -132,9 +134,9 @@ class NextBusFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="route",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_ROUTE): _dict_to_select_selector(
+                    probatio.Required(CONF_ROUTE): _dict_to_select_selector(
                         self._route_tags
                     ),
                 }
@@ -175,9 +177,11 @@ class NextBusFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="stop",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_STOP): _dict_to_select_selector(self._stop_tags),
+                    probatio.Required(CONF_STOP): _dict_to_select_selector(
+                        self._stop_tags
+                    ),
                 }
             ),
         )

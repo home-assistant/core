@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -21,7 +22,7 @@ from .entity import ZinvoltEntity
 class ZinvoltBatteryStateDescription(SensorEntityDescription):
     """Sensor description for Zinvolt battery state."""
 
-    value_fn: Callable[[ZinvoltData], float]
+    value_fn: Callable[[ZinvoltData], float | None]
 
 
 SENSORS: tuple[ZinvoltBatteryStateDescription, ...] = (
@@ -37,7 +38,13 @@ SENSORS: tuple[ZinvoltBatteryStateDescription, ...] = (
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.WATT,
-        value_fn=lambda state: 0 - state.battery.current_power.power_socket_output,
+        value_fn=(
+            lambda state: (
+                None
+                if state.battery.current_power.power_socket_output is None
+                else 0 - state.battery.current_power.power_socket_output
+            )
+        ),
     ),
 )
 
@@ -74,6 +81,7 @@ class ZinvoltBatteryStateSensor(ZinvoltEntity, SensorEntity):
         )
 
     @property
-    def native_value(self) -> float:
+    @override
+    def native_value(self) -> float | None:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)

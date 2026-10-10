@@ -1,11 +1,12 @@
 """Support for Abode Security System switches."""
 
-from typing import Any, cast
+from collections.abc import Callable
+from typing import Any, cast, override
 
 from jaraco.abode.devices.switch import Switch
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -43,15 +44,18 @@ class AbodeSwitch(AbodeDevice, SwitchEntity):
     _device: Switch
     _attr_name = None
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn on the device."""
         self._device.switch_on()
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn off the device."""
         self._device.switch_off()
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if device is on."""
         return cast(bool, self._device.is_on)
@@ -61,19 +65,41 @@ class AbodeAutomationSwitch(AbodeAutomation, SwitchEntity):
     """A switch implementation for Abode automations."""
 
     _attr_translation_key = "automation"
+    _unsub_trigger_signal: Callable[[], None]
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Set up trigger automation service."""
         await super().async_added_to_hass()
 
-        signal = f"abode_trigger_automation_{self.entity_id}"
-        self.async_on_remove(async_dispatcher_connect(self.hass, signal, self.trigger))
+        self._async_connect_trigger_signal()
+        # The lambda is needed because _unsub_trigger_signal is reassigned
+        # on entity id change.
+        # pylint: disable-next=unnecessary-lambda
+        self.async_on_remove(lambda: self._unsub_trigger_signal())
 
+    @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Reconnect the trigger signal, which is keyed on the entity_id."""
+        super().async_entity_id_changed(old_entity_id)
+        self._unsub_trigger_signal()
+        self._async_connect_trigger_signal()
+
+    @callback
+    def _async_connect_trigger_signal(self) -> None:
+        """Connect the trigger signal for the current entity_id."""
+        self._unsub_trigger_signal = async_dispatcher_connect(
+            self.hass, f"abode_trigger_automation_{self.entity_id}", self.trigger
+        )
+
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Enable the automation."""
         if self._automation.enable(True):
             self.schedule_update_ha_state()
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Disable the automation."""
         if self._automation.enable(False):
@@ -84,6 +110,7 @@ class AbodeAutomationSwitch(AbodeAutomation, SwitchEntity):
         self._automation.trigger()
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return True if the automation is enabled."""
         return bool(self._automation.enabled)

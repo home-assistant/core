@@ -39,7 +39,7 @@
 # name: test_sensor[amax_3000-None][sensor.area1_burglary_alarm_issues-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Area1 Burglary alarm issues',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Area1 Burglary alarm issues',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.area1_burglary_alarm_issues',
@@ -89,8 +89,8 @@
 # name: test_sensor[amax_3000-None][sensor.area1_faulting_points-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Area1 Faulting points',
-      'unit_of_measurement': 'points',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Area1 Faulting points',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'points',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.area1_faulting_points',
@@ -140,7 +140,7 @@
 # name: test_sensor[amax_3000-None][sensor.area1_fire_alarm_issues-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Area1 Fire alarm issues',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Area1 Fire alarm issues',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.area1_fire_alarm_issues',
@@ -190,7 +190,7 @@
 # name: test_sensor[amax_3000-None][sensor.area1_gas_alarm_issues-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Area1 Gas alarm issues',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Area1 Gas alarm issues',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.area1_gas_alarm_issues',
@@ -240,7 +240,7 @@
 # name: test_sensor[b5512-None][sensor.area1_burglary_alarm_issues-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Area1 Burglary alarm issues',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Area1 Burglary alarm issues',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.area1_burglary_alarm_issues',
@@ -290,8 +290,8 @@
 # name: test_sensor[b5512-None][sensor.area1_faulting_points-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Area1 Faulting points',
-      'unit_of_measurement': 'points',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Area1 Faulting points',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'points',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.area1_faulting_points',
@@ -341,7 +341,7 @@
 # name: test_sensor[b5512-None][sensor.area1_fire_alarm_issues-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Area1 Fire alarm issues',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Area1 Fire alarm issues',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.area1_fire_alarm_issues',
@@ -391,7 +391,7 @@
 # name: test_sensor[b5512-None][sensor.area1_gas_alarm_issues-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Area1 Gas alarm issues',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Area1 Gas alarm issues',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.area1_gas_alarm_issues',
@@ -441,7 +441,7 @@
 # name: test_sensor[solution_3000-None][sensor.area1_burglary_alarm_issues-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Area1 Burglary alarm issues',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Area1 Burglary alarm issues',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.area1_burglary_alarm_issues',
@@ -491,8 +491,8 @@
 # name: test_sensor[solution_3000-None][sensor.area1_faulting_points-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Area1 Faulting points',
-      'unit_of_measurement': 'points',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Area1 Faulting points',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'points',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.area1_faulting_points',
@@ -542,7 +542,7 @@
 # name: test_sensor[solution_3000-None][sensor.area1_fire_alarm_issues-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Area1 Fire alarm issues',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Area1 Fire alarm issues',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.area1_fire_alarm_issues',
@@ -592,7 +592,7 @@
 # name: test_sensor[solution_3000-None][sensor.area1_gas_alarm_issues-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Area1 Gas alarm issues',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Area1 Gas alarm issues',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.area1_gas_alarm_issues',

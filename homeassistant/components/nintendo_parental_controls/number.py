@@ -3,7 +3,7 @@
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.number import (
     NumberEntity,
@@ -80,10 +80,12 @@ class NintendoParentalControlsNumberEntity(NintendoDevice, NumberEntity):
         self.entity_description = description
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the state of the entity."""
         return self.entity_description.value_fn(self._device)
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Update entity state."""
         await self.entity_description.set_native_value_fn(self._device, value)

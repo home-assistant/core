@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+from typing import override
 
 from esios_api import BadApiTokenAuthError, EsiosApiData, PVPCData
 
@@ -54,6 +55,7 @@ class ElecPricesDataUpdateCoordinator(DataUpdateCoordinator[EsiosApiData]):
         """Return entry ID."""
         return self.config_entry.entry_id
 
+    @override
     async def _async_update_data(self) -> EsiosApiData:
         """Update electricity prices from the ESIOS API."""
         try:

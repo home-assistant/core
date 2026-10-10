@@ -1,6 +1,7 @@
 """Select platform for the Ouman EH-800 integration."""
 
 from dataclasses import dataclass
+from typing import override
 
 from ouman_eh_800_api import (
     ControlEnum,
@@ -21,7 +22,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import OumanDevice
 from .coordinator import OumanEh800ConfigEntry, OumanEh800Coordinator
-from .entity import OumanEh800Entity, OumanEh800EntityDescription
+from .entity import OumanEh800EndpointEntity, OumanEh800EntityDescription
 
 PARALLEL_UPDATES = 1
 
@@ -84,13 +85,13 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
     async_add_entities(
         OumanEh800SelectEntity(coordinator, endpoint, description)
-        for endpoint in coordinator.data
+        for endpoint in coordinator.data.values
         if isinstance(endpoint, EnumControlOumanEndpoint)
         and (description := SELECT_DESCRIPTIONS.get(endpoint)) is not None
     )
 
 
-class OumanEh800SelectEntity(OumanEh800Entity, SelectEntity):
+class OumanEh800SelectEntity(OumanEh800EndpointEntity, SelectEntity):
     """Ouman EH-800 select entity."""
 
     entity_description: OumanEh800SelectEntityDescription
@@ -107,12 +108,14 @@ class OumanEh800SelectEntity(OumanEh800Entity, SelectEntity):
         self._attr_options = [member.name.lower() for member in endpoint.enum_type]
 
     @property
+    @override
     def current_option(self) -> str:
         """Return the currently selected option."""
-        value = self.coordinator.data[self._endpoint]
+        value = self.coordinator.data.values[self._endpoint]
         assert isinstance(value, ControlEnum)
         return value.name.lower()
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option on the device."""
         await self.coordinator.async_set_endpoint_value(

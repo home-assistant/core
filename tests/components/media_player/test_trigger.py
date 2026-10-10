@@ -9,18 +9,20 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_VOLUME_MUTED,
     MediaPlayerState,
 )
+from homeassistant.components.media_player.trigger import TRIGGERS
 from homeassistant.const import CONF_ENTITY_ID
 from homeassistant.core import HomeAssistant
 
 from tests.components.common import (
+    TargetSupport,
     TriggerStateDescription,
     arm_trigger,
     assert_trigger_behavior_all,
     assert_trigger_behavior_each,
     assert_trigger_behavior_first,
-    assert_trigger_gated_by_labs_flag,
     assert_trigger_ignores_limit_entities_with_wrong_unit,
     assert_trigger_options_supported,
+    assert_triggers_target_support,
     parametrize_numerical_attribute_changed_trigger_states,
     parametrize_numerical_attribute_crossed_threshold_trigger_states,
     parametrize_target_entities,
@@ -36,27 +38,6 @@ _VOLUME_CROSSED_THRESHOLD = {"threshold": {"type": "above", "value": {"number": 
 async def target_media_players(hass: HomeAssistant) -> dict[str, list[str]]:
     """Create multiple media player entities associated with different targets."""
     return await target_entities(hass, "media_player")
-
-
-@pytest.mark.parametrize(
-    "trigger_key",
-    [
-        "media_player.muted",
-        "media_player.unmuted",
-        "media_player.volume_changed",
-        "media_player.volume_crossed_threshold",
-        "media_player.paused_playing",
-        "media_player.started_playing",
-        "media_player.stopped_playing",
-        "media_player.turned_off",
-        "media_player.turned_on",
-    ],
-)
-async def test_media_player_triggers_gated_by_labs_flag(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, trigger_key: str
-) -> None:
-    """Test the media player triggers are gated by the labs flag."""
-    await assert_trigger_gated_by_labs_flag(hass, caplog, trigger_key)
 
 
 # is_muted=True states (mute attr True OR volume_level == 0)
@@ -115,7 +96,19 @@ def parametrize_muted_trigger_states(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
+_TRIGGER_TARGET_SUPPORT: dict[str, TargetSupport] = {
+    "muted": TargetSupport.STANDARD,
+    "unmuted": TargetSupport.STANDARD,
+    "volume_changed": TargetSupport.STANDARD,
+    "volume_crossed_threshold": TargetSupport.STANDARD,
+    "paused_playing": TargetSupport.STANDARD,
+    "started_playing": TargetSupport.STANDARD,
+    "stopped_playing": TargetSupport.STANDARD,
+    "turned_off": TargetSupport.STANDARD,
+    "turned_on": TargetSupport.STANDARD,
+}
+
+
 @pytest.mark.parametrize(
     ("trigger_key", "base_options", "supports_behavior", "supports_duration"),
     [
@@ -152,7 +145,11 @@ async def test_media_player_trigger_options_validation(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
+def test_trigger_target_support() -> None:
+    """Certify the trigger registry matches its declared target support."""
+    assert_triggers_target_support(TRIGGERS, _TRIGGER_TARGET_SUPPORT)
+
+
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("media_player"),
@@ -249,7 +246,6 @@ async def test_media_player_state_trigger_behavior_each(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("media_player"),
@@ -297,7 +293,6 @@ async def test_media_player_state_trigger_behavior_first(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("media_player"),
@@ -345,7 +340,6 @@ async def test_media_player_state_trigger_behavior_all(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("media_player"),
@@ -392,7 +386,6 @@ async def test_media_player_volume_trigger_behavior_each(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("media_player"),
@@ -432,7 +425,6 @@ async def test_media_player_volume_trigger_behavior_first(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("media_player"),
@@ -472,7 +464,6 @@ async def test_media_player_volume_trigger_behavior_all(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger", "trigger_options", "limit_entities"),
     [
@@ -529,7 +520,6 @@ async def test_media_player_trigger_ignores_limit_entity_with_wrong_unit(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 async def test_muted_trigger_ignores_entities_without_volume_attributes(
     hass: HomeAssistant,
 ) -> None:
@@ -568,7 +558,6 @@ async def test_muted_trigger_ignores_entities_without_volume_attributes(
     assert len(calls) == 1
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 async def test_muted_trigger_does_not_fire_on_losing_volume_attributes(
     hass: HomeAssistant,
 ) -> None:
@@ -597,7 +586,6 @@ async def test_muted_trigger_does_not_fire_on_losing_volume_attributes(
     assert len(calls) == 0
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 async def test_unmuted_trigger_does_not_fire_when_entity_gains_volume_attributes(
     hass: HomeAssistant,
 ) -> None:

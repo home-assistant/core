@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'fan_speed_list': list([
+      <VacuumEntityCapabilityAttribute.FAN_SPEED_LIST: 'fan_speed_list'>: list([
         'normal',
         'turbo',
         'silent',
@@ -45,14 +45,14 @@
 # name: test_sensor_states[platforms0-vacuum_device.json][vacuum.robot_vacuum_cleaner-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'fan_speed': 'normal',
-      'fan_speed_list': list([
+      <VacuumEntityStateAttribute.FAN_SPEED: 'fan_speed'>: 'normal',
+      <VacuumEntityCapabilityAttribute.FAN_SPEED_LIST: 'fan_speed_list'>: list([
         'normal',
         'turbo',
         'silent',
       ]),
-      'friendly_name': 'Robot vacuum cleaner',
-      'supported_features': <VacuumEntityFeature: 13356>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Robot vacuum cleaner',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <VacuumEntityFeature: 13356>,
     }),
     'context': <ANY>,
     'entity_id': 'vacuum.robot_vacuum_cleaner',
@@ -69,7 +69,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'fan_speed_list': list([
+      <VacuumEntityCapabilityAttribute.FAN_SPEED_LIST: 'fan_speed_list'>: list([
         'normal',
         'turbo',
         'silent',
@@ -108,14 +108,14 @@
 # name: test_vacuum_states_api_push[platforms0-vacuum_device.json][vacuum.robot_vacuum_cleaner-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'fan_speed': 'normal',
-      'fan_speed_list': list([
+      <VacuumEntityStateAttribute.FAN_SPEED: 'fan_speed'>: 'normal',
+      <VacuumEntityCapabilityAttribute.FAN_SPEED_LIST: 'fan_speed_list'>: list([
         'normal',
         'turbo',
         'silent',
       ]),
-      'friendly_name': 'Robot vacuum cleaner',
-      'supported_features': <VacuumEntityFeature: 13356>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Robot vacuum cleaner',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <VacuumEntityFeature: 13356>,
     }),
     'context': <ANY>,
     'entity_id': 'vacuum.robot_vacuum_cleaner',

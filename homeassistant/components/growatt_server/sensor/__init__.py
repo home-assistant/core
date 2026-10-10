@@ -3,6 +3,7 @@
 
 from datetime import date, datetime
 import logging
+from typing import override
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.core import HomeAssistant, callback
@@ -132,11 +133,13 @@ class GrowattSensor(CoordinatorEntity[GrowattCoordinator], SensorEntity):
         )
 
     @property
+    @override
     def native_value(self) -> StateType | date | datetime:
         """Return the state of the sensor."""
         return self.coordinator.get_data(self.entity_description)
 
     @property
+    @override
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of the sensor, if any."""
         if self.entity_description.currency:

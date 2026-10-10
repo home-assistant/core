@@ -14,6 +14,7 @@ from homeassistant.components.recorder.db_schema import (
     EVENTS_CONTEXT_ID_BIN_INDEX,
     OLD_FORMAT_ATTRS_JSON,
     OLD_STATE,
+    SHARED_ATTR_OR_LEGACY_ATTRIBUTES,
     SHARED_ATTRS_JSON,
     SHARED_DATA_OR_LEGACY_EVENT_DATA,
     STATES_CONTEXT_ID_BIN_INDEX,
@@ -65,12 +66,14 @@ STATE_COLUMNS = (
     States.state.label("state"),
     StatesMeta.entity_id.label("entity_id"),
     ICON_OR_OLD_FORMAT_ICON_JSON,
+    SHARED_ATTR_OR_LEGACY_ATTRIBUTES,
 )
 
 STATE_CONTEXT_ONLY_COLUMNS = (
     States.state.label("state"),
     StatesMeta.entity_id.label("entity_id"),
     literal(value=None, type_=sqlalchemy.String).label("icon"),
+    literal(value=None, type_=sqlalchemy.String).label("attributes"),
 )
 
 EVENT_COLUMNS_FOR_STATE_SELECT = (
@@ -93,6 +96,7 @@ EMPTY_STATE_COLUMNS = (
     literal(value=None, type_=sqlalchemy.String).label("state"),
     literal(value=None, type_=sqlalchemy.String).label("entity_id"),
     literal(value=None, type_=sqlalchemy.String).label("icon"),
+    literal(value=None, type_=sqlalchemy.String).label("attributes"),
 )
 
 

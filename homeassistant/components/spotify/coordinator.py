@@ -3,7 +3,9 @@
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
+from typing import override
 
+from mashumaro.exceptions import InvalidFieldValue, MissingField
 from spotifyaio import (
     ContextType,
     Device,
@@ -89,6 +91,7 @@ class SpotifyCoordinator(DataUpdateCoordinator[SpotifyCoordinatorData]):
         self._playlist: Playlist | None = None
         self._checked_playlist_id: str | None = None
 
+    @override
     async def _async_setup(self) -> None:
         """Set up the coordinator."""
         try:
@@ -109,6 +112,7 @@ class SpotifyCoordinator(DataUpdateCoordinator[SpotifyCoordinatorData]):
         except SpotifyConnectionError as err:
             raise UpdateFailed("Error communicating with Spotify API") from err
 
+    @override
     async def _async_update_data(self) -> SpotifyCoordinatorData:
         self.update_interval = UPDATE_INTERVAL
         try:
@@ -140,8 +144,8 @@ class SpotifyCoordinator(DataUpdateCoordinator[SpotifyCoordinatorData]):
                 self._checked_playlist_id = context.uri
                 self._playlist = None
                 if context.context_type == ContextType.PLAYLIST:
-                    # Make sure any playlist lookups don't break the current
-                    # playback state update
+                    # Optional playlist metadata must not block setup or playback
+                    # updates when fetching or deserialization fails.
                     try:
                         self._playlist = await self.client.get_playlist(context.uri)
                     except SpotifyNotFoundError:
@@ -151,7 +155,7 @@ class SpotifyCoordinator(DataUpdateCoordinator[SpotifyCoordinatorData]):
                             context.uri,
                         )
                         self._playlist = None
-                    except SpotifyConnectionError:
+                    except SpotifyConnectionError, InvalidFieldValue, MissingField:
                         _LOGGER.debug(
                             "Unable to load spotify playlist '%s'. "
                             "Continuing without playlist data",
@@ -195,6 +199,7 @@ class SpotifyDeviceCoordinator(DataUpdateCoordinator[list[Device]]):
         )
         self._client = client
 
+    @override
     async def _async_update_data(self) -> list[Device]:
         try:
             return await self._client.get_devices()

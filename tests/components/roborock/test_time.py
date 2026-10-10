@@ -1,21 +1,22 @@
 """Test Roborock Time platform."""
 
 from collections.abc import Callable
-from datetime import time
+from datetime import time, timedelta
 from typing import Any
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 import roborock
 from roborock.data import DnDTimer, RoborockBaseTimer, ValleyElectricityTimer
 
 from homeassistant.components.time import SERVICE_SET_VALUE
-from homeassistant.const import Platform
+from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 from .conftest import FakeDevice
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.fixture
@@ -127,3 +128,53 @@ async def test_update_failure(
             target={"entity_id": entity_id},
         )
     assert fake_vacuum.v1_properties.dnd.set_dnd_timer.call_count == 1
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize(
+    ("entity_id", "trait", "missing_attribute"),
+    [
+        (
+            "time.roborock_s7_maxv_do_not_disturb_begin",
+            lambda x: x.v1_properties.dnd,
+            "start_hour",
+        ),
+        (
+            "time.roborock_s7_maxv_do_not_disturb_begin",
+            lambda x: x.v1_properties.dnd,
+            "start_minute",
+        ),
+        (
+            "time.roborock_s7_maxv_do_not_disturb_end",
+            lambda x: x.v1_properties.dnd,
+            "end_hour",
+        ),
+        (
+            "time.roborock_s7_maxv_off_peak_start",
+            lambda x: x.v1_properties.valley_electricity_timer,
+            "start_minute",
+        ),
+    ],
+)
+async def test_missing_value(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    setup_entry: MockConfigEntry,
+    fake_vacuum: FakeDevice,
+    entity_id: str,
+    trait: Callable[[FakeDevice], Any],
+    missing_attribute: str,
+) -> None:
+    """Test that a missing time component reports as unknown instead of raising."""
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state != STATE_UNKNOWN
+
+    setattr(trait(fake_vacuum), missing_attribute, None)
+    freezer.tick(timedelta(seconds=31))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_UNKNOWN

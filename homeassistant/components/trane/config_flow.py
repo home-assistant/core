@@ -1,10 +1,10 @@
 """Config flow for the Trane Local integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
+import probatio
 from steamloop import PairingError, SteamloopConnectionError, ThermostatConnection
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
@@ -13,9 +13,9 @@ from .const import CONF_SECRET_KEY, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): str,
+        probatio.Required(CONF_HOST): str,
     }
 )
 
@@ -23,6 +23,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 class TraneConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Trane Local."""
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

@@ -1,7 +1,7 @@
 """Demo platform that has a couple of fake sensors."""
 
 from datetime import datetime, timedelta
-from typing import cast
+from typing import cast, override
 
 from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,
@@ -12,11 +12,10 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    CONCENTRATION_PARTS_PER_MILLION,
-    PERCENTAGE,
     EntityCategory,
     UnitOfEnergy,
     UnitOfPower,
+    UnitOfRatio,
     UnitOfTemperature,
     UnitOfVolume,
 )
@@ -52,7 +51,7 @@ async def async_setup_entry(
                 12,
                 SensorDeviceClass.BATTERY,
                 SensorStateClass.MEASUREMENT,
-                PERCENTAGE,
+                UnitOfRatio.PERCENTAGE,
                 entity_category=EntityCategory.DIAGNOSTIC,
                 entity_name="Battery",
             ),
@@ -63,7 +62,7 @@ async def async_setup_entry(
                 54,
                 SensorDeviceClass.HUMIDITY,
                 SensorStateClass.MEASUREMENT,
-                PERCENTAGE,
+                UnitOfRatio.PERCENTAGE,
             ),
             DemoSensor(
                 "sensor_3",
@@ -72,7 +71,7 @@ async def async_setup_entry(
                 54,
                 SensorDeviceClass.CO,
                 SensorStateClass.MEASUREMENT,
-                CONCENTRATION_PARTS_PER_MILLION,
+                UnitOfRatio.PARTS_PER_MILLION,
             ),
             DemoSensor(
                 "sensor_4",
@@ -81,7 +80,7 @@ async def async_setup_entry(
                 54,
                 SensorDeviceClass.CO2,
                 SensorStateClass.MEASUREMENT,
-                CONCENTRATION_PARTS_PER_MILLION,
+                UnitOfRatio.PARTS_PER_MILLION,
             ),
             DemoSensor(
                 "battery_4",
@@ -90,7 +89,7 @@ async def async_setup_entry(
                 99,
                 SensorDeviceClass.BATTERY,
                 SensorStateClass.MEASUREMENT,
-                PERCENTAGE,
+                UnitOfRatio.PERCENTAGE,
                 entity_category=EntityCategory.DIAGNOSTIC,
                 entity_name="Battery",
             ),
@@ -227,6 +226,7 @@ class DemoSumSensor(RestoreSensor):
         self._attr_native_value += self._five_minute_increase
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call when entity about to be added to hass."""
         await super().async_added_to_hass()

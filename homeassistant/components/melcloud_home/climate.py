@@ -1,0 +1,527 @@
+"""Climate platform for MELCloud Home."""
+
+from typing import Any, override
+
+from aiomelcloudhome import (
+    ATAFanSpeed,
+    ATAOperationMode,
+    ATAVaneHorizontal,
+    ATAVaneVertical,
+    ATWOperationMode,
+    ATWZoneMode,
+)
+
+from homeassistant.components.climate import (
+    ClimateEntity,
+    ClimateEntityDescription,
+    ClimateEntityFeature,
+    HVACAction,
+    HVACMode,
+)
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+
+from .common import async_setup_unit_entities, perform_action
+from .coordinator import MelCloudHomeConfigEntry
+from .entity import MelCloudHomeATAUnitEntity, MelCloudHomeATWZoneEntity
+
+PARALLEL_UPDATES = 1
+
+ATA_HVAC_MODE_TO_OPERATION: dict[HVACMode, ATAOperationMode] = {
+    HVACMode.HEAT: ATAOperationMode.HEAT,
+    HVACMode.COOL: ATAOperationMode.COOL,
+    HVACMode.AUTO: ATAOperationMode.AUTOMATIC,
+    HVACMode.DRY: ATAOperationMode.DRY,
+    HVACMode.FAN_ONLY: ATAOperationMode.FAN,
+}
+
+ATA_OPERATION_TO_HVAC_MODE: dict[ATAOperationMode, HVACMode] = {
+    value: key for key, value in ATA_HVAC_MODE_TO_OPERATION.items()
+}
+
+ATA_FAN_SPEED_TO_HA: dict[ATAFanSpeed, str] = {
+    ATAFanSpeed.AUTO: "auto",
+    ATAFanSpeed.ONE: "speed_1",
+    ATAFanSpeed.TWO: "speed_2",
+    ATAFanSpeed.THREE: "speed_3",
+    ATAFanSpeed.FOUR: "speed_4",
+    ATAFanSpeed.FIVE: "speed_5",
+}
+
+HA_FAN_SPEED_TO_ATA: dict[str, ATAFanSpeed] = {
+    value: key for key, value in ATA_FAN_SPEED_TO_HA.items()
+}
+
+ATA_VANE_VERTICAL_TO_HA: dict[ATAVaneVertical, str] = {
+    ATAVaneVertical.AUTO: "auto",
+    ATAVaneVertical.SWING: "swing",
+    ATAVaneVertical.ONE: "position_1",
+    ATAVaneVertical.TWO: "position_2",
+    ATAVaneVertical.THREE: "position_3",
+    ATAVaneVertical.FOUR: "position_4",
+    ATAVaneVertical.FIVE: "position_5",
+}
+
+HA_VANE_VERTICAL_TO_ATA: dict[str, ATAVaneVertical] = {
+    value: key for key, value in ATA_VANE_VERTICAL_TO_HA.items()
+}
+
+ATA_VANE_HORIZONTAL_TO_HA: dict[ATAVaneHorizontal, str] = {
+    ATAVaneHorizontal.AUTO: "auto",
+    ATAVaneHorizontal.SWING: "swing",
+    ATAVaneHorizontal.LEFT: "left",
+    ATAVaneHorizontal.LEFT_CENTRE: "left_centre",
+    ATAVaneHorizontal.CENTRE: "centre",
+    ATAVaneHorizontal.RIGHT_CENTRE: "right_centre",
+    ATAVaneHorizontal.RIGHT: "right",
+}
+
+HA_VANE_HORIZONTAL_TO_ATA: dict[str, ATAVaneHorizontal] = {
+    value: key for key, value in ATA_VANE_HORIZONTAL_TO_HA.items()
+}
+
+ATW_ZONE_MODE_TO_HVAC_MODE: dict[ATWZoneMode, HVACMode] = {
+    ATWZoneMode.HEAT_ROOM_TEMPERATURE: HVACMode.HEAT,
+    ATWZoneMode.HEAT_FLOW_TEMPERATURE: HVACMode.HEAT,
+    ATWZoneMode.HEAT_CURVE: HVACMode.HEAT,
+    ATWZoneMode.COOL_ROOM_TEMPERATURE: HVACMode.COOL,
+    ATWZoneMode.COOL_FLOW_TEMPERATURE: HVACMode.COOL,
+}
+
+HVAC_MODE_TO_ATW_ZONE_MODE: dict[HVACMode, ATWZoneMode] = {
+    HVACMode.HEAT: ATWZoneMode.HEAT_ROOM_TEMPERATURE,
+    HVACMode.COOL: ATWZoneMode.COOL_ROOM_TEMPERATURE,
+}
+
+# The unit heats either the tank or the zones, so heating the tank idles the zones
+ATW_OPERATION_TO_HVAC_ACTION: dict[ATWOperationMode, HVACAction] = {
+    ATWOperationMode.STOP: HVACAction.IDLE,
+    ATWOperationMode.HOT_WATER: HVACAction.IDLE,
+    ATWOperationMode.HEAT: HVACAction.HEATING,
+    ATWOperationMode.HEAT_ZONES: HVACAction.HEATING,
+    ATWOperationMode.COOL: HVACAction.COOLING,
+}
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: MelCloudHomeConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up MELCloud Home climate entities from a config entry."""
+    coordinator = entry.runtime_data.coordinator
+
+    async_setup_unit_entities(
+        coordinator,
+        async_add_entities,
+        lambda units: (
+            ATAClimateEntity(
+                coordinator,
+                ClimateEntityDescription(key="ata_unit", translation_key="ata_unit"),
+                unit,
+            )
+            for unit in units
+        ),
+        lambda units: (
+            ATWZoneClimateEntity(
+                coordinator,
+                ClimateEntityDescription(key="atw_zone", translation_key="atw_zone"),
+                unit,
+                zone_number,
+            )
+            for unit in units
+            for zone_number in (
+                [1, 2]
+                if (unit.capabilities and unit.capabilities.has_zone2)
+                or (unit.capabilities is None and unit.has_zone2)
+                else [1]
+            )
+        ),
+    )
+
+
+class ATAClimateEntity(MelCloudHomeATAUnitEntity, ClimateEntity):
+    """Climate entity for a MELCloud Home Air-to-Air unit."""
+
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_swing_modes = list(ATA_VANE_VERTICAL_TO_HA.values())
+    _attr_swing_horizontal_modes = list(ATA_VANE_HORIZONTAL_TO_HA.values())
+
+    @property
+    @override
+    def supported_features(self) -> ClimateEntityFeature:
+        """Return the features supported by this unit based on its settings."""
+        features = (
+            ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.FAN_MODE
+            | ClimateEntityFeature.TURN_ON
+            | ClimateEntityFeature.TURN_OFF
+        )
+        if (settings := self.unit.settings) is not None:
+            if settings.get("VaneVerticalDirection") is not None:
+                features |= ClimateEntityFeature.SWING_MODE
+            if settings.get("VaneHorizontalDirection") is not None:
+                features |= ClimateEntityFeature.SWING_HORIZONTAL_MODE
+        return features
+
+    @property
+    @override
+    def hvac_modes(self) -> list[HVACMode]:
+        """Return HVAC modes supported by this unit based on its capabilities."""
+        if self.unit.capabilities is None:
+            return [
+                HVACMode.OFF,
+                HVACMode.HEAT,
+                HVACMode.COOL,
+                HVACMode.AUTO,
+                HVACMode.DRY,
+                HVACMode.FAN_ONLY,
+            ]
+
+        modes = [HVACMode.OFF, HVACMode.HEAT]
+        if self.unit.capabilities.has_cool_operation_mode is not False:
+            modes.append(HVACMode.COOL)
+        if self.unit.capabilities.has_auto_operation_mode is not False:
+            modes.append(HVACMode.AUTO)
+        if self.unit.capabilities.has_dry_operation_mode is not False:
+            modes.append(HVACMode.DRY)
+        if self.unit.capabilities.has_fan_operation_mode is not False:
+            modes.append(HVACMode.FAN_ONLY)
+        return modes
+
+    @property
+    @override
+    def fan_modes(self) -> list[str]:
+        """Return fan modes supported by this unit based on its capabilities."""
+        capabilities = self.unit.capabilities
+        number = (
+            capabilities.number_of_fan_speeds
+            if capabilities is not None
+            and capabilities.number_of_fan_speeds is not None
+            else len(ATA_FAN_SPEED_TO_HA) - 1
+        )
+        all_speeds = list(ATA_FAN_SPEED_TO_HA.values())
+        return [all_speeds[0], *all_speeds[1 : number + 1]]
+
+    @property
+    @override
+    def native_current_temperature(self) -> float | None:
+        """Return the current room temperature."""
+        return self.unit.room_temperature
+
+    @property
+    @override
+    def native_target_temperature(self) -> float | None:
+        """Return the target temperature."""
+        return self.unit.set_temperature
+
+    @property
+    @override
+    def min_temp(self) -> float:
+        """Return the minimum temperature based on the current HVAC mode."""
+        capabilities = self.unit.capabilities
+        if capabilities is not None:
+            hvac_mode = self.hvac_mode
+            if hvac_mode in (HVACMode.COOL, HVACMode.DRY):
+                if capabilities.min_temp_cool is not None:
+                    return capabilities.min_temp_cool
+            elif hvac_mode == HVACMode.AUTO:
+                if capabilities.min_temp_auto is not None:
+                    return capabilities.min_temp_auto
+            elif hvac_mode == HVACMode.HEAT:
+                if capabilities.min_temp_heat is not None:
+                    return capabilities.min_temp_heat
+        return super().min_temp
+
+    @property
+    @override
+    def max_temp(self) -> float:
+        """Return the maximum temperature based on the current HVAC mode."""
+        capabilities = self.unit.capabilities
+        if capabilities is not None:
+            hvac_mode = self.hvac_mode
+            if hvac_mode in (HVACMode.COOL, HVACMode.DRY):
+                if capabilities.max_temp_cool is not None:
+                    return capabilities.max_temp_cool
+            elif hvac_mode == HVACMode.AUTO:
+                if capabilities.max_temp_auto is not None:
+                    return capabilities.max_temp_auto
+            elif hvac_mode == HVACMode.HEAT:
+                if capabilities.max_temp_heat is not None:
+                    return capabilities.max_temp_heat
+        return super().max_temp
+
+    @property
+    @override
+    def hvac_mode(self) -> HVACMode:
+        """Return the current HVAC mode."""
+        return (
+            ATA_OPERATION_TO_HVAC_MODE.get(self.unit.operation_mode, HVACMode.OFF)
+            if self.unit.power and self.unit.operation_mode
+            else HVACMode.OFF
+        )
+
+    @property
+    @override
+    def fan_mode(self) -> str | None:
+        """Return the current fan mode."""
+        return (
+            ATA_FAN_SPEED_TO_HA.get(self.unit.set_fan_speed)
+            if self.unit.set_fan_speed is not None
+            else None
+        )
+
+    @override
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
+        """Set the HVAC mode."""
+        if hvac_mode == HVACMode.OFF:
+            await perform_action(
+                self.coordinator,
+                self.coordinator.client.control_ata_unit(self._unit_id, power=False),
+            )
+        else:
+            await perform_action(
+                self.coordinator,
+                self.coordinator.client.control_ata_unit(
+                    self._unit_id,
+                    power=True,
+                    operation_mode=ATA_HVAC_MODE_TO_OPERATION[hvac_mode],
+                ),
+            )
+
+    @override
+    async def async_set_temperature(self, **kwargs: Any) -> None:
+        """Set the target temperature."""
+        await perform_action(
+            self.coordinator,
+            self.coordinator.client.control_ata_unit(
+                self._unit_id, set_temperature=kwargs[ATTR_TEMPERATURE]
+            ),
+        )
+
+    @property
+    @override
+    def swing_mode(self) -> str:
+        """Return the current vertical vane direction."""
+        return ATA_VANE_VERTICAL_TO_HA[self.unit.settings["VaneVerticalDirection"]]
+
+    @property
+    @override
+    def swing_horizontal_mode(self) -> str:
+        """Return the current horizontal vane direction."""
+        return ATA_VANE_HORIZONTAL_TO_HA[self.unit.settings["VaneHorizontalDirection"]]
+
+    @override
+    async def async_set_swing_horizontal_mode(self, swing_horizontal_mode: str) -> None:
+        """Set the horizontal vane direction."""
+        await perform_action(
+            self.coordinator,
+            self.coordinator.client.control_ata_unit(
+                self._unit_id,
+                vane_horizontal_direction=HA_VANE_HORIZONTAL_TO_ATA[
+                    swing_horizontal_mode
+                ],
+            ),
+        )
+
+    @override
+    async def async_set_swing_mode(self, swing_mode: str) -> None:
+        """Set the vertical vane direction."""
+        await perform_action(
+            self.coordinator,
+            self.coordinator.client.control_ata_unit(
+                self._unit_id,
+                vane_vertical_direction=HA_VANE_VERTICAL_TO_ATA[swing_mode],
+            ),
+        )
+
+    @override
+    async def async_set_fan_mode(self, fan_mode: str) -> None:
+        """Set the fan mode."""
+        await perform_action(
+            self.coordinator,
+            self.coordinator.client.control_ata_unit(
+                self._unit_id, set_fan_speed=HA_FAN_SPEED_TO_ATA[fan_mode]
+            ),
+        )
+
+    @override
+    async def async_turn_on(self) -> None:
+        """Turn the unit on."""
+        await perform_action(
+            self.coordinator,
+            self.coordinator.client.control_ata_unit(self._unit_id, power=True),
+        )
+
+    @override
+    async def async_turn_off(self) -> None:
+        """Turn the unit off."""
+        await perform_action(
+            self.coordinator,
+            self.coordinator.client.control_ata_unit(self._unit_id, power=False),
+        )
+
+
+class ATWZoneClimateEntity(MelCloudHomeATWZoneEntity, ClimateEntity):
+    """Climate entity for a MELCloud Home ATW zone."""
+
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.TURN_ON
+        | ClimateEntityFeature.TURN_OFF
+    )
+
+    @property
+    @override
+    def hvac_modes(self) -> list[HVACMode]:
+        """Return HVAC modes supported by this zone based on unit capabilities."""
+        modes = [HVACMode.OFF, HVACMode.HEAT]
+        if (
+            self.unit.capabilities is None
+            or self.unit.capabilities.has_cooling_mode is not False
+        ):
+            modes.append(HVACMode.COOL)
+        return modes
+
+    @property
+    def _zone_mode(self) -> ATWZoneMode | None:
+        """Return the current ATW zone mode."""
+        if self.zone_number == 1:
+            return self.unit.operation_mode_zone1
+        return self.unit.operation_mode_zone2
+
+    @property
+    @override
+    def native_current_temperature(self) -> float | None:
+        """Return the current zone temperature."""
+        return (
+            self.unit.room_temperature_zone1
+            if self.zone_number == 1
+            else self.unit.room_temperature_zone2
+        )
+
+    @property
+    @override
+    def native_target_temperature(self) -> float | None:
+        """Return the target zone temperature."""
+        return (
+            self.unit.set_temperature_zone1
+            if self.zone_number == 1
+            else self.unit.set_temperature_zone2
+        )
+
+    @property
+    @override
+    def min_temp(self) -> float:
+        """Return the minimum zone temperature."""
+        capabilities = self.unit.capabilities
+        if capabilities is not None:
+            value = (
+                capabilities.min_set_temperature_zone1
+                if self.zone_number == 1
+                else capabilities.min_set_temperature_zone2
+            )
+            if value is not None:
+                return value
+        return super().min_temp
+
+    @property
+    @override
+    def max_temp(self) -> float:
+        """Return the maximum zone temperature."""
+        capabilities = self.unit.capabilities
+        if capabilities is not None:
+            value = (
+                capabilities.max_set_temperature_zone1
+                if self.zone_number == 1
+                else capabilities.max_set_temperature_zone2
+            )
+            if value is not None:
+                return value
+        return super().max_temp
+
+    @property
+    @override
+    def hvac_mode(self) -> HVACMode:
+        """Return the current HVAC mode."""
+        return (
+            ATW_ZONE_MODE_TO_HVAC_MODE.get(self._zone_mode, HVACMode.OFF)
+            if self.unit.power and self._zone_mode
+            else HVACMode.OFF
+        )
+
+    @property
+    @override
+    def hvac_action(self) -> HVACAction | None:
+        """Return what the unit is doing for this zone."""
+        if self.hvac_mode == HVACMode.OFF:
+            return HVACAction.OFF
+        if self.unit.operation_mode is None:
+            return None
+        return ATW_OPERATION_TO_HVAC_ACTION[self.unit.operation_mode]
+
+    @override
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
+        """Set the HVAC mode."""
+        if hvac_mode == HVACMode.OFF:
+            await perform_action(
+                self.coordinator,
+                self.coordinator.client.control_atw_unit(self._unit_id, power=False),
+            )
+        else:
+            zone_mode = HVAC_MODE_TO_ATW_ZONE_MODE[hvac_mode]
+            if self.zone_number == 1:
+                await perform_action(
+                    self.coordinator,
+                    self.coordinator.client.control_atw_unit(
+                        self._unit_id,
+                        power=True,
+                        operation_mode_zone1=zone_mode,
+                    ),
+                )
+            else:
+                await perform_action(
+                    self.coordinator,
+                    self.coordinator.client.control_atw_unit(
+                        self._unit_id,
+                        power=True,
+                        operation_mode_zone2=zone_mode,
+                    ),
+                )
+
+    @override
+    async def async_set_temperature(self, **kwargs: Any) -> None:
+        """Set the target temperature."""
+        temperature = kwargs[ATTR_TEMPERATURE]
+        if self.zone_number == 1:
+            await perform_action(
+                self.coordinator,
+                self.coordinator.client.control_atw_unit(
+                    self._unit_id, set_temperature_zone1=temperature
+                ),
+            )
+        else:
+            await perform_action(
+                self.coordinator,
+                self.coordinator.client.control_atw_unit(
+                    self._unit_id, set_temperature_zone2=temperature
+                ),
+            )
+
+    @override
+    async def async_turn_on(self) -> None:
+        """Turn the zone on."""
+        await perform_action(
+            self.coordinator,
+            self.coordinator.client.control_atw_unit(self._unit_id, power=True),
+        )
+
+    @override
+    async def async_turn_off(self) -> None:
+        """Turn the zone off."""
+        await perform_action(
+            self.coordinator,
+            self.coordinator.client.control_atw_unit(self._unit_id, power=False),
+        )

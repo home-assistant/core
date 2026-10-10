@@ -1,5 +1,7 @@
 """Support for Phone Modem button."""
 
+from typing import override
+
 from phone_modem import PhoneModem
 
 from homeassistant.components.button import ButtonEntity
@@ -42,6 +44,7 @@ class PhoneModemButton(ButtonEntity):
         self._attr_unique_id = server_unique_id
         self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, server_unique_id)})
 
+    @override
     async def async_press(self) -> None:
         """Press the button."""
         await self.api.reject_call(self.device)

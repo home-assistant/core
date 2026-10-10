@@ -1,7 +1,7 @@
 """Support for RFXtrx devices."""
 
 from collections.abc import Callable
-from typing import cast
+from typing import cast, override
 
 import RFXtrx as rfxtrxmod
 
@@ -12,14 +12,6 @@ from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import DeviceTuple
 from .const import ATTR_EVENT, COMMAND_GROUP_LIST, DATA_RFXOBJECT, DOMAIN, SIGNAL_EVENT
-
-
-def _get_identifiers_from_device_tuple(
-    device_tuple: DeviceTuple,
-) -> set[tuple[str, str]]:
-    """Calculate the device identifier from a device tuple."""
-    # work around legacy identifier, being a multi tuple value
-    return {(DOMAIN, *device_tuple)}  # type: ignore[arg-type]
 
 
 class RfxtrxEntity(RestoreEntity):
@@ -42,11 +34,11 @@ class RfxtrxEntity(RestoreEntity):
     ) -> None:
         """Initialize the device."""
         self._attr_device_info = DeviceInfo(
-            identifiers=_get_identifiers_from_device_tuple(device_id),
+            identifiers={(DOMAIN, device_id.unique_id)},
             model=device.type_string,
             name=f"{device.type_string} {device_id.id_string}",
         )
-        self._attr_unique_id = "_".join(x for x in device_id)
+        self._attr_unique_id = device_id.unique_id
         self._device = device
         self._event = event
         self._device_id = device_id
@@ -55,6 +47,7 @@ class RfxtrxEntity(RestoreEntity):
         # group events regardless of their group indices.
         (self._group_id, _, _) = device_id.id_string.partition(":")
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Restore RFXtrx device state (ON/OFF)."""
         if self._event:
@@ -65,6 +58,7 @@ class RfxtrxEntity(RestoreEntity):
         )
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, str] | None:
         """Return the device state attributes."""
         if not self._event:

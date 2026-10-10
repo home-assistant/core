@@ -1,6 +1,7 @@
 """Data update coordinator for ReCollect Waste."""
 
 from datetime import timedelta
+from typing import override
 
 from aiorecollect.client import Client, PickupEvent
 from aiorecollect.errors import RecollectError
@@ -43,6 +44,7 @@ class ReCollectWasteDataUpdateCoordinator(DataUpdateCoordinator[list[PickupEvent
             session=aiohttp_client.async_get_clientsession(hass),
         )
 
+    @override
     async def _async_update_data(self) -> list[PickupEvent]:
         """Fetch data from ReCollect."""
         try:

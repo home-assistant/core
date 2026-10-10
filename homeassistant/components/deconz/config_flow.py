@@ -4,9 +4,10 @@ import asyncio
 from collections.abc import Mapping
 import logging
 from pprint import pformat
-from typing import Any, cast
+from typing import Any, cast, override
 from urllib.parse import urlparse
 
+import probatio
 from pydeconz.errors import LinkButtonNotPressed, RequestError, ResponseError
 from pydeconz.gateway import DeconzSession
 from pydeconz.utils import (
@@ -15,7 +16,6 @@ from pydeconz.utils import (
     get_bridge_id as deconz_get_bridge_id,
     normalize_bridge_id,
 )
-import voluptuous as vol
 
 from homeassistant.config_entries import (
     SOURCE_HASSIO,
@@ -63,6 +63,7 @@ class DeconzFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> DeconzOptionsFlowHandler:
@@ -73,6 +74,7 @@ class DeconzFlowHandler(ConfigFlow, domain=DOMAIN):
         """Initialize the deCONZ config flow."""
         self.bridge_id = ""
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -111,7 +113,9 @@ class DeconzFlowHandler(ConfigFlow, domain=DOMAIN):
 
             return self.async_show_form(
                 step_id="user",
-                data_schema=vol.Schema({vol.Optional(CONF_HOST): vol.In(hosts)}),
+                data_schema=probatio.Schema(
+                    {probatio.Optional(CONF_HOST): probatio.In(hosts)}
+                ),
             )
 
         return await self.async_step_manual_input()
@@ -127,10 +131,10 @@ class DeconzFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="manual_input",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_HOST): str,
-                    vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
+                    probatio.Required(CONF_HOST): str,
+                    probatio.Required(CONF_PORT, default=DEFAULT_PORT): int,
                 }
             ),
         )
@@ -209,6 +213,7 @@ class DeconzFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_link()
 
+    @override
     async def async_step_ssdp(
         self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
@@ -243,6 +248,7 @@ class DeconzFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_link()
 
+    @override
     async def async_step_hassio(
         self, discovery_info: HassioServiceInfo
     ) -> ConfigFlowResult:
@@ -313,7 +319,7 @@ class DeconzOptionsFlowHandler(OptionsFlow):
             (CONF_ALLOW_NEW_DEVICES, DEFAULT_ALLOW_NEW_DEVICES),
         ):
             schema_options[
-                vol.Optional(
+                probatio.Optional(
                     option,
                     default=self.config_entry.options.get(option, default),
                 )
@@ -321,5 +327,5 @@ class DeconzOptionsFlowHandler(OptionsFlow):
 
         return self.async_show_form(
             step_id="deconz_devices",
-            data_schema=vol.Schema(schema_options),
+            data_schema=probatio.Schema(schema_options),
         )

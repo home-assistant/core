@@ -147,6 +147,7 @@ async def test_user_both_auth(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_abort_if_already_setup(
     recorder_mock: Recorder, hass: HomeAssistant
 ) -> None:
@@ -158,9 +159,15 @@ async def test_abort_if_already_setup(
 
     # Should fail, same SITE_ID
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
             CONF_NAME: "test",
             CONF_SITE_ID: SITE_ID,
             CONF_SECTION_API_AUTH: {CONF_API_KEY: "test"},
@@ -169,22 +176,38 @@ async def test_abort_if_already_setup(
     assert result.get("type") is FlowResultType.FORM
     assert result.get("errors") == {CONF_SITE_ID: "already_configured"}
 
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_NAME: "test",
+            CONF_SITE_ID: "other_site_id",
+            CONF_SECTION_API_AUTH: {CONF_API_KEY: "test"},
+        },
+    )
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
+
 
 async def test_ignored_entry_does_not_cause_error(
     recorder_mock: Recorder, hass: HomeAssistant
 ) -> None:
     """Test an ignored entry does not cause an error on new entry."""
     MockConfigEntry(
-        domain="solaredge",
+        domain=DOMAIN,
         data={CONF_NAME: DEFAULT_NAME, CONF_API_KEY: API_KEY},
         source=SOURCE_IGNORE,
     ).add_to_hass(hass)
 
     # Should not fail, same SITE_ID
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
             CONF_NAME: "test",
             CONF_SITE_ID: SITE_ID,
             CONF_SECTION_API_AUTH: {CONF_API_KEY: "test"},
@@ -199,6 +222,7 @@ async def test_ignored_entry_does_not_cause_error(
     assert data[CONF_API_KEY] == "test"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_no_auth_provided(recorder_mock: Recorder, hass: HomeAssistant) -> None:
     """Test error when no authentication method is provided."""
     result = await hass.config_entries.flow.async_init(
@@ -210,6 +234,16 @@ async def test_no_auth_provided(recorder_mock: Recorder, hass: HomeAssistant) ->
     )
     assert result.get("type") is FlowResultType.FORM
     assert result.get("errors") == {"base": "auth_missing"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_NAME: NAME,
+            CONF_SITE_ID: SITE_ID,
+            CONF_SECTION_API_AUTH: {CONF_API_KEY: API_KEY},
+        },
+    )
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.parametrize(
@@ -238,9 +272,14 @@ async def test_api_key_errors(
         CONF_SECTION_API_AUTH: {CONF_API_KEY: API_KEY},
     }
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data=user_input,
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input
     )
 
     assert result.get("type") is FlowResultType.FORM

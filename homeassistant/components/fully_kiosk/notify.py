@@ -1,6 +1,7 @@
 """Support for Fully Kiosk Browser notifications."""
 
 from dataclasses import dataclass
+from typing import override
 
 from fullykiosk import FullyKioskError
 
@@ -63,6 +64,7 @@ class FullyNotifyEntity(FullyKioskEntity, NotifyEntity):
         self.entity_description = description
         self._attr_unique_id = f"{coordinator.data['deviceID']}-{description.key}"
 
+    @override
     async def async_send_message(self, message: str, title: str | None = None) -> None:
         """Send a message."""
         try:

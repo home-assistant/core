@@ -48,8 +48,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: FGLairConfigEntry) -> b
 
 async def async_migrate_entry(hass: HomeAssistant, entry: FGLairConfigEntry) -> bool:
     """Migrate old entry."""
-    if entry.version > 1:
-        return False
 
     if entry.version == 1:
         new_data = {**entry.data}

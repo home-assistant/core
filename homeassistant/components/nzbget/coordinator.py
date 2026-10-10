@@ -3,6 +3,7 @@
 import asyncio
 from datetime import timedelta
 import logging
+from typing import override
 
 from pynzbgetapi import NZBGetAPI, NZBGetAPIException
 
@@ -81,6 +82,7 @@ class NZBGetDataUpdateCoordinator(DataUpdateCoordinator):
         self._completed_downloads = actual_completed_downloads
         self._completed_downloads_init = True
 
+    @override
     async def _async_update_data(self) -> dict:
         """Fetch data from NZBGet."""
 

@@ -39,7 +39,7 @@
 # name: test_entities[switch.tx_nr7100_mute_center-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'TX-NR7100 Mute center',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TX-NR7100 Mute center',
     }),
     'context': <ANY>,
     'entity_id': 'switch.tx_nr7100_mute_center',
@@ -89,7 +89,7 @@
 # name: test_entities[switch.tx_nr7100_mute_front_left-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'TX-NR7100 Mute front left',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TX-NR7100 Mute front left',
     }),
     'context': <ANY>,
     'entity_id': 'switch.tx_nr7100_mute_front_left',
@@ -139,7 +139,7 @@
 # name: test_entities[switch.tx_nr7100_mute_front_right-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'TX-NR7100 Mute front right',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TX-NR7100 Mute front right',
     }),
     'context': <ANY>,
     'entity_id': 'switch.tx_nr7100_mute_front_right',
@@ -189,7 +189,7 @@
 # name: test_entities[switch.tx_nr7100_mute_height_1_left-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'TX-NR7100 Mute height 1 left',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TX-NR7100 Mute height 1 left',
     }),
     'context': <ANY>,
     'entity_id': 'switch.tx_nr7100_mute_height_1_left',
@@ -239,7 +239,7 @@
 # name: test_entities[switch.tx_nr7100_mute_height_1_right-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'TX-NR7100 Mute height 1 right',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TX-NR7100 Mute height 1 right',
     }),
     'context': <ANY>,
     'entity_id': 'switch.tx_nr7100_mute_height_1_right',
@@ -289,7 +289,7 @@
 # name: test_entities[switch.tx_nr7100_mute_height_2_left-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'TX-NR7100 Mute height 2 left',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TX-NR7100 Mute height 2 left',
     }),
     'context': <ANY>,
     'entity_id': 'switch.tx_nr7100_mute_height_2_left',
@@ -339,7 +339,7 @@
 # name: test_entities[switch.tx_nr7100_mute_height_2_right-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'TX-NR7100 Mute height 2 right',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TX-NR7100 Mute height 2 right',
     }),
     'context': <ANY>,
     'entity_id': 'switch.tx_nr7100_mute_height_2_right',
@@ -389,7 +389,7 @@
 # name: test_entities[switch.tx_nr7100_mute_subwoofer-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'TX-NR7100 Mute subwoofer',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TX-NR7100 Mute subwoofer',
     }),
     'context': <ANY>,
     'entity_id': 'switch.tx_nr7100_mute_subwoofer',
@@ -439,7 +439,7 @@
 # name: test_entities[switch.tx_nr7100_mute_subwoofer_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'TX-NR7100 Mute subwoofer 2',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TX-NR7100 Mute subwoofer 2',
     }),
     'context': <ANY>,
     'entity_id': 'switch.tx_nr7100_mute_subwoofer_2',
@@ -489,7 +489,7 @@
 # name: test_entities[switch.tx_nr7100_mute_surround_back_left-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'TX-NR7100 Mute surround back left',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TX-NR7100 Mute surround back left',
     }),
     'context': <ANY>,
     'entity_id': 'switch.tx_nr7100_mute_surround_back_left',
@@ -539,7 +539,7 @@
 # name: test_entities[switch.tx_nr7100_mute_surround_back_right-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'TX-NR7100 Mute surround back right',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TX-NR7100 Mute surround back right',
     }),
     'context': <ANY>,
     'entity_id': 'switch.tx_nr7100_mute_surround_back_right',
@@ -589,7 +589,7 @@
 # name: test_entities[switch.tx_nr7100_mute_surround_left-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'TX-NR7100 Mute surround left',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TX-NR7100 Mute surround left',
     }),
     'context': <ANY>,
     'entity_id': 'switch.tx_nr7100_mute_surround_left',
@@ -639,7 +639,7 @@
 # name: test_entities[switch.tx_nr7100_mute_surround_right-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'TX-NR7100 Mute surround right',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TX-NR7100 Mute surround right',
     }),
     'context': <ANY>,
     'entity_id': 'switch.tx_nr7100_mute_surround_right',

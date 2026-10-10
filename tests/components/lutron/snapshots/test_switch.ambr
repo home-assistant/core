@@ -39,7 +39,7 @@
 # name: test_switch_setup[switch.test_area_test_switch-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Switch',
       'lutron_integration_id': 2,
     }),
     'context': <ANY>,
@@ -90,7 +90,7 @@
 # name: test_switch_setup[switch.test_keypad_test_button-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Keypad Test Button',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Keypad Test Button',
       'keypad': 'Test Keypad',
       'led': 'Test LED',
       'scene': 'Test Button',

@@ -1,5 +1,7 @@
 """Support for Plaato Airlock sensors."""
 
+from typing import override
+
 from pyplaato.plaato import PlaatoKeg
 
 from homeassistant.components.binary_sensor import (
@@ -54,6 +56,7 @@ class PlaatoBinarySensor(PlaatoEntity, BinarySensorEntity):
             self._attr_device_class = BinarySensorDeviceClass.OPENING
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
         if self._coordinator is not None:

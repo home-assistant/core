@@ -1,8 +1,8 @@
 """Provides conditions for texts."""
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.input_text import DOMAIN as INPUT_TEXT_DOMAIN
 from homeassistant.const import CONF_OPTIONS
@@ -22,8 +22,8 @@ CONF_VALUE = "value"
 
 _TEXT_CONDITION_SCHEMA = ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL.extend(
     {
-        vol.Required(CONF_OPTIONS): {
-            vol.Required(CONF_VALUE): cv.string,
+        probatio.Required(CONF_OPTIONS): {
+            probatio.Required(CONF_VALUE): cv.string,
         },
     }
 )
@@ -46,10 +46,12 @@ class TextIsEqualToCondition(EntityConditionBase):
         self._value: str = config.options[CONF_VALUE]
 
     @property
+    @override
     def _needs_duration_tracking(self) -> bool:
         """Return if this condition needs duration tracking."""
         return False
 
+    @override
     def is_valid_state(self, entity_state: State) -> bool:
         """Check if the state matches the expected value."""
         return entity_state.state == self._value

@@ -1,6 +1,6 @@
 """Switch implementation for Energenie-Power-Sockets Platform."""
 
-from typing import Any
+from typing import Any, override
 
 from pyegps import __version__ as PYEGPS_VERSION
 from pyegps.exceptions import EgpsException
@@ -55,6 +55,7 @@ class EGPowerStripSocket(SwitchEntity):
             sw_version=PYEGPS_VERSION,
         )
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Switch the socket on."""
         try:
@@ -62,6 +63,7 @@ class EGPowerStripSocket(SwitchEntity):
         except EgpsException as err:
             raise HomeAssistantError(f"Couldn't access USB device: {err}") from err
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Switch the socket off."""
         try:

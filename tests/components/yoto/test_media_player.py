@@ -1,7 +1,7 @@
 """Tests for the Yoto media player platform."""
 
 from typing import Any
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -22,7 +22,7 @@ from homeassistant.components.media_player import (
     SERVICE_VOLUME_SET,
     MediaPlayerState,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -68,7 +68,8 @@ async def test_entity_state(
 ) -> None:
     """Snapshot the media player entity state."""
     freezer.move_to("2026-05-08T12:00:00+00:00")
-    await setup_integration(hass, mock_config_entry)
+    with patch("homeassistant.components.yoto.PLATFORMS", [Platform.MEDIA_PLAYER]):
+        await setup_integration(hass, mock_config_entry)
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
@@ -145,7 +146,7 @@ async def test_state_unavailable_when_offline(
 ) -> None:
     """When the player reports offline the entity is unavailable."""
     player = next(iter(mock_yoto_client.players.values()))
-    player.status.is_online = False
+    player.is_online = False
 
     await setup_integration(hass, mock_config_entry)
 
@@ -240,6 +241,7 @@ async def test_play_media(
         pytest.param("yoto://card/", id="missing_card_id"),
         pytest.param("yoto://card/card-test/01/01-INT/extra", id="too_many_segments"),
         pytest.param("yoto://card/card-test//01-INT", id="empty_segment"),
+        pytest.param("yoto://group/group-test", id="group_uri_not_playable"),
     ],
 )
 async def test_play_media_invalid_uri_raises(
@@ -323,12 +325,12 @@ async def test_play_media_card_detail_failure_raises(
 
 
 @pytest.mark.usefixtures("mock_yoto_client")
-async def test_browse_media_root_lists_cards(
+async def test_browse_media_root_lists_cards_and_groups(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
-    """Browsing without a content id lists every library card."""
+    """Browsing the root lists every library card followed by every group."""
     await setup_integration(hass, mock_config_entry)
     client = await hass_ws_client()
 
@@ -339,11 +341,122 @@ async def test_browse_media_root_lists_cards(
 
     assert response["success"]
     children = response["result"]["children"]
-    assert len(children) == 1
-    assert children[0]["title"] == "Outer Space"
+    assert [c["title"] for c in children] == ["Outer Space", "Bedtime"]
     assert children[0]["media_content_id"] == "yoto://card/card-test"
     assert children[0]["can_play"] is True
-    assert children[0]["can_expand"] is True
+    assert children[1]["media_content_id"] == "yoto://group/group-test"
+    assert children[1]["can_play"] is False
+    assert children[1]["can_expand"] is True
+
+
+@pytest.mark.usefixtures("mock_yoto_client")
+async def test_browse_group_lists_cards(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Browsing a group lists its member cards."""
+    await setup_integration(hass, mock_config_entry)
+    client = await hass_ws_client()
+
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "media_player/browse_media",
+            "entity_id": ENTITY_ID,
+            "media_content_type": "music",
+            "media_content_id": "yoto://group/group-test",
+        }
+    )
+    response = await client.receive_json()
+
+    assert response["success"]
+    result = response["result"]
+    assert result["children_media_class"] == "album"
+    children = result["children"]
+    assert [c["title"] for c in children] == ["Outer Space"]
+    assert children[0]["media_content_id"] == "yoto://card/card-test"
+
+
+async def test_browse_group_skips_cards_missing_from_library(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_yoto_client: MagicMock,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """A group may reference cards absent from the library; those are skipped."""
+    mock_yoto_client.groups["group-test"].card_ids = ["card-test", "missing-card"]
+    await setup_integration(hass, mock_config_entry)
+    client = await hass_ws_client()
+
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "media_player/browse_media",
+            "entity_id": ENTITY_ID,
+            "media_content_type": "music",
+            "media_content_id": "yoto://group/group-test",
+        }
+    )
+    response = await client.receive_json()
+
+    assert response["success"]
+    children = response["result"]["children"]
+    assert [c["title"] for c in children] == ["Outer Space"]
+
+
+@pytest.mark.usefixtures("mock_yoto_client")
+async def test_browse_unknown_group_raises(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Browsing a group that's not in the library returns a browse error."""
+    await setup_integration(hass, mock_config_entry)
+    client = await hass_ws_client()
+
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "media_player/browse_media",
+            "entity_id": ENTITY_ID,
+            "media_content_type": "music",
+            "media_content_id": "yoto://group/does-not-exist",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"] is False
+
+
+@pytest.mark.usefixtures("mock_yoto_client")
+@pytest.mark.parametrize(
+    "media_content_id",
+    [
+        pytest.param("yoto://group/", id="missing_group_id"),
+        pytest.param("yoto://group/group-test/extra", id="too_many_segments"),
+    ],
+)
+async def test_browse_invalid_group_uri_raises(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    hass_ws_client: WebSocketGenerator,
+    media_content_id: str,
+) -> None:
+    """A malformed yoto://group/ URI returns a browse error."""
+    await setup_integration(hass, mock_config_entry)
+    client = await hass_ws_client()
+
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "media_player/browse_media",
+            "entity_id": ENTITY_ID,
+            "media_content_type": "music",
+            "media_content_id": media_content_id,
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"] is False
 
 
 async def test_browse_card_with_multiple_chapters_and_multiple_tracks(

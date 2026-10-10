@@ -39,8 +39,8 @@
 # name: test_button_snapshot[mock_window][button.klf_200_gateway_restart-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'restart',
-      'friendly_name': 'KLF 200 Gateway Restart',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'restart',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'KLF 200 Gateway Restart',
     }),
     'context': <ANY>,
     'entity_id': 'button.klf_200_gateway_restart',
@@ -90,8 +90,8 @@
 # name: test_button_snapshot[mock_window][button.test_window_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'Test Window Identify',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Window Identify',
     }),
     'context': <ANY>,
     'entity_id': 'button.test_window_identify',

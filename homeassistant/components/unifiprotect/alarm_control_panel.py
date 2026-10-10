@@ -1,5 +1,7 @@
 """Support for UniFi Protect NVR alarm control panel."""
 
+from typing import cast, override
+
 from uiprotect.data import NVR, NvrArmModeStatus
 from uiprotect.exceptions import GlobalAlarmManagerError
 
@@ -50,7 +52,13 @@ async def async_setup_entry(
     if api.public_bootstrap.arm_mode is None:
         return
 
-    nvr = api.bootstrap.nvr
+    # In public-API-only mode there is no private bootstrap; the NVR device is
+    # the public one, whose mac the library backfills during priming. Setup
+    # guarantees it is present (it aborts with ConfigEntryNotReady otherwise).
+    if api.is_public_only:
+        nvr = cast(NVR, api.public_bootstrap.nvr)
+    else:
+        nvr = api.bootstrap.nvr
     async_add_entities([ProtectNVRAlarmControlPanel(data, device=nvr)])
 
 
@@ -74,14 +82,15 @@ class ProtectNVRAlarmControlPanel(ProtectNVREntity, AlarmControlPanelEntity):
         arm_mode = api.public_bootstrap.arm_mode if api.has_public_bootstrap else None
         if arm_mode is None:
             # No alarm data available — force unavailable regardless of the
-            # private WebSocket state managed by the base class.
+            # websocket state managed by the base class.
             self._attr_available = False
             self._attr_alarm_state = None
             return
-        # Do NOT set _attr_available = True here.  Availability when alarm data
-        # is present is determined exclusively by the base class via
-        # last_update_success (private WebSocket health). Only force it to
-        # False as an additional condition when alarm data is missing.
+        # arm_mode is delivered over the public devices websocket, so
+        # availability tracks the public WS health, not the private connection
+        # the base class would otherwise apply for the NVR. The NVR carries no
+        # device state, so there is nothing else to gate on.
+        self._attr_available = self.data.last_public_update_success
         # Fall back to DISARMED for unknown future status values rather than
         # rendering the entity as ``unknown``.
         self._attr_alarm_state = _UIPROTECT_TO_HA.get(
@@ -89,11 +98,13 @@ class ProtectNVRAlarmControlPanel(ProtectNVREntity, AlarmControlPanelEntity):
         )
 
     @callback
+    @override
     def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
         super()._async_update_device_from_protect(device)
         self._refresh_alarm_state()
 
     @async_ufp_instance_command
+    @override
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         try:
@@ -105,6 +116,7 @@ class ProtectNVRAlarmControlPanel(ProtectNVREntity, AlarmControlPanelEntity):
             ) from err
 
     @async_ufp_instance_command
+    @override
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command (arms with the currently selected profile)."""
         try:

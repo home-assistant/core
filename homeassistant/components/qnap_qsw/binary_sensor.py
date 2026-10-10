@@ -1,7 +1,7 @@
 """Support for the QNAP QSW binary sensors."""
 
 from dataclasses import dataclass, replace
-from typing import Final
+from typing import Final, override
 
 from aioqsw.const import (
     QSD_ANOMALY,
@@ -152,6 +152,7 @@ class QswBinarySensor(QswSensorEntity, BinarySensorEntity):
         self._async_update_attrs()
 
     @callback
+    @override
     def _async_update_attrs(self) -> None:
         """Update binary sensor attributes."""
         self._attr_is_on = self.get_device_value(

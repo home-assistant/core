@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 import logging
-from typing import cast
+from typing import cast, override
 
 from mill import Heater, Mill
 from mill_local import Mill as MillLocal
@@ -35,12 +35,12 @@ TWO_YEARS_DAYS = 2 * 365
 class MillDataUpdateCoordinator(DataUpdateCoordinator):
     """Class to manage fetching Mill data."""
 
-    config_entry: ConfigEntry
+    config_entry: MillConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: MillConfigEntry,
         mill_data_connection: Mill | MillLocal,
         update_interval: timedelta,
     ) -> None:
@@ -66,7 +66,7 @@ class MillHistoricDataUpdateCoordinator(DataUpdateCoordinator):
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: MillConfigEntry,
         *,
         mill_data_connection: Mill,
     ) -> None:
@@ -80,6 +80,7 @@ class MillHistoricDataUpdateCoordinator(DataUpdateCoordinator):
             config_entry=config_entry,
         )
 
+    @override
     async def _async_update_data(self):
         """Update historic data via API."""
         now = dt_util.utcnow()

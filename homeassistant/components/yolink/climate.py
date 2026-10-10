@@ -1,6 +1,6 @@
 """YoLink Thermostat."""
 
-from typing import Any
+from typing import Any, override
 
 from yolink.const import ATTR_DEVICE_THERMOSTAT
 from yolink.thermostat_request_builder import ThermostatRequestBuilder, ThermostatState
@@ -67,8 +67,9 @@ class YoLinkClimateEntity(YoLinkEntity, ClimateEntity):
     ) -> None:
         """Init YoLink Thermostat."""
         super().__init__(config_entry, coordinator)
-        self._attr_unique_id = f"{coordinator.device.device_id}_climate"
-        self._attr_temperature_unit = UnitOfTemperature.CELSIUS
+        # Legacy format, kept as migrating existing unique IDs is not worth the risk
+        self._attr_unique_id = f"{coordinator.device.device_id}_climate"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
+        self._attr_native_temperature_unit = UnitOfTemperature.CELSIUS
         self._attr_fan_modes = [FAN_ON, FAN_AUTO]
         self._attr_min_temp = -10
         self._attr_max_temp = 50
@@ -89,14 +90,15 @@ class YoLinkClimateEntity(YoLinkEntity, ClimateEntity):
         )
 
     @callback
+    @override
     def update_entity_state(self, state: dict[str, Any]) -> None:
         """Update HA Entity State."""
         normal_state = state.get("state")
         if normal_state is not None:
-            self._attr_current_temperature = normal_state.get("temperature")
+            self._attr_native_current_temperature = normal_state.get("temperature")
             self._attr_current_humidity = normal_state.get("humidity")
-            self._attr_target_temperature_low = normal_state.get("lowTemp")
-            self._attr_target_temperature_high = normal_state.get("highTemp")
+            self._attr_native_target_temperature_low = normal_state.get("lowTemp")
+            self._attr_native_target_temperature_high = normal_state.get("highTemp")
             self._attr_fan_mode = normal_state.get("fan")
             self._attr_hvac_mode = YOLINK_MODEL_2_HA.get(normal_state.get("mode"))
             self._attr_hvac_action = YOLINK_ACTION_2_HA.get(normal_state.get("running"))
@@ -107,6 +109,7 @@ class YoLinkClimateEntity(YoLinkEntity, ClimateEntity):
             )
         self.async_write_ha_state()
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         if (hvac_mode_id := HA_MODEL_2_YOLINK.get(hvac_mode)) is None:
@@ -118,6 +121,7 @@ class YoLinkClimateEntity(YoLinkEntity, ClimateEntity):
         )
         await self.coordinator.async_refresh()
 
+    @override
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set fan mode."""
         await self.call_device(
@@ -126,6 +130,7 @@ class YoLinkClimateEntity(YoLinkEntity, ClimateEntity):
         self._attr_fan_mode = fan_mode
         self.async_write_ha_state()
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set temperature."""
         target_temp_low = kwargs.get(ATTR_TARGET_TEMP_LOW)
@@ -136,16 +141,17 @@ class YoLinkClimateEntity(YoLinkEntity, ClimateEntity):
                     ThermostatState(lowTemp=target_temp_low)
                 )
             )
-            self._attr_target_temperature_low = target_temp_low
+            self._attr_native_target_temperature_low = target_temp_low
         if target_temp_high is not None:
             await self.call_device(
                 ThermostatRequestBuilder.set_state_request(
                     ThermostatState(highTemp=target_temp_high)
                 )
             )
-            self._attr_target_temperature_high = target_temp_high
+            self._attr_native_target_temperature_high = target_temp_high
         await self.coordinator.async_refresh()
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set preset mode."""
         eco_params = "on" if preset_mode == PRESET_ECO else "off"

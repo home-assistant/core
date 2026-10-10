@@ -4,7 +4,7 @@ import datetime
 from enum import Enum
 from functools import partial
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from miio import Device as MiioDevice, DeviceException
 
@@ -44,6 +44,7 @@ class XiaomiMiioEntity(Entity):
         self._attr_available = False
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return the device info."""
         if TYPE_CHECKING:
@@ -85,6 +86,7 @@ class XiaomiCoordinatedMiioEntity[_T: DataUpdateCoordinator[Any]](
         self._attr_unique_id = unique_id
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return the device info."""
         if TYPE_CHECKING:
@@ -139,11 +141,11 @@ class XiaomiCoordinatedMiioEntity[_T: DataUpdateCoordinator[Any]](
 
     @staticmethod
     def _parse_datetime_time(initial_time: datetime.time) -> str:
-        time = datetime.datetime.now().replace(
+        time = datetime.datetime.now().replace(  # pylint: disable=home-assistant-enforce-naive-now
             hour=initial_time.hour, minute=initial_time.minute, second=0, microsecond=0
         )
 
-        if time < datetime.datetime.now():
+        if time < datetime.datetime.now():  # pylint: disable=home-assistant-enforce-naive-now
             time += datetime.timedelta(days=1)
 
         return time.isoformat()
@@ -167,16 +169,21 @@ class XiaomiGatewayDevice(CoordinatorEntity[GatewayDeviceCoordinator], Entity):
         )
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return the device info of the gateway."""
         if TYPE_CHECKING:
             assert self._entry.unique_id is not None
         return DeviceInfo(
             identifiers={(DOMAIN, self._sub_device.sid)},
-            via_device=(DOMAIN, self._entry.unique_id),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                self.hass,
+                (DOMAIN, self._entry.unique_id),
+                config_entry_id=self._entry.entry_id,
+            ),
             manufacturer="Xiaomi",
             name=self._sub_device.name,
             model=self._sub_device.model,
-            sw_version=self._sub_device.firmware_version,
+            sw_version=str(self._sub_device.firmware_version),
             hw_version=self._sub_device.zigbee_model,
         )

@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, cast
+from typing import Any, cast, override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -369,7 +369,6 @@ SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
         value_fn=lambda data: cast(float, data[ATTR_SPEED][API_METRIC][ATTR_VALUE]),
-        translation_key="wind_speed",
     ),
     AccuWeatherSensorDescription(
         key="WindGust",
@@ -436,16 +435,19 @@ class AccuWeatherSensor(
         self._attr_device_info = coordinator.device_info
 
     @property
+    @override
     def native_value(self) -> str | int | float | None:
         """Return the state."""
         return self.entity_description.value_fn(self._sensor_data)
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return self.entity_description.attr_fn(self.coordinator.data)
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle data update."""
         self._sensor_data = self._get_sensor_data(
@@ -495,16 +497,19 @@ class AccuWeatherForecastSensor(
         self.forecast_day = forecast_day
 
     @property
+    @override
     def native_value(self) -> str | int | float | None:
         """Return the state."""
         return self.entity_description.value_fn(self._sensor_data)
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return self.entity_description.attr_fn(self._sensor_data)
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle data update."""
         self._sensor_data = self._get_sensor_data(

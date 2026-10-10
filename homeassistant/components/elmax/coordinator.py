@@ -3,6 +3,7 @@
 from asyncio import timeout
 from datetime import timedelta
 import logging
+from typing import override
 
 from elmax_api.exceptions import (
     ElmaxApiError,
@@ -18,7 +19,7 @@ from elmax_api.model.cover import Cover
 from elmax_api.model.endpoint import DeviceEndpoint
 from elmax_api.model.panel import PanelEntry, PanelStatus
 from elmax_api.push.push import PushNotificationHandler
-from httpx import ConnectError, ConnectTimeout
+from httpx2 import ConnectError, ConnectTimeout
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -96,6 +97,7 @@ class ElmaxCoordinator(DataUpdateCoordinator[PanelStatus]):
         """Set the client library instance for Elmax API."""
         self._client = client
 
+    @override
     async def _async_update_data(self):
         try:
             async with timeout(DEFAULT_TIMEOUT):
@@ -163,6 +165,7 @@ class ElmaxCoordinator(DataUpdateCoordinator[PanelStatus]):
     async def _push_handler(self, status: PanelStatus) -> None:
         self._fire_data_update(status)
 
+    @override
     async def async_shutdown(self) -> None:
         """Cancel any scheduled call, and ignore new runs."""
         if self._push_notification_handler is not None:

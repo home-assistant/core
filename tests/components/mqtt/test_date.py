@@ -6,7 +6,8 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components import date, mqtt
+from homeassistant.components import date
+from homeassistant.components.mqtt.const import DOMAIN
 from homeassistant.const import ATTR_ASSUMED_STATE, ATTR_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 
@@ -44,7 +45,7 @@ from tests.common import async_fire_mqtt_message
 from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
 
 DEFAULT_CONFIG = {
-    mqtt.DOMAIN: {date.DOMAIN: {"name": "test", "command_topic": "test-topic"}}
+    DOMAIN: {date.DOMAIN: {"name": "test", "command_topic": "test-topic"}}
 }
 
 
@@ -64,7 +65,7 @@ async def async_set_value(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 date.DOMAIN: {
                     "name": "test",
                     "state_topic": "state-topic",
@@ -116,7 +117,7 @@ async def test_controlling_state_via_topic(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 date.DOMAIN: {
                     "name": "test",
                     "state_topic": "state-topic",
@@ -155,7 +156,7 @@ async def test_controlling_validation_state_via_topic(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 date.DOMAIN: {
                     "name": "test",
                     "command_topic": "command-topic",
@@ -219,7 +220,7 @@ async def test_default_availability_payload(
 ) -> None:
     """Test availability by default payload with defined topic."""
     config = {
-        mqtt.DOMAIN: {
+        DOMAIN: {
             date.DOMAIN: {
                 "name": "test",
                 "state_topic": "state-topic",
@@ -237,7 +238,7 @@ async def test_custom_availability_payload(
 ) -> None:
     """Test availability by custom payload with defined topic."""
     config = {
-        mqtt.DOMAIN: {
+        DOMAIN: {
             date.DOMAIN: {
                 "name": "test",
                 "state_topic": "state-topic",
@@ -313,7 +314,7 @@ async def test_discovery_update_attr(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 date.DOMAIN: [
                     {
                         "name": "Test 1",
@@ -492,7 +493,7 @@ async def test_encoding_subscribable_topics(
         hass,
         mqtt_mock_entry,
         date.DOMAIN,
-        DEFAULT_CONFIG[mqtt.DOMAIN][date.DOMAIN],
+        DEFAULT_CONFIG[DOMAIN][date.DOMAIN],
         topic,
         value,
         attribute,

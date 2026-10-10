@@ -1,10 +1,10 @@
 """Support for Modbus covers."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.cover import CoverEntity, CoverEntityFeature, CoverState
 from homeassistant.const import CONF_COVERS, CONF_NAME, STATE_UNAVAILABLE, STATE_UNKNOWN
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -84,6 +84,18 @@ class ModbusCover(ModbusBaseEntity, CoverEntity, RestoreEntity):
             self._address = self._status_register
             self._input_type = self._status_register_type
 
+    @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Opt in to in-place entity_id changes.
+
+        Can be removed when backwards compatibility is disabled for core
+        integrations, i.e. once all core integrations have been migrated
+        to in-place entity ID change.
+        """
+        super().async_entity_id_changed(old_entity_id)
+
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await self.async_base_added_to_hass()
@@ -104,6 +116,7 @@ class ModbusCover(ModbusBaseEntity, CoverEntity, RestoreEntity):
         self._attr_is_closing = value == self._state_closing
         self._attr_is_closed = value == self._state_closed
 
+    @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open cover."""
         result = await self._hub.async_pb_call(
@@ -115,6 +128,7 @@ class ModbusCover(ModbusBaseEntity, CoverEntity, RestoreEntity):
         self._attr_available = result is not None
         await self.async_local_update(cancel_pending_update=True)
 
+    @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
         result = await self._hub.async_pb_call(
@@ -126,6 +140,7 @@ class ModbusCover(ModbusBaseEntity, CoverEntity, RestoreEntity):
         self._attr_available = result is not None
         await self.async_local_update(cancel_pending_update=True)
 
+    @override
     async def _async_update(self) -> None:
         """Update the state of the cover."""
         result = await self._hub.async_pb_call(

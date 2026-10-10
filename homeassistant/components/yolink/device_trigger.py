@@ -2,7 +2,7 @@
 
 from typing import Any
 
-import voluptuous as vol
+import probatio
 from yolink.const import ATTR_DEVICE_SMART_REMOTER, ATTR_DEVICE_SWITCH
 
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
@@ -51,7 +51,7 @@ FLEX_BUTTONS_2 = {
 }
 
 TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
-    {vol.Required(CONF_TYPE): vol.In(FLEX_BUTTONS_4)}
+    {probatio.Required(CONF_TYPE): probatio.In(FLEX_BUTTONS_4)}
 )
 
 # YoLink Remotes YS3604/YS3614, Switch YS5708/YS5709
@@ -72,7 +72,7 @@ async def async_get_triggers(
 ) -> list[dict[str, Any]]:
     """List device triggers for YoLink devices."""
     device_registry = dr.async_get(hass)
-    registry_device = device_registry.async_get(device_id)
+    registry_device = device_registry.async_get(device_id, include_child_devices=False)
     if not registry_device or registry_device.model not in [
         ATTR_DEVICE_SMART_REMOTER,
         ATTR_DEVICE_SWITCH,

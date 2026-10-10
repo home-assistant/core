@@ -4,15 +4,17 @@ from typing import Any
 
 import pytest
 
+from homeassistant.components.motion.condition import CONDITIONS
 from homeassistant.const import ATTR_DEVICE_CLASS, CONF_ENTITY_ID, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 
 from tests.components.common import (
     ConditionStateDescription,
+    TargetSupport,
     assert_condition_behavior_all,
     assert_condition_behavior_any,
-    assert_condition_gated_by_labs_flag,
     assert_condition_options_supported,
+    assert_conditions_target_support,
     create_target_condition,
     parametrize_condition_states_all,
     parametrize_condition_states_any,
@@ -27,21 +29,12 @@ async def target_binary_sensors(hass: HomeAssistant) -> dict[str, list[str]]:
     return await target_entities(hass, "binary_sensor")
 
 
-@pytest.mark.parametrize(
-    "condition",
-    [
-        "motion.is_detected",
-        "motion.is_not_detected",
-    ],
-)
-async def test_motion_conditions_gated_by_labs_flag(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, condition: str
-) -> None:
-    """Test the motion conditions are gated by the labs flag."""
-    await assert_condition_gated_by_labs_flag(hass, caplog, condition)
+_CONDITION_TARGET_SUPPORT: dict[str, TargetSupport] = {
+    "is_detected": TargetSupport.STANDARD,
+    "is_not_detected": TargetSupport.STANDARD,
+}
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_key", "base_options", "supports_behavior", "supports_duration"),
     [
@@ -66,7 +59,11 @@ async def test_motion_condition_options_validation(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
+def test_condition_target_support() -> None:
+    """Certify the condition registry matches its declared target support."""
+    assert_conditions_target_support(CONDITIONS, _CONDITION_TARGET_SUPPORT)
+
+
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("binary_sensor"),
@@ -111,7 +108,6 @@ async def test_motion_binary_sensor_condition_behavior_any(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("binary_sensor"),
@@ -159,7 +155,6 @@ async def test_motion_binary_sensor_condition_behavior_all(
 # --- Device class exclusion test ---
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     (
         "condition_key",

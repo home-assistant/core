@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from typing import override
 
 from cookidoo_api import (
     Cookidoo,
@@ -10,6 +11,7 @@ from cookidoo_api import (
     CookidooAuthException,
     CookidooException,
     CookidooIngredientItem,
+    CookidooParseException,
     CookidooRequestException,
     CookidooSubscription,
     CookidooUserInfo,
@@ -59,10 +61,20 @@ class CookidooDataUpdateCoordinator(DataUpdateCoordinator[CookidooData]):
         )
         self.cookidoo = cookidoo
 
+    async def _async_login(self) -> CookidooUserInfo:
+        """Return the user info, reusing the persisted tokens while they are valid."""
+        if self.cookidoo.auth_data is not None:
+            try:
+                return await self.cookidoo.get_user_info()
+            except CookidooAuthException:
+                _LOGGER.debug("Stored tokens are no longer valid, logging in again")
+        await self.cookidoo.login()
+        return await self.cookidoo.get_user_info()
+
+    @override
     async def _async_setup(self) -> None:
         try:
-            await self.cookidoo.login()
-            self.user = await self.cookidoo.get_user_info()
+            self.user = await self._async_login()
         except CookidooRequestException as e:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
@@ -76,7 +88,14 @@ class CookidooDataUpdateCoordinator(DataUpdateCoordinator[CookidooData]):
                     CONF_EMAIL: self.config_entry.data[CONF_EMAIL]
                 },
             ) from e
+        except CookidooParseException as e:
+            # login() scrapes the CIAM login page, so it can also fail to parse it
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="setup_request_exception",
+            ) from e
 
+    @override
     async def _async_update_data(self) -> CookidooData:
         try:
             ingredient_items = await self.cookidoo.get_ingredient_items()
@@ -96,7 +115,7 @@ class CookidooDataUpdateCoordinator(DataUpdateCoordinator[CookidooData]):
                         CONF_EMAIL: self.config_entry.data[CONF_EMAIL]
                     },
                 ) from exc
-            except CookidooRequestException as exc:
+            except (CookidooRequestException, CookidooParseException) as exc:
                 raise UpdateFailed(
                     translation_domain=DOMAIN,
                     translation_key="setup_request_exception",

@@ -1,10 +1,10 @@
 """Support for ONVIF Cameras with FFmpeg as decoder."""
 
 import asyncio
+from typing import override
 
 from haffmpeg.camera import CameraMjpeg
 from onvif.exceptions import ONVIFError
-import voluptuous as vol
 from yarl import URL
 
 from homeassistant.components import ffmpeg
@@ -17,34 +17,10 @@ from homeassistant.components.stream import (
 )
 from homeassistant.const import HTTP_BASIC_AUTHENTICATION
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import (
-    ABSOLUTE_MOVE,
-    ATTR_CONTINUOUS_DURATION,
-    ATTR_DISTANCE,
-    ATTR_MOVE_MODE,
-    ATTR_PAN,
-    ATTR_PRESET,
-    ATTR_SPEED,
-    ATTR_TILT,
-    ATTR_ZOOM,
-    CONF_SNAPSHOT_AUTH,
-    CONTINUOUS_MOVE,
-    DIR_DOWN,
-    DIR_LEFT,
-    DIR_RIGHT,
-    DIR_UP,
-    GOTOPRESET_MOVE,
-    LOGGER,
-    RELATIVE_MOVE,
-    SERVICE_PTZ,
-    STOP_MOVE,
-    ZOOM_IN,
-    ZOOM_OUT,
-)
+from .const import CONF_SNAPSHOT_AUTH, LOGGER
 from .device import ONVIFConfigEntry, ONVIFDevice
 from .entity import ONVIFBaseEntity
 from .models import Profile
@@ -56,32 +32,6 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the ONVIF camera video stream."""
-    platform = entity_platform.async_get_current_platform()
-
-    # Create PTZ service
-    platform.async_register_entity_service(
-        SERVICE_PTZ,
-        {
-            vol.Optional(ATTR_PAN): vol.In([DIR_LEFT, DIR_RIGHT]),
-            vol.Optional(ATTR_TILT): vol.In([DIR_UP, DIR_DOWN]),
-            vol.Optional(ATTR_ZOOM): vol.In([ZOOM_OUT, ZOOM_IN]),
-            vol.Optional(ATTR_DISTANCE, default=0.1): cv.small_float,
-            vol.Optional(ATTR_SPEED): cv.small_float,
-            vol.Optional(ATTR_MOVE_MODE, default=RELATIVE_MOVE): vol.In(
-                [
-                    CONTINUOUS_MOVE,
-                    RELATIVE_MOVE,
-                    ABSOLUTE_MOVE,
-                    GOTOPRESET_MOVE,
-                    STOP_MOVE,
-                ]
-            ),
-            vol.Optional(ATTR_CONTINUOUS_DURATION, default=0.5): cv.small_float,
-            vol.Optional(ATTR_PRESET, default="0"): cv.string,
-        },
-        "async_perform_ptz",
-    )
-
     device = config_entry.runtime_data
     async_add_entities(
         [ONVIFCameraEntity(device, profile) for profile in device.profiles]
@@ -117,14 +67,17 @@ class ONVIFCameraEntity(ONVIFBaseEntity, Camera):
         self._attr_name = f"{device.name} {profile.name}"
 
     @property
+    @override
     def use_stream_for_stills(self) -> bool:
         """Whether or not to use stream to generate stills."""
         return bool(self.stream and self.stream.dynamic_stream_settings.preload_stream)
 
+    @override
     async def stream_source(self):
         """Return the stream source."""
         return await self._async_get_stream_uri()
 
+    @override
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
@@ -158,6 +111,7 @@ class ONVIFCameraEntity(ONVIFBaseEntity, Camera):
             height=height,
         )
 
+    @override
     async def handle_async_mjpeg_stream(self, request):
         """Generate an HTTP MJPEG stream from the camera."""
         LOGGER.debug("Handling mjpeg stream from camera '%s'", self.device.name)

@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, cast
+from typing import Any, cast, override
 
 from aiobafi6 import Device
 
@@ -122,14 +122,17 @@ class BAFSwitch(BAFDescriptionEntity, SwitchEntity):
     entity_description: BAFSwitchDescription
 
     @callback
+    @override
     def _async_update_attrs(self) -> None:
         """Update attrs from device."""
         self._attr_is_on = self.entity_description.value_fn(self._device)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
         setattr(self._device, self.entity_description.key, True)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
         setattr(self._device, self.entity_description.key, False)

@@ -5,17 +5,19 @@ from typing import Any
 import pytest
 
 from homeassistant.components.light import ATTR_BRIGHTNESS
+from homeassistant.components.light.trigger import TRIGGERS
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 
 from tests.components.common import (
+    TargetSupport,
     TriggerStateDescription,
     assert_trigger_behavior_all,
     assert_trigger_behavior_each,
     assert_trigger_behavior_first,
-    assert_trigger_gated_by_labs_flag,
     assert_trigger_ignores_limit_entities_with_wrong_unit,
     assert_trigger_options_supported,
+    assert_triggers_target_support,
     parametrize_numerical_attribute_changed_trigger_states,
     parametrize_numerical_attribute_crossed_threshold_trigger_states,
     parametrize_target_entities,
@@ -37,29 +39,20 @@ async def target_lights(hass: HomeAssistant) -> dict[str, list[str]]:
     return await target_entities(hass, "light")
 
 
-@pytest.mark.parametrize(
-    "trigger_key",
-    [
-        "light.brightness_changed",
-        "light.brightness_crossed_threshold",
-        "light.turned_off",
-        "light.turned_on",
-    ],
-)
-async def test_light_triggers_gated_by_labs_flag(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, trigger_key: str
-) -> None:
-    """Test the light triggers are gated by the labs flag."""
-    await assert_trigger_gated_by_labs_flag(hass, caplog, trigger_key)
-
-
 _CHANGED_THRESHOLD = {"threshold": {"type": "any"}}
 _BRIGHTNESS_CROSSED_THRESHOLD = {
     "threshold": {"type": "above", "value": {"number": 50}}
 }
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
+_TRIGGER_TARGET_SUPPORT: dict[str, TargetSupport] = {
+    "brightness_changed": TargetSupport.STANDARD,
+    "brightness_crossed_threshold": TargetSupport.STANDARD,
+    "turned_off": TargetSupport.STANDARD,
+    "turned_on": TargetSupport.STANDARD,
+}
+
+
 @pytest.mark.parametrize(
     ("trigger_key", "base_options", "supports_behavior", "supports_duration"),
     [
@@ -91,7 +84,11 @@ async def test_light_trigger_options_validation(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
+def test_trigger_target_support() -> None:
+    """Certify the trigger registry matches its declared target support."""
+    assert_triggers_target_support(TRIGGERS, _TRIGGER_TARGET_SUPPORT)
+
+
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("light"),
@@ -134,7 +131,6 @@ async def test_light_state_trigger_behavior_each(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("light"),
@@ -179,7 +175,6 @@ async def test_light_state_attribute_trigger_behavior_each(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("light"),
@@ -222,7 +217,6 @@ async def test_light_state_trigger_behavior_first(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("light"),
@@ -261,7 +255,6 @@ async def test_light_state_attribute_trigger_behavior_first(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("light"),
@@ -304,7 +297,6 @@ async def test_light_state_trigger_behavior_all(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("light"),
@@ -343,7 +335,6 @@ async def test_light_state_attribute_trigger_behavior_all(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger", "trigger_options", "limit_entities"),
     [

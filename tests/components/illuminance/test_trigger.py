@@ -5,6 +5,7 @@ from typing import Any
 import pytest
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
+from homeassistant.components.illuminance.trigger import TRIGGERS
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -16,12 +17,13 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 
 from tests.components.common import (
+    TargetSupport,
     TriggerStateDescription,
     assert_trigger_behavior_all,
     assert_trigger_behavior_each,
     assert_trigger_behavior_first,
-    assert_trigger_gated_by_labs_flag,
     assert_trigger_options_supported,
+    assert_triggers_target_support,
     parametrize_numerical_state_value_changed_trigger_states,
     parametrize_numerical_state_value_crossed_threshold_trigger_states,
     parametrize_target_entities,
@@ -42,27 +44,18 @@ async def target_sensors(hass: HomeAssistant) -> dict[str, list[str]]:
     return await target_entities(hass, "sensor")
 
 
-@pytest.mark.parametrize(
-    "trigger_key",
-    [
-        "illuminance.detected",
-        "illuminance.cleared",
-        "illuminance.changed",
-        "illuminance.crossed_threshold",
-    ],
-)
-async def test_illuminance_triggers_gated_by_labs_flag(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, trigger_key: str
-) -> None:
-    """Test the illuminance triggers are gated by the labs flag."""
-    await assert_trigger_gated_by_labs_flag(hass, caplog, trigger_key)
-
-
 _CHANGED_THRESHOLD = {"threshold": {"type": "any"}}
 _CROSSED_THRESHOLD = {"threshold": {"type": "above", "value": {"number": 50}}}
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
+_TRIGGER_TARGET_SUPPORT: dict[str, TargetSupport] = {
+    "detected": TargetSupport.STANDARD,
+    "cleared": TargetSupport.STANDARD,
+    "changed": TargetSupport.STANDARD,
+    "crossed_threshold": TargetSupport.STANDARD,
+}
+
+
 @pytest.mark.parametrize(
     ("trigger_key", "base_options", "supports_behavior", "supports_duration"),
     [
@@ -89,10 +82,14 @@ async def test_illuminance_trigger_options_validation(
     )
 
 
+def test_trigger_target_support() -> None:
+    """Certify the trigger registry matches its declared target support."""
+    assert_triggers_target_support(TRIGGERS, _TRIGGER_TARGET_SUPPORT)
+
+
 # --- Binary sensor detected/cleared tests ---
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("binary_sensor"),
@@ -143,7 +140,6 @@ async def test_illuminance_trigger_binary_sensor_behavior_each(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("binary_sensor"),
@@ -194,7 +190,6 @@ async def test_illuminance_trigger_binary_sensor_behavior_first(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("binary_sensor"),
@@ -248,7 +243,6 @@ async def test_illuminance_trigger_binary_sensor_behavior_all(
 # --- Sensor changed/crossed_threshold tests ---
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("sensor"),
@@ -291,7 +285,6 @@ async def test_illuminance_trigger_sensor_behavior_each(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("sensor"),
@@ -329,7 +322,6 @@ async def test_illuminance_trigger_sensor_crossed_threshold_behavior_first(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("sensor"),

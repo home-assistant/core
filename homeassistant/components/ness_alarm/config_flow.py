@@ -2,34 +2,28 @@
 
 import asyncio
 import logging
-from types import MappingProxyType
-from typing import Any
+from typing import Any, override
 
 from nessclient import Client
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    ConfigSubentryData,
     ConfigSubentryFlow,
     OptionsFlow,
     SubentryFlowResult,
 )
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TYPE
 from homeassistant.core import callback
-from homeassistant.helpers import config_validation as cv, selector
+from homeassistant.helpers import selector
 
 from .const import (
     CONF_INFER_ARMING_STATE,
     CONF_SHOW_HOME_MODE,
-    CONF_ZONE_ID,
-    CONF_ZONE_NAME,
     CONF_ZONE_NUMBER,
-    CONF_ZONE_TYPE,
-    CONF_ZONES,
     CONNECTION_TIMEOUT,
     DEFAULT_INFER_ARMING_STATE,
     DEFAULT_PORT,
@@ -41,17 +35,21 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_HOST): str,
-        vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_INFER_ARMING_STATE, default=DEFAULT_INFER_ARMING_STATE): bool,
+        probatio.Required(CONF_HOST): str,
+        probatio.Required(CONF_PORT, default=DEFAULT_PORT): probatio.Port(),
+        probatio.Optional(
+            CONF_INFER_ARMING_STATE, default=DEFAULT_INFER_ARMING_STATE
+        ): bool,
     }
 )
 
-ZONE_SCHEMA = vol.Schema(
+ZONE_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_TYPE, default=DEFAULT_ZONE_TYPE): selector.SelectSelector(
+        probatio.Required(
+            CONF_TYPE, default=DEFAULT_ZONE_TYPE
+        ): selector.SelectSelector(
             selector.SelectSelectorConfig(
                 options=[cls.value for cls in BinarySensorDeviceClass],
                 mode=selector.SelectSelectorMode.DROPDOWN,
@@ -70,6 +68,7 @@ class NessAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @classmethod
     @callback
+    @override
     def async_get_supported_subentry_types(
         cls, config_entry: ConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
@@ -80,6 +79,7 @@ class NessAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> OptionsFlow:
@@ -99,6 +99,7 @@ class NessAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
         finally:
             await client.close()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -135,70 +136,6 @@ class NessAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
-        """Import YAML configuration."""
-        host = import_data[CONF_HOST]
-        port = import_data[CONF_PORT]
-
-        # Check if already configured
-        self._async_abort_entries_match({CONF_HOST: host})
-
-        # Test connection to the alarm panel
-        try:
-            await self._test_connection(host, port)
-        except OSError:
-            return self.async_abort(reason="cannot_connect")
-        except Exception:
-            _LOGGER.exception(
-                "Unexpected error connecting to %s:%s during import", host, port
-            )
-            return self.async_abort(reason="unknown")
-
-        # Brief delay to ensure the panel releases the test connection
-        await asyncio.sleep(POST_CONNECTION_DELAY)
-
-        # Prepare subentries for zones
-        subentries: list[ConfigSubentryData] = []
-        zones = import_data.get(CONF_ZONES, [])
-
-        for zone_config in zones:
-            zone_id = zone_config[CONF_ZONE_ID]
-            zone_name = zone_config.get(CONF_ZONE_NAME)
-            zone_type = zone_config.get(CONF_ZONE_TYPE, DEFAULT_ZONE_TYPE)
-
-            # Subentry title is always "Zone {zone_id}"
-            title = f"Zone {zone_id}"
-
-            # Build subentry data
-            subentry_data = {
-                CONF_ZONE_NUMBER: zone_id,
-                CONF_TYPE: zone_type,
-            }
-            # Include zone name in data if provided (for device naming)
-            if zone_name:
-                subentry_data[CONF_ZONE_NAME] = zone_name
-
-            subentries.append(
-                {
-                    "subentry_type": SUBENTRY_TYPE_ZONE,
-                    "title": title,
-                    "unique_id": f"{SUBENTRY_TYPE_ZONE}_{zone_id}",
-                    "data": MappingProxyType(subentry_data),
-                }
-            )
-
-        return self.async_create_entry(
-            title=f"Ness Alarm {host}:{port}",
-            data={
-                CONF_HOST: host,
-                CONF_PORT: port,
-                CONF_INFER_ARMING_STATE: import_data.get(
-                    CONF_INFER_ARMING_STATE, DEFAULT_INFER_ARMING_STATE
-                ),
-            },
-            subentries=subentries,
-        )
-
 
 class NessAlarmOptionsFlowHandler(OptionsFlow):
     """Handle options flow for Ness Alarm."""
@@ -213,9 +150,9 @@ class NessAlarmOptionsFlowHandler(OptionsFlow):
         return self.async_show_form(
             step_id="init",
             data_schema=self.add_suggested_values_to_schema(
-                vol.Schema(
+                probatio.Schema(
                     {
-                        vol.Required(CONF_SHOW_HOME_MODE, default=True): bool,
+                        probatio.Required(CONF_SHOW_HOME_MODE, default=True): bool,
                     }
                 ),
                 self.config_entry.options,
@@ -253,9 +190,9 @@ class ZoneSubentryFlowHandler(ConfigSubentryFlow):
         return self.async_show_form(
             step_id="user",
             errors=errors,
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_ZONE_NUMBER): selector.NumberSelector(
+                    probatio.Required(CONF_ZONE_NUMBER): selector.NumberSelector(
                         selector.NumberSelectorConfig(
                             min=1,
                             max=32,

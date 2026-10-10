@@ -2,11 +2,11 @@
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any, cast
+from typing import Any, cast, override
 
 from pylamarzocco import LaMarzoccoMachine
 from pylamarzocco.const import MachineMode, ModelName, WidgetType
-from pylamarzocco.exceptions import RequestNotSuccessful
+from pylamarzocco.exceptions import LaMarzoccoError
 from pylamarzocco.models import (
     MachineStatus,
     SteamBoilerLevel,
@@ -150,11 +150,12 @@ class LaMarzoccoSwitchEntity(LaMarzoccoEntity, SwitchEntity):
 
     entity_description: LaMarzoccoSwitchEntityDescription
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn device on."""
         try:
             await self.entity_description.control_fn(self.coordinator.device, True)
-        except RequestNotSuccessful as exc:
+        except (LaMarzoccoError, TimeoutError) as exc:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="switch_on_error",
@@ -162,11 +163,12 @@ class LaMarzoccoSwitchEntity(LaMarzoccoEntity, SwitchEntity):
             ) from exc
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn device off."""
         try:
             await self.entity_description.control_fn(self.coordinator.device, False)
-        except RequestNotSuccessful as exc:
+        except (LaMarzoccoError, TimeoutError) as exc:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="switch_off_error",
@@ -175,6 +177,7 @@ class LaMarzoccoSwitchEntity(LaMarzoccoEntity, SwitchEntity):
         self.async_write_ha_state()
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if device is on."""
         return self.entity_description.is_on_fn(self.coordinator.device)
@@ -184,6 +187,7 @@ class LaMarzoccoMainSwitchEntity(LaMarzoccoSwitchEntity):
     """Switch representing espresso machine main power."""
 
     @property
+    @override
     def entity_picture(self) -> str | None:
         """Return the entity picture."""
 
@@ -215,7 +219,7 @@ class LaMarzoccoAutoOnOffSwitchEntity(LaMarzoccoBaseEntity, SwitchEntity):
         self._schedule_entry.enabled = state
         try:
             await self.coordinator.device.set_wakeup_schedule(self._schedule_entry)
-        except RequestNotSuccessful as exc:
+        except (LaMarzoccoError, TimeoutError) as exc:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="auto_on_off_error",
@@ -223,15 +227,18 @@ class LaMarzoccoAutoOnOffSwitchEntity(LaMarzoccoBaseEntity, SwitchEntity):
             ) from exc
         self.async_write_ha_state()
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn switch on."""
         await self._async_enable(True)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn switch off."""
         await self._async_enable(False)
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if switch is on."""
         return self._schedule_entry.enabled

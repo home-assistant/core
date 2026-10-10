@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from fullykiosk import FullyKiosk
 
@@ -105,6 +105,7 @@ class FullyButtonEntity(FullyKioskEntity, ButtonEntity):
         self.entity_description = description
         self._attr_unique_id = f"{coordinator.data['deviceID']}-{description.key}"
 
+    @override
     async def async_press(self) -> None:
         """Set the value of the entity."""
         await self.entity_description.press_action(self.coordinator.fully)

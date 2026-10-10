@@ -1,9 +1,10 @@
 """Support for OpenERZ API for Zurich city waste disposal system."""
 
 from datetime import timedelta
+from typing import override
 
 from openerz_api.main import OpenERZConnector
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
@@ -22,9 +23,9 @@ CONF_WASTE_TYPE = "waste_type"
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_ZIP): cv.positive_int,
-        vol.Required(CONF_WASTE_TYPE, default="waste"): cv.string,
-        vol.Optional(CONF_NAME): cv.string,
+        probatio.Required(CONF_ZIP): cv.positive_int,
+        probatio.Required(CONF_WASTE_TYPE, default="waste"): cv.string,
+        probatio.Optional(CONF_NAME): cv.string,
     }
 )
 
@@ -50,11 +51,13 @@ class OpenERZSensor(SensorEntity):
         self.api_connector = api_connector
 
     @property
+    @override
     def name(self):
         """Return the name of the sensor."""
         return self._name
 
     @property
+    @override
     def native_value(self):
         """Return the state of the sensor."""
         return self._state

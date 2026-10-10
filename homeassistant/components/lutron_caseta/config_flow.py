@@ -4,11 +4,11 @@ import asyncio
 import logging
 import os
 import ssl
-from typing import Any
+from typing import Any, override
 
+import probatio
 from pylutron_caseta.pairing import PAIR_CA, PAIR_CERT, PAIR_KEY, async_pair
 from pylutron_caseta.smartbridge import Smartbridge
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_NAME
@@ -41,7 +41,7 @@ _LOGGER = logging.getLogger(__name__)
 
 ENTRY_DEFAULT_TITLE = "Caséta bridge"
 
-DATA_SCHEMA_USER = vol.Schema({vol.Required(CONF_HOST): str})
+DATA_SCHEMA_USER = probatio.Schema({probatio.Required(CONF_HOST): str})
 TLS_ASSET_TEMPLATE = "lutron_caseta-{}-{}.pem"
 
 
@@ -57,6 +57,7 @@ class LutronCasetaFlowHandler(ConfigFlow, domain=DOMAIN):
         self.tls_assets_validated = False
         self.attempted_tls_validation = False
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -67,6 +68,7 @@ class LutronCasetaFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(step_id="user", data_schema=DATA_SCHEMA_USER)
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -88,6 +90,7 @@ class LutronCasetaFlowHandler(ConfigFlow, domain=DOMAIN):
         }
         return await self.async_step_link()
 
+    @override
     async def async_step_homekit(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:

@@ -1,5 +1,8 @@
 """Support for Tuya cameras."""
 
+from dataclasses import dataclass
+from typing import override
+
 from tuya_device_handlers.definition.camera import (
     CameraDefinition,
     get_default_definition,
@@ -18,11 +21,17 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory
 from .coordinator import TuyaConfigEntry
-from .entity import TuyaEntity
+from .entity import TuyaEntity, TuyaEntityDescription
 
-CAMERAS: dict[DeviceCategory, CameraEntityDescription] = {
-    DeviceCategory.DGHSXJ: CameraEntityDescription(key=""),
-    DeviceCategory.SP: CameraEntityDescription(key=""),
+
+@dataclass(frozen=True)
+class TuyaCameraEntityDescription(TuyaEntityDescription, CameraEntityDescription):
+    """Describes a Tuya camera entity."""
+
+
+CAMERAS: dict[DeviceCategory, TuyaCameraEntityDescription] = {
+    DeviceCategory.DGHSXJ: TuyaCameraEntityDescription(key=""),
+    DeviceCategory.SP: TuyaCameraEntityDescription(key=""),
 }
 
 
@@ -67,7 +76,7 @@ class TuyaCameraEntity(TuyaEntity, CameraEntity):
         self,
         device: CustomerDevice,
         device_manager: Manager,
-        description: CameraEntityDescription,
+        description: TuyaCameraEntityDescription,
         definition: CameraDefinition,
     ) -> None:
         """Init Tuya Camera."""
@@ -78,6 +87,7 @@ class TuyaCameraEntity(TuyaEntity, CameraEntity):
         self._recording_status = definition.recording_status
 
     @property
+    @override
     def is_recording(self) -> bool:
         """Return true if the device is recording."""
         if (status := self._read_wrapper(self._recording_status)) is not None:
@@ -85,12 +95,14 @@ class TuyaCameraEntity(TuyaEntity, CameraEntity):
         return False
 
     @property
+    @override
     def motion_detection_enabled(self) -> bool:
         """Return the camera motion detection status."""
         if (status := self._read_wrapper(self._motion_detection_switch)) is not None:
             return status
         return False
 
+    @override
     async def stream_source(self) -> str | None:
         """Return the source of the stream."""
         return await self.hass.async_add_executor_job(
@@ -99,6 +111,7 @@ class TuyaCameraEntity(TuyaEntity, CameraEntity):
             "rtsp",
         )
 
+    @override
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
@@ -113,10 +126,12 @@ class TuyaCameraEntity(TuyaEntity, CameraEntity):
             height=height,
         )
 
+    @override
     async def async_enable_motion_detection(self) -> None:
         """Enable motion detection in the camera."""
         await self._async_send_wrapper_updates(self._motion_detection_switch, True)
 
+    @override
     async def async_disable_motion_detection(self) -> None:
         """Disable motion detection in camera."""
         await self._async_send_wrapper_updates(self._motion_detection_switch, False)

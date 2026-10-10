@@ -1,6 +1,6 @@
 """Support for FFmpeg."""
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant, ServiceCall, callback
@@ -18,7 +18,9 @@ SERVICE_START = "start"
 SERVICE_STOP = "stop"
 SERVICE_RESTART = "restart"
 
-SERVICE_FFMPEG_SCHEMA = vol.Schema({vol.Optional(ATTR_ENTITY_ID): cv.entity_ids})
+SERVICE_FFMPEG_SCHEMA = probatio.Schema(
+    {probatio.Optional(ATTR_ENTITY_ID): cv.entity_ids}
+)
 
 
 async def _async_service_handle(service: ServiceCall) -> None:

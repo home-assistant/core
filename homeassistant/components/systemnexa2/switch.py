@@ -1,7 +1,7 @@
 """Switch entity for the SystemNexa2 integration."""
 
 from dataclasses import dataclass
-from typing import Any, Final
+from typing import Any, Final, override
 
 from sn2.device import OnOffSetting
 
@@ -89,15 +89,18 @@ class SystemNexa2ConfigurationSwitch(SystemNexa2Entity, SwitchEntity):
         self.entity_description = description
         self._setting = setting
 
+    @override
     async def async_turn_on(self, **_kwargs: Any) -> None:
         """Turn on the switch."""
         await self.coordinator.async_setting_enable(self._setting)
 
+    @override
     async def async_turn_off(self, **_kwargs: Any) -> None:
         """Turn off the switch."""
         await self.coordinator.async_setting_disable(self._setting)
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if the switch is on."""
         return self.coordinator.data.on_off_settings[
@@ -120,19 +123,23 @@ class SystemNexa2SwitchPlug(SystemNexa2Entity, SwitchEntity):
             key="relay_1",
         )
 
+    @override
     async def async_turn_on(self, **_kwargs: Any) -> None:
         """Turn on the switch."""
         await self.coordinator.async_turn_on()
 
+    @override
     async def async_turn_off(self, **_kwargs: Any) -> None:
         """Turn off the switch."""
         await self.coordinator.async_turn_off()
 
+    @override
     async def async_toggle(self, **_kwargs: Any) -> None:
         """Toggle the switch."""
         await self.coordinator.async_toggle()
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if the switch is on."""
         if self.coordinator.data.state is None:

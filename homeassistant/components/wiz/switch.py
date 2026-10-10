@@ -1,6 +1,6 @@
 """WiZ integration switch platform."""
 
-from typing import Any
+from typing import Any, override
 
 from pywizlight import PilotBuilder
 from pywizlight.bulblibrary import BulbClass
@@ -33,6 +33,7 @@ class WizSocketEntity(WizToggleEntity, SwitchEntity):
         super().__init__(wiz_data, name)
         self._async_update_attrs()
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the socket to turn on."""
         await self._device.turn_on(PilotBuilder())

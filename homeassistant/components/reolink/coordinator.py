@@ -3,6 +3,7 @@
 import asyncio
 from datetime import timedelta
 import logging
+from typing import TYPE_CHECKING, override
 
 from reolink_aio.exceptions import (
     CredentialsInvalidError,
@@ -10,12 +11,15 @@ from reolink_aio.exceptions import (
     ReolinkError,
 )
 
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .host import ReolinkHost
+
+if TYPE_CHECKING:
+    from .util import ReolinkConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,12 +32,12 @@ DEVICE_UPDATE_INTERVAL_PER_CAM = timedelta(seconds=10)
 class ReolinkCoordinator(DataUpdateCoordinator[None]):
     """Coordinator for Reolink."""
 
-    config_entry: ConfigEntry
+    config_entry: ReolinkConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: ReolinkConfigEntry,
         host: ReolinkHost,
         name: str,
         *,
@@ -58,7 +62,7 @@ class ReolinkDeviceCoordinator(ReolinkCoordinator):
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: ReolinkConfigEntry,
         host: ReolinkHost,
         *,
         min_timeout: float,
@@ -79,6 +83,7 @@ class ReolinkDeviceCoordinator(ReolinkCoordinator):
         self._last_known_firmware: dict[int | None, str | None] = {}
         self.firmware_coordinator: ReolinkFirmwareCoordinator | None = None
 
+    @override
     async def _async_update_data(self) -> None:
         """Update the host state cache and renew the ONVIF-subscription."""
         async with asyncio.timeout(self._update_timeout):
@@ -141,7 +146,7 @@ class ReolinkFirmwareCoordinator(ReolinkCoordinator):
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: ReolinkConfigEntry,
         host: ReolinkHost,
         *,
         min_timeout: float,
@@ -156,6 +161,7 @@ class ReolinkFirmwareCoordinator(ReolinkCoordinator):
             update_interval=None,  # Do not auto-fetch, resume 24h
         )
 
+    @override
     async def _async_update_data(self) -> None:
         """Check for firmware updates."""
         async with asyncio.timeout(self._min_timeout):

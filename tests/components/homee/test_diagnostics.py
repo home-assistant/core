@@ -58,8 +58,8 @@ async def test_diagnostics_device(
     """Test diagnostics for a device."""
     await setup_mock_homee(hass, mock_homee, mock_config_entry)
 
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{HOMEE_ID}-1")}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{HOMEE_ID}-1"), mock_config_entry.entry_id
     )
     assert device_entry is not None
     result = await get_diagnostics_for_device(
@@ -83,8 +83,8 @@ async def test_diagnostics_homee_device(
     mock_homee.get_node_by_id.return_value = mock_homee.nodes[0]
     await setup_integration(hass, mock_config_entry)
 
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{HOMEE_ID}")}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{HOMEE_ID}"), mock_config_entry.entry_id
     )
     assert device_entry is not None
     result = await get_diagnostics_for_device(

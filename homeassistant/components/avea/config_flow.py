@@ -2,11 +2,11 @@
 
 from contextlib import suppress
 import logging
-from typing import Any
+from typing import Any, override
 
 import avea
 from bleak.exc import BleakError
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
@@ -84,6 +84,7 @@ class AveaConfigFlow(ConfigFlow, domain=DOMAIN):
         self._discovery_info: BluetoothServiceInfoBleak | None = None
         self._discovered_devices: dict[str, BluetoothServiceInfoBleak] = {}
 
+    @override
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak
     ) -> ConfigFlowResult:
@@ -130,6 +131,7 @@ class AveaConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -176,17 +178,17 @@ class AveaConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if self._discovery_info:
             disc = self._discovery_info
-            data_schema = vol.Schema(
+            data_schema = probatio.Schema(
                 {
-                    vol.Required(CONF_ADDRESS, default=disc.address): vol.In(
+                    probatio.Required(CONF_ADDRESS, default=disc.address): probatio.In(
                         {disc.address: _discovery_label(disc)}
                     )
                 }
             )
         else:
-            data_schema = vol.Schema(
+            data_schema = probatio.Schema(
                 {
-                    vol.Required(CONF_ADDRESS): vol.In(
+                    probatio.Required(CONF_ADDRESS): probatio.In(
                         {
                             service_info.address: _discovery_label(service_info)
                             for service_info in self._discovered_devices.values()

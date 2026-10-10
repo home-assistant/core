@@ -1,6 +1,6 @@
 """Sensors for LIFX lights."""
 
-from datetime import timedelta
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -16,7 +16,7 @@ from .const import ATTR_RSSI
 from .coordinator import LIFXConfigEntry, LIFXUpdateCoordinator
 from .entity import LIFXEntity
 
-SCAN_INTERVAL = timedelta(seconds=30)
+PARALLEL_UPDATES = 0
 
 RSSI_SENSOR = SensorEntityDescription(
     key=ATTR_RSSI,
@@ -48,23 +48,27 @@ class LIFXRssiSensor(LIFXEntity, SensorEntity):
     ) -> None:
         """Initialise the RSSI sensor."""
 
-        super().__init__(coordinator)
-        self.entity_description = description
-        self._attr_unique_id = f"{coordinator.serial_number}_{description.key}"
+        super().__init__(coordinator, description)
         self._attr_native_unit_of_measurement = coordinator.rssi_uom
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
         self._async_update_attrs()
-        super()._handle_coordinator_update()
 
     @callback
+    @override
     def _async_update_attrs(self) -> None:
         """Handle coordinator updates."""
         self._attr_native_value = self.coordinator.rssi
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Enable RSSI updates."""
         self.async_on_remove(self.coordinator.async_enable_rssi_updates())
         return await super().async_added_to_hass()
+
+    @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Opt in to in-place entity_id changes.
+
+        This can be removed in Home Assistant Core 2027.11.
+        """
+        super().async_entity_id_changed(old_entity_id)

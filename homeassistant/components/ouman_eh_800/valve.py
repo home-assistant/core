@@ -1,6 +1,7 @@
 """Valve platform for the Ouman EH-800 integration."""
 
 from dataclasses import dataclass
+from typing import override
 
 from ouman_eh_800_api import IntControlOumanEndpoint, L1BaseEndpoints, L2BaseEndpoints
 
@@ -15,7 +16,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import OumanDevice
 from .coordinator import OumanEh800ConfigEntry
-from .entity import OumanEh800Entity, OumanEh800EntityDescription
+from .entity import OumanEh800EndpointEntity, OumanEh800EntityDescription
 
 PARALLEL_UPDATES = 1
 
@@ -52,13 +53,13 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
     async_add_entities(
         OumanEh800ValveEntity(coordinator, endpoint, description)
-        for endpoint in coordinator.data
+        for endpoint in coordinator.data.values
         if isinstance(endpoint, IntControlOumanEndpoint)
         and (description := VALVE_DESCRIPTIONS.get(endpoint)) is not None
     )
 
 
-class OumanEh800ValveEntity(OumanEh800Entity, ValveEntity):
+class OumanEh800ValveEntity(OumanEh800EndpointEntity, ValveEntity):
     """Ouman EH-800 valve entity."""
 
     entity_description: OumanEh800ValveEntityDescription
@@ -72,12 +73,14 @@ class OumanEh800ValveEntity(OumanEh800Entity, ValveEntity):
     )
 
     @property
+    @override
     def current_valve_position(self) -> int:
         """Return the current valve position 0-100."""
-        value = self.coordinator.data[self._endpoint]
+        value = self.coordinator.data.values[self._endpoint]
         assert isinstance(value, float)
         return int(value)
 
+    @override
     async def async_set_valve_position(self, position: int) -> None:
         """Move the valve to the given position."""
         await self.coordinator.async_set_endpoint_value(self._endpoint, position)

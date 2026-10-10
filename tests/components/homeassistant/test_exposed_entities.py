@@ -3,6 +3,7 @@
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.homeassistant import DOMAIN
 from homeassistant.components.homeassistant.exposed_entities import (
     DATA_EXPOSED_ENTITIES,
     ExposedEntities,
@@ -101,7 +102,7 @@ def entities_no_unique_id(hass: HomeAssistant) -> dict[str, str]:
 
 async def test_load_preferences(hass: HomeAssistant) -> None:
     """Make sure that we can load/save data correctly."""
-    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     exposed_entities = hass.data[DATA_EXPOSED_ENTITIES]
     assert exposed_entities._assistants == {}
@@ -134,7 +135,7 @@ async def test_expose_entity(
 ) -> None:
     """Test expose entity."""
     ws_client = await hass_ws_client(hass)
-    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     entry1 = entity_registry.async_get_or_create("test", "test", "unique1")
@@ -194,7 +195,7 @@ async def test_expose_entity_unknown(
 ) -> None:
     """Test behavior when exposing an unknown entity."""
     ws_client = await hass_ws_client(hass)
-    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     exposed_entities = hass.data[DATA_EXPOSED_ENTITIES]
@@ -257,7 +258,7 @@ async def test_expose_new_entities(
 ) -> None:
     """Test expose entity."""
     ws_client = await hass_ws_client(hass)
-    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     entry1 = entity_registry.async_get_or_create("climate", "test", "unique1")
@@ -313,7 +314,7 @@ async def test_listen_updates(
     def listener():
         calls.append(None)
 
-    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     async_listen_entity_updates(hass, "cloud.alexa", listener)
@@ -343,7 +344,7 @@ async def test_get_assistant_settings(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test get assistant settings."""
-    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     entry = entity_registry.async_get_or_create("climate", "test", "unique1")
@@ -370,7 +371,7 @@ async def test_should_expose(
 ) -> None:
     """Test expose entity."""
     ws_client = await hass_ws_client(hass)
-    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     # Expose new entities to Alexa
@@ -433,7 +434,7 @@ async def test_should_expose_hidden_categorized(
 ) -> None:
     """Test expose entity."""
     ws_client = await hass_ws_client(hass)
-    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     # Expose new entities to Alexa
@@ -466,7 +467,7 @@ async def test_list_exposed_entities(
 ) -> None:
     """Test list exposed entities."""
     ws_client = await hass_ws_client(hass)
-    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     entry1 = entity_registry.async_get_or_create("test", "test", "unique1")
@@ -535,7 +536,7 @@ async def test_listeners(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
     """Make sure we call entity listeners."""
-    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     exposed_entities = hass.data[DATA_EXPOSED_ENTITIES]
 

@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from datetime import timedelta
 import logging
+from typing import override
 
 from solarlog_cli.solarlog_connector import SolarLogConnector
 from solarlog_cli.solarlog_exceptions import (
@@ -51,6 +52,7 @@ class SolarLogBasicDataCoordinator(DataUpdateCoordinator[SolarlogData]):
         self.unique_id = config_entry.entry_id
         self.solarlog = api
 
+    @override
     async def _async_setup(self) -> None:
         """Do initialization logic."""
         _LOGGER.debug("Start async_setup")
@@ -62,6 +64,7 @@ class SolarLogBasicDataCoordinator(DataUpdateCoordinator[SolarlogData]):
             device_list = await self.solarlog.update_device_list()
             self.solarlog.set_enabled_devices(dict.fromkeys(device_list, True))
 
+    @override
     async def _async_update_data(self) -> SolarlogData:
         """Update the data from the SolarLog device."""
         _LOGGER.debug("Start basic data update")
@@ -87,7 +90,6 @@ class SolarLogBasicDataCoordinator(DataUpdateCoordinator[SolarlogData]):
                 translation_key="auth_failed",
             ) from ex
         except SolarLogUpdateError as ex:
-            # pylint: disable-next=home-assistant-exception-translation-key-missing
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
@@ -142,6 +144,7 @@ class SolarLogDeviceDataCoordinator(DataUpdateCoordinator[dict[int, InverterData
         self._devices_last_update: set[tuple[int, str]] = set()
         self.solarlog = api
 
+    @override
     async def _async_update_data(self) -> dict[int, InverterData]:
         """Update the data from the SolarLog device."""
         _LOGGER.debug("Start device data update")
@@ -155,7 +158,6 @@ class SolarLogDeviceDataCoordinator(DataUpdateCoordinator[dict[int, InverterData
                 translation_key="auth_failed",
             ) from ex
         except (SolarLogConnectionError, SolarLogUpdateError) as ex:
-            # pylint: disable-next=home-assistant-exception-translation-key-missing
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
@@ -190,18 +192,14 @@ class SolarLogDeviceDataCoordinator(DataUpdateCoordinator[dict[int, InverterData
                     if did == removed_device[0]:
                         device_name = dn
                         break
-                if device := device_registry.async_get_device(
-                    identifiers={
-                        (
-                            DOMAIN,
-                            f"{self.config_entry.entry_id}_{slugify(device_name)}",
-                        )
-                    }
+                if device := device_registry.async_get_device_by_identifier(
+                    (
+                        DOMAIN,
+                        f"{self.config_entry.entry_id}_{slugify(device_name)}",
+                    ),
+                    self.config_entry.entry_id,
                 ):
-                    device_registry.async_update_device(
-                        device_id=device.id,
-                        remove_config_entry_id=self.config_entry.entry_id,
-                    )
+                    device_registry.async_remove_device(device.id)
                     _LOGGER.info("Device removed from device registry: %s", device.id)
 
         # add new devices
@@ -238,6 +236,7 @@ class SolarLogLongtimeDataCoordinator(DataUpdateCoordinator[EnergyData]):
         self.solarlog = api
         self.connection_timeout = timeout
 
+    @override
     async def _async_setup(self) -> None:
         """Do initialization logic."""
         _LOGGER.debug("Start SolarLogLongtimeDataCoordinator async_setup")
@@ -269,6 +268,7 @@ class SolarLogLongtimeDataCoordinator(DataUpdateCoordinator[EnergyData]):
                 translation_key="update_failed",
             ) from ex
 
+    @override
     async def _async_update_data(self) -> EnergyData:
         """Update the energy data from the SolarLog device."""
         _LOGGER.debug(
@@ -285,7 +285,6 @@ class SolarLogLongtimeDataCoordinator(DataUpdateCoordinator[EnergyData]):
                 translation_key="auth_failed",
             ) from ex
         except (SolarLogConnectionError, SolarLogUpdateError) as ex:
-            # pylint: disable-next=home-assistant-exception-translation-key-missing
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_failed",

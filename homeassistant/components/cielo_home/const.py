@@ -11,11 +11,15 @@ from homeassistant.const import Platform
 DOMAIN: Final = "cielo_home"
 PLATFORMS: Final[list[Platform]] = [
     Platform.CLIMATE,
+    Platform.SENSOR,
 ]
 DEFAULT_NAME: Final = "Cielo Home"
 DEFAULT_SCAN_INTERVAL: Final[int] = 2 * 60
 TIMEOUT: Final[int] = 20
 LOGGER: Final = logging.getLogger(__package__)
+
+SENSOR_TEMPERATURE: Final = "temperature"
+SENSOR_HUMIDITY: Final = "humidity"
 
 CIELO_ERRORS: Final[tuple] = (
     ClientError,

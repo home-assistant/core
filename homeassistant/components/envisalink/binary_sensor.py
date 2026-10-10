@@ -2,7 +2,7 @@
 
 import datetime
 import logging
-from typing import Any
+from typing import Any, override
 
 from pyenvisalink import EnvisalinkAlarmPanel
 
@@ -17,13 +17,13 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
-from . import (
+from . import ZONE_SCHEMA
+from .const import (
     CONF_ZONENAME,
     CONF_ZONES,
     CONF_ZONETYPE,
     DATA_EVL,
     SIGNAL_ZONE_UPDATE,
-    ZONE_SCHEMA,
 )
 from .entity import EnvisalinkEntity
 
@@ -48,8 +48,8 @@ async def async_setup_platform(
             zone_num,
             entity_config_data[CONF_ZONENAME],
             entity_config_data[CONF_ZONETYPE],
-            hass.data[DATA_EVL].alarm_state["zone"][zone_num],
-            hass.data[DATA_EVL],
+            hass.data[DATA_EVL].controller.alarm_state["zone"][zone_num],
+            hass.data[DATA_EVL].controller,
         )
         entities.append(entity)
 
@@ -74,6 +74,7 @@ class EnvisalinkBinarySensor(EnvisalinkEntity, BinarySensorEntity):
         _LOGGER.debug("Setting up zone: %s", zone_name)
         super().__init__(zone_name, info, controller)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self.async_on_remove(
@@ -83,6 +84,7 @@ class EnvisalinkBinarySensor(EnvisalinkEntity, BinarySensorEntity):
         )
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         attr: dict[str, Any] = {}
@@ -114,6 +116,7 @@ class EnvisalinkBinarySensor(EnvisalinkEntity, BinarySensorEntity):
         return attr
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if sensor is on."""
         return self._info["status"]["open"]

@@ -1,6 +1,6 @@
 """Support for Insteon thermostat."""
 
-from typing import Any
+from typing import Any, override
 
 from pyinsteon.config import CELSIUS
 from pyinsteon.constants import ThermostatMode
@@ -94,29 +94,34 @@ class InsteonClimateEntity(InsteonEntity, ClimateEntity):
     _attr_min_humidity = 1
 
     @property
-    def temperature_unit(self) -> str:
-        """Return the unit of measurement."""
+    @override
+    def native_temperature_unit(self) -> str:
+        """Return the native unit of measurement."""
         if self._insteon_device.configuration[CELSIUS].value:
             return UnitOfTemperature.CELSIUS
         return UnitOfTemperature.FAHRENHEIT
 
     @property
+    @override
     def current_humidity(self) -> int | None:
         """Return the current humidity."""
         return self._insteon_device.groups[HUMIDITY].value
 
     @property
+    @override
     def hvac_mode(self) -> HVACMode:
         """Return hvac operation ie. heat, cool mode."""
         return HVAC_MODES[self._insteon_device.groups[SYSTEM_MODE].value]
 
     @property
-    def current_temperature(self) -> float | None:
+    @override
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self._insteon_device.groups[TEMPERATURE].value
 
     @property
-    def target_temperature(self) -> float | None:
+    @override
+    def native_target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         if self._insteon_device.groups[SYSTEM_MODE].value == ThermostatMode.HEAT:
             return self._insteon_device.groups[HEAT_SET_POINT].value
@@ -125,25 +130,29 @@ class InsteonClimateEntity(InsteonEntity, ClimateEntity):
         return None
 
     @property
-    def target_temperature_high(self) -> float | None:
+    @override
+    def native_target_temperature_high(self) -> float | None:
         """Return the highbound target temperature we try to reach."""
         if self._insteon_device.groups[SYSTEM_MODE].value == ThermostatMode.AUTO:
             return self._insteon_device.groups[COOL_SET_POINT].value
         return None
 
     @property
-    def target_temperature_low(self) -> float | None:
+    @override
+    def native_target_temperature_low(self) -> float | None:
         """Return the lowbound target temperature we try to reach."""
         if self._insteon_device.groups[SYSTEM_MODE].value == ThermostatMode.AUTO:
             return self._insteon_device.groups[HEAT_SET_POINT].value
         return None
 
     @property
+    @override
     def fan_mode(self) -> str | None:
         """Return the fan setting."""
         return FAN_MODES[self._insteon_device.groups[FAN_MODE].value]
 
     @property
+    @override
     def target_humidity(self) -> int | None:
         """Return the humidity we try to reach."""
         high = self._insteon_device.groups[HUMIDITY_HIGH].value
@@ -152,6 +161,7 @@ class InsteonClimateEntity(InsteonEntity, ClimateEntity):
         return (high + low) / 2 if high and low else None
 
     @property
+    @override
     def hvac_action(self) -> HVACAction:
         """Return the current running hvac operation if supported.
 
@@ -166,6 +176,7 @@ class InsteonClimateEntity(InsteonEntity, ClimateEntity):
         return HVACAction.IDLE
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Provide attributes for display on device card."""
         attr = super().extra_state_attributes
@@ -177,6 +188,7 @@ class InsteonClimateEntity(InsteonEntity, ClimateEntity):
         attr["humidifier"] = humidifier
         return attr
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         target_temp = kwargs.get(ATTR_TEMPERATURE)
@@ -191,16 +203,19 @@ class InsteonClimateEntity(InsteonEntity, ClimateEntity):
             await self._insteon_device.async_set_heat_set_point(target_temp_low)
             await self._insteon_device.async_set_cool_set_point(target_temp_high)
 
+    @override
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
         mode = list(FAN_MODES)[list(FAN_MODES.values()).index(fan_mode)]
         await self._insteon_device.async_set_mode(mode)
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         mode = list(HVAC_MODES)[list(HVAC_MODES.values()).index(hvac_mode)]
         await self._insteon_device.async_set_mode(mode)
 
+    @override
     async def async_set_humidity(self, humidity: int) -> None:
         """Set new humidity level."""
         change = humidity - (self.target_humidity or 0)
@@ -209,6 +224,18 @@ class InsteonClimateEntity(InsteonEntity, ClimateEntity):
         await self._insteon_device.async_set_humidity_low_set_point(low)
         await self._insteon_device.async_set_humidity_high_set_point(high)
 
+    @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Opt in to in-place entity_id changes.
+
+        Can be removed when backwards compatibility is disabled for core
+        integrations, i.e. once all core integrations have been migrated
+        to in-place entity ID change.
+        """
+        super().async_entity_id_changed(old_entity_id)
+
+    @override
     async def async_added_to_hass(self) -> None:
         """Register INSTEON update events."""
         await super().async_added_to_hass()

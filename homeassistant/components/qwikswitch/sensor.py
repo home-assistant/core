@@ -1,7 +1,7 @@
 """Support for Qwikswitch Sensors."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from pyqwikswitch.qwikswitch import SENSORS
 
@@ -55,6 +55,7 @@ class QSSensor(QSEntity, SensorEntity):
         self._attr_native_unit_of_measurement = unit
 
     @callback
+    @override
     def update_packet(self, packet):
         """Receive update packet from QSUSB."""
         val = self._decode(packet, channel=self.channel)

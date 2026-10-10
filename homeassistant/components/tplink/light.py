@@ -3,12 +3,11 @@
 from collections.abc import Sequence
 from dataclasses import dataclass
 import logging
-from typing import Any
+from typing import Any, override
 
 from kasa import Device, DeviceType, KasaException, LightState, Module
 from kasa.interfaces import LightEffect
 from kasa.iot import IotDevice
-import voluptuous as vol
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -26,9 +25,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.typing import VolDictType
 
 from . import TPLinkConfigEntry, legacy_device_id
 from .const import DOMAIN
@@ -44,80 +41,6 @@ from .entity import (
 PARALLEL_UPDATES = 0
 
 _LOGGER = logging.getLogger(__name__)
-
-SERVICE_RANDOM_EFFECT = "random_effect"
-SERVICE_SEQUENCE_EFFECT = "sequence_effect"
-
-HUE = vol.Range(min=0, max=360)
-SAT = vol.Range(min=0, max=100)
-VAL = vol.Range(min=0, max=100)
-TRANSITION = vol.Range(min=0, max=6000)
-HSV_SEQUENCE = vol.ExactSequence((HUE, SAT, VAL))
-
-BASE_EFFECT_DICT: VolDictType = {
-    vol.Optional("brightness", default=100): vol.All(
-        vol.Coerce(int), vol.Range(min=0, max=100)
-    ),
-    vol.Optional("duration", default=0): vol.All(
-        vol.Coerce(int), vol.Range(min=0, max=5000)
-    ),
-    vol.Optional("transition", default=0): vol.All(vol.Coerce(int), TRANSITION),
-    vol.Optional("segments", default=[0]): vol.All(
-        cv.ensure_list_csv,
-        vol.Length(min=1, max=80),
-        [vol.All(vol.Coerce(int), vol.Range(min=0, max=80))],
-    ),
-}
-
-SEQUENCE_EFFECT_DICT: VolDictType = {
-    **BASE_EFFECT_DICT,
-    vol.Required("sequence"): vol.All(
-        cv.ensure_list,
-        vol.Length(min=1, max=16),
-        [vol.All(vol.Coerce(tuple), HSV_SEQUENCE)],
-    ),
-    vol.Optional("repeat_times", default=0): vol.All(
-        vol.Coerce(int), vol.Range(min=0, max=10)
-    ),
-    vol.Optional("spread", default=1): vol.All(
-        vol.Coerce(int), vol.Range(min=1, max=16)
-    ),
-    vol.Optional("direction", default=4): vol.All(
-        vol.Coerce(int), vol.Range(min=1, max=4)
-    ),
-}
-
-RANDOM_EFFECT_DICT: VolDictType = {
-    **BASE_EFFECT_DICT,
-    vol.Optional("fadeoff", default=0): vol.All(
-        vol.Coerce(int), vol.Range(min=0, max=3000)
-    ),
-    vol.Optional("hue_range"): vol.All(
-        cv.ensure_list_csv, [vol.Coerce(int)], vol.ExactSequence((HUE, HUE))
-    ),
-    vol.Optional("saturation_range"): vol.All(
-        cv.ensure_list_csv, [vol.Coerce(int)], vol.ExactSequence((SAT, SAT))
-    ),
-    vol.Optional("brightness_range"): vol.All(
-        cv.ensure_list_csv, [vol.Coerce(int)], vol.ExactSequence((VAL, VAL))
-    ),
-    vol.Optional("transition_range"): vol.All(
-        cv.ensure_list_csv,
-        [vol.Coerce(int)],
-        vol.ExactSequence((TRANSITION, TRANSITION)),
-    ),
-    vol.Required("init_states"): vol.All(
-        cv.ensure_list_csv, [vol.Coerce(int)], HSV_SEQUENCE
-    ),
-    vol.Optional("random_seed", default=100): vol.All(
-        vol.Coerce(int), vol.Range(min=1, max=600)
-    ),
-    vol.Optional("backgrounds"): vol.All(
-        cv.ensure_list,
-        vol.Length(min=1, max=16),
-        [vol.All(vol.Coerce(tuple), HSV_SEQUENCE)],
-    ),
-}
 
 
 @callback
@@ -333,6 +256,7 @@ class TPLinkLightEntity(CoordinatedTPLinkModuleEntity, LightEntity):
         )
 
     @async_refresh_after
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         brightness, transition = self._async_extract_brightness_transition(**kwargs)
@@ -346,6 +270,7 @@ class TPLinkLightEntity(CoordinatedTPLinkModuleEntity, LightEntity):
             await self._async_turn_on_with_brightness(brightness, transition)
 
     @async_refresh_after
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         if (transition := kwargs.get(ATTR_TRANSITION)) is not None:
@@ -369,6 +294,7 @@ class TPLinkLightEntity(CoordinatedTPLinkModuleEntity, LightEntity):
         return ColorMode.HS
 
     @callback
+    @override
     def _async_update_attrs(self) -> bool:
         """Update the entity's attributes."""
         light_module = self._light_module
@@ -404,26 +330,8 @@ class TPLinkLightEffectEntity(TPLinkLightEntity):
 
         self._effect_module = device.modules[Module.LightEffect]
 
-    async def async_added_to_hass(self) -> None:
-        """Call update attributes after the device is added to the platform."""
-        await super().async_added_to_hass()
-
-        self._register_effects_services()
-
-    def _register_effects_services(self) -> None:
-        if self._effect_module.has_custom_effects:
-            self.platform.async_register_entity_service(
-                SERVICE_RANDOM_EFFECT,
-                RANDOM_EFFECT_DICT,
-                "async_set_random_effect",
-            )
-            self.platform.async_register_entity_service(
-                SERVICE_SEQUENCE_EFFECT,
-                SEQUENCE_EFFECT_DICT,
-                "async_set_sequence_effect",
-            )
-
     @callback
+    @override
     def _async_update_attrs(self) -> bool:
         """Update the entity's attributes."""
         super()._async_update_attrs()
@@ -440,6 +348,7 @@ class TPLinkLightEffectEntity(TPLinkLightEntity):
         return True
 
     @async_refresh_after
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         brightness, transition = self._async_extract_brightness_transition(**kwargs)

@@ -1,7 +1,7 @@
 """Support for Freebox devices (Freebox v6 and Freebox mini 4K)."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -85,6 +85,7 @@ class FreeboxHomeBinarySensor(FreeboxHomeEntity, BinarySensorEntity):
             self.get_value("signal", self._endpoint_name)
         )
 
+    @override
     async def async_update_signal(self) -> None:
         """Update name & state."""
         self._attr_is_on = self._edit_state(
@@ -169,6 +170,7 @@ class FreeboxRaidDegradedSensor(BinarySensorEntity):
         self._raid = self._router.raids[self._raid["id"]]
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if degraded."""
         return self._raid["degraded"]
@@ -179,6 +181,7 @@ class FreeboxRaidDegradedSensor(BinarySensorEntity):
         self.async_update_state()
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register state update callback."""
         self.async_update_state()

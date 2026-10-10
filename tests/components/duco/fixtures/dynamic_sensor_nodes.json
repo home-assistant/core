@@ -50,5 +50,31 @@
       "iaq_rh": null,
       "temp": 20.5
     }
+  },
+  {
+    "node_id": 202,
+    "general": {
+      "node_type": "BSCO2",
+      "sub_type": 0,
+      "network_type": "VIRT",
+      "parent": 1,
+      "asso": 1,
+      "name": "New box co2 sensor",
+      "identify": 0
+    },
+    "ventilation": {
+      "state": "AUTO",
+      "time_state_remain": 0,
+      "time_state_end": 0,
+      "mode": "-",
+      "flow_lvl_tgt": null
+    },
+    "sensor": {
+      "co2": 421,
+      "iaq_co2": 100,
+      "rh": null,
+      "iaq_rh": null,
+      "temp": null
+    }
   }
 ]

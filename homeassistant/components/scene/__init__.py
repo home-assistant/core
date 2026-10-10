@@ -3,23 +3,27 @@
 import functools as ft
 import importlib
 import logging
-from typing import Any, Final, final
+from typing import Any, Final, final, override
 
-import voluptuous as vol
+import probatio
 
-from homeassistant.components.light import ATTR_TRANSITION
+from homeassistant.components.light import ATTR_TRANSITION  # noqa: F401
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PLATFORM, SERVICE_TURN_ON, STATE_UNAVAILABLE
+from homeassistant.const import (  # noqa: F401
+    CONF_PLATFORM,
+    SERVICE_TURN_ON,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 from homeassistant.util.async_ import run_callback_threadsafe
-from homeassistant.util.hass_dict import HassKey
 
-DOMAIN: Final = "scene"
-DATA_COMPONENT: HassKey[EntityComponent[BaseScene]] = HassKey(DOMAIN)
+from .const import DATA_COMPONENT, DOMAIN
+from .services import async_setup_services
+
 STATES: Final = "states"
 
 
@@ -39,7 +43,7 @@ def _platform_validator(config: dict[str, Any]) -> dict[str, Any]:
             f"homeassistant.components.{platform_name}.scene"
         )
     except ImportError:
-        raise vol.Invalid("Invalid platform specified") from None
+        raise probatio.Invalid("Invalid platform specified") from None
 
     if not hasattr(platform, "PLATFORM_SCHEMA"):
         return config
@@ -47,13 +51,15 @@ def _platform_validator(config: dict[str, Any]) -> dict[str, Any]:
     return platform.PLATFORM_SCHEMA(config)  # type: ignore[no-any-return]
 
 
-PLATFORM_SCHEMA = vol.Schema(
-    vol.All(
+PLATFORM_SCHEMA = probatio.Schema(
+    probatio.All(
         _hass_domain_validator,
-        vol.Schema({vol.Required(CONF_PLATFORM): str}, extra=vol.ALLOW_EXTRA),
+        probatio.Schema(
+            {probatio.Required(CONF_PLATFORM): str}, extra=probatio.ALLOW_EXTRA
+        ),
         _platform_validator,
     ),
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 # mypy: disallow-any-generics
@@ -73,11 +79,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         ),
         eager_start=True,
     )
-    component.async_register_entity_service(
-        SERVICE_TURN_ON,
-        {ATTR_TRANSITION: vol.All(vol.Coerce(float), vol.Clamp(min=0, max=6553))},
-        "_async_activate",
-    )
+    async_setup_services(hass)
 
     return True
 
@@ -100,6 +102,7 @@ class BaseScene(RestoreEntity):
 
     @property
     @final
+    @override
     def state(self) -> str | None:
         """Return the state of the scene."""
         if self.__last_activated is None:
@@ -116,6 +119,7 @@ class BaseScene(RestoreEntity):
         """Update the activation timestamp."""
         self.__last_activated = dt_util.utcnow().isoformat()
 
+    @override
     async def async_internal_added_to_hass(self) -> None:
         """Call when the scene is added to hass."""
         await super().async_internal_added_to_hass()
@@ -146,6 +150,7 @@ class Scene(BaseScene):
     """A scene is a group of entities and the states we want them to be."""
 
     @final
+    @override
     async def _async_activate(self, **kwargs: Any) -> None:
         """Activate scene.
 

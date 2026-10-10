@@ -1,12 +1,15 @@
 """Generic Plugwise Entity Class."""
 
+from typing import override
+
 from plugwise import GwEntityData
 
-from homeassistant.const import ATTR_NAME, ATTR_VIA_DEVICE, CONF_HOST
+from homeassistant.const import ATTR_NAME, CONF_HOST
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
     CONNECTION_ZIGBEE,
     DeviceInfo,
+    async_get_device_id_by_identifier,
 )
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -40,9 +43,14 @@ class PlugwiseEntity(CoordinatorEntity[PlugwiseDataUpdateCoordinator]):
         )
 
         # Build connections set
-        connections = set()
-        if mac := self.device.get("mac_address"):
-            connections.add((CONNECTION_NETWORK_MAC, mac))
+        connections = {
+            (CONNECTION_NETWORK_MAC, mac_address)
+            for mac_address in (
+                self.device.get("mac_address"),
+                self.device.get("wifi_mac_address"),
+            )
+            if mac_address is not None
+        }
         if zigbee_mac := self.device.get("zigbee_mac_address"):
             connections.add((CONNECTION_ZIGBEE, zigbee_mac))
 
@@ -64,11 +72,16 @@ class PlugwiseEntity(CoordinatorEntity[PlugwiseDataUpdateCoordinator]):
             self._attr_device_info.update(
                 {
                     ATTR_NAME: self.device.get(ATTR_NAME),
-                    ATTR_VIA_DEVICE: (DOMAIN, gateway_id),
+                    "via_device_id": async_get_device_id_by_identifier(
+                        coordinator.hass,
+                        (DOMAIN, gateway_id),
+                        config_entry_id=entry.entry_id,
+                    ),
                 }
             )
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return (

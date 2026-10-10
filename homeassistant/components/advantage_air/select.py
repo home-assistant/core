@@ -1,5 +1,7 @@
 """Select platform for Advantage Air integration."""
 
+from typing import override
+
 from homeassistant.components.select import SelectEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -48,10 +50,12 @@ class AdvantageAirMyZone(AdvantageAirAcEntity, SelectEntity):
                     self._attr_options.append(zone["name"])
 
     @property
+    @override
     def current_option(self) -> str:
         """Return the current MyZone."""
         return self._number_to_name[self._ac["myZone"]]
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Set the MyZone."""
         await self.async_update_ac({"myZone": self._name_to_number[option]})

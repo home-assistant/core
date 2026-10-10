@@ -1,5 +1,7 @@
 """Support for Neato buttons."""
 
+from typing import override
+
 from pybotvac import Robot
 
 from homeassistant.components.button import ButtonEntity
@@ -36,6 +38,7 @@ class NeatoDismissAlertButton(NeatoEntity, ButtonEntity):
         super().__init__(robot)
         self._attr_unique_id = f"{robot.serial}_dismiss_alert"
 
+    @override
     async def async_press(self) -> None:
         """Press the button."""
         await self.hass.async_add_executor_job(self.robot.dismiss_current_alert)

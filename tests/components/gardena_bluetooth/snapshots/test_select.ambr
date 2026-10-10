@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'position_1',
         'position_2',
         'position_3',
@@ -47,8 +47,8 @@
 # name: test_setup[aqua_contour][select.mock_title_active_position-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Title Active position',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Active position',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'position_1',
         'position_2',
         'position_3',
@@ -71,7 +71,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'active',
         'manual_mode',
         'pre_winter',
@@ -111,8 +111,8 @@
 # name: test_setup[aqua_contour][select.mock_title_operation_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Title Operation mode',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Operation mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'active',
         'manual_mode',
         'pre_winter',
@@ -134,7 +134,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'preview',
         'setup_mode',
         'rest',
@@ -178,8 +178,8 @@
 # name: test_setup[aqua_contour][select.mock_title_watering-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Title Watering',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Watering',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'preview',
         'setup_mode',
         'rest',

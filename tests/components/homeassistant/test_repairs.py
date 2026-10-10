@@ -10,11 +10,7 @@ from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
-from tests.components.repairs import (
-    async_process_repairs_platforms,
-    process_repair_fix_flow,
-    start_repair_fix_flow,
-)
+from tests.components.repairs import process_repair_fix_flow, start_repair_fix_flow
 from tests.typing import ClientSessionGenerator
 
 
@@ -37,7 +33,6 @@ async def test_integration_not_found_confirm_step(
     entry2.add_to_hass(hass)
     issue_id = "integration_not_found.test1"
 
-    await async_process_repairs_platforms(hass)
     http_client = await hass_client()
 
     issue = issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, issue_id)
@@ -87,7 +82,6 @@ async def test_integration_not_found_ignore_step(
     entry1.add_to_hass(hass)
     issue_id = "integration_not_found.test1"
 
-    await async_process_repairs_platforms(hass)
     http_client = await hass_client()
 
     issue = issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, issue_id)
@@ -135,7 +129,6 @@ async def test_orphaned_config_entry_confirm_step(
     assert await async_setup_component(hass, REPAIRS_DOMAIN, {REPAIRS_DOMAIN: {}})
     await hass.async_block_till_done()
 
-    await async_process_repairs_platforms(hass)
     http_client = await hass_client()
 
     entry = MockConfigEntry(domain="test_issued", source=config_entries.SOURCE_IGNORE)
@@ -235,7 +228,6 @@ async def test_orphaned_config_entry_ignore_step(
     assert await async_setup_component(hass, REPAIRS_DOMAIN, {REPAIRS_DOMAIN: {}})
     await hass.async_block_till_done()
 
-    await async_process_repairs_platforms(hass)
     http_client = await hass_client()
 
     entry = MockConfigEntry(domain="test_issued", source=config_entries.SOURCE_IGNORE)

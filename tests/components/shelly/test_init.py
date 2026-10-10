@@ -1,12 +1,18 @@
 """Test cases for the Shelly component."""
 
+import asyncio
 from ipaddress import IPv4Address
 from typing import Any
 from unittest.mock import AsyncMock, Mock, call, patch
 
 from aioshelly.block_device import COAP
 from aioshelly.common import ConnectionOptions
-from aioshelly.const import MODEL_BLU_GATEWAY_G3, MODEL_PLUS_2PM
+from aioshelly.const import (
+    DEFAULT_HTTPS_PORT,
+    MODEL_2PM_G3,
+    MODEL_BLU_GATEWAY_G3,
+    MODEL_PLUS_2PM,
+)
 from aioshelly.exceptions import (
     DeviceConnectionError,
     InvalidAuthError,
@@ -33,6 +39,7 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_MODEL,
     CONF_PORT,
+    CONF_VERIFY_SSL,
     STATE_ON,
     STATE_UNAVAILABLE,
 )
@@ -40,6 +47,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
+    EVENT_DEVICE_REGISTRY_UPDATED,
     DeviceRegistry,
     format_mac,
 )
@@ -48,7 +56,11 @@ from homeassistant.setup import async_setup_component
 
 from . import MOCK_MAC, init_integration, mutate_rpc_device_status, register_sub_device
 
-from tests.common import MockConfigEntry
+from tests.common import (
+    MockConfigEntry,
+    async_capture_events,
+    async_load_json_object_fixture,
+)
 
 
 async def test_custom_coap_port(
@@ -141,16 +153,22 @@ async def test_shared_device_mac(
     )
 
     await init_integration(hass, gen, sleep_period=1000)
-    assert "Detected first time setup for device" in caplog.text
     assert "will resume when device is online" in caplog.text
 
+    other_device = device_registry.async_get_device_by_connection(
+        (CONNECTION_NETWORK_MAC, MOCK_MAC), other_entry.entry_id
+    )
+    assert other_device is not None
 
-async def test_setup_entry_not_shelly(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
+
+async def test_setup_entry_not_shelly(hass: HomeAssistant) -> None:
     """Test not Shelly entry."""
-    await init_integration(hass, 1, data={})
-    assert "probably comes from a custom integration" in caplog.text
+    entry = await init_integration(hass, 1, data={})
+    assert entry.state is ConfigEntryState.SETUP_ERROR
+    assert entry.reason == (
+        "The config entry Test name probably comes from a custom integration, please"
+        " remove it if you want to use core Shelly integration"
+    )
 
 
 @pytest.mark.parametrize("gen", [1, 2, 3])
@@ -523,7 +541,10 @@ async def test_entry_missing_port(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
         assert rpc_device_mock.call_args[0][2] == ConnectionOptions(
-            ip_address="192.168.1.37", device_mac="123456789ABC", port=80
+            ip_address="192.168.1.37",
+            device_mac="123456789ABC",
+            port=80,
+            verify_ssl=False,
         )
 
 
@@ -547,7 +568,38 @@ async def test_rpc_entry_custom_port(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
         assert rpc_device_mock.call_args[0][2] == ConnectionOptions(
-            ip_address="192.168.1.37", device_mac="123456789ABC", port=8001
+            ip_address="192.168.1.37",
+            device_mac="123456789ABC",
+            port=8001,
+            verify_ssl=False,
+        )
+
+
+async def test_rpc_entry_https_verify_ssl_disabled(hass: HomeAssistant) -> None:
+    """Test Gen2 HTTPS setup passes verify_ssl=False to ConnectionOptions."""
+    data = {
+        CONF_HOST: "192.168.1.37",
+        CONF_SLEEP_PERIOD: 0,
+        CONF_MODEL: MODEL_PLUS_2PM,
+        CONF_GEN: 2,
+        CONF_PORT: DEFAULT_HTTPS_PORT,
+        CONF_VERIFY_SSL: False,
+    }
+    entry = await init_integration(hass, 2, data=data, skip_setup=True)
+    with (
+        patch("homeassistant.components.shelly.RpcDevice.initialize"),
+        patch(
+            "homeassistant.components.shelly.RpcDevice.create", return_value=Mock()
+        ) as rpc_device_mock,
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert rpc_device_mock.call_args[0][2] == ConnectionOptions(
+            ip_address="192.168.1.37",
+            device_mac="123456789ABC",
+            port=DEFAULT_HTTPS_PORT,
+            verify_ssl=False,
         )
 
 
@@ -662,16 +714,9 @@ async def test_migrate_ble_scanner_mode(
     assert entry.options.get(CONF_BLE_SCANNER_MODE) == expected_mode
 
 
-@pytest.mark.parametrize(
-    ("entry_version", "entry_minor_version"),
-    [(2, 1), (1, 4)],
-    ids=["future_major", "future_minor"],
-)
 async def test_migrate_ble_scanner_mode_future_version(
     hass: HomeAssistant,
     mock_rpc_device: Mock,
-    entry_version: int,
-    entry_minor_version: int,
 ) -> None:
     """Future versions are not downgraded."""
     entry = MockConfigEntry(
@@ -685,32 +730,63 @@ async def test_migrate_ble_scanner_mode_future_version(
         unique_id=MOCK_MAC,
         options={CONF_BLE_SCANNER_MODE: BLEScannerMode.ACTIVE},
         title="Test name",
-        version=entry_version,
-        minor_version=entry_minor_version,
+        version=2,
+        minor_version=1,
     )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert entry.state is ConfigEntryState.MIGRATION_ERROR
-    assert entry.version == entry_version
-    assert entry.minor_version == entry_minor_version
+    assert entry.version == 2
+    assert entry.minor_version == 1
     assert entry.options[CONF_BLE_SCANNER_MODE] == BLEScannerMode.ACTIVE
 
 
+async def test_migrate_ble_scanner_mode_future_minor_version(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+) -> None:
+    """Future minor versions are not downgraded."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "192.168.1.37",
+            CONF_SLEEP_PERIOD: 0,
+            CONF_MODEL: MODEL_PLUS_2PM,
+            "gen": 2,
+        },
+        unique_id=MOCK_MAC,
+        options={CONF_BLE_SCANNER_MODE: BLEScannerMode.ACTIVE},
+        title="Test name",
+        version=1,
+        minor_version=4,
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.version == 1
+    assert entry.minor_version == 4
+    assert entry.options[CONF_BLE_SCANNER_MODE] == BLEScannerMode.ACTIVE
+
+
+@pytest.mark.parametrize("model", [MODEL_BLU_GATEWAY_G3, MODEL_PLUS_2PM])
 async def test_blu_trv_stale_device_removal(
     hass: HomeAssistant,
     mock_blu_trv: Mock,
     entity_registry: EntityRegistry,
     device_registry: DeviceRegistry,
     monkeypatch: pytest.MonkeyPatch,
+    model: str,
 ) -> None:
     """Test BLU TRV removal of stale a device after un-pairing."""
     trv_200_entity_id = "climate.trv_name"
     trv_201_entity_id = "climate.trv_201"
 
-    monkeypatch.setattr(mock_blu_trv, "model", MODEL_BLU_GATEWAY_G3)
-    gw_entry = await init_integration(hass, 3, model=MODEL_BLU_GATEWAY_G3)
+    monkeypatch.setattr(mock_blu_trv, "model", model)
+    gw_entry = await init_integration(hass, 3, model=model)
 
     # verify that both trv devices are present
     assert hass.states.get(trv_200_entity_id) is not None
@@ -769,3 +845,141 @@ async def test_empty_device_removal(
 
     # verify that the empty sub-device is removed
     assert device_registry.async_get(sub_device_entry.id) is None
+
+
+async def test_sub_device_kept_on_reload(
+    hass: HomeAssistant,
+    entity_registry: EntityRegistry,
+    device_registry: DeviceRegistry,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test channel sub-devices are not removed as stale BLU TRV devices."""
+    device_fixture = await async_load_json_object_fixture(hass, "2pm_gen3.json", DOMAIN)
+    monkeypatch.setattr(mock_rpc_device, "shelly", device_fixture["shelly"])
+    monkeypatch.setattr(mock_rpc_device, "status", device_fixture["status"])
+    monkeypatch.setattr(mock_rpc_device, "config", device_fixture["config"])
+    config_entry = await init_integration(hass, gen=3, model=MODEL_2PM_G3)
+
+    sub_device_ids = set()
+    for entity_id in ("switch.test_name_output_0", "switch.test_name_output_1"):
+        entry = entity_registry.async_get(entity_id)
+        assert entry
+        device_entry = device_registry.async_get(entry.device_id)
+        assert device_entry
+        assert device_entry.via_device_id
+        sub_device_ids.add(device_entry.id)
+
+    events = async_capture_events(hass, EVENT_DEVICE_REGISTRY_UPDATED)
+
+    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert not [event for event in events if event.data["action"] == "remove"]
+    for device_id in sub_device_ids:
+        assert device_registry.async_get(device_id)
+
+
+async def test_rpc_waits_for_ble_scanner_at_startup(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+) -> None:
+    """Test setup waits for the bluetooth scanner to be registered."""
+    connect_event = asyncio.Event()
+    reached_connect = asyncio.Event()
+
+    async def _block_until_released(*args: Any, **kwargs: Any) -> Mock:
+        reached_connect.set()
+        await connect_event.wait()
+        return Mock()
+
+    entry = await init_integration(
+        hass,
+        2,
+        options={CONF_BLE_SCANNER_MODE: BLEScannerMode.ACTIVE},
+        skip_setup=True,
+    )
+
+    with patch(
+        "homeassistant.components.shelly.coordinator.async_connect_scanner",
+        _block_until_released,
+    ):
+        setup_task = hass.async_create_task(
+            hass.config_entries.async_setup(entry.entry_id)
+        )
+        async with asyncio.timeout(2):
+            await reached_connect.wait()
+
+        # Setup must still be waiting for the scanner to be registered.
+        assert not setup_task.done()
+
+        connect_event.set()
+        async with asyncio.timeout(2):
+            assert await setup_task is True
+
+    await hass.async_block_till_done()
+    assert entry.state is ConfigEntryState.LOADED
+
+
+async def test_rpc_ble_scanner_startup_wait_times_out(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+) -> None:
+    """Test setup finishes if the bluetooth scanner never registers."""
+    connect_event = asyncio.Event()
+
+    async def _never_returns(*args: Any, **kwargs: Any) -> Mock:
+        await connect_event.wait()
+        return Mock()
+
+    entry = await init_integration(
+        hass,
+        2,
+        options={CONF_BLE_SCANNER_MODE: BLEScannerMode.ACTIVE},
+        skip_setup=True,
+    )
+
+    with (
+        patch(
+            "homeassistant.components.shelly.coordinator.async_connect_scanner",
+            _never_returns,
+        ),
+        patch("homeassistant.components.shelly.STARTUP_SCANNER_WAIT", 0.05),
+    ):
+        async with asyncio.timeout(5):
+            assert await hass.config_entries.async_setup(entry.entry_id) is True
+
+    assert entry.state is ConfigEntryState.LOADED
+    connect_event.set()
+    await hass.async_block_till_done()
+
+
+async def test_rpc_disabled_ble_scanner_does_not_wait_at_startup(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+) -> None:
+    """Test setup does not wait when the BLE scanner is disabled."""
+    block_event = asyncio.Event()
+
+    async def _block_forever(self: Any) -> None:
+        await block_event.wait()
+
+    entry = await init_integration(
+        hass,
+        2,
+        options={CONF_BLE_SCANNER_MODE: BLEScannerMode.DISABLED},
+        skip_setup=True,
+    )
+
+    with patch(
+        "homeassistant.components.shelly.coordinator.ShellyRpcCoordinator"
+        "._async_connect_ble_scanner",
+        _block_forever,
+    ):
+        # Scanner setup is blocked, but a disabled proxy must not wait for it.
+        async with asyncio.timeout(2):
+            assert await hass.config_entries.async_setup(entry.entry_id) is True
+
+    assert entry.state is ConfigEntryState.LOADED
+    block_event.set()
+    await hass.async_block_till_done()

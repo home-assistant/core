@@ -1,7 +1,7 @@
 """Select platform for the jvc_projector integration."""
 
 from dataclasses import dataclass
-from typing import Final
+from typing import Final, override
 
 from jvcprojector import Command, command as cmd
 
@@ -22,40 +22,55 @@ class JvcProjectorSelectDescription(SelectEntityDescription):
 
 
 SELECTS: Final[tuple[JvcProjectorSelectDescription, ...]] = (
-    JvcProjectorSelectDescription(key="input", command=cmd.Input),
+    JvcProjectorSelectDescription(
+        key="input", translation_key="input", command=cmd.Input
+    ),
     JvcProjectorSelectDescription(
         key="installation_mode",
+        translation_key="installation_mode",
         command=cmd.InstallationMode,
         entity_registry_enabled_default=False,
     ),
     JvcProjectorSelectDescription(
         key="light_power",
+        translation_key="light_power",
         command=cmd.LightPower,
         entity_registry_enabled_default=False,
     ),
     JvcProjectorSelectDescription(
         key="dynamic_control",
+        translation_key="dynamic_control",
         command=cmd.DynamicControl,
         entity_registry_enabled_default=False,
     ),
     JvcProjectorSelectDescription(
         key="clear_motion_drive",
+        translation_key="clear_motion_drive",
         command=cmd.ClearMotionDrive,
         entity_registry_enabled_default=False,
     ),
     JvcProjectorSelectDescription(
+        key="motion_enhance",
+        translation_key="motion_enhance",
+        command=cmd.MotionEnhance,
+        entity_registry_enabled_default=False,
+    ),
+    JvcProjectorSelectDescription(
         key="anamorphic",
+        translation_key="anamorphic",
         command=cmd.Anamorphic,
         entity_registry_enabled_default=False,
     ),
     JvcProjectorSelectDescription(
         key="hdr_processing",
+        translation_key="hdr_processing",
         command=cmd.HdrProcessing,
         entity_registry_enabled_default=False,
         snake_case_states=True,
     ),
     JvcProjectorSelectDescription(
         key="picture_mode",
+        translation_key="picture_mode",
         command=cmd.PictureMode,
         entity_registry_enabled_default=False,
         snake_case_states=True,
@@ -91,7 +106,7 @@ class JvcProjectorSelectEntity(JvcProjectorEntity, SelectEntity):
         self.command: type[Command] = description.command
 
         self.entity_description = description
-        self._attr_translation_key = description.key
+        self._attr_translation_key = description.translation_key
         self._attr_unique_id = f"{self._attr_unique_id}_{description.key}"
 
         self._options_map: dict[str, str] = coordinator.get_options_map(
@@ -100,17 +115,20 @@ class JvcProjectorSelectEntity(JvcProjectorEntity, SelectEntity):
         )
 
     @property
+    @override
     def options(self) -> list[str]:
         """Return a list of selectable options."""
         return list(self._options_map.values())
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the selected entity option to represent the entity state."""
         if value := self.coordinator.data.get(self.command.name):
             return self._options_map.get(value)
         return None
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         value = next((k for k, v in self._options_map.items() if v == option), None)

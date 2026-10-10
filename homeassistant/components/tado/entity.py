@@ -1,14 +1,11 @@
 """Base class for Tado entity."""
 
-import logging
-
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DEFAULT_NAME, DOMAIN, TADO_BRIDGE_MODELS, TADO_HOME, TADO_ZONE
 from .coordinator import TadoDataUpdateCoordinator
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class TadoCoordinatorEntity(CoordinatorEntity[TadoDataUpdateCoordinator]):
@@ -28,11 +25,15 @@ class TadoDeviceEntity(TadoCoordinatorEntity):
         self._device_info = device_info
         self.device_name = device_info["serialNo"]
         self.device_id = device_info["shortSerialNo"]
-        via_device: tuple[str, str] | None = None
+        via_device_id: str | None = None
         if device_info["deviceType"] not in TADO_BRIDGE_MODELS:
             for device in coordinator.data["device"].values():
                 if device["deviceType"] in TADO_BRIDGE_MODELS:
-                    via_device = (DOMAIN, device["shortSerialNo"])
+                    via_device_id = dr.async_get_device_id_by_identifier(
+                        coordinator.hass,
+                        (DOMAIN, device["shortSerialNo"]),
+                        config_entry_id=coordinator.config_entry.entry_id,
+                    )
                     break
 
         self._attr_device_info = DeviceInfo(
@@ -43,8 +44,8 @@ class TadoDeviceEntity(TadoCoordinatorEntity):
             sw_version=device_info["currentFwVersion"],
             model=device_info["deviceType"],
         )
-        if via_device:
-            self._attr_device_info["via_device"] = via_device
+        if via_device_id:
+            self._attr_device_info["via_device_id"] = via_device_id
 
 
 class TadoHomeEntity(TadoCoordinatorEntity):

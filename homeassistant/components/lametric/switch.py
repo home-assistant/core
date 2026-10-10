@@ -2,7 +2,7 @@
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from demetriek import Device, LaMetricDevice
 
@@ -14,6 +14,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .coordinator import LaMetricConfigEntry, LaMetricDataUpdateCoordinator
 from .entity import LaMetricEntity
 from .helpers import lametric_exception_handler
+
+PARALLEL_UPDATES = 1
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -34,7 +36,7 @@ SWITCHES = [
         available_fn=lambda device: bool(
             device.bluetooth and device.bluetooth.available
         ),
-        has_fn=lambda device: bool(device.bluetooth),
+        has_fn=lambda device: bool(device.bluetooth and device.bluetooth.available),
         is_on_fn=lambda device: bool(device.bluetooth and device.bluetooth.active),
         set_fn=lambda api, active: api.bluetooth(active=active),
     ),
@@ -74,6 +76,7 @@ class LaMetricSwitchEntity(LaMetricEntity, SwitchEntity):
         self._attr_unique_id = f"{coordinator.data.serial_number}-{description.key}"
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return super().available and self.entity_description.available_fn(
@@ -81,17 +84,20 @@ class LaMetricSwitchEntity(LaMetricEntity, SwitchEntity):
         )
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return state of the switch."""
         return self.entity_description.is_on_fn(self.coordinator.data)
 
     @lametric_exception_handler
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         await self.entity_description.set_fn(self.coordinator.lametric, True)
         await self.coordinator.async_request_refresh()
 
     @lametric_exception_handler
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         await self.entity_description.set_fn(self.coordinator.lametric, False)

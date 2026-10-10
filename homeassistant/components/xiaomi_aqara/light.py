@@ -3,7 +3,7 @@
 import binascii
 import logging
 import struct
-from typing import Any
+from typing import Any, override
 
 from xiaomi_gateway import XiaomiGateway
 
@@ -60,6 +60,7 @@ class XiaomiGatewayLight(XiaomiDevice, LightEntity):
 
         super().__init__(device, name, xiaomi_hub, config_entry)
 
+    @override
     def parse_data(self, data, raw_data):
         """Parse data sent by gateway."""
         value = data.get(self._data_key)
@@ -90,15 +91,18 @@ class XiaomiGatewayLight(XiaomiDevice, LightEntity):
         return True
 
     @property
+    @override
     def brightness(self) -> int:
         """Return the brightness of this light between 0..255."""
         return int(255 * self._brightness / 100)
 
     @property
+    @override
     def hs_color(self) -> tuple[float, float]:
         """Return the hs color value."""
         return self._hs
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         if ATTR_HS_COLOR in kwargs:
@@ -116,6 +120,7 @@ class XiaomiGatewayLight(XiaomiDevice, LightEntity):
             self._attr_is_on = True
             self.schedule_update_ha_state()
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         if self._write_to_hub(self._sid, **{self._data_key: 0}):

@@ -2,9 +2,9 @@
 
 import logging
 import re
-from typing import Any
+from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -12,9 +12,10 @@ from homeassistant.components.light import (
     PLATFORM_SCHEMA as LIGHT_PLATFORM_SCHEMA,
     ColorMode,
     LightEntity,
+    LightEntityStateAttribute,
 )
 from homeassistant.const import CONF_DEVICES, CONF_NAME, CONF_TYPE
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -50,29 +51,29 @@ TYPE_HYBRID = "hybrid"
 TYPE_TOGGLE = "toggle"
 
 RFLINK_PLATFORM = {
-    vol.Optional(
+    probatio.Optional(
         CONF_DEVICE_DEFAULTS, default=DEVICE_DEFAULTS_SCHEMA({})
     ): DEVICE_DEFAULTS_SCHEMA,
-    vol.Optional(CONF_AUTOMATIC_ADD, default=True): cv.boolean,
-    vol.Optional(CONF_DEVICES, default={}): {
-        cv.string: vol.Schema(
+    probatio.Optional(CONF_AUTOMATIC_ADD, default=True): cv.boolean,
+    probatio.Optional(CONF_DEVICES, default={}): {
+        cv.string: probatio.Schema(
             {
-                vol.Optional(CONF_NAME): cv.string,
-                vol.Optional(CONF_TYPE): vol.Any(
+                probatio.Optional(CONF_NAME): cv.string,
+                probatio.Optional(CONF_TYPE): probatio.Any(
                     TYPE_DIMMABLE, TYPE_SWITCHABLE, TYPE_HYBRID, TYPE_TOGGLE
                 ),
-                vol.Optional(CONF_ALIASES, default=[]): vol.All(
-                    cv.ensure_list, [cv.string]
+                probatio.Optional(CONF_ALIASES, default=[]): probatio.All(
+                    probatio.EnsureList(), [cv.string]
                 ),
-                vol.Optional(CONF_GROUP_ALIASES, default=[]): vol.All(
-                    cv.ensure_list, [cv.string]
+                probatio.Optional(CONF_GROUP_ALIASES, default=[]): probatio.All(
+                    probatio.EnsureList(), [cv.string]
                 ),
-                vol.Optional(CONF_NOGROUP_ALIASES, default=[]): vol.All(
-                    cv.ensure_list, [cv.string]
+                probatio.Optional(CONF_NOGROUP_ALIASES, default=[]): probatio.All(
+                    probatio.EnsureList(), [cv.string]
                 ),
-                vol.Optional(CONF_FIRE_EVENT): cv.boolean,
-                vol.Optional(CONF_SIGNAL_REPETITIONS): vol.Coerce(int),
-                vol.Optional(CONF_GROUP, default=True): cv.boolean,
+                probatio.Optional(CONF_FIRE_EVENT): cv.boolean,
+                probatio.Optional(CONF_SIGNAL_REPETITIONS): probatio.Coerce(int),
+                probatio.Optional(CONF_GROUP, default=True): cv.boolean,
             }
         )
     },
@@ -80,7 +81,7 @@ RFLINK_PLATFORM = {
 
 PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA.extend(
     RFLINK_PLATFORM,
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 
@@ -207,6 +208,18 @@ class DimmableRflinkLight(SwitchableRflinkDevice, LightEntity):
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
     _brightness = 255
 
+    @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Opt in to in-place entity_id changes.
+
+        Can be removed when backwards compatibility is disabled for core
+        integrations, i.e. once all core integrations have been migrated
+        to in-place entity ID change.
+        """
+        super().async_entity_id_changed(old_entity_id)
+
+    @override
     async def async_added_to_hass(self) -> None:
         """Restore RFLink light brightness attribute."""
         await super().async_added_to_hass()
@@ -214,11 +227,15 @@ class DimmableRflinkLight(SwitchableRflinkDevice, LightEntity):
         old_state = await self.async_get_last_state()
         if (
             old_state is not None
-            and old_state.attributes.get(ATTR_BRIGHTNESS) is not None
+            and old_state.attributes.get(LightEntityStateAttribute.BRIGHTNESS)
+            is not None
         ):
             # restore also brightness in dimmables devices
-            self._brightness = int(old_state.attributes[ATTR_BRIGHTNESS])
+            self._brightness = int(
+                old_state.attributes[LightEntityStateAttribute.BRIGHTNESS]
+            )
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         if ATTR_BRIGHTNESS in kwargs:
@@ -230,6 +247,7 @@ class DimmableRflinkLight(SwitchableRflinkDevice, LightEntity):
         # Turn on light at the requested dim level
         await self._async_handle_command("dim", self._brightness)
 
+    @override
     def _handle_event(self, event):
         """Adjust state if Rflink picks up a remote command for this device."""
         self.cancel_queued_send_commands()
@@ -245,6 +263,7 @@ class DimmableRflinkLight(SwitchableRflinkDevice, LightEntity):
             self._state = True
 
     @property
+    @override
     def brightness(self) -> int:
         """Return the brightness of this light between 0..255."""
         return self._brightness
@@ -265,6 +284,7 @@ class HybridRflinkLight(DimmableRflinkLight):
     Which results in a nice house disco :)
     """
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on and set dim level."""
         await super().async_turn_on(**kwargs)
@@ -283,6 +303,7 @@ class ToggleRflinkLight(RflinkLight):
     and if the light is off and 'on' gets sent, the light will turn on.
     """
 
+    @override
     def _handle_event(self, event):
         """Adjust state if Rflink picks up a remote command for this device."""
         self.cancel_queued_send_commands()
@@ -292,10 +313,12 @@ class ToggleRflinkLight(RflinkLight):
             # if the state is true, it gets set as false
             self._state = self._state in [None, False]
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         await self._async_handle_command("toggle")
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         await self._async_handle_command("toggle")

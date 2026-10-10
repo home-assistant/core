@@ -17,6 +17,7 @@ from . import (
     STATUS_ACTIVE,
     STATUS_IDLE,
     STATUS_PAUSED,
+    TimerEntityStateAttribute,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -45,15 +46,17 @@ async def _async_reproduce_state(
     # Return if we are already at the right state.
     if cur_state.state == state.state and cur_state.attributes.get(
         ATTR_DURATION
-    ) == state.attributes.get(ATTR_DURATION):
+    ) == state.attributes.get(TimerEntityStateAttribute.DURATION):
         return
 
     service_data = {ATTR_ENTITY_ID: state.entity_id}
 
     if state.state == STATUS_ACTIVE:
         service = SERVICE_START
-        if ATTR_DURATION in state.attributes:
-            service_data[ATTR_DURATION] = state.attributes[ATTR_DURATION]
+        if TimerEntityStateAttribute.DURATION in state.attributes:
+            service_data[ATTR_DURATION] = state.attributes[
+                TimerEntityStateAttribute.DURATION
+            ]
     elif state.state == STATUS_PAUSED:
         service = SERVICE_PAUSE
     elif state.state == STATUS_IDLE:

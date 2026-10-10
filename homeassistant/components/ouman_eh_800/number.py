@@ -1,6 +1,7 @@
 """Number platform for the Ouman EH-800 integration."""
 
 from dataclasses import dataclass
+from typing import override
 
 from ouman_eh_800_api import (
     FloatControlOumanEndpoint,
@@ -31,7 +32,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import OumanDevice
 from .coordinator import OumanEh800ConfigEntry, OumanEh800Coordinator
-from .entity import OumanEh800Entity, OumanEh800EntityDescription
+from .entity import OumanEh800EndpointEntity, OumanEh800EntityDescription
 
 PARALLEL_UPDATES = 1
 
@@ -75,6 +76,9 @@ NUMBER_DESCRIPTIONS: dict[
         mode=NumberMode.BOX,
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
+    ),
+    SystemEndpoints.AUTUMN_DRYING_OUTDOOR_TEMP_LIMIT: _temperature_number(
+        device=OumanDevice.MAIN, key="autumn_drying_outdoor_temperature_limit"
     ),
     # L1 base water-out temperature limits.
     L1BaseEndpoints.WATER_OUT_MIN_TEMP: _temperature_number(
@@ -126,6 +130,11 @@ NUMBER_DESCRIPTIONS: dict[
         key="room_temperature_fine_tuning",
         device_class=NumberDeviceClass.TEMPERATURE_DELTA,
     ),
+    L1NoRoomSensor.AUTUMN_DRYING_SETPOINT: _temperature_number(
+        device=OumanDevice.L1,
+        key="autumn_drying_setpoint",
+        device_class=NumberDeviceClass.TEMPERATURE_DELTA,
+    ),
     L1RoomSensor.TEMPERATURE_DROP: _temperature_number(
         device=OumanDevice.L1,
         key="temperature_drop",
@@ -139,6 +148,11 @@ NUMBER_DESCRIPTIONS: dict[
     L1RoomSensor.ROOM_TEMPERATURE_FINE_TUNING: _temperature_number(
         device=OumanDevice.L1,
         key="room_temperature_fine_tuning",
+        device_class=NumberDeviceClass.TEMPERATURE_DELTA,
+    ),
+    L1RoomSensor.AUTUMN_DRYING_SETPOINT: _temperature_number(
+        device=OumanDevice.L1,
+        key="autumn_drying_setpoint",
         device_class=NumberDeviceClass.TEMPERATURE_DELTA,
     ),
     L1ConstantTempMode.CONSTANT_TEMP_SETPOINT: _temperature_number(
@@ -192,6 +206,11 @@ NUMBER_DESCRIPTIONS: dict[
         key="room_temperature_fine_tuning",
         device_class=NumberDeviceClass.TEMPERATURE_DELTA,
     ),
+    L2NoRoomSensor.AUTUMN_DRYING_SETPOINT: _temperature_number(
+        device=OumanDevice.L2,
+        key="autumn_drying_setpoint",
+        device_class=NumberDeviceClass.TEMPERATURE_DELTA,
+    ),
     L2RoomSensor.TEMPERATURE_DROP: _temperature_number(
         device=OumanDevice.L2,
         key="temperature_drop",
@@ -207,6 +226,11 @@ NUMBER_DESCRIPTIONS: dict[
         key="room_temperature_fine_tuning",
         device_class=NumberDeviceClass.TEMPERATURE_DELTA,
     ),
+    L2RoomSensor.AUTUMN_DRYING_SETPOINT: _temperature_number(
+        device=OumanDevice.L2,
+        key="autumn_drying_setpoint",
+        device_class=NumberDeviceClass.TEMPERATURE_DELTA,
+    ),
 }
 
 
@@ -219,13 +243,13 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
     async_add_entities(
         OumanEh800NumberEntity(coordinator, endpoint, description)
-        for endpoint in coordinator.data
+        for endpoint in coordinator.data.values
         if isinstance(endpoint, IntControlOumanEndpoint | FloatControlOumanEndpoint)
         and (description := NUMBER_DESCRIPTIONS.get(endpoint)) is not None
     )
 
 
-class OumanEh800NumberEntity(OumanEh800Entity, NumberEntity):
+class OumanEh800NumberEntity(OumanEh800EndpointEntity, NumberEntity):
     """Ouman EH-800 number entity."""
 
     entity_description: OumanEh800NumberEntityDescription
@@ -246,12 +270,14 @@ class OumanEh800NumberEntity(OumanEh800Entity, NumberEntity):
         )
 
     @property
+    @override
     def native_value(self) -> float:
         """Return the current value."""
-        value = self.coordinator.data[self._endpoint]
+        value = self.coordinator.data.values[self._endpoint]
         assert isinstance(value, float)
         return value
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set a new value on the device."""
         final_value: int | float = (

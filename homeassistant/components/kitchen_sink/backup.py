@@ -3,7 +3,7 @@
 import asyncio
 from collections.abc import AsyncIterator, Callable, Coroutine
 import logging
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.backup import (
     AddonInfo,
@@ -73,6 +73,7 @@ class KitchenSinkBackupAgent(BackupAgent):
             )
         ]
 
+    @override
     async def async_download_backup(
         self,
         backup_id: str,
@@ -85,6 +86,7 @@ class KitchenSinkBackupAgent(BackupAgent):
         reader.feed_eof()
         return reader
 
+    @override
     async def async_upload_backup(
         self,
         *,
@@ -97,6 +99,7 @@ class KitchenSinkBackupAgent(BackupAgent):
         LOGGER.info("Uploading backup %s %s", backup.backup_id, backup)
         self._uploads.append(backup)
 
+    @override
     async def async_delete_backup(
         self,
         backup_id: str,
@@ -108,10 +111,12 @@ class KitchenSinkBackupAgent(BackupAgent):
         ]
         LOGGER.info("Deleted backup %s", backup_id)
 
+    @override
     async def async_list_backups(self, **kwargs: Any) -> list[AgentBackup]:
         """List synced backups."""
         return self._uploads
 
+    @override
     async def async_get_backup(
         self,
         backup_id: str,

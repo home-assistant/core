@@ -39,8 +39,8 @@
 # name: test_binary_sensors[binary_sensor.direct_panel_https_1_1_1_1_443_api_v2_zona_01-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'Direct Panel https://1.1.1.1:443/api/v2 ZONA  01',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Direct Panel https://1.1.1.1:443/api/v2 ZONA  01',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.direct_panel_https_1_1_1_1_443_api_v2_zona_01',
@@ -90,8 +90,8 @@
 # name: test_binary_sensors[binary_sensor.direct_panel_https_1_1_1_1_443_api_v2_zona_02e-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'Direct Panel https://1.1.1.1:443/api/v2 ZONA  02e',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Direct Panel https://1.1.1.1:443/api/v2 ZONA  02e',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.direct_panel_https_1_1_1_1_443_api_v2_zona_02e',
@@ -141,8 +141,8 @@
 # name: test_binary_sensors[binary_sensor.direct_panel_https_1_1_1_1_443_api_v2_zona_03a-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'Direct Panel https://1.1.1.1:443/api/v2 ZONA  03a',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Direct Panel https://1.1.1.1:443/api/v2 ZONA  03a',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.direct_panel_https_1_1_1_1_443_api_v2_zona_03a',
@@ -192,8 +192,8 @@
 # name: test_binary_sensors[binary_sensor.direct_panel_https_1_1_1_1_443_api_v2_zona_04-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'Direct Panel https://1.1.1.1:443/api/v2 ZONA  04',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Direct Panel https://1.1.1.1:443/api/v2 ZONA  04',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.direct_panel_https_1_1_1_1_443_api_v2_zona_04',
@@ -243,8 +243,8 @@
 # name: test_binary_sensors[binary_sensor.direct_panel_https_1_1_1_1_443_api_v2_zona_05-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'Direct Panel https://1.1.1.1:443/api/v2 ZONA  05',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Direct Panel https://1.1.1.1:443/api/v2 ZONA  05',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.direct_panel_https_1_1_1_1_443_api_v2_zona_05',
@@ -294,8 +294,8 @@
 # name: test_binary_sensors[binary_sensor.direct_panel_https_1_1_1_1_443_api_v2_zona_06-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'Direct Panel https://1.1.1.1:443/api/v2 ZONA  06',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Direct Panel https://1.1.1.1:443/api/v2 ZONA  06',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.direct_panel_https_1_1_1_1_443_api_v2_zona_06',
@@ -345,8 +345,8 @@
 # name: test_binary_sensors[binary_sensor.direct_panel_https_1_1_1_1_443_api_v2_zona_07-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'Direct Panel https://1.1.1.1:443/api/v2 ZONA  07',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Direct Panel https://1.1.1.1:443/api/v2 ZONA  07',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.direct_panel_https_1_1_1_1_443_api_v2_zona_07',
@@ -396,8 +396,8 @@
 # name: test_binary_sensors[binary_sensor.direct_panel_https_1_1_1_1_443_api_v2_zona_08-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'Direct Panel https://1.1.1.1:443/api/v2 ZONA  08',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Direct Panel https://1.1.1.1:443/api/v2 ZONA  08',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.direct_panel_https_1_1_1_1_443_api_v2_zona_08',

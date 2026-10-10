@@ -1,6 +1,7 @@
 """Coordinator for OPNsense device tracker updates."""
 
 import logging
+from typing import override
 
 from aiopnsense import (
     OPNsenseBelowMinFirmware,
@@ -56,6 +57,7 @@ class OPNsenseDeviceTrackerCoordinator(DataUpdateCoordinator[DeviceDetailsByMAC]
                 out_devices[formatted_mac] = device
         return out_devices
 
+    @override
     async def _async_update_data(self) -> DeviceDetailsByMAC:
         """Fetch data from OPNsense."""
         try:

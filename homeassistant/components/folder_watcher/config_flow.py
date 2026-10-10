@@ -2,9 +2,9 @@
 
 from collections.abc import Mapping
 import os
-from typing import Any
+from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.core import callback
@@ -42,9 +42,9 @@ async def validate_setup(
     return user_input
 
 
-OPTIONS_SCHEMA = vol.Schema(
+OPTIONS_SCHEMA = probatio.Schema(
     {
-        vol.Optional(CONF_PATTERNS, default=[DEFAULT_PATTERN]): SelectSelector(
+        probatio.Optional(CONF_PATTERNS, default=[DEFAULT_PATTERN]): SelectSelector(
             SelectSelectorConfig(
                 options=[DEFAULT_PATTERN],
                 multiple=True,
@@ -54,9 +54,9 @@ OPTIONS_SCHEMA = vol.Schema(
         ),
     }
 )
-DATA_SCHEMA = vol.Schema(
+DATA_SCHEMA = probatio.Schema(
     {
-        vol.Required(CONF_FOLDER): TextSelector(),
+        probatio.Required(CONF_FOLDER): TextSelector(),
     }
 ).extend(OPTIONS_SCHEMA.schema)
 
@@ -74,11 +74,13 @@ class FolderWatcherConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     config_flow = CONFIG_FLOW
     options_flow = OPTIONS_FLOW
 
+    @override
     def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
         """Return config entry title."""
         return f"Folder Watcher {options[CONF_FOLDER]}"
 
     @callback
+    @override
     def async_create_entry(
         self, data: Mapping[str, Any], **kwargs: Any
     ) -> ConfigFlowResult:

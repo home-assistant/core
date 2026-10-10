@@ -3,6 +3,7 @@
 from dataclasses import dataclass, field
 from datetime import timedelta
 import logging
+from typing import override
 
 from pyplaato.models.device import PlaatoDevice
 from pyplaato.plaato import Plaato, PlaatoDeviceType
@@ -13,7 +14,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DOMAIN
+from .const import DOMAIN, SCAN_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,7 +44,6 @@ class PlaatoCoordinator(DataUpdateCoordinator[PlaatoDevice]):
         config_entry: PlaatoConfigEntry,
         auth_token: str,
         device_type: PlaatoDeviceType,
-        update_interval: timedelta,
     ) -> None:
         """Initialize."""
         self.api = Plaato(auth_token=auth_token)
@@ -55,9 +55,10 @@ class PlaatoCoordinator(DataUpdateCoordinator[PlaatoDevice]):
             _LOGGER,
             config_entry=config_entry,
             name=DOMAIN,
-            update_interval=update_interval,
+            update_interval=timedelta(minutes=SCAN_INTERVAL),
         )
 
+    @override
     async def _async_update_data(self) -> PlaatoDevice:
         """Update data via library."""
         return await self.api.get_data(

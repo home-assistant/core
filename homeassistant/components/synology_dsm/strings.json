@@ -81,6 +81,17 @@
         "name": "Shut down"
       }
     },
+    "select": {
+      "fan_speed_mode": {
+        "name": "Fan speed mode",
+        "state": {
+          "cool": "Cool mode",
+          "full_speed": "Full-speed mode",
+          "low_power": "Low-Power mode",
+          "quiet": "Quiet mode"
+        }
+      }
+    },
     "sensor": {
       "cpu_15min_load": {
         "name": "CPU load average (15 min)"
@@ -114,9 +125,6 @@
       },
       "disk_status": {
         "name": "Status"
-      },
-      "disk_temp": {
-        "name": "[%key:component::sensor::entity_component::temperature::name%]"
       },
       "memory_available_real": {
         "name": "Memory available (real)"
@@ -153,9 +161,6 @@
       },
       "partition_size_used": {
         "name": "Partition used space"
-      },
-      "temperature": {
-        "name": "[%key:component::sensor::entity_component::temperature::name%]"
       },
       "volume_disk_temp_avg": {
         "name": "Average disk temp"
@@ -230,6 +235,9 @@
     }
   },
   "options": {
+    "abort": {
+      "entry_not_loaded": "The integration is not loaded, so the shares to back up to cannot be listed."
+    },
     "step": {
       "init": {
         "data": {

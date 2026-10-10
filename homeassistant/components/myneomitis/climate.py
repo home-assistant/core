@@ -1,7 +1,7 @@
 """Climate entities for MyNeomitis integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from pyaxencoapi import (
     PRESET_MODE_MAP,
@@ -63,7 +63,7 @@ class MyNeoClimate(ClimateEntity):
     _attr_has_entity_name = True
     _attr_name = None
     _attr_translation_key = "myneomitis"
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_should_poll = False
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
@@ -104,8 +104,8 @@ class MyNeoClimate(ClimateEntity):
             self._attr_preset_modes = default_presets
         self._attr_min_temp = state.get("comfLimitMin", 7)
         self._attr_max_temp = state.get("comfLimitMax", 30)
-        self._attr_current_temperature = state.get("currentTemp")
-        self._attr_target_temperature = (
+        self._attr_native_current_temperature = state.get("currentTemp")
+        self._attr_native_target_temperature = (
             state.get("targetTemp")
             if self._is_sub_device
             else state.get("overrideTemp")
@@ -135,6 +135,7 @@ class MyNeoClimate(ClimateEntity):
                 else HVACMode.HEAT
             )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register listener when entity is added to hass."""
         await super().async_added_to_hass()
@@ -161,11 +162,11 @@ class MyNeoClimate(ClimateEntity):
             return
 
         if "currentTemp" in new_state:
-            self._attr_current_temperature = new_state["currentTemp"]
+            self._attr_native_current_temperature = new_state["currentTemp"]
         if "overrideTemp" in new_state:
-            self._attr_target_temperature = new_state["overrideTemp"]
+            self._attr_native_target_temperature = new_state["overrideTemp"]
         elif "targetTemp" in new_state:
-            self._attr_target_temperature = new_state["targetTemp"]
+            self._attr_native_target_temperature = new_state["targetTemp"]
         if "targetMode" in new_state:
             self._attr_preset_mode = REVERSE_PRESET_MODE_MAP.get(
                 new_state["targetMode"]
@@ -202,6 +203,7 @@ class MyNeoClimate(ClimateEntity):
                     self._attr_hvac_mode = HVACMode.HEAT
         self.async_write_ha_state()
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the target temperature for the climate entity."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
@@ -231,9 +233,10 @@ class MyNeoClimate(ClimateEntity):
                 f"Failed to set temperature to {temperature} for {self.entity_id}"
             )
 
-        self._attr_target_temperature = temperature
+        self._attr_native_target_temperature = temperature
         self.async_write_ha_state()
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode for the climate entity."""
         if preset_mode not in PRESET_MODE_MAP:
@@ -265,6 +268,7 @@ class MyNeoClimate(ClimateEntity):
         self._attr_preset_mode = preset_mode
         self.async_write_ha_state()
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the HVAC mode for the climate entity."""
         if hvac_mode == HVACMode.OFF:
