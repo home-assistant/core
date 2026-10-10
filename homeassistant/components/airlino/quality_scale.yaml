@@ -37,8 +37,8 @@ rules:
   log-when-unavailable: done
   parallel-updates: todo
   reauthentication-flow:
-    status: todo
-    comment: In case the device changes its IP address it will be automatically detected and updated using zero-conf. Not possible yet to update manually.
+    status: exempt
+    comment: No Authentication required
   test-coverage: todo
 
   # Gold

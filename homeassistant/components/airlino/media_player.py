@@ -289,30 +289,7 @@ class AirlinoMediaPlayer(
             await self._async_call(self.coordinator.api.async_disable_sender)
         else:
             await self._async_call(self.coordinator.api.async_receiver_unlink)
-            # If the last slave left, release the master back to standalone
-            # mode so that no one-device group stays behind.
-            master_uuid = self._receiver_sender_uuid(self.coordinator)
-            if master_uuid:
-                await self._async_dissolve_group_if_empty(master_uuid)
         await self.coordinator.async_request_refresh()
-
-    async def _async_dissolve_group_if_empty(self, master_uuid: str) -> None:
-        """Disable the sender if no receiver is linked to it anymore."""
-        for _, runtime in self._all_runtimes():
-            if self._sender_uuid(runtime.coordinator) != master_uuid:
-                continue
-            # Found the master: check whether any other device is still
-            # linked to it (this device just left the group).
-            still_linked = any(
-                self._receiver_sender_uuid(other_runtime.coordinator) == master_uuid
-                for _, other_runtime in self._all_runtimes()
-                if other_runtime.coordinator is not runtime.coordinator
-                and other_runtime.coordinator is not self.coordinator
-            )
-            if not still_linked:
-                await self._async_call(runtime.api.async_disable_sender)
-                await runtime.coordinator.async_request_refresh()
-            break
 
     @override
     @property

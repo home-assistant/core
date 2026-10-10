@@ -69,6 +69,37 @@ async def test_songcast_failure_preserves_previous_state(coordinator) -> None:
     api.async_get_receiver_state.assert_not_awaited()
 
 
+async def test_receiver_status_failure_preserves_previous_state(coordinator) -> None:
+    """Preserve successful sender data when the receiver query fails."""
+    update_coordinator, api = coordinator
+    previous_sender = {"enabled": True, "uuid": "sender-uuid"}
+    previous_receiver = {"sender": "sender-uuid"}
+    update_coordinator.data = {
+        "online": True,
+        "sender": previous_sender,
+        "receiver": previous_receiver,
+    }
+    api.async_get_sender_status.return_value = {"enabled": False}
+    api.async_get_receiver_state.side_effect = AirlinoApiConnectionError("timeout")
+
+    data = await update_coordinator._async_update_data()
+
+    assert data["sender"] == {"enabled": False}
+    assert data["receiver"] == previous_receiver
+
+
+async def test_device_info_is_refetched_after_offline(coordinator) -> None:
+    """Fetch device information again after a previous offline result."""
+    update_coordinator, api = coordinator
+    update_coordinator._device_info = {"devicename": "Old name"}
+    update_coordinator._refetch_device_info = True
+
+    data = await update_coordinator._async_update_data()
+
+    assert data["device"] == {"devicename": "Living room", "model": "AirLino"}
+    api.async_get_device_info.assert_awaited_once()
+
+
 async def test_initial_connection_failure_fails_update(coordinator) -> None:
     """Fail the initial update for an unverified config entry."""
     update_coordinator, api = coordinator

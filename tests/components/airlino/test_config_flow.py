@@ -363,6 +363,27 @@ def test_txt_str(properties: dict[str, Any], key: str, expected: str | None) -> 
     assert _txt_str(properties, key) == expected
 
 
+async def test_validate_input_normalizes_mac_address(hass: HomeAssistant) -> None:
+    """Normalize a MAC from the API before returning it as unique ID."""
+    api = MagicMock()
+    api.async_get_device_info = AsyncMock(
+        return_value={"model": "HBM11", "devicename": "Living Room"}
+    )
+    api.async_get_network_info = AsyncMock(
+        return_value={"eth": {"mac": "00-23-B1-A4-35-9E"}}
+    )
+    with (
+        patch("homeassistant.components.airlino.config_flow.async_get_clientsession"),
+        patch(
+            "homeassistant.components.airlino.config_flow.AirlinoApi",
+            return_value=api,
+        ),
+    ):
+        result = await validate_input(hass, {CONF_HOST: HOST})
+
+    assert result["mac"] == "00:23:b1:a4:35:9e"
+
+
 async def test_validate_input_uses_latest_version_and_ethernet_mac(
     hass: HomeAssistant,
 ) -> None:
