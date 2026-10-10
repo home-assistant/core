@@ -29,6 +29,7 @@ from homeassistant.components.climate import (
     SWING_VERTICAL,
     ClimateEntity,
     ClimateEntityFeature,
+    ClimateEntityStateAttribute,
     HVACMode,
 )
 from homeassistant.components.infrared import (
@@ -124,7 +125,7 @@ class FujitsuAcClimateEntity(
     """Fujitsu AC climate entity controlled via infrared emitter."""
 
     _attr_name = None
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_min_temp = float(MIN_TEMP)
     _attr_max_temp = float(MAX_TEMP)
     _attr_should_poll = False
@@ -150,7 +151,7 @@ class FujitsuAcClimateEntity(
         configured_modes = entry.data[CONF_HVAC_MODES]
         self._attr_hvac_modes = [HVACMode.OFF] + [HVACMode(m) for m in configured_modes]
         self._attr_hvac_mode = HVACMode.OFF
-        self._attr_target_temperature = float(MIN_TEMP)
+        self._attr_native_target_temperature = float(MIN_TEMP)
         self._attr_fan_mode = FAN_AUTO
         self._attr_swing_mode = SWING_OFF
 
@@ -174,14 +175,14 @@ class FujitsuAcClimateEntity(
         if (swing_mode := attributes.get(ATTR_SWING_MODE)) in self._attr_swing_modes:
             self._attr_swing_mode = swing_mode
         if (temperature := attributes.get(ATTR_TEMPERATURE)) is not None:
-            # State attributes are persisted in the system unit, while this entity is
-            # pinned to Celsius because the protocol is, so a Fahrenheit installation
-            # stores a number that means nothing on this scale.
-            self._attr_target_temperature = self._snap_temperature(
+            self._attr_native_target_temperature = self._snap_temperature(
                 TemperatureConverter.convert(
                     float(temperature),
-                    self.hass.config.units.temperature_unit,
-                    self.temperature_unit,
+                    attributes.get(
+                        ClimateEntityStateAttribute.TEMPERATURE_UNIT,
+                        self.hass.config.units.temperature_unit,
+                    ),
+                    self.native_temperature_unit,
                 )
             )
 
@@ -208,7 +209,7 @@ class FujitsuAcClimateEntity(
             if hvac_mode is not None:
                 self._attr_hvac_mode = hvac_mode
 
-        self._attr_target_temperature = temperature
+        self._attr_native_target_temperature = temperature
         self.async_write_ha_state()
 
     @override
@@ -261,7 +262,7 @@ class FujitsuAcClimateEntity(
     ) -> None:
         """Send a state message, taking whatever is not given from the assumed state."""
         if temperature is None:
-            temperature = self._attr_target_temperature or float(MIN_TEMP)
+            temperature = self._attr_native_target_temperature or float(MIN_TEMP)
         swing = swing_mode or self._attr_swing_mode or SWING_OFF
         await self._send_command(
             FujitsuAcCommand(
@@ -322,7 +323,7 @@ class FujitsuAcClimateWithReceiver(
 
         self._attr_hvac_mode = hvac_mode
         # A remote set to Fahrenheit sends its own scale, and this entity is Celsius.
-        self._attr_target_temperature = self._snap_temperature(
+        self._attr_native_target_temperature = self._snap_temperature(
             TemperatureConverter.convert(
                 command.temperature,
                 UnitOfTemperature.FAHRENHEIT,

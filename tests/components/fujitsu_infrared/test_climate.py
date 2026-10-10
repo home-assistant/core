@@ -33,6 +33,7 @@ from homeassistant.components.climate import (
     SWING_OFF,
     SWING_VERTICAL,
     ClimateEntityFeature,
+    ClimateEntityStateAttribute,
     HVACMode,
 )
 from homeassistant.components.fujitsu_infrared.climate import FAN_QUIET
@@ -46,11 +47,16 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
     STATE_UNAVAILABLE,
     Platform,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
-from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
+from homeassistant.util.unit_system import (
+    METRIC_SYSTEM,
+    US_CUSTOMARY_SYSTEM,
+    UnitSystem,
+)
 
 from tests.common import MockConfigEntry, mock_restore_cache, snapshot_platform
 from tests.components.common import assert_availability_follows_source_entity
@@ -711,6 +717,7 @@ async def test_receiver_ignores_unrecognised_signal(
             {
                 ATTR_FAN_MODE: FAN_HIGH,
                 ATTR_TEMPERATURE: 29.0,
+                ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
                 ATTR_SWING_MODE: SWING_BOTH,
             },
             (HVACMode.COOL, FAN_HIGH, 29.0, SWING_BOTH),
@@ -758,16 +765,64 @@ async def test_state_restored_on_restart(
     assert state.attributes[ATTR_SWING_MODE] == expected_swing
 
 
-async def test_fahrenheit_temperatures_round_trip(
+@pytest.mark.parametrize(
+    ("restored_attributes", "unit_system", "expected_temperature"),
+    [
+        pytest.param(
+            {
+                ATTR_TEMPERATURE: 24,
+                ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+            },
+            METRIC_SYSTEM,
+            24,
+            id="celsius_to_celsius",
+        ),
+        pytest.param(
+            {
+                ATTR_TEMPERATURE: 24,
+                ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.CELSIUS,
+            },
+            US_CUSTOMARY_SYSTEM,
+            75,
+            id="celsius_to_fahrenheit",
+        ),
+        pytest.param(
+            {
+                ATTR_TEMPERATURE: 75,
+                ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.FAHRENHEIT,
+            },
+            METRIC_SYSTEM,
+            24,
+            id="fahrenheit_to_celsius",
+        ),
+        pytest.param(
+            {
+                ATTR_TEMPERATURE: 75,
+                ClimateEntityStateAttribute.TEMPERATURE_UNIT: UnitOfTemperature.FAHRENHEIT,
+            },
+            US_CUSTOMARY_SYSTEM,
+            75,
+            id="fahrenheit_to_fahrenheit",
+        ),
+        pytest.param({ATTR_TEMPERATURE: 24}, METRIC_SYSTEM, 24, id="legacy_celsius"),
+        pytest.param(
+            {ATTR_TEMPERATURE: 75}, US_CUSTOMARY_SYSTEM, 75, id="legacy_fahrenheit"
+        ),
+    ],
+)
+async def test_restore_temperature_unit(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_infrared_emitter_entity: MockInfraredEmitterEntity,
     platforms: list[Platform],
+    restored_attributes: dict[str, Any],
+    unit_system: UnitSystem,
+    expected_temperature: int,
 ) -> None:
-    """Test a restored temperature converts to Celsius on a Fahrenheit installation."""
-    hass.config.units = US_CUSTOMARY_SYSTEM
+    """Test restoration uses the saved unit, falling back to the configured unit."""
+    hass.config.units = unit_system
     mock_restore_cache(
-        hass, [State(_CLIMATE_ENTITY_ID, HVACMode.COOL, {ATTR_TEMPERATURE: 75})]
+        hass, [State(_CLIMATE_ENTITY_ID, HVACMode.COOL, restored_attributes)]
     )
     mock_config_entry.add_to_hass(hass)
 
@@ -777,7 +832,7 @@ async def test_fahrenheit_temperatures_round_trip(
 
     state = hass.states.get(_CLIMATE_ENTITY_ID)
     assert state is not None
-    assert state.attributes[ATTR_TEMPERATURE] == 75
+    assert state.attributes[ATTR_TEMPERATURE] == expected_temperature
 
     mock_infrared_emitter_entity.send_command_calls.clear()
     await _set_hvac_mode(hass, HVACMode.COOL)
