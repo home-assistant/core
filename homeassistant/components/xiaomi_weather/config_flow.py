@@ -6,10 +6,11 @@ import probatio
 from xiaomi_weather import Location, XiaomiWeatherClient, XiaomiWeatherError
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
-from homeassistant.helpers import config_validation as cv
+from homeassistant.const import CONF_LATITUDE, CONF_LOCATION, CONF_LONGITUDE, CONF_NAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
+    LocationSelector,
+    LocationSelectorConfig,
     SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
@@ -38,11 +39,11 @@ class XiaomiWeatherConfigFlow(ConfigFlow, domain=DOMAIN):
         """Resolve a weather city from the supplied coordinates."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            self._coordinates = user_input
+            self._coordinates = user_input[CONF_LOCATION]
             client = XiaomiWeatherClient(async_get_clientsession(self.hass))
             try:
                 locations = await client.locate(
-                    user_input[CONF_LATITUDE], user_input[CONF_LONGITUDE]
+                    self._coordinates[CONF_LATITUDE], self._coordinates[CONF_LONGITUDE]
                 )
             except XiaomiWeatherError:
                 errors["base"] = "lookup_failed"
@@ -60,14 +61,17 @@ class XiaomiWeatherConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=self.add_suggested_values_to_schema(
                 probatio.Schema(
                     {
-                        probatio.Required(CONF_LATITUDE): cv.latitude,
-                        probatio.Required(CONF_LONGITUDE): cv.longitude,
+                        probatio.Required(CONF_LOCATION): LocationSelector(
+                            LocationSelectorConfig(radius=False)
+                        ),
                     }
                 ),
-                self._coordinates
-                or {
-                    CONF_LATITUDE: self.hass.config.latitude,
-                    CONF_LONGITUDE: self.hass.config.longitude,
+                {
+                    CONF_LOCATION: self._coordinates
+                    or {
+                        CONF_LATITUDE: self.hass.config.latitude,
+                        CONF_LONGITUDE: self.hass.config.longitude,
+                    }
                 },
             ),
             errors=errors,

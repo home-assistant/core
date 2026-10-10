@@ -149,19 +149,18 @@ class XiaomiWeather(
         """Return independent day and night forecasts anchored to solar times."""
         forecasts: list[Forecast] = []
         for day in self.coordinator.data.iter_daily():
-            if day.temperature_unit != "℃":
-                continue
             for daytime, temperature, time, code in (
                 (True, day.temperature_high, day.sunrise, day.day_weather_code),
                 (False, day.temperature_low, day.sunset, day.night_weather_code),
             ):
-                if temperature is None or time is None:
+                if time is None:
                     continue
                 forecast: Forecast = {
                     "datetime": time.astimezone(UTC).isoformat(),
-                    "native_temperature": temperature,
                     "is_daytime": daytime,
                 }
+                if temperature is not None and day.temperature_unit == "℃":
+                    forecast["native_temperature"] = temperature
                 if (condition := CONDITIONS.get(code or "")) is not None:
                     forecast["condition"] = (
                         "clear-night"
@@ -178,11 +177,7 @@ class XiaomiWeather(
         """Return daily highs and lows at the location's local midnight."""
         forecasts: list[Forecast] = []
         for day in self.coordinator.data.iter_daily():
-            if (
-                day.temperature_unit != "℃"
-                or day.temperature_high is None
-                or day.sunrise is None
-            ):
+            if day.sunrise is None:
                 continue
             forecast: Forecast = {
                 "datetime": day.sunrise.replace(
@@ -190,10 +185,12 @@ class XiaomiWeather(
                 )
                 .astimezone(UTC)
                 .isoformat(),
-                "native_temperature": day.temperature_high,
             }
-            if day.temperature_low is not None:
-                forecast["native_templow"] = day.temperature_low
+            if day.temperature_unit == "℃":
+                if day.temperature_high is not None:
+                    forecast["native_temperature"] = day.temperature_high
+                if day.temperature_low is not None:
+                    forecast["native_templow"] = day.temperature_low
             if (condition := CONDITIONS.get(day.day_weather_code or "")) is not None:
                 forecast["condition"] = condition
             if day.precipitation_probability is not None:
@@ -211,12 +208,9 @@ class XiaomiWeather(
         data = self.coordinator.data
         forecasts: list[Forecast] = []
         for hour in data.iter_hourly():
-            if hour.temperature is None or hour.temperature_unit != "℃":
-                continue
-            forecast: Forecast = {
-                "datetime": hour.time.astimezone(UTC).isoformat(),
-                "native_temperature": hour.temperature,
-            }
+            forecast: Forecast = {"datetime": hour.time.astimezone(UTC).isoformat()}
+            if hour.temperature is not None and hour.temperature_unit == "℃":
+                forecast["native_temperature"] = hour.temperature
             if (
                 condition := _condition(hour.weather_code, hour.time, data)
             ) is not None:

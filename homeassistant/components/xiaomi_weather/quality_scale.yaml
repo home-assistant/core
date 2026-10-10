@@ -7,7 +7,7 @@ rules:
   async-dependency: done
   brands:
     status: done
-    comment: https://github.com/home-assistant/brands/pull/11187
+    comment: Xiaomi assets are reused via the alias proposed in https://github.com/home-assistant/brands/pull/11187 (open, awaiting merge).
   common-modules: done
   config-entry-unloading: todo
   config-flow: done

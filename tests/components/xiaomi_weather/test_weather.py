@@ -112,6 +112,7 @@ async def test_measurements(
     "changes",
     [
         pytest.param({}, id="complete"),
+        pytest.param({"temperature": {"value": []}}, id="missing-temperature-series"),
         pytest.param(
             {
                 "precipitationProbability": {"status": 1},
@@ -200,12 +201,13 @@ async def test_daily_projection(
 
 
 @pytest.mark.parametrize(
-    ("temperature_unit", "wind_unit"),
+    ("temperature_unit", "wind_unit", "temperatures"),
     [
-        pytest.param("℃", None, id="legacy-wind"),
-        pytest.param("℃", "km/h", id="explicit-wind"),
-        pytest.param("℃", "mph", id="unsupported-wind"),
-        pytest.param("F", None, id="unsupported-temperature"),
+        pytest.param("℃", None, [20, None, 0], id="legacy-wind"),
+        pytest.param("℃", "km/h", [20, None, 0], id="explicit-wind"),
+        pytest.param("℃", "mph", [20, None, 0], id="unsupported-wind"),
+        pytest.param("F", None, [20, None, 0], id="unsupported-temperature"),
+        pytest.param("℃", None, [], id="missing-temperature-series"),
     ],
 )
 async def test_hourly_projection(
@@ -216,17 +218,19 @@ async def test_hourly_projection(
     snapshot: SnapshotAssertion,
     temperature_unit: str,
     wind_unit: str | None,
+    temperatures: list[float | None],
 ) -> None:
     """Consume the library's time alignment without shifting temperature gaps."""
     hourly = payload["forecastHourly"]
     hourly["temperature"].update(
-        unit=temperature_unit, pubTime="2026-09-08T17:00:00+08:00", value=[20, None, 0]
+        unit=temperature_unit, pubTime="2026-09-08T17:00:00+08:00", value=temperatures
     )
-    hourly["weather"].update(pubTime="2026-09-08T10:00:00+00:00", value=["999", "0"])
+    hourly["weather"].update(pubTime="2026-09-08T10:00:00+00:00", value=["2", "0"])
     hourly["wind"].update(
         unit=wind_unit,
         value=[
-            {"datetime": "2026-09-08T11:00:00+00:00", "speed": "0", "direction": "0"}
+            {"datetime": "2026-09-08T11:00:00+00:00", "speed": "0", "direction": "0"},
+            {"datetime": "2026-09-08T12:00:00+00:00", "speed": "2", "direction": "90"},
         ],
     )
     client.return_value = parse_weather(payload)

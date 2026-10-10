@@ -25,15 +25,13 @@
       },
       "user": {
         "data": {
-          "latitude": "Latitude",
-          "longitude": "Longitude"
+          "location": "Location"
         },
         "data_description": {
-          "latitude": "Latitude of the weather location, between -90 and 90 degrees.",
-          "longitude": "Longitude of the weather location, between -180 and 180 degrees."
+          "location": "Select the weather location on the map."
         },
-        "description": "Enter the coordinates of the weather location. A city will be matched automatically.",
-        "title": "Enter coordinates"
+        "description": "Select a location in mainland China. A city will be matched automatically.",
+        "title": "Choose a location"
       }
     }
   }

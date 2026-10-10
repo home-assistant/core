@@ -11,6 +11,7 @@ from homeassistant.components.xiaomi_weather.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.selector import LocationSelector
 
 from tests.common import MockConfigEntry
 
@@ -38,10 +39,14 @@ async def test_form(hass: HomeAssistant, locations: AsyncMock) -> None:
     assert result["step_id"] == "user"
     assert result["data_schema"] is not None
     schema = result["data_schema"].schema
-    assert set(schema) == {"latitude", "longitude"}
+    assert set(schema) == {"location"}
+    assert isinstance(schema["location"], LocationSelector)
+    assert schema["location"].config == {"radius": False}
     assert {key.schema: key.description["suggested_value"] for key in schema} == {
-        "latitude": hass.config.latitude,
-        "longitude": hass.config.longitude,
+        "location": {
+            "latitude": hass.config.latitude,
+            "longitude": hass.config.longitude,
+        },
     }
     locations.assert_not_awaited()
 
@@ -61,7 +66,7 @@ async def test_setup(
 ) -> None:
     """Review the resolved city and supplied coordinates before saving."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=coordinates
+        DOMAIN, context={"source": SOURCE_USER}, data={"location": coordinates}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "confirm"
@@ -106,7 +111,7 @@ async def test_lookup_error_retry(
     locations.return_value = []
     locations.side_effect = failure
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=COORDINATES
+        DOMAIN, context={"source": SOURCE_USER}, data={"location": COORDINATES}
     )
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": error}
@@ -114,13 +119,13 @@ async def test_lookup_error_retry(
     assert {
         key.schema: key.description["suggested_value"]
         for key in result["data_schema"].schema
-    } == COORDINATES
+    } == {"location": COORDINATES}
     client.assert_not_awaited()
     assert not hass.config_entries.async_entries(DOMAIN)
     locations.side_effect = None
     locations.return_value = [BEIJING]
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], COORDINATES
+        result["flow_id"], {"location": COORDINATES}
     )
     assert result["step_id"] == "confirm"
     client.assert_not_awaited()
@@ -134,7 +139,7 @@ async def test_weather_error_retry(
 ) -> None:
     """Keep the location on the confirmation page until weather access succeeds."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=COORDINATES
+        DOMAIN, context={"source": SOURCE_USER}, data={"location": COORDINATES}
     )
     assert result["step_id"] == "confirm"
     summary = result["description_placeholders"]
@@ -157,7 +162,7 @@ async def test_multiple_matches(
     """Review the selected city before saving an ambiguous match."""
     locations.return_value = [BEIJING, CHAOYANG]
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=COORDINATES
+        DOMAIN, context={"source": SOURCE_USER}, data={"location": COORDINATES}
     )
     assert result["step_id"] == "city"
     assert result["data_schema"] is not None
@@ -197,7 +202,7 @@ async def test_duplicate(
     """Reject a city that is already configured before fetching weather."""
     entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=COORDINATES
+        DOMAIN, context={"source": SOURCE_USER}, data={"location": COORDINATES}
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
@@ -213,7 +218,7 @@ async def test_duplicate_during_selection(
     """Reject a city configured while the user was choosing a match."""
     locations.return_value = [BEIJING, CHAOYANG]
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=COORDINATES
+        DOMAIN, context={"source": SOURCE_USER}, data={"location": COORDINATES}
     )
     assert result["step_id"] == "city"
     entry.add_to_hass(hass)
@@ -230,7 +235,7 @@ async def test_duplicate_during_confirmation(
 ) -> None:
     """Recheck duplicates when another entry is added during confirmation."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=COORDINATES
+        DOMAIN, context={"source": SOURCE_USER}, data={"location": COORDINATES}
     )
     assert result["step_id"] == "confirm"
     entry.add_to_hass(hass)
@@ -252,7 +257,7 @@ async def test_unsupported_current_temperature(
         ),
     )
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=COORDINATES
+        DOMAIN, context={"source": SOURCE_USER}, data={"location": COORDINATES}
     )
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     assert result["type"] is FlowResultType.FORM

@@ -46,10 +46,35 @@
     }),
   })
 # ---
+# name: test_daily_projection[daily-missing-temperature-series]
+  dict({
+    'weather.beijing': dict({
+      'forecast': list([
+        dict({
+          'condition': 'sunny',
+          'datetime': '2026-09-07T16:00:00+00:00',
+          'precipitation_probability': 0,
+          'temperature': None,
+          'wind_bearing': 27.0,
+          'wind_speed': 6.0,
+        }),
+      ]),
+    }),
+  })
+# ---
 # name: test_daily_projection[daily-night-only]
   dict({
     'weather.beijing': dict({
       'forecast': list([
+        dict({
+          'condition': 'sunny',
+          'datetime': '2026-09-07T16:00:00+00:00',
+          'precipitation_probability': 0,
+          'temperature': None,
+          'templow': 0.0,
+          'wind_bearing': 27.0,
+          'wind_speed': 6.0,
+        }),
       ]),
     }),
   })
@@ -116,6 +141,14 @@
   dict({
     'weather.beijing': dict({
       'forecast': list([
+        dict({
+          'condition': 'sunny',
+          'datetime': '2026-09-07T16:00:00+00:00',
+          'precipitation_probability': 0,
+          'temperature': None,
+          'wind_bearing': 27.0,
+          'wind_speed': 6.0,
+        }),
       ]),
     }),
   })
@@ -171,6 +204,14 @@
           'wind_bearing': 27.0,
           'wind_speed': 6.0,
         }),
+        dict({
+          'condition': 'clear-night',
+          'datetime': '2026-09-08T10:36:00+00:00',
+          'is_daytime': False,
+          'temperature': None,
+          'wind_bearing': 27.0,
+          'wind_speed': 6.0,
+        }),
       ]),
     }),
   })
@@ -195,10 +236,42 @@
     }),
   })
 # ---
+# name: test_daily_projection[twice_daily-missing-temperature-series]
+  dict({
+    'weather.beijing': dict({
+      'forecast': list([
+        dict({
+          'condition': 'sunny',
+          'datetime': '2026-09-07T21:48:00+00:00',
+          'is_daytime': True,
+          'temperature': None,
+          'wind_bearing': 27.0,
+          'wind_speed': 6.0,
+        }),
+        dict({
+          'condition': 'clear-night',
+          'datetime': '2026-09-08T10:36:00+00:00',
+          'is_daytime': False,
+          'temperature': None,
+          'wind_bearing': 27.0,
+          'wind_speed': 6.0,
+        }),
+      ]),
+    }),
+  })
+# ---
 # name: test_daily_projection[twice_daily-night-only]
   dict({
     'weather.beijing': dict({
       'forecast': list([
+        dict({
+          'condition': 'sunny',
+          'datetime': '2026-09-07T21:48:00+00:00',
+          'is_daytime': True,
+          'temperature': None,
+          'wind_bearing': 27.0,
+          'wind_speed': 6.0,
+        }),
         dict({
           'condition': 'clear-night',
           'datetime': '2026-09-08T10:36:00+00:00',
@@ -293,6 +366,22 @@
   dict({
     'weather.beijing': dict({
       'forecast': list([
+        dict({
+          'condition': 'sunny',
+          'datetime': '2026-09-07T21:48:00+00:00',
+          'is_daytime': True,
+          'temperature': None,
+          'wind_bearing': 27.0,
+          'wind_speed': 6.0,
+        }),
+        dict({
+          'condition': 'clear-night',
+          'datetime': '2026-09-08T10:36:00+00:00',
+          'is_daytime': False,
+          'temperature': None,
+          'wind_bearing': 27.0,
+          'wind_speed': 6.0,
+        }),
       ]),
     }),
   })
@@ -326,11 +415,22 @@
           'temperature': 20.0,
         }),
         dict({
+          'condition': 'cloudy',
+          'datetime': '2026-09-08T10:00:00+00:00',
+          'temperature': None,
+        }),
+        dict({
           'condition': 'clear-night',
           'datetime': '2026-09-08T11:00:00+00:00',
           'temperature': 0.0,
           'wind_bearing': 0.0,
           'wind_speed': 0.0,
+        }),
+        dict({
+          'datetime': '2026-09-08T12:00:00+00:00',
+          'temperature': None,
+          'wind_bearing': 90.0,
+          'wind_speed': 2.0,
         }),
       ]),
     }),
@@ -345,11 +445,48 @@
           'temperature': 20.0,
         }),
         dict({
+          'condition': 'cloudy',
+          'datetime': '2026-09-08T10:00:00+00:00',
+          'temperature': None,
+        }),
+        dict({
           'condition': 'clear-night',
           'datetime': '2026-09-08T11:00:00+00:00',
           'temperature': 0.0,
           'wind_bearing': 0.0,
           'wind_speed': 0.0,
+        }),
+        dict({
+          'datetime': '2026-09-08T12:00:00+00:00',
+          'temperature': None,
+          'wind_bearing': 90.0,
+          'wind_speed': 2.0,
+        }),
+      ]),
+    }),
+  })
+# ---
+# name: test_hourly_projection[missing-temperature-series]
+  dict({
+    'weather.beijing': dict({
+      'forecast': list([
+        dict({
+          'condition': 'cloudy',
+          'datetime': '2026-09-08T10:00:00+00:00',
+          'temperature': None,
+        }),
+        dict({
+          'condition': 'clear-night',
+          'datetime': '2026-09-08T11:00:00+00:00',
+          'temperature': None,
+          'wind_bearing': 0.0,
+          'wind_speed': 0.0,
+        }),
+        dict({
+          'datetime': '2026-09-08T12:00:00+00:00',
+          'temperature': None,
+          'wind_bearing': 90.0,
+          'wind_speed': 2.0,
         }),
       ]),
     }),
@@ -359,6 +496,28 @@
   dict({
     'weather.beijing': dict({
       'forecast': list([
+        dict({
+          'datetime': '2026-09-08T09:00:00+00:00',
+          'temperature': None,
+        }),
+        dict({
+          'condition': 'cloudy',
+          'datetime': '2026-09-08T10:00:00+00:00',
+          'temperature': None,
+        }),
+        dict({
+          'condition': 'clear-night',
+          'datetime': '2026-09-08T11:00:00+00:00',
+          'temperature': None,
+          'wind_bearing': 0.0,
+          'wind_speed': 0.0,
+        }),
+        dict({
+          'datetime': '2026-09-08T12:00:00+00:00',
+          'temperature': None,
+          'wind_bearing': 90.0,
+          'wind_speed': 2.0,
+        }),
       ]),
     }),
   })
@@ -372,10 +531,20 @@
           'temperature': 20.0,
         }),
         dict({
+          'condition': 'cloudy',
+          'datetime': '2026-09-08T10:00:00+00:00',
+          'temperature': None,
+        }),
+        dict({
           'condition': 'clear-night',
           'datetime': '2026-09-08T11:00:00+00:00',
           'temperature': 0.0,
           'wind_bearing': 0.0,
+        }),
+        dict({
+          'datetime': '2026-09-08T12:00:00+00:00',
+          'temperature': None,
+          'wind_bearing': 90.0,
         }),
       ]),
     }),
