@@ -1,0 +1,12 @@
+{
+  "entity": {
+    "sensor": {
+      "bc": {
+        "default": "mdi:molecule"
+      },
+      "nox": {
+        "default": "mdi:molecule"
+      }
+    }
+  }
+}

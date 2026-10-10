@@ -1833,6 +1833,9 @@ open-meteo==1.0.1
 # homeassistant.components.ovhcloud_ai_endpoints
 openai==3.10.0
 
+# homeassistant.components.openaq
+openaq==1.1.0
+
 # homeassistant.components.openerz
 openerz-api==0.3.0
 
