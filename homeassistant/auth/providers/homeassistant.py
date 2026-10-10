@@ -160,16 +160,17 @@ class Data:
         """Remove authentication."""
         username = self.normalize_username(username)
 
-        index = None
-        for i, user in enumerate(self.users):
-            if self.normalize_username(user["username"]) == username:
-                index = i
-                break
+        original_count = len(self.users)
+        # Remove every matching entry (not just the first) in case a past bug
+        # left duplicate entries for the same normalized username in storage.
+        self.users[:] = [
+            user
+            for user in self.users
+            if self.normalize_username(user["username"]) != username
+        ]
 
-        if index is None:
+        if len(self.users) == original_count:
             raise InvalidUser(translation_key="user_not_found")
-
-        self.users.pop(index)
 
     def change_password(self, username: str, new_password: str) -> None:
         """Update the password.
@@ -177,12 +178,19 @@ class Data:
         Raises InvalidUser if user cannot be found.
         """
         username = self.normalize_username(username)
+        password_hash = self.hash_password(new_password, True).decode()
 
+        found = False
+        # Update every matching entry (not just the first) in case a past bug
+        # left duplicate entries for the same normalized username in storage:
+        # validate_login checks all entries, so only updating one would leave
+        # a stale entry that can still authenticate with the old password.
         for user in self.users:
             if self.normalize_username(user["username"]) == username:
-                user["password"] = self.hash_password(new_password, True).decode()
-                break
-        else:
+                user["password"] = password_hash
+                found = True
+
+        if not found:
             raise InvalidUser(translation_key="user_not_found")
 
     @callback
@@ -217,12 +225,15 @@ class Data:
         username = self.normalize_username(username)
         self._validate_new_username(new_username)
 
+        found = False
+        # Update every matching entry (not just the first) in case a past bug
+        # left duplicate entries for the same normalized username in storage.
         for user in self.users:
             if self.normalize_username(user["username"]) == username:
                 user["username"] = new_username
-                assert self._data is not None
-                break
-        else:
+                found = True
+
+        if not found:
             raise InvalidUser(translation_key="user_not_found")
 
     async def async_save(self) -> None:
@@ -242,6 +253,11 @@ class HassAuthProvider(AuthProvider):
         super().__init__(*args, **kwargs)
         self.data: Data | None = None
         self._init_lock = asyncio.Lock()
+        # Serializes add/remove/change operations so that two concurrent
+        # calls (e.g. a double-submitted "add user" request) cannot both
+        # pass the duplicate-username check before either has saved,
+        # which would leave two entries for the same username in storage.
+        self._write_lock = asyncio.Lock()
 
     @override
     async def async_initialize(self) -> None:
@@ -275,8 +291,11 @@ class HassAuthProvider(AuthProvider):
             await self.async_initialize()
             assert self.data is not None
 
-        await self.hass.async_add_executor_job(self.data.add_auth, username, password)
-        await self.data.async_save()
+        async with self._write_lock:
+            await self.hass.async_add_executor_job(
+                self.data.add_auth, username, password
+            )
+            await self.data.async_save()
 
     async def async_remove_auth(self, username: str) -> None:
         """Call remove_auth on data."""
@@ -284,8 +303,9 @@ class HassAuthProvider(AuthProvider):
             await self.async_initialize()
             assert self.data is not None
 
-        self.data.async_remove_auth(username)
-        await self.data.async_save()
+        async with self._write_lock:
+            self.data.async_remove_auth(username)
+            await self.data.async_save()
 
     async def async_change_password(self, username: str, new_password: str) -> None:
         """Call change_password on data."""
@@ -293,10 +313,11 @@ class HassAuthProvider(AuthProvider):
             await self.async_initialize()
             assert self.data is not None
 
-        await self.hass.async_add_executor_job(
-            self.data.change_password, username, new_password
-        )
-        await self.data.async_save()
+        async with self._write_lock:
+            await self.hass.async_add_executor_job(
+                self.data.change_password, username, new_password
+            )
+            await self.data.async_save()
 
     async def async_change_username(
         self, credential: Credentials, new_username: str
@@ -306,11 +327,12 @@ class HassAuthProvider(AuthProvider):
             await self.async_initialize()
             assert self.data is not None
 
-        self.data.change_username(credential.data["username"], new_username)
-        self.hass.auth.async_update_user_credentials_data(
-            credential, {**credential.data, "username": new_username}
-        )
-        await self.data.async_save()
+        async with self._write_lock:
+            self.data.change_username(credential.data["username"], new_username)
+            self.hass.auth.async_update_user_credentials_data(
+                credential, {**credential.data, "username": new_username}
+            )
+            await self.data.async_save()
 
     @override
     async def async_get_or_create_credentials(
@@ -345,8 +367,9 @@ class HassAuthProvider(AuthProvider):
             assert self.data is not None
 
         try:
-            self.data.async_remove_auth(credentials.data["username"])
-            await self.data.async_save()
+            async with self._write_lock:
+                self.data.async_remove_auth(credentials.data["username"])
+                await self.data.async_save()
         except InvalidUser:
             # Can happen if somehow we didn't clean up a credential
             pass
