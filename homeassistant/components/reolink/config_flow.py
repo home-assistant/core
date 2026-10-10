@@ -11,6 +11,7 @@ from reolink_aio.baichuan import DEFAULT_BC_PORT
 from reolink_aio.exceptions import (
     ApiError,
     CredentialsInvalidError,
+    LoginAccountDeviceError,
     LoginFirmwareError,
     LoginPrivacyModeError,
     ReolinkError,
@@ -32,11 +33,12 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow
-from homeassistant.helpers import config_validation as cv, selector
+from homeassistant.helpers import selector
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import (
+    ACCOUNT_DEVICE_REOLINK_URL,
     CONF_BC_CONNECT,
     CONF_BC_ONLY,
     CONF_BC_PORT,
@@ -282,6 +284,9 @@ class ReolinkFlowHandler(ConfigFlow, domain=DOMAIN):
                 return await self.async_step_privacy()
             except CredentialsInvalidError:
                 errors[CONF_PASSWORD] = "invalid_auth"
+            except LoginAccountDeviceError:
+                errors["base"] = "account_device"
+                placeholders["reolink_account_device_link"] = ACCOUNT_DEVICE_REOLINK_URL
             except LoginFirmwareError:
                 errors["base"] = "update_needed"
                 placeholders["current_firmware"] = host.api.sw_version
@@ -355,7 +360,9 @@ class ReolinkFlowHandler(ConfigFlow, domain=DOMAIN):
         data_schema = probatio.Schema(
             {
                 probatio.Required(CONF_USERNAME, default=self._username): str,
-                probatio.Required(CONF_PASSWORD, default=self._password): str,
+                probatio.Required(
+                    probatio.Secret(CONF_PASSWORD), default=self._password
+                ): str,
             }
         )
         if self._host is None or self.source == SOURCE_RECONFIGURE or errors:
@@ -367,9 +374,11 @@ class ReolinkFlowHandler(ConfigFlow, domain=DOMAIN):
         if errors:
             data_schema = data_schema.extend(
                 {
-                    probatio.Optional(CONF_PORT): cv.port,
+                    probatio.Optional(CONF_PORT): probatio.Port(),
                     probatio.Required(CONF_USE_HTTPS, default=False): bool,
-                    probatio.Required(CONF_BC_PORT, default=DEFAULT_BC_PORT): cv.port,
+                    probatio.Required(
+                        CONF_BC_PORT, default=DEFAULT_BC_PORT
+                    ): probatio.Port(),
                 }
             )
 

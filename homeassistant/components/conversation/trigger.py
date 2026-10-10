@@ -78,7 +78,7 @@ TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
     {
         probatio.Required(CONF_PLATFORM): DOMAIN,
         probatio.Required(CONF_COMMAND): probatio.All(
-            cv.ensure_list,
+            probatio.EnsureList(),
             [cv.string],
             has_one_non_empty_item,
             has_no_punctuation,

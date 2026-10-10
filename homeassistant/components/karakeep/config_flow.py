@@ -25,11 +25,13 @@ _LOGGER = logging.getLogger(__name__)
 STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_URL): str,
-        probatio.Required(CONF_TOKEN): str,
+        probatio.Required(probatio.Secret(CONF_TOKEN)): str,
         probatio.Required(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): bool,
     }
 )
-STEP_REAUTH_DATA_SCHEMA = probatio.Schema({probatio.Required(CONF_TOKEN): str})
+STEP_REAUTH_DATA_SCHEMA = probatio.Schema(
+    {probatio.Required(probatio.Secret(CONF_TOKEN)): str}
+)
 
 
 class KarakeepConfigFlow(ConfigFlow, domain=DOMAIN):

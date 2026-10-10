@@ -31,7 +31,7 @@ DEFAULT_SENDER_NAME = "Home Assistant"
 
 PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {
-        probatio.Required(CONF_API_KEY): cv.string,
+        probatio.Required(probatio.Secret(CONF_API_KEY)): cv.string,
         probatio.Required(CONF_SENDER): probatio.Email(),
         probatio.Required(CONF_RECIPIENT): probatio.Email(),
         probatio.Optional(CONF_SENDER_NAME, default=DEFAULT_SENDER_NAME): cv.string,

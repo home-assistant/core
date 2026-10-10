@@ -16,7 +16,6 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_HOST, CONF_PORT
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import SectionConfig, section
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import (
     ObjectSelector,
     SelectOptionDict,
@@ -100,7 +99,7 @@ class AndroidTVFlowHandler(ConfigFlow, domain=DOMAIN):
                         translation_key="device_class",
                     )
                 ),
-                probatio.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
+                probatio.Required(CONF_PORT, default=DEFAULT_PORT): probatio.Port(),
                 probatio.Required(CONF_MORE_OPTIONS): section(
                     probatio.Schema(
                         {
@@ -109,7 +108,7 @@ class AndroidTVFlowHandler(ConfigFlow, domain=DOMAIN):
                             probatio.Optional(
                                 CONF_ADB_SERVER_PORT,
                                 default=DEFAULT_ADB_SERVER_PORT,
-                            ): cv.port,
+                            ): probatio.Port(),
                         }
                     ),
                     SectionConfig(collapsed=True),

@@ -7,7 +7,6 @@ import probatio
 
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from .auto_setup import autosetup_ihc_products
@@ -25,7 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 CONFIG_SCHEMA = probatio.Schema(
-    {DOMAIN: probatio.Schema(probatio.All(cv.ensure_list, [IHC_SCHEMA]))},
+    {DOMAIN: probatio.Schema(probatio.All(probatio.EnsureList(), [IHC_SCHEMA]))},
     extra=probatio.ALLOW_EXTRA,
 )
 

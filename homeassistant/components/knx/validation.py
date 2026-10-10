@@ -128,7 +128,7 @@ def maybe_ga_validator(value: Any) -> str | int | None:
 
 
 ga_list_validator = probatio.All(
-    cv.ensure_list,
+    probatio.EnsureList(),
     [ga_validator],
     probatio.IsTrue(
         "value must be a group address or a list containing group addresses"
@@ -137,7 +137,7 @@ ga_list_validator = probatio.All(
 
 ga_list_validator_optional = probatio.Maybe(
     probatio.All(
-        cv.ensure_list,
+        probatio.EnsureList(),
         [ga_validator],
         probatio.Any(
             probatio.IsTrue(), probatio.SetTo(None)

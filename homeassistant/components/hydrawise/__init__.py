@@ -7,7 +7,8 @@ from pydrawise import Controller, auth, hybrid
 from homeassistant.const import CONF_API_KEY, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers.typing import ConfigType
 
 from .const import APP_ID, DOMAIN, MANUFACTURER
 from .coordinator import (
@@ -16,6 +17,7 @@ from .coordinator import (
     HydrawiseUpdateCoordinators,
     HydrawiseWaterUseDataUpdateCoordinator,
 )
+from .services import async_setup_services
 
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
@@ -27,13 +29,25 @@ PLATFORMS: list[Platform] = [
 _REQUIRED_AUTH_KEYS = (CONF_USERNAME, CONF_PASSWORD, CONF_API_KEY)
 
 
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Hunter Hydrawise integration."""
+    async_setup_services(hass)
+    return True
+
+
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: HydrawiseConfigEntry
 ) -> bool:
     """Set up Hydrawise from a config entry."""
     if any(k not in config_entry.data for k in _REQUIRED_AUTH_KEYS):
         # If we are missing any required authentication keys, trigger a reauth flow.
-        raise ConfigEntryAuthFailed
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="missing_credentials",
+        )
 
     hydrawise = hybrid.HybridClient(
         auth.HybridAuth(

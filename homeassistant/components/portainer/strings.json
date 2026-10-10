@@ -56,16 +56,25 @@
   },
   "entity": {
     "binary_sensor": {
+      "container_out_of_memory": {
+        "name": "Out of memory"
+      },
       "status": {
         "name": "Status"
       }
     },
     "button": {
+      "build_cache_prune": {
+        "name": "Prune build cache"
+      },
       "images_prune": {
         "name": "Prune unused images"
       },
       "kill_container": {
         "name": "Kill container"
+      },
+      "networks_prune": {
+        "name": "Prune unused networks"
       },
       "pause_container": {
         "name": "Pause container"
@@ -78,6 +87,9 @@
       },
       "resume_container": {
         "name": "Resume container"
+      },
+      "update_stack": {
+        "name": "Update stack"
       },
       "volumes_prune": {
         "name": "Prune unused volumes"
@@ -126,6 +138,12 @@
           "starting": "Starting",
           "unhealthy": "Unhealthy"
         }
+      },
+      "container_restart_count": {
+        "name": "Restart count"
+      },
+      "container_started_at": {
+        "name": "Started"
       },
       "container_state": {
         "name": "State",
@@ -232,12 +250,18 @@
     "update": {
       "container_image_update": {
         "name": "Image update available"
+      },
+      "server_update": {
+        "name": "Update"
       }
     }
   },
   "exceptions": {
     "cannot_connect": {
       "message": "An error occurred while trying to connect to the Portainer instance."
+    },
+    "instance_id_failed": {
+      "message": "Failed to fetch the Portainer instance ID."
     },
     "invalid_auth": {
       "message": "An error occurred while trying to authenticate."
@@ -250,6 +274,24 @@
     }
   },
   "services": {
+    "prune_build_cache": {
+      "description": "Prunes the build cache on a Portainer endpoint.",
+      "fields": {
+        "all": {
+          "description": "If true (default), prune all unused build cache. If false, only prune dangling build cache.",
+          "name": "All"
+        },
+        "device_id": {
+          "description": "The endpoint to prune the build cache on.",
+          "name": "[%key:component::portainer::services::prune_images::fields::device_id::name%]"
+        },
+        "until": {
+          "description": "Only prune build cache that was last used longer ago than this duration. If not provided, build cache of any age is pruned.",
+          "name": "[%key:component::portainer::services::prune_images::fields::until::name%]"
+        }
+      },
+      "name": "Prune build cache"
+    },
     "prune_images": {
       "description": "Prunes unused images on a Portainer endpoint.",
       "fields": {

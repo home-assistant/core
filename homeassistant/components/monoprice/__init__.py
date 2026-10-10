@@ -1,7 +1,6 @@
 """The Monoprice 6-Zone Amplifier integration."""
 
 from dataclasses import dataclass
-import logging
 
 from pymonoprice import Monoprice, get_monoprice
 from serialx import SerialException
@@ -18,7 +17,6 @@ from .services import async_setup_services
 
 PLATFORMS = [Platform.MEDIA_PLAYER]
 
-_LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
@@ -46,8 +44,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: MonopriceConfigEntry) ->
     try:
         monoprice = await hass.async_add_executor_job(get_monoprice, port)
     except SerialException as err:
-        _LOGGER.error("Error connecting to Monoprice controller at %s", port)
-        raise ConfigEntryNotReady from err
+        raise ConfigEntryNotReady(
+            f"Error connecting to Monoprice controller at {port}"
+        ) from err
 
     # double negative to handle absence of value
     first_run = not bool(entry.data.get(CONF_NOT_FIRST_RUN))

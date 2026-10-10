@@ -32,7 +32,7 @@ AUTH_SCHEMA = probatio.Schema(
         probatio.Required(CONF_USERNAME): TextSelector(
             TextSelectorConfig(autocomplete="username")
         ),
-        probatio.Required(CONF_PASSWORD): TextSelector(
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.PASSWORD, autocomplete="current-password"
             )
@@ -46,7 +46,7 @@ RECONFIGURE_SCHEMA = probatio.Schema(
         probatio.Optional(CONF_USERNAME): TextSelector(
             TextSelectorConfig(autocomplete="username")
         ),
-        probatio.Optional(CONF_PASSWORD): TextSelector(
+        probatio.Optional(probatio.Secret(CONF_PASSWORD)): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.PASSWORD,
                 autocomplete="current-password",
@@ -112,24 +112,6 @@ class OpenEVSEConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(USER_SCHEMA, user_input),
             errors=errors,
-        )
-
-    async def async_step_import(self, data: dict[str, str]) -> ConfigFlowResult:
-        """Handle the initial step."""
-
-        self._async_abort_entries_match({CONF_HOST: data[CONF_HOST]})
-        errors, serial = await self.check_status(data[CONF_HOST])
-
-        if not errors:
-            if serial is not None:
-                await self.async_set_unique_id(serial)
-                self._abort_if_unique_id_configured()
-        else:
-            return self.async_abort(reason="unavailable_host")
-
-        return self.async_create_entry(
-            title=f"OpenEVSE {data[CONF_HOST]}",
-            data=data,
         )
 
     @override

@@ -9,7 +9,13 @@ import pytest
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
-from . import RECEIVER_INFO, mock_discovery, setup_integration
+from . import (
+    DISCONNECT,
+    RECEIVER_INFO,
+    mock_discovery,
+    receive_messages,
+    setup_integration,
+)
 
 from tests.common import MockConfigEntry
 
@@ -95,8 +101,6 @@ async def test_reconnect(
 
     assert mock_connect.call_count == 0
 
-    # Simulate a disconnect
-    read_queue.put_nowait(None)
-    await asyncio.sleep(0)
+    await receive_messages(read_queue, DISCONNECT)
 
     assert mock_connect.call_count == 1

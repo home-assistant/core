@@ -3,9 +3,14 @@
 import logging
 from pathlib import Path
 import random
-from typing import Literal, override
+from typing import Any, Literal, override
 
-from homeassistant.components.image import DEFAULT_CONTENT_TYPE, ImageEntity
+from homeassistant.components.image import (
+    DEFAULT_CONTENT_TYPE,
+    ImageContentTypeError,
+    ImageEntity,
+    valid_image_content_type,
+)
 from homeassistant.components.media_player import (
     BrowseError,
     BrowseMedia,
@@ -152,6 +157,10 @@ class CollectionImageImageEntity(ImageEntity):
         """Get the previous image."""
         await self._get_next_sequential_image(True, wrap)
 
+    async def select_image(self, image: dict[str, Any]) -> None:
+        """Select a specific image."""
+        await self.update_image(image["media_content_id"])
+
     async def _get_image_at_position(self, position: Literal[0, -1]) -> None:
         """Get the first or last image."""
 
@@ -189,6 +198,14 @@ class CollectionImageImageEntity(ImageEntity):
         self._attr_available = True
         await self.update_image(child.media_content_id)
 
+    def _clear_image(self) -> None:
+        """Clear the displayed image."""
+        self._attr_image_last_updated = None
+        self.path = None
+        self._attr_image_url = UNDEFINED
+        self._attr_content_type = DEFAULT_CONTENT_TYPE
+        self.async_write_ha_state()
+
     async def update_image(self, image_id: str) -> None:
         """Update the entity from the image_id."""
 
@@ -196,11 +213,8 @@ class CollectionImageImageEntity(ImageEntity):
         try:
             resolved = await async_resolve_media(self.hass, image_id, self.entity_id)
         except Unresolvable as err:
-            self._attr_image_last_updated = None
-            self.path = None
-            self._attr_image_url = UNDEFINED
-            self._attr_content_type = DEFAULT_CONTENT_TYPE
-            self.async_write_ha_state()
+            self._current_image_id = image_id
+            self._clear_image()
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="unresolvable",
@@ -209,8 +223,21 @@ class CollectionImageImageEntity(ImageEntity):
                     "id": image_id,
                 },
             ) from err
-        finally:
-            self._current_image_id = image_id
+        self._current_image_id = image_id
+
+        try:
+            valid_image_content_type(resolved.mime_type)
+        except ImageContentTypeError as err:
+            self._clear_image()
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_media_type",
+                translation_placeholders={
+                    "entity": self.entity_id,
+                    "id": image_id,
+                    "mime_type": resolved.mime_type,
+                },
+            ) from err
 
         if resolved.url:
             self.path = None
@@ -222,6 +249,12 @@ class CollectionImageImageEntity(ImageEntity):
         self._attr_content_type = resolved.mime_type
         self._attr_image_last_updated = dt_util.utcnow()
         self.async_write_ha_state()
+
+    @property
+    @override
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return the state attributes."""
+        return {"current_media_id": self._current_image_id}
 
     @override
     async def async_added_to_hass(self) -> None:

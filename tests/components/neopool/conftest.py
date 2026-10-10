@@ -342,6 +342,7 @@ def mock_neopool_client() -> Generator[MagicMock]:
         mock_client.async_set_manual_filtration = AsyncMock(return_value={})
         mock_client.async_set_binary_flag = AsyncMock(return_value={})
         mock_client.async_set_bitmask_flag = AsyncMock(return_value={})
+        mock_client.async_set_relay_activation_delay = AsyncMock(return_value={})
         mock_client.async_start_backwash = AsyncMock(return_value=None)
         mock_client.async_stop_backwash = AsyncMock(return_value=None)
         mock_client.async_read_register = AsyncMock(return_value=[0])

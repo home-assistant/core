@@ -3,7 +3,7 @@
 from unittest.mock import Mock
 
 from freezegun.api import FrozenDateTimeFactory
-from momonga import MomongaError
+from momonga import MomongaError, MomongaSkScanFailure
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.route_b_smart_meter.const import DEFAULT_SCAN_INTERVAL
@@ -88,3 +88,38 @@ async def test_route_b_smart_meter_sensor_no_data(
     ):
         assert hass.states.get(f"{entity_prefix}{key}").state == STATE_UNKNOWN
     assert hass.states.get(f"{entity_prefix}instantaneous_current_t_phase").state == "2"
+
+
+async def test_route_b_smart_meter_sensor_reopen_closed_session(
+    hass: HomeAssistant,
+    mock_momonga: Mock,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a session left closed is reopened on the next update."""
+    entity_id = (
+        "sensor.route_b_smart_meter_01234567890123456789012345f789_instantaneous_power"
+    )
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    client = mock_momonga.return_value
+    client.is_open = False
+    client.reopen.side_effect = MomongaSkScanFailure
+    freezer.tick(DEFAULT_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get(entity_id).state is STATE_UNAVAILABLE
+    client.get_instantaneous_power.assert_called_once()
+
+    def reopen() -> None:
+        client.is_open = True
+
+    client.reopen.side_effect = reopen
+    freezer.tick(DEFAULT_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get(entity_id).state == "3"
+    assert client.reopen.call_count == 2

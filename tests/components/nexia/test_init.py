@@ -1,6 +1,6 @@
 """The init tests for the nexia platform."""
 
-from unittest.mock import NonCallableMock, patch
+from unittest.mock import MagicMock, NonCallableMock, patch
 
 import aiohttp
 from nexia.home import NexiaHome
@@ -29,6 +29,22 @@ async def test_setup_retry_client_os_error(
     patch_nexia_home.login.side_effect = aiohttp.ClientOSError
     config_entry = await setup_integration(hass, patch_nexia_home)
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_setup_invalid_credentials(
+    hass: HomeAssistant,
+    patch_nexia_home: NonCallableMock[NexiaHome],
+) -> None:
+    """Verify setup fails on invalid credentials."""
+    patch_nexia_home.login.side_effect = aiohttp.ClientResponseError(
+        MagicMock(), (), status=401
+    )
+    config_entry = await setup_integration(hass, patch_nexia_home)
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert (
+        config_entry.reason
+        == "Access error from Nexia service, please check credentials"
+    )
 
 
 async def test_device_remove_devices(

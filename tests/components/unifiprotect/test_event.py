@@ -1,13 +1,13 @@
 """Test the UniFi Protect event platform."""
 
-import asyncio
 from collections.abc import Callable, Coroutine
 from datetime import datetime, timedelta
 import json
 from pathlib import Path
 from typing import Any
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from uiprotect import EventChange, ProtectEvent, ProtectEventChannel
 from uiprotect.data import (
@@ -28,6 +28,7 @@ from homeassistant.components.unifiprotect.const import (
     DEFAULT_ATTRIBUTION,
     DOMAIN,
     EVENT_TYPE_PACKAGE_DETECTED,
+    VEHICLE_EVENT_DELAY_SECONDS,
 )
 from homeassistant.components.unifiprotect.event import (
     _MAX_TRACKED_EVENTS,
@@ -46,22 +47,12 @@ from .utils import (
     init_entry,
     make_public_camera,
     public_device_ws_message,
+    registered_keys,
     remove_entities,
     setup_public_camera,
 )
 
-# Short delay for testing
-TEST_VEHICLE_EVENT_DELAY = 0.05
-
-
-@pytest.fixture(autouse=True)
-def short_vehicle_delay():
-    """Use a short delay for vehicle event tests."""
-    with patch(
-        "homeassistant.components.unifiprotect.event.VEHICLE_EVENT_DELAY_SECONDS",
-        TEST_VEHICLE_EVENT_DELAY,
-    ):
-        yield
+from tests.common import async_fire_time_changed
 
 
 async def test_camera_remove(
@@ -887,6 +878,7 @@ async def test_vehicle_detection_basic(
     doorbell: Camera,
     unadopted_camera: Camera,
     fixed_now: datetime,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test basic vehicle detection event with thumbnails."""
 
@@ -939,7 +931,8 @@ async def test_vehicle_detection_basic(
     ufp.ws_msg(mock_msg)
 
     # Wait for the timer
-    await asyncio.sleep(TEST_VEHICLE_EVENT_DELAY * 2)
+    freezer.tick(timedelta(seconds=VEHICLE_EVENT_DELAY_SECONDS * 2))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     # Should have received vehicle detection event
@@ -961,6 +954,7 @@ async def test_vehicle_detection_with_lpr_ufp6(
     doorbell: Camera,
     unadopted_camera: Camera,
     fixed_now: datetime,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test vehicle detection with license plate recognition (UFP 6.0+ format)."""
 
@@ -1022,7 +1016,8 @@ async def test_vehicle_detection_with_lpr_ufp6(
     ufp.ws_msg(mock_msg)
 
     # Wait for the timer
-    await asyncio.sleep(TEST_VEHICLE_EVENT_DELAY * 2)
+    freezer.tick(timedelta(seconds=VEHICLE_EVENT_DELAY_SECONDS * 2))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     # Should have received vehicle detection event
@@ -1045,6 +1040,7 @@ async def test_vehicle_detection_with_lpr_legacy(
     doorbell: Camera,
     unadopted_camera: Camera,
     fixed_now: datetime,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test vehicle detection with license plate recognition (legacy format)."""
 
@@ -1098,7 +1094,8 @@ async def test_vehicle_detection_with_lpr_legacy(
     ufp.ws_msg(mock_msg)
 
     # Wait for the timer
-    await asyncio.sleep(TEST_VEHICLE_EVENT_DELAY * 2)
+    freezer.tick(timedelta(seconds=VEHICLE_EVENT_DELAY_SECONDS * 2))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     # Should have received vehicle detection event
@@ -1118,6 +1115,7 @@ async def test_vehicle_detection_multiple_thumbnails(
     doorbell: Camera,
     unadopted_camera: Camera,
     fixed_now: datetime,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test vehicle detection with multiple thumbnails - should pick best LPR."""
 
@@ -1199,7 +1197,8 @@ async def test_vehicle_detection_multiple_thumbnails(
     ufp.ws_msg(mock_msg)
 
     # Wait for the timer
-    await asyncio.sleep(TEST_VEHICLE_EVENT_DELAY * 2)
+    freezer.tick(timedelta(seconds=VEHICLE_EVENT_DELAY_SECONDS * 2))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     # Should have received vehicle detection event with highest confidence LPR
@@ -1219,6 +1218,7 @@ async def test_vehicle_detection_no_thumbnails(
     doorbell: Camera,
     unadopted_camera: Camera,
     fixed_now: datetime,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test vehicle detection event without thumbnails - should not fire."""
 
@@ -1262,7 +1262,8 @@ async def test_vehicle_detection_no_thumbnails(
     ufp.ws_msg(mock_msg)
 
     # Wait for the timer to expire
-    await asyncio.sleep(TEST_VEHICLE_EVENT_DELAY * 2)
+    freezer.tick(timedelta(seconds=VEHICLE_EVENT_DELAY_SECONDS * 2))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     # Should NOT have received any events (no vehicle thumbnails)
@@ -1277,6 +1278,7 @@ async def test_vehicle_detection_timer_reset_on_new_thumbnail(
     doorbell: Camera,
     unadopted_camera: Camera,
     fixed_now: datetime,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that timer resets when new thumbnails arrive for same event."""
 
@@ -1331,7 +1333,8 @@ async def test_vehicle_detection_timer_reset_on_new_thumbnail(
     await hass.async_block_till_done()
 
     # Wait briefly (timer hasn't expired yet)
-    await asyncio.sleep(TEST_VEHICLE_EVENT_DELAY / 2)
+    freezer.tick(timedelta(seconds=VEHICLE_EVENT_DELAY_SECONDS / 2))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     # No event yet (timer hasn't expired)
@@ -1369,7 +1372,8 @@ async def test_vehicle_detection_timer_reset_on_new_thumbnail(
     assert len(events) == 0
 
     # Wait for timer to expire
-    await asyncio.sleep(TEST_VEHICLE_EVENT_DELAY * 2)
+    freezer.tick(timedelta(seconds=VEHICLE_EVENT_DELAY_SECONDS * 2))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     # Now should have the event with the better LPR
@@ -1388,6 +1392,7 @@ async def test_vehicle_detection_new_event_cancels_timer(
     doorbell: Camera,
     unadopted_camera: Camera,
     fixed_now: datetime,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that new event cancels timer for previous event."""
 
@@ -1446,7 +1451,8 @@ async def test_vehicle_detection_new_event_cancels_timer(
     await hass.async_block_till_done()
 
     # Wait briefly (timer hasn't expired yet)
-    await asyncio.sleep(TEST_VEHICLE_EVENT_DELAY / 2)
+    freezer.tick(timedelta(seconds=VEHICLE_EVENT_DELAY_SECONDS / 2))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     # No event yet
@@ -1490,7 +1496,8 @@ async def test_vehicle_detection_new_event_cancels_timer(
     await hass.async_block_till_done()
 
     # Wait for second event's timer
-    await asyncio.sleep(TEST_VEHICLE_EVENT_DELAY * 2)
+    freezer.tick(timedelta(seconds=VEHICLE_EVENT_DELAY_SECONDS * 2))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     # Should have two events - first fired immediately when second arrived
@@ -1509,12 +1516,133 @@ async def test_vehicle_detection_new_event_cancels_timer(
     unsub()
 
 
+def _vehicle_event(
+    ufp: MockUFPFixture,
+    camera_id: str,
+    *,
+    event_id: str,
+    event_type: EventType,
+    start: datetime,
+) -> Event:
+    """Build an open vehicle event without thumbnails, as Protect starts one."""
+    return Event(
+        model=ModelType.EVENT,
+        id=event_id,
+        type=event_type,
+        start=start,
+        end=None,
+        score=100,
+        smart_detect_types=[
+            SmartDetectObjectType.LICENSE_PLATE,
+            SmartDetectObjectType.VEHICLE,
+        ],
+        smart_detect_event_ids=[],
+        camera_id=camera_id,
+        api=ufp.api,
+        metadata={"detected_thumbnails": []},
+    )
+
+
+def _process_vehicle_event(ufp: MockUFPFixture, event: Event) -> None:
+    """Apply event to the bootstrap like a websocket frame and signal it."""
+    ufp.api.bootstrap.process_event(event)
+    mock_msg = Mock()
+    mock_msg.changed_data = {}
+    mock_msg.new_obj = event
+    ufp.ws_msg(mock_msg)
+
+
+@pytest.mark.parametrize(
+    ("end_order", "expected_event_id"),
+    [
+        pytest.param(("zone_event", "line_event"), "line_event", id="zone_ends_first"),
+        pytest.param(("line_event", "zone_event"), "zone_event", id="line_ends_first"),
+    ],
+)
+async def test_vehicle_detection_line_crossing_in_zone(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+    unadopted_camera: Camera,
+    fixed_now: datetime,
+    end_order: tuple[str, str],
+    expected_event_id: str,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A vehicle crossing a line inside a zone fires once with its plate."""
+    await init_entry(hass, ufp, [doorbell, unadopted_camera])
+    events: list[HAEvent] = []
+
+    @callback
+    def _capture_event(event: HAEvent) -> None:
+        events.append(event)
+
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.EVENT, doorbell, EVENT_DESCRIPTIONS[3]
+    )
+    unsub = async_track_state_change_event(hass, entity_id, _capture_event)
+
+    zone = _vehicle_event(
+        ufp,
+        doorbell.id,
+        event_id="zone_event",
+        event_type=EventType.SMART_DETECT,
+        start=fixed_now - timedelta(seconds=15),
+    )
+    line = _vehicle_event(
+        ufp,
+        doorbell.id,
+        event_id="line_event",
+        event_type=EventType.SMART_DETECT_LINE,
+        start=fixed_now - timedelta(seconds=10),
+    )
+    protect_events = {zone.id: zone, line.id: line}
+    for protect_event in (zone, line):
+        _process_vehicle_event(ufp, protect_event)
+
+    for event_id in end_order:
+        protect_events[event_id].update_from_dict({"end": fixed_now})
+        _process_vehicle_event(ufp, protect_events[event_id])
+
+    # Protect writes the thumbnails only once an event has ended.
+    for protect_event in (zone, line):
+        protect_event.update_from_dict(
+            {
+                "metadata": {
+                    "detected_thumbnails": [
+                        {
+                            "type": "vehicle",
+                            "confidence": 90,
+                            "clock_best_wall": fixed_now,
+                            "cropped_id": f"{protect_event.id}_thumb",
+                            "name": "7ABC123",
+                        }
+                    ]
+                }
+            }
+        )
+        _process_vehicle_event(ufp, protect_event)
+    await hass.async_block_till_done()
+    freezer.tick(timedelta(seconds=VEHICLE_EVENT_DELAY_SECONDS * 2))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert len(events) == 1
+    state = events[0].data["new_state"]
+    assert state
+    assert state.attributes[ATTR_EVENT_ID] == expected_event_id
+    assert state.attributes["license_plate"] == "7ABC123"
+
+    unsub()
+
+
 async def test_vehicle_detection_timer_cleanup_on_remove(
     hass: HomeAssistant,
     ufp: MockUFPFixture,
     doorbell: Camera,
     unadopted_camera: Camera,
     fixed_now: datetime,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that pending timer is cancelled when entity is removed."""
 
@@ -1566,7 +1694,8 @@ async def test_vehicle_detection_timer_cleanup_on_remove(
     await hass.async_block_till_done()
 
     # Wait past when timer would have fired
-    await asyncio.sleep(TEST_VEHICLE_EVENT_DELAY * 2)
+    freezer.tick(timedelta(seconds=VEHICLE_EVENT_DELAY_SECONDS * 2))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     # Entity should be gone and no event should have fired
@@ -1580,6 +1709,7 @@ async def test_vehicle_detection_refire_on_lpr_data(
     doorbell: Camera,
     unadopted_camera: Camera,
     fixed_now: datetime,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that event refires when LPR data arrives after initial detection."""
 
@@ -1632,7 +1762,8 @@ async def test_vehicle_detection_refire_on_lpr_data(
     ufp.ws_msg(mock_msg)
 
     # Wait for the timer to expire - first event should fire without LPR
-    await asyncio.sleep(TEST_VEHICLE_EVENT_DELAY * 2)
+    freezer.tick(timedelta(seconds=VEHICLE_EVENT_DELAY_SECONDS * 2))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     # Should have received first event without LPR
@@ -1671,7 +1802,8 @@ async def test_vehicle_detection_refire_on_lpr_data(
     ufp.ws_msg(mock_msg)
 
     # Wait for the new timer to expire
-    await asyncio.sleep(TEST_VEHICLE_EVENT_DELAY * 2)
+    freezer.tick(timedelta(seconds=VEHICLE_EVENT_DELAY_SECONDS * 2))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     # Should have received second event WITH LPR data
@@ -1691,6 +1823,7 @@ async def test_vehicle_detection_no_refire_same_data(
     doorbell: Camera,
     unadopted_camera: Camera,
     fixed_now: datetime,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that event does NOT refire when same data arrives again."""
 
@@ -1748,7 +1881,8 @@ async def test_vehicle_detection_no_refire_same_data(
     ufp.ws_msg(mock_msg)
 
     # Wait for the timer to expire
-    await asyncio.sleep(TEST_VEHICLE_EVENT_DELAY * 2)
+    freezer.tick(timedelta(seconds=VEHICLE_EVENT_DELAY_SECONDS * 2))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     # Should have received one event
@@ -1760,7 +1894,8 @@ async def test_vehicle_detection_no_refire_same_data(
 
     # Send the same event again with identical data
     ufp.ws_msg(mock_msg)
-    await asyncio.sleep(TEST_VEHICLE_EVENT_DELAY * 2)
+    freezer.tick(timedelta(seconds=VEHICLE_EVENT_DELAY_SECONDS * 2))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     # Should NOT have received another event (same data)
@@ -2430,16 +2565,6 @@ async def test_event_entities_unavailable_on_events_ws_disconnect(
     assert hass.states.get(motion_id).state != STATE_UNAVAILABLE
 
 
-def _event_keys(entity_registry: EntityRegistry, mac: str) -> set[str]:
-    """Return the description keys of a device's event entities."""
-    prefix = f"{mac}_"
-    return {
-        entry.unique_id.removeprefix(prefix)
-        for entry in entity_registry.entities.values()
-        if entry.domain == Platform.EVENT and entry.unique_id.startswith(prefix)
-    }
-
-
 async def test_smart_detection_events_need_advertised_types(
     hass: HomeAssistant,
     entity_registry: EntityRegistry,
@@ -2452,7 +2577,7 @@ async def test_smart_detection_events_need_advertised_types(
 
     await init_entry(hass, ufp, [doorbell])
 
-    keys = _event_keys(entity_registry, doorbell.mac)
+    keys = registered_keys(entity_registry, Platform.EVENT, doorbell.mac)
     assert "motion_detection" in keys
     assert not keys & {"smart_detection", "package"}
 
@@ -2491,7 +2616,7 @@ async def test_public_only_event_entities(
 
     await setup_public_only()
 
-    assert _event_keys(entity_registry, doorbell.mac) == expected
+    assert registered_keys(entity_registry, Platform.EVENT, doorbell.mac) == expected
 
 
 async def test_public_only_skips_private_event_classes(
@@ -2508,7 +2633,9 @@ async def test_public_only_skips_private_event_classes(
 
     await setup_public_only()
 
-    assert "vehicle" not in _event_keys(entity_registry, doorbell.mac)
+    assert "vehicle" not in registered_keys(
+        entity_registry, Platform.EVENT, doorbell.mac
+    )
 
 
 async def test_public_only_event_fires(
@@ -2568,4 +2695,6 @@ async def test_public_only_event_camera_added_after_setup(
     ufp_public_only.devices_ws_subscription(msg)
     await hass.async_block_till_done()
 
-    assert "motion_detection" in _event_keys(entity_registry, camera.mac)
+    assert "motion_detection" in registered_keys(
+        entity_registry, Platform.EVENT, camera.mac
+    )

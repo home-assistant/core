@@ -3,7 +3,7 @@
 from typing import Any, override
 
 import probatio
-from simplepush import UnknownError, send
+from simplepush.legacy import UnknownError, send
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_NAME, CONF_PASSWORD
@@ -67,11 +67,13 @@ class SimplePushFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=probatio.Schema(
                 {
-                    probatio.Required(CONF_DEVICE_KEY): str,
+                    probatio.Required(probatio.Secret(CONF_DEVICE_KEY)): str,
                     # Name field is no longer allowed in config flow schemas
                     # pylint: disable-next=home-assistant-config-flow-name-field
                     probatio.Required(CONF_NAME, default=DEFAULT_NAME): str,
-                    probatio.Inclusive(CONF_PASSWORD, ATTR_ENCRYPTED): str,
+                    probatio.Inclusive(
+                        probatio.Secret(CONF_PASSWORD), ATTR_ENCRYPTED
+                    ): str,
                     probatio.Inclusive(CONF_SALT, ATTR_ENCRYPTED): str,
                 }
             ),
