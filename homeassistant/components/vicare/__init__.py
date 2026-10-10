@@ -10,10 +10,14 @@ from PyViCare.PyViCare import PyViCare
 from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
 from PyViCare.PyViCareOAuthManager import obtain_token_via_basic_auth_pkce
 from PyViCare.PyViCareUtils import (
+    PyViCareDeviceCommunicationError,
+    PyViCareInternalServerError,
     PyViCareInvalidConfigurationError,
     PyViCareInvalidCredentialsError,
+    PyViCareInvalidDataError,
     PyViCareRateLimitError,
 )
+import requests
 
 from homeassistant.components.application_credentials import (
     ClientCredential,
@@ -166,6 +170,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ViCareConfigEntry) -> bo
         raise ConfigEntryNotReady(
             f"ViCare API rate limit exceeded, resets at {err.limitResetDate}"
         ) from err
+    except (
+        PyViCareDeviceCommunicationError,
+        PyViCareInternalServerError,
+        PyViCareInvalidDataError,
+        requests.RequestException,
+    ) as err:
+        # The coordinator treats the same errors as transient.
+        raise ConfigEntryNotReady("Unable to reach the ViCare API") from err
 
     # Group devices by gateway: in viaGateway mode one bulk fetch refreshes
     # every device behind a gateway, so one coordinator serves the gateway.

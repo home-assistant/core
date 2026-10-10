@@ -7,6 +7,7 @@ from aiohttp import ClientError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from PyViCare.PyViCareUtils import (
+    PyViCareDeviceCommunicationError,
     PyViCareInternalServerError,
     PyViCareInvalidConfigurationError,
     PyViCareInvalidCredentialsError,
@@ -14,6 +15,7 @@ from PyViCare.PyViCareUtils import (
     PyViCareNotSupportedFeatureError,
     PyViCareRateLimitError,
 )
+import requests
 
 from homeassistant.components.vicare.const import DEFAULT_CACHE_DURATION, DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
@@ -474,6 +476,43 @@ async def test_setup_entry_rate_limited(
     # SETUP_RETRY alone would also match an unrelated ConfigEntryNotReady.
     assert "rate limit" in mock_config_entry.reason
     assert str(rate_limit_error.limitResetDate) in mock_config_entry.reason
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        # From a real response, 2026-10-09T17:05:26Z.
+        PyViCareInternalServerError(
+            {"statusCode": 502, "message": "Non-JSON 502 response", "viErrorId": "n/a"}
+        ),
+        PyViCareDeviceCommunicationError(
+            {"extendedPayload": {"reason": "GATEWAY_OFFLINE"}}
+        ),
+        PyViCareInvalidDataError({"error": "no data"}),
+        requests.ConnectionError,
+    ],
+)
+async def test_setup_entry_transient_api_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    error: Exception | type[Exception],
+) -> None:
+    """Test setup retries on a ViCare API error that resolves on its own."""
+    mock_config_entry.add_to_hass(hass)
+    client = MockPyViCare([])
+    client.initWithExternalOAuth.side_effect = error
+
+    with (
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+        ),
+        patch(f"{MODULE}.PyViCare", return_value=client),
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.reason == "Unable to reach the ViCare API"
 
 
 async def test_setup_entry_invalid_configuration(
