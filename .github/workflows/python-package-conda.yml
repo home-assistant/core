@@ -1,0 +1,853 @@
+name: Python Package using Conda
+
+on: [push]
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 5
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python 3.10
+      uses: actions/setup-python@v3
+      with:
+        python-version: '3.10'
+    - name: Add conda to system path
+      run: |
+        # $CONDA is an environment variable pointing to the root of the miniconda directory
+        echo $CONDA/bin >> $GITHUB_PATH
+    - name: Install dependencies
+      run: |
+        conda env update --file environment.yml --name base
+    - name: Lint with flake8
+      run: |
+        conda install flake8
+        # stop the build if there are Python syntax errors or undefined names
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
+        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+    - name: Test with pytest
+      run: |
+        conda install pytest
+        pytest
+This is the **starter workflow GitHub generates for Conda projects**. It has the same problems as your original `python-app.yml`, plus a few Conda-specific ones. Here's the review and an improved version.
+
+## Issues in the original
+
+| # | Issue | Why it matters |
+|---|---|---|
+| 1 | `on: [push]` | Runs on every branch, every push. No PR trigger, no branch filter. |
+| 2 | `max-parallel: 5` | Meaningless — there's no matrix, only one job. |
+| 3 | `actions/setup-python@v3` | Outdated (Node 16, EOL). And it's **pointless here** — you're using conda, not system Python. |
+| 4 | `echo $CONDA/bin >> $GITHUB_PATH` | `$CONDA` is not reliably set on `ubuntu-latest` images anymore. The whole step is unnecessary if you use `setup-miniconda`. |
+| 5 | `conda env update --name base` | Updating `base` is discouraged. Create a named env; isolation matters. |
+| 6 | `conda install flake8` / `conda install pytest` **inside steps** | Slow, unpinned, re-solves the environment mid-run, and not reproducible. Deps belong in `environment.yml`. |
+| 7 | No caching | Conda re-downloads the whole world every run. |
+| 8 | No Python matrix | Locks you to 3.10 forever. |
+| 9 | No `permissions:` block | Uses default token permissions (broader than needed). |
+| 10 | No `concurrency:` | Stale runs pile up on rapid pushes. |
+| 11 | Uses `defaults.run.shell` implicitly | On some runners conda activation is needed in every step — better to declare it explicitly. |
+| 12 | `pytest` with no args | Fails with "no tests collected" exit code 5 on empty repos. |
+
+## Improved version
+
+```yaml
+name: Python Package using Conda
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build-linux:
+    name: Conda (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: [ "3.10", "3.11", "3.12" ]
+
+    defaults:
+      run:
+        shell: bash -el {0}     # -l activates the conda env in every step
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Miniconda
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          miniforge-version: latest
+          python-version: ${{ matrix.python-version }}
+          environment-file: environment.yml
+          activate-environment: myenv
+          use-mamba: true              # much faster solver
+          auto-activate-base: false
+
+      - name: Cache conda packages
+        uses: actions/cache@v4
+        with:
+          path: ~/conda_pkgs_dir
+          key: conda-${{ runner.os }}-${{ matrix.python-version }}-${{ hashFiles('environment.yml') }}
+          restore-keys: |
+            conda-${{ runner.os }}-${{ matrix.python-version }}-
+
+      - name: Verify environment
+        run: |
+          conda info
+          conda list
+          python --version
+
+      - name: Lint with flake8
+        run: |
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+          flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
+      - name: Test with pytest
+        run: pytest --cov=. --cov-report=xml --cov-report=term-missing
+
+      - name: Upload coverage to Codecov
+        if: matrix.python-version == '3.12'
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./coverage.xml
+          fail_ci_if_error: false
+          token: ${{ secrets.CODECOV_TOKEN }}
+```
+
+## `environment.yml` — everything lives here
+
+This replaces the inline `conda install flake8` / `conda install pytest` steps.
+
+```yaml
+name: myenv
+
+channels:
+  - conda-forge
+
+dependencies:
+  - python=3.10       # ← overridden by the matrix at runtime
+  - pip
+
+  # Runtime deps
+  # - numpy
+  # - pandas
+  # - scipy
+
+  # Dev / test tooling
+  - flake8
+  - pytest
+  - pytest-cov
+  - pip:
+      - codecov
+```
+
+**Why a single `environment.yml` beats inline installs:**
+
+- Reproducible — one source of truth for both CI and local dev (`conda env create -f environment.yml`).
+- Faster — one solver pass instead of three.
+- Cacheable — the `hashFiles('environment.yml')` key actually invalidates when deps change.
+- Auditable — reviewers see what CI is really installing.
+
+## Key changes explained
+
+### `conda-incubator/setup-miniconda@v3`
+
+This is the **official recommended action** for conda on GitHub Actions. It:
+
+- Installs Miniforge (conda-forge only, no licensing concerns with Anaconda's default channels).
+- Creates the environment from your `environment.yml` in one step.
+- Handles activation correctly — no `echo $CONDA/bin >> $GITHUB_PATH` hack.
+- Supports a Python version matrix via the `python-version` input.
+
+If you need the `anaconda` default channels (e.g. for packages only on Anaconda's repo), use `miniconda-version` instead of `miniforge-version` — but check Anaconda's [Terms of Service](https://www.anaconda.com/legal) first, since commercial use of their default channels now requires a paid license.
+
+### `defaults.run.shell: bash -el {0}`
+
+Without this, some steps run before conda activation and see the system Python. The `-el` flags:
+
+- `-e` → exit on error
+- `-l` → login shell, which sources `~/.bash_profile` where conda activation lives
+
+This is the difference between "works sometimes" and "works every time."
+
+### `use-mamba: true`
+
+Mamba is a drop-in replacement for the conda solver — same commands, 10–100× faster dependency resolution. On a small environment it's the difference between 90s and 10s. `setup-miniconda@v3` installs it for you.
+
+### Cache key includes `matrix.python-version`
+
+Each Python version needs its own `~/conda_pkgs_dir` — conda packages are built per-Python-version. Omitting this from the key causes subtle "works on 3.10, fails on 3.12" bugs.
+
+## Gotchas specific to Conda
+
+| Trap | Why it bites | Fix |
+|---|---|---|
+| **`$CONDA` unset** | Newer `ubuntu-latest` images don't export it globally | Use `setup-miniconda` — it handles activation itself |
+| **`conda install` mid-step** | Re-solves the whole env; can silently upgrade other packages | Put everything in `environment.yml` |
+| **`conda update --all`** | Non-deterministic; breaks on random days | Never run it in CI |
+| **Mixing pip and conda carelessly** | pip can clobber conda packages; order matters | Install conda deps first, pip last (as shown in the `pip:` sub-block) |
+| **`base` env updates** | Pollutes the runner's base env; some packages may not upgrade cleanly | Always create a named env |
+| **Anaconda defaults licensing** | Commercial use of `defaults` channel requires a paid plan since 2024 | Use `conda-forge` via Miniforge |
+| **Slow solver** | The classic solver is O(exponential) in dep count | `use-mamba: true` |
+| **Lockfiles** | `environment.yml` has no lock — two runs can resolve differently | For reproducibility, use `conda-lock` and commit `conda-lock.yml` |
+
+## When to use Conda vs pip
+
+You're using Conda — presumably for scientific packages. Worth asking whether you *need* it:
+
+**Conda wins when:**
+- You need **non-Python binaries** (GDAL, HDF5, MKL, CUDA, R, compiled Fortran).
+- You're working in a science/data stack where conda-forge is the canonical distribution.
+- You need GPU builds (`pytorch-gpu`, `tensorflow-gpu`) that pip wheels don't cover well.
+
+**pip wins when:**
+- You're a pure-Python library.
+- You want faster CI and simpler caching.
+- All your deps have wheels on PyPI.
+
+If you can drop Conda, the plain `python-app.yml` from earlier in this thread is faster, simpler, and doesn't require the `setup-miniconda` action or the `environment.yml` file.
+
+## Full picture if you keep Conda
+
+```
+.
+├── .github/
+│   └── workflows/
+│       └── python-app.yml       # ← the improved Conda workflow above
+├── environment.yml              # single source of truth for deps
+├── pyproject.toml               # coverage + pytest config
+└── src/your_package/
+```
+
+You can still add everything else from earlier in this thread — nightly audit, publish to PyPI, Dependabot, pre-commit, branch protection. The only difference is the conda-specific env setup in the test job. `pip-audit` won't work well on conda-managed envs, so for security scanning use `conda list --explicit` + [safety](https://pypi.org/project/safety/) or [conda-audit](https://github.com/conda/conda-audit) instead.
+
+---
+
+Want me to:
+
+1. **Adapt the `nightly.yml`** for a conda environment (replacing pip-audit with conda-appropriate tooling)?
+2. **Add `conda-lock`** for full reproducibility?
+3. **Show the pip-only alternative** if you're not sure you need Conda?
+4. **Update the HTML reference** to include this Conda variant?
+
+Tell me which.Here's all four. Each section is self-contained.
+
+---
+
+## 1. `nightly.yml` for Conda
+
+Replaces `pip-audit` (which doesn't understand conda-managed packages) with conda-appropriate tooling. Freshness test uses `conda update --all` in a throwaway env so it can't poison the runner's base.
+
+```yaml
+name: Nightly
+
+on:
+  schedule:
+    - cron: "17 3 * * *"     # 03:17 UTC daily
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  # ----------------------------------------------------------------------
+  # Dependency audit: scan the *current* environment for known CVEs.
+  # ----------------------------------------------------------------------
+  dependency-audit:
+    name: Nightly — dependency audit
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash -el {0 }
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Miniconda
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          miniforge-version: latest
+          environment-file: environment.yml
+          activate-environment: myenv
+          use-mamba: true
+          auto-activate-base: false
+
+      - name: Export explicit package list
+        run: |
+          conda list --explicit > conda-explicit.txt
+          conda list --json > conda-list.json
+
+      - name: Install safety (CVE scanner)
+        run: pip install safety pip-audit
+
+      - name: pip-audit — CVE scan of pip-installed packages
+        run: pip-audit --strict --desc on || true
+
+      - name: safety — CVE scan across the whole env
+        run: |
+          # safety reads requirements-style files; conda's explicit list works.
+          safety check --file conda-explicit.txt --full-report --continue-on-error || true
+
+      - name: Upload environment snapshot
+        uses: actions/upload-artifact@v4
+        with:
+          name: conda-env-${{ github.run_id }}
+          path: |
+            conda-explicit.txt
+            conda-list.json
+
+  # ----------------------------------------------------------------------
+  # Freshness: install latest allowed deps in a *throwaway* env.
+  # ----------------------------------------------------------------------
+  freshness-test:
+    name: Nightly — latest allowed deps
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash -el {0 }
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Miniconda
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          miniforge-version: latest
+          # Note: no environment-file — we clone and then update.
+          activate-environment: fresh
+          use-mamba: true
+          auto-activate-base: false
+
+      - name: Clone env, then update to latest allowed
+        run: |
+          conda env create -n fresh -f environment.yml
+          conda activate fresh
+          conda update --all --yes
+          conda list
+
+      - name: Install pytest
+        run: pip install pytest
+
+      - name: Test
+        run: pytest -q
+
+  notify:
+    name: Nightly — notify
+    needs: [dependency-audit, freshness-test]
+    if: failure()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Open or update tracking issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const title = "Nightly build failing";
+            const body = `Run: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: "open",
+              labels: "nightly-failure",
+            });
+            if (issues.length) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issues[0].number,
+                body,
+              });
+            } else {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title, body,
+                labels: ["nightly-failure"],
+              });
+            }
+```
+
+### Why the tooling changed
+
+| Tool | pip world | conda world |
+|---|---|---|
+| CVE scan | `pip-audit` | `safety` reads the explicit env list; `pip-audit` still works for the pip-installed subset |
+| Freshness | `pip install --upgrade -r requirements.txt` | `conda update --all` in a cloned env |
+| Env dump | `pip freeze` | `conda list --explicit` (pins URLs + hashes) |
+
+`conda-audit` (the conda-native scanner) is still experimental and unmaintained as of 2025 — `safety` against `conda list --explicit` is the pragmatic choice.
+
+`safety check --continue-on-error` is deliberate: we want the report in the log but don't want a single transitive CVE to page someone at 3am. Swap to `--fail-on any` (or drop the flag) once you're clean and want the gate.
+
+---
+
+## 2. `conda-lock` for full reproducibility
+
+`environment.yml` alone has **no lockfile** — two `conda env create` runs a week apart can resolve to different versions. `conda-lock` produces a fully-pinned, cross-platform lockfile.
+
+### Install and generate the lock
+
+```bash
+# One-time, local
+pip install conda-lock
+
+# Generate lock for the platforms you CI on
+conda-lock lock \
+  --file environment.yml \
+  --kind explicit \
+  --platform linux-64 \
+  --platform osx-64 \
+  --platform osx-arm64 \
+  --platform win-64
+```
+
+This produces:
+```
+conda-lock.yml           # unified lock (recommended)
+conda-linux-64.lock      # explicit per-platform (if --kind explicit)
+conda-osx-64.lock
+conda-osx-arm64.lock
+conda-win-64.lock
+```
+
+### Updated workflow using the lock
+
+```yaml
+name: Python Package using Conda
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build-linux:
+    name: Conda (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: [ "3.10", "3.11", "3.12" ]
+
+    defaults:
+      run:
+        shell: bash -el {0 }
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Miniconda
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          miniforge-version: latest
+          python-version: ${{ matrix.python-version }}
+          activate-environment: myenv
+          use-mamba: true
+          auto-activate-base: false
+
+      - name: Cache conda packages
+        uses: actions/cache@v4
+        with:
+          path: ~/conda_pkgs_dir
+          key: conda-${{ runner.os }}-${{ matrix.python-version }}-${{ hashFiles('conda-lock.yml') }}
+          restore-keys: |
+            conda-${{ runner.os }}-${{ matrix.python-version }}-
+
+      - name: Install conda-lock
+        run: pip install conda-lock
+
+      - name: Create env from lockfile
+        run: |
+          conda-lock install \
+            --conda $(which conda) \
+            --name myenv \
+            conda-lock.yml
+          conda activate myenv
+
+      - name: Verify environment
+        run: |
+          conda info
+          conda list
+          python --version
+
+      - name: Lint with flake8
+        run: |
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+          flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
+      - name: Test with pytest
+        run: pytest --cov=. --cov-report=xml --cov-report=term-missing
+
+      - name: Upload coverage to Codecov
+        if: matrix.python-version == '3.12'
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./coverage.xml
+          fail_ci_if_error: false
+          token: ${{ secrets.CODECOV_TOKEN }}
+```
+
+### The Python-version matrix and locks conflict
+
+Notice a subtlety: **`conda-lock.yml` pins `python=3.10` explicitly** if that's what's in `environment.yml`. You can't reuse one lock across 3.10/3.11/3.12.
+
+Two options:
+
+**Option A — drop the matrix.** Lock to one Python version. Simple, reproducible, boring. This is what most scientific projects do.
+
+**Option B — one lock per Python version.**
+```bash
+for v in 3.10 3.11 3.12; do
+  sed "s/python=.*/python=$v/" environment.yml > environment-$v.yml
+  conda-lock lock --file environment-$v.yml -k explicit --platform linux-64
+  mv conda-lock.yml conda-lock-$v.yml
+done
+```
+
+Then in CI: `conda-lock install --name myenv conda-lock-${{ matrix.python-version }}.yml`.
+
+Option A is what I'd recommend unless you actively support multiple Python versions.
+
+### Commit the lock
+
+**Yes, commit `conda-lock.yml`.** It's the entire point — it's the reproducible artifact. Add `conda-lock.yml linguist-generated=true` to `.gitattributes` if you don't want it counted in repo stats.
+
+### Regenerate on dep changes
+
+Add a CI job that fails if the lock is out of date relative to `environment.yml`:
+
+```yaml
+  lock-check:
+    name: Lockfile up to date
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: conda-incubator/setup-miniconda@v3
+        with:
+          miniforge-version: latest
+          use-mamba: true
+      - run: pip install conda-lock
+      - run: |
+          conda-lock lock --file environment.yml --kind explicit --platform linux-64
+          git diff --exit-code conda-lock.yml || \
+            (echo "::error::conda-lock.yml is out of date. Run 'conda-lock lock' and commit." && exit 1)
+```
+
+Or add a `pre-commit` hook that runs `conda-lock` on `environment.yml` changes.
+
+---
+
+## 3. Pip-only alternative
+
+If you don't actually need conda's non-Python binaries (GDAL, MKL, CUDA, R, etc.), the pip path is simpler and faster. Same coverage, no `setup-miniconda`, no `environment.yml`, no lockfile tooling.
+
+```yaml
+name: Python application
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Test (${{ matrix.os }}, Python ${{ matrix.python-version }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            python-version: "3.10"
+          - os: ubuntu-latest
+            python-version: "3.11"
+          - os: ubuntu-latest
+            python-version: "3.12"
+          - os: windows-latest
+            python-version: "3.12"
+          - os: macos-latest
+            python-version: "3.12"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip'
+          cache-dependency-path: requirements*.txt
+
+      - name: Install dependencies
+        shell: bash
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest pytest-cov
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          if [ -f requirements-dev.txt ]; then pip install -r requirements-dev.txt; fi
+
+      - name: Test with pytest
+        shell: bash
+        run: pytest --cov=. --cov-report=xml --cov-report=term-missing
+
+      - name: Upload coverage to Codecov
+        if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.12'
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./coverage.xml
+          fail_ci_if_error: false
+          token: ${{ secrets.CODECOV_TOKEN }}
+```
+
+### Pip-only with a lockfile
+
+For reproducibility without conda-lock, use **pip-tools** (classic) or **uv** (modern, much faster).
+
+**pip-tools:**
+```bash
+pip install pip-tools
+pip-compile requirements.in -o requirements.txt
+pip-compile requirements-dev.in -o requirements-dev.txt
+```
+CI installs from `requirements.txt` (fully pinned). Regenerate and commit on change.
+
+**uv (recommended in 2025):**
+```bash
+uv pip compile requirements.in -o requirements.txt
+```
+And in the workflow:
+```yaml
+      - uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+          cache-dependency-glob: "requirements*.txt"
+
+      - run: uv pip install --system -r requirements.txt -r requirements-dev.txt
+```
+
+uv is 10–100× faster than pip for both install and resolve, and it works with `requirements.txt` — no ecosystem migration required.
+
+### Decision matrix
+
+| Criterion | Conda | pip |
+|---|---|---|
+| Non-Python binaries (GDAL, HDF5, MKL) | ✅ native | ⚠️ needs system libs, often broken |
+| GPU (CUDA) builds | ✅ first-class | ⚠️ wheels exist for common cases |
+| Solver speed | fast with mamba | very fast with uv |
+| CI startup time | 30–90s | 5–15s |
+| Cache simplicity | per-Python-version, per-OS | one cache, one key |
+| Lockfile ecosystem | conda-lock (complex) | pip-tools / uv (mature) |
+| Cross-platform parity | good | good with wheels |
+| **Pure-Python library** | ❌ overkill | ✅ pick this |
+| **Scientific stack** | ✅ pick this | ⚠️ works for most, breaks on some |
+
+**Rule of thumb:** if you have to ask, you don't need conda. Reach for it when you hit a specific package that only conda-forge distributes in working form.
+
+---
+
+## 4. Updated HTML reference
+
+Add these two sections to the existing HTML. Find the `<h2 class="section" id="extensions">` block and insert the following **before** it:
+
+```html
+<!-- ======================= CONDA VARIANT ======================= -->
+<h2 class="section" id="conda">Conda Variant</h2>
+<p>Alternative to the pip-based workflow. Use when you need non-Python binaries (GDAL, HDF5, MKL, CUDA) that pip wheels don't cover. Otherwise prefer pip — see <a href="#pip-vs-conda" style="color:var(--accent)">decision matrix</a>.</p>
+
+<h3>python-app.yml (Conda)</h3>
+<span class="filename">.github/workflows/python-app.yml</span>
+<pre><code>name: Python Package using Conda
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build-linux:
+    name: Conda (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: [ "3.10", "3.11", "3.12" ]
+
+    defaults:
+      run:
+        shell: bash -el {0 }     # -l activates conda in every step
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Miniconda
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          miniforge-version: latest
+          python-version: ${{ matrix.python-version }}
+          environment-file: environment.yml
+          activate-environment: myenv
+          use-mamba: true
+          auto-activate-base: false
+
+      - name: Cache conda packages
+        uses: actions/cache@v4
+        with:
+          path: ~/conda_pkgs_dir
+          key: conda-${{ runner.os }}-${{ matrix.python-version }}-${{ hashFiles('environment.yml') }}
+          restore-keys: |
+            conda-${{ runner.os }}-${{ matrix.python-version }}-
+
+      - name: Lint with flake8
+        run: |
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+          flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
+      - name: Test with pytest
+        run: pytest --cov=. --cov-report=xml --cov-report=term-missing
+
+      - name: Upload coverage to Codecov
+        if: matrix.python-version == '3.12'
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./coverage.xml
+          fail_ci_if_error: false
+          token: ${{ secrets.CODECOV_TOKEN }}</code></pre>
+
+<h3>environment.yml</h3>
+<span class="filename">environment.yml</span>
+<pre><code>name: myenv
+
+channels:
+  - conda-forge
+
+dependencies:
+  - python=3.10       # overridden by matrix at runtime
+  - pip
+  # runtime deps go here
+  - flake8
+  - pytest
+  - pytest-cov
+  - pip:
+      - codecov</code></pre>
+
+<h3>Conda with conda-lock (fully reproducible)</h3>
+<p>Generate locally once, commit the lock, install from it in CI:</p>
+<pre><code># generate
+conda-lock lock --file environment.yml --kind explicit \
+  --platform linux-64 --platform osx-64 \
+  --platform osx-arm64 --platform win-64
+
+# CI installs from the lock
+conda-lock install --conda $(which conda) --name myenv conda-lock.yml</code></pre>
+
+<div class="callout">
+  <strong>Lock + Python matrix conflict.</strong> A single <code>conda-lock.yml</code> pins one Python version. Either drop the matrix (common for scientific projects) or generate one lock per Python version.
+</div>
+
+<h3>Conda gotchas</h3>
+<table>
+  <thead><tr><th>Trap</th><th>Fix</th></tr></thead>
+  <tbody>
+    <tr><td><code>$CONDA</code> unset on newer runners</td><td>Use <code>setup-miniconda</code>, not <code>echo $CONDA/bin &gt;&gt; $GITHUB_PATH</code></td></tr>
+    <tr><td><code>conda install</code> mid-step re-solves env</td><td>Put everything in <code>environment.yml</code></td></tr>
+    <tr><td><code>conda update --all</code> breaks on random days</td><td>Never run it in main CI; only in the nightly freshness job, in a throwaway env</td></tr>
+    <tr><td>pip clobbers conda packages</td><td>Install conda deps first, pip last (use the <code>pip:</code> sub-block)</td></tr>
+    <tr><td>Updating <code>base</code> env</td><td>Always create a named env</td></tr>
+    <tr><td>Anaconda <code>defaults</code> channel licensing</td><td>Use <code>conda-forge</code> via Miniforge</td></tr>
+    <tr><td>Slow solver</td><td><code>use-mamba: true</code></td></tr>
+    <tr><td>No lockfile in <code>environment.yml</code></td><td>Use <code>conda-lock</code></td></tr>
+  </tbody>
+</table>
+
+<!-- ======================= PIP VS CONDA ======================= -->
+<h2 class="section" id="pip-vs-conda">Pip vs Conda — Decision Matrix</h2>
+<table>
+  <thead><tr><th>Criterion</th><th>Conda</th><th>pip</th></tr></thead>
+  <tbody>
+    <tr><td>Non-Python binaries (GDAL, HDF5, MKL)</td><td style="color:var(--ok)">✅ native</td><td style="color:var(--warn)">⚠️ needs system libs</td></tr>
+    <tr><td>GPU (CUDA) builds</td><td style="color:var(--ok)">✅ first-class</td><td style="color:var(--warn)">⚠️ wheels for common cases</td></tr>
+    <tr><td>Solver speed</td><td>fast with mamba</td><td>very fast with uv</td></tr>
+    <tr><td>CI startup time</td><td>30–90s</td><td>5–15s</td></tr>
+    <tr><td>Cache simplicity</td><td>per-Python-version, per-OS</td><td>one cache, one key</td></tr>
+    <tr><td>Lockfile ecosystem</td><td>conda-lock (complex)</td><td>pip-tools / uv (mature)</td></tr>
+    <tr><td>Pure-Python library</td><td style="color:var(--err)">❌ overkill</td><td style="color:var(--ok)">✅ pick this</td></tr>
+    <tr><td>Scientific stack</td><td style="color:var(--ok)">✅ pick this</td><td style="color:var(--warn)">⚠️ breaks on some</td></tr>
+  </tbody>
+</table>
+
+<div class="callout ok">
+  <strong>Rule of thumb:</strong> if you have to ask, you don't need conda. Reach for it when a specific package only works via conda-forge.
+</div>
+
+<h3>Pip-only with uv (modern)</h3>
+<span class="filename">.github/workflows/python-app.yml — pip variant</span>
+<pre><code>      - uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+          cache-dependency-glob: "requirements*.txt"
+
+      - run: uv pip install --system -r requirements.txt -r requirements-dev.txt</code></pre>
+```
+
+Also add a sidebar entry — find the `<nav>` block and insert after the existing `<a href="#pyproject">`:
+
+```html
+  <a href="#conda">Conda Variant</a>
+  <a href="#pip-vs-conda">Pip vs Conda</a>
+```
+
+That gives the HTML reference four new anchors: `#conda`, `#pip-vs-conda`, plus the sub-sections, all reachable from the sidebar.
+
+---
+
+## Summary of what you now have
+
+| Artifact | Purpose |
+|---|---|
+| `python-app.yml` (pip) | Main CI, hybrid OS/Python matrix |
+| `python-app.yml` (conda) | Same, but Miniforge + `environment.yml` |
+| `environment.yml` | Conda dep manifest |
+| `conda-lock.yml` | Fully pinned, cross-platform conda lock |
+| `nightly.yml` (conda) | Daily CVE scan via safety + freshness via `conda update --all` |
+| Pip-only alternative | Uses `setup-python` + uv for speed |
+| HTML reference | Now includes both variants with a decision matrix |
+
+**Pick one path and delete the other.** Maintaining both conda and pip in the same repo doubles the surface area and nobody remembers which is canonical six months later. The decision matrix is the tiebreaker — if you're not sure, you're a pip project.
