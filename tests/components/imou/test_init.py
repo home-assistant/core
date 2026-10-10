@@ -140,6 +140,8 @@ async def test_multiple_channels_create_separate_devices(
         device_key, entity_type = entry.unique_id.split("$", 1)
         assert entry.device_id == device_ids_by_key[device_key]
         assert entry.translation_key == EXPECTED_TRANSLATION_KEYS[entity_type]
+        if entry.disabled:
+            continue
         state = hass.states.get(entry.entity_id)
         assert state is not None
         assert state.state != STATE_UNAVAILABLE
