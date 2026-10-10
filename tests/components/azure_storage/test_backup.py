@@ -279,9 +279,22 @@ async def test_agents_error_on_download_not_found(
 @pytest.mark.parametrize(
     ("error", "message"),
     [
-        (HttpResponseError("http error"), "Error during backup operation"),
-        (ServiceRequestError("timeout"), "Timeout during backup operation"),
-        (AzureError("generic error"), "Error during backup operation"),
+        (
+            HttpResponseError("http error"),
+            (
+                "Error during backup operation in"
+                " async_delete_backup:"
+                " Status None, message: http error"
+            ),
+        ),
+        (
+            ServiceRequestError("timeout"),
+            "Timeout during backup operation in async_delete_backup",
+        ),
+        (
+            AzureError("generic error"),
+            "Error during backup operation in async_delete_backup: generic error",
+        ),
     ],
 )
 async def test_error_during_delete(

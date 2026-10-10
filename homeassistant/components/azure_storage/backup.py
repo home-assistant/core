@@ -75,14 +75,15 @@ def handle_backup_errors[_R, **P](
                 err.message,
                 exc_info=True,
             )
+            # pylint: disable-next=home-assistant-exception-not-translated
             raise BackupAgentError(
-                translation_domain=DOMAIN,
-                translation_key="backup_operation_failed",
+                f"Error during backup operation in {func.__name__}:"
+                f" Status {err.status_code}, message: {err.message}"
             ) from err
         except ServiceRequestError as err:
+            # pylint: disable-next=home-assistant-exception-not-translated
             raise BackupAgentError(
-                translation_domain=DOMAIN,
-                translation_key="backup_operation_timeout",
+                f"Timeout during backup operation in {func.__name__}"
             ) from err
         except AzureError as err:
             _LOGGER.debug(
@@ -91,9 +92,9 @@ def handle_backup_errors[_R, **P](
                 err,
                 exc_info=True,
             )
+            # pylint: disable-next=home-assistant-exception-not-translated
             raise BackupAgentError(
-                translation_domain=DOMAIN,
-                translation_key="backup_operation_failed",
+                f"Error during backup operation in {func.__name__}: {err}"
             ) from err
 
     return wrapper
@@ -121,11 +122,8 @@ class AzureStorageBackupAgent(BackupAgent):
         """Download a backup file."""
         blob = await self._find_blob_by_backup_id(backup_id)
         if blob is None:
-            raise BackupNotFound(
-                translation_domain=DOMAIN,
-                translation_key="backup_not_found",
-                translation_placeholders={"backup_id": backup_id},
-            )
+            # pylint: disable-next=home-assistant-exception-not-translated
+            raise BackupNotFound(f"Backup {backup_id} not found")
         download_stream = await self._client.download_blob(blob.name)
         return download_stream.chunks()
 
@@ -164,11 +162,8 @@ class AzureStorageBackupAgent(BackupAgent):
         """Delete a backup file."""
         blob = await self._find_blob_by_backup_id(backup_id)
         if blob is None:
-            raise BackupNotFound(
-                translation_domain=DOMAIN,
-                translation_key="backup_not_found",
-                translation_placeholders={"backup_id": backup_id},
-            )
+            # pylint: disable-next=home-assistant-exception-not-translated
+            raise BackupNotFound(f"Backup {backup_id} not found")
         await self._client.delete_blob(blob.name)
 
     @handle_backup_errors
@@ -196,11 +191,8 @@ class AzureStorageBackupAgent(BackupAgent):
         """Return a backup."""
         blob = await self._find_blob_by_backup_id(backup_id)
         if blob is None:
-            raise BackupNotFound(
-                translation_domain=DOMAIN,
-                translation_key="backup_not_found",
-                translation_placeholders={"backup_id": backup_id},
-            )
+            # pylint: disable-next=home-assistant-exception-not-translated
+            raise BackupNotFound(f"Backup {backup_id} not found")
 
         return AgentBackup.from_dict(json.loads(blob.metadata["backup_metadata"]))
 

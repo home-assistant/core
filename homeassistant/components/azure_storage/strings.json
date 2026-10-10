@@ -51,15 +51,6 @@
     "account_not_found": {
       "message": "Storage account {account_name} not found"
     },
-    "backup_not_found": {
-      "message": "Backup {backup_id} not found"
-    },
-    "backup_operation_failed": {
-      "message": "Error during backup operation"
-    },
-    "backup_operation_timeout": {
-      "message": "Timeout during backup operation"
-    },
     "cannot_connect": {
       "message": "Cannot connect to storage account {account_name}"
     },

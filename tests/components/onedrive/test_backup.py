@@ -502,7 +502,7 @@ async def test_reauth_on_403(
 
     assert response["success"]
     assert response["result"]["agent_errors"] == {
-        f"{DOMAIN}.{mock_config_entry.unique_id}": "Authentication failed"
+        f"{DOMAIN}.{mock_config_entry.unique_id}": "Authentication error"
     }
 
     await hass.async_block_till_done()
