@@ -705,6 +705,10 @@ def _purge_filtered_event_data(
     to_purge: list[tuple[int, int | None]] = []
     for event_id, data_id, event_type, shared_data in events:
         data = json_loads(shared_data) if shared_data else {}
+        # Recorder discards oversized payloads as {}, so their original filter
+        # matches cannot be reconstructed from the stored data.
+        if data == {}:
+            continue
         matches_exclude = _event_data_filter_matches(
             event_type, data, exclude_event_data
         )

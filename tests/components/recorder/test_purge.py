@@ -1456,6 +1456,15 @@ async def test_purge_filtered_events(
         ),
         (
             {
+                "include": {
+                    "event_data": [{"event_type": "test", "match": {"command": "keep"}}]
+                }
+            },
+            [{}, {"command": "drop"}, {"command": "keep"}],
+            [{}, {"command": "keep"}],
+        ),
+        (
+            {
                 "exclude": {
                     "event_data": [{"event_type": "test", "match": {"command": "drop"}}]
                 }

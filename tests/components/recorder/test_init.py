@@ -932,6 +932,16 @@ async def test_event_data_filter_oversized_payload(
         == expected_event_data
     )
 
+    await hass.services.async_call(
+        DOMAIN, SERVICE_PURGE, {"keep_days": 10, "apply_filter": True}, blocking=True
+    )
+    await async_wait_purge_done(hass)
+
+    assert (
+        await instance.async_add_executor_job(_get_event_data, hass)
+        == expected_event_data
+    )
+
 
 @pytest.mark.parametrize(
     ("dialect", "match_value", "matches"),
