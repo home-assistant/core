@@ -10,7 +10,11 @@ from homeassistant.helpers.typing import ConfigType
 
 from .client_wrapper import CannotConnect, InvalidAuth, create_client, validate_input
 from .const import CONF_CLIENT_DEVICE_ID, DEFAULT_NAME, DOMAIN, PLATFORMS
-from .coordinator import JellyfinConfigEntry, JellyfinDataUpdateCoordinator
+from .coordinator import (
+    JellyfinConfigEntry,
+    JellyfinDataUpdateCoordinator,
+    JellyfinRuntimeData,
+)
 from .services import async_setup_services
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
@@ -58,7 +62,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: JellyfinConfigEntry) -> 
         sw_version=coordinator.server_version,
     )
 
-    entry.runtime_data = coordinator
+    entry.runtime_data = JellyfinRuntimeData(client=client, sessions=coordinator)
     entry.async_on_unload(client.stop)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -86,7 +90,7 @@ async def async_remove_config_entry_device(
     device_entry: dr.AnyDeviceEntry,
 ) -> bool:
     """Remove device from a config entry."""
-    coordinator = config_entry.runtime_data
+    coordinator = config_entry.runtime_data.sessions
 
     return not device_entry.identifiers.intersection(
         (

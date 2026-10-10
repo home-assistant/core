@@ -1,5 +1,6 @@
 """Data update coordinator for the Jellyfin integration."""
 
+from dataclasses import dataclass
 from datetime import timedelta
 from typing import Any, override
 
@@ -11,7 +12,16 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import CONF_CLIENT_DEVICE_ID, DOMAIN, LOGGER, USER_APP_NAME
 
-type JellyfinConfigEntry = ConfigEntry[JellyfinDataUpdateCoordinator]
+
+@dataclass
+class JellyfinRuntimeData:
+    """Runtime data for the Jellyfin integration."""
+
+    client: JellyfinClient
+    sessions: JellyfinDataUpdateCoordinator
+
+
+type JellyfinConfigEntry = ConfigEntry[JellyfinRuntimeData]
 
 
 class JellyfinDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
