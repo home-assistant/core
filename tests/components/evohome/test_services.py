@@ -42,7 +42,7 @@ async def test_refresh_system_deprecated(
     """
 
     # EvoService.REFRESH_SYSTEM
-    with patch("evohomeasync2.location.Location.update") as mock_fcn:
+    with patch("evohomeasync2.location.Location.get_status") as mock_fcn:
         await hass.services.async_call(
             DOMAIN,
             EvoService.REFRESH_SYSTEM,
@@ -73,7 +73,7 @@ async def test_update_entity(
 
     await async_setup_component(hass, "homeassistant", {})
 
-    with patch("evohomeasync2.location.Location.update") as mock_fcn:
+    with patch("evohomeasync2.location.Location.get_status") as mock_fcn:
         await hass.services.async_call(
             "homeassistant",
             "update_entity",

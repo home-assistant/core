@@ -89,7 +89,7 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
         """
 
         try:
-            await self.client.update(dont_update_status=True)  # only config for now
+            await self.client.setup()  # only config for now
         except ec2.EvohomeError as err:
             raise UpdateFailed(err) from err
 
@@ -130,20 +130,17 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
             }
             self.logger.debug("Config = %s", [config])
 
-    async def call_client_api(
+    async def call_client_api[_T](
         self,
-        client_api: Awaitable[dict[str, Any] | None],
+        client_api: Awaitable[_T],
         request_refresh: bool = True,
-    ) -> dict[str, Any] | None:
+    ) -> _T | None:
         """Call a client API and update the Coordinator state if required."""
 
         try:
             result = await client_api
 
-        except ec2.InvalidSystemModeError:
-            raise
-
-        except ec2.ApiRequestFailedError as err:
+        except ec2.ApiCallFailedError as err:
             self.logger.error(err)
             return None
 
@@ -158,7 +155,7 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
         assert self.client_v1 is not None  # mypy check
 
         try:
-            await self.client_v1.update()
+            await self.client_v1.get_status()
 
         except ec1.BadUserCredentialsError as err:
             self.logger.warning(
@@ -191,9 +188,9 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
         """Get the latest modes, temperatures, setpoints of a Location."""
 
         try:
-            status = await self.loc.update()
+            status = await self.loc.get_status()
 
-        except ec2.ApiRequestFailedError as err:
+        except ec2.ApiCallFailedError as err:
             if err.status != HTTPStatus.TOO_MANY_REQUESTS:
                 raise UpdateFailed(err) from err
 
