@@ -10,7 +10,8 @@ from homeassistant.components.harmony.const import (
     SERVICE_CHANGE_CHANNEL,
     SERVICE_SYNC,
 )
-from homeassistant.components.harmony.remote import ATTR_CHANNEL, ATTR_DELAY_SECS
+from homeassistant.components.harmony.remote import ATTR_DELAY_SECS
+from homeassistant.components.harmony.services import ATTR_CHANNEL
 from homeassistant.components.remote import (
     ATTR_ACTIVITY,
     ATTR_COMMAND,

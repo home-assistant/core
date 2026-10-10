@@ -31,31 +31,31 @@
         "unit_of_measurement": "alerts"
       },
       "drum_black": {
-        "name": "Black drum level"
+        "name": "Black drum"
       },
       "drum_cyan": {
-        "name": "Cyan drum level"
+        "name": "Cyan drum"
       },
       "drum_magenta": {
-        "name": "Magenta drum level"
+        "name": "Magenta drum"
       },
       "drum_yellow": {
-        "name": "Yellow drum level"
+        "name": "Yellow drum"
       },
       "output_tray": {
         "name": "Output tray {tray_number}"
       },
       "toner_black": {
-        "name": "Black toner level"
+        "name": "Black toner"
       },
       "toner_cyan": {
-        "name": "Cyan toner level"
+        "name": "Cyan toner"
       },
       "toner_magenta": {
-        "name": "Magenta toner level"
+        "name": "Magenta toner"
       },
       "toner_yellow": {
-        "name": "Yellow toner level"
+        "name": "Yellow toner"
       },
       "tray": {
         "name": "Input tray {tray_number}"
@@ -66,6 +66,11 @@
       "tray_mp": {
         "name": "Multi-purpose tray"
       }
+    }
+  },
+  "exceptions": {
+    "api_not_supported": {
+      "message": "The printer does not support the SyncThru JSON API"
     }
   }
 }

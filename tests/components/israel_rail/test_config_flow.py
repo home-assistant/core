@@ -33,6 +33,7 @@ async def test_create_entry(hass: HomeAssistant, mock_israelrail: AsyncMock) -> 
         CONF_START: "באר יעקב",
         CONF_DESTINATION: "אשקלון",
     }
+    assert result["result"].unique_id == "באר יעקב אשקלון"
 
 
 @pytest.mark.usefixtures("mock_setup_entry")

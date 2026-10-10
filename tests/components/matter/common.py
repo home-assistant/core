@@ -86,6 +86,7 @@ FIXTURES = [
     "mock_pump",
     "mock_room_airconditioner",
     "mock_soil_sensor",
+    "mock_solar_battery_storage",
     "mock_solar_inverter",
     "mock_speaker",
     "mock_switch_unit",

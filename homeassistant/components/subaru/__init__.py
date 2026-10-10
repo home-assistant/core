@@ -12,7 +12,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.typing import ConfigType
@@ -70,9 +70,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: SubaruConfigEntry) -> bo
         )
         _LOGGER.debug("Using subarulink %s", controller.version)
         await controller.connect()
-    except InvalidCredentials:
-        _LOGGER.error("Invalid account")
-        return False
+    except InvalidCredentials as err:
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="invalid_credentials",
+        ) from err
     except SubaruException as err:
         raise ConfigEntryNotReady(err.message) from err
 

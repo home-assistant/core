@@ -1,6 +1,7 @@
 """Tests for the telegram_bot component."""
 
 import base64
+import errno
 from http import HTTPStatus
 import io
 import os
@@ -26,7 +27,10 @@ from telegram.error import (
     TimedOut,
 )
 
-from homeassistant.components.telegram_bot.bot import ALLOWED_UPDATES
+from homeassistant.components.telegram_bot.bot import (
+    ALLOWED_UPDATES,
+    _read_file_as_bytesio,
+)
 from homeassistant.components.telegram_bot.const import (
     ATTR_AUTHENTICATION,
     ATTR_CALLBACK_QUERY_ID,
@@ -154,7 +158,7 @@ async def test_polling_platform_init_failed_does_not_log_token(
     api_key = mock_polling_config_entry.data[CONF_API_KEY]
     # The Telegram API URL embeds the bot token, and library errors quote it.
     error = NetworkError(
-        "httpx.HTTPStatusError: Client error '401 Unauthorized' for url "
+        "httpx2.HTTPStatusError: Client error '401 Unauthorized' for url "
         f"'https://api.telegram.org/bot{api_key}/getMe'"
     )
 
@@ -1476,6 +1480,7 @@ async def test_async_setup_entry_failed(
 
     await hass.async_block_till_done()
     assert mock_broadcast_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_broadcast_config_entry.error_reason_translation_key == "invalid_api_key"
 
 
 async def test_answer_callback_query(
@@ -1612,7 +1617,7 @@ async def test_send_video(
 
     with (
         patch(
-            "homeassistant.components.telegram_bot.bot.httpx.AsyncClient.get"
+            "homeassistant.components.telegram_bot.bot.httpx2.AsyncClient.get"
         ) as mock_get,
         patch("homeassistant.components.telegram_bot.bot._RETRY_DELAY", 0),
     ):
@@ -1635,8 +1640,38 @@ async def test_send_video(
 
     assert mock_get.call_count > 0
     assert err.value.translation_domain == DOMAIN
-    assert err.value.translation_key == "failed_to_load_url"
-    assert err.value.translation_placeholders == {"error": "404"}
+    assert err.value.translation_key == "failed_to_load_url_status"
+    assert err.value.translation_placeholders == {"status_code": "404"}
+
+    # test: empty response
+
+    with (
+        patch(
+            "homeassistant.components.telegram_bot.bot.httpx2.AsyncClient.get"
+        ) as mock_get,
+        patch("homeassistant.components.telegram_bot.bot._RETRY_DELAY", 0),
+    ):
+        mock_get.return_value = AsyncMock(status_code=200, content=b"")
+
+        with pytest.raises(HomeAssistantError) as err:
+            await hass.services.async_call(
+                DOMAIN,
+                SERVICE_SEND_VIDEO,
+                {
+                    ATTR_URL: "https://mock",
+                    ATTR_AUTHENTICATION: HTTP_BASIC_AUTHENTICATION,
+                    ATTR_USERNAME: "mock_bot",
+                    ATTR_PASSWORD: "mock password",
+                },
+                blocking=True,
+            )
+
+    await hass.async_block_till_done()
+
+    assert mock_get.call_count == 5
+    assert err.value.translation_domain == DOMAIN
+    assert err.value.translation_key == "failed_to_load_url_empty"
+    assert err.value.translation_placeholders is None
 
     # test: invalid url
 
@@ -1695,9 +1730,9 @@ async def test_send_video(
     await hass.async_block_till_done()
 
     assert err.value.translation_domain == DOMAIN
-    assert err.value.translation_key == "failed_to_load_file"
+    assert err.value.translation_key == "file_not_found"
     assert err.value.translation_placeholders == {
-        "error": "[Errno 2] No such file or directory: '/tmp/not-exists'"
+        "file_path": "/tmp/not-exists"  # noqa: S108
     }
 
     # test: success with file
@@ -1727,7 +1762,7 @@ async def test_send_video(
     # test: success with url
 
     with patch(
-        "homeassistant.components.telegram_bot.bot.httpx.AsyncClient.get"
+        "homeassistant.components.telegram_bot.bot.httpx2.AsyncClient.get"
     ) as mock_get:
         mock_get.return_value = AsyncMock(status_code=200, content=b"mock content")
 
@@ -2517,12 +2552,7 @@ async def test_download_file_when_empty_file_path(
             hass, schema_request, telegram_file, "file_content"
         )
     await hass.async_block_till_done()
-    assert err.value.translation_placeholders is not None
-    assert "error" in err.value.translation_placeholders
-    assert (
-        err.value.translation_placeholders["error"]
-        == "No file path returned from Telegram"
-    )
+    assert err.value.translation_key == "no_file_path"
 
 
 @pytest.mark.parametrize(
@@ -2686,7 +2716,7 @@ async def test_send_media_group(
     await hass.async_block_till_done()
 
     with patch(
-        "homeassistant.components.telegram_bot.bot.httpx.AsyncClient.get"
+        "homeassistant.components.telegram_bot.bot.httpx2.AsyncClient.get"
     ) as mock_get:
         mock_get.return_value = AsyncMock(status_code=200, content=b"mock content")
 
@@ -2730,6 +2760,61 @@ async def test_send_media_group(
             }
         ]
     }
+
+
+async def test_send_media_group_caption_parse_mode(
+    hass: HomeAssistant,
+    mock_broadcast_config_entry: MockConfigEntry,
+    mock_external_calls: None,
+) -> None:
+    """Test the parse mode applies to the captions of the media items."""
+    mock_broadcast_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    with (
+        patch(
+            "homeassistant.components.telegram_bot.bot.httpx2.AsyncClient.get"
+        ) as mock_get,
+        patch(
+            "homeassistant.components.telegram_bot.bot.Bot.send_media_group",
+            AsyncMock(
+                return_value=[
+                    Message(
+                        message_id=12345,
+                        date=dt_util.utcnow(),
+                        chat=Chat(id=123456, type=ChatType.PRIVATE),
+                    )
+                ]
+            ),
+        ) as mock_send_media_group,
+    ):
+        mock_get.return_value = AsyncMock(status_code=200, content=b"mock content")
+
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SEND_MEDIA_GROUP,
+            {
+                ATTR_PARSER: PARSER_MD,
+                ATTR_MEDIA: [
+                    {
+                        ATTR_MEDIA_TYPE: InputMediaType.PHOTO,
+                        ATTR_URL: "https://mock/photo.jpg",
+                        ATTR_CAPTION: "*bold*",
+                    },
+                    {
+                        ATTR_MEDIA_TYPE: InputMediaType.PHOTO,
+                        ATTR_URL: "https://mock/photo2.jpg",
+                    },
+                ],
+            },
+            blocking=True,
+            return_response=True,
+        )
+
+    media = mock_send_media_group.call_args.kwargs[ATTR_MEDIA]
+    assert media[0].caption == "*bold*"
+    assert media[0].parse_mode == PARSER_MD
 
 
 @pytest.mark.parametrize(
@@ -2820,3 +2905,24 @@ async def test_download_file_rejects_symlink_out_of_allowlist(
     assert err.value.translation_key == "allowlist_external_dirs_error"
     get_file_mock.assert_not_called()
     assert not target.exists()
+
+
+@pytest.mark.parametrize(
+    ("error", "translation_key"),
+    [
+        (OSError(errno.ENOENT, "No such file"), "file_not_found"),
+        (OSError(errno.EACCES, "Permission denied"), "file_permission_denied"),
+        (OSError(errno.EPERM, "Operation not permitted"), "file_permission_denied"),
+        (OSError(errno.EIO, "Input/output error"), "failed_to_load_file"),
+    ],
+)
+def test_read_file_errors(error: OSError, translation_key: str) -> None:
+    """Test reading a file maps OS errors to translated messages."""
+    with (
+        patch("builtins.open", side_effect=error),
+        pytest.raises(HomeAssistantError) as err,
+    ):
+        _read_file_as_bytesio("/some/file.jpg")
+
+    assert err.value.translation_key == translation_key
+    assert err.value.translation_placeholders == {"file_path": "/some/file.jpg"}

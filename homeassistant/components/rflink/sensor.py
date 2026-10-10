@@ -33,7 +33,7 @@ from homeassistant.const import (
     UnitOfTemperature,
     UnitOfVolumetricFlux,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -48,7 +48,6 @@ from .const import (
     EVENT_KEY_SENSOR,
     EVENT_KEY_UNIT,
     SIGNAL_AVAILABILITY,
-    SIGNAL_HANDLE_EVENT,
     TMP_ENTITY,
 )
 from .entity import RflinkDevice
@@ -374,6 +373,17 @@ class RflinkSensor(RflinkDevice, SensorEntity):
         """Domain specific event handler."""
         self._state = event["value"]
 
+    @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Opt in to in-place entity_id changes.
+
+        Can be removed when backwards compatibility is disabled for core
+        integrations, i.e. once all core integrations have been migrated
+        to in-place entity ID change.
+        """
+        super().async_entity_id_changed(old_entity_id)
+
     @override
     # pylint: disable-next=home-assistant-missing-super-call
     async def async_added_to_hass(self) -> None:
@@ -399,13 +409,8 @@ class RflinkSensor(RflinkDevice, SensorEntity):
                 self.hass, SIGNAL_AVAILABILITY, self._availability_callback
             )
         )
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                SIGNAL_HANDLE_EVENT.format(self.entity_id),
-                self.handle_event_callback,
-            )
-        )
+        self._async_subscribe_handle_event()
+        self.async_on_remove(self._async_unsubscribe_handle_event)
 
         # Process the initial event now that the entity is created
         if self._initial_event:
