@@ -41,6 +41,7 @@ from .generated.application_credentials import APPLICATION_CREDENTIALS
 from .generated.bluetooth import BLUETOOTH
 from .generated.config_flows import FLOWS
 from .generated.dhcp import DHCP
+from .generated.lorawan import LORAWAN
 from .generated.mqtt import MQTT
 from .generated.ssdp import SSDP
 from .generated.usb import USB
@@ -282,6 +283,7 @@ class Manifest(TypedDict, total=False):
     iot_class: str
     bluetooth: list[dict[str, int | str]]
     mqtt: list[str]
+    lorawan: list[tuple[str, int | str]]
     ssdp: list[dict[str, str]]
     zeroconf: list[str | dict[str, str]]
     dhcp: list[dict[str, bool | str]]
@@ -664,6 +666,43 @@ async def async_get_homekit(
     return homekit
 
 
+async def async_get_lorawan(
+    hass: HomeAssistant,
+) -> dict[str, list[tuple[str, int | str]]]:
+    """Return LoRaWAN vendor registrations, including custom integrations."""
+    registrations = LORAWAN.copy()
+    integrations = await async_get_custom_components(hass)
+    for integration in integrations.values():
+        registrations.pop(integration.domain, None)
+        vendors = integration.lorawan
+        if vendors is None:
+            continue
+        if (
+            not isinstance(vendors, list)
+            or not vendors
+            or any(
+                not isinstance(vendor, list | tuple)
+                or len(vendor) != 2
+                or not isinstance(vendor[0], str)
+                or not vendor[0]
+                or type(vendor[1]) not in (int, str)
+                or (isinstance(vendor[1], int) and vendor[1] < 0)
+                or vendor[1] == ""
+                for vendor in vendors
+            )
+            or len({tuple(vendor) for vendor in vendors}) != len(vendors)
+            or not integration.config_flow
+            or "lorawan" not in integration.dependencies
+        ):
+            _LOGGER.warning(
+                "Ignoring invalid LoRaWAN discovery registration for %s",
+                integration.domain,
+            )
+            continue
+        registrations[integration.domain] = [(stack, brand) for stack, brand in vendors]
+    return registrations
+
+
 async def async_get_ssdp(hass: HomeAssistant) -> dict[str, list[dict[str, str]]]:
     """Return cached list of ssdp mappings."""
 
@@ -958,6 +997,11 @@ class Integration:
     def mqtt(self) -> list[str] | None:
         """Return Integration MQTT entries."""
         return self.manifest.get("mqtt")
+
+    @property
+    def lorawan(self) -> list[tuple[str, int | str]] | None:
+        """Return the stack and brand IDs this integration supports."""
+        return self.manifest.get("lorawan")
 
     @property
     def ssdp(self) -> list[dict[str, str]] | None:

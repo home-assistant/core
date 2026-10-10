@@ -1103,6 +1103,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/lookin/ @ANMalko @bdraco
 /homeassistant/components/loqed/ @mikewoudenberg
 /tests/components/loqed/ @mikewoudenberg
+/homeassistant/components/lorawan/ @balloob
+/tests/components/lorawan/ @balloob
 /homeassistant/components/lovelace/ @home-assistant/frontend
 /tests/components/lovelace/ @home-assistant/frontend
 /homeassistant/components/luci/ @mzdrale

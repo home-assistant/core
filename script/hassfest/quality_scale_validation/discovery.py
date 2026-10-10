@@ -12,6 +12,7 @@ MANIFEST_KEYS = [
     "bluetooth",
     "dhcp",
     "homekit",
+    "lorawan",
     "mqtt",
     "ssdp",
     "usb",
