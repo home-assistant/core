@@ -30,8 +30,8 @@ class HaseIQSensorEntityDescription(SensorEntityDescription):
     value_fn: Callable[[Status], StateType]
 
 
-# The stove only reports the temperature and the heat-up while heating up, and the
-# performance at nominal temperature: in any other phase, pyhaseiq returns None.
+# The stove only reports the heat-up while heating up, and the performance at nominal
+# temperature: in any other phase, pyhaseiq returns None for them.
 SENSORS: tuple[HaseIQSensorEntityDescription, ...] = (
     HaseIQSensorEntityDescription(
         key="phase",

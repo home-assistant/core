@@ -39,12 +39,14 @@ async def test_readings_follow_the_phase(
     """Test a reading the stove stops reporting becomes unknown."""
     await setup_integration(hass, mock_config_entry)
 
-    mock_client.get_status.return_value = Status(Phase.NOMINAL, performance=69.0)
+    mock_client.get_status.return_value = Status(
+        Phase.NOMINAL, temperature=533.7, performance=69.0
+    )
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert hass.states.get("sensor.hase_iq_phase").state == "nominal"
     assert hass.states.get("sensor.hase_iq_performance").state == "69.0"
-    assert hass.states.get("sensor.hase_iq_temperature").state == STATE_UNKNOWN
+    assert hass.states.get("sensor.hase_iq_temperature").state == "533.7"
     assert hass.states.get("sensor.hase_iq_heat_up").state == STATE_UNKNOWN

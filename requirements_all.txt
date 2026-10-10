@@ -2284,7 +2284,7 @@ pygtfs==0.1.11
 pygti==1.1.1
 
 # homeassistant.components.hase_iq
-pyhaseiq==0.2.0
+pyhaseiq==0.2.1
 
 # homeassistant.components.version
 pyhaversion==22.8.0
