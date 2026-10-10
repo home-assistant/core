@@ -53,6 +53,8 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_VERIFY_SSL: True,
         },
         title="AdGuard Home",
+        entry_id="01JADGUARDHOME0000000000000",
+        minor_version=2,
     )
 
 
