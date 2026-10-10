@@ -470,10 +470,10 @@ async def test_reconfigure_errors(
     assert mock_config_entry.data == RECONFIGURE_INPUT
 
 
-@pytest.mark.usefixtures("mock_deprecated_lhm_client")
 async def test_reconfigure_deprecated_version_is_rejected(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    mock_deprecated_lhm_client: AsyncMock,
 ) -> None:
     """Test that reconfigure does not complete for a deprecated LHM version."""
     mock_config_entry.add_to_hass(hass)
@@ -488,6 +488,18 @@ async def test_reconfigure_deprecated_version_is_rejected(
     assert result["step_id"] == "reconfigure"
     assert result["errors"] == {"base": "deprecated_version"}
     assert mock_config_entry.data == VALID_CONFIG
+
+    mock_deprecated_lhm_client.get_data.return_value = replace(
+        mock_deprecated_lhm_client.get_data.return_value, is_deprecated_version=False
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], RECONFIGURE_INPUT
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data == RECONFIGURE_INPUT
 
 
 async def test_reconfigure_lhm_server_already_exists(
