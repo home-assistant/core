@@ -308,12 +308,13 @@ async def test_set_temperature_updates_cached_setpoint_and_siblings() -> None:
     entity.coordinator = coordinator
     object.__setattr__(entity, "_embedded_id", "zone")
     object.__setattr__(entity, "_setpoint", "roomTemperature")
-    object.__setattr__(entity, "_attr_target_temperature", 20)
+    object.__setattr__(entity, "_attr_native_target_temperature", 20)
     entity._operation_mode = MagicMock(return_value=MagicMock(value="heating"))
     entity._get_setpoint = MagicMock(return_value=setpoint)
     await entity.async_set_temperature(temperature=21)
 
     assert setpoint.value == 21
+    assert entity.native_target_temperature == 21
     assert entity._get_setpoint.call_args_list == [call("heating"), call("heating")]
     coordinator.async_update_listeners.assert_called_once_with()
 
@@ -322,7 +323,7 @@ async def test_set_temperature_rejects_missing_operation_mode() -> None:
     """Reject a temperature write when Daikin omits the operation mode."""
     entity = object.__new__(DaikinClimate)
     object.__setattr__(entity, "_device", MagicMock(name="Device"))
-    object.__setattr__(entity, "_attr_target_temperature", 20)
+    object.__setattr__(entity, "_attr_native_target_temperature", 20)
     entity._operation_mode = MagicMock(return_value=None)
     entity._async_execute_climate_command = AsyncMock()
 
@@ -337,7 +338,7 @@ async def test_set_temperature_rejects_unavailable_setpoint() -> None:
     """Reject a temperature write when its setpoint is not writable."""
     entity = object.__new__(DaikinClimate)
     object.__setattr__(entity, "_device", MagicMock(name="Device"))
-    object.__setattr__(entity, "_attr_target_temperature", 20)
+    object.__setattr__(entity, "_attr_native_target_temperature", 20)
     entity._operation_mode = MagicMock(return_value=MagicMock(value="heating"))
     entity._get_setpoint = MagicMock(return_value=MagicMock(settable=False))
     entity._async_execute_climate_command = AsyncMock()
@@ -357,7 +358,7 @@ async def test_set_temperature_rejects_unsupported_hvac_mode() -> None:
     object.__setattr__(entity, "_device", device)
     object.__setattr__(entity, "_embedded_id", "zone")
     object.__setattr__(entity, "_attr_hvac_modes", [HVACMode.OFF, HVACMode.COOL])
-    object.__setattr__(entity, "_attr_target_temperature", 20)
+    object.__setattr__(entity, "_attr_native_target_temperature", 20)
 
     with pytest.raises(ServiceValidationError):
         await entity.async_set_temperature(hvac_mode=HVACMode.HEAT, temperature=21)
