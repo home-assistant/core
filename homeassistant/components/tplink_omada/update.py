@@ -107,44 +107,24 @@ class OmadaControllerUpdate(OmadaControllerEntity, UpdateEntity):
     @property
     def _update_data(self) -> OmadaControllerUpdateInfo | None:
         """Return controller update data when the optional refresh succeeded."""
-        update = cast(OmadaControllerUpdateInfo | None, self._update_coordinator.data)
-        if update is None:
-            return None
-
-        # The client wraps null sections as update objects instead of omitting them.
-        return OmadaControllerUpdateInfo(
-            {
-                key: value
-                for key in ("hardware", "software")
-                if isinstance(value := update.raw_data.get(key), dict)
-            }
-        )
+        return cast(OmadaControllerUpdateInfo | None, self._update_coordinator.data)
 
     def _update_attrs(self) -> None:
         """Update installed and latest controller versions."""
         update = self._update_data
-        if update is None or update.update is None:
+        if update is None or (active_update := update.update) is None:
             self._attr_installed_version = self.coordinator.data.current_version
             self._attr_latest_version = self._attr_installed_version
             self._attr_supported_features = UpdateEntityFeature(0)
             return
 
-        active_update = update.update
-        # The client version properties require currentVersion, which OC300 may omit.
-        current_version = (
-            active_update.raw_data.get("currentVersion")
-            if active_update is not None
-            else None
-        )
         self._attr_installed_version = (
-            current_version or self.coordinator.data.current_version
-            if update.hardware is not None and active_update is not None
-            else self.coordinator.data.current_version or current_version
+            active_update.current_version or self.coordinator.data.current_version
+            if update.hardware is not None
+            else self.coordinator.data.current_version or active_update.current_version
         )
         self._attr_latest_version = (
-            active_update.raw_data.get("latestVersion") or self._attr_installed_version
-            if active_update is not None
-            else self._attr_installed_version
+            active_update.latest_version or self._attr_installed_version
         )
         self._attr_supported_features = UpdateEntityFeature.RELEASE_NOTES
         if update.hardware is not None:
@@ -184,7 +164,7 @@ class OmadaControllerUpdate(OmadaControllerEntity, UpdateEntity):
                 translation_key="firmware_update_rejected",
             )
 
-        target_version = version or update.hardware.raw_data.get("latestVersion")
+        target_version = version or update.latest_version
         if not target_version:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
