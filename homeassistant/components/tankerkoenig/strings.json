@@ -12,7 +12,7 @@
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_auth": "Invalid API key. If you are sure the key is correct, the Tankerkoenig service may be temporarily unavailable; try again later.",
       "no_stations": "Could not find any station in range."
     },
     "step": {
@@ -182,7 +182,7 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "error": {
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+      "invalid_auth": "[%key:component::tankerkoenig::config::error::invalid_auth%]"
     },
     "step": {
       "init": {
