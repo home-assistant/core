@@ -112,7 +112,8 @@ class OnectaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, DaikinOnectaDe
             except OnectaApiError as err:
                 if err.status == 401:
                     raise ConfigEntryAuthFailed(
-                        "Daikin API authentication failed"
+                        translation_domain=DOMAIN,
+                        translation_key="authentication_failed",
                     ) from err
                 raise UpdateFailed(
                     translation_domain=DOMAIN,

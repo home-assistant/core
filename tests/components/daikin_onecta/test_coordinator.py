@@ -337,8 +337,10 @@ class TestOnectaDataUpdateCoordinator:
             )
         )
 
-        with pytest.raises(ConfigEntryAuthFailed):
+        with pytest.raises(ConfigEntryAuthFailed) as exc_info:
             await coordinator._async_update_data_from_cloud()
+
+        assert exc_info.value.translation_key == "authentication_failed"
 
     async def test_token_refresh_reauth_error_propagates(self, coordinator):
         """Preserve OAuth refresh failures for Home Assistant reauthentication."""

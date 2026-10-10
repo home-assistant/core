@@ -75,6 +75,9 @@
     }
   },
   "exceptions": {
+    "authentication_failed": {
+      "message": "Daikin API authentication failed"
+    },
     "api_error": {
       "message": "Daikin API returned HTTP {status}"
     },
