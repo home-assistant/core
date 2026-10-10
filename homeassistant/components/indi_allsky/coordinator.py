@@ -122,12 +122,18 @@ class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[IndiAllSkyData]):
 
     async def _async_fetch_keogram_and_update(self, media: MediaData) -> None:
         """Fetch latest keogram image and update coordinator."""
-        self.latest_keogram_updated = dt_util.utcnow()
+        image_bytes: bytes | None
         try:
-            self.latest_keogram_image = await self.client.fetch_image("latestkeogram")
+            image_bytes = await self.client.fetch_image("latestkeogram")
         except IndiAllSkyError:
             _LOGGER.warning("Failed to fetch latest keogram image")
-            self.latest_keogram_image = None
+            image_bytes = None
+        if media is not self.latest_keogram:
+            return
+        self.latest_keogram_image = image_bytes
+        self.latest_keogram_updated = (
+            dt_util.utcnow() if image_bytes is not None else None
+        )
         self.async_set_updated_data(
             IndiAllSkyData(
                 exposure=self.latest_exposure,
@@ -152,14 +158,18 @@ class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[IndiAllSkyData]):
 
     async def _async_fetch_startrail_and_update(self, media: MediaData) -> None:
         """Fetch latest startrail image and update coordinator."""
-        self.latest_startrail_updated = dt_util.utcnow()
+        image_bytes: bytes | None
         try:
-            self.latest_startrail_image = await self.client.fetch_image(
-                "lateststartrail"
-            )
+            image_bytes = await self.client.fetch_image("lateststartrail")
         except IndiAllSkyError:
             _LOGGER.warning("Failed to fetch latest startrail image")
-            self.latest_startrail_image = None
+            image_bytes = None
+        if media is not self.latest_startrail:
+            return
+        self.latest_startrail_image = image_bytes
+        self.latest_startrail_updated = (
+            dt_util.utcnow() if image_bytes is not None else None
+        )
         self.async_set_updated_data(
             IndiAllSkyData(
                 exposure=self.latest_exposure,

@@ -87,12 +87,16 @@ class IndiAllSkyImageEntity(IndiAllSkyEntity, ImageEntity):
         self.entity_description = description
         self._attr_unique_id = f"{entry.entry_id}_{description.key}"
         self._last_fetched: datetime | None = None
+        self._last_image_updated: datetime | None = None
 
     @callback
     @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        self.async_update_token()
+        image_updated = self.entity_description.updated_fn(self.coordinator.data)
+        if image_updated != self._last_image_updated:
+            self._last_image_updated = image_updated
+            self.async_update_token()
         super()._handle_coordinator_update()
 
     @property
