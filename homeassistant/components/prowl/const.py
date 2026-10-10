@@ -6,3 +6,5 @@ DOMAIN = "prowl"
 PLATFORMS = [Platform.NOTIFY]
 
 CONF_ENTRY = "entry"
+CONF_LEGACY_SERVICE_NAME = "legacy_service_name"
+CONF_NAMES = "names"

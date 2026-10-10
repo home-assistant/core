@@ -16,7 +16,7 @@ from homeassistant.components.notify import (
     BaseNotificationService,
     NotifyEntity,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -25,7 +25,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import CONF_ENTRY, DOMAIN
+from .const import CONF_ENTRY, CONF_LEGACY_SERVICE_NAME
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,9 +41,6 @@ async def async_get_service(
 ) -> ProwlNotificationService:
     """Get the Prowl notification service."""
     if discovery_info is None:
-        await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=dict(config)
-        )
         # YAML keeps providing the legacy service while it is present
         return ProwlNotificationService(
             hass, config[CONF_API_KEY], get_async_client(hass)
@@ -63,8 +60,10 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the notify entities."""
+    # A title composed of several YAML names is not used as entity name
+    name = "Prowl" if CONF_LEGACY_SERVICE_NAME in entry.data else entry.title
     prowl = ProwlNotificationEntity(
-        hass, entry.title, entry.data[CONF_API_KEY], get_async_client(hass)
+        hass, name, entry.title, entry.data[CONF_API_KEY], get_async_client(hass)
     )
     async_add_entities([prowl])
 
@@ -122,6 +121,7 @@ class ProwlNotificationEntity(NotifyEntity):
         self,
         hass: HomeAssistant,
         name: str,
+        unique_id: str,
         api_key: str,
         httpx_client: httpx2.AsyncClient,
     ) -> None:
@@ -129,7 +129,7 @@ class ProwlNotificationEntity(NotifyEntity):
         self._hass = hass
         self._prowl = prowlpy.AsyncProwl(api_key, client=httpx_client)
         self._attr_name = name
-        self._attr_unique_id = name
+        self._attr_unique_id = unique_id
 
     @override
     async def async_send_message(self, message: str, title: str | None = None) -> None:

@@ -6,8 +6,12 @@ import prowlpy
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.prowl.const import DOMAIN
-from homeassistant.const import CONF_API_KEY, CONF_NAME
+from homeassistant.components.prowl.const import (
+    CONF_LEGACY_SERVICE_NAME,
+    CONF_NAMES,
+    DOMAIN,
+)
+from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -141,32 +145,46 @@ async def test_flow_api_failure(hass: HomeAssistant, mock_prowlpy: AsyncMock) ->
 
 
 @pytest.mark.parametrize(
-    ("import_data", "expected_title"),
+    ("names", "expected_title", "expected_data"),
     [
+        pytest.param(["My Prowl"], "My Prowl", CONF_INPUT, id="with_name"),
         pytest.param(
-            {CONF_API_KEY: TEST_API_KEY, CONF_NAME: "My Prowl"},
-            "My Prowl",
-            id="with_name",
+            [None],
+            "Prowl",
+            {**CONF_INPUT, CONF_LEGACY_SERVICE_NAME: "notify"},
+            id="without_name",
         ),
-        pytest.param({CONF_API_KEY: TEST_API_KEY}, "Prowl", id="without_name"),
+        pytest.param(
+            ["one", "two"],
+            "one, two",
+            {**CONF_INPUT, CONF_LEGACY_SERVICE_NAME: "one"},
+            id="several_names",
+        ),
+        pytest.param(
+            [None, "two"],
+            "notify, two",
+            {**CONF_INPUT, CONF_LEGACY_SERVICE_NAME: "notify"},
+            id="several_names_first_without_name",
+        ),
     ],
 )
 @pytest.mark.usefixtures("mock_prowlpy")
 async def test_flow_import(
     hass: HomeAssistant,
-    import_data: dict[str, str],
+    names: list[str | None],
     expected_title: str,
+    expected_data: dict[str, str],
 ) -> None:
-    """Test importing a YAML configuration."""
+    """Test importing the YAML configuration of an API key."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_IMPORT},
-        data=import_data,
+        data={CONF_API_KEY: TEST_API_KEY, CONF_NAMES: names},
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == expected_title
-    assert result["data"] == {CONF_API_KEY: TEST_API_KEY}
+    assert result["data"] == expected_data
 
 
 @pytest.mark.parametrize(
@@ -190,7 +208,7 @@ async def test_flow_import_existing_entry(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_IMPORT},
-        data={CONF_API_KEY: TEST_API_KEY, CONF_NAME: "prowl"},
+        data={CONF_API_KEY: TEST_API_KEY, CONF_NAMES: ["prowl"]},
     )
 
     assert result["type"] is FlowResultType.ABORT
