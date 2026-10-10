@@ -7,11 +7,12 @@ from pybravia import BraviaClient
 
 from homeassistant.components import ssdp
 from homeassistant.const import CONF_HOST, CONF_MAC, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 
-from .const import CONF_USE_SSL
+from .const import CONF_USE_SSL, DOMAIN
 from .coordinator import BraviaTVConfigEntry, BraviaTVCoordinator
 
 PLATFORMS: Final[list[Platform]] = [
@@ -67,6 +68,44 @@ async def async_unload_entry(
 ) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
+
+
+async def async_migrate_entry(
+    hass: HomeAssistant, config_entry: BraviaTVConfigEntry
+) -> bool:
+    """Migrate an old config entry."""
+    if config_entry.version == 1 and config_entry.minor_version == 1:
+        # Old entries from a TV without CID have an empty unique ID
+        new_unique_id = config_entry.unique_id or dr.format_mac(
+            config_entry.data[CONF_MAC]
+        )
+
+        if new_unique_id != config_entry.unique_id:
+            device_registry = dr.async_get(hass)
+            if device_entry := device_registry.async_get_device_by_identifier(
+                (DOMAIN, ""), config_entry.entry_id
+            ):
+                new_identifiers = device_entry.identifiers.copy()
+                new_identifiers.discard((DOMAIN, ""))
+                new_identifiers.add((DOMAIN, new_unique_id))
+                device_registry.async_update_device(
+                    device_entry.id, new_identifiers=new_identifiers
+                )
+
+            @callback
+            def update_unique_id(entity_entry: er.RegistryEntry) -> dict[str, str]:
+                """Prefix the entity unique ID, which was the suffix alone."""
+                return {"new_unique_id": f"{new_unique_id}{entity_entry.unique_id}"}
+
+            await er.async_migrate_entries(
+                hass, config_entry.entry_id, update_unique_id
+            )
+
+        hass.config_entries.async_update_entry(
+            config_entry, unique_id=new_unique_id, minor_version=2
+        )
+
+    return True
 
 
 async def update_listener(

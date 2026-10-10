@@ -82,6 +82,7 @@ async def test_form(
         (AuthorizationError(reason="Other"), "cannot_connect"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_caldav_client_error(
     hass: HomeAssistant,
     side_effect: Exception,
@@ -107,6 +108,19 @@ async def test_caldav_client_error(
 
     assert result2.get("type") is FlowResultType.FORM
     assert result2.get("errors") == {"base": expected_error}
+
+    dav_client.return_value.get_principal.side_effect = None
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_URL: TEST_URL,
+            CONF_USERNAME: TEST_USERNAME,
+            CONF_PASSWORD: TEST_PASSWORD,
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result3.get("type") is FlowResultType.CREATE_ENTRY
 
 
 async def test_reauth_success(

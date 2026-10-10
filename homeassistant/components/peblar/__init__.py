@@ -20,6 +20,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
 from .coordinator import (
+    PeblarAuthorizationDataUpdateCoordinator,
     PeblarConfigEntry,
     PeblarDataUpdateCoordinator,
     PeblarRuntimeData,
@@ -34,6 +35,7 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
+    Platform.EVENT,
     Platform.NUMBER,
     Platform.SELECT,
     Platform.SENSOR,
@@ -83,21 +85,30 @@ async def async_setup_entry(hass: HomeAssistant, entry: PeblarConfigEntry) -> bo
         hass, entry, peblar
     )
     version_coordinator = PeblarVersionDataUpdateCoordinator(hass, entry, peblar)
+    authorization_coordinator = PeblarAuthorizationDataUpdateCoordinator(
+        hass, entry, peblar
+    )
     await asyncio.gather(
         meter_coordinator.async_config_entry_first_refresh(),
         user_configuration_coordinator.async_config_entry_first_refresh(),
         version_coordinator.async_config_entry_first_refresh(),
     )
 
+    # Reading back who was shown in is an extra the rest does not depend on,
+    # and the endpoint it needs is missing on older firmware. Asking for it
+    # above would take the whole integration down over a single entity.
+    await authorization_coordinator.async_refresh()
+
     # Store the runtime data
     entry.runtime_data = PeblarRuntimeData(
+        authorization_coordinator=authorization_coordinator,
         data_coordinator=meter_coordinator,
         system_information=system_information,
         user_configuration_coordinator=user_configuration_coordinator,
         version_coordinator=version_coordinator,
     )
 
-    listener = PeblarSessionListener(hass, entry, peblar, meter_coordinator)
+    listener = PeblarSessionListener(hass, entry, peblar)
     entry.async_create_background_task(
         hass, listener.async_run(), name=f"Peblar {entry.title} event stream"
     )

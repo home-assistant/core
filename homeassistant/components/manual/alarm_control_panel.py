@@ -150,7 +150,9 @@ PLATFORM_SCHEMA = probatio.Schema(
                 ): cv.boolean,
                 probatio.Optional(
                     CONF_ARMING_STATES, default=SUPPORTED_ARMING_STATES
-                ): probatio.All(cv.ensure_list, [probatio.In(SUPPORTED_ARMING_STATES)]),
+                ): probatio.All(
+                    probatio.EnsureList(), [probatio.In(SUPPORTED_ARMING_STATES)]
+                ),
                 probatio.Optional(CONF_ALARM_ARMED_AWAY, default={}): _state_schema(
                     AlarmControlPanelState.ARMED_AWAY
                 ),

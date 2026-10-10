@@ -5,7 +5,12 @@ from typing import Any, override
 
 from midealocal.const import DeviceType
 
-from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
+from homeassistant.components.switch import (
+    SwitchDeviceClass,
+    SwitchEntity,
+    SwitchEntityDescription,
+)
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -28,11 +33,13 @@ SWITCHES: list[MideaSwitchEntityDescription] = [
         translation_key="pump",
         models=[DeviceType.A1],
         capability="pump",
+        entity_category=EntityCategory.CONFIG,
     ),
     MideaSwitchEntityDescription(
         key="aux_heating",
         translation_key="aux_heating",
         models=[DeviceType.AC, DeviceType.CC, DeviceType.CF],
+        entity_category=EntityCategory.CONFIG,
     ),
     MideaSwitchEntityDescription(
         key="child_lock",
@@ -48,36 +55,43 @@ SWITCHES: list[MideaSwitchEntityDescription] = [
             DeviceType.FB,
             DeviceType.FC,
         ],
+        entity_category=EntityCategory.CONFIG,
     ),
     MideaSwitchEntityDescription(
         key="prompt_tone",
         translation_key="prompt_tone",
         models=[DeviceType.AC],
+        entity_category=EntityCategory.CONFIG,
     ),
     MideaSwitchEntityDescription(
         key="screen_display",
         translation_key="screen_display",
         models=[DeviceType.AC],
+        entity_category=EntityCategory.CONFIG,
     ),
     MideaSwitchEntityDescription(
         key="out_silent",
         translation_key="out_silent",
         models=[DeviceType.AC],
+        entity_category=EntityCategory.CONFIG,
     ),
     MideaSwitchEntityDescription(
         key="smart_eye",
         translation_key="smart_eye",
         models=[DeviceType.AC],
+        entity_category=EntityCategory.CONFIG,
     ),
     MideaSwitchEntityDescription(
         key="anion",
         translation_key="anion",
         models=[DeviceType.AC],
+        entity_category=EntityCategory.CONFIG,
     ),
     MideaSwitchEntityDescription(
         key="sound",
         translation_key="sound",
         models=[DeviceType.AC],
+        entity_category=EntityCategory.CONFIG,
     ),
     MideaSwitchEntityDescription(
         key="self_clean",
@@ -88,26 +102,48 @@ SWITCHES: list[MideaSwitchEntityDescription] = [
         key="disinfect",
         translation_key="disinfect",
         models=[DeviceType.C3],
+        entity_category=EntityCategory.CONFIG,
     ),
     MideaSwitchEntityDescription(
         key="tbh",
         translation_key="tbh",
         models=[DeviceType.C3],
+        entity_category=EntityCategory.CONFIG,
     ),
     MideaSwitchEntityDescription(
         key="zone1_curve",
         translation_key="zone1_curve",
         models=[DeviceType.C3],
+        entity_category=EntityCategory.CONFIG,
     ),
     MideaSwitchEntityDescription(
         key="zone2_curve",
         translation_key="zone2_curve",
         models=[DeviceType.C3],
+        entity_category=EntityCategory.CONFIG,
     ),
     MideaSwitchEntityDescription(
         key="night_light",
         translation_key="night_light",
         models=[DeviceType.CC],
+        entity_category=EntityCategory.CONFIG,
+    ),
+    MideaSwitchEntityDescription(
+        key="power",
+        translation_key="power",
+        models=[DeviceType.DA, DeviceType.DB, DeviceType.DC],
+        device_class=SwitchDeviceClass.SWITCH,
+    ),
+    MideaSwitchEntityDescription(
+        key="start",
+        translation_key="running",
+        models=[DeviceType.DA, DeviceType.DB, DeviceType.DC],
+        device_class=SwitchDeviceClass.SWITCH,
+    ),
+    MideaSwitchEntityDescription(
+        key="ai_switch",
+        translation_key="ai_switch",
+        models=[DeviceType.DC],
     ),
 ]
 

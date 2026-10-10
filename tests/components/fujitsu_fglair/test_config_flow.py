@@ -46,6 +46,7 @@ async def test_full_flow(hass: HomeAssistant, mock_ayla_api: AsyncMock) -> None:
         CONF_PASSWORD: TEST_PASSWORD,
         CONF_REGION: REGION_DEFAULT,
     }
+    assert result["result"].unique_id == TEST_USERNAME.lower()
 
 
 @pytest.mark.usefixtures("mock_setup_entry")

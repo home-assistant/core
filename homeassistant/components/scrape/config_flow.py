@@ -45,7 +45,6 @@ from homeassistant.const import (
     HTTP_BASIC_AUTHENTICATION,
     HTTP_DIGEST_AUTHENTICATION,
     Platform,
-    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.selector import (
@@ -64,6 +63,8 @@ from homeassistant.helpers.selector import (
     TextSelector,
     TextSelectorConfig,
     TextSelectorType,
+    UnitOfMeasurementSelector,
+    UnitOfMeasurementSelectorConfig,
 )
 from homeassistant.helpers.trigger_template_entity import CONF_AVAILABILITY
 
@@ -108,7 +109,7 @@ RESOURCE_SETUP = probatio.Schema(
                             type=TextSelectorType.TEXT, autocomplete="username"
                         )
                     ),
-                    probatio.Optional(CONF_PASSWORD): TextSelector(
+                    probatio.Optional(probatio.Secret(CONF_PASSWORD)): TextSelector(
                         TextSelectorConfig(
                             type=TextSelectorType.PASSWORD,
                             autocomplete="current-password",
@@ -159,13 +160,14 @@ SENSOR_SETTINGS = probatio.Schema(
                         DeviceClassSelectorConfig(domain=Platform.SENSOR)
                     ),
                     probatio.Optional(CONF_STATE_CLASS): StateClassSelector(),
-                    probatio.Optional(CONF_UNIT_OF_MEASUREMENT): SelectSelector(
-                        SelectSelectorConfig(
-                            options=[cls.value for cls in UnitOfTemperature],
-                            custom_value=True,
-                            mode=SelectSelectorMode.DROPDOWN,
-                            translation_key="unit_of_measurement",
-                            sort=True,
+                    probatio.Optional(
+                        CONF_UNIT_OF_MEASUREMENT
+                    ): UnitOfMeasurementSelector(
+                        UnitOfMeasurementSelectorConfig(
+                            context={
+                                "filter_device_class": CONF_DEVICE_CLASS,
+                                "filter_state_class": CONF_STATE_CLASS,
+                            }
                         )
                     ),
                 }

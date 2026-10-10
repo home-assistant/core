@@ -33,11 +33,18 @@ from .const import CONF_2FA, CONF_CONFIG_ENTRY_MINOR_VERSION, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = probatio.Schema(
-    {probatio.Required(CONF_USERNAME): str, probatio.Required(CONF_PASSWORD): str}
+    {
+        probatio.Required(CONF_USERNAME): str,
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
+    }
 )
-STEP_REAUTH_DATA_SCHEMA = probatio.Schema({probatio.Required(CONF_PASSWORD): str})
+STEP_REAUTH_DATA_SCHEMA = probatio.Schema(
+    {probatio.Required(probatio.Secret(CONF_PASSWORD)): str}
+)
 
-STEP_RECONFIGURE_DATA_SCHEMA = probatio.Schema({probatio.Required(CONF_PASSWORD): str})
+STEP_RECONFIGURE_DATA_SCHEMA = probatio.Schema(
+    {probatio.Required(probatio.Secret(CONF_PASSWORD)): str}
+)
 
 UNKNOWN_RING_ACCOUNT = "unknown_ring_account"
 
@@ -186,12 +193,14 @@ class RingConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                data = {
+                data_updates = {
                     CONF_USERNAME: user_input[CONF_USERNAME],
                     CONF_TOKEN: token,
                     CONF_DEVICE_ID: self.hardware_id,
                 }
-                return self.async_update_reload_and_abort(reauth_entry, data=data)
+                return self.async_update_reload_and_abort(
+                    reauth_entry, data_updates=data_updates
+                )
 
         return self.async_show_form(
             step_id="reauth_confirm",
@@ -229,12 +238,14 @@ class RingConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                data = {
+                data_updates = {
                     CONF_USERNAME: username,
                     CONF_TOKEN: token,
                     CONF_DEVICE_ID: self.hardware_id,
                 }
-                return self.async_update_reload_and_abort(reconfigure_entry, data=data)
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry, data_updates=data_updates
+                )
 
         return self.async_show_form(
             step_id="reconfigure",

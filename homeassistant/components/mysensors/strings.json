@@ -83,5 +83,10 @@
         "description": "Choose connection method to the gateway"
       }
     }
+  },
+  "exceptions": {
+    "gateway_setup_failed": {
+      "message": "Gateway setup failed"
+    }
   }
 }

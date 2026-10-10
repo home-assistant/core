@@ -90,9 +90,9 @@ class RabbitAirConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=probatio.Schema(
                 {
                     probatio.Required(CONF_HOST, default=host): str,
-                    probatio.Required(CONF_ACCESS_TOKEN, default=token): probatio.All(
-                        str, probatio.Length(min=32, max=32)
-                    ),
+                    probatio.Required(
+                        probatio.Secret(CONF_ACCESS_TOKEN), default=token
+                    ): probatio.All(str, probatio.Length(min=32, max=32)),
                 }
             ),
             errors=errors,

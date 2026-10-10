@@ -620,6 +620,25 @@ async def test_form_user_no_devices_password_fetch_fails_cannot_connect(
     assert result4["errors"] == {"base": "cannot_connect"}
     assert len(mock_setup_entry.mock_calls) == 0
 
+    mocked_roomba.connect.side_effect = None
+    with (
+        patch(
+            "homeassistant.components.roomba.config_flow.RoombaFactory.create_roomba",
+            return_value=mocked_roomba,
+        ),
+        patch(
+            "homeassistant.components.roomba.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result5 = await hass.config_entries.flow.async_configure(
+            result4["flow_id"],
+            {CONF_PASSWORD: "password"},
+        )
+        await hass.async_block_till_done()
+
+    assert result5["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_form_user_discovery_and_password_fetch_gets_connection_refused(
     hass: HomeAssistant,

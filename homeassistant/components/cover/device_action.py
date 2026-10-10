@@ -22,7 +22,8 @@ from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity import get_supported_features
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
-from . import ATTR_POSITION, ATTR_TILT_POSITION, DOMAIN, CoverEntityFeature
+from . import ATTR_POSITION, ATTR_TILT_POSITION, CoverEntityFeature
+from .const import DOMAIN
 
 CMD_ACTION_TYPES = {"open", "close", "stop", "open_tilt", "close_tilt"}
 POSITION_ACTION_TYPES = {"set_position", "set_tilt_position"}
@@ -39,7 +40,7 @@ POSITION_ACTION_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
         probatio.Required(CONF_TYPE): probatio.In(POSITION_ACTION_TYPES),
         probatio.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
         probatio.Optional("position", default=0): probatio.All(
-            probatio.Coerce(int), probatio.Range(min=0, max=100)
+            probatio.Coerce(int), probatio.Percentage()
         ),
     }
 )
@@ -105,7 +106,7 @@ async def async_get_action_capabilities(
         "extra_fields": probatio.Schema(
             {
                 probatio.Optional(ATTR_POSITION, default=0): probatio.All(
-                    probatio.Coerce(int), probatio.Range(min=0, max=100)
+                    probatio.Coerce(int), probatio.Percentage()
                 )
             }
         )

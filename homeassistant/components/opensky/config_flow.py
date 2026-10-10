@@ -118,7 +118,7 @@ class OpenSkyOptionsFlowHandler(OptionsFlow):
                         probatio.Required(CONF_RADIUS): probatio.Coerce(float),
                         probatio.Optional(CONF_ALTITUDE): probatio.Coerce(float),
                         probatio.Optional(CONF_USERNAME): str,
-                        probatio.Optional(CONF_PASSWORD): str,
+                        probatio.Optional(probatio.Secret(CONF_PASSWORD)): str,
                         probatio.Optional(CONF_CONTRIBUTING_USER, default=False): bool,
                     }
                 ),
