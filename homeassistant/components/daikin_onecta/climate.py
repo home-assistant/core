@@ -154,11 +154,11 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
         # Successful writes update the typed model optimistically so Home
         # Assistant reflects the new state without waiting for the next poll.
         self._attr_supported_features = self._get_supported_features()
-        self._attr_current_temperature = self._get_current_temperature()
+        self._attr_native_current_temperature = self._get_current_temperature()
         self._attr_max_temp = self._get_max_temp()
         self._attr_min_temp = self._get_min_temp()
         self._attr_target_temperature_step = self._get_target_temperature_step()
-        self._attr_target_temperature = self._get_target_temperature()
+        self._attr_native_target_temperature = self._get_target_temperature()
         self._attr_hvac_modes = self._get_hvac_modes()
         self._attr_swing_modes = self._get_swing_modes()
         self._attr_swing_horizontal_modes = self._get_swing_horizontal_modes()
@@ -302,7 +302,7 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
 
         if ATTR_TEMPERATURE in kwargs:
             value = kwargs[ATTR_TEMPERATURE]
-            if self._attr_target_temperature != value:
+            if self._attr_native_target_temperature != value:
                 operationmode = self._operation_mode()
                 if operationmode is None:
                     self._raise_service_validation_error(
@@ -322,7 +322,7 @@ class DaikinClimate(DaikinOnectaEntity, ClimateEntity):
                     setpointdict = self._get_setpoint(omv)
                     if setpointdict is not None:
                         setpointdict.value = value
-                        self._attr_target_temperature = value
+                        self._attr_native_target_temperature = value
                         self.coordinator.async_update_listeners()
                 else:
                     self._raise_command_failed("set_temperature_failed")
