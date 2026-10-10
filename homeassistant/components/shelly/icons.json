@@ -59,6 +59,9 @@
       "self_test": {
         "default": "mdi:progress-wrench"
       },
+      "storage_free_space": {
+        "default": "mdi:sd"
+      },
       "tilt": {
         "default": "mdi:angle-acute"
       },

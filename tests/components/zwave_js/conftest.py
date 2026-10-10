@@ -461,6 +461,12 @@ def aeotec_zw164_siren_state_fixture() -> dict[str, Any]:
     return load_json_object_fixture("aeotec_zw164_siren_state.json", DOMAIN)
 
 
+@pytest.fixture(name="aeotec_zwa046_state", scope="package")
+def aeotec_zwa046_state_fixture() -> dict[str, Any]:
+    """Load the Aeotec ZWA046 Home Energy Meter 8 node state fixture data."""
+    return load_json_object_fixture("aeotec_ltd_zwa046_state.json", DOMAIN)
+
+
 @pytest.fixture(name="lock_popp_electric_strike_lock_control_state", scope="package")
 def lock_popp_electric_strike_lock_control_state_fixture() -> dict[str, Any]:
     """Load the popp electric strike lock control node state fixture data."""
@@ -515,6 +521,12 @@ def lock_home_connect_620_state_fixture() -> dict[str, Any]:
 def switch_zooz_zen72_state_fixture() -> dict[str, Any]:
     """Load the Zooz Zen72 switch node state fixture data."""
     return load_json_object_fixture("switch_zooz_zen72_state.json", DOMAIN)
+
+
+@pytest.fixture(name="zooz_zse43_state", scope="package")
+def zooz_zse43_state_fixture() -> dict[str, Any]:
+    """Load the Zooz ZSE43 tilt/shock sensor node state fixture data."""
+    return load_json_object_fixture("zooz_zse43_state.json", DOMAIN)
 
 
 @pytest.fixture(name="indicator_test_state", scope="package")
@@ -1321,6 +1333,14 @@ def vision_security_zl7432_fixture(client, vision_security_zl7432_state) -> Node
     return node
 
 
+@pytest.fixture(name="aeotec_zwa046")
+def aeotec_zwa046_fixture(client: MagicMock, aeotec_zwa046_state: NodeDataType) -> Node:
+    """Mock an Aeotec ZWA046 Home Energy Meter 8 node."""
+    node = Node(client, copy.deepcopy(aeotec_zwa046_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
 @pytest.fixture(name="zen_31")
 def zen_31_fixture(client, zen_31_state) -> Node:
     """Mock a bulb 6 multi-color node."""
@@ -1431,6 +1451,14 @@ def lock_home_connect_620_fixture(client, lock_home_connect_620_state) -> Node:
 def switch_zooz_zen72_fixture(client, switch_zooz_zen72_state) -> Node:
     """Mock a Zooz Zen72 switch node."""
     node = Node(client, copy.deepcopy(switch_zooz_zen72_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="zooz_zse43")
+def zooz_zse43_fixture(client: MagicMock, zooz_zse43_state: NodeDataType) -> Node:
+    """Mock a Zooz ZSE43 tilt/shock sensor node."""
+    node = Node(client, copy.deepcopy(zooz_zse43_state))
     client.driver.controller.nodes[node.node_id] = node
     return node
 

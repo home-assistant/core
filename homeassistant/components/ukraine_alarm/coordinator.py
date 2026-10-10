@@ -13,7 +13,7 @@ from homeassistant.const import CONF_REGION
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import ALERT_TYPES, DOMAIN
+from .const import AIR_ALERT_LEVELS, ALERT_TYPE_AIR, ALERT_TYPES, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -56,5 +56,11 @@ class UkraineAlarmDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         current = dict.fromkeys(ALERT_TYPES, False)
         for alert in res[0]["activeAlerts"]:
             current[alert["type"]] = True
+
+            if alert["type"] != ALERT_TYPE_AIR:
+                continue
+            for level in alert.get("activeAlertLevels") or []:
+                if key := AIR_ALERT_LEVELS.get(str(level.get("alertLevel")).lower()):
+                    current[key] = True
 
         return current

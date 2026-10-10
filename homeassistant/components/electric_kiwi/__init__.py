@@ -1,6 +1,5 @@
 """The Electric Kiwi integration."""
 
-import aiohttp
 from electrickiwi_api import ElectricKiwiApi
 from electrickiwi_api.exceptions import ApiException, AuthException
 
@@ -8,9 +7,8 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
+    ConfigEntryError,
     ConfigEntryNotReady,
-    OAuth2TokenRequestError,
-    OAuth2TokenRequestReauthError,
 )
 from homeassistant.helpers import (
     aiohttp_client,
@@ -19,6 +17,7 @@ from homeassistant.helpers import (
 )
 
 from . import api
+from .const import DOMAIN
 from .coordinator import (
     ElectricKiwiAccountDataCoordinator,
     ElectricKiwiConfigEntry,
@@ -41,12 +40,7 @@ async def async_setup_entry(
 
     session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
 
-    try:
-        await session.async_ensure_token_valid()
-    except OAuth2TokenRequestReauthError as err:
-        raise ConfigEntryAuthFailed(err) from err
-    except (OAuth2TokenRequestError, aiohttp.ClientError) as err:
-        raise ConfigEntryNotReady from err
+    await session.async_ensure_token_valid()
 
     ek_api = ElectricKiwiApi(
         api.ConfigEntryElectricKiwiAuth(
@@ -104,11 +98,17 @@ async def async_migrate_entry(
         try:
             await ek_api.set_active_session()
             connection_details = await ek_api.get_connection_details()
-        except AuthException:
+        except AuthException as err:
             config_entry.async_start_reauth(hass)
-            return False
-        except ApiException:
-            return False
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="auth_failed",
+            ) from err
+        except ApiException as err:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="connection_failed",
+            ) from err
         unique_id = str(ek_api.customer_number)
         identifier = ek_api.electricity.identifier
         hass.config_entries.async_update_entry(

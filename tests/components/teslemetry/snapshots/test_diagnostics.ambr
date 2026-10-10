@@ -4,6 +4,7 @@
     'energysites': list([
       dict({
         'history': dict({
+          '_period_start': '2024-09-18T00:00:00+10:00',
           'battery_energy_exported': 36,
           'battery_energy_imported_from_generator': 0,
           'battery_energy_imported_from_grid': 0,
@@ -34,25 +35,25 @@
           'components_batteries': list([
             dict({
               'device_id': 'battery-1-id',
-              'din': 'battery-1-din',
+              'din': '**REDACTED**',
               'nameplate_energy': 13500,
               'nameplate_max_charge_power': 5000,
               'nameplate_max_discharge_power': 5000,
               'part_name': 'Powerwall 2',
               'part_number': '3012170-10-B',
               'part_type': 2,
-              'serial_number': 'TG000000001DA5',
+              'serial_number': '**REDACTED**',
             }),
             dict({
               'device_id': 'battery-2-id',
-              'din': 'battery-2-din',
+              'din': '**REDACTED**',
               'nameplate_energy': 13500,
               'nameplate_max_charge_power': 5000,
               'nameplate_max_discharge_power': 5000,
               'part_name': 'Powerwall 2',
               'part_number': '3012170-05-C',
               'part_type': 2,
-              'serial_number': 'TG000000002DA5',
+              'serial_number': '**REDACTED**',
             }),
           ]),
           'components_battery': True,
@@ -70,13 +71,13 @@
           'components_gateways': list([
             dict({
               'device_id': 'gateway-id',
-              'din': 'gateway-din',
+              'din': '**REDACTED**',
               'firmware_version': '24.4.0 0fe780c9',
               'is_active': True,
               'part_name': 'Tesla Backup Gateway 2',
               'part_number': '1152100-14-J',
               'part_type': 10,
-              'serial_number': 'CN00000000J50D',
+              'serial_number': '**REDACTED**',
               'site_id': '1234-abcd',
               'updated_datetime': '2024-05-14T00:00:00.000Z',
             }),
@@ -99,22 +100,22 @@
           'components_wall_connectors': list([
             dict({
               'device_id': '123abc',
-              'din': 'abd-123',
+              'din': '**REDACTED**',
               'is_active': True,
               'part_name': 'Gen 3 Wall Connector',
             }),
             dict({
               'device_id': '234bcd',
-              'din': 'bcd-234',
+              'din': '**REDACTED**',
               'is_active': True,
               'part_name': 'Gen 3 Wall Connector',
             }),
           ]),
           'components_wifi_commissioning_enabled': True,
           'default_real_mode': 'self_consumption',
-          'id': '1233-abcd',
+          'id': '**REDACTED**',
           'installation_date': '**REDACTED**',
-          'installation_time_zone': '',
+          'installation_time_zone': 'Australia/Brisbane',
           'max_site_meter_power_ac': 1000000000,
           'min_site_meter_power_ac': -1000000000,
           'nameplate_energy': 40500,
@@ -284,7 +285,6 @@
         'live': dict({
           'backup_capable': True,
           'battery_power': 5060,
-          'energy_left': 38896.47368421053,
           'generator_power': 0,
           'grid_power': 0,
           'grid_services_active': False,
@@ -296,21 +296,20 @@
           'solar_power': 1185,
           'storm_mode_active': False,
           'timestamp': '2024-01-01T00:00:00+00:00',
-          'total_pack_energy': 40727,
-          'wall_connectors': dict({
-            'abd-123': dict({
-              'din': 'abd-123',
+          'wall_connectors': list([
+            dict({
+              'din': '**REDACTED**',
               'wall_connector_fault_state': 2,
               'wall_connector_power': 0,
               'wall_connector_state': 2,
             }),
-            'bcd-234': dict({
-              'din': 'bcd-234',
+            dict({
+              'din': '**REDACTED**',
               'wall_connector_fault_state': 2,
               'wall_connector_power': 0,
               'wall_connector_state': 2,
             }),
-          }),
+          ]),
         }),
       }),
     ]),
@@ -330,7 +329,7 @@
         'data': dict({
           'access_type': 'OWNER',
           'api_version': 71,
-          'backseat_token': None,
+          'backseat_token': '**REDACTED**',
           'backseat_token_updated_at': None,
           'ble_autopair_enrolled': False,
           'calendar_enabled': True,
@@ -393,7 +392,7 @@
           'climate_state_battery_heater_no_power': None,
           'climate_state_cabin_overheat_protection': 'On',
           'climate_state_cabin_overheat_protection_actively_cooling': False,
-          'climate_state_climate_keeper_mode': 'keep',
+          'climate_state_climate_keeper_mode': 'on',
           'climate_state_cop_activation_temperature': 'High',
           'climate_state_defrost_mode': 0,
           'climate_state_driver_temp_setting': 22,
@@ -590,7 +589,6 @@
           'config': dict({
             'fields': dict({
             }),
-            'prefer_typed': None,
           }),
         }),
       }),

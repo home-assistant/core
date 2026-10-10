@@ -2,6 +2,7 @@
 
 from unittest.mock import patch
 
+import pytest
 from serial import SerialException
 
 from homeassistant import config_entries
@@ -60,6 +61,7 @@ async def test_flow_entry_already_exists(hass: HomeAssistant) -> None:
     assert result["reason"] == "single_instance_allowed"
 
 
+@pytest.mark.usefixtures("mock_litejet")
 async def test_flow_open_failed(hass: HomeAssistant) -> None:
     """Test user input when serial port open fails."""
     test_data = {CONF_PORT: "/dev/test"}
@@ -81,6 +83,13 @@ async def test_flow_open_failed(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"][CONF_PORT] == "open_failed"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=test_data,
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_options(hass: HomeAssistant) -> None:

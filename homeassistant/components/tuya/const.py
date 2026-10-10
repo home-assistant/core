@@ -221,6 +221,8 @@ class DeviceCategory(StrEnum):
 
     https://developer.tuya.com/en/docs/iot/categoryhps?id=Kaiuz42yhn1hs
     """
+    HWSB = "hwsb"
+    """Outdoor equipment"""
     JS = "js"
     """Water purifier"""
     JSQ = "jsq"
@@ -574,6 +576,8 @@ class DeviceCategory(StrEnum):
     """Tank Level Sensor (undocumented)"""
     ZNNBQ = "znnbq"
     """VESKA-micro inverter (undocumented)"""
+    ZNJDQ = "znjdq"
+    """Circuit breaker (undocumented)"""
     ZWJCY = "zwjcy"
     """Soil sensor - plant monitor (undocumented)"""
     ZNJXS = "znjxs"
@@ -598,6 +602,7 @@ class DPCode(StrEnum):
     ALARM_SWITCH = "alarm_switch"  # Alarm switch
     ALARM_TIME = "alarm_time"  # Alarm time
     ALARM_VOLUME = "alarm_volume"  # Alarm volume
+    ALL_ENERGY = "all_energy"  # Combined energy of all channels
     ANGLE_HORIZONTAL = "angle_horizontal"
     ANGLE_VERTICAL = "angle_vertical"
     ANION = "anion"  # Ionizer unit
@@ -638,6 +643,8 @@ class DPCode(StrEnum):
     CH2O_VALUE = "ch2o_value"
     CH4_SENSOR_STATE = "ch4_sensor_state"
     CH4_SENSOR_VALUE = "ch4_sensor_value"
+    CHARGE_CUR_SET = "charge_cur_set"
+    CHARGE_ENERGY_ONCE = "charge_energy_once"
     CHARGE_STATE = "charge_state"
     CHILD_LOCK = "child_lock"  # Child lock
     CISTERN = "cistern"
@@ -685,9 +692,15 @@ class DPCode(StrEnum):
     CUMULATIVE_ENERGY_OUTPUT_INV = "cumulative_energy_output_inv"
     CUP_NUMBER = "cup_number"  # NUmber of cups
     CUR_CURRENT = "cur_current"  # Actual current
+    CUR_CURRENT1 = "cur_current1"  # Actual current, channel 1
+    CUR_CURRENT2 = "cur_current2"  # Actual current, channel 2
     CUR_NEUTRAL = "cur_neutral"  # Total reverse energy
     CUR_POWER = "cur_power"  # Actual power
+    CUR_POWER1 = "cur_power1"  # Actual power, channel 1
+    CUR_POWER2 = "cur_power2"  # Actual power, channel 2
     CUR_VOLTAGE = "cur_voltage"  # Actual voltage
+    CUR_VOLTAGE1 = "cur_voltage1"  # Actual voltage, channel 1
+    CUR_VOLTAGE2 = "cur_voltage2"  # Actual voltage, channel 2
     CURRENT_SOC = "current_soc"
     DECIBEL_SENSITIVITY = "decibel_sensitivity"
     DECIBEL_SWITCH = "decibel_switch"
@@ -696,6 +709,8 @@ class DPCode(StrEnum):
     DELAY_CLEAN_TIME = "delay_clean_time"
     DELAY_SET = "delay_set"
     DEVICE_RESTART = "device_restart"
+    DEVICE_STATE1 = "device_state1"  # Channel 1 monitoring state
+    DEVICE_STATE2 = "device_state2"  # Channel 2 monitoring state
     DEW_POINT_TEMP = "dew_point_temp"
     DISINFECTION = "disinfection"
     DO_NOT_DISTURB = "do_not_disturb"
@@ -803,6 +818,26 @@ class DPCode(StrEnum):
     PHASE_A = "phase_a"
     PHASE_B = "phase_b"
     PHASE_C = "phase_c"
+    PHASE_S1 = "phase_s1"
+    PHASE_S2 = "phase_s2"
+    PHASE_S3 = "phase_s3"
+    PHASE_S4 = "phase_s4"
+    PHASE_S5 = "phase_s5"
+    PHASE_S6 = "phase_s6"
+    PHASE_S7 = "phase_s7"
+    PHASE_S8 = "phase_s8"
+    PHASE_S9 = "phase_s9"
+    PHASE_S10 = "phase_s10"
+    PHASE_S11 = "phase_s11"
+    PHASE_S12 = "phase_s12"
+    PHASE_S13 = "phase_s13"
+    PHASE_S14 = "phase_s14"
+    PHASE_S15 = "phase_s15"
+    PHASE_S16 = "phase_s16"
+    PHASE_S17 = "phase_s17"
+    PHASE_S18 = "phase_s18"
+    PHASE_S19 = "phase_s19"
+    PHASE_S20 = "phase_s20"
     PH_CURRENT = "ph_current"
     PIR = "pir"  # Motion sensor
     PM1 = "pm1"
@@ -858,6 +893,7 @@ class DPCode(StrEnum):
     SOS = "sos"  # Emergency State
     SOS_STATE = "sos_state"  # Emergency mode
     SPEED = "speed"  # Speed level
+    SPEED_SET = "speed_set"
     SPRAY_MODE = "spray_mode"  # Spraying mode
     START = "start"  # Start
     STATUS = "status"
@@ -875,6 +911,7 @@ class DPCode(StrEnum):
     SWITCH_7 = "switch_7"  # Switch 7
     SWITCH_8 = "switch_8"  # Switch 8
     SWITCH_ALARM_LIGHT = "switch_alarm_light"
+    SWITCH_ALARM_PROPEL = "switch_alarm_propel"
     SWITCH_ALARM_SOUND = "switch_alarm_sound"
     SWITCH_BACKLIGHT = "switch_backlight"  # Backlight switch
     SWITCH_CHARGE = "switch_charge"
@@ -882,6 +919,7 @@ class DPCode(StrEnum):
     SWITCH_DISTURB = "switch_disturb"
     SWITCH_FAN = "switch_fan"
     SWITCH_HORIZONTAL = "switch_horizontal"  # Horizontal swing flap switch
+    SWITCH_KB_SOUND = "switch_kb_sound"
     SWITCH_LED = "switch_led"  # Switch
     SWITCH_LED_1 = "switch_led_1"
     SWITCH_LED_2 = "switch_led_2"
@@ -947,9 +985,13 @@ class DPCode(StrEnum):
     TEMPER_ALARM = "temper_alarm"  # Tamper alarm
     TIME_TOTAL = "time_total"
     TIME_USE = "time_use"  # Total seconds of irrigation
+    TODAY_ACC_ENERGY1 = "today_acc_energy1"  # Energy today, channel 1
+    TODAY_ACC_ENERGY2 = "today_acc_energy2"  # Energy today, channel 2
     TOTAL_CLEAN_AREA = "total_clean_area"
     TOTAL_CLEAN_COUNT = "total_clean_count"
     TOTAL_CLEAN_TIME = "total_clean_time"
+    TOTAL_ENERGY1 = "total_energy1"  # Total energy, channel 1
+    TOTAL_ENERGY2 = "total_energy2"  # Total energy, channel 2
     TOTAL_FORWARD_ENERGY = "total_forward_energy"
     TOTAL_PM = "total_pm"
     TOTAL_POWER = "total_power"
@@ -973,11 +1015,15 @@ class DPCode(StrEnum):
     VOLUME_SET = "volume_set"
     WARM = "warm"  # Heat preservation
     WARM_TIME = "warm_time"  # Heat preservation time
+    WARN_POWER1 = "warn_power1"  # Power warning threshold, channel 1
+    WARN_POWER2 = "warn_power2"  # Power warning threshold, channel 2
     WATER = "water"
     WATER_LEVEL = "water_level"
+    WATER_ONCE = "water_once"
     WATER_RESET = "water_reset"  # Resetting of water usage days
     WATER_SET = "water_set"  # Water level
     WATER_TIME = "water_time"  # Water usage duration
+    WATER_TOTAL = "water_total"
     WATERSENSOR_STATE = "watersensor_state"
     WEATHER_DELAY = "weather_delay"
     WET = "wet"  # Humidification

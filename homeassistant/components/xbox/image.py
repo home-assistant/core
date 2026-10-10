@@ -25,6 +25,12 @@ class XboxImage(StrEnum):
     NOW_PLAYING = "now_playing"
     GAMERPIC = "gamerpic"
     AVATAR = "avatar"
+    POSTER = "poster"
+    BRANDED_KEY_ART = "branded_key_art"
+    TITLED_HERO_ART = "titled_hero_art"
+    SUPER_HERO_ART = "super_hero_art"
+    BOX_ART = "box_art"
+    FEATURE_PROMOTIONAL_SQUARE_ART = "feature_promotional_square_art"
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -44,6 +50,67 @@ IMAGE_DESCRIPTIONS: tuple[XboxImageEntityDescription, ...] = (
         key=XboxImage.NOW_PLAYING,
         translation_key=XboxImage.NOW_PLAYING,
         image_url_fn=lambda _, title: title.display_image if title else None,
+    ),
+    XboxImageEntityDescription(
+        key=XboxImage.POSTER,
+        translation_key=XboxImage.POSTER,
+        image_url_fn=lambda _, title: (
+            next((img.url for img in title.images if img.type == "Poster"), None)
+            if title and title.images
+            else None
+        ),
+    ),
+    XboxImageEntityDescription(
+        key=XboxImage.BRANDED_KEY_ART,
+        translation_key=XboxImage.BRANDED_KEY_ART,
+        image_url_fn=lambda _, title: (
+            next((img.url for img in title.images if img.type == "BrandedKeyArt"), None)
+            if title and title.images
+            else None
+        ),
+    ),
+    XboxImageEntityDescription(
+        key=XboxImage.TITLED_HERO_ART,
+        translation_key=XboxImage.TITLED_HERO_ART,
+        image_url_fn=lambda _, title: (
+            next((img.url for img in title.images if img.type == "TitledHeroArt"), None)
+            if title and title.images
+            else None
+        ),
+    ),
+    XboxImageEntityDescription(
+        key=XboxImage.SUPER_HERO_ART,
+        translation_key=XboxImage.SUPER_HERO_ART,
+        image_url_fn=lambda _, title: (
+            next((img.url for img in title.images if img.type == "SuperHeroArt"), None)
+            if title and title.images
+            else None
+        ),
+    ),
+    XboxImageEntityDescription(
+        key=XboxImage.BOX_ART,
+        translation_key=XboxImage.BOX_ART,
+        image_url_fn=lambda _, title: (
+            next((img.url for img in title.images if img.type == "BoxArt"), None)
+            if title and title.images
+            else None
+        ),
+    ),
+    XboxImageEntityDescription(
+        key=XboxImage.FEATURE_PROMOTIONAL_SQUARE_ART,
+        translation_key=XboxImage.FEATURE_PROMOTIONAL_SQUARE_ART,
+        image_url_fn=lambda _, title: (
+            next(
+                (
+                    img.url
+                    for img in title.images
+                    if img.type == "FeaturePromotionalSquareArt"
+                ),
+                None,
+            )
+            if title and title.images
+            else None
+        ),
     ),
     XboxImageEntityDescription(
         key=XboxImage.AVATAR,

@@ -1,6 +1,6 @@
 """Attribution of serial ports to the integrations and apps using them."""
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterator, Mapping, Sequence
 import os
 import re
 from typing import Any
@@ -8,8 +8,13 @@ from typing import Any
 from homeassistant.components.hassio import HassioNotReadyError, get_addons_info
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.generated.usb import USB_DEPENDENTS
 from homeassistant.helpers.hassio import is_hassio
-from homeassistant.loader import async_get_integrations
+from homeassistant.loader import (
+    Integration,
+    async_get_custom_components,
+    async_get_integrations,
+)
 
 from .const import DOMAIN
 from .models import SerialDevice, SerialPortConsumer, USBDevice
@@ -30,6 +35,17 @@ SERIAL_PORT_KEY_PATHS: tuple[tuple[str, ...], ...] = (
 
 # Integrations configured with a serial port but not depending on `usb`
 NON_USB_SERIAL_DOMAINS = ("alarmdecoder", "bryant_evolution", "elkm1", "mysensors")
+
+# Integrations depending on `usb` that are not set up with a chosen serial port
+NON_SERIAL_USB_DEPENDENTS = (
+    "bluetooth",
+    "default_config",
+    "esphome",
+    "homeassistant_connect_zbt2",
+    "homeassistant_hardware",
+    "homeassistant_sky_connect",
+    "homeassistant_yellow",
+)
 
 # States in which the entry claims its configured port, even if the port is not
 # open right now: a retrying setup typically failed to open the port, while an
@@ -61,6 +77,28 @@ BAUD_SUFFIX_RE = re.compile(r":\d+$")
 
 # Supervisor app state, mirrors `aiohasupervisor.models.AddonState.STARTED`
 APP_STATE_STARTED = "started"
+
+
+def _is_serial_integration(integration: Integration) -> bool:
+    """Return if an integration can be configured with a serial port."""
+    return (
+        integration.domain in NON_USB_SERIAL_DOMAINS
+        or DOMAIN in integration.dependencies
+        or DOMAIN in integration.after_dependencies
+    )
+
+
+async def async_get_serial_integrations(hass: HomeAssistant) -> set[str]:
+    """Return the domains of integrations configurable with a serial port."""
+    domains = {*USB_DEPENDENTS, *NON_USB_SERIAL_DOMAINS}
+
+    for integration in (await async_get_custom_components(hass)).values():
+        if _is_serial_integration(integration):
+            domains.add(integration.domain)
+        else:
+            domains.discard(integration.domain)
+
+    return domains.difference(NON_SERIAL_USB_DEPENDENTS)
 
 
 def _resolve_key_path(data: Mapping[str, Any], key_path: tuple[str, ...]) -> Any:
@@ -127,11 +165,7 @@ async def _async_get_config_entry_consumers(
         if isinstance(integration, Exception):
             continue
 
-        if (
-            entry.domain not in NON_USB_SERIAL_DOMAINS
-            and DOMAIN not in integration.dependencies
-            and DOMAIN not in integration.after_dependencies
-        ):
+        if not _is_serial_integration(integration):
             continue
 
         for key_path in SERIAL_PORT_KEY_PATHS:
@@ -156,14 +190,29 @@ async def _async_get_config_entry_consumers(
     return consumers
 
 
+def _iter_option_device_paths(value: Any) -> Iterator[str]:
+    """Yield device paths configured anywhere in the options of an app."""
+    if isinstance(value, str):
+        if value.startswith("/dev/"):
+            yield value
+    elif isinstance(value, Mapping):
+        for item in value.values():
+            yield from _iter_option_device_paths(item)
+    elif isinstance(value, list):
+        for item in value:
+            yield from _iter_option_device_paths(item)
+
+
 @callback
 def _async_get_app_consumers(
     hass: HomeAssistant,
 ) -> dict[str, list[SerialPortConsumer]]:
-    """Return devices mapped into apps, either statically or through options.
+    """Return devices configured in the options of apps.
 
-    Supervisor resolves `device(subsystem=tty)` options into real devices, so device
-    paths that no longer exist are missing and non-serial devices are included.
+    The `devices` field of an app also lists the static devices of its manifest,
+    which are mapped into the container whether the app uses them or not, so only
+    options are evidence of a device being used. Options can refer to devices
+    that no longer exist or are not serial ports.
     """
     if not is_hassio(hass):
         return {}
@@ -179,7 +228,7 @@ def _async_get_app_consumers(
         if info is None:
             continue
 
-        for device in info["devices"]:
+        for device in _iter_option_device_paths(info["options"]):
             consumers.setdefault(device, []).append(
                 SerialPortConsumer(
                     kind="app",
@@ -224,7 +273,7 @@ async def async_get_serial_port_consumers(
         consumers.setdefault(device, []).extend(path_consumers)
 
     for path, path_consumers in app_consumers.items():
-        # Apps also map non-serial devices, only scanned ports are of interest
+        # Options can name non-serial devices, only scanned ports are of interest
         resolved_path = resolved[path]
 
         if resolved_path not in aliases:

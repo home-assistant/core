@@ -3,9 +3,7 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "no_plants": "No plants have been found on this account",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      "no_plants": "No plants have been found on this account"
     },
     "error": {
       "cannot_connect": "Cannot connect to Growatt servers. Please check your internet connection and try again.",
@@ -651,6 +649,18 @@
     },
     "login_failed": {
       "message": "Growatt login failed: {message}"
+    },
+    "migration_invalid_plant_id": {
+      "message": "The configuration contains an invalid plant ID, reconfigure the integration"
+    },
+    "migration_missing_credentials": {
+      "message": "The configuration is missing the username or password, reconfigure the integration"
+    },
+    "migration_no_plants": {
+      "message": "No plants found for Growatt account {username}"
+    },
+    "migration_plant_id_failed": {
+      "message": "Failed to resolve the plant ID from the Growatt API"
     },
     "no_devices_configured": {
       "message": "No {device_type} devices with token authentication are configured. Actions require {device_type} devices with V1 API access."

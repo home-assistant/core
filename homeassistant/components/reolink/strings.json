@@ -2,8 +2,6 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "unique_id_mismatch": "The MAC address of the device does not match the previous MAC address"
     },
     "error": {
@@ -555,6 +553,7 @@
         "state": {
           "adaptive": "Adaptive",
           "auto": "[%key:common::state::auto%]",
+          "auto_pir": "Auto PIR",
           "autoadaptive": "Auto adaptive",
           "off": "[%key:common::state::off%]",
           "onatnight": "On at night",
@@ -955,6 +954,9 @@
     "login_error": {
       "message": "Error during login attempt: {err}"
     },
+    "no_access_to_path": {
+      "message": "Cannot write `{filename}`, no access to path; `allowlist_external_dirs` may need to be adjusted in `configuration.yaml`"
+    },
     "no_data": {
       "message": "Device returned no data: {err}"
     },
@@ -984,6 +986,9 @@
     },
     "webhook_no_url": {
       "message": "Error registering URL for webhook {event_id}: Home Assistant URL is not available"
+    },
+    "write_image_error": {
+      "message": "Can't write image to `{filename}`, see the log for details"
     }
   },
   "issues": {
@@ -1064,6 +1069,20 @@
         }
       },
       "name": "PTZ move"
+    },
+    "snapshot_past": {
+      "description": "Takes a snapshot from a past moment in time out of the recordings of a camera and stores it in a file.",
+      "fields": {
+        "filename": {
+          "description": "Full path to filename.",
+          "name": "Filename"
+        },
+        "timestamp": {
+          "description": "Moment in time to take the snapshot from, in the local time of Home Assistant.",
+          "name": "Timestamp"
+        }
+      },
+      "name": "Take camera snapshot from past"
     }
   }
 }

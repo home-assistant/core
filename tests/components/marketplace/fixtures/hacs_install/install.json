@@ -1,0 +1,327 @@
+{
+  "source": "Written by HACS 1105d8d0 on Home Assistant 2025.3.0 after downloading an integration, a plugin and a theme",
+  "core.config_entries": {
+    "version": 1,
+    "minor_version": 5,
+    "key": "core.config_entries",
+    "data": {
+      "entries": [
+        {
+          "created_at": "2026-09-27T18:43:13.589834+00:00",
+          "data": {
+            "token": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+          },
+          "disabled_by": null,
+          "discovery_keys": {},
+          "domain": "hacs",
+          "entry_id": "01M3J2VB1NF6G5V0QJX6HBC94T",
+          "minor_version": 0,
+          "modified_at": "2026-09-27T18:43:13.589836+00:00",
+          "options": {
+            "appdaemon": true
+          },
+          "pref_disable_new_entities": false,
+          "pref_disable_polling": false,
+          "source": "user",
+          "subentries": [],
+          "title": "",
+          "unique_id": "12345",
+          "version": 1
+        }
+      ]
+    }
+  },
+  "core.entity_registry": {
+    "version": 1,
+    "minor_version": 16,
+    "key": "core.entity_registry",
+    "data": {
+      "entities": [
+        {
+          "aliases": [],
+          "area_id": null,
+          "categories": {},
+          "capabilities": null,
+          "config_entry_id": "01M3J2VB1NF6G5V0QJX6HBC94T",
+          "config_subentry_id": null,
+          "created_at": "2026-09-27T18:43:13.617011+00:00",
+          "device_class": null,
+          "device_id": "dc8e0e459611a74e1c0c59a43a396023",
+          "disabled_by": null,
+          "entity_category": "config",
+          "entity_id": "update.hacs_update",
+          "hidden_by": null,
+          "icon": null,
+          "id": "54789578ed8aa3b3105bcac140492b2c",
+          "has_entity_name": false,
+          "labels": [],
+          "modified_at": "2026-09-27T18:43:13.617054+00:00",
+          "name": null,
+          "options": {},
+          "original_device_class": null,
+          "original_icon": null,
+          "original_name": "HACS update",
+          "platform": "hacs",
+          "supported_features": 23,
+          "translation_key": null,
+          "unique_id": "172733314",
+          "previous_unique_id": null,
+          "unit_of_measurement": null
+        },
+        {
+          "aliases": [],
+          "area_id": null,
+          "categories": {},
+          "capabilities": null,
+          "config_entry_id": "01M3J2VB1NF6G5V0QJX6HBC94T",
+          "config_subentry_id": null,
+          "created_at": "2026-09-27T18:43:13.625339+00:00",
+          "device_class": null,
+          "device_id": "4a5393988b51b868270dbc3595c951b4",
+          "disabled_by": null,
+          "entity_category": "config",
+          "entity_id": "update.proxy_manifest_update",
+          "hidden_by": null,
+          "icon": null,
+          "id": "41f48e1bf52a27a17d9c9ac1876cbbdd",
+          "has_entity_name": false,
+          "labels": [],
+          "modified_at": "2026-09-27T18:43:13.625371+00:00",
+          "name": null,
+          "options": {},
+          "original_device_class": null,
+          "original_icon": null,
+          "original_name": "Proxy manifest update",
+          "platform": "hacs",
+          "supported_features": 23,
+          "translation_key": null,
+          "unique_id": "1296269",
+          "previous_unique_id": null,
+          "unit_of_measurement": null
+        },
+        {
+          "aliases": [],
+          "area_id": null,
+          "categories": {},
+          "capabilities": null,
+          "config_entry_id": "01M3J2VB1NF6G5V0QJX6HBC94T",
+          "config_subentry_id": null,
+          "created_at": "2026-09-27T18:43:13.654079+00:00",
+          "device_class": null,
+          "device_id": "16f5b003c2db8d2611c39da4cd672335",
+          "disabled_by": null,
+          "entity_category": "config",
+          "entity_id": "update.proxy_manifest_update_2",
+          "hidden_by": null,
+          "icon": null,
+          "id": "6d74a06b5372bbec2cd036c13400b1db",
+          "has_entity_name": false,
+          "labels": [],
+          "modified_at": "2026-09-27T18:43:13.654107+00:00",
+          "name": null,
+          "options": {},
+          "original_device_class": null,
+          "original_icon": null,
+          "original_name": "Proxy manifest update",
+          "platform": "hacs",
+          "supported_features": 23,
+          "translation_key": null,
+          "unique_id": "1296267",
+          "previous_unique_id": null,
+          "unit_of_measurement": null
+        },
+        {
+          "aliases": [],
+          "area_id": null,
+          "categories": {},
+          "capabilities": null,
+          "config_entry_id": "01M3J2VB1NF6G5V0QJX6HBC94T",
+          "config_subentry_id": null,
+          "created_at": "2026-09-27T18:43:13.681831+00:00",
+          "device_class": null,
+          "device_id": "b09bfabbde74dd0fe65097527cde5ef5",
+          "disabled_by": null,
+          "entity_category": "config",
+          "entity_id": "update.proxy_manifest_update_3",
+          "hidden_by": null,
+          "icon": null,
+          "id": "6644ab8060d5532df6b41f1339dcdf29",
+          "has_entity_name": false,
+          "labels": [],
+          "modified_at": "2026-09-27T18:43:13.681866+00:00",
+          "name": null,
+          "options": {},
+          "original_device_class": null,
+          "original_icon": null,
+          "original_name": "Proxy manifest update",
+          "platform": "hacs",
+          "supported_features": 23,
+          "translation_key": null,
+          "unique_id": "1296266",
+          "previous_unique_id": null,
+          "unit_of_measurement": null
+        }
+      ],
+      "deleted_entities": []
+    }
+  },
+  "core.device_registry": {
+    "version": 1,
+    "minor_version": 9,
+    "key": "core.device_registry",
+    "data": {
+      "devices": [
+        {
+          "area_id": null,
+          "config_entries": ["01M3J2VB1NF6G5V0QJX6HBC94T"],
+          "config_entries_subentries": {
+            "01M3J2VB1NF6G5V0QJX6HBC94T": [null]
+          },
+          "configuration_url": "homeassistant://hacs",
+          "connections": [],
+          "created_at": "2026-09-27T18:43:13.616885+00:00",
+          "disabled_by": null,
+          "entry_type": "service",
+          "hw_version": null,
+          "id": "dc8e0e459611a74e1c0c59a43a396023",
+          "identifiers": [
+            [
+              "hacs",
+              "0717a0cd-745c-48fd-9b16-c8534c9704f9-bc944b0f-fd42-4a58-a072-ade38d1444cd"
+            ]
+          ],
+          "labels": [],
+          "manufacturer": "hacs.xyz",
+          "model": "",
+          "model_id": null,
+          "modified_at": "2026-09-27T18:43:13.616911+00:00",
+          "name_by_user": null,
+          "name": "HACS",
+          "primary_config_entry": "01M3J2VB1NF6G5V0QJX6HBC94T",
+          "serial_number": null,
+          "sw_version": "0.0.0",
+          "via_device_id": null
+        },
+        {
+          "area_id": null,
+          "config_entries": ["01M3J2VB1NF6G5V0QJX6HBC94T"],
+          "config_entries_subentries": {
+            "01M3J2VB1NF6G5V0QJX6HBC94T": [null]
+          },
+          "configuration_url": "homeassistant://hacs/repository/1296269",
+          "connections": [],
+          "created_at": "2026-09-27T18:43:13.625267+00:00",
+          "disabled_by": null,
+          "entry_type": "service",
+          "hw_version": null,
+          "id": "4a5393988b51b868270dbc3595c951b4",
+          "identifiers": [["hacs", "1296269"]],
+          "labels": [],
+          "manufacturer": "hacs-test-org",
+          "model": "integration",
+          "model_id": null,
+          "modified_at": "2026-09-27T18:43:13.625281+00:00",
+          "name_by_user": null,
+          "name": "Proxy manifest",
+          "primary_config_entry": "01M3J2VB1NF6G5V0QJX6HBC94T",
+          "serial_number": null,
+          "sw_version": null,
+          "via_device_id": null
+        },
+        {
+          "area_id": null,
+          "config_entries": ["01M3J2VB1NF6G5V0QJX6HBC94T"],
+          "config_entries_subentries": {
+            "01M3J2VB1NF6G5V0QJX6HBC94T": [null]
+          },
+          "configuration_url": "homeassistant://hacs/repository/1296267",
+          "connections": [],
+          "created_at": "2026-09-27T18:43:13.654006+00:00",
+          "disabled_by": null,
+          "entry_type": "service",
+          "hw_version": null,
+          "id": "16f5b003c2db8d2611c39da4cd672335",
+          "identifiers": [["hacs", "1296267"]],
+          "labels": [],
+          "manufacturer": "hacs-test-org",
+          "model": "plugin",
+          "model_id": null,
+          "modified_at": "2026-09-27T18:43:13.654022+00:00",
+          "name_by_user": null,
+          "name": "Proxy manifest",
+          "primary_config_entry": "01M3J2VB1NF6G5V0QJX6HBC94T",
+          "serial_number": null,
+          "sw_version": null,
+          "via_device_id": null
+        },
+        {
+          "area_id": null,
+          "config_entries": ["01M3J2VB1NF6G5V0QJX6HBC94T"],
+          "config_entries_subentries": {
+            "01M3J2VB1NF6G5V0QJX6HBC94T": [null]
+          },
+          "configuration_url": "homeassistant://hacs/repository/1296266",
+          "connections": [],
+          "created_at": "2026-09-27T18:43:13.681755+00:00",
+          "disabled_by": null,
+          "entry_type": "service",
+          "hw_version": null,
+          "id": "b09bfabbde74dd0fe65097527cde5ef5",
+          "identifiers": [["hacs", "1296266"]],
+          "labels": [],
+          "manufacturer": "hacs-test-org",
+          "model": "theme",
+          "model_id": null,
+          "modified_at": "2026-09-27T18:43:13.681772+00:00",
+          "name_by_user": null,
+          "name": "Proxy manifest",
+          "primary_config_entry": "01M3J2VB1NF6G5V0QJX6HBC94T",
+          "serial_number": null,
+          "sw_version": null,
+          "via_device_id": null
+        }
+      ],
+      "deleted_devices": []
+    }
+  },
+  "lovelace_resources": {
+    "version": 1,
+    "minor_version": 1,
+    "key": "lovelace_resources",
+    "data": {
+      "items": [
+        {
+          "id": "1ab09c9cf6534c6eb3e29a66c3c2be59",
+          "url": "/hacsfiles/plugin-basic/plugin-basic.js?hacstag=1296267100",
+          "type": "module"
+        }
+      ]
+    }
+  },
+  "files": {
+    "custom_components/example/manifest.json": "{\n    \"name\": \"Proxy  integration\",\n    \"domain\": \"example\"\n}",
+    "themes/example/example.yaml": "",
+    "www/community/plugin-basic/plugin-basic.js": "",
+    "www/community/plugin-basic/plugin-basic.js.gz": ""
+  },
+  "custom_components/hacs/manifest.json": {
+    "domain": "hacs",
+    "name": "HACS",
+    "after_dependencies": ["python_script"],
+    "codeowners": ["@ludeeus"],
+    "config_flow": true,
+    "dependencies": [
+      "http",
+      "websocket_api",
+      "frontend",
+      "persistent_notification",
+      "lovelace",
+      "repairs"
+    ],
+    "documentation": "https://hacs.xyz/docs/use/",
+    "iot_class": "cloud_polling",
+    "issue_tracker": "https://github.com/hacs/integration/issues",
+    "requirements": ["aiogithubapi>=22.10.1"],
+    "version": "0.0.0"
+  }
+}

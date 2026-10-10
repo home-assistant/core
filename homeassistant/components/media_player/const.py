@@ -1,9 +1,21 @@
 """Provides the constants needed for component."""
 
 from enum import IntFlag, StrEnum
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
+import probatio
+
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.deprecation import EnumWithDeprecatedMembers
+from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.util.hass_dict import HassKey
+
+if TYPE_CHECKING:
+    from . import MediaPlayerEntity
+
+DOMAIN: Final = "media_player"
+
+DATA_COMPONENT: HassKey[EntityComponent[MediaPlayerEntity]] = HassKey(DOMAIN)
 
 # How long our auth signature on the content should be valid for
 CONTENT_AUTH_EXPIRY_TIME = 3600 * 24
@@ -42,7 +54,6 @@ ATTR_MEDIA_VOLUME_MUTED = "is_volume_muted"
 ATTR_SOUND_MODE = "sound_mode"
 ATTR_SOUND_MODE_LIST = "sound_mode_list"
 
-DOMAIN: Final = "media_player"
 
 INTENT_MEDIA_PAUSE = "HassMediaPause"
 INTENT_MEDIA_UNPAUSE = "HassMediaUnpause"
@@ -208,3 +219,44 @@ class MediaPlayerEntityFeature(IntFlag):
     MEDIA_ANNOUNCE = 1048576
     MEDIA_ENQUEUE = 2097152
     SEARCH_MEDIA = 4194304
+
+
+class MediaPlayerDeviceClass(StrEnum):
+    """Device class for media players."""
+
+    TV = "tv"
+    SPEAKER = "speaker"
+    RECEIVER = "receiver"
+    PROJECTOR = "projector"
+
+
+DEVICE_CLASSES_SCHEMA = probatio.All(
+    probatio.Lower, probatio.Coerce(MediaPlayerDeviceClass)
+)
+
+
+ATTR_MEDIA = "media"
+
+
+class MediaPlayerEnqueue(StrEnum):
+    """Enqueue types for playing media."""
+
+    # add given media item to end of the queue
+    ADD = "add"
+    # play the given media item next, keep queue
+    NEXT = "next"
+    # play the given media item now, keep queue
+    PLAY = "play"
+    # play the given media item now, clear queue
+    REPLACE = "replace"
+
+
+MEDIA_PLAYER_PLAY_MEDIA_SCHEMA = {
+    probatio.Required(ATTR_MEDIA_CONTENT_TYPE): cv.string,
+    probatio.Required(ATTR_MEDIA_CONTENT_ID): cv.string,
+    probatio.Exclusive(ATTR_MEDIA_ENQUEUE, "enqueue_announce"): probatio.Any(
+        cv.boolean, probatio.Coerce(MediaPlayerEnqueue)
+    ),
+    probatio.Exclusive(ATTR_MEDIA_ANNOUNCE, "enqueue_announce"): cv.boolean,
+    probatio.Optional(ATTR_MEDIA_EXTRA, default={}): dict,
+}

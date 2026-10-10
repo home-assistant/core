@@ -10,9 +10,9 @@ from homeassistant.components.backup import BackupAgentError
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 
-from .client import BackupAgentClient
+from .client import BackupAgentClient, SFTPConnectionError
 from .const import (
     CONF_BACKUP_LOCATION,
     CONF_PRIVATE_KEY_FILE,
@@ -55,6 +55,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: SFTPConfigEntry) -> bool
     try:
         client = BackupAgentClient(entry, hass)
         await client.open()
+    except SFTPConnectionError as e:
+        raise ConfigEntryNotReady(str(e)) from e
     except BackupAgentError as e:
         raise ConfigEntryError from e
 
@@ -127,7 +129,7 @@ async def async_remove_entry(hass: HomeAssistant, entry: SFTPConfigEntry) -> Non
                 )
         else:
             LOGGER.debug(
-                "Removed storage directory for %s integration",
+                "Removed storage directory for %s integration for host %s@%s",
                 DOMAIN,
                 entry.data[CONF_USERNAME],
                 entry.data[CONF_HOST],

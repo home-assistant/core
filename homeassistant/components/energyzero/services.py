@@ -7,7 +7,7 @@ from typing import Final
 from zoneinfo import ZoneInfo
 
 from energyzero import EnergyPrices, EnergyZeroNoDataError, Interval, PriceType
-import voluptuous as vol
+import probatio
 
 from homeassistant.core import (
     HomeAssistant,
@@ -27,19 +27,32 @@ ATTR_CONFIG_ENTRY: Final = "config_entry"
 ATTR_START: Final = "start"
 ATTR_END: Final = "end"
 ATTR_INCL_VAT: Final = "incl_vat"
+ATTR_PRICE_TYPE: Final = "price_type"
+ATTR_INTERVAL: Final = "interval"
+
+ENERGY_INTERVALS = {"hour": Interval.HOUR, "quarter": Interval.QUARTER}
 
 GAS_SERVICE_NAME: Final = "get_gas_prices"
 ENERGY_SERVICE_NAME: Final = "get_energy_prices"
-SERVICE_SCHEMA: Final = vol.Schema(
+SERVICE_SCHEMA: Final = probatio.Schema(
     {
-        vol.Required(ATTR_CONFIG_ENTRY): selector.ConfigEntrySelector(
+        probatio.Required(ATTR_CONFIG_ENTRY): selector.ConfigEntrySelector(
             {
                 "integration": DOMAIN,
             }
         ),
-        vol.Required(ATTR_INCL_VAT): bool,
-        vol.Optional(ATTR_START): str,
-        vol.Optional(ATTR_END): str,
+        probatio.Required(ATTR_INCL_VAT): bool,
+        probatio.Optional(ATTR_START): str,
+        probatio.Optional(ATTR_END): str,
+    }
+)
+
+ENERGY_SERVICE_SCHEMA: Final = SERVICE_SCHEMA.extend(
+    {
+        probatio.Optional(ATTR_PRICE_TYPE, default="market"): probatio.In(
+            ("market", "all_in")
+        ),
+        probatio.Optional(ATTR_INTERVAL, default="hour"): probatio.In(ENERGY_INTERVALS),
     }
 )
 
@@ -86,6 +99,8 @@ def __serialize_prices(
             {
                 "price": price,
                 "timestamp": str(time_range.start_including),
+                "start": str(time_range.start_including),
+                "end": str(time_range.end_excluding),
             }
             for price_data in prices
             for time_range, price in price_data.prices.items()
@@ -111,12 +126,20 @@ async def __get_prices(
     local_tz = ZoneInfo(call.hass.config.time_zone)
     start_date, start_datetime = __get_date(call.data.get(ATTR_START), local_tz)
     end_date, end_datetime = __get_date(call.data.get(ATTR_END), local_tz)
+
     filter_start = start_datetime or dt_util.as_utc(
         dt_util.start_of_local_day(start_date)
     )
-    filter_end = end_datetime or dt_util.as_utc(
-        dt_util.start_of_local_day(end_date + timedelta(days=1))
-    )
+    end_start = end_datetime or dt_util.as_utc(dt_util.start_of_local_day(end_date))
+
+    if filter_start == end_start:
+        day = filter_start.astimezone(local_tz).date()
+        filter_start = dt_util.as_utc(dt_util.start_of_local_day(day))
+        filter_end = dt_util.as_utc(dt_util.start_of_local_day(day + timedelta(days=1)))
+    else:
+        filter_end = end_datetime or dt_util.as_utc(
+            dt_util.start_of_local_day(end_date + timedelta(days=1))
+        )
 
     if filter_end <= filter_start:
         raise ServiceValidationError(
@@ -132,6 +155,11 @@ async def __get_prices(
         PriceType.MARKET_WITH_VAT if call.data[ATTR_INCL_VAT] else PriceType.MARKET
     )
 
+    if price_type is ServicePriceType.ENERGY and call.data[ATTR_PRICE_TYPE] == "all_in":
+        selected_price_type = (
+            PriceType.ALL_IN if call.data[ATTR_INCL_VAT] else PriceType.ALL_IN_EXCL_VAT
+        )
+
     price_data: list[EnergyPrices] = []
     for day_offset in range((end_date - start_date).days + 1):
         request_date = start_date + timedelta(days=day_offset)
@@ -146,7 +174,7 @@ async def __get_prices(
             prices = coordinator.energyzero.get_electricity_prices(
                 start_date=request_date,
                 end_date=request_date,
-                interval=Interval.HOUR,
+                interval=ENERGY_INTERVALS[call.data[ATTR_INTERVAL]],
                 price_type=selected_price_type,
                 local_tz=local_tz,
             )
@@ -180,6 +208,6 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         ENERGY_SERVICE_NAME,
         partial(__get_prices, price_type=ServicePriceType.ENERGY),
-        schema=SERVICE_SCHEMA,
+        schema=ENERGY_SERVICE_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )

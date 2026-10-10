@@ -2,7 +2,7 @@
 
 from typing import Any, override
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
@@ -30,10 +30,10 @@ class DynaliteFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             return await self._try_create(user_input)
 
-        schema = vol.Schema(
+        schema = probatio.Schema(
             {
-                vol.Required(CONF_HOST): cv.string,
-                vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
+                probatio.Required(CONF_HOST): cv.string,
+                probatio.Required(CONF_PORT, default=DEFAULT_PORT): int,
             }
         )
         return self.async_show_form(step_id="user", data_schema=schema)

@@ -12,10 +12,10 @@ from unittest.mock import AsyncMock, Mock, patch
 
 from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
+import probatio
 import pytest
 from pytest_unordered import unordered
 from sqlalchemy.exc import SQLAlchemyError
-import voluptuous as vol
 
 from homeassistant.components.device_automation import (
     DOMAIN as DEVICE_AUTOMATION_DOMAIN,
@@ -59,19 +59,19 @@ from homeassistant.helpers.automation import (
     move_top_level_schema_fields_to_options,
 )
 from homeassistant.helpers.condition import (
-    _DATA_HISTORY_PRIMING_MANAGER,
     ATTR_BEHAVIOR,
     BEHAVIOR_ALL,
     BEHAVIOR_ANY,
     CONDITIONS,
+    DATA_HISTORY_PRIMING_MANAGER,
     MAX_HISTORY_PRIMING_LOOKBACK,
     Condition,
     ConditionChecker,
     ConditionConfig,
     EntityConditionBase,
     EntityNumericalConditionWithUnitBase,
+    HistoryPrimingManager,
     _async_get_condition_platform,
-    _HistoryPrimingManager,
     async_validate_condition_config,
     make_entity_numerical_condition,
     make_entity_numerical_condition_with_unit,
@@ -175,7 +175,7 @@ def assert_condition_trace(expected):
 )
 async def test_invalid_condition(hass: HomeAssistant, config: dict, error: str) -> None:
     """Test if validating an invalid condition raises."""
-    with pytest.raises(vol.Invalid, match=error):
+    with pytest.raises(probatio.Invalid, match=error):
         cv.CONDITION_SCHEMA(config)
 
 
@@ -538,7 +538,7 @@ async def test_malformed_and_condition_list_shorthand(hass: HomeAssistant) -> No
         "condition": ["bad", "syntax"],
     }
 
-    with pytest.raises(vol.MultipleInvalid):
+    with pytest.raises(probatio.MultipleInvalid):
         cv.CONDITION_SCHEMA(config)
 
 
@@ -1034,28 +1034,28 @@ async def test_time_window(hass: HomeAssistant) -> None:
     test2 = await condition.async_from_config(hass, config2)
 
     with patch(
-        "homeassistant.helpers.condition.dt_util.now",
+        "homeassistant.helpers.condition.conditions.dt_util.now",
         return_value=dt_util.now().replace(hour=3),
     ):
         assert not test1.async_check()
         assert test2.async_check()
 
     with patch(
-        "homeassistant.helpers.condition.dt_util.now",
+        "homeassistant.helpers.condition.conditions.dt_util.now",
         return_value=dt_util.now().replace(hour=9),
     ):
         assert test1.async_check()
         assert not test2.async_check()
 
     with patch(
-        "homeassistant.helpers.condition.dt_util.now",
+        "homeassistant.helpers.condition.conditions.dt_util.now",
         return_value=dt_util.now().replace(hour=15),
     ):
         assert test1.async_check()
         assert not test2.async_check()
 
     with patch(
-        "homeassistant.helpers.condition.dt_util.now",
+        "homeassistant.helpers.condition.conditions.dt_util.now",
         return_value=dt_util.now().replace(hour=21),
     ):
         assert not test1.async_check()
@@ -1104,7 +1104,7 @@ async def test_time_using_input_datetime(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.helpers.condition.dt_util.now",
+        "homeassistant.helpers.condition.conditions.dt_util.now",
         return_value=dt_util.now().replace(hour=3),
     ):
         assert not condition.time(
@@ -1115,7 +1115,7 @@ async def test_time_using_input_datetime(hass: HomeAssistant) -> None:
         )
 
     with patch(
-        "homeassistant.helpers.condition.dt_util.now",
+        "homeassistant.helpers.condition.conditions.dt_util.now",
         return_value=dt_util.now().replace(hour=9),
     ):
         assert condition.time(
@@ -1126,7 +1126,7 @@ async def test_time_using_input_datetime(hass: HomeAssistant) -> None:
         )
 
     with patch(
-        "homeassistant.helpers.condition.dt_util.now",
+        "homeassistant.helpers.condition.conditions.dt_util.now",
         return_value=dt_util.now().replace(hour=15),
     ):
         assert condition.time(
@@ -1137,7 +1137,7 @@ async def test_time_using_input_datetime(hass: HomeAssistant) -> None:
         )
 
     with patch(
-        "homeassistant.helpers.condition.dt_util.now",
+        "homeassistant.helpers.condition.conditions.dt_util.now",
         return_value=dt_util.now().replace(hour=21),
     ):
         assert not condition.time(
@@ -1149,7 +1149,7 @@ async def test_time_using_input_datetime(hass: HomeAssistant) -> None:
 
     # Trigger on PM time
     with patch(
-        "homeassistant.helpers.condition.dt_util.now",
+        "homeassistant.helpers.condition.conditions.dt_util.now",
         return_value=dt_util.now().replace(hour=18, minute=0, second=0),
     ):
         assert condition.time(
@@ -1163,7 +1163,7 @@ async def test_time_using_input_datetime(hass: HomeAssistant) -> None:
 
     # Trigger on AM time
     with patch(
-        "homeassistant.helpers.condition.dt_util.now",
+        "homeassistant.helpers.condition.conditions.dt_util.now",
         return_value=dt_util.now().replace(hour=6, minute=0, second=0),
     ):
         assert not condition.time(
@@ -1202,28 +1202,28 @@ async def test_time_using_time(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.helpers.condition.dt_util.now",
+        "homeassistant.helpers.condition.conditions.dt_util.now",
         return_value=dt_util.now().replace(hour=3),
     ):
         assert not condition.time(hass, after="time.am", before="time.pm")
         assert condition.time(hass, after="time.pm", before="time.am")
 
     with patch(
-        "homeassistant.helpers.condition.dt_util.now",
+        "homeassistant.helpers.condition.conditions.dt_util.now",
         return_value=dt_util.now().replace(hour=9),
     ):
         assert condition.time(hass, after="time.am", before="time.pm")
         assert not condition.time(hass, after="time.pm", before="time.am")
 
     with patch(
-        "homeassistant.helpers.condition.dt_util.now",
+        "homeassistant.helpers.condition.conditions.dt_util.now",
         return_value=dt_util.now().replace(hour=15),
     ):
         assert condition.time(hass, after="time.am", before="time.pm")
         assert not condition.time(hass, after="time.pm", before="time.am")
 
     with patch(
-        "homeassistant.helpers.condition.dt_util.now",
+        "homeassistant.helpers.condition.conditions.dt_util.now",
         return_value=dt_util.now().replace(hour=21),
     ):
         assert not condition.time(hass, after="time.am", before="time.pm")
@@ -1231,7 +1231,7 @@ async def test_time_using_time(hass: HomeAssistant) -> None:
 
     # Trigger on PM time
     with patch(
-        "homeassistant.helpers.condition.dt_util.now",
+        "homeassistant.helpers.condition.conditions.dt_util.now",
         return_value=dt_util.now().replace(hour=18, minute=0, second=0),
     ):
         assert condition.time(hass, after="time.pm", before="time.am")
@@ -1241,7 +1241,7 @@ async def test_time_using_time(hass: HomeAssistant) -> None:
 
     # Trigger on AM time
     with patch(
-        "homeassistant.helpers.condition.dt_util.now",
+        "homeassistant.helpers.condition.conditions.dt_util.now",
         return_value=dt_util.now().replace(hour=6, minute=0, second=0),
     ):
         assert not condition.time(hass, after="time.pm", before="time.am")
@@ -1287,14 +1287,14 @@ async def test_time_using_sensor(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.helpers.condition.dt_util.now",
+        "homeassistant.helpers.condition.conditions.dt_util.now",
         return_value=dt_util.now().replace(hour=3),
     ):
         assert not condition.time(hass, after="sensor.am", before="sensor.pm")
         assert condition.time(hass, after="sensor.pm", before="sensor.am")
 
     with patch(
-        "homeassistant.helpers.condition.dt_util.now",
+        "homeassistant.helpers.condition.conditions.dt_util.now",
         return_value=dt_util.now().replace(hour=9),
     ):
         assert condition.time(hass, after="sensor.am", before="sensor.pm")
@@ -1302,14 +1302,14 @@ async def test_time_using_sensor(hass: HomeAssistant) -> None:
         assert not condition.time(hass, after="sensor.pm", before="sensor.am")
 
     with patch(
-        "homeassistant.helpers.condition.dt_util.now",
+        "homeassistant.helpers.condition.conditions.dt_util.now",
         return_value=dt_util.now().replace(hour=15),
     ):
         assert condition.time(hass, after="sensor.am", before="sensor.pm")
         assert not condition.time(hass, after="sensor.pm", before="sensor.am")
 
     with patch(
-        "homeassistant.helpers.condition.dt_util.now",
+        "homeassistant.helpers.condition.conditions.dt_util.now",
         return_value=dt_util.now().replace(hour=21),
     ):
         assert not condition.time(hass, after="sensor.am", before="sensor.pm")
@@ -1317,7 +1317,7 @@ async def test_time_using_sensor(hass: HomeAssistant) -> None:
 
     # Trigger on PM time
     with patch(
-        "homeassistant.helpers.condition.dt_util.now",
+        "homeassistant.helpers.condition.conditions.dt_util.now",
         return_value=dt_util.now().replace(hour=18, minute=0, second=0),
     ):
         assert condition.time(hass, after="sensor.pm", before="sensor.am")
@@ -1331,7 +1331,7 @@ async def test_time_using_sensor(hass: HomeAssistant) -> None:
 
     # Trigger on AM time
     with patch(
-        "homeassistant.helpers.condition.dt_util.now",
+        "homeassistant.helpers.condition.conditions.dt_util.now",
         return_value=dt_util.now().replace(hour=6, minute=0, second=0),
     ):
         assert not condition.time(hass, after="sensor.pm", before="sensor.am")
@@ -1385,15 +1385,25 @@ async def test_state_raises(hass: HomeAssistant) -> None:
         test.async_check()
 
 
-async def test_state_for(hass: HomeAssistant) -> None:
-    """Test state with duration."""
+@pytest.mark.parametrize(
+    "req_state",
+    [
+        pytest.param("100", id="scalar"),
+        pytest.param(["100"], id="single_item_list"),
+    ],
+)
+async def test_state_for(hass: HomeAssistant, req_state: str | list[str]) -> None:
+    """Test state with duration.
+
+    A single-element list `state` is equivalent to the scalar form.
+    """
     config = {
         "condition": "and",
         "conditions": [
             {
                 "condition": "state",
                 "entity_id": ["sensor.temperature"],
-                "state": "100",
+                "state": req_state,
                 "for": {"seconds": 5},
             },
         ],
@@ -1462,6 +1472,56 @@ async def test_state_for_invalid_template(
         assert not test.async_check()
 
 
+@pytest.mark.parametrize(
+    ("extra_config", "error"),
+    [
+        pytest.param(
+            {"attribute": "battery_level"},
+            r"Cannot use 'for' with an attribute",
+            id="attribute",
+        ),
+        pytest.param(
+            {"state": ["100", "200"]},
+            r"Cannot use 'for' with a list of states",
+            id="list_of_states",
+        ),
+        pytest.param(
+            {"state": []},
+            r"Cannot use 'for' with a list of states",
+            id="empty_list",
+        ),
+        pytest.param(
+            {"state": "input_number.threshold"},
+            r"Cannot use 'for' with a state referencing an entity",
+            id="state_from_entity",
+        ),
+        pytest.param(
+            {"state": ["input_number.threshold"]},
+            r"Cannot use 'for' with a state referencing an entity",
+            id="single_item_list_from_entity",
+        ),
+    ],
+)
+def test_state_for_not_allowed(extra_config: dict[str, Any], error: str) -> None:
+    """Test state condition rejects `for` with unsupported `state`/`attribute`.
+
+    `for` is anchored to the entity's last_changed, which reflects a single
+    current state. It therefore cannot be combined with an attribute, a list
+    that is not a single state, or a state resolved from another entity (even as
+    a single-element list). A single-element literal list behaves like the
+    scalar form (see `test_state_for`).
+    """
+    config = {
+        "condition": "state",
+        "entity_id": "sensor.temperature",
+        "state": "100",
+        "for": {"seconds": 5},
+        **extra_config,
+    }
+    with pytest.raises(probatio.Invalid, match=error):
+        cv.CONDITION_SCHEMA(config)
+
+
 async def test_state_unknown_attribute(hass: HomeAssistant) -> None:
     """Test that state returns False on unknown attribute."""
     # Unknown attribute
@@ -1492,6 +1552,44 @@ async def test_state_unknown_attribute(hass: HomeAssistant) -> None:
             ],
         }
     )
+
+
+@pytest.mark.parametrize(
+    ("req_state", "attribute_value", "expected"),
+    [
+        # A list `state` is matched as alternatives, so the attribute value must
+        # equal one of the items; the list itself is never compared as a whole.
+        pytest.param(["a", "b"], "a", True, id="item_in_list"),
+        pytest.param(["a", "b"], ["a", "b"], False, id="list_is_not_an_item"),
+        # Nesting the list makes the list value itself one of the items to match.
+        pytest.param([["a", "b"]], ["a", "b"], True, id="list_in_list_of_lists"),
+        pytest.param([["a", "b"]], "a", False, id="scalar_not_in_list_of_lists"),
+    ],
+)
+async def test_state_attribute_list_matching(
+    hass: HomeAssistant,
+    req_state: list[Any],
+    attribute_value: str | list[str],
+    expected: bool,
+) -> None:
+    """Test how a state-attribute condition matches against a list `state`.
+
+    A list `state` is treated as alternatives (match any item), so a list-valued
+    attribute only matches when the list is nested as an item of `state`. This
+    documents the current behavior; the implementation is unchanged.
+    """
+    config = {
+        "condition": "state",
+        "entity_id": "sensor.test",
+        "attribute": "options",
+        "state": req_state,
+    }
+    config = cv.CONDITION_SCHEMA(config)
+    config = await condition.async_validate_condition_config(hass, config)
+    test = await condition.async_from_config(hass, config)
+
+    hass.states.async_set("sensor.test", "on", {"options": attribute_value})
+    assert test.async_check() is expected
 
 
 async def test_state_multiple_entities(hass: HomeAssistant) -> None:
@@ -2450,7 +2548,7 @@ async def test_platform_multiple_conditions(hass: HomeAssistant) -> None:
     assert await async_validate_condition_config(hass, config_1) == config_1
     assert await async_validate_condition_config(hass, config_2) == config_2
     with pytest.raises(
-        vol.Invalid, match="Invalid condition 'test.unknown_cond' specified"
+        probatio.Invalid, match="Invalid condition 'test.unknown_cond' specified"
     ):
         await async_validate_condition_config(hass, config_3)
 
@@ -2468,8 +2566,8 @@ async def test_platform_migrate_condition(hass: HomeAssistant) -> None:
     """Test a condition platform with a migration."""
 
     OPTIONS_SCHEMA_DICT = {
-        vol.Required("option_1"): str,
-        vol.Optional("option_2"): int,
+        probatio.Required("option_1"): str,
+        probatio.Optional("option_2"): int,
     }
 
     class MockCondition(Condition):
@@ -2908,8 +3006,8 @@ async def test_async_get_all_descriptions(
 
     with (
         patch(
-            "homeassistant.helpers.condition._load_conditions_files",
-            side_effect=condition._load_conditions_files,
+            "homeassistant.helpers.condition.descriptions._load_conditions_files",
+            side_effect=condition.descriptions._load_conditions_files,
         ) as proxy_load_conditions_files,
         patch(
             "annotatedyaml.loader.load_yaml",
@@ -3091,7 +3189,7 @@ async def test_async_get_all_descriptions_with_yaml_error(
 
     with (
         patch(
-            "homeassistant.helpers.condition.load_yaml_dict",
+            "homeassistant.helpers.condition.descriptions.load_yaml_dict",
             side_effect=_load_yaml_dict,
         ),
         patch.object(Integration, "has_conditions", return_value=True),
@@ -3585,7 +3683,7 @@ async def test_numerical_condition_schema_requires_above_or_below(
         CONF_TARGET: {CONF_ENTITY_ID: "test.entity_1"},
         CONF_OPTIONS: {},
     }
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await async_validate_condition_config(hass, config)
 
 
@@ -3593,7 +3691,7 @@ async def test_numerical_condition_schema_requires_above_or_below(
     ("above", "below", "expected_result"),
     [
         (10.0, 10.0, does_not_raise()),
-        (20.0, 10.0, pytest.raises(vol.Invalid, match="must not be greater")),
+        (20.0, 10.0, pytest.raises(probatio.Invalid, match="must not be greater")),
     ],
 )
 async def test_numerical_condition_schema_above_must_be_less_than_below(
@@ -4045,7 +4143,7 @@ async def test_numerical_condition_with_unit_schema_rejects_invalid_units(
             }
         },
     }
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         await async_validate_condition_config(hass, config)
 
 
@@ -5797,14 +5895,14 @@ async def test_async_setup_creates_history_priming_manager(
 ) -> None:
     """The priming manager is created during condition setup, not on demand."""
     # condition.async_setup runs as part of the test hass fixture.
-    assert isinstance(hass.data[_DATA_HISTORY_PRIMING_MANAGER], _HistoryPrimingManager)
+    assert isinstance(hass.data[DATA_HISTORY_PRIMING_MANAGER], HistoryPrimingManager)
 
 
 async def test_history_priming_manager_serializes_queries(
     recorder_mock: Recorder, hass: HomeAssistant
 ) -> None:
     """Queries run one at a time even when many conditions prime together."""
-    manager = _HistoryPrimingManager(hass)
+    manager = HistoryPrimingManager(hass)
     instance = get_instance(hass)
 
     running = 0
@@ -5861,7 +5959,7 @@ async def test_history_priming_manager_does_not_ride_in_flight_flush(
     test fails: the late arrivals would ride the first flush (it would stay at
     one flush total) instead of sharing a second, fresh one.
     """
-    manager = _HistoryPrimingManager(hass)
+    manager = HistoryPrimingManager(hass)
     instance = get_instance(hass)
 
     flush_futures: list[asyncio.Future[None]] = []
@@ -5906,7 +6004,7 @@ async def test_history_priming_manager_retries_after_cancelled_flush(
     test fails: the rider would proceed on the cancelled flush and never make a
     second one.
     """
-    manager = _HistoryPrimingManager(hass)
+    manager = HistoryPrimingManager(hass)
     instance = get_instance(hass)
 
     flush_futures: list[asyncio.Future[None]] = []
@@ -5950,7 +6048,7 @@ async def test_history_priming_manager_cancelled_lobby_waiter(
     A condition whose timeout fires while it waits for an in-flight flush is
     cancelled. That must leave the manager able to flush for the next priming.
     """
-    manager = _HistoryPrimingManager(hass)
+    manager = HistoryPrimingManager(hass)
     instance = get_instance(hass)
 
     flush_futures: list[asyncio.Future[None]] = []
@@ -6484,3 +6582,287 @@ async def test_condition_entity_filter_no_device_class_means_match_all_in_domain
     entities = {"cover.door", "cover.garage", "cover.plain"}
     result = cond.entity_filter(entities)
     assert result == entities
+
+
+_STATE_CONDITION = {"condition": "state", "entity_id": "light.kitchen", "state": "on"}
+_TEMPLATE_CONDITION = {"condition": "template", "value_template": "{{ true }}"}
+
+
+@pytest.mark.parametrize(
+    ("config", "needs_polling"),
+    [
+        pytest.param(_STATE_CONDITION, False, id="state"),
+        pytest.param({**_STATE_CONDITION, "for": {"seconds": 5}}, True, id="state_for"),
+        pytest.param(
+            {
+                "condition": "numeric_state",
+                "entity_id": "sensor.temperature",
+                "above": 20,
+            },
+            False,
+            id="numeric_state",
+        ),
+        pytest.param(
+            {
+                "condition": "numeric_state",
+                "entity_id": "sensor.temperature",
+                "above": 20,
+                "value_template": "{{ state.attributes.value }}",
+            },
+            True,
+            id="numeric_state_template",
+        ),
+        pytest.param(_TEMPLATE_CONDITION, True, id="template"),
+        pytest.param(
+            {**_TEMPLATE_CONDITION, "enabled": False}, False, id="disabled_template"
+        ),
+        pytest.param(
+            {"condition": "and", "conditions": [_STATE_CONDITION, _STATE_CONDITION]},
+            False,
+            id="and",
+        ),
+        pytest.param(
+            {"condition": "or", "conditions": [_STATE_CONDITION, _TEMPLATE_CONDITION]},
+            True,
+            id="or_with_template",
+        ),
+        pytest.param(
+            {"condition": "light.is_on", "target": {"entity_id": "light.kitchen"}},
+            False,
+            id="entity_condition",
+        ),
+        pytest.param(
+            {
+                "condition": "light.is_on",
+                "target": {"entity_id": "light.kitchen"},
+                "options": {"for": {"seconds": 5}},
+            },
+            True,
+            id="entity_condition_for",
+        ),
+    ],
+)
+async def test_needs_polling(
+    hass: HomeAssistant, config: dict[str, Any], needs_polling: bool
+) -> None:
+    """Test which conditions can change without a reported state change."""
+    config = await async_validate_condition_config(hass, cv.CONDITION_SCHEMA(config))
+    test = await condition.async_from_config(hass, config)
+
+    assert test.needs_polling is needs_polling
+
+
+@pytest.mark.parametrize(
+    ("config", "entity_id"),
+    [
+        pytest.param(
+            {"condition": "state", "entity_id": "counter.value", "state": "10"},
+            "counter.value",
+            id="state",
+        ),
+        pytest.param(
+            {
+                "condition": "state",
+                "entity_id": "counter.value",
+                "state": "input_number.threshold",
+            },
+            "input_number.threshold",
+            id="state_entity",
+        ),
+        pytest.param(
+            {
+                "condition": "numeric_state",
+                "entity_id": "counter.value",
+                "above": "input_number.threshold",
+            },
+            "input_number.threshold",
+            id="numeric_state_above",
+        ),
+        pytest.param(
+            {
+                "condition": "numeric_state",
+                "entity_id": "counter.value",
+                "below": "input_number.threshold",
+            },
+            "input_number.threshold",
+            id="numeric_state_below",
+        ),
+        pytest.param(
+            {
+                "condition": "not",
+                "conditions": [
+                    {"condition": "state", "entity_id": "counter.value", "state": "10"}
+                ],
+            },
+            "counter.value",
+            id="not",
+        ),
+        pytest.param(
+            {
+                "condition": "counter.is_value",
+                "target": {"entity_id": "counter.value"},
+                "options": {"threshold": {"type": "above", "value": {"number": 5}}},
+            },
+            "counter.value",
+            id="entity_condition",
+        ),
+        pytest.param(
+            {
+                "condition": "counter.is_value",
+                "target": {"entity_id": "counter.value"},
+                "options": {
+                    "threshold": {
+                        "type": "above",
+                        "value": {"entity": "input_number.threshold"},
+                    }
+                },
+            },
+            "input_number.threshold",
+            id="threshold_entity",
+        ),
+        pytest.param(
+            {
+                "condition": "counter.is_value",
+                "target": {"entity_id": "counter.value"},
+                "options": {
+                    "threshold": {
+                        "type": "between",
+                        "value_min": {"entity": "input_number.threshold"},
+                        "value_max": {"number": 50},
+                    }
+                },
+            },
+            "input_number.threshold",
+            id="threshold_entity_min",
+        ),
+        pytest.param(
+            {
+                "condition": "counter.is_value",
+                "target": {"entity_id": "counter.value"},
+                "options": {
+                    "threshold": {
+                        "type": "between",
+                        "value_min": {"number": 0},
+                        "value_max": {"entity": "input_number.threshold"},
+                    }
+                },
+            },
+            "input_number.threshold",
+            id="threshold_entity_max",
+        ),
+    ],
+)
+async def test_track_changes(
+    hass: HomeAssistant, config: dict[str, Any], entity_id: str
+) -> None:
+    """Test a state change of an entity the condition depends on is reported."""
+    config = await async_validate_condition_config(hass, cv.CONDITION_SCHEMA(config))
+    test = await condition.async_from_config(hass, config)
+    action = Mock()
+    unsub = await test.async_track_changes(action)
+
+    hass.states.async_set("sensor.unrelated", "on")
+    action.assert_not_called()
+
+    hass.states.async_set(entity_id, "15")
+    action.assert_called_once()
+
+    unsub()
+    hass.states.async_set(entity_id, "20")
+    action.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    ("target", "registry_listeners"),
+    [
+        pytest.param(
+            {"entity_id": ["light.kitchen", "sensor.kitchen"]}, 0, id="entity"
+        ),
+        pytest.param({"area_id": "kitchen"}, 1, id="area"),
+    ],
+)
+async def test_track_changes_target(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    entity_registry: er.EntityRegistry,
+    target: dict[str, Any],
+    registry_listeners: int,
+) -> None:
+    """Test only targeted entities the condition can evaluate are tracked."""
+    area = area_registry.async_create("Kitchen")
+    light = entity_registry.async_get_or_create(
+        "light", "test", "kitchen", suggested_object_id="kitchen"
+    )
+    sensor = entity_registry.async_get_or_create(
+        "sensor", "test", "kitchen", suggested_object_id="kitchen"
+    )
+    entity_registry.async_update_entity(light.entity_id, area_id=area.id)
+    entity_registry.async_update_entity(sensor.entity_id, area_id=area.id)
+    init_count = hass.bus.async_listeners()[er.EVENT_ENTITY_REGISTRY_UPDATED]
+    config = await async_validate_condition_config(
+        hass, cv.CONDITION_SCHEMA({"condition": "light.is_on", "target": target})
+    )
+    test = await condition.async_from_config(hass, config)
+    action = Mock()
+    unsub = await test.async_track_changes(action)
+
+    assert (
+        hass.bus.async_listeners()[er.EVENT_ENTITY_REGISTRY_UPDATED]
+        == init_count + registry_listeners
+    )
+
+    hass.states.async_set(sensor.entity_id, "20")
+    action.assert_not_called()
+
+    hass.states.async_set(light.entity_id, "on")
+    action.assert_called_once()
+
+    unsub()
+    assert hass.bus.async_listeners()[er.EVENT_ENTITY_REGISTRY_UPDATED] == init_count
+
+
+async def test_track_changes_target_registry_update(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a change of the entities in the target is reported."""
+    area = area_registry.async_create("Kitchen")
+    kitchen = entity_registry.async_get_or_create(
+        "light", "test", "kitchen", suggested_object_id="kitchen"
+    )
+    hallway = entity_registry.async_get_or_create(
+        "light", "test", "hallway", suggested_object_id="hallway"
+    )
+    entity_registry.async_update_entity(kitchen.entity_id, area_id=area.id)
+    config = await async_validate_condition_config(
+        hass,
+        cv.CONDITION_SCHEMA(
+            {"condition": "light.is_on", "target": {"area_id": area.id}}
+        ),
+    )
+    test = await condition.async_from_config(hass, config)
+    action = Mock()
+    unsub = await test.async_track_changes(action)
+    action.assert_not_called()
+
+    entity_registry.async_update_entity(hallway.entity_id, area_id=area.id)
+    await hass.async_block_till_done()
+    action.assert_called_once()
+
+    unsub()
+
+
+async def test_track_changes_isolates_context(hass: HomeAssistant) -> None:
+    """Test the action does not run in the context of the state change caller."""
+    config = await async_validate_condition_config(
+        hass, cv.CONDITION_SCHEMA(_STATE_CONDITION)
+    )
+    test = await condition.async_from_config(hass, config)
+    unsub = await test.async_track_changes(trace.trace_clear)
+
+    caller_trace = trace.trace_get()
+    hass.states.async_set("light.kitchen", "on")
+    assert trace.trace_get(clear=False) is caller_trace
+
+    unsub()

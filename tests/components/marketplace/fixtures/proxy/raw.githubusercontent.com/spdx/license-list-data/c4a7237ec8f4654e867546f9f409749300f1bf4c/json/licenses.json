@@ -1,0 +1,24 @@
+{
+  "licenseListVersion": "3.28.0",
+  "licenses": [
+    {
+      "licenseId": "CC0-1.0",
+      "name": "Creative Commons Zero v1.0 Universal",
+      "isDeprecatedLicenseId": false,
+      "isOsiApproved": false
+    },
+    {
+      "licenseId": "GPL-3.0",
+      "name": "GNU General Public License v3.0 only",
+      "isDeprecatedLicenseId": true,
+      "isOsiApproved": true
+    },
+    {
+      "licenseId": "MIT",
+      "name": "MIT License",
+      "isDeprecatedLicenseId": false,
+      "isOsiApproved": true
+    }
+  ],
+  "releaseDate": "2025-05-30"
+}

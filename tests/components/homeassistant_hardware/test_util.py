@@ -8,6 +8,7 @@ import pytest
 from universal_silabs_flasher.common import Version as FlasherVersion
 from universal_silabs_flasher.const import ApplicationType as FlasherApplicationType
 from universal_silabs_flasher.firmware import GBLImage
+from universal_silabs_flasher.flasher import YellowFlasher, Zbt1Flasher, Zbt2Flasher
 
 from homeassistant.components.hassio import (
     AddonError,
@@ -22,10 +23,12 @@ from homeassistant.components.homeassistant_hardware.helpers import (
 from homeassistant.components.homeassistant_hardware.util import (
     ApplicationType,
     FirmwareInfo,
+    FlasherType,
     OwningAddon,
     OwningIntegration,
     async_firmware_flashing_context,
     async_flash_silabs_firmware,
+    async_get_flasher_cls,
     get_otbr_addon_firmware_info,
     get_z2m_addon_firmware_info,
     get_z2m_addon_manager,
@@ -790,6 +793,21 @@ async def test_probe_silabs_firmware_info(
 
 
 @pytest.mark.parametrize(
+    ("flasher_type", "expected_cls"),
+    [
+        (FlasherType.YELLOW, YellowFlasher),
+        (FlasherType.ZBT1, Zbt1Flasher),
+        (FlasherType.ZBT2, Zbt2Flasher),
+    ],
+)
+async def test_async_get_flasher_cls(
+    hass: HomeAssistant, flasher_type: FlasherType, expected_cls: type
+) -> None:
+    """Test resolving the flasher class of a flasher type."""
+    assert await async_get_flasher_cls(hass, flasher_type) is expected_cls
+
+
+@pytest.mark.parametrize(
     ("probe_result", "expected"),
     [
         (FlasherApplicationType.EZSP, ApplicationType.EZSP),
@@ -798,7 +816,9 @@ async def test_probe_silabs_firmware_info(
     ],
 )
 async def test_probe_silabs_firmware_type(
-    probe_result: FirmwareInfo | None, expected: ApplicationType | None
+    hass: HomeAssistant,
+    probe_result: FirmwareInfo | None,
+    expected: ApplicationType | None,
 ) -> None:
     """Test getting the firmware type from the probe result."""
 
@@ -813,11 +833,12 @@ async def test_probe_silabs_firmware_type(
     mock_flasher.app_type = None
 
     with patch(
-        "homeassistant.components.homeassistant_hardware.util.Flasher",
+        "universal_silabs_flasher.flasher.Flasher",
         autospec=True,
         return_value=mock_flasher,
     ):
         result = await probe_silabs_firmware_type(
+            hass,
             "/dev/ttyUSB0",
             application_probe_methods=[
                 (ApplicationType.EZSP, 460800),
@@ -872,9 +893,7 @@ async def test_async_flash_silabs_firmware(hass: HomeAssistant) -> None:
                 owners=[owner1, owner2],
             ),
         ),
-        patch(
-            "homeassistant.components.homeassistant_hardware.util.parse_firmware_image"
-        ),
+        patch("universal_silabs_flasher.firmware.parse_firmware_image"),
         patch(
             "homeassistant.components.homeassistant_hardware.util.probe_silabs_firmware_info",
             return_value=expected_firmware_info,
@@ -952,9 +971,7 @@ async def test_async_flash_silabs_firmware_flash_failure(
                 owners=[owner1, owner2],
             ),
         ),
-        patch(
-            "homeassistant.components.homeassistant_hardware.util.parse_firmware_image"
-        ),
+        patch("universal_silabs_flasher.firmware.parse_firmware_image"),
         pytest.raises(HomeAssistantError, match=expected_error_msg) as exc,
     ):
         async with async_firmware_flashing_context(
@@ -1006,9 +1023,7 @@ async def test_async_flash_silabs_firmware_probe_failure(hass: HomeAssistant) ->
                 owners=[owner1, owner2],
             ),
         ),
-        patch(
-            "homeassistant.components.homeassistant_hardware.util.parse_firmware_image"
-        ),
+        patch("universal_silabs_flasher.firmware.parse_firmware_image"),
         patch(
             "homeassistant.components.homeassistant_hardware.util.probe_silabs_firmware_info",
             return_value=None,

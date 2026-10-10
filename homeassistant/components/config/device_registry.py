@@ -4,7 +4,7 @@ from itertools import chain
 import logging
 from typing import Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant import loader
 from homeassistant.components import websocket_api
@@ -35,7 +35,7 @@ def async_setup(hass: HomeAssistant) -> bool:
 @callback
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "config/device_registry/list_composite_splits",
+        probatio.Required("type"): "config/device_registry/list_composite_splits",
     }
 )
 def websocket_list_composite_splits(
@@ -74,7 +74,7 @@ def websocket_list_composite_splits(
 @callback
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "config/device_registry/list",
+        probatio.Required("type"): "config/device_registry/list",
     }
 )
 def websocket_list_devices(
@@ -104,8 +104,8 @@ def websocket_list_devices(
 @callback
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "config/device_registry/list_linked_devices",
-        vol.Required("device_id"): str,
+        probatio.Required("type"): "config/device_registry/list_linked_devices",
+        probatio.Required("device_id"): str,
     }
 )
 def websocket_list_linked_devices(
@@ -150,14 +150,16 @@ def websocket_list_linked_devices(
 @require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "config/device_registry/update",
-        vol.Optional("area_id"): vol.Any(str, None),
-        vol.Required("device_id"): str,
+        probatio.Required("type"): "config/device_registry/update",
+        probatio.Optional("area_id"): probatio.Any(str, None),
+        probatio.Required("device_id"): str,
         # We only allow setting disabled_by user via API.
-        # No Enum support like this in voluptuous, use .value
-        vol.Optional("disabled_by"): vol.Any(DeviceEntryDisabler.USER.value, None),
-        vol.Optional("labels"): [str],
-        vol.Optional("name_by_user"): vol.Any(str, None),
+        # No Enum support like this in probatio, use .value
+        probatio.Optional("disabled_by"): probatio.Any(
+            DeviceEntryDisabler.USER.value, None
+        ),
+        probatio.Optional("labels"): [str],
+        probatio.Optional("name_by_user"): probatio.Any(str, None),
     }
 )
 @callback

@@ -5,7 +5,7 @@ import logging
 from typing import Any, cast
 import uuid
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_NAME
@@ -20,7 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_COMPLETE = "complete"
 
-ITEM_UPDATE_SCHEMA = vol.Schema({ATTR_COMPLETE: bool, ATTR_NAME: str})
+ITEM_UPDATE_SCHEMA = probatio.Schema({ATTR_COMPLETE: bool, ATTR_NAME: str})
 PERSISTENCE = ".shopping_list.json"
 
 
@@ -188,7 +188,7 @@ class ShoppingData:
             # All the unchecked items must be passed in the item_ids array,
             # so all items left in the mapping should be checked items.
             if value["complete"] is False:
-                raise vol.Invalid(
+                raise probatio.Invalid(
                     "The item ids array doesn't contain all the unchecked shopping list"
                     " items."
                 )

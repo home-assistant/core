@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock
 
-import httpx
+import httpx2
 from iaqualink.client import AqualinkClient
 from iaqualink.exception import (
     AqualinkServiceException,
@@ -231,7 +231,7 @@ async def test_light_turn_on_without_attributes_updates_state(
             id="timeout",
         ),
         pytest.param(
-            httpx.HTTPError("boom"),
+            httpx2.HTTPError("boom"),
             HomeAssistantError,
             "Aqualink error: boom",
             id="http",

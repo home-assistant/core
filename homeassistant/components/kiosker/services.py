@@ -12,7 +12,7 @@ from kiosker import (
     IPAuthenticationError,
     TLSVerificationError,
 )
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import ATTR_DEVICE_ID, ATTR_ICON
 from homeassistant.core import HomeAssistant, ServiceCall, ServiceResponse, callback
@@ -35,35 +35,37 @@ from .const import (
 )
 from .coordinator import KioskerConfigEntry, KioskerDataUpdateCoordinator
 
-NAVIGATE_URL_SCHEMA = vol.Schema(
+NAVIGATE_URL_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_DEVICE_ID): str,
-        vol.Required(ATTR_URL): str,
+        probatio.Required(ATTR_DEVICE_ID): str,
+        probatio.Required(ATTR_URL): str,
     }
 )
 
-SET_BLACKOUT_SCHEMA = vol.Schema(
+SET_BLACKOUT_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_DEVICE_ID): str,
-        vol.Optional(ATTR_VISIBLE, default=True): cv.boolean,
-        vol.Optional(ATTR_TEXT): str,
-        vol.Optional(ATTR_BACKGROUND, default=[0, 0, 0]): selector.ColorRGBSelector(),
-        vol.Optional(
+        probatio.Required(ATTR_DEVICE_ID): str,
+        probatio.Optional(ATTR_VISIBLE, default=True): cv.boolean,
+        probatio.Optional(ATTR_TEXT): str,
+        probatio.Optional(
+            ATTR_BACKGROUND, default=[0, 0, 0]
+        ): selector.ColorRGBSelector(),
+        probatio.Optional(
             ATTR_FOREGROUND, default=[255, 255, 255]
         ): selector.ColorRGBSelector(),
-        vol.Optional(ATTR_ICON): str,
-        vol.Optional(ATTR_EXPIRE, default=60): vol.All(
-            vol.Coerce(int), vol.Range(min=0, max=100000)
+        probatio.Optional(ATTR_ICON): str,
+        probatio.Optional(ATTR_EXPIRE, default=60): probatio.All(
+            probatio.Coerce(int), probatio.Range(min=0, max=100000)
         ),
-        vol.Optional(ATTR_DISMISSIBLE, default=False): cv.boolean,
-        vol.Optional(
+        probatio.Optional(ATTR_DISMISSIBLE, default=False): cv.boolean,
+        probatio.Optional(
             ATTR_BUTTON_BACKGROUND, default=[255, 255, 255]
         ): selector.ColorRGBSelector(),
-        vol.Optional(
+        probatio.Optional(
             ATTR_BUTTON_FOREGROUND, default=[0, 0, 0]
         ): selector.ColorRGBSelector(),
-        vol.Optional(ATTR_BUTTON_TEXT): str,
-        vol.Optional(ATTR_SOUND): str,
+        probatio.Optional(ATTR_BUTTON_TEXT): str,
+        probatio.Optional(ATTR_SOUND): str,
     }
 )
 

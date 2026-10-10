@@ -103,7 +103,7 @@
     'state': '2',
   })
 # ---
-# name: test_all_entities[sensor.sec84251907c415_black_toner_level-entry]
+# name: test_all_entities[sensor.sec84251907c415_black_toner-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -117,7 +117,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.sec84251907c415_black_toner_level',
+    'entity_id': 'sensor.sec84251907c415_black_toner',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -125,12 +125,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Black toner level',
+    'object_id_base': 'Black toner',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': 'mdi:printer',
-    'original_name': 'Black toner level',
+    'original_name': 'Black toner',
     'platform': 'syncthru',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -140,11 +140,11 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_all_entities[sensor.sec84251907c415_black_toner_level-state]
+# name: test_all_entities[sensor.sec84251907c415_black_toner-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'cnt': 1176,
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SEC84251907C415 Black toner level',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SEC84251907C415 Black toner',
       <EntityStateAttribute.ICON: 'icon'>: 'mdi:printer',
       'newError': 'C1-5110',
       'opt': 1,
@@ -152,14 +152,14 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.sec84251907c415_black_toner_level',
+    'entity_id': 'sensor.sec84251907c415_black_toner',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '8',
   })
 # ---
-# name: test_all_entities[sensor.sec84251907c415_cyan_toner_level-entry]
+# name: test_all_entities[sensor.sec84251907c415_cyan_toner-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -173,7 +173,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.sec84251907c415_cyan_toner_level',
+    'entity_id': 'sensor.sec84251907c415_cyan_toner',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -181,12 +181,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Cyan toner level',
+    'object_id_base': 'Cyan toner',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': 'mdi:printer',
-    'original_name': 'Cyan toner level',
+    'original_name': 'Cyan toner',
     'platform': 'syncthru',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -196,11 +196,11 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_all_entities[sensor.sec84251907c415_cyan_toner_level-state]
+# name: test_all_entities[sensor.sec84251907c415_cyan_toner-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'cnt': 25,
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SEC84251907C415 Cyan toner level',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SEC84251907C415 Cyan toner',
       <EntityStateAttribute.ICON: 'icon'>: 'mdi:printer',
       'newError': '',
       'opt': 1,
@@ -208,7 +208,7 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.sec84251907c415_cyan_toner_level',
+    'entity_id': 'sensor.sec84251907c415_cyan_toner',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -274,7 +274,7 @@
     'state': 'Ready',
   })
 # ---
-# name: test_all_entities[sensor.sec84251907c415_magenta_toner_level-entry]
+# name: test_all_entities[sensor.sec84251907c415_magenta_toner-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -288,7 +288,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.sec84251907c415_magenta_toner_level',
+    'entity_id': 'sensor.sec84251907c415_magenta_toner',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -296,12 +296,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Magenta toner level',
+    'object_id_base': 'Magenta toner',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': 'mdi:printer',
-    'original_name': 'Magenta toner level',
+    'original_name': 'Magenta toner',
     'platform': 'syncthru',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -311,11 +311,11 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_all_entities[sensor.sec84251907c415_magenta_toner_level-state]
+# name: test_all_entities[sensor.sec84251907c415_magenta_toner-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'cnt': 25,
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SEC84251907C415 Magenta toner level',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SEC84251907C415 Magenta toner',
       <EntityStateAttribute.ICON: 'icon'>: 'mdi:printer',
       'newError': '',
       'opt': 1,
@@ -323,7 +323,7 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.sec84251907c415_magenta_toner_level',
+    'entity_id': 'sensor.sec84251907c415_magenta_toner',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -384,7 +384,7 @@
     'state': 'Ready',
   })
 # ---
-# name: test_all_entities[sensor.sec84251907c415_yellow_toner_level-entry]
+# name: test_all_entities[sensor.sec84251907c415_yellow_toner-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -398,7 +398,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.sec84251907c415_yellow_toner_level',
+    'entity_id': 'sensor.sec84251907c415_yellow_toner',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -406,12 +406,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Yellow toner level',
+    'object_id_base': 'Yellow toner',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': 'mdi:printer',
-    'original_name': 'Yellow toner level',
+    'original_name': 'Yellow toner',
     'platform': 'syncthru',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -421,11 +421,11 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_all_entities[sensor.sec84251907c415_yellow_toner_level-state]
+# name: test_all_entities[sensor.sec84251907c415_yellow_toner-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'cnt': 27,
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SEC84251907C415 Yellow toner level',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SEC84251907C415 Yellow toner',
       <EntityStateAttribute.ICON: 'icon'>: 'mdi:printer',
       'newError': '',
       'opt': 1,
@@ -433,7 +433,7 @@
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.sec84251907c415_yellow_toner_level',
+    'entity_id': 'sensor.sec84251907c415_yellow_toner',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

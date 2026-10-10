@@ -6,6 +6,7 @@ from satel_integra import AsyncSatel
 from satel_integra.exceptions import (
     SatelConnectFailedError,
     SatelConnectionInitializationError,
+    SatelMonitoringStartError,
     SatelPanelBusyError,
 )
 
@@ -107,7 +108,13 @@ class SatelClient:
             output_changed_callback=outputs_update_callback,
         )
 
-        await self.controller.start(enable_monitoring=True)
+        try:
+            await self.controller.start(enable_monitoring=True)
+        except SatelMonitoringStartError as ex:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="monitoring_start_failed",
+            ) from ex
 
     async def async_close(self) -> None:
         """Close the connection."""

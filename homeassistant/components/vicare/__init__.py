@@ -12,6 +12,7 @@ from PyViCare.PyViCareOAuthManager import obtain_token_via_basic_auth_pkce
 from PyViCare.PyViCareUtils import (
     PyViCareInvalidConfigurationError,
     PyViCareInvalidCredentialsError,
+    PyViCareRateLimitError,
 )
 
 from homeassistant.components.application_credentials import (
@@ -30,12 +31,14 @@ from homeassistant.exceptions import (
 )
 from homeassistant.helpers import (
     config_entry_oauth2_flow,
+    config_validation as cv,
     device_registry as dr,
     entity_registry as er,
     issue_registry as ir,
 )
 from homeassistant.helpers.config_entry_oauth2_flow import MY_AUTH_CALLBACK_PATH
 from homeassistant.helpers.storage import STORAGE_DIR
+from homeassistant.helpers.typing import ConfigType
 
 from .api import ConfigEntryAuth
 from .const import (
@@ -47,6 +50,7 @@ from .const import (
     VIESSMANN_DEVELOPER_PORTAL,
 )
 from .coordinator import ViCareCoordinator
+from .services import async_setup_services
 from .types import ViCareConfigEntry, ViCareData, ViCareDevice
 from .utils import get_device_serial
 
@@ -126,25 +130,24 @@ async def async_migrate_entry(
     return True
 
 
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Viessmann ViCare integration."""
+    async_setup_services(hass)
+    return True
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ViCareConfigEntry) -> bool:
     """Set up from config entry."""
     _LOGGER.debug("Setting up ViCare component")
 
-    try:
-        implementation = (
-            await config_entry_oauth2_flow.async_get_config_entry_implementation(
-                hass, entry
-            )
+    implementation = (
+        await config_entry_oauth2_flow.async_get_config_entry_implementation(
+            hass, entry
         )
-    except (
-        config_entry_oauth2_flow.ImplementationUnavailableError,
-        ValueError,
-    ) as err:
-        # Application Credentials missing or removed — user must re-authenticate
-        _LOGGER.debug("OAuth2 implementation unavailable: %s", err)
-        raise ConfigEntryAuthFailed(
-            "OAuth2 implementation unavailable, please re-authenticate"
-        ) from err
+    )
 
     oauth_session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
     try:
@@ -170,6 +173,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ViCareConfigEntry) -> bo
         PyViCareInvalidCredentialsError,
     ) as err:
         raise ConfigEntryAuthFailed("Authentication failed") from err
+    except PyViCareRateLimitError as err:
+        # The quota recovers on its own.
+        raise ConfigEntryNotReady(
+            f"ViCare API rate limit exceeded, resets at {err.limitResetDate}"
+        ) from err
 
     # Group devices by gateway: in viaGateway mode one bulk fetch refreshes
     # every device behind a gateway, so one coordinator serves the gateway.
@@ -293,6 +301,9 @@ def _setup_vicare_api(
         devices.append(
             ViCareDevice(config=device_config, api=api, serial=get_device_serial(api))
         )
+    if device_config_list and not devices:
+        # Offline devices get no entities, and nothing would set them up later.
+        raise ConfigEntryNotReady("No ViCare device is online")
     return ViCareData(client=client, devices=devices)
 
 
