@@ -56,7 +56,9 @@ async def test_binary_sensor_get_state(
 ) -> None:
     """Test states of the binary_sensor."""
 
-    device = device_registry.async_get_device(identifiers={("freedompro", uid)})
+    device = device_registry.async_get_device_by_identifier(
+        ("freedompro", uid), init_integration.entry_id
+    )
     assert device is not None
     assert device.identifiers == {("freedompro", uid)}
     assert device.manufacturer == "Freedompro"

@@ -8,6 +8,7 @@ import broadlink as blk
 from homeassistant.const import CONF_HOST
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers import event
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 
@@ -31,7 +32,7 @@ class BroadlinkHeartbeat:
     async def async_setup(self) -> None:
         """Set up the heartbeat."""
         if self._unsubscribe is None:
-            await self.async_heartbeat(dt.datetime.now())  # pylint: disable=home-assistant-enforce-naive-now
+            await self.async_heartbeat(dt_util.utcnow())
             self._unsubscribe = event.async_track_time_interval(
                 self._hass, self.async_heartbeat, self.HEARTBEAT_INTERVAL
             )
@@ -47,14 +48,14 @@ class BroadlinkHeartbeat:
         hass = self._hass
         config_entries = hass.config_entries.async_entries(DOMAIN)
         hosts: set[str] = {entry.data[CONF_HOST] for entry in config_entries}
-        await hass.async_add_executor_job(self.heartbeat, hosts)
+        await self.heartbeat(hosts)
 
     @staticmethod
-    def heartbeat(hosts: set[str]) -> None:
+    async def heartbeat(hosts: set[str]) -> None:
         """Send packets to feed watchdog timers."""
         for host in hosts:
             try:
-                blk.ping(host)
+                await blk.ping(host)
             except OSError as err:
                 _LOGGER.debug("Failed to send heartbeat to %s: %s", host, err)
             else:

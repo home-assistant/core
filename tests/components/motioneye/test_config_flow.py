@@ -1,5 +1,7 @@
 """Test the motionEye config flow."""
 
+from collections.abc import Generator
+from contextlib import contextmanager
 from unittest.mock import AsyncMock, patch
 
 from motioneye_client.client import (
@@ -7,6 +9,7 @@ from motioneye_client.client import (
     MotionEyeClientInvalidAuthError,
     MotionEyeClientRequestError,
 )
+import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.motioneye.const import (
@@ -29,8 +32,69 @@ from . import TEST_URL, create_mock_motioneye_client, create_mock_motioneye_conf
 
 from tests.common import MockConfigEntry
 
+USER_INPUT = {
+    CONF_URL: TEST_URL,
+    CONF_ADMIN_USERNAME: "admin-username",
+    CONF_ADMIN_PASSWORD: "admin-password",
+    CONF_SURVEILLANCE_USERNAME: "surveillance-username",
+    CONF_SURVEILLANCE_PASSWORD: "surveillance-password",
+}
 
-async def test_user_success(hass: HomeAssistant) -> None:
+
+@contextmanager
+def _patch_client_and_setup(mock_client: AsyncMock) -> Generator[None]:
+    """Patch the motionEye client and the entry setup."""
+    with (
+        patch(
+            "homeassistant.components.motioneye.MotionEyeClient",
+            return_value=mock_client,
+        ),
+        patch(
+            "homeassistant.components.motioneye.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        yield
+
+
+@pytest.mark.parametrize(
+    ("user_input", "expected_data"),
+    [
+        pytest.param(
+            {
+                CONF_URL: TEST_URL,
+                CONF_ADMIN_USERNAME: "admin-username",
+                CONF_ADMIN_PASSWORD: "admin-password",
+                CONF_SURVEILLANCE_USERNAME: "surveillance-username",
+                CONF_SURVEILLANCE_PASSWORD: "surveillance-password",
+            },
+            {
+                CONF_URL: TEST_URL,
+                CONF_ADMIN_USERNAME: "admin-username",
+                CONF_ADMIN_PASSWORD: "admin-password",
+                CONF_SURVEILLANCE_USERNAME: "surveillance-username",
+                CONF_SURVEILLANCE_PASSWORD: "surveillance-password",
+            },
+            id="credentials",
+        ),
+        pytest.param(
+            {CONF_URL: TEST_URL},
+            {
+                CONF_URL: TEST_URL,
+                CONF_ADMIN_USERNAME: "",
+                CONF_ADMIN_PASSWORD: "",
+                CONF_SURVEILLANCE_USERNAME: "",
+                CONF_SURVEILLANCE_PASSWORD: "",
+            },
+            id="no_credentials",
+        ),
+    ],
+)
+async def test_user_success(
+    hass: HomeAssistant,
+    user_input: dict[str, str],
+    expected_data: dict[str, str],
+) -> None:
     """Test successful user flow."""
 
     result = await hass.config_entries.flow.async_init(
@@ -52,26 +116,13 @@ async def test_user_success(hass: HomeAssistant) -> None:
         ) as mock_setup_entry,
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_URL: TEST_URL,
-                CONF_ADMIN_USERNAME: "admin-username",
-                CONF_ADMIN_PASSWORD: "admin-password",
-                CONF_SURVEILLANCE_USERNAME: "surveillance-username",
-                CONF_SURVEILLANCE_PASSWORD: "surveillance-password",
-            },
+            result["flow_id"], user_input
         )
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == f"{TEST_URL}"
-    assert result["data"] == {
-        CONF_URL: TEST_URL,
-        CONF_ADMIN_USERNAME: "admin-username",
-        CONF_ADMIN_PASSWORD: "admin-password",
-        CONF_SURVEILLANCE_USERNAME: "surveillance-username",
-        CONF_SURVEILLANCE_PASSWORD: "surveillance-password",
-    }
+    assert result["data"] == expected_data
     assert len(mock_setup_entry.mock_calls) == 1
     assert mock_client.async_client_close.called
 
@@ -165,6 +216,15 @@ async def test_user_invalid_auth(hass: HomeAssistant) -> None:
     assert result["errors"] == {"base": "invalid_auth"}
     assert mock_client.async_client_close.called
 
+    mock_client.async_client_login = AsyncMock()
+    with _patch_client_and_setup(mock_client):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], USER_INPUT
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_user_invalid_url(hass: HomeAssistant) -> None:
     """Test invalid url is handled correctly."""
@@ -192,6 +252,14 @@ async def test_user_invalid_url(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_url"}
+
+    with _patch_client_and_setup(mock_client):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], USER_INPUT
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_user_cannot_connect(hass: HomeAssistant) -> None:
@@ -225,6 +293,15 @@ async def test_user_cannot_connect(hass: HomeAssistant) -> None:
     assert result["errors"] == {"base": "cannot_connect"}
     assert mock_client.async_client_close.called
 
+    mock_client.async_client_login = AsyncMock()
+    with _patch_client_and_setup(mock_client):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], USER_INPUT
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_user_request_error(hass: HomeAssistant) -> None:
     """Test a request error is handled correctly."""
@@ -254,6 +331,15 @@ async def test_user_request_error(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "unknown"}
     assert mock_client.async_client_close.called
+
+    mock_client.async_client_login = AsyncMock()
+    with _patch_client_and_setup(mock_client):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], USER_INPUT
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_reauth(hass: HomeAssistant) -> None:

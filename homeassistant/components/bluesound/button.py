@@ -9,18 +9,10 @@ from pyblu import Player
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.const import CONF_PORT
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import (
-    CONNECTION_NETWORK_MAC,
-    DeviceInfo,
-    format_mac,
-)
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
 from .coordinator import BluesoundCoordinator
-from .media_player import DEFAULT_PORT
-from .utils import format_unique_id
+from .entity import BluesoundEntity
 
 if TYPE_CHECKING:
     from . import BluesoundConfigEntry
@@ -79,10 +71,9 @@ BUTTON_DESCRIPTIONS = [
 ]
 
 
-class BluesoundButton(CoordinatorEntity[BluesoundCoordinator], ButtonEntity):
+class BluesoundButton(BluesoundEntity, ButtonEntity):
     """Base class for Bluesound buttons."""
 
-    _attr_has_entity_name = True
     entity_description: BluesoundButtonEntityDescription
 
     def __init__(
@@ -93,33 +84,15 @@ class BluesoundButton(CoordinatorEntity[BluesoundCoordinator], ButtonEntity):
         description: BluesoundButtonEntityDescription,
     ) -> None:
         """Initialize the Bluesound button."""
-        super().__init__(coordinator)
-        sync_status = coordinator.data.sync_status
-
-        self.entity_description = description
-        self._player = player
-        self._attr_unique_id = (
-            f"{description.key}-{format_unique_id(sync_status.mac, port)}"
+        super().__init__(
+            coordinator,
+            player,
+            port=port,
+            sync_status=coordinator.data.sync_status,
+            unique_id_prefix=description.key,
         )
 
-        if port == DEFAULT_PORT:
-            self._attr_device_info = DeviceInfo(
-                identifiers={(DOMAIN, format_mac(sync_status.mac))},
-                connections={(CONNECTION_NETWORK_MAC, sync_status.mac)},
-                name=sync_status.name,
-                manufacturer=sync_status.brand,
-                model=sync_status.model_name,
-                model_id=sync_status.model,
-            )
-        else:
-            self._attr_device_info = DeviceInfo(
-                identifiers={(DOMAIN, format_unique_id(sync_status.mac, port))},
-                name=sync_status.name,
-                manufacturer=sync_status.brand,
-                model=sync_status.model_name,
-                model_id=sync_status.model,
-                via_device=(DOMAIN, format_mac(sync_status.mac)),
-            )
+        self.entity_description = description
 
     @override
     async def async_press(self) -> None:

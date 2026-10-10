@@ -1,0 +1,28 @@
+{
+  "totalUsed": 3133.1,
+  "dailyUsed": 34.7,
+  "vip": [
+    {
+      "volt": "246.6",
+      "current": "0.0",
+      "power": 1200
+    },
+    {
+      "volt": "245.9",
+      "current": "0.0",
+      "power": 2000
+    },
+    {
+      "volt": "246.2",
+      "current": "0.0",
+      "power": 227
+    }
+  ],
+  "totalPower": 3427,
+  "smartLoadStatus": -1,
+  "loadFac": 50.01,
+  "upsPowerL1": 5.0,
+  "upsPowerL2": 0.0,
+  "upsPowerL3": 0.0,
+  "upsPowerTotal": 5.0
+}

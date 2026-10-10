@@ -4,11 +4,12 @@ from datetime import timedelta
 from unittest.mock import AsyncMock, Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
+from pyezvizapi.exceptions import PyEzvizError
 import pytest
 
 from homeassistant.components import image
 from homeassistant.components.ezviz.const import ATTR_TYPE_CLOUD
-from homeassistant.const import STATE_UNKNOWN
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -87,6 +88,7 @@ async def test_last_alarm_pic_sensor_not_created(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_ezviz_client: AsyncMock,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test that last_alarm_pic sensor is not created."""
     # Mock coordinator data with all sensor fields
@@ -115,8 +117,7 @@ async def test_last_alarm_pic_sensor_not_created(
     assert last_alarm_pic_state is None
 
     # But other sensors should be created
-    registry = er.async_get(hass)
-    battery_entity = registry.async_get("sensor.camera_1_battery")
+    battery_entity = entity_registry.async_get("sensor.camera_1_battery")
     assert battery_entity is not None
 
 
@@ -337,3 +338,40 @@ async def test_image_entity_keeps_last_alarm_pic_when_refresh_omits_it(
     state = hass.states.get("image.camera_1_last_motion_image")
     assert state is not None
     assert "last_alarm_pic" not in state.attributes
+
+
+async def test_entity_unavailable_on_update_failure(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_ezviz_client: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test entities become unavailable when a coordinator update fails."""
+    entity_id = "sensor.camera_1_battery"
+    mock_ezviz_client.load_cameras.return_value = {
+        "C123456789": _mock_camera_data(battery_level=85)
+    }
+
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "85"
+
+    mock_ezviz_client.load_cameras.side_effect = PyEzvizError("Connection lost")
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+    mock_ezviz_client.load_cameras.side_effect = None
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "85"

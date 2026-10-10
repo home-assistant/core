@@ -1,6 +1,8 @@
 """The tests for the Configurator component."""
 
+from collections.abc import Callable, Coroutine
 from datetime import timedelta
+from typing import Any
 
 import pytest
 
@@ -150,3 +152,53 @@ async def test_configure_service_requires_admin(
             context=Context(user_id=hass_read_only_user.id),
             blocking=True,
         )
+
+
+async def _async_request_config(
+    hass: HomeAssistant, name: str, callback: configurator.ConfiguratorCallback
+) -> str:
+    """Request config using the async API."""
+    return configurator.async_request_config(hass, name, callback)
+
+
+async def _sync_request_config(
+    hass: HomeAssistant, name: str, callback: configurator.ConfiguratorCallback
+) -> str:
+    """Request config using the sync API from an executor thread."""
+    return await hass.async_add_executor_job(
+        configurator.request_config, hass, name, callback
+    )
+
+
+@pytest.mark.parametrize(
+    "ignore_missing_translations", ["component.configurator.services.configure."]
+)
+@pytest.mark.parametrize("integration_frame_path", ["custom_components/my_integration"])
+@pytest.mark.usefixtures("mock_integration_frame")
+@pytest.mark.parametrize(
+    "request_config",
+    [_async_request_config, _sync_request_config],
+    ids=["async", "sync"],
+)
+async def test_request_config_deprecated(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    request_config: Callable[
+        [HomeAssistant, str, configurator.ConfiguratorCallback],
+        Coroutine[Any, Any, str],
+    ],
+) -> None:
+    """Test that requesting a config warns about the deprecated integration."""
+    request_id = await request_config(hass, "Test Request", lambda _: None)
+
+    states = hass.states.async_all()
+    assert len(states) == 1
+    state = states[0]
+    assert state.state == configurator.STATE_CONFIGURE
+    assert state.attributes.get(configurator.ATTR_CONFIGURE_ID) == request_id
+
+    assert (
+        "Detected that custom integration 'my_integration' uses the deprecated "
+        "configurator integration" in caplog.text
+    )
+    assert "This will stop working in Home Assistant 2027.10" in caplog.text

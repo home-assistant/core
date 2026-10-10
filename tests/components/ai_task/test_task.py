@@ -18,7 +18,7 @@ from homeassistant.components.camera import Image
 from homeassistant.components.conversation import async_get_chat_log
 from homeassistant.components.llm import AssistAPI
 from homeassistant.const import STATE_UNKNOWN
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import chat_session
 from homeassistant.util import dt as dt_util
@@ -78,14 +78,21 @@ async def test_generate_data_preferred_entity(
     assert state is not None
     assert state.state == STATE_UNKNOWN
 
+    context = Context()
     llm_api = AssistAPI(hass)
     result = await async_generate_data(
         hass,
         task_name="Test Task",
         instructions="Test prompt",
         llm_api=llm_api,
+        context=context,
     )
     assert result.data == "Mock result"
+
+    # The LLM API uses the context to check permissions when calling tools
+    chat_log = mock_ai_task_entity.mock_chat_logs[0]
+    assert chat_log.llm_api is not None
+    assert chat_log.llm_api.llm_context.context is context
     as_dict = result.as_dict()
     assert as_dict["conversation_id"] == result.conversation_id
     assert as_dict["data"] == "Mock result"

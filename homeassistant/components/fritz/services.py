@@ -1,7 +1,5 @@
 """Services for Fritz integration."""
 
-import logging
-
 from fritzconnection.core.exceptions import (
     FritzActionError,
     FritzActionFailedError,
@@ -9,7 +7,7 @@ from fritzconnection.core.exceptions import (
     FritzServiceError,
 )
 from fritzconnection.lib.fritzwlan import DEFAULT_PASSWORD_LENGTH
-import voluptuous as vol
+import probatio
 
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -18,25 +16,23 @@ from homeassistant.helpers.service import (
     async_register_admin_service,
 )
 
-from .const import DOMAIN
+from .const import DOMAIN, LOGGER
 from .coordinator import FritzConfigEntry
 
-_LOGGER = logging.getLogger(__name__)
-
 SERVICE_SET_GUEST_WIFI_PW = "set_guest_wifi_password"
-SERVICE_SCHEMA_SET_GUEST_WIFI_PW = vol.Schema(
+SERVICE_SCHEMA_SET_GUEST_WIFI_PW = probatio.Schema(
     {
-        vol.Required("device_id"): str,
-        vol.Optional("password"): vol.Length(min=8, max=63),
-        vol.Optional("length"): vol.Range(min=8, max=63),
+        probatio.Required("device_id"): str,
+        probatio.Optional("password"): probatio.Length(min=8, max=63),
+        probatio.Optional("length"): probatio.Range(min=8, max=63),
     }
 )
 SERVICE_DIAL = "dial"
-SERVICE_SCHEMA_DIAL = vol.Schema(
+SERVICE_SCHEMA_DIAL = probatio.Schema(
     {
-        vol.Required("device_id"): str,
-        vol.Required("number"): str,
-        vol.Required("max_ring_seconds"): vol.Range(min=1, max=300),
+        probatio.Required("device_id"): str,
+        probatio.Required("number"): str,
+        probatio.Required("max_ring_seconds"): probatio.Range(min=1, max=300),
     }
 )
 
@@ -60,7 +56,7 @@ async def _async_set_guest_wifi_password(service_call: ServiceCall) -> None:
         )
 
     for target_entry in target_entries:
-        _LOGGER.debug("Executing service %s", service_call.service)
+        LOGGER.debug("Executing service %s", service_call.service)
         avm_wrapper = target_entry.runtime_data
         try:
             await avm_wrapper.async_trigger_set_guest_password(
@@ -96,7 +92,7 @@ async def _async_dial(service_call: ServiceCall) -> None:
         )
 
     for target_entry in target_entries:
-        _LOGGER.debug("Executing service %s", service_call.service)
+        LOGGER.debug("Executing service %s", service_call.service)
         avm_wrapper = target_entry.runtime_data
         try:
             await avm_wrapper.async_trigger_dial(

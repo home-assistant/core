@@ -126,14 +126,12 @@ class AqvifyCoordinator(DataUpdateCoordinator[AqvifyCoordinatorData]):
             account_id = self.config_entry.unique_id
             device_registry = dr.async_get(self.hass)
             for device_id in stale_devices:
-                device = device_registry.async_get_device(
-                    identifiers={(DOMAIN, f"{account_id}_{device_id}")}
+                device = device_registry.async_get_device_by_identifier(
+                    (DOMAIN, f"{account_id}_{device_id}"),
+                    self.config_entry.entry_id,
                 )
                 if device:
-                    device_registry.async_update_device(
-                        device_id=device.id,
-                        remove_config_entry_id=self.config_entry.entry_id,
-                    )
+                    device_registry.async_remove_device(device.id)
         self.previous_devices = current_devices
 
         device_data = {}

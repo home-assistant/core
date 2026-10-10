@@ -8,7 +8,6 @@ from pathlib import Path
 from homeassistant.const import Platform
 from homeassistant.requirements import DISCOVERY_INTEGRATIONS
 
-from . import ast_parse_module
 from .model import Config, Integration
 
 # Duplicated from homeassistant.bootstrap to avoid importing bootstrap (and its
@@ -35,12 +34,21 @@ class ImportCollector(ast.NodeVisitor):
 
             self._cur_fil_dir = fil.relative_to(self.integration.path)
             self.referenced[self._cur_fil_dir] = set()
-            try:
-                self.visit(ast_parse_module(fil))
-            except SyntaxError as e:
-                e.add_note(f"File: {fil}")
-                raise
+            source = fil.read_text()
+            # Every reference contains this text, so skip parsing files without it
+            if "homeassistant.components" in source:
+                try:
+                    self.visit(ast.parse(source))
+                except SyntaxError as e:
+                    e.add_note(f"File: {fil}")
+                    raise
             self._cur_fil_dir = None
+
+    def generic_visit(self, node: ast.AST) -> None:
+        """Visit child statements only, imports never appear in expressions."""
+        for field in ("body", "orelse", "finalbody", "handlers", "cases"):
+            for child in getattr(node, field, ()):
+                self.visit(child)
 
     def _add_reference(self, reference_domain: str) -> None:
         """Add a reference."""

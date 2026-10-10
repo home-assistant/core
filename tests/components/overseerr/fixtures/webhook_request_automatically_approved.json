@@ -1,12 +1,15 @@
 {
   "notification_type": "MEDIA_AUTO_APPROVED",
+  "event": "Request was auto-approved",
   "subject": "Something (2024)",
   "message": "Here is an interesting Linux ISO that was automatically approved.",
   "image": "https://image.tmdb.org/t/p/w600_and_h900_bestv2/something.jpg",
   "media": {
     "media_type": "movie",
+    "imdb_id": "tt1234567",
     "tmdb_id": "123",
     "tvdb_id": "",
+    "jellyfin_media_id": "",
     "status": "PENDING",
     "status4k": "UNKNOWN"
   },
@@ -15,9 +18,11 @@
     "requested_by_email": "my@email.com",
     "requested_by_username": "henk",
     "requested_by_avatar": "https://plex.tv/users/abc/avatar?c=123",
+    "requested_by_jellyfin_user_id": "",
     "requested_by_settings_discord_id": "123",
     "requested_by_settings_telegram_chat_id": ""
   },
   "issue": null,
-  "comment": null
+  "comment": null,
+  "extra": []
 }

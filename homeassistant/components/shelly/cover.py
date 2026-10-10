@@ -120,13 +120,33 @@ class BlockShellyCover(ShellyBlockAttributeEntity, CoverEntity):
         self.control_result: dict[str, Any] | None = None
         self._attr_name = None  # Main device entity
         self._attr_unique_id: str = f"{coordinator.mac}-{block.description}"
-        if self.coordinator.device.settings["rollers"][0]["positioning"]:
+        self._positioning: bool = self.coordinator.device.settings["rollers"][0][
+            "positioning"
+        ]
+        # Without positioning the direction it last travelled in is all there is,
+        # and that says nothing about where it stopped
+        self._attr_assumed_state = not self._positioning
+        if self._positioning:
             self._attr_supported_features |= CoverEntityFeature.SET_POSITION
 
     @property
     @override
-    def is_closed(self) -> bool:
+    def is_closed(self) -> bool | None:
         """If cover is closed."""
+        if not self._positioning:
+            # An uncalibrated roller parks its position on 101, so the direction
+            # it last travelled in is all there is to go on
+            last_direction = self.coordinator.device.status["rollers"][0].get(
+                "last_direction"
+            )
+            if self.control_result:
+                last_direction = self.control_result.get(
+                    "last_direction", last_direction
+                )
+            if not last_direction:
+                return None
+            return cast(str, last_direction) == "close"
+
         if self.control_result:
             return cast(bool, self.control_result["current_pos"] == 0)
 
@@ -134,8 +154,11 @@ class BlockShellyCover(ShellyBlockAttributeEntity, CoverEntity):
 
     @property
     @override
-    def current_cover_position(self) -> int:
+    def current_cover_position(self) -> int | None:
         """Position of the cover."""
+        if not self._positioning:
+            return None
+
         if self.control_result:
             return cast(int, self.control_result["current_pos"])
 
@@ -215,7 +238,11 @@ class RpcShellyCover(ShellyRpcAttributeEntity, CoverEntity):
         self._attr_name = get_rpc_channel_name(coordinator.device, key)
         self._attr_unique_id: str = f"{coordinator.mac}-{key}"
         self._update_task: asyncio.Task | None = None
-        if self.status["pos_control"]:
+        self._positioning: bool = self.status["pos_control"]
+        # Without position control the direction it last travelled in is all
+        # there is, and that says nothing about where it stopped
+        self._attr_assumed_state = not self._positioning
+        if self._positioning:
             self._attr_supported_features |= CoverEntityFeature.SET_POSITION
         if coordinator.device.config[key].get("slat", {}).get("enable"):
             self._attr_supported_features |= (
@@ -229,13 +256,20 @@ class RpcShellyCover(ShellyRpcAttributeEntity, CoverEntity):
     @override
     def is_closed(self) -> bool | None:
         """If cover is closed."""
+        if not self._positioning and self.status["state"] == "stopped":
+            # A stopped cover without position control only knows the
+            # direction it last travelled in
+            if not (last_direction := self.status.get("last_direction")):
+                return None
+            return cast(str, last_direction) == "close"
+
         return cast(bool, self.status["state"] == "closed")
 
     @property
     @override
     def current_cover_position(self) -> int | None:
         """Position of the cover."""
-        if not self.status["pos_control"]:
+        if not self._positioning:
             return None
 
         return cast(int, self.status["current_pos"])

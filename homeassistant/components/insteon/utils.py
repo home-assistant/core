@@ -190,9 +190,13 @@ def compute_device_name(ha_device) -> str:
     return ha_device.name_by_user or ha_device.name
 
 
-async def async_device_name(dev_registry: dr.DeviceRegistry, address: Address) -> str:
+async def async_device_name(
+    dev_registry: dr.DeviceRegistry, address: Address, config_entry_id: str
+) -> str:
     """Get the Insteon device name from a device registry id."""
-    ha_device = dev_registry.async_get_device(identifiers={(DOMAIN, str(address))})
+    ha_device = dev_registry.async_get_device_by_identifier(
+        (DOMAIN, str(address)), config_entry_id
+    )
     if not ha_device:
         if device := devices[address]:
             return f"{device.description} ({device.model})"

@@ -8,6 +8,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
+from .const import CONF_SPLIT_PHASE, DEFAULT_SPLIT_PHASE
 from .coordinator import (
     WallConnectorConfigEntry,
     WallConnectorCoordinator,
@@ -23,7 +24,11 @@ async def async_setup_entry(
     """Set up Tesla Wall Connector from a config entry."""
     hostname = entry.data[CONF_HOST]
 
-    wall_connector = WallConnector(host=hostname, session=async_get_clientsession(hass))
+    wall_connector = WallConnector(
+        host=hostname,
+        session=async_get_clientsession(hass),
+        split_phase=entry.options.get(CONF_SPLIT_PHASE, DEFAULT_SPLIT_PHASE),
+    )
 
     try:
         version_data = await wall_connector.async_get_version()

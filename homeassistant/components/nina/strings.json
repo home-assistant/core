@@ -132,7 +132,7 @@
   },
   "services": {
     "get_details": {
-      "description": "Get the details of a warning.",
+      "description": "Retrieves the details of a warning.",
       "name": "Get warning details"
     }
   }

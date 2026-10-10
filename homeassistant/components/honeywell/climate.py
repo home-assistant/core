@@ -38,13 +38,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.unit_conversion import TemperatureConverter
 
 from . import HoneywellConfigEntry, HoneywellData
-from .const import (
-    _LOGGER,
-    CONF_COOL_AWAY_TEMPERATURE,
-    CONF_HEAT_AWAY_TEMPERATURE,
-    DOMAIN,
-    RETRY,
-)
+from .const import CONF_COOL_AWAY_TEMPERATURE, CONF_HEAT_AWAY_TEMPERATURE, DOMAIN, RETRY
 
 MODE_PERMANENT_HOLD = 2
 MODE_TEMPORARY_HOLD = 1
@@ -152,10 +146,8 @@ def remove_stale_devices(
             # If device_id is None an invalid device entry was
             # found for this config entry. If the device_id is not
             # in existing device ids it's a stale device entry.
-            # Remove config entry from this device entry in either case.
-            device_registry.async_update_device(
-                device_entry.id, remove_config_entry_id=config_entry.entry_id
-            )
+            # Remove the device entry in either case.
+            device_registry.async_remove_device(device_entry.id)
 
 
 class HoneywellUSThermostat(ClimateEntity):
@@ -190,9 +182,9 @@ class HoneywellUSThermostat(ClimateEntity):
         )
 
         self._attr_translation_placeholders = {"name": device.name}
-        self._attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
+        self._attr_native_temperature_unit = UnitOfTemperature.FAHRENHEIT
         if device.temperature_unit == "C":
-            self._attr_temperature_unit = UnitOfTemperature.CELSIUS
+            self._attr_native_temperature_unit = UnitOfTemperature.CELSIUS
         self._attr_preset_modes = [PRESET_NONE, PRESET_AWAY, PRESET_HOLD]
 
         # not all honeywell HVACs support all modes
@@ -260,7 +252,7 @@ class HoneywellUSThermostat(ClimateEntity):
                 ]
             )
         return TemperatureConverter.convert(
-            DEFAULT_MIN_TEMP, UnitOfTemperature.CELSIUS, self.temperature_unit
+            DEFAULT_MIN_TEMP, UnitOfTemperature.CELSIUS, self.native_temperature_unit
         )
 
     @property
@@ -279,7 +271,7 @@ class HoneywellUSThermostat(ClimateEntity):
                 ]
             )
         return TemperatureConverter.convert(
-            DEFAULT_MAX_TEMP, UnitOfTemperature.CELSIUS, self.temperature_unit
+            DEFAULT_MAX_TEMP, UnitOfTemperature.CELSIUS, self.native_temperature_unit
         )
 
     @property
@@ -304,13 +296,13 @@ class HoneywellUSThermostat(ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self._device.current_temperature
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         if self.hvac_mode == HVACMode.COOL:
             return self._device.setpoint_cool
@@ -320,7 +312,7 @@ class HoneywellUSThermostat(ClimateEntity):
 
     @property
     @override
-    def target_temperature_high(self) -> float | None:
+    def native_target_temperature_high(self) -> float | None:
         """Return the highbound target temperature we try to reach."""
         if self.hvac_mode == HVACMode.HEAT_COOL:
             return self._device.setpoint_cool
@@ -328,7 +320,7 @@ class HoneywellUSThermostat(ClimateEntity):
 
     @property
     @override
-    def target_temperature_low(self) -> float | None:
+    def native_target_temperature_low(self) -> float | None:
         """Return the lowbound target temperature we try to reach."""
         if self.hvac_mode == HVACMode.HEAT_COOL:
             return self._device.setpoint_heat
@@ -405,7 +397,6 @@ class HoneywellUSThermostat(ClimateEntity):
             ) from err
 
         except SomeComfortError as err:
-            _LOGGER.error("Invalid temperature %.1f: %s", temperature, err)
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="temp_failed_value",
@@ -430,7 +421,6 @@ class HoneywellUSThermostat(ClimateEntity):
                 ) from err
 
             except SomeComfortError as err:
-                _LOGGER.error("Invalid temperature %.1f: %s", temperature, err)
                 raise ServiceValidationError(
                     translation_domain=DOMAIN,
                     translation_key="temp_failed_value",
@@ -486,14 +476,6 @@ class HoneywellUSThermostat(ClimateEntity):
             ) from err
 
         except SomeComfortError as err:
-            _LOGGER.error(
-                "Temperature out of range. Mode: %s,"
-                " Heat Temperature:  %.1f,"
-                " Cool Temperature: %.1f",
-                mode,
-                self._heat_away_temp,
-                self._cool_away_temp,
-            )
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="temp_failed_range",
@@ -518,13 +500,11 @@ class HoneywellUSThermostat(ClimateEntity):
                     await self._device.set_hold_heat(True)
 
             except SomeComfortError as err:
-                _LOGGER.error("Couldn't set permanent hold")
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
                     translation_key="set_hold_failed",
                 ) from err
         else:
-            _LOGGER.error("Invalid system mode returned: %s", mode)
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="set_mode_failed",
@@ -540,7 +520,6 @@ class HoneywellUSThermostat(ClimateEntity):
             await self._device.set_hold_heat(False)
 
         except SomeComfortError as err:
-            _LOGGER.error("Can not stop hold mode")
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="stop_hold_failed",

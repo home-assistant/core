@@ -1,21 +1,15 @@
 """Device tracker platform that adds support for OwnTracks over MQTT."""
-# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 from typing import Any, override
 
 from homeassistant.components.device_tracker import (
-    ATTR_SOURCE_TYPE,
     DOMAIN as DEVICE_TRACKER_DOMAIN,
+    DeviceTrackerEntityStateAttribute,
     SourceType,
     TrackerEntity,
+    TrackerEntityStateAttribute,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_BATTERY_LEVEL,
-    ATTR_GPS_ACCURACY,
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
-)
+from homeassistant.const import ATTR_BATTERY_LEVEL, EntityStateAttribute
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -23,6 +17,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.util import dt as dt_util
 
+from . import OwnTracksConfigEntry
 from .const import (
     ATTR_ADDRESS,
     ATTR_BATTERY_STATUS,
@@ -45,7 +40,7 @@ _RESTORED_OWNTRACKS_ATTRIBUTES: tuple[str, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: OwnTracksConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up OwnTracks based off an entry."""
@@ -53,28 +48,29 @@ async def async_setup_entry(
     dev_reg = dr.async_get(hass)
     dev_ids = {
         identifier[1]
-        for device in dev_reg.devices.get_devices_for_config_entry_id(entry.entry_id)
+        for device in dr.async_entries_for_config_entry(dev_reg, entry.entry_id)
         for identifier in device.identifiers
     }
 
+    devices: dict[str, OwnTracksEntity] = {}
     entities = []
     for dev_id in dev_ids:
-        entity = hass.data[DOMAIN]["devices"][dev_id] = OwnTracksEntity(dev_id)
+        entity = devices[dev_id] = OwnTracksEntity(dev_id)
         entities.append(entity)
 
     @callback
     def _receive_data(dev_id, **data):
         """Receive set location."""
-        entity = hass.data[DOMAIN]["devices"].get(dev_id)
+        entity = devices.get(dev_id)
 
         if entity is not None:
             entity.update_data(data)
             return
 
-        entity = hass.data[DOMAIN]["devices"][dev_id] = OwnTracksEntity(dev_id, data)
+        entity = devices[dev_id] = OwnTracksEntity(dev_id, data)
         async_add_entities([entity])
 
-    hass.data[DOMAIN]["context"].set_async_see(_receive_data)
+    entry.runtime_data.set_async_see(_receive_data)
 
     async_add_entities(entities)
 
@@ -177,10 +173,13 @@ class OwnTracksEntity(TrackerEntity, RestoreEntity):
 
         self._data = {
             "host_name": state.name,
-            "gps": (attr.get(ATTR_LATITUDE), attr.get(ATTR_LONGITUDE)),
-            "gps_accuracy": attr.get(ATTR_GPS_ACCURACY),
+            "gps": (
+                attr.get(EntityStateAttribute.LATITUDE),
+                attr.get(EntityStateAttribute.LONGITUDE),
+            ),
+            "gps_accuracy": attr.get(TrackerEntityStateAttribute.GPS_ACCURACY),
             "battery": attr.get(ATTR_BATTERY_LEVEL),
-            "source_type": attr.get(ATTR_SOURCE_TYPE),
+            "source_type": attr.get(DeviceTrackerEntityStateAttribute.SOURCE_TYPE),
             "attributes": attributes,
         }
 

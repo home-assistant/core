@@ -33,16 +33,26 @@ async def test_all_entities(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-async def test_zone_enabled_sensors_disabled_by_default(
+async def test_disabled_by_default_sensors(
     hass: HomeAssistant,
     mock_yardian_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """All per-zone binary sensors remain disabled by default."""
-
+    """Ensure specific binary sensors remain disabled by default."""
     await setup_integration(hass, mock_config_entry)
 
+    # 1. Check Freeze Prevention sensor
+    freeze_entity_id = entity_registry.async_get_entity_id(
+        "binary_sensor", DOMAIN, f"{mock_config_entry.unique_id}-freeze_prevent"
+    )
+    assert freeze_entity_id is not None
+    freeze_entry = entity_registry.async_get(freeze_entity_id)
+    assert freeze_entry is not None
+    assert freeze_entry.disabled
+    assert freeze_entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+
+    # 2. Check all per-zone enabled sensors
     for idx in range(2):
         entity_id = entity_registry.async_get_entity_id(
             "binary_sensor", DOMAIN, f"{mock_config_entry.unique_id}-zone_enabled_{idx}"
@@ -75,7 +85,6 @@ async def test_standby_sensor_edge_cases(
     future_ts = int(now.timestamp()) + 3600
 
     # 1. Test Future Timestamp (Should be ON)
-    # Create a fresh copy of the dictionary so the coordinator detects a change
     new_oper_info = dict(mock_yardian_client.fetch_oper_info.return_value)
     new_oper_info["iStandby"] = future_ts
     mock_yardian_client.fetch_oper_info.return_value = new_oper_info
@@ -87,12 +96,52 @@ async def test_standby_sensor_edge_cases(
     assert hass.states.get(entity_id).state == STATE_ON
 
     # 2. Test Missing Data (Should be safely OFF)
-    # Create another fresh dictionary copy
     new_oper_info_missing = dict(mock_yardian_client.fetch_oper_info.return_value)
     new_oper_info_missing.pop("iStandby", None)
     mock_yardian_client.fetch_oper_info.return_value = new_oper_info_missing
 
-    # Fast-forward time again
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == STATE_OFF
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_freeze_prevent_sensor_states(
+    hass: HomeAssistant,
+    mock_yardian_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test freeze prevention binary sensor states and edge cases."""
+    await setup_integration(hass, mock_config_entry)
+
+    entity_id = entity_registry.async_get_entity_id(
+        "binary_sensor", DOMAIN, f"{mock_config_entry.unique_id}-freeze_prevent"
+    )
+    assert entity_id is not None
+
+    # 1. Initially ON (conftest.py mocks fFreezePrevent=1)
+    assert hass.states.get(entity_id).state == STATE_ON
+
+    # 2. Test OFF (fFreezePrevent=0)
+    new_oper_info = dict(mock_yardian_client.fetch_oper_info.return_value)
+    new_oper_info["fFreezePrevent"] = 0
+    mock_yardian_client.fetch_oper_info.return_value = new_oper_info
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == STATE_OFF
+
+    # 3. Test Missing Data (Should default to OFF based on our code .get("fFreezePrevent", 0))
+    new_oper_info_missing = dict(mock_yardian_client.fetch_oper_info.return_value)
+    new_oper_info_missing.pop("fFreezePrevent", None)
+    mock_yardian_client.fetch_oper_info.return_value = new_oper_info_missing
+
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()

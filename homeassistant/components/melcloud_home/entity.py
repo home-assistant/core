@@ -6,18 +6,13 @@ from typing import override
 from aiomelcloudhome import ATAUnit, ATWUnit
 from yarl import URL
 
+from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DEVICE_ATA, DEVICE_ATW, DOMAIN, WEB_BASE_URL
 from .coordinator import MelCloudHomeCoordinator
-
-
-def unit_ids(unit: ATAUnit | ATWUnit) -> dict[str, list[str]]:
-    """Return the client keyword argument selecting this unit."""
-    if isinstance(unit, ATAUnit):
-        return {"ata_unit_ids": [unit.id]}
-    return {"atw_unit_ids": [unit.id]}
 
 
 class MelCloudHomeEntity(CoordinatorEntity[MelCloudHomeCoordinator]):
@@ -31,11 +26,18 @@ class MelCloudHomeUnitEntity[_UnitT: (ATAUnit, ATWUnit)](MelCloudHomeEntity):
 
     _unit_type_path: str
 
-    def __init__(self, coordinator: MelCloudHomeCoordinator, unit: _UnitT) -> None:
+    def __init__(
+        self,
+        coordinator: MelCloudHomeCoordinator,
+        entity_description: EntityDescription,
+        unit: _UnitT,
+    ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
+        self.entity_description = entity_description
         self._unit_id = unit.id
-        self._attr_unique_id = unit.id
+        self._unit: _UnitT = unit
+        self._attr_unique_id = f"{unit.id}_{self.entity_description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, unit.id)},
             name=unit.name,
@@ -55,10 +57,18 @@ class MelCloudHomeUnitEntity[_UnitT: (ATAUnit, ATWUnit)](MelCloudHomeEntity):
         """Return if the entity is available."""
         return super().available and self._unit_id in self._units_dict()
 
+    @callback
+    @override
+    def _handle_coordinator_update(self) -> None:
+        """Keep the last known unit state while the unit is missing."""
+        if (unit := self._units_dict().get(self._unit_id)) is not None:
+            self._unit = unit
+        super()._handle_coordinator_update()
+
     @property
     def unit(self) -> _UnitT:
-        """Return the current unit state from coordinator data."""
-        return self._units_dict()[self._unit_id]
+        """Return the latest known unit state."""
+        return self._unit
 
 
 class MelCloudHomeATAUnitEntity(MelCloudHomeUnitEntity[ATAUnit]):
@@ -89,14 +99,15 @@ class MelCloudHomeATWZoneEntity(MelCloudHomeATWUnitEntity):
     def __init__(
         self,
         coordinator: MelCloudHomeCoordinator,
+        entity_description: EntityDescription,
         unit: ATWUnit,
         zone_number: int,
     ) -> None:
         """Initialize the entity."""
-        super().__init__(coordinator, unit)
+        super().__init__(coordinator, entity_description, unit)
         self._zone_number = zone_number
         self._attr_unique_id = f"{unit.id}_zone_{zone_number}"
-        self._attr_name = f"Zone {zone_number}"
+        self._attr_translation_placeholders = {"zone_number": str(zone_number)}
 
     @property
     def zone_number(self) -> int:

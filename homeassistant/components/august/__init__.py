@@ -14,12 +14,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryNotReady,
-    OAuth2TokenRequestError,
-    OAuth2TokenRequestReauthError,
+    OAuth2TokenRequestBaseError,
 )
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.helpers.config_entry_oauth2_flow import (
-    ImplementationUnavailableError,
     OAuth2Session,
     async_get_config_entry_implementation,
 )
@@ -40,23 +38,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: AugustConfigEntry) -> bo
         raise ConfigEntryAuthFailed("Migration to OAuth required")
 
     session = async_create_august_clientsession(hass)
-    try:
-        implementation = await async_get_config_entry_implementation(hass, entry)
-    except ImplementationUnavailableError as err:
-        raise ConfigEntryNotReady("OAuth implementation not available") from err
+    implementation = await async_get_config_entry_implementation(hass, entry)
     oauth_session = OAuth2Session(hass, entry, implementation)
     august_gateway = AugustGateway(Path(hass.config.config_dir), session, oauth_session)
     try:
         await async_setup_august(hass, entry, august_gateway)
-    except OAuth2TokenRequestReauthError as err:
-        raise ConfigEntryAuthFailed from err
+    except OAuth2TokenRequestBaseError:
+        raise
     except (RequireValidation, InvalidAuth) as err:
         raise ConfigEntryAuthFailed from err
     except TimeoutError as err:
         raise ConfigEntryNotReady("Timed out connecting to august api") from err
     except (
         AugustApiAIOHTTPError,
-        OAuth2TokenRequestError,
         ClientError,
         CannotConnect,
     ) as err:
@@ -92,7 +86,9 @@ async def async_setup_august(
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, config_entry: AugustConfigEntry, device_entry: dr.DeviceEntry
+    hass: HomeAssistant,
+    config_entry: AugustConfigEntry,
+    device_entry: dr.AnyDeviceEntry,
 ) -> bool:
     """Remove august config entry from a device if its no longer present."""
     return not any(

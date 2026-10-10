@@ -1,6 +1,6 @@
 """Test the Rfxtrx config flow."""
 
-from unittest.mock import patch
+from unittest.mock import MagicMock, Mock, patch
 
 from RFXtrx import RFXtrxTransportError
 
@@ -11,6 +11,8 @@ from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+
+from . import ENTRY_VERSION
 
 from tests.common import MockConfigEntry
 
@@ -72,6 +74,7 @@ async def test_setup_network(transport_mock, hass: HomeAssistant) -> None:
         "automatic_add": False,
         "devices": {},
     }
+    assert result["result"].unique_id == DOMAIN
 
 
 @patch(
@@ -113,6 +116,7 @@ async def test_setup_serial(com_mock, transport_mock, hass: HomeAssistant) -> No
         "automatic_add": False,
         "devices": {},
     }
+    assert result["result"].unique_id == DOMAIN
 
 
 @patch(
@@ -162,9 +166,10 @@ async def test_setup_serial_manual(
         "automatic_add": False,
         "devices": {},
     }
+    assert result["result"].unique_id == DOMAIN
 
 
-async def test_setup_network_fail(transport_mock, hass: HomeAssistant) -> None:
+async def test_setup_network_fail(transport_mock: Mock, hass: HomeAssistant) -> None:
     """Test we can setup network."""
     transport_mock.return_value.connect.side_effect = RFXtrxTransportError
     result = await hass.config_entries.flow.async_init(
@@ -192,12 +197,22 @@ async def test_setup_network_fail(transport_mock, hass: HomeAssistant) -> None:
     assert result["step_id"] == "setup_network"
     assert result["errors"] == {"base": "cannot_connect"}
 
+    transport_mock.return_value.connect.side_effect = None
+    with patch("homeassistant.components.rfxtrx.async_setup_entry", return_value=True):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"host": "10.10.0.1", "port": 1234}
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 @patch(
     "homeassistant.components.rfxtrx.config_flow.usb.async_scan_serial_ports",
     return_value=[com_port()],
 )
-async def test_setup_serial_fail(com_mock, transport_mock, hass: HomeAssistant) -> None:
+async def test_setup_serial_fail(
+    com_mock: MagicMock, transport_mock: Mock, hass: HomeAssistant
+) -> None:
     """Test setup serial failed connection."""
     transport_mock.return_value.connect.side_effect = RFXtrxTransportError
     port = com_port()
@@ -227,13 +242,21 @@ async def test_setup_serial_fail(com_mock, transport_mock, hass: HomeAssistant) 
     assert result["step_id"] == "setup_serial"
     assert result["errors"] == {"base": "cannot_connect"}
 
+    transport_mock.return_value.connect.side_effect = None
+    with patch("homeassistant.components.rfxtrx.async_setup_entry", return_value=True):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"device": port.device}
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 @patch(
     "homeassistant.components.rfxtrx.config_flow.usb.async_scan_serial_ports",
     return_value=[com_port()],
 )
 async def test_setup_serial_manual_fail(
-    com_mock, transport_mock, hass: HomeAssistant
+    com_mock: MagicMock, transport_mock: Mock, hass: HomeAssistant
 ) -> None:
     """Test setup serial failed connection."""
     transport_mock.return_value.connect.side_effect = RFXtrxTransportError
@@ -270,6 +293,14 @@ async def test_setup_serial_manual_fail(
     assert result["step_id"] == "setup_serial_manual_path"
     assert result["errors"] == {"base": "cannot_connect"}
 
+    transport_mock.return_value.connect.side_effect = None
+    with patch("homeassistant.components.rfxtrx.async_setup_entry", return_value=True):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"device": "/dev/ttyUSB0"}
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_options_global(hass: HomeAssistant) -> None:
     """Test if we can set global options."""
@@ -285,6 +316,7 @@ async def test_options_global(hass: HomeAssistant) -> None:
             "devices": {},
         },
         unique_id=DOMAIN,
+        version=ENTRY_VERSION,
     )
     with patch("homeassistant.components.rfxtrx.async_setup_entry", return_value=True):
         result = await start_options_flow(hass, entry)
@@ -320,6 +352,7 @@ async def test_no_protocols(hass: HomeAssistant) -> None:
             "devices": {},
         },
         unique_id=DOMAIN,
+        version=ENTRY_VERSION,
     )
     with patch("homeassistant.components.rfxtrx.async_setup_entry", return_value=True):
         result = await start_options_flow(hass, entry)
@@ -354,6 +387,7 @@ async def test_options_add_device(hass: HomeAssistant) -> None:
             "devices": {},
         },
         unique_id=DOMAIN,
+        version=ENTRY_VERSION,
     )
     result = await start_options_flow(hass, entry)
 
@@ -416,6 +450,7 @@ async def test_options_add_duplicate_device(hass: HomeAssistant) -> None:
             "devices": {"0b1100cd0213c7f230010f71": {}},
         },
         unique_id=DOMAIN,
+        version=ENTRY_VERSION,
     )
     entry.add_to_hass(hass)
 
@@ -436,6 +471,12 @@ async def test_options_add_duplicate_device(hass: HomeAssistant) -> None:
     assert result["step_id"] == "prompt_options"
     assert result["errors"]
     assert result["errors"]["event_code"] == "already_configured_device"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={"automatic_add": True}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_options_replace_sensor_device(
@@ -458,6 +499,7 @@ async def test_options_replace_sensor_device(
             },
         },
         unique_id=DOMAIN,
+        version=ENTRY_VERSION,
     )
     await start_options_flow(hass, entry)
 
@@ -508,7 +550,7 @@ async def test_options_replace_sensor_device(
         (
             elem.id
             for elem in device_entries
-            if next(iter(elem.identifiers))[1:] == ("52", "1", "f0:04")
+            if next(iter(elem.identifiers))[1] == "52_1_f0:04"
         ),
         None,
     )
@@ -516,7 +558,7 @@ async def test_options_replace_sensor_device(
         (
             elem.id
             for elem in device_entries
-            if next(iter(elem.identifiers))[1:] == ("52", "1", "23:04")
+            if next(iter(elem.identifiers))[1] == "52_1_23:04"
         ),
         None,
     )
@@ -620,6 +662,7 @@ async def test_options_replace_control_device(
             },
         },
         unique_id=DOMAIN,
+        version=ENTRY_VERSION,
     )
     await start_options_flow(hass, entry)
 
@@ -642,7 +685,7 @@ async def test_options_replace_control_device(
         (
             elem.id
             for elem in device_entries
-            if next(iter(elem.identifiers))[1:] == ("11", "0", "118cdea:2")
+            if next(iter(elem.identifiers))[1] == "11_0_118cdea:2"
         ),
         None,
     )
@@ -650,7 +693,7 @@ async def test_options_replace_control_device(
         (
             elem.id
             for elem in device_entries
-            if next(iter(elem.identifiers))[1:] == ("11", "0", "1118cdea:2")
+            if next(iter(elem.identifiers))[1] == "11_0_1118cdea:2"
         ),
         None,
     )
@@ -715,6 +758,7 @@ async def test_options_add_and_configure_device(
             "devices": {},
         },
         unique_id=DOMAIN,
+        version=ENTRY_VERSION,
     )
     result = await start_options_flow(hass, entry)
 
@@ -823,6 +867,7 @@ async def test_options_configure_rfy_cover_device(
             "devices": {},
         },
         unique_id=DOMAIN,
+        version=ENTRY_VERSION,
     )
     result = await start_options_flow(hass, entry)
 

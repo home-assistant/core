@@ -1,0 +1,262 @@
+# serializer version: 1
+# name: test_fan_state_snapshot[b6][fan.range_hood-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: None,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'fan',
+    'entity_category': None,
+    'entity_id': 'fan.range_hood',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'midea',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <FanEntityFeature: 49>,
+    'translation_key': None,
+    'unique_id': '12345678_fan',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_fan_state_snapshot[b6][fan.range_hood-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Range Hood',
+      <FanEntityStateAttribute.PERCENTAGE: 'percentage'>: 50,
+      <FanEntityStateAttribute.PERCENTAGE_STEP: 'percentage_step'>: 50.0,
+      <FanEntityStateAttribute.PRESET_MODE: 'preset_mode'>: None,
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: None,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <FanEntityFeature: 49>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'fan.range_hood',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_fan_state_snapshot[ce][fan.fresh_air_appliance-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
+        'sleep',
+        'eco',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'fan',
+    'entity_category': None,
+    'entity_id': 'fan.fresh_air_appliance',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'midea',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <FanEntityFeature: 57>,
+    'translation_key': 'fan',
+    'unique_id': '12345678_fan',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_fan_state_snapshot[ce][fan.fresh_air_appliance-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fresh Air Appliance',
+      <FanEntityStateAttribute.PERCENTAGE: 'percentage'>: 42,
+      <FanEntityStateAttribute.PERCENTAGE_STEP: 'percentage_step'>: 14.285714285714286,
+      <FanEntityStateAttribute.PRESET_MODE: 'preset_mode'>: None,
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
+        'sleep',
+        'eco',
+      ]),
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <FanEntityFeature: 57>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'fan.fresh_air_appliance',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_fan_state_snapshot[fa][fan.fan-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
+        'natural',
+        'sleep',
+        'comfort',
+        'silent',
+        'baby',
+        'induction',
+        'circulation',
+        'strong',
+        'soft',
+        'customize',
+        'warm',
+        'smart',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'fan',
+    'entity_category': None,
+    'entity_id': 'fan.fan',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'midea',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <FanEntityFeature: 59>,
+    'translation_key': 'fan',
+    'unique_id': '12345678_fan',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_fan_state_snapshot[fa][fan.fan-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Fan',
+      <FanEntityStateAttribute.OSCILLATING: 'oscillating'>: True,
+      <FanEntityStateAttribute.PERCENTAGE: 'percentage'>: 66,
+      <FanEntityStateAttribute.PERCENTAGE_STEP: 'percentage_step'>: 33.333333333333336,
+      <FanEntityStateAttribute.PRESET_MODE: 'preset_mode'>: None,
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
+        'natural',
+        'sleep',
+        'comfort',
+        'silent',
+        'baby',
+        'induction',
+        'circulation',
+        'strong',
+        'soft',
+        'customize',
+        'warm',
+        'smart',
+      ]),
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <FanEntityFeature: 59>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'fan.fan',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_fan_state_snapshot[x40][fan.integrated_ceiling_fan-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: None,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'fan',
+    'entity_category': None,
+    'entity_id': 'fan.integrated_ceiling_fan',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'midea',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <FanEntityFeature: 49>,
+    'translation_key': None,
+    'unique_id': '12345678_fan',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_fan_state_snapshot[x40][fan.integrated_ceiling_fan-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Integrated Ceiling Fan',
+      <FanEntityStateAttribute.PERCENTAGE: 'percentage'>: 50,
+      <FanEntityStateAttribute.PERCENTAGE_STEP: 'percentage_step'>: 50.0,
+      <FanEntityStateAttribute.PRESET_MODE: 'preset_mode'>: None,
+      <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: None,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <FanEntityFeature: 49>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'fan.integrated_ceiling_fan',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---

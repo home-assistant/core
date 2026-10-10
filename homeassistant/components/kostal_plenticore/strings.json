@@ -1,8 +1,7 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -24,6 +23,14 @@
           "service_code": "Service code"
         }
       }
+    }
+  },
+  "exceptions": {
+    "authentication_failed": {
+      "message": "Authentication failed connecting to {host}"
+    },
+    "cannot_connect": {
+      "message": "Error connecting to {host}"
     }
   }
 }

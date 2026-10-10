@@ -22,10 +22,6 @@ from aioshelly.const import (
     MODEL_RGBW2,
     MODEL_VALVE,
     MODEL_VINTAGE_V2,
-    MODEL_WALL_DISPLAY,
-    MODEL_WALL_DISPLAY_X2,
-    MODEL_WALL_DISPLAY_X2I,
-    MODEL_WALL_DISPLAY_XL,
 )
 
 from homeassistant.components.number import NumberMode
@@ -93,6 +89,9 @@ REST_SENSORS_UPDATE_INTERVAL: Final = 60
 
 # Refresh interval for RPC polling sensors
 RPC_SENSORS_POLLING_INTERVAL: Final = 60
+
+# Interval for checking the BLU TRV firmware repository for a newer version
+BLU_TRV_UPDATE_CHECK_INTERVAL: Final = 24 * 3600
 
 CONF_SLEEP_PERIOD: Final = "sleep_period"
 
@@ -221,12 +220,8 @@ BLOCK_EXPECTED_SLEEP_PERIOD = 43200
 ENTRY_RELOAD_COOLDOWN = 60
 
 SHELLY_GAS_MODELS = [MODEL_GAS]
-SHELLY_WALL_DISPLAY_MODELS = (
-    MODEL_WALL_DISPLAY,
-    MODEL_WALL_DISPLAY_X2,
-    MODEL_WALL_DISPLAY_X2I,
-    MODEL_WALL_DISPLAY_XL,
-)
+
+SHELLY_WALL_DISPLAY_MODEL_PREFIX = "SAWD"
 
 CONF_BLE_SCANNER_MODE = "ble_scanner_mode"
 
@@ -255,6 +250,7 @@ OUTBOUND_WEBSOCKET_INCORRECTLY_ENABLED_ISSUE_ID = (
 )
 DEPRECATED_FIRMWARE_ISSUE_ID = "deprecated_firmware_{unique}"
 OPEN_WIFI_AP_ISSUE_ID = "open_wifi_ap_{unique}"
+RTSP_DISABLED_ISSUE_ID = "rtsp_disabled_{unique}"
 COIOT_UNCONFIGURED_ISSUE_ID = "coiot_unconfigured_{unique}"
 
 
@@ -284,6 +280,17 @@ OTA_BEGIN = "ota_begin"
 OTA_ERROR = "ota_error"
 OTA_PROGRESS = "ota_progress"
 OTA_SUCCESS = "ota_success"
+
+# Time allowed for a device to come back online after a firmware update
+OTA_REBOOT_TIMEOUT: Final = 300
+
+# BLU TRV firmware is first downloaded by the host device and then sent to the TRV,
+# each phase reports its own progress
+OTA_MSG_UPDATING = "Updating"
+
+# The host device reports BLU TRV OTA events on the BTHome device component
+# paired with the BLU TRV component
+BTHOME_DEVICE_IDENTIFIER = "bthomedevice"
 
 GEN1_RELEASE_URL = "https://shelly-api-docs.shelly.cloud/gen1/#changelog"
 GEN2_RELEASE_URL = "https://shelly-api-docs.shelly.cloud/gen2/changelog/"
@@ -318,6 +325,9 @@ API_WS_URL = "/api/shelly/ws"
 
 COMPONENT_ID_PATTERN = re.compile(r"[a-z\d]+:\d+")
 
+# Firmware ID looks like "20260724-105432/v1.5.0@aa8644cc"
+FW_ID_VERSION_PATTERN = re.compile(r"/(?P<version>[^@]+)")
+
 # Mapping for units that require conversion to a Home Assistant recognized unit
 # e.g. "m3/min" to "m³/min"
 DEVICE_UNIT_MAP = {
@@ -339,6 +349,8 @@ MODEL_TOP_EV_CHARGER_EVE01 = "EVE01"
 MODEL_FRANKEVER_IRRIGATION_CONTROLLER = "Irrigation"
 
 ROLE_GENERIC = "generic"
+
+RPC_ERROR_CODE_REMOTE_DISABLED = -110
 
 TRV_CHANNEL = 0
 

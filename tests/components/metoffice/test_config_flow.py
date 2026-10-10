@@ -2,14 +2,14 @@
 
 import datetime
 import json
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 import requests_mock
 
 from homeassistant import config_entries
 from homeassistant.components.metoffice.const import DOMAIN
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr
@@ -17,12 +17,13 @@ from homeassistant.helpers import device_registry as dr
 from .const import (
     METOFFICE_CONFIG_WAVERTREE,
     TEST_API_KEY,
+    TEST_COORDINATES_WAVERTREE,
     TEST_LATITUDE_WAVERTREE,
     TEST_LONGITUDE_WAVERTREE,
     TEST_SITE_NAME_WAVERTREE,
 )
 
-from tests.common import MockConfigEntry, async_load_fixture
+from tests.common import MockConfigEntry, async_load_json_object_fixture
 
 
 async def test_form(hass: HomeAssistant, requests_mock: requests_mock.Mocker) -> None:
@@ -31,7 +32,7 @@ async def test_form(hass: HomeAssistant, requests_mock: requests_mock.Mocker) ->
     hass.config.longitude = TEST_LONGITUDE_WAVERTREE
 
     # all metoffice test data encapsulated in here
-    mock_json = json.loads(await async_load_fixture(hass, "metoffice.json", DOMAIN))
+    mock_json = await async_load_json_object_fixture(hass, "metoffice.json", DOMAIN)
     wavertree_daily = json.dumps(mock_json["wavertree_daily"])
     requests_mock.get(
         "https://data.hub.api.metoffice.gov.uk/sitespecific/v0/point/daily",
@@ -61,6 +62,7 @@ async def test_form(hass: HomeAssistant, requests_mock: requests_mock.Mocker) ->
         "longitude": TEST_LONGITUDE_WAVERTREE,
         "name": TEST_SITE_NAME_WAVERTREE,
     }
+    assert result2["result"].unique_id == TEST_COORDINATES_WAVERTREE
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -72,7 +74,7 @@ async def test_form_already_configured(
     hass.config.longitude = TEST_LONGITUDE_WAVERTREE
 
     # all metoffice test data encapsulated in here
-    mock_json = json.loads(await async_load_fixture(hass, "metoffice.json", DOMAIN))
+    mock_json = await async_load_json_object_fixture(hass, "metoffice.json", DOMAIN)
     wavertree_daily = json.dumps(mock_json["wavertree_daily"])
     requests_mock.get(
         "https://data.hub.api.metoffice.gov.uk/sitespecific/v0/point/daily",
@@ -86,9 +88,19 @@ async def test_form_already_configured(
     ).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-        data=METOFFICE_CONFIG_WAVERTREE,
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_API_KEY: TEST_API_KEY,
+            CONF_LATITUDE: TEST_LATITUDE_WAVERTREE,
+            CONF_LONGITUDE: TEST_LONGITUDE_WAVERTREE,
+        },
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -118,9 +130,26 @@ async def test_form_cannot_connect(
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
+    mock_json = await async_load_json_object_fixture(hass, "metoffice.json", DOMAIN)
+    requests_mock.get(
+        "https://data.hub.api.metoffice.gov.uk/sitespecific/v0/point/daily",
+        text=json.dumps(mock_json["wavertree_daily"]),
+    )
+    with patch(
+        "homeassistant.components.metoffice.async_setup_entry",
+        return_value=True,
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"api_key": TEST_API_KEY},
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_form_unknown_error(
-    hass: HomeAssistant, mock_simple_manager_fail
+    hass: HomeAssistant, mock_simple_manager_fail: MagicMock
 ) -> None:
     """Test we handle unknown error."""
     mock_instance = mock_simple_manager_fail.return_value
@@ -138,6 +167,20 @@ async def test_form_unknown_error(
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
 
+    mock_instance.get_forecast = MagicMock()
+    mock_instance.get_forecast.return_value.name = TEST_SITE_NAME_WAVERTREE
+    with patch(
+        "homeassistant.components.metoffice.async_setup_entry",
+        return_value=True,
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"api_key": TEST_API_KEY},
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+
 
 @pytest.mark.freeze_time(datetime.datetime(2024, 11, 23, 12, tzinfo=datetime.UTC))
 async def test_reauth_flow(
@@ -146,7 +189,7 @@ async def test_reauth_flow(
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test handling authentication errors and reauth flow."""
-    mock_json = json.loads(await async_load_fixture(hass, "metoffice.json", DOMAIN))
+    mock_json = await async_load_json_object_fixture(hass, "metoffice.json", DOMAIN)
     wavertree_daily = json.dumps(mock_json["wavertree_daily"])
     wavertree_hourly = json.dumps(mock_json["wavertree_hourly"])
     requests_mock.get(

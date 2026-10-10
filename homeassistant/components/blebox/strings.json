@@ -5,8 +5,6 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "authorization_required": "The BleBox device requires authentication.",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "unique_id_mismatch": "The device identifier does not match the previously configured device.",
       "unsupported_device_response": "The BleBox device returned an unrecognized response.",
       "unsupported_device_version": "[%key:component::blebox::config::error::unsupported_version%]"
@@ -70,11 +68,21 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "input": { "name": "Input" }
+    },
+    "button": {
+      "close": { "name": "Close" },
+      "down": { "name": "Down" },
+      "fav": { "name": "Favorite" },
+      "open": { "name": "Open" },
+      "second_output": { "name": "Second output" },
+      "up": { "name": "Up" }
+    },
     "light": { "channel": { "name": "Channel {index}" } },
     "sensor": {
       "active_power": { "name": "Active power" },
       "active_power_n": { "name": "Active power {index}" },
-      "apparent_power": { "name": "Apparent power" },
       "apparent_power_n": { "name": "Apparent power {index}" },
       "co2_level": {
         "name": "Carbon dioxide level",
@@ -88,7 +96,6 @@
           "unhealthy": "Unhealthy"
         }
       },
-      "current": { "name": "Current" },
       "current_n": { "name": "Current {index}" },
       "forward_active_energy": { "name": "Forward active energy" },
       "forward_active_energy_n": { "name": "Forward active energy {index}" },
@@ -96,7 +103,6 @@
       "forward_reactive_energy_n": {
         "name": "Forward reactive energy {index}"
       },
-      "frequency": { "name": "Frequency" },
       "frequency_n": { "name": "Frequency {index}" },
       "open_status": {
         "name": "Open status",
@@ -109,7 +115,6 @@
         }
       },
       "power_consumption": { "name": "Energy last hour" },
-      "reactive_power": { "name": "Reactive power" },
       "reactive_power_n": { "name": "Reactive power {index}" },
       "reverse_active_energy": { "name": "Reverse active energy" },
       "reverse_active_energy_n": { "name": "Reverse active energy {index}" },
@@ -117,9 +122,7 @@
       "reverse_reactive_energy_n": {
         "name": "Reverse reactive energy {index}"
       },
-      "temperature": { "name": "Temperature" },
       "temperature_n": { "name": "Temperature {index}" },
-      "voltage": { "name": "Voltage" },
       "voltage_n": { "name": "Voltage {index}" }
     }
   },

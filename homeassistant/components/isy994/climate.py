@@ -38,10 +38,10 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.enum import try_parse_enum
 
 from .const import (
-    _LOGGER,
     HA_FAN_TO_ISY,
     HA_HVAC_TO_ISY,
     ISY_HVAC_MODES,
+    LOGGER,
     UOM_FAN_MODES,
     UOM_HVAC_ACTIONS,
     UOM_HVAC_MODE_GENERIC,
@@ -96,8 +96,8 @@ class ISYThermostatEntity(ISYNodeEntity, ClimateEntity):
 
     @property
     @override
-    def temperature_unit(self) -> str:
-        """Return the unit of measurement."""
+    def native_temperature_unit(self) -> str:
+        """Return the unit of measurement the device reports in."""
         if not (uom := self._node.aux_properties.get(PROP_UOM)):
             return self.hass.config.units.temperature_unit
         if uom.value == UOM_ISY_CELSIUS:
@@ -150,7 +150,7 @@ class ISYThermostatEntity(ISYNodeEntity, ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         return convert_isy_value_to_hass(
             self._node.status, self._uom, self._node.prec, 1
@@ -158,17 +158,17 @@ class ISYThermostatEntity(ISYNodeEntity, ClimateEntity):
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         if self.hvac_mode == HVACMode.COOL:
-            return self.target_temperature_high
+            return self.native_target_temperature_high
         if self.hvac_mode == HVACMode.HEAT:
-            return self.target_temperature_low
+            return self.native_target_temperature_low
         return None
 
     @property
     @override
-    def target_temperature_high(self) -> float | None:
+    def native_target_temperature_high(self) -> float | None:
         """Return the highbound target temperature we try to reach."""
         target = self._node.aux_properties.get(PROP_SETPOINT_COOL)
         if not target:
@@ -177,7 +177,7 @@ class ISYThermostatEntity(ISYNodeEntity, ClimateEntity):
 
     @property
     @override
-    def target_temperature_low(self) -> float | None:
+    def native_target_temperature_low(self) -> float | None:
         """Return the lowbound target temperature we try to reach."""
         target = self._node.aux_properties.get(PROP_SETPOINT_HEAT)
         if not target:
@@ -213,13 +213,13 @@ class ISYThermostatEntity(ISYNodeEntity, ClimateEntity):
     @override
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
-        _LOGGER.debug("Requested fan mode %s", fan_mode)
+        LOGGER.debug("Requested fan mode %s", fan_mode)
         await self._node.set_fan_mode(HA_FAN_TO_ISY.get(fan_mode))
         self.async_write_ha_state()
 
     @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
-        _LOGGER.debug("Requested operation mode %s", hvac_mode)
+        LOGGER.debug("Requested operation mode %s", hvac_mode)
         await self._node.set_climate_mode(HA_HVAC_TO_ISY.get(hvac_mode))
         self.async_write_ha_state()

@@ -2,10 +2,15 @@
 
 import logging
 
-from cookidoo_api import CookidooAuthException, CookidooRequestException
+from cookidoo_api import (
+    CookidooAuthException,
+    CookidooParseException,
+    CookidooRequestException,
+)
 
-from homeassistant.const import Platform
+from homeassistant.const import CONF_EMAIL, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .const import DOMAIN
@@ -65,9 +70,23 @@ def _migrate_identifiers(
         device_registry.async_update_device(dev.id, new_identifiers=new_identifiers)
     for ent in entity_entries:
         if ent.unique_id and ent.unique_id.startswith(f"{old_prefix}_"):
+            new_entity_unique_id = f"{new_unique_id}{ent.unique_id[len(old_prefix) :]}"
+            if (
+                existing_entity_id := entity_registry.async_get_entity_id(
+                    ent.domain, ent.platform, new_entity_unique_id
+                )
+            ) and existing_entity_id != ent.entity_id:
+                existing_ent = entity_registry.async_get(existing_entity_id)
+                if (
+                    existing_ent
+                    and existing_ent.config_entry_id == config_entry.entry_id
+                ):
+                    entity_registry.async_remove(ent.entity_id)
+                    continue
+
             entity_registry.async_update_entity(
                 ent.entity_id,
-                new_unique_id=f"{new_unique_id}{ent.unique_id[len(old_prefix) :]}",
+                new_unique_id=new_entity_unique_id,
             )
 
 
@@ -84,9 +103,17 @@ async def async_migrate_entry(
         try:
             await cookidoo.login()
             user_info = await cookidoo.get_user_info()
-        except (CookidooRequestException, CookidooAuthException) as e:
-            _LOGGER.error("Could not migrate config entry: %s", e)
-            return False
+        except CookidooAuthException as e:
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="setup_authentication_exception",
+                translation_placeholders={CONF_EMAIL: config_entry.data[CONF_EMAIL]},
+            ) from e
+        except (CookidooParseException, CookidooRequestException) as e:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="setup_request_exception",
+            ) from e
 
         _migrate_identifiers(hass, config_entry, config_entry.entry_id, user_info.id)
         hass.config_entries.async_update_entry(
@@ -100,9 +127,17 @@ async def async_migrate_entry(
         try:
             await cookidoo.login()
             user_info = await cookidoo.get_user_info()
-        except (CookidooRequestException, CookidooAuthException) as e:
-            _LOGGER.error("Could not migrate config entry: %s", e)
-            return False
+        except CookidooAuthException as e:
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="setup_authentication_exception",
+                translation_placeholders={CONF_EMAIL: config_entry.data[CONF_EMAIL]},
+            ) from e
+        except (CookidooParseException, CookidooRequestException) as e:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="setup_request_exception",
+            ) from e
 
         old_unique_id = config_entry.unique_id
         if old_unique_id:

@@ -1,0 +1,369 @@
+# serializer version: 1
+# name: test_select_entities[air_conditioner][select.test_air_conditioner_air_purify-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'start',
+        'stop',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.test_air_conditioner_air_purify',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Air purify',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Air purify',
+    'platform': 'lg_thinq',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'air_clean_operation_mode',
+    'unique_id': 'MW2-2E247F93-B570-46A6-B827-920E9E10F966_air_clean_operation_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_select_entities[air_conditioner][select.test_air_conditioner_air_purify-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test air conditioner Air purify',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'start',
+        'stop',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.test_air_conditioner_air_purify',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_select_entities[air_conditioner][select.test_air_conditioner_air_quality_sensor-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'on_working',
+        'always',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.test_air_conditioner_air_quality_sensor',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Air quality sensor',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Air quality sensor',
+    'platform': 'lg_thinq',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <Property.MONITORING_ENABLED: 'monitoring_enabled'>,
+    'unique_id': 'MW2-2E247F93-B570-46A6-B827-920E9E10F966_monitoring_enabled',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_select_entities[air_conditioner][select.test_air_conditioner_air_quality_sensor-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test air conditioner Air quality sensor',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'on_working',
+        'always',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.test_air_conditioner_air_quality_sensor',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on_working',
+  })
+# ---
+# name: test_select_entities[dehumidifier][select.test_dehumidifier_operating_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'smart_humidity',
+        'intensive_dry',
+        'rapid_humidity',
+        'quiet_humidity',
+        'clothes_dry',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.test_dehumidifier_operating_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Operating mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Operating mode',
+    'platform': 'lg_thinq',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'current_job_mode_dehumidifier',
+    'unique_id': 'TQS-25A89504-EF8E-4C4E-99F3-3956ED3BD397_current_job_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_select_entities[dehumidifier][select.test_dehumidifier_operating_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test dehumidifier Operating mode',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'smart_humidity',
+        'intensive_dry',
+        'rapid_humidity',
+        'quiet_humidity',
+        'clothes_dry',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.test_dehumidifier_operating_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'smart_humidity',
+  })
+# ---
+# name: test_select_entities[dehumidifier][select.test_dehumidifier_speed-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'low',
+        'high',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.test_dehumidifier_speed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Speed',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Speed',
+    'platform': 'lg_thinq',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <Property.WIND_STRENGTH: 'wind_strength'>,
+    'unique_id': 'TQS-25A89504-EF8E-4C4E-99F3-3956ED3BD397_wind_strength',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_select_entities[dehumidifier][select.test_dehumidifier_speed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test dehumidifier Speed',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'low',
+        'high',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.test_dehumidifier_speed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'high',
+  })
+# ---
+# name: test_select_entities[washer][select.test_washer_operation-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'start',
+        'stop',
+        'power_off',
+        'power_on',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.test_washer_operation',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Operation',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Operation',
+    'platform': 'lg_thinq',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'operation_mode',
+    'unique_id': 'MW2-0B530EFD-1ADF-4F54-A2C3-46C37F94C689_main_washer_operation_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_select_entities[washer][select.test_washer_operation-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test washer Operation',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'start',
+        'stop',
+        'power_off',
+        'power_on',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.test_washer_operation',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_select_entities[washtower_dryer][select.test_washtower_dryer_operation-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'start',
+        'stop',
+        'power_off',
+        'power_on',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.test_washtower_dryer_operation',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Operation',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Operation',
+    'platform': 'lg_thinq',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'operation_mode',
+    'unique_id': 'MW2-1E7C3325-9C2B-4E1F-8D64-0A5B7C11F203_dryer_operation_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_select_entities[washtower_dryer][select.test_washtower_dryer_operation-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test washtower dryer Operation',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'start',
+        'stop',
+        'power_off',
+        'power_on',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.test_washtower_dryer_operation',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---

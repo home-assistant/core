@@ -218,8 +218,8 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
 
         registered_devices: set[str] = {
             str(mower_id)
-            for device in device_registry.devices.get_devices_for_config_entry_id(
-                self.config_entry.entry_id
+            for device in dr.async_entries_for_config_entry(
+                device_registry, self.config_entry.entry_id
             )
             for domain, mower_id in device.identifiers
             if domain == DOMAIN
@@ -230,12 +230,11 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
             _LOGGER.debug("Removing orphaned devices: %s", orphaned_devices)
             device_registry = dr.async_get(self.hass)
             for mower_id in orphaned_devices:
-                dev = device_registry.async_get_device(identifiers={(DOMAIN, mower_id)})
+                dev = device_registry.async_get_device_by_identifier(
+                    (DOMAIN, mower_id), self.config_entry.entry_id
+                )
                 if dev is not None:
-                    device_registry.async_update_device(
-                        device_id=dev.id,
-                        remove_config_entry_id=self.config_entry.entry_id,
-                    )
+                    device_registry.async_remove_device(dev.id)
 
         new_devices = current_devices - registered_devices
         if new_devices:
@@ -250,6 +249,7 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
             for mower_id, mower_data in self.data.items()
             if mower_data.capabilities.stay_out_zones
             and mower_data.stay_out_zones is not None
+            and mower_data.stay_out_zones.zones is not None
         }
 
         entity_registry = er.async_get(self.hass)

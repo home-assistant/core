@@ -252,14 +252,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: BSBLanConfigEntry) -> bo
 
     # Create coordinators with the already-initialized client
     fast_coordinator = BSBLanFastCoordinator(hass, entry, bsblan, circuits)
-    slow_coordinator = BSBLanSlowCoordinator(hass, entry, bsblan)
+    slow_coordinator = BSBLanSlowCoordinator(hass, entry, bsblan, circuits)
+    entry.async_on_unload(slow_coordinator.async_add_listener(lambda: None))
 
     # Perform first refresh of fast coordinator (required for entities)
     await fast_coordinator.async_config_entry_first_refresh()
-
-    # Refresh slow coordinator - don't fail if DHW is not available
-    # This allows the integration to work even if the device doesn't support DHW
-    await slow_coordinator.async_refresh()
 
     entry.runtime_data = BSBLanData(
         client=bsblan,
@@ -269,6 +266,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: BSBLanConfigEntry) -> bo
         info=info,
         static=static_per_circuit,
         available_circuits=circuits,
+    )
+
+    # Fetch slow data in the background so it does not block startup.
+    entry.async_create_background_task(
+        hass,
+        slow_coordinator.async_refresh(),
+        name=f"{DOMAIN}_slow_data_fetch_{entry.entry_id}",
     )
 
     # Register main device before forwarding platforms, so sub-devices

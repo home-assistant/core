@@ -101,6 +101,7 @@ def get_device_class(node: HomeeNode) -> CoverDeviceClass | None:
 
 
 async def add_cover_entities(
+    hass: HomeAssistant,
     config_entry: HomeeConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
     nodes: list[HomeeNode],
@@ -122,7 +123,7 @@ async def add_cover_entities(
                     node.name,
                 )
 
-    async_add_entities(HomeeCover(cover, config_entry) for cover in entities)
+    async_add_entities(HomeeCover(hass, cover, config_entry) for cover in entities)
 
 
 async def async_setup_entry(
@@ -132,7 +133,9 @@ async def async_setup_entry(
 ) -> None:
     """Add the homee platform for the cover integration."""
 
-    await setup_homee_platform(add_cover_entities, async_add_entities, config_entry)
+    await setup_homee_platform(
+        hass, add_cover_entities, async_add_entities, config_entry
+    )
 
 
 def is_cover_node(node: HomeeNode) -> bool:
@@ -151,9 +154,11 @@ class HomeeCover(HomeeNodeEntity, CoverEntity):
 
     _attr_name = None
 
-    def __init__(self, node: HomeeNode, entry: HomeeConfigEntry) -> None:
+    def __init__(
+        self, hass: HomeAssistant, node: HomeeNode, entry: HomeeConfigEntry
+    ) -> None:
         """Initialize a homee cover entity."""
-        super().__init__(node, entry)
+        super().__init__(hass, node, entry)
         self._open_close_attribute = get_open_close_attribute(node)
         self._attr_supported_features = get_cover_features(
             node, self._open_close_attribute

@@ -40,9 +40,12 @@ async def test_unload_entry(hass: HomeAssistant, get_client: NordPoolClient) -> 
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert entry.state is ConfigEntryState.LOADED
+    coordinator = entry.runtime_data
+    assert coordinator.listener_unsub is not None
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
     assert entry.state is ConfigEntryState.NOT_LOADED
+    assert coordinator.listener_unsub is None
 
 
 @pytest.mark.parametrize(
@@ -101,8 +104,12 @@ async def test_reconfigure_cleans_up_device(
 
     assert entry.state is ConfigEntryState.LOADED
 
-    assert device_registry.async_get_device(identifiers={(DOMAIN, "SE3")})
-    assert device_registry.async_get_device(identifiers={(DOMAIN, "SE4")})
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, "SE3"), entry.entry_id
+    )
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, "SE4"), entry.entry_id
+    )
     assert entity_registry.async_get("sensor.nord_pool_se3_current_price")
     assert entity_registry.async_get("sensor.nord_pool_se4_current_price")
     assert hass.states.get("sensor.nord_pool_se3_current_price")
@@ -162,13 +169,19 @@ async def test_reconfigure_cleans_up_device(
     }
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert device_registry.async_get_device(identifiers={(DOMAIN, "NL")})
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, "NL"), entry.entry_id
+    )
     assert entity_registry.async_get("sensor.nord_pool_nl_current_price")
     assert hass.states.get("sensor.nord_pool_nl_current_price")
 
-    assert not device_registry.async_get_device(identifiers={(DOMAIN, "SE3")})
+    assert not device_registry.async_get_device_by_identifier(
+        (DOMAIN, "SE3"), entry.entry_id
+    )
     assert not entity_registry.async_get("sensor.nord_pool_se3_current_price")
     assert not hass.states.get("sensor.nord_pool_se3_current_price")
-    assert not device_registry.async_get_device(identifiers={(DOMAIN, "SE4")})
+    assert not device_registry.async_get_device_by_identifier(
+        (DOMAIN, "SE4"), entry.entry_id
+    )
     assert not entity_registry.async_get("sensor.nord_pool_se4_current_price")
     assert not hass.states.get("sensor.nord_pool_se4_current_price")

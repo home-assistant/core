@@ -13,6 +13,12 @@
       "dust_alert": {
         "default": "mdi:alert"
       },
+      "ground_heat_exchanger_attached": {
+        "default": "mdi:heat-pump"
+      },
+      "mixer_pump_status": {
+        "default": "mdi:pump"
+      },
       "pump_status": {
         "default": "mdi:pump"
       },

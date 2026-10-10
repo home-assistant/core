@@ -4,7 +4,7 @@
     StateSnapshot({
       'attributes': ReadOnlyDict({
         <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mower can do all',
-        <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LawnMowerEntityFeature: 7>,
+        <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LawnMowerEntityFeature: 15>,
       }),
       'context': <ANY>,
       'entity_id': 'lawn_mower.mower_can_do_all',
@@ -60,6 +60,18 @@
       'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'returning',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mower can stop',
+        <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LawnMowerEntityFeature: 9>,
+      }),
+      'context': <ANY>,
+      'entity_id': 'lawn_mower.mower_can_stop',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'mowing',
     }),
     StateSnapshot({
       'attributes': ReadOnlyDict({

@@ -109,6 +109,26 @@ async def test_states(
     )
 
 
+async def test_device_does_not_link_via_self(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    caplog: pytest.LogCaptureFixture,
+    mocked_hub: Device,
+) -> None:
+    """Test a child sharing its parent's device_id does not link to itself."""
+    await setup_platform_for_device(
+        hass, mock_config_entry, Platform.CLIMATE, mocked_hub
+    )
+
+    devices = dr.async_entries_for_config_entry(
+        device_registry, mock_config_entry.entry_id
+    )
+    assert devices
+    for device in devices:
+        assert device.via_device_id != device.id
+
+
 async def test_set_temperature(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mocked_hub: Device
 ) -> None:

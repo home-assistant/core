@@ -1,6 +1,20 @@
 """Helpers for Proxmox VE."""
 
+from dataclasses import dataclass
+from typing import Any
+
 from .const import ProxmoxPermission
+
+
+@dataclass(frozen=True)
+class ProxmoxUpdateInfo:
+    """Describes Proxmox VE update information."""
+
+    latest_version: str | None = None
+    latest_version_id: str | None = None
+    total_updates: int = 0
+    proxmox_updates: int = 0
+    other_updates: int = 0
 
 
 def is_granted(
@@ -16,3 +30,44 @@ def is_granted(
         if value is not None:
             return value == 1
     return False
+
+
+def is_proxmox_package(update: dict[str, Any]) -> bool:
+    """Indicate if the given update is related to Proxmox VE."""
+    package = update.get("Package", "")
+    origin = update.get("Origin", "")
+    title = update.get("Title", "")
+    return (
+        package.startswith(("pve-", "libpve-"))
+        or "proxmox" in origin.lower()
+        or "proxmox" in title.lower()
+    )
+
+
+def update_version(
+    current_version: str,
+    updates: list[dict[str, Any]],
+) -> ProxmoxUpdateInfo:
+    """Return the updated version based on the current version and updates."""
+
+    count = len(updates)
+    pve_count = sum(is_proxmox_package(u) for u in updates)
+    other_count = count - pve_count
+    pve_manager_update = next(
+        (update for update in updates if update.get("Package") == "pve-manager"),
+        None,
+    )
+    latest = (
+        pve_manager_update["Version"].split("-")[0]
+        if pve_manager_update
+        else current_version
+    )
+    return ProxmoxUpdateInfo(
+        latest_version=latest,
+        latest_version_id=f"{latest}-p{pve_count}-d{other_count}"
+        if count
+        else current_version,
+        total_updates=count,
+        proxmox_updates=pve_count,
+        other_updates=other_count,
+    )
