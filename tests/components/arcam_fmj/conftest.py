@@ -6,6 +6,7 @@ from contextlib import contextmanager
 from unittest.mock import AsyncMock, Mock, patch
 
 from arcam.fmj.client import Client, ResponsePacket
+from arcam.fmj.codecs import RoomEqMode
 from arcam.fmj.state import State
 import pytest
 
@@ -92,6 +93,8 @@ def state_1_fixture(client: Mock) -> State:
     state.get_mute.return_value = None
     state.get_decode_modes.return_value = []
     state.get_decode_mode.return_value = None
+    state.get_room_eq_names.return_value = []
+    state.get_room_equalization.return_value = RoomEqMode.OFF
     state.__aenter__ = AsyncMock()
     state.__aexit__ = AsyncMock()
     return state
@@ -113,6 +116,8 @@ def state_2_fixture(client: Mock) -> State:
     state.get_mute.return_value = None
     state.get_decode_modes.return_value = []
     state.get_decode_mode.return_value = None
+    state.get_room_eq_names.return_value = []
+    state.get_room_equalization.return_value = RoomEqMode.OFF
     state.__aenter__ = AsyncMock()
     state.__aexit__ = AsyncMock()
     return state
