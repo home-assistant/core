@@ -6,8 +6,23 @@ from dataclasses import dataclass, field
 from typing import Any, cast, override
 
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import TemplateError
 
 from . import template
+
+
+def _render_variable(
+    key: str,
+    value: Any,
+    variables: Mapping[str, Any],
+    *,
+    limited: bool = False,
+) -> Any:
+    """Render a variable and identify it in errors."""
+    try:
+        return template.render_complex(value, variables, limited)
+    except TemplateError as err:
+        raise TemplateError(f"Variable '{key}': {err}") from err
 
 
 class ScriptVariables:
@@ -52,8 +67,8 @@ class ScriptVariables:
             if key in rendered_variables:
                 continue
 
-            rendered_variables[key] = template.render_complex(
-                value, rendered_variables, limited
+            rendered_variables[key] = _render_variable(
+                key, value, rendered_variables, limited=limited
             )
 
         return rendered_variables
@@ -76,7 +91,7 @@ class ScriptVariables:
         rendered_variables = {}
 
         for key, value in self.variables.items():
-            rendered_variable = template.render_complex(value, run_variables)
+            rendered_variable = _render_variable(key, value, run_variables)
             rendered_variables[key] = rendered_variable
             run_variables[key] = rendered_variable
 

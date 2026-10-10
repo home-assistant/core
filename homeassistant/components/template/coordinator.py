@@ -14,6 +14,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
 )
 from homeassistant.core import Context, CoreState, Event, HomeAssistant, callback
+from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import condition, discovery, trigger as trigger_helper
 from homeassistant.helpers.script import Script
 from homeassistant.helpers.script_variables import ScriptVariables
@@ -128,12 +129,28 @@ class TriggerUpdateCoordinator(DataUpdateCoordinator):
             self.logger.log,
         )
 
+    @callback
+    def _render_variables(self, run_variables: TemplateVarsType) -> TemplateVarsType:
+        """Render section variables with a registered entity as error context."""
+        if self._run_variables is None:
+            return run_variables
+
+        try:
+            return self._run_variables.async_render(self.hass, run_variables)
+        except TemplateError as err:
+            entity_id = next(self.async_contexts(), None)
+            if entity_id is None:
+                raise
+            raise TemplateError(
+                "Error processing variables of configuration block containing "
+                f"'{entity_id}': {err}"
+            ) from err
+
     async def _handle_triggered_with_script(
         self, run_variables: TemplateVarsType, context: Context | None = None
     ) -> None:
         # Render run variables after the trigger, before checking conditions.
-        if self._run_variables:
-            run_variables = self._run_variables.async_render(self.hass, run_variables)
+        run_variables = self._render_variables(run_variables)
 
         if not check_conditions(self._cond_func, run_variables):
             return
@@ -150,8 +167,7 @@ class TriggerUpdateCoordinator(DataUpdateCoordinator):
     async def _handle_triggered(
         self, run_variables: TemplateVarsType, context: Context | None = None
     ) -> None:
-        if self._run_variables:
-            run_variables = self._run_variables.async_render(self.hass, run_variables)
+        run_variables = self._render_variables(run_variables)
 
         if not check_conditions(self._cond_func, run_variables):
             return
