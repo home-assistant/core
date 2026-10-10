@@ -93,9 +93,9 @@ def parse_site(site: dict[str, Any]) -> dict[str, Any]:
 
 def parse_species(
     species: list[dict[str, Any]],
-) -> tuple[list[dict[str, Any]], list[str]]:
+) -> tuple[list[dict[str, Any] | str], list[str]]:
     """Parse the pollutant species measured at a site."""
-    pollutants: list[dict[str, Any]] = []
+    pollutants: list[dict[str, Any] | str] = []
     qualities: list[str] = []
     for entry in species:
         quality = entry["@AirQualityBand"]
@@ -112,6 +112,9 @@ def parse_species(
             }
         )
         qualities.append(quality)
+    if not pollutants:
+        # Preserve the legacy no-data sentinel for existing templates
+        pollutants.append(NO_SPECIES_DATA)
     return pollutants, qualities
 
 

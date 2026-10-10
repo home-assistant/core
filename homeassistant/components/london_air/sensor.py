@@ -12,7 +12,7 @@ from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import issue_registry as ir
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -27,7 +27,6 @@ from .coordinator import (
     authority_status,
 )
 
-# Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
@@ -103,6 +102,7 @@ class LondonAirSensor(CoordinatorEntity[LondonAirDataUpdateCoordinator], SensorE
 
     _attr_has_entity_name = True
     _attr_name = None
+    _attr_icon = "mdi:cloud-outline"
 
     def __init__(
         self,
@@ -114,6 +114,7 @@ class LondonAirSensor(CoordinatorEntity[LondonAirDataUpdateCoordinator], SensorE
         self._authority = authority
         self._attr_unique_id = authority
         self._attr_device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, authority)},
             name=authority,
             manufacturer=MANUFACTURER,

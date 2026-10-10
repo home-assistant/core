@@ -1,9 +1,0 @@
-{
-  "entity": {
-    "sensor": {
-      "air_quality": {
-        "default": "mdi:cloud-outline"
-      }
-    }
-  }
-}
