@@ -466,8 +466,8 @@ def _issue_translation_keys(issue_registry: ir.IssueRegistry) -> list[str | None
 @pytest.mark.parametrize(
     ("connectivity_mode", "expected_issues"),
     [
-        ("SmartLink", ["smartlink"]),
-        ("Not configured", ["not_configured"]),
+        ("SmartLink", ["connectivity_smartlink"]),
+        ("Not configured", ["connectivity_not_configured"]),
         ("Bluetooth", []),
         ("unknown", []),
         (None, []),
@@ -503,6 +503,7 @@ async def test_connectivity_mode_issue_details(
         "device_name": "Airthings Corentium Home 2",
         "serial_number": f"{CORENTIUM_HOME_2_DEVICE_INFO.model.value}123456",
         "update_interval": "30",
+        "airthings_url": "https://www.home-assistant.io/integrations/airthings",
     }
 
 
@@ -511,9 +512,9 @@ async def test_connectivity_mode_issue_details(
     [
         ("SmartLink", "Bluetooth", []),
         ("Not configured", "Bluetooth", []),
-        ("Not configured", "SmartLink", ["smartlink"]),
-        ("SmartLink", "unknown", ["smartlink"]),
-        ("SmartLink", None, ["smartlink"]),
+        ("Not configured", "SmartLink", ["connectivity_smartlink"]),
+        ("SmartLink", "unknown", ["connectivity_smartlink"]),
+        ("SmartLink", None, ["connectivity_smartlink"]),
     ],
 )
 async def test_connectivity_mode_issue_updated_on_refresh(
@@ -554,7 +555,7 @@ async def test_connectivity_mode_issue_kept_on_reload(
         await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.SETUP_RETRY
-    assert _issue_translation_keys(issue_registry) == ["smartlink"]
+    assert _issue_translation_keys(issue_registry) == ["connectivity_smartlink"]
 
 
 async def test_connectivity_mode_issue_deleted_on_remove(
@@ -564,7 +565,7 @@ async def test_connectivity_mode_issue_deleted_on_remove(
     """Test the connectivity mode issue is deleted when the entry is removed."""
     entry = await _setup_corentium_home_2(hass, "SmartLink")
 
-    assert _issue_translation_keys(issue_registry) == ["smartlink"]
+    assert _issue_translation_keys(issue_registry) == ["connectivity_smartlink"]
 
     await hass.config_entries.async_remove(entry.entry_id)
     await hass.async_block_till_done()

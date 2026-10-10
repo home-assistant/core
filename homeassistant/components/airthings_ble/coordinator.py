@@ -17,17 +17,28 @@ from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
+    CONNECTIVITY_MODE_MAP,
     DEFAULT_SCAN_INTERVAL,
     DEVICE_MODEL,
     DEVICE_SPECIFIC_SCAN_INTERVAL,
     DOMAIN,
+    UNSUPPORTED_CONNECTIVITY_MODES,
     connectivity_mode_issue_id,
-    get_connectivity_mode,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
-UNSUPPORTED_CONNECTIVITY_MODES = {"smartlink", "not_configured"}
+AIRTHINGS_CLOUD_DOCUMENTATION_URL = (
+    "https://www.home-assistant.io/integrations/airthings"
+)
+
+
+def get_connectivity_mode(value: str | float | None) -> str | None:
+    """Get connectivity mode."""
+    if not isinstance(value, str):
+        return None
+    return CONNECTIVITY_MODE_MAP.get(value)
+
 
 type AirthingsBLEConfigEntry = ConfigEntry[AirthingsBLEDataUpdateCoordinator]
 
@@ -140,17 +151,23 @@ class AirthingsBLEDataUpdateCoordinator(DataUpdateCoordinator[AirthingsDevice]):
             ir.async_delete_issue(self.hass, DOMAIN, issue_id)
             return
 
-        assert self.update_interval is not None
+        device = dr.async_get(self.hass).async_get_device_by_connection(
+            (dr.CONNECTION_BLUETOOTH, data.address), self.config_entry.entry_id
+        )
+        scan_interval = DEVICE_SPECIFIC_SCAN_INTERVAL.get(
+            data.model.value, DEFAULT_SCAN_INTERVAL
+        )
         ir.async_create_issue(
             self.hass,
             DOMAIN,
             issue_id,
             is_fixable=False,
             severity=ir.IssueSeverity.WARNING,
-            translation_key=mode,
+            translation_key=f"connectivity_{mode}",
             translation_placeholders={
-                "device_name": data.friendly_name(),
+                "device_name": (device and device.name_by_user) or data.friendly_name(),
                 "serial_number": f"{data.model.value}{data.identifier}",
-                "update_interval": str(self.update_interval // timedelta(minutes=1)),
+                "update_interval": str(scan_interval // 60),
+                "airthings_url": AIRTHINGS_CLOUD_DOCUMENTATION_URL,
             },
         )
