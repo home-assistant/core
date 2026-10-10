@@ -5,7 +5,14 @@ from collections.abc import Callable
 from dataclasses import replace
 from unittest.mock import AsyncMock, Mock, patch
 
-from lorawan_connection import ConnectionUnavailable, DeviceEvent, Downlink, EventType
+from lorawan_connection import (
+    ConnectionUnavailable,
+    DeviceEvent,
+    Downlink,
+    EventType,
+    StatusEvent,
+    UplinkEvent,
+)
 from lorawan_connection.mock import MockConnection
 import pytest
 
@@ -18,6 +25,7 @@ from homeassistant.config_entries import SOURCE_INTEGRATION_DISCOVERY
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
 from .conftest import RegisterBackend
 from .helpers import DESCRIPTOR, inventory
@@ -61,7 +69,7 @@ async def test_subscribe_and_reconnect(
 async def test_discovery_replay_and_live_events(
     hass: HomeAssistant, registered_backend: RegisterBackend
 ) -> None:
-    """Inventory deduplicates vendor discovery and later changes can rediscover it."""
+    """Discover a vendor once across inventory, live additions, and connections."""
     with patch(
         "homeassistant.components.lorawan.connection.discovery_flow.async_create_flow"
     ) as discover:
@@ -75,10 +83,71 @@ async def test_discovery_replay_and_live_events(
             data={},
         )
         backend.emit(inventory(DESCRIPTOR, EventType.UPDATED))
-        assert discover.call_count == 2
+        backend.emit(inventory(replace(DESCRIPTOR, dev_eui="0201010101010103")))
         backend.emit(inventory(DESCRIPTOR, EventType.REMOVED))
         backend.emit(inventory(replace(DESCRIPTOR, brand_id=456)))
-        assert discover.call_count == 2
+        await registered_backend("other", [replace(DESCRIPTOR, network_id="other")])
+        backend.disconnect()
+        await registered_backend("network", [DESCRIPTOR])
+        assert discover.call_count == 1
+
+
+@pytest.mark.parametrize("event_type", [EventType.UPDATED, EventType.REMOVED])
+async def test_discovery_ignores_inventory_changes(
+    hass: HomeAssistant, registered_backend: RegisterBackend, event_type: EventType
+) -> None:
+    """Only additions can discover a vendor, even if it has not been seen before."""
+    with patch(
+        "homeassistant.components.lorawan.connection.discovery_flow.async_create_flow"
+    ) as discover:
+        backend, _ = await registered_backend("network", [])
+        backend.emit(inventory(DESCRIPTOR, EventType.UPDATED))
+        backend.emit(inventory(DESCRIPTOR, event_type))
+        discover.assert_not_called()
+        backend.emit(inventory(DESCRIPTOR))
+        discover.assert_called_once()
+
+
+async def test_discovery_ignores_device_activity(
+    hass: HomeAssistant, registered_backend: RegisterBackend
+) -> None:
+    """Uplink and status traffic does not start discovery."""
+    with patch(
+        "homeassistant.components.lorawan.connection.discovery_flow.async_create_flow"
+    ) as discover:
+        backend, _ = await registered_backend("network", [])
+        backend.emit(inventory(DESCRIPTOR, EventType.UPDATED))
+        backend.emit(
+            UplinkEvent(
+                descriptor=DESCRIPTOR, received_at=dt_util.utcnow(), data=b"payload"
+            )
+        )
+        backend.emit(StatusEvent(descriptor=DESCRIPTOR, received_at=dt_util.utcnow()))
+        discover.assert_not_called()
+
+
+async def test_discovery_of_another_vendor(
+    hass: HomeAssistant, registered_backend: RegisterBackend
+) -> None:
+    """Deduplication of one vendor does not prevent discovery of another."""
+    with (
+        patch(
+            "homeassistant.components.lorawan.async_get_lorawan",
+            return_value={
+                "test_vendor": [("example", 123)],
+                "other_vendor": [("example", 456)],
+            },
+        ),
+        patch(
+            "homeassistant.components.lorawan.connection.discovery_flow.async_create_flow"
+        ) as discover,
+    ):
+        backend, _ = await registered_backend("network", [DESCRIPTOR])
+        backend.emit(inventory(replace(DESCRIPTOR, brand_id=456)))
+        assert [call.args[1] for call in discover.call_args_list] == [
+            "test_vendor",
+            "other_vendor",
+        ]
 
 
 async def test_duplicate_registration(
@@ -109,6 +178,7 @@ async def test_registration_failure(
         await async_register_connection(hass, provider_entry, connection=backend)
     stop_disconnect.assert_called_once_with()
     assert not async_get_connections(hass)
+
     unsubscribe = await async_register_connection(
         hass, provider_entry, connection=MockConnection()
     )
@@ -180,6 +250,15 @@ async def test_disconnect_during_registration(
     stop_events.assert_called_once_with()
     stop_disconnect.assert_called_once_with()
     assert not async_get_connections(hass)
+
+    with patch(
+        "homeassistant.components.lorawan.connection.discovery_flow.async_create_flow"
+    ) as discover:
+        unsubscribe = await async_register_connection(
+            hass, provider_entry, connection=MockConnection([DESCRIPTOR])
+        )
+        discover.assert_called_once()
+        unsubscribe()
 
 
 async def test_failed_listener_replay(

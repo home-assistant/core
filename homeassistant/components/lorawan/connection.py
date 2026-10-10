@@ -37,6 +37,8 @@ class ConnectionRegistry:
     """Discovery matchers keyed by device integration domain."""
     connections: dict[str, RegisteredConnection] = field(default_factory=dict)
     """Registered connections keyed by provider config entry ID."""
+    discovered: set[str] = field(default_factory=set)
+    """Device integration domains already discovered during this run."""
     changed: list[Callable[[ConnectionChange], None]] = field(default_factory=list)
     pending: set[str] = field(default_factory=set)
 
@@ -95,6 +97,9 @@ async def async_register_connection(
 
     @callback
     def discover(domain: str) -> None:
+        if domain in registry.discovered:
+            return
+        registry.discovered.add(domain)
         discovery_flow.async_create_flow(
             hass, domain, context={"source": SOURCE_INTEGRATION_DISCOVERY}, data={}
         )
@@ -103,11 +108,11 @@ async def async_register_connection(
     def handle_event(event: DeviceEvent) -> None:
         if (
             disconnected
+            or event.type != EventType.ADDED
             or event.network_id != entry_id
-            or event.type == EventType.REMOVED
-            or (descriptor := event.descriptor) is None
         ):
             return
+        descriptor = event.descriptor
         for domain, brands in registry.integrations.items():
             if (descriptor.stack, descriptor.brand_id) in brands:
                 if active:
