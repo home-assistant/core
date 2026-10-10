@@ -1,5 +1,6 @@
 """Tests for the INDI Allsky sensor platform."""
 
+import asyncio
 from dataclasses import replace
 from datetime import timedelta
 from unittest.mock import AsyncMock, patch
@@ -479,20 +480,40 @@ async def test_initial_sensor_fetch_preserved(
     assert state.state == "14.8"
 
 
-async def test_exposure_complete_triggers_sensor_fetch(
+async def test_exposure_complete_triggers_sensor_fetch_and_coalesces(
     hass: HomeAssistant,
     mock_indi_allsky_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     mock_exposure_data: ExposureData,
 ) -> None:
-    """Test that exposure_complete event triggers sensor fetch."""
+    """Test that exposure_complete event triggers sensor fetch and coalesces overlapping requests."""
+    fetch_started = asyncio.Event()
+    unblock_fetch = asyncio.Event()
+
+    async def _slow_fetch() -> None:
+        fetch_started.set()
+        await unblock_fetch.wait()
+
     with patch("homeassistant.components.indi_allsky._PLATFORMS", [Platform.SENSOR]):
         await setup_integration(hass, mock_config_entry)
 
     mock_indi_allsky_client.fetch_sensors.reset_mock()
+    mock_indi_allsky_client.fetch_sensors.side_effect = _slow_fetch
+    fetch_started.clear()
+    unblock_fetch.clear()
 
-    for callback in mock_indi_allsky_client.callbacks.get("exposure_complete", []):
-        callback(mock_exposure_data)
+    callbacks = mock_indi_allsky_client.callbacks.get("exposure_complete", [])
+    assert callbacks
+    for cb in callbacks:
+        cb(mock_exposure_data)
+
+    await fetch_started.wait()
+
+    # While first fetch is in flight, fire another exposure complete
+    for cb in callbacks:
+        cb(mock_exposure_data)
+
+    unblock_fetch.set()
     await hass.async_block_till_done()
 
     mock_indi_allsky_client.fetch_sensors.assert_called_once()
@@ -504,13 +525,13 @@ async def test_periodic_sensor_polling(
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test periodic sensor polling via coordinator update interval."""
+    """Test periodic fallback sensor polling via time interval tracker."""
     with patch("homeassistant.components.indi_allsky._PLATFORMS", [Platform.SENSOR]):
         await setup_integration(hass, mock_config_entry)
 
     mock_indi_allsky_client.fetch_sensors.reset_mock()
 
-    freezer.tick(timedelta(seconds=30))
+    freezer.tick(timedelta(minutes=10))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 

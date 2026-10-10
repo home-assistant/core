@@ -1,8 +1,9 @@
 """DataUpdateCoordinator for INDI Allsky integration."""
 
+import asyncio
 from contextlib import suppress
 from dataclasses import dataclass
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 from typing import override
 
@@ -18,6 +19,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -25,7 +27,7 @@ from .util import get_ssl_context
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = timedelta(seconds=30)
+SCAN_INTERVAL = timedelta(minutes=10)
 
 type IndiAllSkyConfigEntry = ConfigEntry[IndiAllSkyDataUpdateCoordinator]
 
@@ -60,6 +62,7 @@ class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[IndiAllSkyData]):
         self.latest_keogram: MediaData | None = None
         self.latest_startrail: MediaData | None = None
         self.latest_sensor: SensorData | None = None
+        self._sensor_fetch_task: asyncio.Task[None] | None = None
 
         entry.async_on_unload(
             self.client.register_callback(
@@ -80,23 +83,30 @@ class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[IndiAllSkyData]):
             self.client.register_callback("sensor_update", self._handle_sensor_update)
         )
         entry.async_on_unload(self.client.disconnect)
+        entry.async_on_unload(
+            async_track_time_interval(
+                hass,
+                self._async_handle_interval_refresh,
+                SCAN_INTERVAL,
+            )
+        )
 
         super().__init__(
             hass,
             _LOGGER,
             config_entry=entry,
             name=DOMAIN,
-            update_interval=SCAN_INTERVAL,
+            update_interval=None,
         )
+
+    async def _async_handle_interval_refresh(self, _now: datetime) -> None:
+        """Handle periodic fallback sensor polling."""
+        self._async_trigger_fetch_sensors()
 
     def _handle_exposure_complete(self, exposure: ExposureData) -> None:
         """Handle new exposure_complete event from WebSocket stream."""
         self.latest_exposure = exposure
-        self.config_entry.async_create_background_task(
-            self.hass,
-            self._async_fetch_sensors(),
-            "indi_allsky_fetch_sensors",
-        )
+        self._async_trigger_fetch_sensors()
         self.async_set_updated_data(
             IndiAllSkyData(
                 exposure=exposure,
@@ -106,10 +116,23 @@ class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[IndiAllSkyData]):
             )
         )
 
+    def _async_trigger_fetch_sensors(self) -> None:
+        """Trigger sensor fetch if no fetch task is currently active."""
+        if self._sensor_fetch_task is not None and not self._sensor_fetch_task.done():
+            return
+        self._sensor_fetch_task = self.config_entry.async_create_background_task(
+            self.hass,
+            self._async_fetch_sensors(),
+            "indi_allsky_fetch_sensors",
+        )
+
     async def _async_fetch_sensors(self) -> None:
         """Fetch sensor update from indi-allsky."""
-        with suppress(IndiAllSkyError):
-            await self.client.fetch_sensors()
+        try:
+            with suppress(IndiAllSkyError):
+                await self.client.fetch_sensors()
+        finally:
+            self._sensor_fetch_task = None
 
     def _handle_keogram_complete(self, media: MediaData) -> None:
         """Handle new keogram_complete event from WebSocket stream."""
