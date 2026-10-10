@@ -6,10 +6,11 @@ from typing import Any, override
 import probatio
 import prowlpy
 
+from homeassistant.components.notify import SERVICE_NOTIFY
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_API_KEY, CONF_NAME
+from homeassistant.const import CONF_API_KEY
 
-from .const import DOMAIN
+from .const import CONF_LEGACY_SERVICE_NAME, CONF_NAMES, DOMAIN
 from .helpers import async_verify_key
 
 _LOGGER = logging.getLogger(__name__)
@@ -57,10 +58,21 @@ class ProwlConfigFlow(ConfigFlow, domain=DOMAIN):
         self._async_abort_entries_match({CONF_API_KEY: api_key})
 
         # Not validated: API key or connection problems surface on entry setup
-        # The title is the name of the legacy notify service
+        names: list[str | None] = import_data[CONF_NAMES]
+        if names[0] and len(names) == 1:
+            # The title is the name of the legacy notify service
+            return self.async_create_entry(
+                title=names[0],
+                data={CONF_API_KEY: api_key},
+            )
+        # YAML without a name provides the notify.notify service
+        service_names = [name or SERVICE_NOTIFY for name in names]
         return self.async_create_entry(
-            title=import_data.get(CONF_NAME) or "Prowl",
-            data={CONF_API_KEY: api_key},
+            title=", ".join(service_names) if len(names) > 1 else "Prowl",
+            data={
+                CONF_API_KEY: api_key,
+                CONF_LEGACY_SERVICE_NAME: service_names[0],
+            },
         )
 
     async def _validate_api_key(self, api_key: str) -> dict[str, str]:
