@@ -65,10 +65,12 @@ async def auto_setup_integration(
     """Auto setup integration."""
     with patch("homeassistant.components.onkyo.PLATFORMS", [Platform.MEDIA_PLAYER]):
         await setup_integration(hass, mock_config_entry)
+
         # Let the delayed queries triggered by the initial messages run
-        freezer.tick(timedelta(seconds=QUERY_AV_INFO_DELAY))
+        freezer.tick(timedelta(seconds=max(QUERY_STATE_DELAY, QUERY_AV_INFO_DELAY)))
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
+
         writes.clear()
         yield
 
