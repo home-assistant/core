@@ -1586,6 +1586,9 @@ matter-ble-proxy==0.7.1
 # homeassistant.components.matter
 matter-python-client==1.4.0
 
+# homeassistant.components.mawaqit
+mawaqit==2.2.0
+
 # homeassistant.components.maxcube
 maxcube-api==0.4.3
 
