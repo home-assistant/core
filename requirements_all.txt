@@ -266,7 +266,7 @@ aioengiebelgium==0.4.3
 aioesphomeapi==46.6.0
 
 # homeassistant.components.mijn_farmad_apotheek
-aiofarmad==0.5.0
+aiofarmad==0.6.3
 
 # homeassistant.components.matrix
 # homeassistant.components.slack

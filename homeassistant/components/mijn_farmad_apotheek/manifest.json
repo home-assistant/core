@@ -8,6 +8,6 @@
   "iot_class": "cloud_polling",
   "loggers": ["aiofarmad"],
   "quality_scale": "bronze",
-  "requirements": ["aiofarmad==0.5.0"],
+  "requirements": ["aiofarmad==0.6.3"],
   "single_config_entry": true
 }
