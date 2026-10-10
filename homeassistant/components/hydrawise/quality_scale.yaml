@@ -4,15 +4,8 @@ rules:
   appropriate-polling: done
   brands: done
   common-modules: done
-  config-flow:
-    status: todo
-    comment: The username and password fields are missing a data_description.
-  config-flow-test-coverage:
-    status: todo
-    comment: |
-      Missing tests for aborting on an already configured account and for
-      reauthenticating with a different account. A ClientError raised while
-      checking the credentials is not handled.
+  config-flow: done
+  config-flow-test-coverage: done
   dependency-transparency: done
   docs-actions: todo
   docs-conditions:
@@ -35,10 +28,7 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions:
-    status: todo
-    comment: |
-      The actions and the switch and valve commands do not handle API errors.
+  action-exceptions: done
   config-entry-unloading: done
   docs-configuration-parameters:
     status: exempt
@@ -78,9 +68,7 @@ rules:
     comment: The remaining watering time sensor is missing the duration device class.
   entity-disabled-by-default: todo
   entity-translations: done
-  exception-translations:
-    status: todo
-    comment: Errors raised by actions and entity commands are not translated.
+  exception-translations: done
   icon-translations:
     status: todo
     comment: The sensor entity overrides the icon property based on its state.
