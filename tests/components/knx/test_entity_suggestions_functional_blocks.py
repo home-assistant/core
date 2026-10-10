@@ -367,13 +367,18 @@ def test_passive_address_with_other_dpt_dropped() -> None:
     assert suggestion["knx"]["ga_color_temp"] == {"write": "5/0/5", "dpt": "7.600"}
 
 
-def test_conflicting_dpt_dropped() -> None:
+@pytest.mark.parametrize(
+    "com_object_ids",
+    [["co-60", "co-62", "co-92"], ["co-60", "co-92", "co-62"]],
+    ids=["write_first", "state_first"],
+)
+def test_conflicting_dpt_dropped(com_object_ids: list[str]) -> None:
     """Test a state address resolving to another DPT than the write address is dropped."""
     project = _with_com_objects(
         # RGBW state for an RGB write address - both valid colour DPTs on their own
         **{"co-92": _com_object(["423.82"], ["6/0/5"])},
     )
-    channel = _channel("RGB", ["423"], ["co-60", "co-62", "co-92"])
+    channel = _channel("RGB", ["423"], com_object_ids)
     suggestion = _build_platform_suggestion(project, channel, Platform.LIGHT)
     assert suggestion is not None
     assert suggestion["knx"] == {
