@@ -18,6 +18,7 @@ from homeassistant.const import CONF_NAME, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -95,6 +96,7 @@ async def async_setup_platform(
                 hass,
                 DOMAIN,
                 f"deprecated_yaml_import_issue_{result['reason']}_{nextdeparture[CONF_STATION]}",
+                breaks_in_ha_version="2027.5.0",
                 is_fixable=False,
                 severity=ir.IssueSeverity.WARNING,
                 translation_key=f"deprecated_yaml_import_issue_{result['reason']}",
@@ -106,7 +108,7 @@ async def async_setup_platform(
             hass,
             DOMAIN,
             "deprecated_yaml",
-            breaks_in_ha_version="2027.3.0",
+            breaks_in_ha_version="2027.5.0",
             is_fixable=False,
             severity=ir.IssueSeverity.WARNING,
             translation_key="deprecated_yaml",
@@ -203,6 +205,7 @@ class MVGSensor(SensorEntity):
                 limit=self._number,
                 offset=self._timeoffset,
                 transport_types=self._transport_types,
+                session=async_get_clientsession(self.hass),
             )
         except MvgApiError as err:
             _LOGGER.warning("Could not update MVG departures: %s", err)
@@ -238,6 +241,6 @@ class MVGSensor(SensorEntity):
         """Return the state attributes."""
         if not self._departures:
             return None
-        attr = dict(self._departures[0])  # next departure attributes
-        attr["departures"] = deepcopy(self._departures)  # all departures dictionary
+        attr = dict(self._departures[0])
+        attr["departures"] = deepcopy(self._departures)
         return attr

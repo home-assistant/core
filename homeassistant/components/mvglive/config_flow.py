@@ -11,6 +11,7 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_NAME
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
     SelectOptionDict,
     SelectSelector,
@@ -116,25 +117,30 @@ class MvgConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             search_term = user_input[CONF_STATION].strip().lower()
-            try:
-                all_stations = await MvgApi.stations_async()
-            except MvgApiError:
-                errors["base"] = "cannot_connect"
+            if not search_term:
+                errors["base"] = "invalid_station"
             else:
-                matches = sorted(
-                    (
-                        station
-                        for station in all_stations
-                        if search_term in station["name"].lower()
-                    ),
-                    key=lambda station: station["name"],
-                )[:MAX_STATION_MATCHES]
-                if not matches:
-                    errors["base"] = "invalid_station"
+                try:
+                    all_stations = await MvgApi.stations_async(
+                        session=async_get_clientsession(self.hass)
+                    )
+                except MvgApiError:
+                    errors["base"] = "cannot_connect"
                 else:
-                    self._matches = {station["id"]: station for station in matches}
-                    self._products = user_input[CONF_PRODUCTS]
-                    return await self.async_step_select()
+                    matches = sorted(
+                        (
+                            station
+                            for station in all_stations
+                            if search_term in station["name"].lower()
+                        ),
+                        key=lambda station: station["name"],
+                    )[:MAX_STATION_MATCHES]
+                    if not matches:
+                        errors["base"] = "invalid_station"
+                    else:
+                        self._matches = {station["id"]: station for station in matches}
+                        self._products = user_input[CONF_PRODUCTS]
+                        return await self.async_step_select()
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
@@ -184,23 +190,20 @@ class MvgConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> config_entries.ConfigFlowResult:
         """Import a single `nextdeparture` entry from YAML configuration."""
         try:
-            station = await MvgApi.station_async(import_data[CONF_STATION])
+            station = await MvgApi.station_async(
+                import_data[CONF_STATION], session=async_get_clientsession(self.hass)
+            )
         except MvgApiError:
             return self.async_abort(reason="cannot_connect")
         if station is None:
             return self.async_abort(reason="invalid_station")
 
-        # Legacy YAML allows several entries per station, so the optional
-        # name or else the filter set has to keep them apart.
+        # Legacy YAML allows several entries per station with any name.
         name = import_data.get(CONF_NAME)
-        suffix = name or _filter_digest(import_data)
+        digest = _filter_digest(import_data)
+        suffix = f"{name}_{digest}" if name else digest
         await self.async_set_unique_id(f"{station['id']}_{suffix}")
         self._abort_if_unique_id_configured()
-
-        # `directions` is a fallback: only used if `destinations` wasn't set.
-        destinations = import_data.get(CONF_DESTINATIONS, DEFAULT_DESTINATIONS)
-        if destinations == DEFAULT_DESTINATIONS and import_data.get(CONF_DIRECTIONS):
-            destinations = import_data[CONF_DIRECTIONS]
 
         return self.async_create_entry(
             title=name or station["name"],
@@ -209,7 +212,9 @@ class MvgConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_STATION_NAME: station["name"],
             },
             options={
-                CONF_DESTINATIONS: destinations,
+                CONF_DESTINATIONS: import_data.get(
+                    CONF_DESTINATIONS, DEFAULT_DESTINATIONS
+                ),
                 CONF_LINES: import_data.get(CONF_LINES, DEFAULT_LINES),
                 CONF_PRODUCTS: _migrate_products(import_data.get(CONF_PRODUCTS)),
                 CONF_TIMEOFFSET: import_data.get(CONF_TIMEOFFSET, DEFAULT_TIMEOFFSET),
