@@ -6,6 +6,8 @@ from typing import Final
 from chip.clusters import Objects as clusters
 
 ADDON_SLUG = "core_matter_server"
+CONF_ADDON_BLE_PROXY = "ble_proxy"
+CONF_ADDON_BLUETOOTH_ADAPTER_ID = "bluetooth_adapter_id"
 
 CONF_INTEGRATION_CREATED_ADDON = "integration_created_addon"
 CONF_USE_ADDON = "use_addon"

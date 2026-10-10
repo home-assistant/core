@@ -1,7 +1,7 @@
 """Provide common fixtures."""
 
 import asyncio
-from collections.abc import AsyncGenerator
+from collections.abc import AsyncGenerator, Generator
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -18,7 +18,7 @@ from .common import (
     setup_integration_with_node_fixtures,
 )
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, mock_component
 
 MOCK_FABRIC_ID = 12341234
 MOCK_COMPR_FABRIC_ID = 1234
@@ -97,3 +97,26 @@ async def matter_node(
     return await setup_integration_with_node_fixture(
         hass, node_fixture, matter_client, attributes
     )
+
+
+@pytest.fixture(name="mock_bluetooth_loaded")
+def mock_bluetooth_loaded_fixture(hass: HomeAssistant) -> None:
+    """Mark the bluetooth integration as loaded for the BLE proxy gate."""
+    mock_component(hass, "bluetooth")
+
+
+@pytest.fixture(name="mock_ble_proxy")
+def mock_ble_proxy_fixture() -> Generator[tuple[MagicMock, MagicMock]]:
+    """Stub the BLE proxy created inside async_setup_entry.
+
+    Yields `(proxy, factory)` so tests can assert both the proxy lifecycle
+    (`connect`/`disconnect`) and the arguments passed to `create_matter_ble_proxy`.
+    """
+    proxy = MagicMock()
+    proxy.connect = AsyncMock()
+    proxy.disconnect = AsyncMock()
+    with patch(
+        "homeassistant.components.matter.ble_proxy.create_matter_ble_proxy",
+        return_value=proxy,
+    ) as factory:
+        yield proxy, factory
