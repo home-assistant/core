@@ -2157,7 +2157,7 @@ pycoolmasternet-async==0.2.6
 pycsspeechtts==1.0.8
 
 # homeassistant.components.cync
-pycync==0.5.0
+pycync==0.6.1
 
 # homeassistant.components.daikin
 pydaikin==2.20.0

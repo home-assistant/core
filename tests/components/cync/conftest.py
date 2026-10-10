@@ -61,8 +61,7 @@ def cync_client():
         cync_mock.get_devices.return_value = available_mock_devices
 
         cync_mock.create.return_value = cync_mock
-        client_mock = cync_mock.return_value
-        yield client_mock
+        yield cync_mock
 
 
 @pytest.fixture
