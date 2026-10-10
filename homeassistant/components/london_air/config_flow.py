@@ -24,6 +24,7 @@ class LondonAirConfigFlow(ConfigFlow, domain=DOMAIN):
             URL, timeout=REQUEST_TIMEOUT
         )
         response.raise_for_status()
+        response.release()
 
     def _schema(self, default: list[str]) -> probatio.Schema:
         """Build the locations selection schema."""

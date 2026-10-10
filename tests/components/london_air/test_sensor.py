@@ -186,9 +186,12 @@ async def test_yaml_migration(
         == 2
     )
 
-    assert issue_registry.async_get_issue(
+    issue = issue_registry.async_get_issue(
         HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
     )
+    assert issue is not None
+    assert issue.is_fixable is False
+    assert issue.severity is ir.IssueSeverity.WARNING
     assert (
         issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, "deprecated_yaml") is None
     )

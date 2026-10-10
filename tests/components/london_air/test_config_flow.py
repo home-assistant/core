@@ -9,7 +9,7 @@ from homeassistant.components.london_air.const import CONF_LOCATIONS, DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
@@ -242,8 +242,10 @@ async def test_reconfigure_preserves_submitted_locations(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
 
+    data_schema = result["data_schema"]
+    assert data_schema is not None
     locations = next(
-        key.default() for key in result["data_schema"].schema if key == CONF_LOCATIONS
+        key.default() for key in data_schema.schema if key == CONF_LOCATIONS
     )
     assert locations == ["Merton", "Barnet"]
 
@@ -251,6 +253,7 @@ async def test_reconfigure_preserves_submitted_locations(
 async def test_reconfigure_removes_location(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
     mock_session: MagicMock,
     api_payload: dict[str, Any],
@@ -270,6 +273,14 @@ async def test_reconfigure_removes_location(
 
     assert hass.states.get("sensor.merton") is not None
     assert hass.states.get("sensor.city_of_london") is not None
+    assert (
+        len(
+            er.async_entries_for_config_entry(
+                entity_registry, mock_config_entry.entry_id
+            )
+        )
+        == 2
+    )
 
     result = await mock_config_entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
@@ -285,6 +296,12 @@ async def test_reconfigure_removes_location(
 
     assert hass.states.get("sensor.merton") is not None
     assert hass.states.get("sensor.city_of_london") is None
+
+    entity_entries = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
+    assert len(entity_entries) == 1
+    assert entity_entries[0].unique_id == "Merton"
 
     identifiers = {
         identifier
