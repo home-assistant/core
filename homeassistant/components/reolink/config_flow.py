@@ -11,6 +11,7 @@ from reolink_aio.baichuan import DEFAULT_BC_PORT
 from reolink_aio.exceptions import (
     ApiError,
     CredentialsInvalidError,
+    LoginAccountDeviceError,
     LoginFirmwareError,
     LoginPrivacyModeError,
     ReolinkError,
@@ -37,6 +38,7 @@ from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import (
+    ACCOUNT_DEVICE_REOLINK_URL,
     CONF_BC_CONNECT,
     CONF_BC_ONLY,
     CONF_BC_PORT,
@@ -283,6 +285,9 @@ class ReolinkFlowHandler(ConfigFlow, domain=DOMAIN):
                 return await self.async_step_privacy()
             except CredentialsInvalidError:
                 errors[CONF_PASSWORD] = "invalid_auth"
+            except LoginAccountDeviceError:
+                errors["base"] = "account_device"
+                placeholders["reolink_account_device_link"] = ACCOUNT_DEVICE_REOLINK_URL
             except LoginFirmwareError:
                 errors["base"] = "update_needed"
                 placeholders["current_firmware"] = host.api.sw_version

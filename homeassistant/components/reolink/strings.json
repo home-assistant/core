@@ -5,6 +5,7 @@
       "unique_id_mismatch": "The MAC address of the device does not match the previous MAC address"
     },
     "error": {
+      "account_device": "The Reolink device is set up as an 'account device', which blocks local login. Reset the device and set it up again as a 'local device' following the Reolink instructions: {reolink_account_device_link}",
       "api_error": "API error occurred",
       "cannot_connect": "Failed to connect, check the IP address of the camera",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
@@ -928,6 +929,9 @@
     }
   },
   "exceptions": {
+    "account_device": {
+      "message": "Reolink device {host} is set up as an 'account device', which blocks local login. Reset the device and set it up again as a 'local device' following the Reolink instructions: {reolink_account_device_link}, also see the troubleshooting steps: {account_device_link}"
+    },
     "api_error": {
       "message": "The device responded with an error: {err}"
     },
@@ -1020,9 +1024,6 @@
     },
     "webhook_no_url": {
       "message": "Error registering URL for webhook {event_id}: Home Assistant URL is not available"
-    },
-    "write_image_error": {
-      "message": "Can't write image to `{filename}`, see the log for details"
     }
   },
   "issues": {

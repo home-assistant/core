@@ -497,6 +497,35 @@ async def test_switch_turn_on_off(
     assert state.state == state_value
 
 
+async def test_switch_wifi_coordinator_update(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    fc_class_mock,
+    fh_class_mock,
+) -> None:
+    """Test Wi-Fi switch state is refreshed by the coordinator."""
+    entity_id = "switch.mock_title_wi_fi_guest"
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_ON
+
+    fc_data = deepcopy(MOCK_FB_SERVICES)
+    fc_data["WLANConfiguration2"]["GetInfo"]["NewEnable"] = False
+    fc_class_mock.return_value.override_services(fc_data)
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_OFF
+
+
 async def test_switch_port_coordinator_update(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
