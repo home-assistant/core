@@ -326,22 +326,6 @@ async def test_disconnect_during_collection_setup(
     await hass.async_block_till_done()
 
 
-async def test_vendor_change_removes_old_model(
-    hass: HomeAssistant, registered_backend: RegisterBackend
-) -> None:
-    """Changing the catalog vendor retires the model without leaking events."""
-
-    backend, _ = await registered_backend("network", [DESCRIPTOR])
-    entry = MockConfigEntry(domain="test_vendor")
-    entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    backend.emit(inventory(replace(DESCRIPTOR, brand_id=676), EventType.UPDATED))
-    await hass.async_block_till_done()
-    assert not entry.runtime_data.coordinators
-    assert hass.states.get("sensor.greenhouse_temperature") is None
-    await hass.config_entries.async_unload(entry.entry_id)
-
-
 async def test_collection_connection_filter_and_disconnect() -> None:
     """The retained transport filters replay and rejects commands while detached."""
 

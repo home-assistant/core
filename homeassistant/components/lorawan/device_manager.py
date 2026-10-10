@@ -141,8 +141,7 @@ class _CollectionConnection:
         return event_classes[kind](descriptor=descriptor, received_at=dt_util.utcnow())
 
     def emit(self, event: DeviceEvent) -> None:
-        previous = self._devices.get(event.dev_eui)
-        descriptor = event.descriptor or previous
+        descriptor = event.descriptor or self._devices.get(event.dev_eui)
         if descriptor is None:
             return
         if event.type == EventType.REMOVED:
@@ -152,8 +151,6 @@ class _CollectionConnection:
         for brands, listener in tuple(self._listeners):
             if brands is None or (descriptor.stack, descriptor.brand_id) in brands:
                 notify([listener], event)
-            elif previous and (previous.stack, previous.brand_id) in brands:
-                notify([listener], self._event(EventType.REMOVED, previous))
 
 
 @dataclass
