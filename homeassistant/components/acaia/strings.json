@@ -41,6 +41,16 @@
       "tare": {
         "name": "Tare"
       }
+    },
+    "number": {
+      "idle_timeout": {
+        "name": "Idle disconnect timeout"
+      }
+    },
+    "switch": {
+      "keep_connected": {
+        "name": "Keep connected"
+      }
     }
   }
 }
