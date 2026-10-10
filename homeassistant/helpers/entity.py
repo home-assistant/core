@@ -1835,6 +1835,12 @@ class Entity(
         """Handle device registry update."""
         data = event.data
 
+        if data["action"] == "remove":
+            # Prevent accesses to a removed device registry entry before the
+            # entity has been removed
+            self.device_entry = None
+            return
+
         if data["action"] != "update":
             return
 
