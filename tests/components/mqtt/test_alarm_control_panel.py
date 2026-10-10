@@ -1408,9 +1408,16 @@ async def test_reload_after_invalid_config(
             )
             await hass.async_block_till_done()
 
-        # Test the config is loaded now and that the existing issue is removed
+        # Test the config is loaded now and that the existing issue is removed.
+        # The patch is module wide, so other integrations (e.g. http) may
+        # remove their own issues too; only count the MQTT one.
         assert hass.states.get("alarm_control_panel.test") is not None
-        assert mock_async_remove_issue.call_count == 1
+        mqtt_issue_removals = [
+            mock_call
+            for mock_call in mock_async_remove_issue.mock_calls
+            if mock_call.args[1] == "mqtt"
+        ]
+        assert len(mqtt_issue_removals) == 1
 
         # Reload with an invalid config
         invalid_config = {
