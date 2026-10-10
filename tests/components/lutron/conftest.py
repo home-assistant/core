@@ -3,7 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from pylutron import OccupancyGroup
+from pylutron import OccupancyGroup, Shade
 import pytest
 
 from homeassistant.components.lutron.const import DOMAIN
@@ -68,8 +68,8 @@ def mock_lutron() -> Generator[MagicMock]:
         switch.last_level.return_value = 0
         area.outputs.append(switch)
 
-        # Mock a cover
-        cover = MagicMock()
+        # Mock a cover (pylutron parses SYSTEM_SHADE outputs as Shade)
+        cover = MagicMock(spec=Shade)
         cover.name = "Test Cover"
         cover.id = 3
         cover.uuid = "cover_uuid"
