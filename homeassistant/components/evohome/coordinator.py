@@ -140,6 +140,9 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
         try:
             result = await client_api
 
+        except ec2.AuthenticationFailedError:
+            raise
+
         except ec2.ApiCallFailedError as err:
             self.logger.error(err)
             return None
