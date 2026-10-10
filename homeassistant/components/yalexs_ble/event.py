@@ -2,7 +2,7 @@
 
 from typing import Any, override
 
-from yalexs_ble import ConnectionInfo, DoorActivity, LockActivity, LockInfo
+from yalexs_ble import DoorActivity, LockActivity
 
 from homeassistant.components.event import EventEntity
 from homeassistant.core import HomeAssistant, callback
@@ -42,13 +42,8 @@ class YaleXSBLEEvent(YALEXSBLEEntity, EventEntity):
         self._attr_unique_id = f"{data.lock.address}operation"
 
     @callback
-    def _async_activity_update(
-        self,
-        activity: DoorActivity | LockActivity,
-        lock_info: LockInfo,
-        connection_info: ConnectionInfo,
-    ) -> None:
-        """Handle activity update."""
+    def _async_activity_update(self, activity: DoorActivity | LockActivity) -> None:
+        """Handle a new activity record from the lock's log."""
         value, attributes = self._extract_values(activity)
         event_data = {
             "state": value,
@@ -84,7 +79,5 @@ class YaleXSBLEEvent(YALEXSBLEEntity, EventEntity):
         await super().async_added_to_hass()
 
         self.async_on_remove(
-            self._device.register_activity_callback(
-                self._async_activity_update, request_update=True
-            )
+            self._device.register_activity_callback(self._async_activity_update)
         )
