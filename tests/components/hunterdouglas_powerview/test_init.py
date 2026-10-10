@@ -79,7 +79,7 @@ async def test_setup_retry_when_hub_unreachable(hass: HomeAssistant) -> None:
 
 @pytest.mark.usefixtures("mock_hunterdouglas_hub")
 @pytest.mark.parametrize("api_version", [1, 2, 3])
-async def test_setup_retry_when_shade_data_fails(hass: HomeAssistant) -> None:
+async def test_setup_retry_when_room_data_fails(hass: HomeAssistant) -> None:
     """Test setup retries when fetching rooms fails after connecting."""
     entry = MockConfigEntry(domain=DOMAIN, data={"host": "1.2.3.4"}, unique_id=MOCK_MAC)
     entry.add_to_hass(hass)
