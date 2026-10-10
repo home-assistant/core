@@ -281,6 +281,15 @@ async def test_reconfigure_removes_location(
         )
         == 2
     )
+    initial_identifiers = {
+        identifier
+        for device in dr.async_entries_for_config_entry(
+            device_registry, mock_config_entry.entry_id
+        )
+        for identifier in device.identifiers
+    }
+    assert (DOMAIN, "Merton") in initial_identifiers
+    assert (DOMAIN, "City of London") in initial_identifiers
 
     result = await mock_config_entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
@@ -303,12 +312,12 @@ async def test_reconfigure_removes_location(
     assert len(entity_entries) == 1
     assert entity_entries[0].unique_id == "Merton"
 
+    device_entries = dr.async_entries_for_config_entry(
+        device_registry, mock_config_entry.entry_id
+    )
+    assert len(device_entries) == 1
     identifiers = {
-        identifier
-        for device in dr.async_entries_for_config_entry(
-            device_registry, mock_config_entry.entry_id
-        )
-        for identifier in device.identifiers
+        identifier for device in device_entries for identifier in device.identifiers
     }
     assert (DOMAIN, "Merton") in identifiers
     assert (DOMAIN, "City of London") not in identifiers

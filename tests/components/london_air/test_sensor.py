@@ -192,6 +192,8 @@ async def test_yaml_migration(
     assert issue is not None
     assert issue.is_fixable is False
     assert issue.severity is ir.IssueSeverity.WARNING
+    assert issue.breaks_in_ha_version == "2027.5.0"
+    assert issue.translation_key == "deprecated_yaml"
     assert (
         issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, "deprecated_yaml") is None
     )
@@ -232,6 +234,7 @@ async def test_yaml_migration_import_failure(
     assert issue is not None
     assert issue.is_fixable is False
     assert issue.severity is ir.IssueSeverity.WARNING
+    assert issue.breaks_in_ha_version == "2027.5.0"
 
     assert hass.states.get("sensor.merton") is None
 
