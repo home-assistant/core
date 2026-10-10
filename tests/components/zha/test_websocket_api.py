@@ -1,9 +1,11 @@
 """Test ZHA WebSocket API."""
 
+import asyncio
 from binascii import unhexlify
 from collections.abc import Callable, Coroutine
 from copy import deepcopy
-from typing import TYPE_CHECKING
+import logging
+from typing import TYPE_CHECKING, Any
 from unittest.mock import ANY, AsyncMock, MagicMock, call, patch
 
 import probatio
@@ -50,6 +52,7 @@ from homeassistant.components.zha.const import (
     EZSP_OVERWRITE_EUI64,
 )
 from homeassistant.components.zha.helpers import (
+    DEBUG_LEVELS,
     ZHADeviceProxy,
     ZHAGatewayProxy,
     get_zha_gateway,
@@ -953,6 +956,54 @@ async def test_ws_permit_ha12(
     assert app_controller.permit.await_args[1]["time_s"] == duration
     assert app_controller.permit.await_args[1]["node"] == node
     assert app_controller.permit_with_link_key.call_count == 0
+
+
+async def test_ws_permit_overlapping_restores_log_levels(zha_client) -> None:
+    """Test overlapping permit subscriptions restore the original log levels."""
+
+    async def send_and_wait_result(payload: dict[str, Any]) -> None:
+        await zha_client.send_json(payload)
+        msg = await zha_client.receive_json()
+        # Skip the log events relayed to the open permit subscriptions
+        while msg["type"] != TYPE_RESULT or msg["id"] != payload[ID]:
+            msg = await zha_client.receive_json()
+        assert msg["success"]
+
+    def log_levels() -> dict[str, int]:
+        return {name: logging.getLogger(name).level for name in DEBUG_LEVELS}
+
+    saved_levels = log_levels()
+    for name in DEBUG_LEVELS:
+        logging.getLogger(name).setLevel(logging.INFO)
+
+    try:
+        await send_and_wait_result({ID: 20, TYPE: f"{DOMAIN}/devices/{SERVICE_PERMIT}"})
+        await send_and_wait_result({ID: 21, TYPE: f"{DOMAIN}/devices/{SERVICE_PERMIT}"})
+        assert log_levels() == DEBUG_LEVELS
+
+        # Ending the first session must leave the second one in debug mode
+        await send_and_wait_result(
+            {ID: 22, TYPE: "unsubscribe_events", "subscription": 20}
+        )
+        assert log_levels() == DEBUG_LEVELS
+
+        # and still relaying logs to it
+        logging.getLogger("zha").debug("still relayed")
+        async with asyncio.timeout(5):
+            while True:
+                msg = await zha_client.receive_json()
+                log_entry = msg.get("event", {}).get("log_entry", {})
+                if msg["id"] == 21 and log_entry.get("message") == ["still relayed"]:
+                    break
+
+        # Ending the last session restores the levels from before the first one
+        await send_and_wait_result(
+            {ID: 23, TYPE: "unsubscribe_events", "subscription": 21}
+        )
+        assert log_levels() == dict.fromkeys(DEBUG_LEVELS, logging.INFO)
+    finally:
+        for name, level in saved_levels.items():
+            logging.getLogger(name).setLevel(level)
 
 
 async def test_get_network_settings(
