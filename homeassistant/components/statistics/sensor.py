@@ -66,7 +66,7 @@ _LOGGER = logging.getLogger(__name__)
 
 # Samples expiring within this window are purged together in one update,
 # so bursts of samples do not each cause a separate state write.
-PURGE_COALESCE_WINDOW = 1.0
+PURGE_COALESCE_WINDOW_SECONDS = 1.0
 
 # Stats for attributes only
 STAT_AGE_COVERAGE_RATIO = "age_coverage_ratio"
@@ -990,12 +990,12 @@ class StatisticsSensor(SensorEntity):
             # in the future when the oldest state will expire. Samples expiring
             # shortly after it are included, so they are purged in one update.
             # The purge is only ever delayed, never done early.
-            window_end = self.ages[0] + PURGE_COALESCE_WINDOW
+            window_end = self.ages[0] + PURGE_COALESCE_WINDOW_SECONDS
             last_age = self.ages[0]
             for age in self.ages:
                 if age > window_end:
                     break
-                last_age = age
+                last_age = max(last_age, age)
             return last_age + self._samples_max_age
         return None
 
