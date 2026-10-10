@@ -45,7 +45,7 @@ from .expose_controller import (
     validate_stored_expose_config,
 )
 from .knx_selector import (
-    GroupAddressSelector,
+    GASelector,
     GroupSelect,
     KnxPayloadSelector,
     KnxSelectOptionsSelector,
@@ -155,7 +155,7 @@ def _storage_encoders(config_type: type, sparse: bool) -> _StorageEncoders:
         encode: Callable[[Any], Any]
         if isinstance(
             field_selector,
-            (GroupAddressSelector, KnxPayloadSelector, KnxSelectOptionsSelector),
+            (GASelector, KnxPayloadSelector, KnxSelectOptionsSelector),
         ):
             encode = field_selector.to_storage
         elif isinstance(field_selector, GroupSelect):
