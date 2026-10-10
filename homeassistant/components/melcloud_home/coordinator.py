@@ -169,7 +169,7 @@ class MelCloudHomeTelemetryCoordinator(
         self,
         hass: HomeAssistant,
         entry: MelCloudHomeConfigEntry,
-        client: MELCloudHome,
+        coordinator: MelCloudHomeCoordinator,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
@@ -179,7 +179,7 @@ class MelCloudHomeTelemetryCoordinator(
             name=f"{DOMAIN}_telemetry",
             update_interval=TELEMETRY_UPDATE_INTERVAL,
         )
-        self.client = client
+        self._coordinator = coordinator
         self._unavailable_telemetry: set[tuple[str, str]] = set()
 
     async def _async_fetch_telemetry[_T](
@@ -210,7 +210,7 @@ class MelCloudHomeTelemetryCoordinator(
         energy = await self._async_fetch_telemetry(
             "Energy telemetry",
             unit_id,
-            self.client.get_energy_telemetry(
+            self._coordinator.client.get_energy_telemetry(
                 unit_id, from_dt=start_of_month, to_dt=now, interval="Day"
             ),
         )
@@ -223,30 +223,17 @@ class MelCloudHomeTelemetryCoordinator(
         return await self._async_fetch_telemetry(
             "Outdoor temperature",
             unit_id,
-            self.client.get_outdoor_temperature(unit_id),
+            self._coordinator.client.get_outdoor_temperature(unit_id),
         )
 
     @override
     async def _async_update_data(self) -> MelCloudHomeTelemetryData:
         """Fetch energy and outdoor temperature telemetry for all supported units."""
-        try:
-            data = await self.client.get_context()
-        except MelCloudHomeAuthenticationError as err:
-            raise ConfigEntryAuthFailed(
-                translation_domain=DOMAIN,
-                translation_key="invalid_auth",
-            ) from err
-        except MelCloudHomeConnectionError as err:
+        if not self._coordinator.last_update_success:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",
-            ) from err
-        except MelCloudHomeTimeoutError as err:
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="timeout_connect",
-            ) from err
-
+            )
         start_of_month = utcnow().replace(
             day=1, hour=0, minute=0, second=0, microsecond=0
         )
@@ -256,7 +243,7 @@ class MelCloudHomeTelemetryCoordinator(
         outdoor_temperature_coroutine: dict[
             str, Coroutine[None, None, float | None]
         ] = {}
-        for building in data.buildings:
+        for building in self._coordinator.data.buildings:
             for ata_unit in building.air_to_air_units:
                 if (
                     ata_unit.capabilities

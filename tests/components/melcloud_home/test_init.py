@@ -269,48 +269,61 @@ async def test_energy_telemetry_fetch_failure(
     assert mock_config_entry.runtime_data.coordinator.last_update_success is True
 
 
-@pytest.mark.parametrize(
-    "exception",
-    [
-        pytest.param(MelCloudHomeAuthenticationError("bad creds"), id="auth"),
-        pytest.param(MelCloudHomeConnectionError("cannot connect"), id="connection"),
-        pytest.param(MelCloudHomeTimeoutError("timeout"), id="timeout"),
-    ],
-)
-async def test_telemetry_coordinator_context_fetch_failure(
+async def test_telemetry_reuses_main_coordinator_context(
     hass: HomeAssistant,
     mock_melcloud_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
-    exception: Exception,
 ) -> None:
-    """Test that a failing telemetry coordinator refresh doesn't affect the main coordinator."""
+    """Test the telemetry coordinator uses the units of the main coordinator."""
     await setup_integration(hass, mock_config_entry)
 
-    # Split the margin so the main coordinator's rescheduled refresh doesn't land
-    # exactly on the telemetry coordinator's, which would make both fail below.
-    freezer.tick(TELEMETRY_UPDATE_INTERVAL - UPDATE_INTERVAL / 2)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    mock_melcloud_client.get_context.assert_called_once()
+    assert mock_config_entry.runtime_data.telemetry_coordinator.data.energy == {
+        "ata-unit-uuid-1": 450.5,
+        "atw-unit-uuid-1": 450.5,
+    }
 
-    mock_melcloud_client.get_context.side_effect = exception
-    freezer.tick(UPDATE_INTERVAL / 2)
+    mock_melcloud_client.get_context.reset_mock()
+    mock_melcloud_client.get_energy_telemetry.reset_mock()
+    mock_melcloud_client.get_outdoor_temperature.reset_mock()
+    freezer.tick(TELEMETRY_UPDATE_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    mock_melcloud_client.get_context.assert_called_once()
+    assert mock_melcloud_client.get_energy_telemetry.call_count == 2
+    mock_melcloud_client.get_outdoor_temperature.assert_called_once()
+
+
+async def test_telemetry_skipped_while_context_fetch_fails(
+    hass: HomeAssistant,
+    mock_melcloud_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the telemetry coordinator fails without API calls while the main one fails."""
+    await setup_integration(hass, mock_config_entry)
+
+    mock_melcloud_client.get_context.side_effect = MelCloudHomeConnectionError
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    mock_melcloud_client.get_energy_telemetry.reset_mock()
+    mock_melcloud_client.get_outdoor_temperature.reset_mock()
+    freezer.tick(TELEMETRY_UPDATE_INTERVAL - UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert (
-        energy_sensor := hass.states.get(
-            "sensor.living_room_ac_energy_consumed_monthly"
-        )
+        mock_config_entry.runtime_data.telemetry_coordinator.last_update_success
+        is False
     )
-    assert energy_sensor.state == STATE_UNAVAILABLE
-
-    assert (
-        room_temperature_sensor := hass.states.get(
-            "sensor.living_room_ac_room_temperature"
-        )
-    )
-    assert room_temperature_sensor.state != STATE_UNAVAILABLE
+    assert (state := hass.states.get("sensor.living_room_ac_energy_consumed_monthly"))
+    assert state.state == STATE_UNAVAILABLE
+    mock_melcloud_client.get_energy_telemetry.assert_not_called()
+    mock_melcloud_client.get_outdoor_temperature.assert_not_called()
 
 
 @pytest.mark.parametrize(
