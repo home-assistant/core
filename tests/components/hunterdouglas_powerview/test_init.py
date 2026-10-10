@@ -77,7 +77,7 @@ async def test_remove_phantom_shade_via_websocket(
     )
 
     client = await hass_ws_client(hass)
-    response = await client.remove_device(phantom.id, entry.entry_id)
+    response = await client.remove_device(phantom.id)
 
     assert response["success"]
     assert device_registry.async_get(phantom.id) is None
@@ -90,7 +90,7 @@ async def test_remove_active_shade_and_hub_blocked(
 ) -> None:
     """Test the hub and shades still on the hub cannot be removed."""
     entry = await _setup_entry(hass)
-    hub = device_registry.async_get_device(identifiers={(DOMAIN, MOCK_SERIAL)})
+    hub = _get_hub_device(device_registry, entry)
     assert hub is not None
     shade = next(
         device
