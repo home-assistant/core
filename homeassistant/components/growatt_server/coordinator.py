@@ -776,7 +776,14 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         mains_enabled: bool,
         periods: list[dict],
     ) -> None:
-        """Update AC charge time periods for SPH/Mix device."""
+        """Update AC charge time periods for SPH/Mix device.
+
+        Args:
+            charge_power: Charge power limit (0-100 %)
+            charge_stop_soc: Stop charging at this SOC level (0-100 %)
+            mains_enabled: Whether AC (mains) charging is enabled
+            periods: List of 3 dicts with keys start_time, end_time, enabled
+        """
         if self.api_version == "v1":
             try:
                 await self.hass.async_add_executor_job(
@@ -851,7 +858,7 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         Args:
             discharge_power: Discharge power limit (0-100 %)
             discharge_stop_soc: Stop discharging at this SOC level (0-100 %)
-            periods: List of up to 3 dicts with keys start_time, end_time, enabled
+            periods: List of 3 dicts with keys start_time, end_time, enabled
         """
         if self.api_version == "v1":
             try:

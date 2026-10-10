@@ -66,7 +66,7 @@ def _get_coordinator(
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key=support.no_devices_key,
-            translation_placeholders=support.placeholders,
+            translation_placeholders=dict(support.placeholders),
         )
 
     device_registry = dr.async_get(hass)
