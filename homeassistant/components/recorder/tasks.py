@@ -3,7 +3,7 @@
 import abc
 import asyncio
 from collections.abc import Callable, Iterable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 import logging
 import threading
@@ -118,12 +118,19 @@ class PurgeTask(RecorderTask):
     purge_before: datetime
     repack: bool
     apply_filter: bool
+    event_data_purge_state: purge.EventDataPurgeState = field(
+        default_factory=purge.EventDataPurgeState
+    )
 
     @override
     def run(self, instance: Recorder) -> None:
         """Purge the database."""
         if purge.purge_old_data(
-            instance, self.purge_before, self.repack, self.apply_filter
+            instance,
+            self.purge_before,
+            self.repack,
+            self.apply_filter,
+            event_data_purge_state=self.event_data_purge_state,
         ):
             # We always need to do the db cleanups after a purge
             # is finished to ensure the WAL checkpoint and other
@@ -132,7 +139,12 @@ class PurgeTask(RecorderTask):
             return
         # Schedule a new purge task if this one didn't finish
         instance.queue_task(
-            PurgeTask(self.purge_before, self.repack, self.apply_filter)
+            PurgeTask(
+                self.purge_before,
+                self.repack,
+                self.apply_filter,
+                self.event_data_purge_state,
+            )
         )
 
 

@@ -1,7 +1,7 @@
 """Support for recording details."""
 
 import asyncio
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Iterable, Mapping
 from concurrent.futures import CancelledError
 import contextlib
 from datetime import datetime, timedelta
@@ -41,12 +41,14 @@ from homeassistant.helpers.event import (
     async_track_time_interval,
     async_track_utc_time_change,
 )
+from homeassistant.helpers.json import json_bytes, json_bytes_strip_null
 from homeassistant.helpers.recorder import DATA_RECORDER
 from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.util import dt as dt_util
 from homeassistant.util.enum import try_parse_enum
 from homeassistant.util.event_type import EventType
+from homeassistant.util.json import JSON_ENCODE_EXCEPTIONS, json_loads
 
 from . import migration, statistics
 from .const import (
@@ -143,6 +145,35 @@ CONNECTIVITY_ERR = "Error in database connectivity during commit"
 MAX_DB_EXECUTOR_WORKERS = POOL_SIZE - 1
 
 
+def _event_data_filter_matches(
+    event: Event,
+    filters: dict[str, tuple[tuple[tuple[str, object], ...], ...]],
+    dialect: SupportedDialect | None,
+) -> bool:
+    """Return if an event matches an event data filter."""
+    if not (rules := filters.get(cast(str, event.event_type))):
+        return False
+    encoder = (
+        json_bytes_strip_null if dialect == SupportedDialect.POSTGRESQL else json_bytes
+    )
+    try:
+        data = json_loads(encoder(event.data))
+    except JSON_ENCODE_EXCEPTIONS:
+        return False
+    if not isinstance(data, Mapping):
+        return False
+
+    return any(
+        all(
+            key in data
+            and type(data[key]) is type(expected_value)
+            and data[key] == expected_value
+            for key, expected_value in rule
+        )
+        for rule in rules
+    )
+
+
 class Recorder(threading.Thread):
     """A threaded recorder class."""
 
@@ -160,6 +191,10 @@ class Recorder(threading.Thread):
         db_retry_wait: int,
         entity_filter: Callable[[str], bool] | None,
         exclude_event_types: set[EventType[Any] | str],
+        include_event_data: dict[str, tuple[tuple[tuple[str, object], ...], ...]]
+        | None = None,
+        exclude_event_data: dict[str, tuple[tuple[tuple[str, object], ...], ...]]
+        | None = None,
     ) -> None:
         """Initialize the recorder."""
         threading.Thread.__init__(self, name="Recorder")
@@ -195,6 +230,8 @@ class Recorder(threading.Thread):
         # by is_entity_recorder and the sensor recorder.
         self.entity_filter = entity_filter
         self.exclude_event_types = exclude_event_types
+        self.include_event_data = include_event_data or {}
+        self.exclude_event_data = exclude_event_data or {}
 
         self.schema_version = 0
         self._commits_without_expire = 0
@@ -1036,6 +1073,18 @@ class Recorder(threading.Thread):
         if event.event_type == EVENT_STATE_CHANGED:
             self._process_state_changed_event_into_session(event)
         else:
+            # Startup events can be queued before the database dialect is known.
+            if _event_data_filter_matches(
+                event, self.exclude_event_data, self.dialect_name
+            ):
+                return
+            if (
+                event.event_type in self.include_event_data
+                and not _event_data_filter_matches(
+                    event, self.include_event_data, self.dialect_name
+                )
+            ):
+                return
             self._process_non_state_changed_event_into_session(event)
         # Commit if the commit interval is zero
         if not self.commit_interval:

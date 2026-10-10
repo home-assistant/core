@@ -2,7 +2,10 @@
 
 import asyncio
 from collections.abc import Generator
-from datetime import datetime, timedelta
+from datetime import UTC, date, datetime, time, timedelta
+from http import HTTPStatus
+import math
+from pathlib import Path
 import sqlite3
 import sys
 import threading
@@ -10,6 +13,7 @@ from typing import Any, cast
 from unittest.mock import Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
+import probatio
 import pytest
 from sqlalchemy.exc import DatabaseError, OperationalError, SQLAlchemyError
 from sqlalchemy.pool import QueuePool
@@ -37,7 +41,9 @@ from homeassistant.components.recorder.const import (
     KEEPALIVE_TIME,
     SupportedDialect,
 )
+from homeassistant.components.recorder.core import _event_data_filter_matches
 from homeassistant.components.recorder.db_schema import (
+    MAX_EVENT_DATA_BYTES,
     SCHEMA_VERSION,
     EventData,
     Events,
@@ -67,6 +73,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_FINAL_WRITE,
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
+    EVENT_STATE_CHANGED,
     MATCH_ALL,
 )
 from homeassistant.core import Context, CoreState, Event, HomeAssistant, State, callback
@@ -79,11 +86,12 @@ from homeassistant.helpers.event import async_track_entity_registry_updated_even
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-from homeassistant.util.json import json_loads
+from homeassistant.util.json import JsonValueType, json_loads
 
 from .common import (
     async_block_recorder,
     async_recorder_block_till_done,
+    async_wait_purge_done,
     async_wait_recorder,
     async_wait_recording_done,
     convert_pending_states_to_meta,
@@ -718,6 +726,433 @@ async def test_saving_event_exclude_event_type(
     events = await instance.async_add_executor_job(_get_events, hass, ["test", "test2"])
     assert len(events) == 1
     assert events[0].event_type == "test2"
+
+
+async def test_saving_event_exclude_event_data(
+    hass: HomeAssistant,
+    async_setup_recorder_instance: RecorderInstanceGenerator,
+) -> None:
+    """Test event data filters exclude only matching events from Recorder."""
+    config = {
+        "exclude": {
+            "event_data": [
+                {
+                    "event_type": "zha_event",
+                    "match": {"command": "vibration_strength"},
+                },
+                {
+                    "event_type": "zha_event",
+                    "match": {"command": "drop", "device_id": "sensor-1"},
+                },
+                {
+                    "event_type": "scalar_event",
+                    "match": {
+                        "text": "value",
+                        "boolean": True,
+                        "integer": 2,
+                        "float": 1.5,
+                    },
+                },
+            ]
+        }
+    }
+    instance = await async_setup_recorder_instance(hass, config)
+    received_events: list[Event] = []
+    hass.bus.async_listen("zha_event", received_events.append)
+
+    hass.bus.async_fire("zha_event", {"command": "vibration_strength"})
+    hass.bus.async_fire("zha_event", {"command": "tilt"})
+    hass.bus.async_fire("other_event", {"command": "vibration_strength"})
+    hass.bus.async_fire("zha_event", {"command": "drop", "device_id": "sensor-1"})
+    hass.bus.async_fire("zha_event", {"command": "drop"})
+    hass.bus.async_fire("zha_event", {"device_id": "sensor-1"})
+    hass.bus.async_fire(
+        "scalar_event",
+        {"text": "value", "boolean": True, "integer": 2, "float": 1.5},
+    )
+    hass.bus.async_fire(
+        "scalar_event",
+        {"text": "value", "boolean": True, "integer": 2, "float": 2.5},
+    )
+
+    await async_wait_recording_done(hass)
+
+    def _get_events(hass: HomeAssistant) -> list[Event]:
+        with session_scope(hass=hass, read_only=True) as session:
+            events = []
+            for event, event_data, event_types in (
+                session.query(Events, EventData, EventTypes)
+                .outerjoin(
+                    EventTypes, (Events.event_type_id == EventTypes.event_type_id)
+                )
+                .outerjoin(EventData, Events.data_id == EventData.data_id)
+                .where(
+                    EventTypes.event_type.in_(
+                        (
+                            "zha_event",
+                            "other_event",
+                            "scalar_event",
+                        )
+                    )
+                )
+            ):
+                native_event = db_event_to_native(event)
+                if event_data:
+                    native_event.data = db_event_data_to_native(event_data)
+                native_event.event_type = event_types.event_type
+                events.append(native_event)
+            return events
+
+    stored_events = await instance.async_add_executor_job(_get_events, hass)
+    assert {
+        (event.event_type, tuple(sorted(event.data.items()))) for event in stored_events
+    } == {
+        ("zha_event", (("command", "tilt"),)),
+        ("other_event", (("command", "vibration_strength"),)),
+        ("zha_event", (("command", "drop"),)),
+        ("zha_event", (("device_id", "sensor-1"),)),
+        (
+            "scalar_event",
+            (
+                ("boolean", True),
+                ("float", 2.5),
+                ("integer", 2),
+                ("text", "value"),
+            ),
+        ),
+    }
+    assert len(received_events) == 5
+
+
+@pytest.mark.parametrize(
+    ("filter_type", "store_matches"), [("include", True), ("exclude", False)]
+)
+@pytest.mark.parametrize(
+    ("event_value", "match_value", "matches"),
+    [
+        (LockState.LOCKED, "locked", True),
+        (HTTPStatus.OK, 200, True),
+        (datetime(2026, 10, 9, 12, 30, tzinfo=UTC), "2026-10-09T12:30:00+00:00", True),
+        (date(2026, 10, 9), "2026-10-09", True),
+        (time(12, 30), "12:30:00", True),
+        (Path("event/data"), "event/data", True),
+        (True, True, True),
+        (1.5, 1.5, True),
+        (True, 1, False),
+        (1, True, False),
+        (200.0, 200, False),
+        (200, 200.0, False),
+    ],
+)
+async def test_event_data_filter_scalar_types(
+    hass: HomeAssistant,
+    async_setup_recorder_instance: RecorderInstanceGenerator,
+    filter_type: str,
+    store_matches: bool,
+    event_value: str | bool | float | date | time | Path,
+    match_value: str | bool | float,
+    matches: bool,
+) -> None:
+    """Test live and historical filters agree on JSON scalar types and enums."""
+    instance = await async_setup_recorder_instance(
+        hass,
+        {
+            filter_type: {
+                "event_data": [
+                    {"event_type": "scalar_event", "match": {"value": match_value}}
+                ]
+            }
+        },
+    )
+    hass.bus.async_fire("scalar_event", {"value": event_value})
+    await async_wait_recording_done(hass)
+
+    def _get_event_count(hass: HomeAssistant) -> int:
+        with session_scope(hass=hass, read_only=True) as session:
+            return (
+                session.query(Events)
+                .filter(
+                    Events.event_type_id.in_(select_event_type_ids(("scalar_event",)))
+                )
+                .count()
+            )
+
+    assert await instance.async_add_executor_job(_get_event_count, hass) == int(
+        matches == store_matches
+    )
+
+    await hass.services.async_call(
+        DOMAIN, SERVICE_PURGE, {"keep_days": 10, "apply_filter": True}, blocking=True
+    )
+    await async_wait_purge_done(hass)
+
+    assert await instance.async_add_executor_job(_get_event_count, hass) == int(
+        matches == store_matches
+    )
+
+
+@pytest.mark.parametrize(
+    ("filter_type", "expected_event_data"), [("include", [{}]), ("exclude", [])]
+)
+async def test_event_data_filter_oversized_payload(
+    hass: HomeAssistant,
+    async_setup_recorder_instance: RecorderInstanceGenerator,
+    filter_type: str,
+    expected_event_data: list[dict[str, str]],
+) -> None:
+    """Test live filtering matches complete payloads before storage truncation."""
+    instance = await async_setup_recorder_instance(
+        hass,
+        {
+            filter_type: {
+                "event_data": [
+                    {"event_type": "large_event", "match": {"value": "match"}}
+                ]
+            }
+        },
+    )
+    hass.bus.async_fire(
+        "large_event", {"value": "match", "payload": "x" * MAX_EVENT_DATA_BYTES}
+    )
+    await async_wait_recording_done(hass)
+
+    def _get_event_data(hass: HomeAssistant) -> list[JsonValueType]:
+        with session_scope(hass=hass, read_only=True) as session:
+            return [
+                json_loads(shared_data)
+                for (shared_data,) in session.query(EventData.shared_data)
+                .join(Events)
+                .filter(
+                    Events.event_type_id.in_(select_event_type_ids(("large_event",)))
+                )
+            ]
+
+    assert (
+        await instance.async_add_executor_job(_get_event_data, hass)
+        == expected_event_data
+    )
+
+    await hass.services.async_call(
+        DOMAIN, SERVICE_PURGE, {"keep_days": 10, "apply_filter": True}, blocking=True
+    )
+    await async_wait_purge_done(hass)
+
+    assert (
+        await instance.async_add_executor_job(_get_event_data, hass)
+        == expected_event_data
+    )
+
+
+@pytest.mark.parametrize(
+    ("dialect", "match_value", "matches"),
+    [
+        (SupportedDialect.SQLITE, "before", False),
+        (SupportedDialect.POSTGRESQL, "before", True),
+        (SupportedDialect.SQLITE, "before\0after", True),
+        (SupportedDialect.POSTGRESQL, "before\0after", False),
+    ],
+)
+def test_event_data_filter_dialect_normalization(
+    dialect: SupportedDialect, match_value: str, matches: bool
+) -> None:
+    """Test live filters preserve database-specific string normalization."""
+    assert (
+        _event_data_filter_matches(
+            Event("test_event", {"value": "before\0after"}),
+            {"test_event": ((("value", match_value),),)},
+            dialect,
+        )
+        is matches
+    )
+
+
+@pytest.mark.parametrize(
+    ("filter_attribute", "dialect", "recorded"),
+    [
+        ("include_event_data", SupportedDialect.SQLITE, False),
+        ("include_event_data", SupportedDialect.POSTGRESQL, True),
+        ("exclude_event_data", SupportedDialect.SQLITE, True),
+        ("exclude_event_data", SupportedDialect.POSTGRESQL, False),
+    ],
+)
+async def test_event_data_filter_before_database_setup(
+    hass: HomeAssistant,
+    filter_attribute: str,
+    dialect: SupportedDialect,
+    recorded: bool,
+) -> None:
+    """Test startup events use the dialect determined during database setup."""
+    recorder_helper.async_initialize_recorder(hass)
+    instance = _default_recorder(hass)
+    instance.entity_filter = None
+    setattr(instance, filter_attribute, {"test_event": ((("value", "before"),),)})
+    assert instance.dialect_name is None
+    instance.async_initialize()
+
+    hass.bus.async_fire("test_event", {"value": "before\0after"})
+    await hass.async_block_till_done()
+    assert instance.backlog == 1
+    event = instance._queue.get_nowait()
+    assert isinstance(event, Event)
+
+    with (
+        patch.object(instance, "dialect_name", dialect),
+        patch.object(
+            instance, "_process_non_state_changed_event_into_session"
+        ) as process,
+    ):
+        instance._process_one_event(event)
+
+    assert process.call_count == int(recorded)
+    instance._async_stop_queue_watcher_and_event_listener()
+
+
+def test_event_data_filter_unserializable_event() -> None:
+    """Test filter matching tolerates event data that Recorder cannot serialize."""
+    assert not _event_data_filter_matches(
+        Event("test_event", {"value": object()}),
+        {"test_event": ((("value", "match"),),)},
+        SupportedDialect.SQLITE,
+    )
+
+
+async def test_event_data_filter_include_exclude_precedence(
+    hass: HomeAssistant,
+    async_setup_recorder_instance: RecorderInstanceGenerator,
+) -> None:
+    """Test excludes take precedence over event data includes."""
+    config = {
+        "include": {
+            "event_data": [
+                {"event_type": "test_event", "match": {"command": "include"}},
+                {"event_type": "included_event", "match": {"command": "include"}},
+            ]
+        },
+        "exclude": {
+            "event_types": ["excluded_event"],
+            "event_data": [
+                {"event_type": "test_event", "match": {"command": "include"}}
+            ],
+        },
+    }
+    instance = await async_setup_recorder_instance(hass, config)
+
+    hass.bus.async_fire("test_event", {"command": "include"})
+    hass.bus.async_fire("test_event", {"command": "not_included"})
+    hass.bus.async_fire("included_event", {"command": "include"})
+    hass.bus.async_fire("included_event", {"command": "not_included"})
+    hass.bus.async_fire("excluded_event", {"command": "include"})
+    hass.bus.async_fire("unfiltered_event", {"command": "include"})
+
+    await async_wait_recording_done(hass)
+
+    def _get_event_count(hass: HomeAssistant) -> int:
+        with session_scope(hass=hass, read_only=True) as session:
+            return (
+                session.query(Events)
+                .join(EventTypes)
+                .where(
+                    EventTypes.event_type.in_(
+                        (
+                            "test_event",
+                            "included_event",
+                            "excluded_event",
+                            "unfiltered_event",
+                        )
+                    )
+                )
+                .count()
+            )
+
+    event_count = await instance.async_add_executor_job(_get_event_count, hass)
+    assert event_count == 2
+
+
+@pytest.mark.parametrize(
+    ("filter_type", "event_data_filter"),
+    [
+        ("exclude", {"event_data": [{"match": {"command": "vibration_strength"}}]}),
+        ("exclude", {"event_data": [{"event_type": "zha_event"}]}),
+        ("exclude", {"event_data": [{"event_type": "zha_event", "match": {}}]}),
+        (
+            "exclude",
+            {"event_data": [{"event_type": "zha_event", "match": {"value": []}}]},
+        ),
+        (
+            "exclude",
+            {"event_data": [{"event_type": "zha_event", "match": "not-a-mapping"}]},
+        ),
+        ("include", {"event_types": ["zha_event"]}),
+        (
+            "include",
+            {
+                "event_data": [
+                    {"event_type": EVENT_STATE_CHANGED, "match": {"state": "on"}}
+                ]
+            },
+        ),
+        (
+            "exclude",
+            {
+                "event_data": [
+                    {"event_type": EVENT_STATE_CHANGED, "match": {"state": "on"}}
+                ]
+            },
+        ),
+    ],
+)
+def test_invalid_event_data_filter_config(
+    filter_type: str, event_data_filter: dict[str, object]
+) -> None:
+    """Test invalid event data filters are rejected by the configuration schema."""
+    with pytest.raises(probatio.Invalid):
+        CONFIG_SCHEMA({DOMAIN: {filter_type: event_data_filter}})
+
+
+@pytest.mark.parametrize("filter_type", ["include", "exclude"])
+@pytest.mark.parametrize("value", [math.nan, math.inf, -math.inf])
+def test_event_data_filter_config_rejects_non_finite_floats(
+    filter_type: str, value: float
+) -> None:
+    """Test non-finite values cannot be configured as exact-match event data."""
+    with pytest.raises(probatio.Invalid, match="expected a finite float"):
+        CONFIG_SCHEMA(
+            {
+                DOMAIN: {
+                    filter_type: {
+                        "event_data": [
+                            {"event_type": "test_event", "match": {"value": value}}
+                        ]
+                    }
+                }
+            }
+        )
+
+
+def test_event_data_filter_config_normalizes_string_subclasses() -> None:
+    """Test event data filter config normalizes string subclasses."""
+
+    class AnnotatedString(str):
+        __slots__ = ()
+
+    config = CONFIG_SCHEMA(
+        {
+            DOMAIN: {
+                "exclude": {
+                    "event_data": [
+                        {
+                            "event_type": "test_event",
+                            "match": {"command": AnnotatedString("include")},
+                        }
+                    ]
+                }
+            }
+        }
+    )
+
+    value = config[DOMAIN]["exclude"]["event_data"][0]["match"]["command"]
+    assert value == "include"
+    assert type(value) is str
 
 
 async def test_saving_state_exclude_domains(
