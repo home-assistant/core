@@ -5,7 +5,7 @@
       "unique_id_mismatch": "The MAC address of the device does not match the previous MAC address"
     },
     "error": {
-      "account_device": "The Reolink device is set up as an 'account device', which blocks local login. Reset the device and set it up again as a 'local device' following the Reolink instructions: {reolink_account_device_link}, also see the troubleshooting step: {account_device_link}",
+      "account_device": "The Reolink device is set up as an 'account device', which blocks local login. Reset the device and set it up again as a 'local device' following the Reolink instructions: {reolink_account_device_link}",
       "api_error": "API error occurred",
       "cannot_connect": "Failed to connect, check the IP address of the camera",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
