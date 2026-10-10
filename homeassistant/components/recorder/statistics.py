@@ -547,9 +547,8 @@ def _compile_hourly_statistics(session: Session, start: datetime) -> None:
     - average, min max is computed by a database query
     - sum is taken from the last 5-minute entry during the hour
     """
-    start_time = start.replace(minute=0)
-    start_time_ts = start_time.timestamp()
-    end_time = start_time + Statistics.duration
+    start_time_ts = start.timestamp()
+    end_time = start + Statistics.duration
     end_time_ts = end_time.timestamp()
 
     # Compute last hour's average, min, max
@@ -612,8 +611,11 @@ def compile_missing_statistics(instance: Recorder) -> bool:
     period_size = 5
     last_period_minutes = now.minute - now.minute % period_size
     last_period = now.replace(minute=last_period_minutes, second=0, microsecond=0)
-    start = now - timedelta(days=instance.keep_days)
-    start = start.replace(minute=0, second=0, microsecond=0)
+    start = dt_util.as_utc(
+        dt_util.as_local(now - timedelta(days=instance.keep_days)).replace(
+            minute=0, second=0, microsecond=0
+        )
+    )
     # Commit every 12 hours of data
     commit_interval = 60 / period_size * 12
 
@@ -805,7 +807,9 @@ def _compile_statistics(
         ):
             new_short_term_stats.append(new_stat)
 
-    if start.minute == 50:
+    end_local = dt_util.as_local(end)
+
+    if end_local.minute == 55:
         # Once every hour, update issues
         for platform in instance.hass.data[DATA_RECORDER].recorder_platforms.values():
             if not (
@@ -818,15 +822,15 @@ def _compile_statistics(
                 instance.hass, session, custom_equivalent_units_per_entity
             )
 
-    if start.minute == 55:
+    if end_local.minute == 0:
         # A full hour is ready, summarize it
-        _compile_hourly_statistics(session, start)
+        _compile_hourly_statistics(session, end - Statistics.duration)
 
     session.add(StatisticsRuns(start=start))
 
     if fire_events:
         instance.hass.bus.fire(EVENT_RECORDER_5MIN_STATISTICS_GENERATED)
-        if start.minute == 55:
+        if end_local.minute == 0:
             instance.hass.bus.fire(EVENT_RECORDER_HOURLY_STATISTICS_GENERATED)
 
     if updated_metadata_ids:
