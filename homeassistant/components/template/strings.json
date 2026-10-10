@@ -166,7 +166,7 @@
           "open_cover": "Defines actions to run when the cover is opened.",
           "position": "Defines a template to get the position of the cover. Value values are numbers between `0` (`closed`) and `100` (`open`).",
           "set_cover_position": "Defines actions to run when the cover is given a `set_cover_position` command. Receives variable `position`.",
-          "state": "Defines a template to get the state of the cover. Valid output values from the template are `open`, `opening`, `closing` and `closed` which are directly mapped to the corresponding states.  If both a state and a position are specified, only `opening` and `closing` are set from the state template.",
+          "state": "Defines a template to get the state of the cover. Valid output values from the template are `open`, `opening`, `closing` and `closed` which are directly mapped to the corresponding states. If both a state and a position are specified, only `opening` and `closing` are set from the state template.",
           "stop_cover": "Defines actions to run when the cover is stopped."
         },
         "sections": {
@@ -252,7 +252,7 @@
         "data_description": {
           "device_id": "[%key:component::template::common::device_id_description%]",
           "percentage": "Defines a template to get the speed percentage of the fan.",
-          "set_percentage": "Defines actions to run when the fan is given a speed percentage command.  Receives variable `percentage`.",
+          "set_percentage": "Defines actions to run when the fan is given a speed percentage command. Receives variable `percentage`.",
           "speed_count": "The number of speeds the fan supports. Used to calculate the percentage step for the `fan.increase_speed` and `fan.decrease_speed` actions.",
           "state": "The fan is `on` if the template evaluates as `True`, `yes`, `on`, `enable` or a positive number. Any other value will render it as `off`.",
           "turn_off": "Defines actions to run when the fan is turned off.",
@@ -350,7 +350,7 @@
           "device_id": "[%key:component::template::common::device_id_description%]",
           "lock": "Defines actions to run when the lock is locked.",
           "open": "Defines actions to run when the lock is opened.",
-          "state": "Defines a template to set the state of the lock.  The lock is locked if the template evaluates to `True`, `true`, `on`, or `locked`.  The lock is unlocked if the template evaluates to `False`, `false`, `off`, or `unlocked`.  Other valid states are `jammed`, `opening`, `locking`, `open`, and `unlocking`.",
+          "state": "Defines a template to set the state of the lock. The lock is locked if the template evaluates to `True`, `true`, `on`, or `locked`. The lock is unlocked if the template evaluates to `False`, `false`, `off`, or `unlocked`. Other valid states are `jammed`, `opening`, `locking`, `open`, and `unlocking`.",
           "unlock": "Defines actions to run when the lock is unlocked."
         },
         "sections": {
@@ -653,11 +653,11 @@
       "title": "Device for template helper {name} needs to be selected again"
     },
     "config_format_actions": {
-      "description": "There is an actions option in the template configuration that does not pair with a trigger option.  This will be an configuration validation error in 2026.5.\n\n Please add a trigger to the configuration or remove the actions option from the configuration.\n\n```\n{config}\n```",
+      "description": "There is an actions option in the template configuration that does not pair with a trigger option. This will be a configuration validation error in 2026.5.\n\nPlease add a trigger to the configuration or remove the actions option from the configuration.\n\n```\n{config}\n```",
       "title": "Template actions option requires a trigger"
     },
     "config_format_triggers": {
-      "description": "A trigger template configuration needs a trigger and at least one domain when defining an entity. This will be an configuration validation error in Home Assistant Core 2026.5.\n\n Please remove the orphaned trigger from the configuration.\n\n```\n{config}\n```",
+      "description": "A trigger template configuration needs a trigger and at least one domain when defining an entity. This will be a configuration validation error in Home Assistant Core 2026.5.\n\nPlease remove the orphaned trigger from the configuration.\n\n```\n{config}\n```",
       "title": "Incomplete template configuration"
     }
   },

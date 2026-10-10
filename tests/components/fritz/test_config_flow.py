@@ -1,8 +1,11 @@
 """Tests for Fritz!Tools config flow."""
 
+from collections.abc import Generator
+from contextlib import contextmanager
 from copy import deepcopy
 import dataclasses
-from unittest.mock import patch
+from typing import Any
+from unittest.mock import MagicMock, patch
 
 from fritzconnection.core.exceptions import (
     FritzAuthorizationError,
@@ -53,6 +56,23 @@ from .const import (
 )
 
 from tests.common import MockConfigEntry
+
+
+@contextmanager
+def _patch_fritz_connection(fc_class_mock: MagicMock) -> Generator[None]:
+    """Patch a reachable FRITZ!Box and the entry setup."""
+    with (
+        patch(
+            "homeassistant.components.fritz.config_flow.FritzConnection",
+            side_effect=fc_class_mock,
+        ),
+        patch(
+            "homeassistant.components.fritz.config_flow.socket.gethostbyname",
+            return_value=MOCK_IPS["fritz.box"],
+        ),
+        patch("homeassistant.components.fritz.async_setup_entry", return_value=True),
+    ):
+        yield
 
 
 @pytest.mark.parametrize(
@@ -193,7 +213,8 @@ async def test_user_already_configured(
         patch(
             "homeassistant.components.fritz.config_flow.socket.gethostbyname",
             return_value=MOCK_IPS["fritz.box"],
-        ),
+        ) as mock_gethostbyname,
+        patch("homeassistant.components.fritz.async_setup_entry", return_value=True),
     ):
         mock_request_get.return_value.status_code = 200
         mock_request_get.return_value.content = MOCK_REQUEST
@@ -214,6 +235,13 @@ async def test_user_already_configured(
         assert result["step_id"] == "user"
         assert result["errors"]["base"] == "already_configured"
 
+        mock_gethostbyname.side_effect = [MOCK_IPS["server"], MOCK_IPS["fritz.box"]]
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={**MOCK_USER_INPUT_SIMPLE, CONF_HOST: "other_host"},
+        )
+        assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 @pytest.mark.parametrize(
     "error",
@@ -225,8 +253,9 @@ async def test_user_already_configured(
 )
 async def test_exception_security(
     hass: HomeAssistant,
-    error,
-    user_input,
+    fc_class_mock: MagicMock,
+    error: type[Exception],
+    user_input: dict[str, Any],
 ) -> None:
     """Test starting a flow by user with invalid credentials."""
 
@@ -249,6 +278,12 @@ async def test_exception_security(
         assert result["step_id"] == "user"
         assert result["errors"]["base"] == ERROR_AUTH_INVALID
 
+    with _patch_fritz_connection(fc_class_mock):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=user_input
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 @pytest.mark.parametrize(
     ("user_input"),
@@ -256,7 +291,8 @@ async def test_exception_security(
 )
 async def test_exception_connection(
     hass: HomeAssistant,
-    user_input,
+    fc_class_mock: MagicMock,
+    user_input: dict[str, Any],
 ) -> None:
     """Test starting a flow by user with a connection error."""
 
@@ -279,12 +315,20 @@ async def test_exception_connection(
         assert result["step_id"] == "user"
         assert result["errors"]["base"] == ERROR_CANNOT_CONNECT
 
+    with _patch_fritz_connection(fc_class_mock):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=user_input
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 @pytest.mark.parametrize(
     ("user_input"),
     [(MOCK_USER_DATA), (MOCK_USER_INPUT_SIMPLE)],
 )
-async def test_exception_unknown(hass: HomeAssistant, user_input) -> None:
+async def test_exception_unknown(
+    hass: HomeAssistant, fc_class_mock: MagicMock, user_input: dict[str, Any]
+) -> None:
     """Test starting a flow by user with an unknown exception."""
 
     result = await hass.config_entries.flow.async_init(
@@ -305,6 +349,12 @@ async def test_exception_unknown(hass: HomeAssistant, user_input) -> None:
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
         assert result["errors"]["base"] == ERROR_UNKNOWN
+
+    with _patch_fritz_connection(fc_class_mock):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=user_input
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_reauth_successful(
@@ -394,6 +444,17 @@ async def test_reauth_not_successful(
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "reauth_confirm"
         assert result["errors"]["base"] == error
+
+    with _patch_fritz_connection(fc_class_mock):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_USERNAME: "other_fake_user",
+                CONF_PASSWORD: "other_fake_password",
+            },
+        )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
 
 
 @pytest.mark.parametrize(

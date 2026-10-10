@@ -1,124 +1,40 @@
 """Support for AdGuard Home."""
 
-from dataclasses import dataclass
+from adguardhome import AdGuardHome
+from yarl import URL
 
-from adguardhome import AdGuardHome, AdGuardHomeConnectionError
-import probatio
-
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
-    CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_SSL,
-    CONF_URL,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
     Platform,
 )
-from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import ConfigEntryNotReady, ServiceValidationError
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
-from .const import (
-    CONF_FORCE,
-    DOMAIN,
-    SERVICE_ADD_URL,
-    SERVICE_DISABLE_URL,
-    SERVICE_ENABLE_URL,
-    SERVICE_REFRESH,
-    SERVICE_REMOVE_URL,
+from .const import DOMAIN
+from .coordinator import (
+    AdGuardConfigEntry,
+    AdGuardData,
+    AdGuardHomeStateCoordinator,
+    AdGuardHomeStatisticsCoordinator,
+    AdGuardHomeUpdateCoordinator,
 )
-
-SERVICE_URL_SCHEMA = probatio.Schema(
-    {probatio.Required(CONF_URL): probatio.Any(cv.url, cv.path)}
-)
-SERVICE_ADD_URL_SCHEMA = probatio.Schema(
-    {
-        probatio.Required(CONF_NAME): cv.string,
-        probatio.Required(CONF_URL): probatio.Any(cv.url, cv.path),
-    }
-)
-SERVICE_REFRESH_SCHEMA = probatio.Schema(
-    {probatio.Optional(CONF_FORCE, default=False): cv.boolean}
-)
+from .services import async_setup_services
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 PLATFORMS = [Platform.SENSOR, Platform.SWITCH, Platform.UPDATE]
-type AdGuardConfigEntry = ConfigEntry[AdGuardData]
-
-
-@dataclass
-class AdGuardData:
-    """Adguard data type."""
-
-    client: AdGuardHome
-    version: str
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the component."""
 
-    def _get_adguard_instances(hass: HomeAssistant) -> list[AdGuardHome]:
-        """Get the AdGuardHome instances."""
-        entries: list[AdGuardConfigEntry] = hass.config_entries.async_loaded_entries(
-            DOMAIN
-        )
-        if not entries:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN, translation_key="config_entry_not_loaded"
-            )
-        return [entry.runtime_data.client for entry in entries]
-
-    async def add_url(call: ServiceCall) -> None:
-        """Service call to add a new filter subscription to AdGuard Home."""
-        for adguard in _get_adguard_instances(call.hass):
-            await adguard.filtering.add_url(
-                allowlist=False, name=call.data[CONF_NAME], url=call.data[CONF_URL]
-            )
-
-    async def remove_url(call: ServiceCall) -> None:
-        """Service call to remove a filter subscription from AdGuard Home."""
-        for adguard in _get_adguard_instances(call.hass):
-            await adguard.filtering.remove_url(allowlist=False, url=call.data[CONF_URL])
-
-    async def enable_url(call: ServiceCall) -> None:
-        """Service call to enable a filter subscription in AdGuard Home."""
-        for adguard in _get_adguard_instances(call.hass):
-            await adguard.filtering.enable_url(allowlist=False, url=call.data[CONF_URL])
-
-    async def disable_url(call: ServiceCall) -> None:
-        """Service call to disable a filter subscription in AdGuard Home."""
-        for adguard in _get_adguard_instances(call.hass):
-            await adguard.filtering.disable_url(
-                allowlist=False, url=call.data[CONF_URL]
-            )
-
-    async def refresh(call: ServiceCall) -> None:
-        """Service call to refresh the filter subscriptions in AdGuard Home."""
-        for adguard in _get_adguard_instances(call.hass):
-            await adguard.filtering.refresh(
-                allowlist=False, force=call.data[CONF_FORCE]
-            )
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_ADD_URL, add_url, schema=SERVICE_ADD_URL_SCHEMA
-    )
-    hass.services.async_register(
-        DOMAIN, SERVICE_REMOVE_URL, remove_url, schema=SERVICE_URL_SCHEMA
-    )
-    hass.services.async_register(
-        DOMAIN, SERVICE_ENABLE_URL, enable_url, schema=SERVICE_URL_SCHEMA
-    )
-    hass.services.async_register(
-        DOMAIN, SERVICE_DISABLE_URL, disable_url, schema=SERVICE_URL_SCHEMA
-    )
-    hass.services.async_register(
-        DOMAIN, SERVICE_REFRESH, refresh, schema=SERVICE_REFRESH_SCHEMA
-    )
+    async_setup_services(hass)
     return True
 
 
@@ -155,21 +71,31 @@ async def async_setup_entry(hass: HomeAssistant, entry: AdGuardConfigEntry) -> b
 
     session = async_get_clientsession(hass, entry.data[CONF_VERIFY_SSL])
     adguard = AdGuardHome(
-        entry.data[CONF_HOST],
-        port=entry.data[CONF_PORT],
+        URL.build(
+            scheme="https" if entry.data[CONF_SSL] else "http",
+            host=entry.data[CONF_HOST],
+            port=entry.data[CONF_PORT],
+        ),
         username=entry.data[CONF_USERNAME],
         password=entry.data[CONF_PASSWORD],
-        tls=entry.data[CONF_SSL],
         verify_ssl=entry.data[CONF_VERIFY_SSL],
         session=session,
     )
 
-    try:
-        version = await adguard.version()
-    except AdGuardHomeConnectionError as exception:
-        raise ConfigEntryNotReady from exception
+    state = AdGuardHomeStateCoordinator(hass, entry, adguard)
+    await state.async_config_entry_first_refresh()
 
-    entry.runtime_data = AdGuardData(adguard, version)
+    statistics = AdGuardHomeStatisticsCoordinator(hass, entry, adguard)
+    await statistics.async_config_entry_first_refresh()
+
+    # Checking for updates needs AdGuard Home to reach the internet, which not
+    # every installation can. That should not keep the rest from working.
+    update = AdGuardHomeUpdateCoordinator(hass, entry, adguard)
+    await update.async_refresh()
+
+    entry.runtime_data = AdGuardData(
+        client=adguard, state=state, statistics=statistics, update=update
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

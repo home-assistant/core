@@ -4,7 +4,7 @@ import asyncio
 import logging
 from typing import Any, override
 
-import httpx
+import httpx2
 import probatio
 import prowlpy
 
@@ -60,7 +60,7 @@ class ProwlNotificationService(BaseNotificationService):
     """
 
     def __init__(
-        self, hass: HomeAssistant, api_key: str, httpx_client: httpx.AsyncClient
+        self, hass: HomeAssistant, api_key: str, httpx_client: httpx2.AsyncClient
     ) -> None:
         """Initialize the service."""
         self._hass = hass
@@ -83,19 +83,17 @@ class ProwlNotificationService(BaseNotificationService):
                     url=data.get("url"),
                 )
         except TimeoutError as ex:
-            _LOGGER.error("Timeout accessing Prowl API")
             raise HomeAssistantError("Timeout accessing Prowl API") from ex
         except prowlpy.APIError as ex:
             if str(ex).startswith("Invalid API key"):
-                _LOGGER.error("Invalid API key for Prowl service")
                 raise HomeAssistantError("Invalid API key for Prowl service") from ex
             if str(ex).startswith("Not accepted"):
-                _LOGGER.error("Prowl returned: exceeded rate limit")
                 raise HomeAssistantError(
                     "Prowl service reported: exceeded rate limit"
                 ) from ex
-            _LOGGER.error("Unexpected error when calling Prowl API: %s", str(ex))
-            raise HomeAssistantError("Unexpected error when calling Prowl API") from ex
+            raise HomeAssistantError(
+                f"Unexpected error when calling Prowl API: {ex}"
+            ) from ex
 
 
 class ProwlNotificationEntity(NotifyEntity):
@@ -109,7 +107,7 @@ class ProwlNotificationEntity(NotifyEntity):
         hass: HomeAssistant,
         name: str,
         api_key: str,
-        httpx_client: httpx.AsyncClient,
+        httpx_client: httpx2.AsyncClient,
     ) -> None:
         """Initialize the service."""
         self._hass = hass
@@ -131,16 +129,14 @@ class ProwlNotificationEntity(NotifyEntity):
                     url=None,
                 )
         except TimeoutError as ex:
-            _LOGGER.error("Timeout accessing Prowl API")
             raise HomeAssistantError("Timeout accessing Prowl API") from ex
         except prowlpy.APIError as ex:
             if str(ex).startswith("Invalid API key"):
-                _LOGGER.error("Invalid API key for Prowl service")
                 raise HomeAssistantError("Invalid API key for Prowl service") from ex
             if str(ex).startswith("Not accepted"):
-                _LOGGER.error("Prowl returned: exceeded rate limit")
                 raise HomeAssistantError(
                     "Prowl service reported: exceeded rate limit"
                 ) from ex
-            _LOGGER.error("Unexpected error when calling Prowl API: %s", str(ex))
-            raise HomeAssistantError("Unexpected error when calling Prowl API") from ex
+            raise HomeAssistantError(
+                f"Unexpected error when calling Prowl API: {ex}"
+            ) from ex
