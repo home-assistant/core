@@ -235,6 +235,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/besen/ @moryoav
 /homeassistant/components/binary_sensor/ @home-assistant/core
 /tests/components/binary_sensor/ @home-assistant/core
+/homeassistant/components/birdnet_go/ @TN-1
+/tests/components/birdnet_go/ @TN-1
 /homeassistant/components/bitvis/ @MandusBorjesson @real-tintin @simontegelid
 /tests/components/bitvis/ @MandusBorjesson @real-tintin @simontegelid
 /homeassistant/components/bizkaibus/ @UgaitzEtxebarria

@@ -1,0 +1,12 @@
+{
+  "lifetime_species": 42,
+  "today_detections": 138,
+  "best_day": {
+    "date": "2026-05-15",
+    "count": 420
+  },
+  "detection_streak": {
+    "days": 17,
+    "start_date": "2026-08-20"
+  }
+}
