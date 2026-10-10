@@ -17,6 +17,7 @@ class LinkPlaySharedData:
 
 
 DOMAIN = "linkplay"
+ENTITY_ID_CHANGED_SIGNAL = f"{DOMAIN}_entity_id_changed"
 SHARED_DATA = "shared_data"
 SHARED_DATA_KEY: HassKey[LinkPlaySharedData] = HassKey(SHARED_DATA)
 PLATFORMS = [Platform.BUTTON, Platform.MEDIA_PLAYER, Platform.SELECT]
