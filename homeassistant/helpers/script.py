@@ -462,12 +462,13 @@ class _ScriptRun:
         script: Script,
         variables: ScriptRunVariables,
         context: Context | None,
+        orig_context: Context | None,
         log_exceptions: bool,
     ) -> None:
         self._hass = hass
         self._script = script
         self._variables = variables
-        self._orig_context = context
+        self._orig_context = orig_context or context
         if not script.permission_check and context and context.user_id is not None:
             self._context = Context(parent_id=context.id)
         else:
@@ -720,7 +721,9 @@ class _ScriptRun:
         result = await self._async_run_long_action(
             self._hass.async_create_task_internal(
                 script.async_run(
-                    self._variables.enter_scope(parallel=parallel), self._context
+                    self._variables.enter_scope(parallel=parallel),
+                    self._context,
+                    orig_context=self._orig_context,
                 ),
                 eager_start=True,
             )
@@ -1927,6 +1930,8 @@ class Script:
         run_variables: _VarsType | None = None,
         context: Context | None = None,
         started_action: Callable[..., Any] | None = None,
+        *,
+        orig_context: Context | None = None,
     ) -> ScriptRunResult | None:
         """Run script."""
         if self._unloaded:
@@ -2010,7 +2015,9 @@ class Script:
             cls = _ScriptRun
         else:
             cls = _QueuedScriptRun
-        run = cls(self._hass, self, variables, context, self._log_exceptions)
+        run = cls(
+            self._hass, self, variables, context, orig_context, self._log_exceptions
+        )
         has_existing_runs = bool(self._runs)
         self._runs.append(run)
         if self.script_mode == SCRIPT_MODE_RESTART and has_existing_runs:

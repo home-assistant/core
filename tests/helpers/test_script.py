@@ -7055,7 +7055,7 @@ async def test_stopping_run_before_starting(
     # Tested directly because we are checking for a race in the internals
     # where the script is stopped before it is started. Previously this
     # would hang indefinitely.
-    run = script._ScriptRun(hass, script_obj, {}, None, True)
+    run = script._ScriptRun(hass, script_obj, {}, None, None, True)
     await run.async_stop()
 
 
@@ -7613,6 +7613,56 @@ async def test_permission_check_action_override(
             }
         ]
     )
+    script_obj = script.Script(
+        hass, sequence, "Test Name", "test_domain", permission_check=False
+    )
+
+    user_context = Context(user_id=hass_read_only_user.id)
+    with pytest.raises(exceptions.Unauthorized):
+        await script_obj.async_run(context=user_context)
+
+    assert len(calls) == 0
+
+
+async def test_permission_check_nested_action_override(
+    hass: HomeAssistant,
+    hass_read_only_user: MockUser,
+) -> None:
+    """Test permission_check: true on action step within permission_check: false script."""
+    calls = []
+
+    async def mock_service(call: ServiceCall) -> None:
+        calls.append(call)
+
+    service.async_register_admin_service(hass, "test", "admin_action", mock_service)
+
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {
+                "action": "test.admin_action",
+                "permission_check": True,
+            }
+        ]
+    )
+
+    sequence = cv.SCRIPT_SCHEMA(
+        {
+            "alias": "choose step",
+            "choose": [
+                {
+                    "conditions": {
+                        "condition": "template",
+                        "value_template": "true",
+                    },
+                    "sequence": {
+                        "action": "test.admin_action",
+                        "permission_check": True,
+                    },
+                },
+            ],
+        }
+    )
+
     script_obj = script.Script(
         hass, sequence, "Test Name", "test_domain", permission_check=False
     )
