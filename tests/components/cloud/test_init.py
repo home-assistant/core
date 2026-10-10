@@ -29,11 +29,21 @@ from homeassistant.components.cloud.const import (
     DOMAIN,
     EVENT_CLOUD_EVENT,
     MODE_DEV,
+    PREF_ALEXA_SETTINGS_VERSION,
     PREF_CLOUDHOOKS,
+    PREF_GOOGLE_SETTINGS_VERSION,
 )
-from homeassistant.components.cloud.prefs import STORAGE_KEY
-from homeassistant.const import CONF_MODE, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import Context, HomeAssistant, callback
+from homeassistant.components.cloud.prefs import (
+    ALEXA_SETTINGS_VERSION,
+    GOOGLE_SETTINGS_VERSION,
+    STORAGE_KEY,
+)
+from homeassistant.const import (
+    CONF_MODE,
+    EVENT_HOMEASSISTANT_STARTED,
+    EVENT_HOMEASSISTANT_STOP,
+)
+from homeassistant.core import Context, CoreState, HomeAssistant, callback
 from homeassistant.exceptions import Unauthorized
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -656,3 +666,30 @@ async def test_async_listen_cloudhook_change_cloud_setup_later(
 
     # Should not receive update after unsubscribe
     assert len(changes) == 1
+
+
+async def test_assistant_settings_migrated_at_startup(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """Test outdated assistant settings are migrated at startup without a login."""
+    hass.set_state(CoreState.not_running)
+    hass_storage[STORAGE_KEY] = {
+        "version": 1,
+        "minor_version": 4,
+        "data": {
+            PREF_ALEXA_SETTINGS_VERSION: ALEXA_SETTINGS_VERSION - 1,
+            PREF_GOOGLE_SETTINGS_VERSION: GOOGLE_SETTINGS_VERSION - 1,
+        },
+    }
+    with patch("hass_nabucasa.Cloud.initialize"):
+        assert await async_setup_component(hass, "homeassistant", {})
+        assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+    prefs = hass.data[DATA_CLOUD].client.prefs
+    assert prefs.alexa_settings_version == ALEXA_SETTINGS_VERSION - 1
+    assert prefs.google_settings_version == GOOGLE_SETTINGS_VERSION - 1
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
+
+    assert prefs.alexa_settings_version == ALEXA_SETTINGS_VERSION
+    assert prefs.google_settings_version == GOOGLE_SETTINGS_VERSION
