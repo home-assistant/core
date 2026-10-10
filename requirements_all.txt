@@ -1533,7 +1533,7 @@ librouteros==4.2.2
 libsoundtouch==0.8
 
 # homeassistant.components.lifx
-lifx-async==7.9.3
+lifx-async==7.10.1
 
 # homeassistant.components.osramlightify
 lightify==1.0.7.3
@@ -3205,7 +3205,7 @@ synology-srm==0.2.0
 systembridgeconnector==5.5.0
 
 # homeassistant.components.tailscale
-tailscale==0.7.0
+tailscale==1.0.0
 
 # homeassistant.components.tapsaff
 tapsaff==0.2.1
