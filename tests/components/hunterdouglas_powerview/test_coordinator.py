@@ -9,7 +9,7 @@ from homeassistant.components.hunterdouglas_powerview.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from .const import MOCK_MAC, MOCK_SERIAL
+from .const import MOCK_MAC
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
