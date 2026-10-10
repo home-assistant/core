@@ -153,6 +153,7 @@
         'number.inovelli_on_level_6': 'On level (6)',
         'number.inovelli_on_off_transition_time': 'On/Off transition time',
         'number.inovelli_on_transition_time': 'On transition time',
+        'number.inovelli_power_on_color_temperature': 'Power-on color temperature',
         'number.inovelli_power_on_level_1': 'Power-on level (1)',
         'number.inovelli_power_on_level_6': 'Power-on level (6)',
         'select.inovelli_dimming_edge': 'Dimming Edge',
