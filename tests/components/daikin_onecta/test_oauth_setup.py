@@ -8,7 +8,7 @@ import pytest
 from yarl import URL
 
 from homeassistant.components.daikin_onecta.const import DOMAIN
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
     OAuth2TokenRequestError,
@@ -17,6 +17,8 @@ from homeassistant.exceptions import (
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
 )
+
+from .test_climate_snapshots import _async_setup_fixture
 
 from tests.common import MockConfigEntry
 
@@ -70,6 +72,31 @@ def _token_error() -> OAuth2TokenRequestError:
         status=500,
         message="server error",
     )
+
+
+@pytest.mark.parametrize("status", [401, 403])
+async def test_poll_rejected_cloud_token_starts_reauthentication(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    status: int,
+) -> None:
+    """A real library authentication failure during polling starts the HA flow."""
+    await _async_setup_fixture(hass, config_entry, "minimal_data")
+    coordinator = config_entry.runtime_data
+    with patch(
+        "homeassistant.components.daikin_onecta.DaikinApi.get_cloud_device_details",
+        side_effect=OnectaAuthenticationError(
+            status=status, method="GET", path="/v1/gateway-devices"
+        ),
+    ):
+        await coordinator.async_refresh()
+        await hass.async_block_till_done()
+
+    assert not coordinator.last_update_success
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+    assert flows[0]["context"]["entry_id"] == config_entry.entry_id
 
 
 @pytest.mark.asyncio
