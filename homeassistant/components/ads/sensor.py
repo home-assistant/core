@@ -20,9 +20,9 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 
 from . import ADS_TYPEMAP, CONF_ADS_FACTOR, CONF_ADS_TYPE
-from .const import CONF_ADS_VAR, DATA_ADS, STATE_KEY_STATE, AdsType
+from .const import CONF_ADS_VAR, STATE_KEY_STATE, AdsType
 from .entity import AdsEntity
-from .hub import AdsHub
+from .hub import AdsHub, async_get_hub
 
 DEFAULT_NAME = "ADS sensor"
 
@@ -57,14 +57,14 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up an ADS sensor device."""
-    ads_hub = hass.data[DATA_ADS]
+    ads_hub = async_get_hub(hass)
 
     ads_var: str = config[CONF_ADS_VAR]
     ads_type: AdsType = config[CONF_ADS_TYPE]
@@ -85,7 +85,7 @@ def setup_platform(
         unit_of_measurement,
     )
 
-    add_entities([entity])
+    async_add_entities([entity])
 
 
 class AdsSensor(AdsEntity, SensorEntity):

@@ -2,9 +2,11 @@
   "domain": "ads",
   "name": "ADS",
   "codeowners": ["@mrpasztoradam"],
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/ads",
+  "integration_type": "hub",
   "iot_class": "local_push",
   "loggers": ["pyads"],
-  "quality_scale": "legacy",
-  "requirements": ["pyads==3.4.0"]
+  "requirements": ["pyads==3.4.0"],
+  "single_config_entry": true
 }
