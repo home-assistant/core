@@ -14,10 +14,13 @@ from homeassistant.components.aquacell.const import (
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
+from homeassistant.setup import async_setup_component
 
-from . import setup_integration
+from . import DSN, setup_integration
 
 from tests.common import MockConfigEntry
+from tests.typing import WebSocketGenerator
 
 
 async def test_load_unload_entry(
@@ -107,3 +110,31 @@ async def test_load_exceptions(
     entry = hass.config_entries.async_entries(DOMAIN)[0]
 
     assert entry.state is expected_state
+
+
+async def test_remove_device(
+    hass: HomeAssistant,
+    mock_aquacell_api: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test only softeners no longer returned by the API can be removed."""
+    assert await async_setup_component(hass, "config", {})
+    await setup_integration(hass, mock_config_entry)
+    client = await hass_ws_client(hass)
+
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, DSN), mock_config_entry.entry_id
+    )
+    assert device_entry is not None
+    response = await client.remove_device(device_entry.id)
+    assert not response["success"]
+
+    old_device_entry = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, "OLD-DSN")},
+    )
+    response = await client.remove_device(old_device_entry.id)
+    assert response["success"]
+    assert device_registry.async_get(old_device_entry.id) is None
