@@ -14,6 +14,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, snapshot_platform
+from tests.components.common import assert_availability_follows_source_entity
 from tests.components.infrared import RECEIVER_ENTITY_ID
 from tests.components.infrared.common import MockInfraredReceiverEntity
 
@@ -131,6 +132,40 @@ async def test_event_resubscribes_after_receiver_unavailable(
     state = hass.states.get(EVENT_ENTITY_ID)
     assert state is not None
     assert state.state != STATE_UNAVAILABLE
+
+    now = dt_util.parse_datetime("2026-05-12 12:00:00+00:00")
+    assert now is not None
+    freezer.move_to(now)
+
+    command = NECCommand(address=_LG_TV_NEC_ADDRESS, command=LGTVCode.POWER_ON)
+    mock_infrared_receiver_entity._handle_received_signal(
+        InfraredReceivedSignal(timings=command.get_raw_timings())
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(EVENT_ENTITY_ID)
+    assert state is not None
+    assert state.state == now.isoformat(timespec="milliseconds")
+    assert state.attributes[ATTR_EVENT_TYPE] == "power_on"
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_event_follows_receiver_rename(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_infrared_receiver_entity: MockInfraredReceiverEntity,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test availability tracking and signals survive a receiver entity rename."""
+    new_receiver_entity_id = "infrared.renamed_receiver"
+    entity_registry.async_update_entity(
+        RECEIVER_ENTITY_ID, new_entity_id=new_receiver_entity_id
+    )
+    await hass.async_block_till_done()
+
+    await assert_availability_follows_source_entity(
+        hass, EVENT_ENTITY_ID, [new_receiver_entity_id]
+    )
 
     now = dt_util.parse_datetime("2026-05-12 12:00:00+00:00")
     assert now is not None
