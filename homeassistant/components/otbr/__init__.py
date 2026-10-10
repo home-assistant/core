@@ -22,6 +22,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from . import homeassistant_hardware, websocket_api
 from .const import API_TIMEOUT, DOMAIN
+from .services import async_settle_unanswered_migration, async_setup_services
 from .types import OTBRConfigEntry
 from .util import (
     GetBorderAgentIdNotSupported,
@@ -39,6 +40,7 @@ CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Open Thread Border Router component."""
     websocket_api.async_setup(hass)
+    async_setup_services(hass)
 
     async_register_firmware_info_provider(hass, DOMAIN, homeassistant_hardware)
 
@@ -89,6 +91,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: OTBRConfigEntry) -> bool
         ) as err:
             raise ConfigEntryNotReady("Unable to connect") from err
         if dataset_tlvs:
+            # A migration this router never answered is settled first: found
+            # on the target, the preferred pointer follows it here as well.
+            await async_settle_unanswered_migration(hass, entry, otbrdata, dataset_tlvs)
             await update_issues(hass, otbrdata, dataset_tlvs)
             await async_add_dataset(
                 hass,
