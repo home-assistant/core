@@ -21,8 +21,11 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import config_validation as cv, service
-from homeassistant.helpers.service import async_get_device_and_config_entry
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.service import (
+    async_get_device_and_config_entry,
+    async_register_platform_entity_service,
+)
 from homeassistant.helpers.typing import VolDictType
 from homeassistant.util.json import JsonValueType
 
@@ -138,7 +141,7 @@ async def async_set_kvs_value(call: ServiceCall) -> None:
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Set up the services for Shelly integration."""
-    for service_name, method, schema, response in (
+    for service, method, schema, response in (
         (
             SERVICE_GET_KVS_VALUE,
             async_get_kvs_value,
@@ -154,13 +157,13 @@ def async_setup_services(hass: HomeAssistant) -> None:
     ):
         hass.services.async_register(
             DOMAIN,
-            service_name,
+            service,
             method,
             schema=schema,
             supports_response=response,
         )
 
-    service.async_register_platform_entity_service(
+    async_register_platform_entity_service(
         hass,
         DOMAIN,
         SERVICE_SET_COVER_POSITION_AND_TILT,
