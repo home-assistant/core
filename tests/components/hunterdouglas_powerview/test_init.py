@@ -25,9 +25,7 @@ def _get_hub_device(
     """Return the hub device (the only one with no parent) for an entry."""
     return next(
         device
-        for device in dr.async_entries_for_config_entry(
-            device_registry, entry.entry_id
-        )
+        for device in dr.async_entries_for_config_entry(device_registry, entry.entry_id)
         if device.via_device_id is None
     )
 
