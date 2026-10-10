@@ -81,4 +81,6 @@ rules:
   inject-websession:
     status: exempt
     comment: The underlying library does not use HTTP for communication.
-  strict-typing: done
+  strict-typing:
+    status: todo
+    comment: Requirement 'getmac==0.9.5' appears untyped
