@@ -158,7 +158,6 @@ BINARY_SENSOR_OPTIONS = {
                         "data": {"position": "{{ position }}"},
                     }
                 ],
-                "supported_speeds": ["slow", "fast"],
             },
             {
                 "device_class": "garage",
@@ -169,9 +168,8 @@ BINARY_SENSOR_OPTIONS = {
                         "data": {"position": "{{ position }}"},
                     }
                 ],
-                "supported_speeds": ["slow", "fast"],
             },
-            {"supported_speeds": ["slow", "fast"]},
+            {},
         ),
         (
             "event",
@@ -677,7 +675,7 @@ async def test_config_flow_device(
             ["open", "closed"],
             {"one": "open", "two": "closed"},
             {"set_cover_position": []},
-            {"set_cover_position": [], "supported_speeds": ["slow", "fast"]},
+            {"set_cover_position": []},
             "state",
             None,
         ),
