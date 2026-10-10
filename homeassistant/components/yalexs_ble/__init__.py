@@ -3,6 +3,8 @@
 from yalexs_ble import (
     AuthError,
     ConnectionInfo,
+    DoorActivity,
+    LockActivity,
     LockInfo,
     LockState,
     PushLock,
@@ -17,17 +19,24 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import CALLBACK_TYPE, CoreState, Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.typing import ConfigType
 
 from .config_cache import async_get_validated_config
 from .const import (
     CONF_ALWAYS_CONNECTED,
     CONF_KEY,
     CONF_LOCAL_NAME,
+    CONF_MASTER_CODE_NAME,
     CONF_SLOT,
     DEVICE_TIMEOUT,
     DOMAIN,
+    activity_signal,
 )
 from .models import YaleXSBLEData
+from .services import async_setup_services
+from .store import CredentialNames, async_remove_credential_names
 from .util import async_find_existing_service_info, bluetooth_callback_matcher
 
 type YALEXSBLEConfigEntry = ConfigEntry[YaleXSBLEData]
@@ -38,6 +47,14 @@ PLATFORMS: list[Platform] = [
     Platform.LOCK,
     Platform.SENSOR,
 ]
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Yale Access Bluetooth integration services."""
+    async_setup_services(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: YALEXSBLEConfigEntry) -> bool:
@@ -66,6 +83,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: YALEXSBLEConfigEntry) ->
     ) -> None:
         """Update from a ble callback."""
         push_lock.update_advertisement(service_info.device, service_info.advertisement)
+
+    @callback
+    def _async_activity(activity: LockActivity | DoorActivity) -> None:
+        """Fan a lock activity out to the lock entities."""
+        async_dispatcher_send(hass, activity_signal(address), activity)
+
+    # Registered before start so the library's first activity read is primed.
+    entry.async_on_unload(push_lock.register_activity_callback(_async_activity))
 
     shutdown_callback: CALLBACK_TYPE | None = await push_lock.start()
 
@@ -134,7 +159,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: YALEXSBLEConfigEntry) ->
         else:
             raise
 
-    entry.runtime_data = YaleXSBLEData(entry.title, push_lock, always_connected)
+    credential_names = CredentialNames(hass, entry.entry_id)
+    await credential_names.async_load()
+    entry.runtime_data = YaleXSBLEData(
+        entry.title,
+        push_lock,
+        always_connected,
+        credential_names,
+        entry.options.get(CONF_MASTER_CODE_NAME) or None,
+    )
 
     @callback
     def _async_device_unavailable(
@@ -180,3 +213,8 @@ async def _async_wait_for_first_update(push_lock: PushLock, local_name: str) -> 
 async def async_unload_entry(hass: HomeAssistant, entry: YALEXSBLEConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: YALEXSBLEConfigEntry) -> None:
+    """Remove stored data when the config entry is removed."""
+    await async_remove_credential_names(hass, entry.entry_id)

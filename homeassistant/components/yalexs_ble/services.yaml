@@ -1,0 +1,73 @@
+clear_lock_credential:
+  target:
+    entity:
+      domain: lock
+      integration: yalexs_ble
+  fields:
+    credential_type:
+      required: true
+      default: pin
+      selector:
+        select:
+          options:
+            - pin
+    credential_index:
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 250
+          step: 1
+          mode: box
+
+get_lock_credential_status:
+  target:
+    entity:
+      domain: lock
+      integration: yalexs_ble
+  fields:
+    credential_type:
+      required: true
+      default: pin
+      selector:
+        select:
+          options:
+            - pin
+    credential_index:
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 250
+          step: 1
+          mode: box
+
+set_lock_credential:
+  target:
+    entity:
+      domain: lock
+      integration: yalexs_ble
+  fields:
+    credential_type:
+      required: true
+      default: pin
+      selector:
+        select:
+          options:
+            - pin
+    credential_data:
+      required: true
+      selector:
+        text:
+          type: password
+    credential_index:
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 250
+          step: 1
+          mode: box
+    name:
+      selector:
+        text:
