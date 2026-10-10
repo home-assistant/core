@@ -181,9 +181,11 @@ class NiceGOUpdateCoordinator(DataUpdateCoordinator[dict[str, NiceGODevice]]):
                     self.refresh_token, async_get_clientsession(self.hass)
                 )
         except AuthFailedError as e:
+            # pylint: disable-next=home-assistant-log-and-raise
             _LOGGER.exception("Authentication failed")
             raise ConfigEntryAuthFailed from e
         except ApiError as e:
+            # pylint: disable-next=home-assistant-log-and-raise
             _LOGGER.exception("API error")
             raise UpdateFailed from e
 
@@ -195,9 +197,11 @@ class NiceGOUpdateCoordinator(DataUpdateCoordinator[dict[str, NiceGODevice]]):
                 self.email, self.password, async_get_clientsession(self.hass)
             )
         except AuthFailedError as e:
+            # pylint: disable-next=home-assistant-log-and-raise
             _LOGGER.exception("Authentication failed")
             raise ConfigEntryAuthFailed from e
         except ApiError as e:
+            # pylint: disable-next=home-assistant-log-and-raise
             _LOGGER.exception("API error")
             raise UpdateFailed from e
 

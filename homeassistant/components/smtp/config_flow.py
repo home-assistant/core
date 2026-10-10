@@ -99,7 +99,7 @@ STEP_USER_DATA_SCHEMA = probatio.Schema(
         ),
         probatio.Optional(CONF_SENDER_NAME): cv.string,
         probatio.Required(CONF_SERVER, default=DEFAULT_HOST): cv.string,
-        probatio.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        probatio.Required(CONF_PORT, default=DEFAULT_PORT): probatio.Port(),
         probatio.Required(CONF_ENCRYPTION, default=DEFAULT_ENCRYPTION): SelectSelector(
             SelectSelectorConfig(
                 options=ENCRYPTION_OPTIONS,
@@ -113,7 +113,7 @@ STEP_USER_DATA_SCHEMA = probatio.Schema(
                 autocomplete="username",
             ),
         ),
-        probatio.Optional(CONF_PASSWORD): TextSelector(
+        probatio.Optional(probatio.Secret(CONF_PASSWORD)): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.PASSWORD,
                 autocomplete="current-password",
@@ -130,7 +130,7 @@ STEP_REAUTH_DATA_SCHEMA = probatio.Schema(
                 autocomplete="username",
             ),
         ),
-        probatio.Optional(CONF_PASSWORD): TextSelector(
+        probatio.Optional(probatio.Secret(CONF_PASSWORD)): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.PASSWORD,
                 autocomplete="current-password",

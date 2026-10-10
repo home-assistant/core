@@ -62,11 +62,11 @@ async def test_statistics_import(
 
     freezer.tick(datetime.timedelta(days=1))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     await async_wait_recording_done(hass)
     freezer.tick(datetime.timedelta(days=1))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     await async_wait_recording_done(hass)
 
     for entity in entities:

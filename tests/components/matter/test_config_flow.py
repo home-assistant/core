@@ -179,6 +179,17 @@ async def test_manual_errors(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error}
 
+    client_connect.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "url": "ws://localhost:5580/ws",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_manual_already_configured(
     hass: HomeAssistant,

@@ -83,6 +83,7 @@ async def test_user(hass: HomeAssistant) -> None:
             "36b4b812-xxxx-xxxx-xxxx-c51735325858",
         ]
         assert result["options"][CONF_SHOW_ON_MAP]
+        assert result["result"].unique_id == "51.0_13.0"
 
         await hass.async_block_till_done()
 
@@ -132,6 +133,26 @@ async def test_exception_security(hass: HomeAssistant) -> None:
         assert result["step_id"] == "user"
         assert result["errors"][CONF_API_KEY] == "invalid_auth"
 
+    with (
+        patch(
+            "homeassistant.components.tankerkoenig.async_setup_entry", return_value=True
+        ),
+        patch(
+            "homeassistant.components.tankerkoenig.config_flow.Tankerkoenig.nearby_stations",
+            return_value=NEARBY_STATIONS,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=MOCK_USER_DATA
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "select_station"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=MOCK_STATIONS_DATA
+        )
+        assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_user_no_stations(hass: HomeAssistant) -> None:
     """Test starting a flow by user which does not find any station."""
@@ -151,6 +172,26 @@ async def test_user_no_stations(hass: HomeAssistant) -> None:
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
         assert result["errors"][CONF_RADIUS] == "no_stations"
+
+    with (
+        patch(
+            "homeassistant.components.tankerkoenig.async_setup_entry", return_value=True
+        ),
+        patch(
+            "homeassistant.components.tankerkoenig.config_flow.Tankerkoenig.nearby_stations",
+            return_value=NEARBY_STATIONS,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=MOCK_USER_DATA
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "select_station"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=MOCK_STATIONS_DATA
+        )
+        assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_reauth(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:

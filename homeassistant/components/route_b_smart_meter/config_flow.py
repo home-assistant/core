@@ -112,7 +112,7 @@ class BRouteConfigFlow(ConfigFlow, domain=DOMAIN):
                         }
                     ),
                     probatio.Required(CONF_ID): str,
-                    probatio.Required(CONF_PASSWORD): str,
+                    probatio.Required(probatio.Secret(CONF_PASSWORD)): str,
                 }
             ),
             errors=errors,

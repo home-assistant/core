@@ -8,6 +8,7 @@ registered. Registering a new entity while a timer is in progress resets the
 timer.
 """
 
+import asyncio
 from collections import defaultdict
 from collections.abc import Callable, Hashable, KeysView, Mapping, Sequence
 import dataclasses
@@ -67,7 +68,7 @@ from .json import (
     find_paths_unserializable_data,
     json_fragment,
 )
-from .registry import BaseRegistry, BaseRegistryItems, RegistryIndexType
+from .registry import BaseRegistry, BaseRegistryItems, NextNamePart, RegistryIndexType
 from .singleton import singleton
 from .typing import UNDEFINED, UndefinedType
 
@@ -123,6 +124,7 @@ def _deserialize_aliases(aliases: list[str | None]) -> list[AliasEntry]:
 # Attributes relevant to describing entity
 # to external services.
 ENTITY_DESCRIBING_ATTRIBUTES = {
+    "area_id",
     "capabilities",
     "device_class",
     "entity_id",
@@ -197,6 +199,7 @@ DISPLAY_DICT_OPTIONAL = (
     ("ai", "area_id", False),
     ("lb", "labels", True),
     ("di", "device_id", False),
+    ("np", "next_name_part", False),
     ("ic", "icon", False),
     ("tk", "translation_key", False),
 )
@@ -220,6 +223,17 @@ def _protect_optional_entity_options(
     if data is None:
         return ReadOnlyDict({})
     return ReadOnlyDict({key: ReadOnlyDict(val) for key, val in data.items()})
+
+
+def _entity_next_name_part(
+    area_id: str | None, device_id: str | None
+) -> NextNamePart | None:
+    """Compute the next name part of an entity."""
+    if area_id is not None:
+        return NextNamePart.AREA
+    if device_id is not None:
+        return NextNamePart.DEVICE
+    return None
 
 
 @attr.s(frozen=True, kw_only=True, slots=True)
@@ -286,6 +300,11 @@ class RegistryEntry:
     def hidden(self) -> bool:
         """Return if entry is hidden."""
         return self.hidden_by is not None
+
+    @property
+    def next_name_part(self) -> NextNamePart | None:
+        """Next name part of the entity."""
+        return _entity_next_name_part(self.area_id, self.device_id)
 
     @property
     def _as_display_dict(self) -> dict[str, Any] | None:
@@ -375,6 +394,7 @@ class RegistryEntry:
             "labels": list(self.labels),
             "modified_at": self.modified_at.timestamp(),
             "name": self.name,
+            "next_name_part": self.next_name_part,
             "options": self.options,
             "original_name": original_name,
             "platform": self.platform,
@@ -469,7 +489,7 @@ class RegistryEntry:
         if icon is not None:
             attrs[EntityStateAttribute.ICON] = icon
 
-        name = async_get_full_entity_name(hass, self)
+        name = async_get_legacy_friendly_name(hass, self)
         if name:
             attrs[EntityStateAttribute.FRIENDLY_NAME] = name
 
@@ -488,7 +508,8 @@ def async_get_unprefixed_name(hass: HomeAssistant, entry: RegistryEntry) -> str:
     name = entry.name
     if name is not None:
         if (
-            entry.device_id is not None
+            entry.next_name_part is NextNamePart.DEVICE
+            and entry.device_id is not None
             and (device := dr.async_get(hass).async_get(entry.device_id)) is not None
         ):
             device_name = device.name_by_user or device.name
@@ -512,42 +533,53 @@ def _async_get_full_entity_name(
     fallback: str,
     has_entity_name: bool,
     name: str | None,
+    next_name_part: NextNamePart | None,
     original_name: str | None,
     original_name_unprefixed: str | UndefinedType | None = UNDEFINED,
     overridden_name: str | None = None,
     parts: Sequence[EntityNamePart],
     unprefix_name: bool = False,
     use_legacy_naming: bool = False,
+    use_next_name_part: bool = True,
 ) -> str:
     """Get full name for an entity.
 
     This includes the device and area name if appropriate.
+    With use_next_name_part, owners contribute their name part only while
+    the next_name_part links reach them.
     Used for both full entity name and entity ID.
     """
     if name is None and overridden_name is not None:
         full_name = overridden_name
 
-    elif not use_legacy_naming or name is None:
+    elif not use_legacy_naming or not name:
+        raw_device_name: str | None = None
         device_name: str | None = None
         parent_device_name: str | None = None
         if device_id is not None:
             device_registry = dr.async_get(hass)
             if (device := device_registry.async_get(device_id)) is not None:
-                device_name = device.name_by_user or device.name
+                raw_device_name = device.name_by_user or device.name
 
-                if (
-                    EntityNamePart.PARENT_DEVICE in parts
-                    and isinstance(device, dr.ChildDeviceEntry)
-                    and (
-                        parent_device := device_registry.async_get(
-                            device.parent_device_id, include_child_devices=False
+                if not use_next_name_part or next_name_part is NextNamePart.DEVICE:
+                    device_name = raw_device_name
+                    if (
+                        EntityNamePart.PARENT_DEVICE in parts
+                        and isinstance(device, dr.ChildDeviceEntry)
+                        and (
+                            not use_next_name_part
+                            or device.next_name_part is NextNamePart.PARENT_DEVICE
                         )
-                    )
-                    is not None
-                ):
-                    parent_device_name = (
-                        parent_device.name_by_user or parent_device.name
-                    )
+                        and (
+                            parent_device := device_registry.async_get(
+                                device.parent_device_id, include_child_devices=False
+                            )
+                        )
+                        is not None
+                    ):
+                        parent_device_name = (
+                            parent_device.name_by_user or parent_device.name
+                        )
 
                 if area_id is None:
                     area_id = dr.async_get_effective_area_id(hass, device)
@@ -572,7 +604,7 @@ def _async_get_full_entity_name(
         if entity_name is None:
             if original_name_unprefixed is UNDEFINED:
                 original_name_unprefixed = (
-                    _async_strip_prefix_from_entity_name(original_name, device_name)
+                    _async_strip_prefix_from_entity_name(original_name, raw_device_name)
                     if not has_entity_name
                     else None
                 )
@@ -583,7 +615,9 @@ def _async_get_full_entity_name(
                 else original_name
             )
         elif unprefix_name:
-            unprefixed_name = _async_strip_prefix_from_entity_name(name, device_name)
+            unprefixed_name = _async_strip_prefix_from_entity_name(
+                name, raw_device_name
+            )
             if unprefixed_name is not None:
                 entity_name = unprefixed_name
 
@@ -608,12 +642,12 @@ def _async_get_full_entity_name(
 
 
 @callback
-def async_get_full_entity_name(
+def async_get_legacy_friendly_name(
     hass: HomeAssistant,
     entry: RegistryEntry,
     original_name: str | UndefinedType | None = UNDEFINED,
 ) -> str:
-    """Get full entity name for an entry."""
+    """Get the legacy friendly name for an entity entry."""
     original_name_unprefixed: str | UndefinedType | None = UNDEFINED
     if original_name is UNDEFINED or original_name == entry.original_name:
         original_name = entry.original_name
@@ -626,10 +660,35 @@ def async_get_full_entity_name(
         fallback="",
         has_entity_name=entry.has_entity_name,
         name=entry.name,
+        next_name_part=entry.next_name_part,
         original_name=original_name,
         original_name_unprefixed=original_name_unprefixed,
         parts=(EntityNamePart.DEVICE, EntityNamePart.ENTITY),
         use_legacy_naming=True,
+        use_next_name_part=False,
+    )
+
+
+@callback
+def async_get_full_entity_name(hass: HomeAssistant, entry: RegistryEntry) -> str:
+    """Get the computed name for an entity entry."""
+    return _async_get_full_entity_name(
+        hass,
+        area_id=entry.area_id,
+        device_id=entry.device_id,
+        fallback="",
+        has_entity_name=entry.has_entity_name,
+        name=entry.name,
+        next_name_part=entry.next_name_part,
+        original_name=entry.original_name,
+        original_name_unprefixed=entry.original_name_unprefixed,
+        parts=(
+            EntityNamePart.PARENT_DEVICE,
+            EntityNamePart.DEVICE,
+            EntityNamePart.ENTITY,
+        ),
+        use_legacy_naming=True,
+        use_next_name_part=True,
     )
 
 
@@ -643,7 +702,8 @@ def async_get_entity_aliases(
     """Get all names/aliases for an entity.
 
     Processes entry aliases where COMPUTED_NAME entries are replaced with the
-    computed full entity name. String entries are used as-is.
+    computed full entity name, which follows the next_name_part links.
+    String entries are used as-is.
 
     The returned list preserves the order set by the user.
     """
@@ -1248,6 +1308,7 @@ class EntityRegistry(BaseRegistry):
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the registry."""
         self.hass = hass
+        self._loaded_event = asyncio.Event()
         self._store = EntityRegistryStore(
             hass,
             STORAGE_VERSION_MAJOR,
@@ -1417,6 +1478,7 @@ class EntityRegistry(BaseRegistry):
             fallback=f"{platform}_{unique_id}",
             has_entity_name=has_entity_name,
             name=name,
+            next_name_part=_entity_next_name_part(area_id, device_id),
             original_name=object_id_base,
             overridden_name=suggested_object_id,
             parts=parts,
@@ -2213,6 +2275,9 @@ class EntityRegistry(BaseRegistry):
     @override
     async def _async_load(self) -> None:
         """Load the entity registry."""
+        if self._loaded_event.is_set():
+            raise RuntimeError("Entity registry is already loaded")
+
         # Device registry must be loaded before entity registry because
         # migration and entity processing reference device names, and because entities
         # are moved to the correct device when a pre-migration composite device was
@@ -2428,6 +2493,12 @@ class EntityRegistry(BaseRegistry):
         if migrated_composite_device:
             self.async_schedule_save()
 
+        self._loaded_event.set()
+
+    async def async_wait_loaded(self) -> None:
+        """Wait until the entity registry is fully loaded."""
+        await self._loaded_event.wait()
+
     @override
     def _data_to_save(self) -> dict[str, Any]:
         """Return data of entity registry to store in a file."""
@@ -2557,7 +2628,6 @@ def async_get(hass: HomeAssistant) -> EntityRegistry:
 
 async def async_load(hass: HomeAssistant, *, load_empty: bool = False) -> None:
     """Load entity registry."""
-    assert DATA_REGISTRY not in hass.data
     await async_get(hass).async_load(load_empty=load_empty)
 
 

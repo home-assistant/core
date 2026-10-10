@@ -11,7 +11,7 @@
       }),
       'domain': 'melcloud_home',
       'entry_id': 'config-entry-uuid-1',
-      'minor_version': 1,
+      'minor_version': 2,
       'options': dict({
       }),
       'pref_disable_new_entities': False,
@@ -274,6 +274,7 @@
         'ata-unit-uuid-1': 450.5,
         'atw-unit-uuid-1': 450.5,
       }),
+      'energy_period_start': '2026-06-01T00:00:00+00:00',
       'outdoor_temperature': dict({
         'ata-unit-uuid-1': 19.5,
       }),

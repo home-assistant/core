@@ -1,5 +1,10 @@
 """Support for Tuya number."""
 
+# Tuya drops the device class at runtime when a device reports a unit that
+# doesn't fit it. The translation key then still gives the entity its name,
+# so it is not redundant here.
+# pylint: disable=home-assistant-redundant-translation-key
+
 from dataclasses import dataclass
 from typing import override
 
@@ -151,6 +156,13 @@ NUMBERS: dict[DeviceCategory, tuple[TuyaNumberEntityDescription, ...]] = {
             key=DPCode.TARGET_DIS_CLOSEST,
             translation_key="target_dis_closest",
             device_class=NumberDeviceClass.DISTANCE,
+        ),
+    ),
+    DeviceCategory.HWSB: (
+        TuyaNumberEntityDescription(
+            key=DPCode.SPEED_SET,
+            translation_key="speed",
+            native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         ),
     ),
     DeviceCategory.JSQ: (

@@ -13,6 +13,7 @@ VEHICLE_REDACT = [
     "vehicle_id",
     "vin",
     "tokens",
+    "backseat_token",
     "id_s",
     "drive_state_active_route_latitude",
     "drive_state_active_route_longitude",
@@ -22,8 +23,8 @@ VEHICLE_REDACT = [
     "drive_state_native_longitude",
 ]
 
-ENERGY_LIVE_REDACT = ["vin"]
-ENERGY_INFO_REDACT = ["installation_date"]
+ENERGY_LIVE_REDACT = ["vin", "din"]
+ENERGY_INFO_REDACT = ["id", "installation_date", "din", "serial_number"]
 
 
 async def async_get_config_entry_diagnostics(
@@ -41,7 +42,16 @@ async def async_get_config_entry_diagnostics(
     ]
     energysites = [
         {
-            "live": async_redact_data(x.live_coordinator.data, ENERGY_LIVE_REDACT)
+            # Wall connectors are keyed by DIN, which embeds the serial number
+            "live": async_redact_data(
+                {
+                    **x.live_coordinator.data,
+                    "wall_connectors": list(
+                        x.live_coordinator.data["wall_connectors"].values()
+                    ),
+                },
+                ENERGY_LIVE_REDACT,
+            )
             if x.live_coordinator
             else None,
             "info": async_redact_data(x.info_coordinator.data, ENERGY_INFO_REDACT),

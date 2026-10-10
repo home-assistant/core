@@ -325,6 +325,7 @@ def gen_issues_schema(frontend_issues: frozenset[str]) -> dict[str, Any]:
         probatio.Schema(
             {
                 probatio.Required("title"): translation_value_validator,
+                probatio.Optional("short_title"): translation_value_validator,
                 probatio.Exclusive(
                     "description", "fixable"
                 ): translation_value_validator,

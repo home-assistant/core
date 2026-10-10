@@ -140,17 +140,6 @@ ALL_DEVICES_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         ufp_value_fn=_get_uptime,
     ),
     ProtectSensorEntityDescription(
-        key="ble_signal",
-        translation_key="bluetooth_signal_strength",
-        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
-        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-        state_class=SensorStateClass.MEASUREMENT,
-        ufp_value="bluetooth_connection_state.signal_strength",
-        ufp_required_field="bluetooth_connection_state.signal_strength",
-    ),
-    ProtectSensorEntityDescription(
         key="phy_rate",
         translation_key="link_speed",
         device_class=SensorDeviceClass.DATA_RATE,
@@ -371,6 +360,15 @@ SENSE_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
     ),
     ProtectSensorEntityDescription(
+        key="signal_quality",
+        translation_key="signal_quality",
+        native_unit_of_measurement=PERCENTAGE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
+        ufp_public_value="wireless_connection_state.signal_state.signal_quality",
+    ),
+    ProtectSensorEntityDescription(
         key="sensitivity",
         translation_key="sensitivity",
         native_unit_of_measurement=PERCENTAGE,
@@ -393,6 +391,17 @@ SENSE_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_value="camera.display_name",
         ufp_perm=PermRequired.NO_WRITE,
+    ),
+    # Sensors connect over Bluetooth or SuperLink, which the public API does
+    # not tell apart, so the name stays generic.
+    ProtectSensorEntityDescription(
+        key="signal_strength",
+        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
+        ufp_public_value="wireless_connection_state.signal_state.signal_strength",
     ),
 )
 
@@ -601,6 +610,13 @@ def _fob_signal_strength(fob: Fob) -> int | None:
     return None
 
 
+def _fob_signal_quality(fob: Fob) -> int | None:
+    """Return the key fob signal quality, if it has been reported."""
+    if (signal := fob.wireless_connection_state.signal_state) is not None:
+        return signal.signal_quality
+    return None
+
+
 def _fob_status(fob: Fob) -> str | None:
     """Return the key fob presence state.
 
@@ -637,6 +653,15 @@ FOB_SENSORS: tuple[ProtectFobSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=_fob_signal_strength,
+    ),
+    ProtectFobSensorEntityDescription(
+        key="signal_quality",
+        translation_key="signal_quality",
+        native_unit_of_measurement=PERCENTAGE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=_fob_signal_quality,
     ),
     ProtectFobSensorEntityDescription(
         key="status",

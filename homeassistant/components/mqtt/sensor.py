@@ -26,6 +26,7 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
+    CONF_ENTITY_CATEGORY,
     CONF_FORCE_UPDATE,
     CONF_NAME,
     CONF_OPTIONS,
@@ -54,7 +55,7 @@ from .const import (
 from .entity import MqttAvailabilityMixin, MqttEntity, async_setup_entity_entry_helper
 from .models import MqttValueTemplate, PayloadSentinel, ReceiveMessage
 from .schemas import MQTT_ENTITY_COMMON_SCHEMA
-from .util import check_state_too_long
+from .util import check_state_too_long, entity_category_without_config
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -74,19 +75,21 @@ URL_DOCS_SUPPORTED_SENSOR_UOM = (
     "https://www.home-assistant.io/integrations/sensor/#device-class"
 )
 
-_PLATFORM_SCHEMA_BASE = MQTT_RO_SCHEMA.extend(
+_PLATFORM_SCHEMA_BASE = MQTT_RO_SCHEMA.extend(MQTT_ENTITY_COMMON_SCHEMA.schema).extend(
     {
         probatio.Optional(CONF_DEVICE_CLASS): probatio.Any(DEVICE_CLASSES_SCHEMA, None),
         probatio.Optional(CONF_EXPIRE_AFTER): cv.positive_int,
         probatio.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
         probatio.Optional(CONF_LAST_RESET_VALUE_TEMPLATE): cv.template,
         probatio.Optional(CONF_NAME): probatio.Any(cv.string, None),
-        probatio.Optional(CONF_OPTIONS): cv.ensure_list,
+        probatio.Optional(CONF_OPTIONS): probatio.EnsureList(),
         probatio.Optional(CONF_SUGGESTED_DISPLAY_PRECISION): cv.positive_int,
         probatio.Optional(CONF_STATE_CLASS): probatio.Any(STATE_CLASSES_SCHEMA, None),
         probatio.Optional(CONF_UNIT_OF_MEASUREMENT): probatio.Any(cv.string, None),
+        # a sensor can not be added as a config entity
+        probatio.Optional(CONF_ENTITY_CATEGORY): entity_category_without_config,
     }
-).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
+)
 
 
 def validate_sensor_state_and_device_class_config(config: ConfigType) -> ConfigType:
@@ -239,6 +242,17 @@ class MqttSensor(MqttEntity, RestoreSensor):
                 self.entity_id,
                 remain_seconds,
             )
+
+    @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Opt in to in-place entity_id changes.
+
+        Can be removed when backwards compatibility is disabled for core
+        integrations, i.e. once all core integrations have been migrated
+        to in-place entity ID change.
+        """
+        super().async_entity_id_changed(old_entity_id)
 
     @override
     async def async_will_remove_from_hass(self) -> None:
