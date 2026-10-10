@@ -41,7 +41,11 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import (
+    HomeAssistantError,
+    ServiceNotSupported,
+    ServiceValidationError,
+)
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -1214,6 +1218,62 @@ async def test_speed_unavailable_member(
     assert slow_fast.last_kwargs == {ATTR_SPEED: "slow"}
     assert silent_fast.last_kwargs is None
     assert no_speed.last_kwargs == {}
+
+
+@pytest.mark.parametrize(
+    "data",
+    [
+        pytest.param({}, id="without_speed"),
+        pytest.param({ATTR_SPEED: "fast"}, id="with_speed"),
+    ],
+)
+async def test_speed_member_without_action(
+    hass: HomeAssistant, data: dict[str, Any]
+) -> None:
+    """Test a member without the action is left to core, like without a speed."""
+    entities = [
+        MockCover(
+            name="Open only",
+            unique_id="open_only",
+            supported_features=CoverEntityFeature.OPEN | CoverEntityFeature.SPEED,
+            supported_speeds=["slow"],
+        ),
+        MockCover(
+            name="Open close",
+            unique_id="open_close",
+            supported_features=CoverEntityFeature.OPEN
+            | CoverEntityFeature.CLOSE
+            | CoverEntityFeature.SPEED,
+            supported_speeds=["fast"],
+        ),
+    ]
+    setup_test_component_platform(hass, COVER_DOMAIN, entities)
+    assert await async_setup_component(
+        hass,
+        COVER_DOMAIN,
+        {
+            COVER_DOMAIN: [
+                {"platform": "test"},
+                {
+                    "platform": "group",
+                    CONF_ENTITIES: ["cover.open_only", "cover.open_close"],
+                },
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    with pytest.raises(ServiceNotSupported):
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_CLOSE_COVER,
+            {ATTR_ENTITY_ID: COVER_GROUP, **data},
+            blocking=True,
+        )
+
+    assert [entity.last_kwargs for entity in entities] == [None, None]
 
 
 async def test_speed_not_supported_by_any_member(

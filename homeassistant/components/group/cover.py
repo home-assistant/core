@@ -206,6 +206,7 @@ class CoverGroup(GroupEntity, CoverEntity):
     async def _async_call_with_speed(
         self,
         service: str,
+        feature: CoverEntityFeature,
         entity_ids: set[str],
         data: dict[str, Any],
         speed: str | None,
@@ -221,11 +222,14 @@ class CoverGroup(GroupEntity, CoverEntity):
             await self._async_call_members(service, entity_ids, data)
             return
 
-        # Core skips unavailable members, so they are not reported
+        # Unavailable members and members without the action are left to core
         unsupported = sorted(
             entity_id
             for entity_id in entity_ids
-            if not self.hass.states.is_state(entity_id, STATE_UNAVAILABLE)
+            if (state := self.hass.states.get(entity_id))
+            and state.state != STATE_UNAVAILABLE
+            and state.attributes.get(EntityStateAttribute.SUPPORTED_FEATURES, 0)
+            & feature
             and (speeds := self._member_speeds(entity_id))
             and speed not in speeds
         )
@@ -248,6 +252,7 @@ class CoverGroup(GroupEntity, CoverEntity):
         """Move the covers up."""
         await self._async_call_with_speed(
             SERVICE_OPEN_COVER,
+            CoverEntityFeature.OPEN,
             self._covers[KEY_OPEN_CLOSE],
             {},
             kwargs.get(ATTR_SPEED),
@@ -258,6 +263,7 @@ class CoverGroup(GroupEntity, CoverEntity):
         """Move the covers down."""
         await self._async_call_with_speed(
             SERVICE_CLOSE_COVER,
+            CoverEntityFeature.CLOSE,
             self._covers[KEY_OPEN_CLOSE],
             {},
             kwargs.get(ATTR_SPEED),
@@ -276,6 +282,7 @@ class CoverGroup(GroupEntity, CoverEntity):
         """Set covers position."""
         await self._async_call_with_speed(
             SERVICE_SET_COVER_POSITION,
+            CoverEntityFeature.SET_POSITION,
             self._covers[KEY_POSITION],
             {ATTR_POSITION: kwargs[ATTR_POSITION]},
             kwargs.get(ATTR_SPEED),
