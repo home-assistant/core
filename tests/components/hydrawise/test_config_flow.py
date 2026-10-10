@@ -64,7 +64,7 @@ async def test_form(
         (ClientError("XXX"), "cannot_connect"),
         (APIError("unavailable"), "cannot_connect"),
         (NotAuthorizedError("HTTP 401"), "invalid_auth"),
-        (TimeoutError, "timeout_connect"),
+        (TimeoutError(), "timeout_connect"),
         (Exception("Boom"), "unknown"),
     ],
 )
