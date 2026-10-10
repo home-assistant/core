@@ -277,6 +277,8 @@ def get_status_callbacks(chromecast_mock, mz_mock=None):
     cast_status_cb = status_listener.new_cast_status
 
     connection_listener = chromecast_mock.register_connection_listener.call_args[0][0]
+    # Run connection status handling directly on the HA event loop.
+    # The PyChromecast callback and thread handoff are tested in test_helpers.py.
     conn_status_cb = connection_listener.async_new_connection_status
 
     mc = chromecast_mock.socket_client.media_controller
