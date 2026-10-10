@@ -844,16 +844,16 @@ async def async_validate(hass: HomeAssistant) -> EnergyPreferencesValidation:
             )
         )
 
-    for device in manager.data.get("device_consumption_water", []):
+    for water_device in manager.data.get("device_consumption_water", []):
         device_result = ValidationIssues()
         result.device_consumption_water.append(device_result)
-        wanted_statistics_metadata.add(device["stat_consumption"])
+        wanted_statistics_metadata.add(water_device["stat_consumption"])
         validate_calls.append(
             functools.partial(
                 _async_validate_usage_stat,
                 hass,
                 statistics_metadata,
-                device["stat_consumption"],
+                water_device["stat_consumption"],
                 WATER_USAGE_DEVICE_CLASSES,
                 WATER_USAGE_UNITS,
                 WATER_UNIT_ERROR,
