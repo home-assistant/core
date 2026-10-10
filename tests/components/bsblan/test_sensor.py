@@ -2,18 +2,19 @@
 
 from unittest.mock import AsyncMock
 
-from bsblan import BSBLANError
+from bsblan import BSBLANAuthError, BSBLANConnectionError, BSBLANError, Device
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.const import Platform
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_with_selected_platforms
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 ENTITY_CURRENT_TEMP = "sensor.bsb_lan_current_temperature"
 ENTITY_OUTSIDE_TEMP = "sensor.bsb_lan_outside_temperature"
@@ -63,6 +64,9 @@ async def test_sensors_not_created_when_sensor_request_fails(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test sensors are not created when generic sensor data is unsupported."""
+    mock_bsblan.device.return_value = Device.model_validate(
+        {**mock_bsblan.device.return_value.model_dump(), "bus": "PPS"}
+    )
     mock_bsblan.sensor.side_effect = BSBLANError("No sensor data")
 
     await setup_with_selected_platforms(hass, mock_config_entry, [Platform.SENSOR])
@@ -78,6 +82,56 @@ async def test_sensors_not_created_when_sensor_request_fails(
     )
     sensor_entities = [entry for entry in entity_entries if entry.domain == "sensor"]
     assert len(sensor_entities) == 0
+
+
+@pytest.mark.parametrize(
+    ("exception", "expected_state"),
+    [
+        pytest.param(
+            BSBLANError("Sensor failed"), ConfigEntryState.SETUP_RETRY, id="generic"
+        ),
+        pytest.param(
+            BSBLANConnectionError("Connection failed"),
+            ConfigEntryState.SETUP_RETRY,
+            id="connection",
+        ),
+        pytest.param(
+            BSBLANAuthError("Authentication failed"),
+            ConfigEntryState.SETUP_ERROR,
+            id="auth",
+        ),
+    ],
+)
+async def test_sensor_errors_fail_setup(
+    hass: HomeAssistant,
+    mock_bsblan: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    exception: BSBLANError,
+    expected_state: ConfigEntryState,
+) -> None:
+    """Test sensor failures are not treated as successful updates."""
+    mock_bsblan.sensor.side_effect = exception
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert mock_config_entry.state is expected_state
+
+
+async def test_sensor_error_on_refresh_marks_entities_unavailable(
+    hass: HomeAssistant,
+    mock_bsblan: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a failed sensor refresh does not expose stale values as available."""
+    await setup_with_selected_platforms(hass, mock_config_entry, [Platform.SENSOR])
+    mock_bsblan.sensor.side_effect = BSBLANError("Sensor failed")
+    freezer.tick(delta=20)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    state = hass.states.get(ENTITY_CURRENT_TEMP)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
 
 
 async def test_partial_sensors_created_when_some_data_available(

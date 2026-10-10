@@ -112,6 +112,9 @@
     "coordinator_connection_error": {
       "message": "Error while establishing connection with BSB-LAN device at {host}"
     },
+    "coordinator_sensor_error": {
+      "message": "Error while fetching sensor data from the BSB-LAN device at {host}"
+    },
     "coordinator_state_error": {
       "message": "Error while fetching state data for heating circuit {circuit} from the BSB-LAN device at {host}"
     },
