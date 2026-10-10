@@ -179,10 +179,16 @@
       "stats_area_mower": {
         "default": "mdi:floor-plan"
       },
+      "stats_progress": {
+        "default": "mdi:progress-clock"
+      },
       "stats_time": {
         "default": "mdi:timer-outline"
       },
       "stats_time_mower": {
+        "default": "mdi:timer-outline"
+      },
+      "stats_time_mower_estimated": {
         "default": "mdi:timer-outline"
       },
       "total_stats_area": {
