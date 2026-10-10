@@ -1,5 +1,7 @@
 """Test the tractive config flow."""
 
+from collections.abc import Generator
+from contextlib import contextmanager
 from http import HTTPStatus
 from unittest.mock import patch
 
@@ -17,6 +19,19 @@ USER_INPUT = {
     "email": "test-email@example.com",
     "password": "test-password",
 }
+
+
+@contextmanager
+def _patch_success(user_id: str = "user_id") -> Generator[None]:
+    """Patch a successful login without setting up the entry."""
+    with (
+        patch("aiotractive.api.API.user_id", return_value=user_id),
+        patch(
+            "homeassistant.components.tractive.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        yield
 
 
 async def test_form(hass: HomeAssistant) -> None:
@@ -64,8 +79,15 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
         )
 
     assert result2["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "invalid_auth"}
+
+    with _patch_success():
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            USER_INPUT,
+        )
+        await hass.async_block_till_done()
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_cannot_connect(hass: HomeAssistant) -> None:
@@ -84,8 +106,15 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
         )
 
     assert result2["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "cannot_connect"}
+
+    with _patch_success():
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            USER_INPUT,
+        )
+        await hass.async_block_till_done()
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_rate_limit_exceeded(hass: HomeAssistant) -> None:
@@ -112,8 +141,15 @@ async def test_form_rate_limit_exceeded(hass: HomeAssistant) -> None:
         )
 
     assert result2["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "rate_limit_exceeded"}
+
+    with _patch_success():
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            USER_INPUT,
+        )
+        await hass.async_block_till_done()
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_unknown_error(hass: HomeAssistant) -> None:
@@ -132,8 +168,15 @@ async def test_form_unknown_error(hass: HomeAssistant) -> None:
         )
 
     assert result2["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"] == {"base": "unknown"}
+
+    with _patch_success():
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            USER_INPUT,
+        )
+        await hass.async_block_till_done()
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_flow_entry_already_exists(hass: HomeAssistant) -> None:
@@ -222,8 +265,16 @@ async def test_reauthentication_failure(hass: HomeAssistant) -> None:
 
     assert result2["step_id"] == "reauth_confirm"
     assert result2["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"]["base"] == "invalid_auth"
+
+    with _patch_success("USERID"):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            USER_INPUT,
+        )
+        await hass.async_block_till_done()
+    assert result3["type"] is FlowResultType.ABORT
+    assert result3["reason"] == "reauth_successful"
 
 
 async def test_reauthentication_cannot_connect(hass: HomeAssistant) -> None:
@@ -253,8 +304,16 @@ async def test_reauthentication_cannot_connect(hass: HomeAssistant) -> None:
 
     assert result2["step_id"] == "reauth_confirm"
     assert result2["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"]["base"] == "cannot_connect"
+
+    with _patch_success("USERID"):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            USER_INPUT,
+        )
+        await hass.async_block_till_done()
+    assert result3["type"] is FlowResultType.ABORT
+    assert result3["reason"] == "reauth_successful"
 
 
 async def test_reauthentication_rate_limit_exceeded(hass: HomeAssistant) -> None:
@@ -289,8 +348,16 @@ async def test_reauthentication_rate_limit_exceeded(hass: HomeAssistant) -> None
 
     assert result2["step_id"] == "reauth_confirm"
     assert result2["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"]["base"] == "rate_limit_exceeded"
+
+    with _patch_success("USERID"):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            USER_INPUT,
+        )
+        await hass.async_block_till_done()
+    assert result3["type"] is FlowResultType.ABORT
+    assert result3["reason"] == "reauth_successful"
 
 
 async def test_reauthentication_unknown_failure(hass: HomeAssistant) -> None:
@@ -320,8 +387,16 @@ async def test_reauthentication_unknown_failure(hass: HomeAssistant) -> None:
 
     assert result2["step_id"] == "reauth_confirm"
     assert result2["type"] is FlowResultType.FORM
-    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result2["errors"]["base"] == "unknown"
+
+    with _patch_success("USERID"):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            USER_INPUT,
+        )
+        await hass.async_block_till_done()
+    assert result3["type"] is FlowResultType.ABORT
+    assert result3["reason"] == "reauth_successful"
 
 
 async def test_reauthentication_failure_no_existing_entry(hass: HomeAssistant) -> None:

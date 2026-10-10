@@ -232,7 +232,6 @@ async def test_import_exist(hass: HomeAssistant) -> None:
 async def test_user_invalid(hass: HomeAssistant) -> None:
     """Test using adding invalid config."""
     mocked_device = _create_mocked_device(True)
-    _create_mock_config_entry(hass)
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -246,8 +245,13 @@ async def test_user_invalid(hass: HomeAssistant) -> None:
         )
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
-        # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
         assert result["errors"] == {"base": "cannot_connect"}
+
+    with _patch_config_flow_device(_create_mocked_device()), _patch_setup():
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_ENDPOINT: ENDPOINT}
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
     mocked_device.get_supported_methods.assert_called_once()
     mocked_device.get_interface_information.assert_not_called()

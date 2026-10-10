@@ -103,10 +103,9 @@ class ProxmoxNodeUpdateEntity(ProxmoxNodeEntity, UpdateEntity):
 
     @property
     @override
-    # pylint: disable-next=home-assistant-coordinator-entity-available
     def available(self) -> bool:
         """Return if the update platform is available."""
-        return self._update_info() is not None
+        return super().available and self._update_info() is not None
 
     @override
     def release_notes(self) -> str | None:

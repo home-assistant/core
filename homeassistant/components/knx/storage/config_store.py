@@ -12,7 +12,6 @@ from typing import (
     get_args,
     get_origin,
     get_type_hints,
-    overload,
     override,
 )
 
@@ -35,7 +34,13 @@ from .entity_store_validation import (
     validate_entity_data,
 )
 from .expose_controller import KNXExposeStoreConfigModel, KNXExposeStoreModel
-from .knx_selector import GroupAddressSelector, TypedGroupSelect, knx_selector_in
+from .knx_selector import (
+    GroupAddressSelector,
+    GroupSelect,
+    KnxPayloadSelector,
+    KnxSelectOptionsSelector,
+    knx_selector_in,
+)
 from .time_server import KNXTimeServerStoreModel
 
 _LOGGER = logging.getLogger(__name__)
@@ -67,8 +72,6 @@ def to_storage_dict(data: KnxEntityData[Any]) -> dict[str, Any]:
 
 
 def _knx_to_storage(knx_config: Any) -> dict[str, Any]:
-    if isinstance(knx_config, dict):
-        return knx_config  # platform not yet migrated to a typed config
     return {
         name: encode(getattr(knx_config, name))
         for name, encode in _storage_encoders(type(knx_config))
@@ -90,8 +93,8 @@ _STORAGE_ENCODERS: dict[type, _StorageEncoders] = {}
 def _storage_encoders(config_type: type) -> _StorageEncoders:
     """Return a storage encoder per field of a typed config.
 
-    Section fields are dropped, group addresses are rendered by their selector
-    and group select options by their own encoders.
+    Section fields are dropped, group addresses and payloads are rendered by
+    their selector and group select options by their own encoders.
     """
     if (cached := _STORAGE_ENCODERS.get(config_type)) is not None:
         return cached
@@ -104,9 +107,12 @@ def _storage_encoders(config_type: type) -> _StorageEncoders:
             continue
         field_selector = knx_selector_in(metadata)
         encode: Callable[[Any], Any]
-        if isinstance(field_selector, GroupAddressSelector):
+        if isinstance(
+            field_selector,
+            (GroupAddressSelector, KnxPayloadSelector, KnxSelectOptionsSelector),
+        ):
             encode = field_selector.to_storage
-        elif isinstance(field_selector, TypedGroupSelect):
+        elif isinstance(field_selector, GroupSelect):
             encode = _group_select_to_storage
         else:
             encode = _unchanged
@@ -200,26 +206,16 @@ class KNXConfigStore:
         """Add platform controller."""
         self._platform_controllers[platform] = controller
 
-    @overload
-    def get_entity_configs(
-        self, platform: Platform
-    ) -> dict[str, KnxEntityData[Any]]: ...
-
-    @overload
+    @callback
     def get_entity_configs[KnxT](
         self, platform: Platform, config_type: type[KnxT]
-    ) -> dict[str, KnxEntityData[KnxT]]: ...
-
-    @callback
-    def get_entity_configs(
-        self, platform: Platform, config_type: type | None = None
-    ) -> dict[str, KnxEntityData[Any]]:
+    ) -> dict[str, KnxEntityData[KnxT]]:
         """Return validated entity configurations for a platform.
 
         Invalid configurations are reported as a repair issue and stay in
         `self.data` so they aren't dropped from storage.
         """
-        validated: dict[str, KnxEntityData[Any]] = {}
+        validated: dict[str, KnxEntityData[KnxT]] = {}
         invalid: list[str] = []
         for unique_id, config in self.data["entities"].get(platform, {}).items():
             try:
@@ -229,8 +225,8 @@ class KNXConfigStore:
             except EntityStoreValidationException:
                 invalid.append(unique_id)
                 continue
-            data: KnxEntityData[Any] = result[CONF_DATA]
-            if config_type is not None and not isinstance(data.knx, config_type):
+            data: KnxEntityData[KnxT] = result[CONF_DATA]
+            if not isinstance(data.knx, config_type):
                 raise TypeError(
                     f"{platform} schema yields {type(data.knx).__name__},"
                     f" not {config_type.__name__}"
