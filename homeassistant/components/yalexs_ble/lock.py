@@ -26,7 +26,6 @@ from homeassistant.const import ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_NAME
 from homeassistant.core import CALLBACK_TYPE, Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import CONTEXT_RECENT_TIME_SECONDS
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 
@@ -40,11 +39,12 @@ from .const import (
     ATTR_SOURCE,
     DOMAIN,
     EVENT_LOCK_ACTIVITY,
+    HA_OPERATION_TIMEOUT_SECONDS,
     activity_signal,
     changed_by_for_source,
 )
 from .entity import YALEXSBLEEntity
-from .models import YaleXSBLEData
+from .models import ExpectedOperation, YaleXSBLEData
 
 PIN_PATTERN = re.compile(r"[0-9]{4,8}")
 
@@ -57,6 +57,16 @@ MATCH_STATUS: dict[LockStatus, LockStatus] = {
     LockStatus.SECUREMODE: LockStatus.LOCKED,
     LockStatus.UNLOCKED: LockStatus.UNLOCKED,
 }
+
+
+LOCK_STATUSES = frozenset({LockStatus.LOCKED})
+SECURE_MODE_STATUSES = frozenset({LockStatus.SECUREMODE, LockStatus.LOCKED})
+UNLOCK_STATUSES = frozenset({LockStatus.UNLOCKED})
+
+
+def _keycode_slot_unchanged(err: BaseException | None) -> bool:
+    """Return if a failed set left the slot as it was, as only the clear step failed."""
+    return isinstance(err, KeycodeError) and err.command == "clear_keycode"
 
 
 @contextmanager
@@ -151,6 +161,8 @@ class YaleXSBLEBaseLock(YALEXSBLEEntity, LockEntity):
                 )
             return
         self._async_cancel_hold()
+        if new_state.lock is not self._lock_status:
+            self._attr_changed_by = None
         super()._async_state_changed(new_state, lock_info, connection_info)
 
     def _should_hold(self, new_state: LockState) -> bool:
@@ -159,15 +171,37 @@ class YaleXSBLEBaseLock(YALEXSBLEEntity, LockEntity):
             return False
         if self._pending is None and new_state.lock is self._lock_status:
             return False
-        return not self._initiated_by_ha()
+        return not self._matches_expected_operation(new_state)
 
-    def _initiated_by_ha(self) -> bool:
-        """Return if the entity recently operated under a service call context."""
-        return (
-            self._context_set is not None
-            and time.time() - self._context_set <= CONTEXT_RECENT_TIME_SECONDS
-            and self._context is not self._activity_context
+    def _matches_expected_operation(self, new_state: LockState) -> bool:
+        """Return if the state is the outcome of a pending Home Assistant operation."""
+        data = self._data
+        if (operation := data.expected_operation) is None:
+            return False
+        if (
+            operation.matched_state is not None
+            and operation.matched_state is not new_state
+        ) or time.monotonic() > operation.deadline:
+            data.expected_operation = None
+            return False
+        if new_state.lock not in operation.statuses:
+            data.expected_operation = None
+            return False
+        operation.matched_state = new_state
+        return True
+
+    @contextmanager
+    def _expect_operation(self, statuses: frozenset[LockStatus]) -> Generator[None]:
+        """Expect a lock operation for the duration of the library call."""
+        data = self._data
+        data.expected_operation = ExpectedOperation(
+            statuses, time.monotonic() + HA_OPERATION_TIMEOUT_SECONDS
         )
+        try:
+            yield
+        except Exception:
+            data.expected_operation = None
+            raise
 
     @callback
     def _async_cancel_hold(self) -> None:
@@ -278,7 +312,8 @@ class YaleXSBLEBaseLock(YALEXSBLEEntity, LockEntity):
     @override
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the lock."""
-        await self._device.unlock()
+        with self._expect_operation(UNLOCK_STATUSES):
+            await self._device.unlock()
 
     async def async_set_lock_credential(self, **kwargs: Any) -> None:
         """Set a keypad PIN."""
@@ -288,8 +323,13 @@ class YaleXSBLEBaseLock(YALEXSBLEEntity, LockEntity):
                 translation_domain=DOMAIN, translation_key="invalid_pin"
             )
         slot: int = kwargs[ATTR_CREDENTIAL_INDEX]
-        with _translate_keycode_errors():
-            await self._device.set_keycode(slot, pin)
+        try:
+            with _translate_keycode_errors():
+                await self._device.set_keycode(slot, pin)
+        except HomeAssistantError as err:
+            if not _keycode_slot_unchanged(err.__cause__):
+                await self._data.credential_names.async_remove(slot)
+            raise
         if name := kwargs.get(ATTR_NAME):
             await self._data.credential_names.async_set(slot, name)
 
@@ -321,7 +361,8 @@ class YaleXSBLELock(YaleXSBLEBaseLock, LockEntity):
     @override
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the lock."""
-        await self._device.lock()
+        with self._expect_operation(LOCK_STATUSES):
+            await self._device.lock()
 
 
 class YaleXSBLESecureModeLock(YaleXSBLEBaseLock):
@@ -339,4 +380,5 @@ class YaleXSBLESecureModeLock(YaleXSBLEBaseLock):
     @override
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the lock."""
-        await self._device.securemode()
+        with self._expect_operation(SECURE_MODE_STATUSES):
+            await self._device.securemode()

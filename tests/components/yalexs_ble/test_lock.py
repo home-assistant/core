@@ -37,6 +37,7 @@ from homeassistant.components.yalexs_ble.const import (
     CONF_SLOT,
     DOMAIN,
     EVENT_LOCK_ACTIVITY,
+    HA_OPERATION_TIMEOUT_SECONDS,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_ADDRESS, EVENT_STATE_CHANGED
@@ -319,6 +320,44 @@ async def test_set_credential_errors(
             {"credential_data": "1234", "credential_index": 3, "name": "Nope"},
         )
     assert not any(key.startswith("yalexs_ble.") for key in hass_storage)
+
+
+@pytest.mark.usefixtures("entry")
+@pytest.mark.parametrize(
+    ("error", "name_kept"),
+    [
+        pytest.param(
+            KeycodeError("clear_keycode", OperationError.KEYCODE_NOSPACE),
+            True,
+            id="clear_failed",
+        ),
+        pytest.param(
+            KeycodeError("commit_keycode", OperationError.KEYCODE_NOSPACE),
+            False,
+            id="commit_failed",
+        ),
+        pytest.param(BleakError("gone"), False, id="bleak"),
+    ],
+)
+async def test_failed_set_credential_name_handling(
+    hass: HomeAssistant,
+    mock_lock: MockLock,
+    entry: MockConfigEntry,
+    error: Exception,
+    name_kept: bool,
+) -> None:
+    """Test a failed set keeps the name only when the slot is unchanged."""
+    entry.runtime_data.credential_names._names["3"] = "Guest"
+    mock_lock.push_lock.set_keycode.side_effect = error
+    with pytest.raises(HomeAssistantError):
+        await _call(
+            hass,
+            "set_lock_credential",
+            {"credential_data": "1234", "credential_index": 3},
+        )
+    assert entry.runtime_data.credential_names.get(3) == (
+        "Guest" if name_kept else None
+    )
 
 
 @pytest.mark.usefixtures("entry")
@@ -689,28 +728,315 @@ async def test_ha_initiated_change_not_held(
     hass: HomeAssistant, mock_lock: MockLock
 ) -> None:
     """Test a state change after a service call is written immediately."""
+    activity_events = async_capture_events(hass, EVENT_LOCK_ACTIVITY)
     await hass.services.async_call(
         "lock", "unlock", {"entity_id": ENTITY_ID}, blocking=True
     )
+    mock_lock.push(LockStatus.UNLOCKED)
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID).state == "unlocked"
+    assert not activity_events
+
+
+@pytest.mark.usefixtures("entry")
+async def test_slow_ha_unlock_not_held(
+    hass: HomeAssistant, mock_lock: MockLock, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test an HA operation whose status arrives late is still not held."""
+    await hass.services.async_call(
+        "lock", "unlock", {"entity_id": ENTITY_ID}, blocking=True
+    )
+    freezer.tick(timedelta(seconds=10))
     mock_lock.push(LockStatus.UNLOCKED)
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID).state == "unlocked"
 
 
 @pytest.mark.usefixtures("entry")
-async def test_stale_service_context_does_not_hold_off(
+async def test_expected_operation_expires(
     hass: HomeAssistant, mock_lock: MockLock, freezer: FrozenDateTimeFactory
 ) -> None:
-    """Test an old service call context no longer counts as HA initiated."""
+    """Test a later external change is held once the HA operation timed out."""
     await hass.services.async_call(
         "lock", "unlock", {"entity_id": ENTITY_ID}, blocking=True
     )
-    freezer.tick(timedelta(seconds=30))
+    freezer.tick(timedelta(seconds=HA_OPERATION_TIMEOUT_SECONDS + 1))
     mock_lock.push(LockStatus.UNLOCKED)
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID).state == "locked"
-    await _expire_hold(hass, freezer)
+    mock_lock.fire(_activity(LockStatus.UNLOCKED, LockOperationSource.PIN, 3))
+    await hass.async_block_till_done()
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == "unlocked"
+    assert state.attributes["changed_by"] == "Keypad slot 3"
+
+
+@pytest.mark.usefixtures("entry")
+async def test_external_change_after_ha_operation_held(
+    hass: HomeAssistant, mock_lock: MockLock
+) -> None:
+    """Test a completed HA operation does not make the next change HA initiated."""
+    await hass.services.async_call(
+        "lock", "unlock", {"entity_id": ENTITY_ID}, blocking=True
+    )
+    mock_lock.push(LockStatus.UNLOCKED)
+    await hass.async_block_till_done()
+    mock_lock.push(LockStatus.LOCKED)
+    await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID).state == "unlocked"
+    mock_lock.fire(_activity(LockStatus.LOCKED, LockOperationSource.PIN, 3))
+    await hass.async_block_till_done()
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == "locked"
+    assert state.attributes["changed_by"] == "Keypad slot 3"
+
+
+@pytest.mark.usefixtures("entry")
+async def test_opposite_change_during_ha_operation_held(
+    hass: HomeAssistant, mock_lock: MockLock
+) -> None:
+    """Test a change that does not match the HA operation is held."""
+    await hass.services.async_call(
+        "lock", "unlock", {"entity_id": ENTITY_ID}, blocking=True
+    )
+    mock_lock.push(LockStatus.SECUREMODE)
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID).state == "locked"
+    assert (
+        hass.states.get(ENTITY_ID).last_changed
+        == hass.states.get(ENTITY_ID).last_updated
+    )
+    mock_lock.fire(_activity(LockStatus.LOCKED, LockOperationSource.MANUAL))
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID).attributes["changed_by"] == "Manual"
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "entry")
+async def test_noop_ha_operation_does_not_misattribute_later_change(
+    hass: HomeAssistant, mock_lock: MockLock
+) -> None:
+    """Test an HA command that changes nothing does not claim a later change."""
+    mock_lock.push_lock.securemode = AsyncMock()
+    mock_lock.push(LockStatus.UNLOCKED)
+    mock_lock.fire(_activity(LockStatus.UNLOCKED, LockOperationSource.MANUAL))
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        "lock", "unlock", {"entity_id": ENTITY_ID}, blocking=True
+    )
+    mock_lock.push(LockStatus.LOCKED)
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID).state == "unlocked"
+    mock_lock.fire(_activity(LockStatus.LOCKED, LockOperationSource.PIN, 3))
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID).state == "locked"
+
+    activity_events = async_capture_events(hass, EVENT_LOCK_ACTIVITY)
+    mock_lock.push(LockStatus.UNLOCKED)
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID).state == "locked"
+    mock_lock.fire(_activity(LockStatus.UNLOCKED, LockOperationSource.PIN, 4))
+    await hass.async_block_till_done()
+    assert len(activity_events) == 1
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == "unlocked"
+    assert state.attributes["changed_by"] == "Keypad slot 4"
+    assert hass.states.get(SECURE_ENTITY_ID).state == "unlocked"
+
+
+@pytest.mark.usefixtures("entry")
+@pytest.mark.parametrize(
+    ("service", "start", "end"),
+    [
+        pytest.param("lock", LockStatus.UNLOCKED, LockStatus.LOCKED, id="lock"),
+        pytest.param("unlock", LockStatus.LOCKED, LockStatus.UNLOCKED, id="unlock"),
+    ],
+)
+async def test_failed_ha_operation_clears_expectation(
+    hass: HomeAssistant,
+    mock_lock: MockLock,
+    service: str,
+    start: LockStatus,
+    end: LockStatus,
+) -> None:
+    """Test a failing library call does not leave an expected operation behind."""
+    mock_lock.push(start)
+    mock_lock.fire(_activity(start, LockOperationSource.MANUAL))
+    await hass.async_block_till_done()
+    getattr(mock_lock.push_lock, service).side_effect = BleakError("gone")
+    with pytest.raises(BleakError):
+        await hass.services.async_call(
+            "lock", service, {"entity_id": ENTITY_ID}, blocking=True
+        )
+    mock_lock.push(end)
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID).state == start.name.lower()
+
+
+@pytest.mark.usefixtures("entry")
+@pytest.mark.parametrize(
+    ("service", "data"),
+    [
+        pytest.param(
+            "set_lock_credential",
+            {"credential_data": "1234", "credential_index": 3},
+            id="set",
+        ),
+        pytest.param("clear_lock_credential", {"credential_index": 3}, id="clear"),
+        pytest.param(
+            "get_lock_credential_status", {"credential_index": 3}, id="status"
+        ),
+    ],
+)
+async def test_credential_action_does_not_suppress_attribution(
+    hass: HomeAssistant, mock_lock: MockLock, service: str, data: dict[str, Any]
+) -> None:
+    """Test a credential action shortly before a keypad unlock still attributes it."""
+    await _call(
+        hass,
+        service,
+        data,
+        return_response=service == "get_lock_credential_status",
+    )
+    activity_events = async_capture_events(hass, EVENT_LOCK_ACTIVITY)
+    mock_lock.push(LockStatus.UNLOCKED)
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID).state == "locked"
+    mock_lock.fire(_activity(LockStatus.UNLOCKED, LockOperationSource.PIN, 3))
+    await hass.async_block_till_done()
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == "unlocked"
+    assert state.attributes["changed_by"] == "Keypad slot 3"
+    assert len(activity_events) == 1
+
+
+@pytest.mark.usefixtures("entry")
+async def test_changed_by_cleared_on_ha_initiated_change(
+    hass: HomeAssistant, mock_lock: MockLock
+) -> None:
+    """Test an HA initiated change drops the previous keypad attribution."""
+    mock_lock.push(LockStatus.UNLOCKED)
+    mock_lock.fire(_activity(LockStatus.UNLOCKED, LockOperationSource.PIN, 3))
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID).attributes["changed_by"] == "Keypad slot 3"
+
+    await hass.services.async_call(
+        "lock", "lock", {"entity_id": ENTITY_ID}, blocking=True
+    )
+    mock_lock.push(LockStatus.LOCKED)
+    await hass.async_block_till_done()
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == "locked"
+    assert "changed_by" not in state.attributes
+
+    mock_lock.fire(_activity(LockStatus.LOCKED, LockOperationSource.REMOTE))
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID).attributes["changed_by"] == "Remote"
+
+
+@pytest.mark.usefixtures("entry")
+@pytest.mark.parametrize(
+    ("status", "state"),
+    [
+        pytest.param(LockStatus.LOCKING, "locking", id="locking"),
+        pytest.param(LockStatus.UNLOCKING, "unlocking", id="unlocking"),
+        pytest.param(LockStatus.JAMMED, "jammed", id="jammed"),
+    ],
+)
+async def test_changed_by_cleared_on_transitional_state(
+    hass: HomeAssistant, mock_lock: MockLock, status: LockStatus, state: str
+) -> None:
+    """Test transitional and fault states drop the previous attribution."""
+    mock_lock.push(LockStatus.UNLOCKED)
+    mock_lock.fire(_activity(LockStatus.UNLOCKED, LockOperationSource.PIN, 3))
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID).attributes["changed_by"] == "Keypad slot 3"
+
+    mock_lock.push(status)
+    await hass.async_block_till_done()
+    result = hass.states.get(ENTITY_ID)
+    assert result.state == state
+    assert "changed_by" not in result.attributes
+
+
+@pytest.mark.usefixtures("entry")
+async def test_changed_by_kept_on_battery_update(
+    hass: HomeAssistant, mock_lock: MockLock
+) -> None:
+    """Test an update that keeps the lock status keeps the attribution."""
+    mock_lock.push(LockStatus.UNLOCKED)
+    mock_lock.fire(_activity(LockStatus.UNLOCKED, LockOperationSource.PIN, 3))
+    await hass.async_block_till_done()
+
+    mock_lock.push(LockStatus.UNLOCKED, percentage=50)
+    await hass.async_block_till_done()
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == "unlocked"
+    assert state.attributes["changed_by"] == "Keypad slot 3"
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "entry")
+@pytest.mark.parametrize(
+    ("entity_id", "status", "secure_state"),
+    [
+        pytest.param(ENTITY_ID, LockStatus.LOCKED, "unlocked", id="lock"),
+        pytest.param(
+            SECURE_ENTITY_ID, LockStatus.SECUREMODE, "locked", id="secure_mode"
+        ),
+        pytest.param(
+            SECURE_ENTITY_ID, LockStatus.LOCKED, "unlocked", id="secure_mode_locked"
+        ),
+    ],
+)
+async def test_ha_operation_not_misattributed_with_both_entities(
+    hass: HomeAssistant,
+    mock_lock: MockLock,
+    entity_id: str,
+    status: LockStatus,
+    secure_state: str,
+) -> None:
+    """Test an HA operation on one lock entity is not held by its sibling."""
+    mock_lock.push_lock.securemode = AsyncMock()
+    mock_lock.push(LockStatus.UNLOCKED)
+    mock_lock.fire(_activity(LockStatus.UNLOCKED, LockOperationSource.MANUAL))
+    await hass.async_block_till_done()
+    activity_events = async_capture_events(hass, EVENT_LOCK_ACTIVITY)
+
+    await hass.services.async_call(
+        "lock", "lock", {"entity_id": entity_id}, blocking=True
+    )
+    mock_lock.push(status)
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID).state == "locked"
+    assert hass.states.get(SECURE_ENTITY_ID).state == secure_state
+    assert not activity_events
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "entry")
+async def test_external_operation_one_event_with_both_entities(
+    hass: HomeAssistant, mock_lock: MockLock
+) -> None:
+    """Test an external change after an HA operation yields exactly one event."""
+    mock_lock.push_lock.securemode = AsyncMock()
+    await hass.services.async_call(
+        "lock", "unlock", {"entity_id": ENTITY_ID}, blocking=True
+    )
+    mock_lock.push(LockStatus.UNLOCKED)
+    await hass.async_block_till_done()
+    activity_events = async_capture_events(hass, EVENT_LOCK_ACTIVITY)
+
+    mock_lock.push(LockStatus.LOCKED)
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID).state == "unlocked"
+    mock_lock.fire(_activity(LockStatus.LOCKED, LockOperationSource.PIN, 3))
+    await hass.async_block_till_done()
+    assert len(activity_events) == 1
+    assert hass.states.get(ENTITY_ID).state == "locked"
+    assert hass.states.get(ENTITY_ID).attributes["changed_by"] == "Keypad slot 3"
+    assert (
+        hass.states.get(SECURE_ENTITY_ID).context.id
+        == hass.states.get(ENTITY_ID).context.id
+    )
 
 
 @pytest.mark.usefixtures("entry")
