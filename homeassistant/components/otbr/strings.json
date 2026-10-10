@@ -20,6 +20,30 @@
   "exceptions": {
     "border_agent_id_unsupported": {
       "message": "The OTBR does not support Border Agent ID"
+    },
+    "dataset_discarded": {
+      "message": "The network is moving to the new dataset, but Home Assistant could not record it: a dataset for the same network, at least as new as this one, was stored while the border router was being updated. Check the Thread panel; the stored network may not match the one the mesh is switching to."
+    },
+    "invalid_channel": {
+      "message": "The channel must be between 11 and 26, not {channel}."
+    },
+    "migration_in_flight": {
+      "message": "This network is still mid-change: a migration onto or off it, or a channel change, started from Home Assistant has {remaining} seconds of its delay left. Wait for it to complete, then try again."
+    },
+    "pending_dataset_in_place": {
+      "message": "A pending dataset is already in place: a migration or channel change is propagating through the mesh. Wait for it to complete, then try again."
+    },
+    "pending_dataset_refused": {
+      "message": "The border router refused the pending dataset: it is not attached to a Thread network, or the network's leader rejected it."
+    },
+    "pending_dataset_refused_reason": {
+      "message": "The border router refused the pending dataset: {reason}."
+    },
+    "pending_dataset_unanswered": {
+      "message": "The border router did not answer the pending dataset write in time, or the network's leader did not answer the border router, so the change may be under way. Wait for the delay to pass before trying again."
+    },
+    "router_dataset_invalid": {
+      "message": "The border router returned a dataset that could not be parsed or has no extended PAN ID."
     }
   },
   "issues": {
