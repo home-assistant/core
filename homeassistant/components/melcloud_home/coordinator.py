@@ -67,11 +67,18 @@ class MelCloudHomeCoordinator(DataUpdateCoordinator[UserContext]):
         self.new_ata_callbacks: list[Callable[[list[ATAUnit]], None]] = []
         self.new_atw_callbacks: list[Callable[[list[ATWUnit]], None]] = []
 
-    def _notify_new_units(self, data: UserContext) -> None:
-        """Notify callbacks when new units are discovered."""
+    def _async_sync_units(self, data: UserContext) -> None:
+        """Add entities for new units and remove devices of units that are gone."""
         current_ata = [
             unit for building in data.buildings for unit in building.air_to_air_units
         ]
+        current_atw_units = [
+            unit for building in data.buildings for unit in building.air_to_water_units
+        ]
+        if not current_ata and not current_atw_units:
+            # An empty context is more likely an API glitch than every unit removed
+            _LOGGER.debug("No units in the account, skipping stale device removal")
+            return
 
         current_ata_ids = {unit.id for unit in current_ata}
         self.known_ata &= current_ata_ids
@@ -82,10 +89,6 @@ class MelCloudHomeCoordinator(DataUpdateCoordinator[UserContext]):
             self.known_ata.update(unit.id for unit in new_ata_units)
             for ata_callback in self.new_ata_callbacks:
                 ata_callback(new_ata_units)
-
-        current_atw_units = [
-            unit for building in data.buildings for unit in building.air_to_water_units
-        ]
 
         current_atw_ids = {unit.id for unit in current_atw_units}
         self.known_atw &= current_atw_ids
@@ -134,11 +137,16 @@ class MelCloudHomeCoordinator(DataUpdateCoordinator[UserContext]):
                 translation_key="timeout_connect",
             ) from err
 
-        for building in data.buildings:
-            for ata_unit in building.air_to_air_units:
-                self.ata_units[ata_unit.id] = ata_unit
-            for atw_unit in building.air_to_water_units:
-                self.atw_units[atw_unit.id] = atw_unit
+        self.ata_units = {
+            unit.id: unit
+            for building in data.buildings
+            for unit in building.air_to_air_units
+        }
+        self.atw_units = {
+            unit.id: unit
+            for building in data.buildings
+            for unit in building.air_to_water_units
+        }
 
         return data
 
@@ -147,7 +155,7 @@ class MelCloudHomeCoordinator(DataUpdateCoordinator[UserContext]):
     def _async_refresh_finished(self) -> None:
         """Notify entity callbacks after coordinator data has been updated."""
         if self.data is not None:
-            self._notify_new_units(self.data)
+            self._async_sync_units(self.data)
 
 
 @dataclass(kw_only=True, frozen=True)
