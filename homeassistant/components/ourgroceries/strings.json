@@ -16,7 +16,7 @@
   },
   "exceptions": {
     "invalid_login": {
-      "message": "Login to OurGroceries failed, the username or password is incorrect"
+      "message": "Login to OurGroceries failed because the username or password is incorrect"
     }
   }
 }

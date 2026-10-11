@@ -53,15 +53,14 @@ async def test_init_failure(
 
 
 @pytest.mark.parametrize("exception", [InvalidLoginException])
+@pytest.mark.usefixtures("login_with_error", "setup_integration")
 async def test_init_invalid_login(
     hass: HomeAssistant,
-    login_with_error,
-    setup_integration: None,
     ourgroceries_config_entry: MockConfigEntry,
 ) -> None:
     """Test an invalid login fails setup with the correct reason."""
     assert ourgroceries_config_entry.state is ConfigEntryState.SETUP_ERROR
     assert (
         ourgroceries_config_entry.reason
-        == "Login to OurGroceries failed, the username or password is incorrect"
+        == "Login to OurGroceries failed because the username or password is incorrect"
     )
