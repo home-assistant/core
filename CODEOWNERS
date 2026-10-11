@@ -1728,6 +1728,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/sky_remote/ @dunnmj @saty9
 /homeassistant/components/skybell/ @tkdrob
 /tests/components/skybell/ @tkdrob
+/homeassistant/components/skylight/ @devinslick @megathelegend
+/tests/components/skylight/ @devinslick @megathelegend
 /homeassistant/components/slack/ @tkdrob @fletcherau
 /tests/components/slack/ @tkdrob @fletcherau
 /homeassistant/components/sleep_as_android/ @tr4nt0r
