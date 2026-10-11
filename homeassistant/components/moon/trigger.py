@@ -17,7 +17,7 @@ from homeassistant.helpers.trigger import (
 from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_PHASE
-from .helpers import MOON_PHASES, moon_phase
+from .helpers import MOON_PHASES, get_moon_data, moon_phase
 
 PHASE_ANY = "any"
 
@@ -56,12 +56,12 @@ class MoonPhaseChangedTrigger(Trigger):
         did_not_trigger: TriggerNotTriggeredReporter | None = None,
     ) -> CALLBACK_TYPE:
         """Attach the trigger to an action runner."""
-        last_phase = moon_phase()
+        last_phase = moon_phase(get_moon_data(self._hass))
 
         @callback
         def check_phase(_now: datetime) -> None:
             nonlocal last_phase
-            current_phase = moon_phase()
+            current_phase = moon_phase(get_moon_data(self._hass))
             if current_phase == last_phase:
                 return
             previous_phase = last_phase

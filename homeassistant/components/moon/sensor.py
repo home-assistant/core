@@ -1,18 +1,17 @@
 """Support for tracking the moon phases."""
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
-from .helpers import MOON_PHASES, moon_phase
+from .helpers import MOON_PHASES, MoonConfigEntry, moon_phase
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: MoonConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the platform from config_entry."""
@@ -27,8 +26,9 @@ class MoonSensorEntity(SensorEntity):
     _attr_options = list(MOON_PHASES)
     _attr_translation_key = "phase"
 
-    def __init__(self, entry: ConfigEntry) -> None:
+    def __init__(self, entry: MoonConfigEntry) -> None:
         """Initialize the moon sensor."""
+        self._moon_data = entry.runtime_data
         self._attr_unique_id = entry.entry_id
         self._attr_device_info = DeviceInfo(
             name="Moon",
@@ -38,4 +38,4 @@ class MoonSensorEntity(SensorEntity):
 
     async def async_update(self) -> None:
         """Get the time and updates the states."""
-        self._attr_native_value = moon_phase()
+        self._attr_native_value = moon_phase(self._moon_data)
