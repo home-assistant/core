@@ -14,6 +14,6 @@
   "integration_type": "device",
   "iot_class": "local_polling",
   "loggers": ["eurotronic_cometblue_ha"],
-  "quality_scale": "bronze",
+  "quality_scale": "silver",
   "requirements": ["eurotronic-cometblue-ha==1.4.0"]
 }
