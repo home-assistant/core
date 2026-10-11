@@ -155,6 +155,11 @@ pysnmplib==1000000000.0.0
 # breaks getmac due to them both sharing the same python package name inside 'getmac'.
 get-mac==1000000000.0.0
 
+# The broadlink package has been replaced with python-broadlink. Installing broadlink
+# alongside python-broadlink breaks python-broadlink due to them both sharing the same
+# python package name inside 'broadlink'.
+broadlink==1000000000.0.0
+
 # Poetry is a build dependency. Installing it as a runtime dependency almost
 # always indicates an issue with library requirements.
 poetry==1000000000.0.0
