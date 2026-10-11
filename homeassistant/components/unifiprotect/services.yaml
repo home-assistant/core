@@ -72,3 +72,16 @@ ptz_goto_preset:
       required: true
       selector:
         text:
+
+trigger_alarm_webhook:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: unifiprotect
+    trigger_id:
+      example: 0b6c5a2e-9d3f-4c1a-8e7b-2f4d6a8c1e3b
+      required: true
+      selector:
+        text:
