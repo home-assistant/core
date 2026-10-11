@@ -142,6 +142,34 @@ async def test_image_fetch_error(
     with pytest.raises(HomeAssistantError):
         await image.async_get_image(hass, "image.indi_allsky_latest_star_trail")
 
+    # Verify recovery: later on-demand fetch succeeds and caches image in coordinator data
+    initial_keogram_state = hass.states.get("image.indi_allsky_latest_keogram")
+    assert initial_keogram_state is not None
+    initial_keogram_token = initial_keogram_state.attributes["access_token"]
+
+    mock_indi_allsky_client.fetch_image.side_effect = None
+    mock_indi_allsky_client.fetch_image.return_value = (
+        b"\xff\xd8\xff\xe0recovered_keogram"
+    )
+
+    with patch("random.SystemRandom.getrandbits", return_value=777777777):
+        img = await image.async_get_image(hass, "image.indi_allsky_latest_keogram")
+        assert img.content == b"\xff\xd8\xff\xe0recovered_keogram"
+
+    coordinator = mock_config_entry.runtime_data
+    assert coordinator.latest_keogram_image == b"\xff\xd8\xff\xe0recovered_keogram"
+    assert coordinator.latest_keogram_updated is not None
+
+    updated_keogram_state = hass.states.get("image.indi_allsky_latest_keogram")
+    assert updated_keogram_state is not None
+    assert updated_keogram_state.attributes["access_token"] != initial_keogram_token
+
+    # Consecutive get_image uses cached coordinator image without network call
+    mock_indi_allsky_client.fetch_image.reset_mock()
+    img2 = await image.async_get_image(hass, "image.indi_allsky_latest_keogram")
+    assert img2.content == b"\xff\xd8\xff\xe0recovered_keogram"
+    mock_indi_allsky_client.fetch_image.assert_not_called()
+
 
 async def test_stale_media_fetch_ignored(
     hass: HomeAssistant,

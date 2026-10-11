@@ -15,7 +15,7 @@ from aioindiallsky import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL, CONF_VERIFY_SSL
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
@@ -122,14 +122,11 @@ class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[IndiAllSkyData]):
             "indi_allsky_fetch_keogram",
         )
 
-    async def _async_fetch_keogram_and_update(self, media: MediaData) -> None:
-        """Fetch latest keogram image and update coordinator."""
-        image_bytes: bytes | None
-        try:
-            image_bytes = await self.client.fetch_image("latestkeogram")
-        except IndiAllSkyError as err:
-            _LOGGER.warning("Failed to fetch latest keogram image: %s", err)
-            image_bytes = None
+    @callback
+    def async_set_keogram_image(
+        self, media: MediaData, image_bytes: bytes | None
+    ) -> None:
+        """Update cached keogram image if media matches current."""
         if media is not self.latest_keogram:
             return
         self.latest_keogram_image = image_bytes
@@ -149,6 +146,16 @@ class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[IndiAllSkyData]):
             )
         )
 
+    async def _async_fetch_keogram_and_update(self, media: MediaData) -> None:
+        """Fetch latest keogram image and update coordinator."""
+        image_bytes: bytes | None
+        try:
+            image_bytes = await self.client.fetch_image("latestkeogram")
+        except IndiAllSkyError as err:
+            _LOGGER.warning("Failed to fetch latest keogram image: %s", err)
+            image_bytes = None
+        self.async_set_keogram_image(media, image_bytes)
+
     def _handle_startrail_complete(self, media: MediaData) -> None:
         """Handle new startrail_complete event from WebSocket stream."""
         self.latest_startrail = media
@@ -160,14 +167,11 @@ class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[IndiAllSkyData]):
             "indi_allsky_fetch_startrail",
         )
 
-    async def _async_fetch_startrail_and_update(self, media: MediaData) -> None:
-        """Fetch latest startrail image and update coordinator."""
-        image_bytes: bytes | None
-        try:
-            image_bytes = await self.client.fetch_image("lateststartrail")
-        except IndiAllSkyError as err:
-            _LOGGER.warning("Failed to fetch latest startrail image: %s", err)
-            image_bytes = None
+    @callback
+    def async_set_startrail_image(
+        self, media: MediaData, image_bytes: bytes | None
+    ) -> None:
+        """Update cached startrail image if media matches current."""
         if media is not self.latest_startrail:
             return
         self.latest_startrail_image = image_bytes
@@ -186,6 +190,16 @@ class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[IndiAllSkyData]):
                 sensor=self.latest_sensor,
             )
         )
+
+    async def _async_fetch_startrail_and_update(self, media: MediaData) -> None:
+        """Fetch latest startrail image and update coordinator."""
+        image_bytes: bytes | None
+        try:
+            image_bytes = await self.client.fetch_image("lateststartrail")
+        except IndiAllSkyError as err:
+            _LOGGER.warning("Failed to fetch latest startrail image: %s", err)
+            image_bytes = None
+        self.async_set_startrail_image(media, image_bytes)
 
     def _handle_sensor_update(self, sensor: SensorData) -> None:
         """Handle new sensor_update event from WebSocket stream."""

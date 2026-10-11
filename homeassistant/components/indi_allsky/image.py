@@ -33,6 +33,9 @@ class IndiAllSkyImageEntityDescription(ImageEntityDescription):
     media_fn: Callable[[IndiAllSkyData], MediaData | None]
     image_fn: Callable[[IndiAllSkyData], bytes | None]
     updated_fn: Callable[[IndiAllSkyData], datetime | None]
+    set_image_fn: Callable[
+        [IndiAllSkyDataUpdateCoordinator, MediaData, bytes | None], None
+    ]
     image_filename: str
 
 
@@ -43,6 +46,9 @@ IMAGE_DESCRIPTIONS: tuple[IndiAllSkyImageEntityDescription, ...] = (
         media_fn=lambda data: data.latest_keogram,
         image_fn=lambda data: data.latest_keogram_image,
         updated_fn=lambda data: data.latest_keogram_updated,
+        set_image_fn=lambda coord, media, img: coord.async_set_keogram_image(
+            media, img
+        ),
         image_filename="latestkeogram",
     ),
     IndiAllSkyImageEntityDescription(
@@ -51,6 +57,9 @@ IMAGE_DESCRIPTIONS: tuple[IndiAllSkyImageEntityDescription, ...] = (
         media_fn=lambda data: data.latest_startrail,
         image_fn=lambda data: data.latest_startrail_image,
         updated_fn=lambda data: data.latest_startrail_updated,
+        set_image_fn=lambda coord, media, img: coord.async_set_startrail_image(
+            media, img
+        ),
         image_filename="lateststartrail",
     ),
 )
@@ -135,10 +144,11 @@ class IndiAllSkyImageEntity(IndiAllSkyEntity, ImageEntity):
         else:
             if content_type := infer_image_type(image_bytes):
                 self._attr_content_type = content_type
-            if (
-                self.entity_description.media_fn(self.coordinator.data) is None
-                and self._last_fetched is None
-            ):
+            if media := self.entity_description.media_fn(self.coordinator.data):
+                self.entity_description.set_image_fn(
+                    self.coordinator, media, image_bytes
+                )
+            elif self._last_fetched is None:
                 self._last_fetched = dt_util.utcnow()
                 self.async_write_ha_state()
             return image_bytes
