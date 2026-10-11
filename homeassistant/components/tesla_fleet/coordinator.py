@@ -600,17 +600,12 @@ class TeslaFleetEnergySiteStatisticsCoordinator(DataUpdateCoordinator[None]):
                         translation_key="history_wrong_day",
                         translation_placeholders={"date": day.date().isoformat()},
                     )
-                # Leave the boundary hour for the next day's overlapping window.
-                window_end = dt_util.as_utc(next_day).replace(
-                    minute=0, second=0, microsecond=0
-                )
             else:
-                history, window_end = data, None
+                history = data
             self._add_statistics(
                 [*previous_day, *history["time_series"]],
                 last_stats,
                 window_start,
-                window_end,
                 first_run_start,
             )
             await recorder.async_block_till_done()
@@ -661,10 +656,9 @@ class TeslaFleetEnergySiteStatisticsCoordinator(DataUpdateCoordinator[None]):
         time_series: list[dict[str, Any]],
         last_stats: dict[str, StatisticData],
         window_start: datetime,
-        window_end: datetime | None,
         first_run_start: datetime,
     ) -> None:
-        """Write complete windows and carry their totals into the next day."""
+        """Write each field's hours from its latest one, continuing its total."""
         hourly_periods = _aggregate_energy_history_by_hour(time_series)
         for key in ENERGY_HISTORY_FIELDS:
             statistic_id = build_statistic_id(self.api.energy_site_id, key)
@@ -675,9 +669,7 @@ class TeslaFleetEnergySiteStatisticsCoordinator(DataUpdateCoordinator[None]):
             )
             statistics: list[StatisticData] = []
             for start, hour_values in hourly_periods:
-                if start < field_start or (
-                    window_end is not None and start >= window_end
-                ):
+                if start < field_start:
                     continue
 
                 state = hour_values[key]

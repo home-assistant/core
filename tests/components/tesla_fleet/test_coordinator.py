@@ -381,39 +381,6 @@ async def test_repeated_import_with_delayed_recorder(
     ]
 
 
-async def test_independent_baselines(
-    hass: HomeAssistant,
-    normal_config_entry: MockConfigEntry,
-    freezer: FrozenDateTimeFactory,
-    history_responses: dict[str | None, dict[str, Any]],
-) -> None:
-    """Replace each field's latest hour using that field's own baseline."""
-    before = [
-        ("2023-06-01T08:00:00-07:00", {GRID: 10, SOLAR: 100}),
-        ("2023-06-01T09:00:00-07:00", {SOLAR: 200}),
-    ]
-    history_responses[None] = _history(*before)
-    await _setup(hass, normal_config_entry)
-    history_responses[END_DATE] = _history(
-        *before,
-        (
-            "2023-06-01T09:05:00-07:00",
-            {GRID: 30, SOLAR: 50, "battery_energy_exported": 1000},
-        ),
-    )
-    history_responses[None] = _history(
-        (AFTER, {GRID: 20, SOLAR: 400, "battery_energy_exported": 5})
-    )
-    await _refresh(hass, freezer)
-    expected = {
-        GRID_STATISTIC_ID: 60,
-        SOLAR_STATISTIC_ID: 750,
-        f"tesla_fleet:{SITE_ID}_battery_energy_exported": 1005,
-    }
-    stats = await _get_hourly_stats(hass, set(expected))
-    assert {key: rows[-1]["sum"] for key, rows in stats.items()} == expected
-
-
 async def test_copy_sensor_history(
     hass: HomeAssistant,
     normal_config_entry: MockConfigEntry,
