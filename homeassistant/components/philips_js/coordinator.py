@@ -11,18 +11,38 @@ from haphilipsjs import (
     GeneralFailure,
     PhilipsTV,
 )
-from haphilipsjs.typing import SystemType
+from haphilipsjs.typing import (
+    MenuItemsSettingsCurrentValueValue,
+    MenuItemsSettingsUpdateValueData,
+    SystemType,
+)
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_ALLOW_NOTIFY, CONF_SYSTEM, DOMAIN
+from .const import CONF_ALLOW_NOTIFY, CONF_MENU_NODES, CONF_SYSTEM, DOMAIN
+from .helpers import (
+    EntitySetupData,
+    MenuData,
+    SettingsNotAvailable,
+    async_fetch_menu_data,
+    get_menu_nodes,
+)
 
 _LOGGER = logging.getLogger(__name__)
+
+MENU_STORAGE_VERSION = 1
+
+
+def get_menu_store(hass: HomeAssistant, entry_id: str) -> Store[MenuData]:
+    """Return the store holding the cached menu structure of an entry."""
+    return Store(hass, MENU_STORAGE_VERSION, f"{DOMAIN}.{entry_id}.menu")
+
 
 type PhilipsTVConfigEntry = ConfigEntry[PhilipsTVDataUpdateCoordinator]
 
@@ -41,6 +61,11 @@ class PhilipsTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
         """Set up the coordinator."""
         self.api = api
         self._notify_future: asyncio.Task | None = None
+        self.settings: dict[int, MenuItemsSettingsCurrentValueValue | None] = {}
+        self.menu: MenuData | None = None
+        self._menu_store = get_menu_store(hass, config_entry.entry_id)
+        # The api replaces this object when it reads the structure again
+        self._menu_source: object | None = None
 
         super().__init__(
             hass,
@@ -62,7 +87,7 @@ class PhilipsTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
             },
             manufacturer="Philips",
             model=self.system.get("model"),
-            name=self.system["name"],
+            name=self.system.get("name"),
             sw_version=self.system.get("softwareversion"),
         )
 
@@ -99,6 +124,7 @@ class PhilipsTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
         )
 
     async def _notify_task(self):
+        settings_version = self.api.settings_version
         while self._notify_wanted:
             try:
                 res = await self.api.notifyChange(130)
@@ -106,6 +132,13 @@ class PhilipsTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
                 res = None
 
             if res:
+                if settings_version != self.api.settings_version:
+                    try:
+                        await self._async_update_settings()
+                    except ConnectionFailure, AutenticationFailure:
+                        _LOGGER.debug("Aborting notify due to failed settings update")
+                        break
+                    settings_version = self.api.settings_version
                 self.async_set_updated_data(None)
             elif res is None:
                 _LOGGER.debug("Aborting notify due to unexpected return")
@@ -132,11 +165,110 @@ class PhilipsTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
         super()._unschedule_refresh()
         self._async_notify_stop()
 
+    @property
+    def menu_nodes(self) -> dict[int, EntitySetupData]:
+        """Return the menu nodes that can be exposed as entities."""
+        if self.menu is None:
+            return {}
+        return get_menu_nodes(self.menu)
+
+    @property
+    def selected_menu_nodes(self) -> list[EntitySetupData]:
+        """Return the menu nodes selected in options and known by the TV."""
+        menu_nodes = self.menu_nodes
+        return [
+            menu_nodes[node_id]
+            for node_id in self.config_entry.options.get(CONF_MENU_NODES, [])
+            if node_id in menu_nodes
+        ]
+
+    @callback
+    def _async_log_missing_menu_nodes(self) -> None:
+        if self.menu is None:
+            return
+        menu_nodes = self.menu_nodes
+        if missing := [
+            node_id
+            for node_id in self.config_entry.options.get(CONF_MENU_NODES, [])
+            if node_id not in menu_nodes
+        ]:
+            _LOGGER.warning(
+                "Selected menu settings %s are no longer provided by the TV", missing
+            )
+
+    @override
+    async def _async_setup(self) -> None:
+        """Load the cached menu structure."""
+        self.menu = await self._menu_store.async_load()
+        self._async_log_missing_menu_nodes()
+
+    async def _async_update_menu(self) -> None:
+        """Refresh the cached menu structure when the TV provides a new one."""
+        if (source := self.api.settings) is None or source is self._menu_source:
+            return
+
+        try:
+            menu = await async_fetch_menu_data(self.api)
+        except SettingsNotAvailable as err:
+            _LOGGER.debug("Unable to read menu structure: %s", err)
+            return
+        self._menu_source = source
+
+        if menu == self.menu:
+            return
+
+        selected_menu_nodes = self.selected_menu_nodes
+        self.menu = menu
+        await self._menu_store.async_save(menu)
+        self._async_log_missing_menu_nodes()
+
+        # Entities are created from the menu, so they need to be set up again
+        if (
+            self.config_entry.state is ConfigEntryState.LOADED
+            and self.selected_menu_nodes != selected_menu_nodes
+        ):
+            self.hass.config_entries.async_schedule_reload(self.config_entry.entry_id)
+
+    async def _async_update_settings(self) -> None:
+        node_ids = [
+            description["node"]["node_id"] for description in self.selected_menu_nodes
+        ]
+        if settings := await self.api.getMenuItemsSettingsCurrentValue(node_ids):
+            self.settings = settings
+        else:
+            self.settings = {}
+
+    async def async_update_menu_setting(
+        self, node_id: int, data: MenuItemsSettingsUpdateValueData
+    ) -> None:
+        """Send a new value for a menu setting to the TV."""
+        try:
+            result = await self.api.postMenuItemsSettingsUpdateData({node_id: data})
+        except GeneralFailure as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="update_failed"
+            ) from err
+        # A failed request without exception is reported as None
+        if result is None:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="update_failed"
+            )
+
+        # A change can affect value and availability of other settings
+        try:
+            await self._async_update_settings()
+        except GeneralFailure:
+            await self.async_request_refresh()
+            return
+        self.async_update_listeners()
+
     @override
     async def _async_update_data(self):
         """Fetch the latest data from the source."""
         try:
-            await self.api.update()
+            if await self.api.update():
+                await self._async_update_menu()
+                await self._async_update_settings()
             self._async_notify_schedule()
         except ConnectionFailure:
             pass
@@ -144,3 +276,9 @@ class PhilipsTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
             raise ConfigEntryAuthFailed(str(exception)) from exception
         except GeneralFailure as exception:
             raise UpdateFailed(str(exception)) from exception
+
+    def get_string(self, string_id: str) -> str:
+        """Get a translation from the cached menu structure."""
+        if self.menu is None:
+            return string_id
+        return self.menu["strings"].get(string_id, string_id)

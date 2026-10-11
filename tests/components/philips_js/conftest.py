@@ -1,16 +1,33 @@
 """Standard setup for tests."""
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, create_autospec, patch
+from unittest.mock import AsyncMock, MagicMock, create_autospec, patch
 
 from haphilipsjs import PhilipsTV
 import pytest
 
-from homeassistant.components.philips_js.const import DOMAIN
+from homeassistant.components.philips_js.const import (
+    CONF_ALLOW_NOTIFY,
+    CONF_MENU_NODES,
+    DOMAIN,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from . import MOCK_CONFIG, MOCK_ENTITY_ID, MOCK_NAME, MOCK_SERIAL_NO, MOCK_SYSTEM
+from . import (
+    MOCK_CONFIG,
+    MOCK_CONFIG_PAIRED,
+    MOCK_ENTITY_ID,
+    MOCK_MENU_CURRENT,
+    MOCK_MENU_ENTRY_ID,
+    MOCK_MENU_ROOT,
+    MOCK_MENU_SELECTED,
+    MOCK_MENU_STRINGS,
+    MOCK_MENU_UNIQUE_ID,
+    MOCK_NAME,
+    MOCK_SERIAL_NO,
+    MOCK_SYSTEM,
+)
 
 from tests.common import MockConfigEntry
 
@@ -50,6 +67,9 @@ def mock_tv():
     tv.ambilight_current_configuration = None
     tv.ambilight_styles = {}
     tv.ambilight_cached = {}
+    tv.huelamp_power = None
+    tv.settings = None
+    tv.settings_version = 0
 
     with (
         patch(
@@ -89,3 +109,35 @@ def mock_device(
         config_entry_id=mock_config_entry.entry_id,
         identifiers={(DOMAIN, MOCK_SERIAL_NO)},
     )
+
+
+@pytest.fixture
+def mock_tv_menu(mock_tv: MagicMock) -> MagicMock:
+    """Return a mock tv with menu settings."""
+    mock_tv.json_feature_supported.return_value = True
+    mock_tv.settings = {"node": MOCK_MENU_ROOT}
+    mock_tv.getMenuItemsSettingsCurrentValue.side_effect = lambda node_ids: {
+        node_id: MOCK_MENU_CURRENT.get(node_id) for node_id in node_ids
+    }
+    # Like the library, untranslated strings map to themselves
+    mock_tv.getStringsCached.side_effect = lambda string_ids: {
+        string_id: MOCK_MENU_STRINGS.get(string_id, string_id)
+        for string_id in string_ids
+    }
+    return mock_tv
+
+
+@pytest.fixture
+def mock_menu_config_entry(
+    hass: HomeAssistant, mock_tv_menu: MagicMock
+) -> MockConfigEntry:
+    """Return a config entry with selected menu nodes."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        entry_id=MOCK_MENU_ENTRY_ID,
+        unique_id=MOCK_MENU_UNIQUE_ID,
+        data=MOCK_CONFIG_PAIRED,
+        options={CONF_ALLOW_NOTIFY: True, CONF_MENU_NODES: MOCK_MENU_SELECTED},
+    )
+    config_entry.add_to_hass(hass)
+    return config_entry

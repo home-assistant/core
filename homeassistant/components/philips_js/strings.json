@@ -63,11 +63,20 @@
       }
     }
   },
+  "exceptions": {
+    "update_failed": {
+      "message": "Failed to update the setting on the TV"
+    }
+  },
   "options": {
+    "abort": {
+      "menu_not_available": "The menu settings have not been read from the TV yet. Turn on the TV and try again."
+    },
     "step": {
       "init": {
         "data": {
-          "allow_notify": "Allow notification service"
+          "allow_notify": "Allow notification service",
+          "menu_nodes": "Menu settings"
         },
         "data_description": {
           "allow_notify": "Allow the usage of data notification service on TV instead of periodic polling. This allows faster reaction to state changes on the TV, however, some TV's will stop responding with this activated due to firmware bugs."

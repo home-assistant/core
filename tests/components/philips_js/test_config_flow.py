@@ -1,13 +1,20 @@
 """Test the Philips TV config flow."""
 
 from ipaddress import ip_address
+import logging
+from typing import Any
 from unittest.mock import ANY, MagicMock
 
-from haphilipsjs import PairingFailure
+from haphilipsjs import ConnectionFailure, PairingFailure
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.philips_js.const import CONF_ALLOW_NOTIFY, DOMAIN
+from homeassistant.components.philips_js.const import (
+    CONF_ALLOW_NOTIFY,
+    CONF_MENU_NODES,
+    DOMAIN,
+)
+from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
@@ -16,6 +23,8 @@ from . import (
     MOCK_CONFIG,
     MOCK_CONFIG_PAIRED,
     MOCK_HOSTNAME,
+    MOCK_MENU_DATA,
+    MOCK_MENU_STORAGE_KEY,
     MOCK_NAME,
     MOCK_PASSWORD,
     MOCK_SERIAL_NO,
@@ -27,7 +36,16 @@ from . import (
 
 from tests.common import MockConfigEntry
 
-pytestmark = pytest.mark.usefixtures("mock_setup_entry")
+MOCK_MENU_OPTIONS = [
+    {"value": "2", "label": "Toggle"},
+]
+
+
+def _get_schema(result: ConfigFlowResult) -> dict[str, tuple[Any, Any]]:
+    """Return the form schema keyed by field name."""
+    return {
+        key.schema: (key, value) for key, value in result["data_schema"].schema.items()
+    }
 
 
 @pytest.fixture
@@ -237,29 +255,140 @@ async def test_pair_grant_failed(hass: HomeAssistant, mock_tv_pairable) -> None:
     }
 
 
-async def test_options_flow(hass: HomeAssistant) -> None:
+async def test_options_flow(
+    hass: HomeAssistant,
+    mock_menu_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     """Test config flow options."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="123456",
-        data=MOCK_CONFIG_PAIRED,
-    )
-    config_entry.add_to_hass(hass)
-
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    caplog.set_level(logging.DEBUG)
+    assert await hass.config_entries.async_setup(mock_menu_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert "Ignoring menu node 10 and its children without name" in caplog.text
+
+    result = await hass.config_entries.options.async_init(
+        mock_menu_config_entry.entry_id
+    )
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
+    schema = _get_schema(result)
+    # Unknown node is not offered, so it is dropped from the default
+    assert schema[CONF_ALLOW_NOTIFY][0].default() is True
+    assert schema[CONF_MENU_NODES][0].default() == ["2"]
+    assert schema[CONF_MENU_NODES][1].config["options"] == MOCK_MENU_OPTIONS
+
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={CONF_ALLOW_NOTIFY: True}
+        result["flow_id"],
+        user_input={CONF_ALLOW_NOTIFY: False, CONF_MENU_NODES: ["2"]},
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert config_entry.options == {CONF_ALLOW_NOTIFY: True}
+    assert mock_menu_config_entry.options == {
+        CONF_ALLOW_NOTIFY: False,
+        CONF_MENU_NODES: [2],
+    }
+
+
+async def test_options_flow_cached_menu(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    mock_menu_config_entry: MockConfigEntry,
+    mock_tv: MagicMock,
+) -> None:
+    """Test options flow uses the cached menu while the TV is off."""
+    hass_storage[MOCK_MENU_STORAGE_KEY] = {
+        "version": 1,
+        "minor_version": 1,
+        "key": MOCK_MENU_STORAGE_KEY,
+        "data": MOCK_MENU_DATA,
+    }
+    mock_tv.update.return_value = False
+    mock_tv.settings = None
+
+    assert await hass.config_entries.async_setup(mock_menu_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(
+        mock_menu_config_entry.entry_id
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    schema = _get_schema(result)
+    assert schema[CONF_MENU_NODES][0].default() == ["2"]
+    assert schema[CONF_MENU_NODES][1].config["options"] == MOCK_MENU_OPTIONS
+
+
+async def test_options_flow_menu_not_supported(
+    hass: HomeAssistant, mock_menu_config_entry: MockConfigEntry, mock_tv: MagicMock
+) -> None:
+    """Test options flow on a TV without menu settings support."""
+    mock_tv.json_feature_supported.return_value = False
+    mock_tv.settings = None
+
+    assert await hass.config_entries.async_setup(mock_menu_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(
+        mock_menu_config_entry.entry_id
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    schema = _get_schema(result)
+    assert schema[CONF_MENU_NODES][0].default() == []
+    assert schema[CONF_MENU_NODES][1].config["options"] == []
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_ALLOW_NOTIFY: True, CONF_MENU_NODES: []},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert mock_menu_config_entry.options == {
+        CONF_ALLOW_NOTIFY: True,
+        CONF_MENU_NODES: [],
+    }
+
+
+@pytest.mark.parametrize(
+    "tv_config",
+    [
+        pytest.param({"update.return_value": False}, id="tv-off"),
+        pytest.param({"settings": None}, id="no-settings"),
+        pytest.param({"settings": {"node": {}}}, id="no-root-node"),
+        pytest.param(
+            {
+                "getStringsCached.side_effect": None,
+                "getStringsCached.return_value": None,
+            },
+            id="no-strings",
+        ),
+        pytest.param(
+            {"getMenuItemsSettingsCurrentValue.side_effect": ConnectionFailure("")},
+            id="connection-failure",
+        ),
+    ],
+)
+async def test_options_flow_menu_not_available(
+    hass: HomeAssistant,
+    mock_menu_config_entry: MockConfigEntry,
+    mock_tv: MagicMock,
+    tv_config: dict[str, Any],
+) -> None:
+    """Test options flow aborts when the menu has never been read."""
+    mock_tv.configure_mock(**tv_config)
+
+    assert await hass.config_entries.async_setup(mock_menu_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(
+        mock_menu_config_entry.entry_id
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "menu_not_available"
 
 
 @pytest.mark.parametrize(

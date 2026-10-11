@@ -18,6 +18,7 @@ from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
+    OptionsFlow,
 )
 from homeassistant.const import (
     CONF_API_VERSION,
@@ -28,15 +29,24 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import callback
-from homeassistant.helpers import selector
-from homeassistant.helpers.schema_config_entry_flow import (
-    SchemaFlowFormStep,
-    SchemaOptionsFlowHandler,
+from homeassistant.helpers.selector import (
+    BooleanSelector,
+    SelectOptionDict,
+    SelectSelector,
+    SelectSelectorConfig,
 )
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from . import LOGGER
-from .const import CONF_ALLOW_NOTIFY, CONF_SYSTEM, CONST_APP_ID, CONST_APP_NAME, DOMAIN
+from .const import (
+    CONF_ALLOW_NOTIFY,
+    CONF_MENU_NODES,
+    CONF_SYSTEM,
+    CONST_APP_ID,
+    CONST_APP_NAME,
+    DOMAIN,
+)
+from .coordinator import PhilipsTVConfigEntry
 
 USER_SCHEMA = probatio.Schema(
     {
@@ -49,15 +59,6 @@ USER_SCHEMA = probatio.Schema(
         ): probatio.In(["1", "5", "6"]),
     }
 )
-
-OPTIONS_SCHEMA = probatio.Schema(
-    {
-        probatio.Optional(CONF_ALLOW_NOTIFY, default=False): selector.BooleanSelector(),
-    }
-)
-OPTIONS_FLOW = {
-    "init": SchemaFlowFormStep(OPTIONS_SCHEMA),
-}
 
 
 class PhilipsJSConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -243,6 +244,66 @@ class PhilipsJSConfigFlow(ConfigFlow, domain=DOMAIN):
     @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
-    ) -> SchemaOptionsFlowHandler:
+    ) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
-        return SchemaOptionsFlowHandler(config_entry, OPTIONS_FLOW)
+        return OptionsFlowHandler()
+
+
+class OptionsFlowHandler(OptionsFlow):
+    """Handle an option flow."""
+
+    config_entry: PhilipsTVConfigEntry
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle options flow."""
+        if user_input is not None:
+            return self.async_create_entry(
+                data={
+                    CONF_ALLOW_NOTIFY: user_input[CONF_ALLOW_NOTIFY],
+                    CONF_MENU_NODES: [
+                        int(node_id) for node_id in user_input[CONF_MENU_NODES]
+                    ],
+                }
+            )
+
+        coordinator = self.config_entry.runtime_data
+        if (
+            coordinator.api.json_feature_supported("menuitems", "Setup_Menu")
+            and coordinator.menu is None
+        ):
+            return self.async_abort(reason="menu_not_available")
+
+        options = self.config_entry.options
+        menu_nodes = coordinator.menu_nodes
+
+        menu_nodes_selector = SelectSelector(
+            SelectSelectorConfig(
+                options=[
+                    SelectOptionDict(value=str(node_id), label=data["name"])
+                    for node_id, data in menu_nodes.items()
+                ],
+                multiple=True,
+            )
+        )
+
+        # Previously selected nodes may no longer be provided by the TV
+        menu_nodes_default = [
+            str(node_id)
+            for node_id in options.get(CONF_MENU_NODES, [])
+            if node_id in menu_nodes
+        ]
+
+        data_schema = probatio.Schema(
+            {
+                probatio.Required(
+                    CONF_ALLOW_NOTIFY,
+                    default=options.get(CONF_ALLOW_NOTIFY, False),
+                ): BooleanSelector(),
+                probatio.Required(
+                    CONF_MENU_NODES, default=menu_nodes_default
+                ): menu_nodes_selector,
+            }
+        )
+        return self.async_show_form(step_id="init", data_schema=data_schema)
