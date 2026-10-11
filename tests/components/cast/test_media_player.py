@@ -3,6 +3,7 @@
 import asyncio
 from collections.abc import Callable
 import json
+from threading import Thread
 from typing import Any
 from unittest.mock import ANY, AsyncMock, MagicMock, Mock, patch
 from uuid import UUID
@@ -24,6 +25,7 @@ from homeassistant.components.cast.const import (
     SIGNAL_HASS_CAST_SHOW_VIEW,
     HomeAssistantControllerData,
 )
+from homeassistant.components.cast.helpers import CastStatusListener
 from homeassistant.components.cast.media_player import ChromecastInfo
 from homeassistant.components.media_player import (
     DOMAIN as MP_DOMAIN,
@@ -787,6 +789,58 @@ async def test_connection_status_after_invalidation(hass: HomeAssistant) -> None
     entity.new_connection_status(connection_status)
 
     assert not entity.available
+
+
+async def test_connection_status_not_scheduled_after_listener_invalidation(
+    hass: HomeAssistant,
+) -> None:
+    """Test an invalidated listener does not schedule connection callbacks."""
+    entity = MagicMock()
+    entity.hass = hass
+    entity._cast_info.is_audio_group = False
+
+    chromecast = MagicMock()
+    mz_mgr = MagicMock()
+    listener = CastStatusListener(entity, chromecast, mz_mgr)
+    listener.invalidate()
+
+    with patch.object(hass.loop, "call_soon_threadsafe") as schedule:
+        thread = Thread(
+            target=listener.new_connection_status,
+            args=(MagicMock(status="CONNECTED"),),
+        )
+        thread.start()
+        thread.join()
+
+    schedule.assert_not_called()
+    entity.new_connection_status.assert_not_called()
+
+
+async def test_connection_status_ignored_if_invalidated_before_execution(
+    hass: HomeAssistant,
+) -> None:
+    """Test a queued connection callback is ignored after invalidation."""
+    entity = MagicMock()
+    entity.hass = hass
+    entity._cast_info.is_audio_group = False
+
+    chromecast = MagicMock()
+    mz_mgr = MagicMock()
+    listener = CastStatusListener(entity, chromecast, mz_mgr)
+
+    thread = Thread(
+        target=listener.new_connection_status,
+        args=(MagicMock(status="CONNECTED"),),
+    )
+    thread.start()
+    thread.join()
+
+    # The event loop cannot run the scheduled callback until we yield control.
+    listener.invalidate()
+
+    await hass.async_block_till_done()
+
+    entity.new_connection_status.assert_not_called()
 
 
 async def test_media_content_type_without_chromecast(hass: HomeAssistant) -> None:

@@ -201,9 +201,10 @@ class CastStatusListener(
     @override
     def new_connection_status(self, status):
         """Schedule connection status handling on the Home Assistant event loop."""
-        self._cast_device.hass.loop.call_soon_threadsafe(
-            self.async_new_connection_status, status
-        )
+        if self._valid:
+            self._cast_device.hass.loop.call_soon_threadsafe(
+                self.async_new_connection_status, status
+            )
 
     def async_new_connection_status(self, status):
         """Handle connection status on the Home Assistant event loop."""
