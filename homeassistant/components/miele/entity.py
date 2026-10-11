@@ -8,7 +8,14 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DEVICE_TYPE_TAGS, DOMAIN, MANUFACTURER, MieleAppliance, StateStatus
+from .const import (
+    CORE_DEVICE_TYPES,
+    DEVICE_TYPE_TAGS,
+    DOMAIN,
+    MANUFACTURER,
+    MieleAppliance,
+    StateStatus,
+)
 from .coordinator import MieleAuxDataUpdateCoordinator, MieleDataUpdateCoordinator
 
 
@@ -62,6 +69,7 @@ class MieleEntity(MieleBaseEntity[MieleDataUpdateCoordinator]):
             serial_number=device_id,
             name=device.device_name or appliance_type or device.tech_type,
             translation_key=None if device.device_name else appliance_type,
+            device_type=CORE_DEVICE_TYPES.get(MieleAppliance(device.device_type)),
             manufacturer=MANUFACTURER,
             model=(
                 appliance_type.capitalize().replace("_", " ")

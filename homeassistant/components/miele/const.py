@@ -102,6 +102,12 @@ DEVICE_TYPE_TAGS = {
     MieleAppliance.HOB_INDUCT_EXTR: "hob_extraction",
 }
 
+# Appliances without an entry are not modelled by a core device type yet.
+CORE_DEVICE_TYPES: dict[MieleAppliance, str] = {
+    MieleAppliance.FRIDGE: "appliance.refrigerator",
+    MieleAppliance.FRIDGE_FREEZER: "appliance.refrigerator",
+}
+
 
 class StateStatus(MieleEnum, missing_to_none=True):
     """Define appliance states."""

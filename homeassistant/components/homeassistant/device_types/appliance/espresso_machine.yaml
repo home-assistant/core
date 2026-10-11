@@ -1,0 +1,94 @@
+# Device type: appliance.espresso_machine
+#
+# The device type is its path under device_types/, so this file needs no top
+# level key. Adding a type means adding a file, never editing a shared one.
+#
+# `description` is written for language models and is deliberately NOT
+# translated: an LLM is told the user's language and answers in it, and every
+# other LLM facing string in Home Assistant is untranslated English too. Voice
+# never reads descriptions - it matches on names, aliases and device classes -
+# so the display names, and the optional voice aliases such as "coffee machine",
+# live in espresso_machine.strings.json instead, where they can be translated.
+# The two files must define the same set of traits.
+#
+# A trait describes the job an entity does for the device, independent of which
+# integration provides it. Integrations map their own entities onto these traits
+# in their own device_types.yaml; they cannot define traits of their own. A
+# trait may be filled by an entity on the device itself or on one of its child
+# devices.
+#
+# `required: true` means consumers may assume the trait is present on a device of
+# this type. A device that declares the type without providing every required
+# trait is reported as a repair issue, it is never a setup failure.
+
+description: >-
+  A machine that brews espresso by forcing hot water through ground coffee. It
+  heats water in one or more boilers and may also steam milk.
+
+traits:
+  power:
+    description: >-
+      Turns the machine on and off. The machine needs several minutes to reach
+      brewing temperature after being turned on, so being on does not mean it is
+      ready to brew.
+    required: true
+    domains:
+      - switch
+  brewing:
+    description: On while the machine is actively pulling a shot.
+    required: true
+    domains:
+      - binary_sensor
+    device_class: running
+  steam_boiler_power:
+    description: >-
+      Turns the separate steam boiler on and off. Turning it off saves a lot of
+      energy when no milk drinks are being made.
+    domains:
+      - switch
+  water_tank_empty:
+    description: >-
+      On when the water tank needs refilling. The machine cannot brew while this
+      is on.
+    domains:
+      - binary_sensor
+    device_class: problem
+  cleaning_active:
+    description: On while the machine is running a cleaning or backflush cycle.
+    domains:
+      - binary_sensor
+    device_class: running
+  start_cleaning:
+    description: Starts a cleaning or backflush cycle to rinse the brew group.
+    domains:
+      - button
+  coffee_boiler_target_temperature:
+    description: >-
+      The temperature the coffee boiler heats to. This is the main lever on how
+      the espresso tastes; darker roasts are usually brewed cooler.
+    domains:
+      - number
+    device_class: temperature
+  # Machines with a stepped steam boiler expose this as a select instead of a
+  # number, so the trait deliberately allows both.
+  steam_boiler_target_temperature:
+    description: >-
+      The temperature the steam boiler heats to, which controls how powerful the
+      steam is for frothing milk.
+    domains:
+      - number
+      - select
+  coffee_boiler_ready_time:
+    description: >-
+      When the coffee boiler will have reached its target temperature and the
+      machine is ready to brew.
+    domains:
+      - sensor
+    device_class: timestamp
+  steam_boiler_ready_time:
+    description: >-
+      When the steam boiler will have reached its target temperature and is
+      ready to steam milk.
+    domains:
+      - sensor
+    device_class: timestamp

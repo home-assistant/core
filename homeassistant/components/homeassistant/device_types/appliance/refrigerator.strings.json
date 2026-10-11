@@ -1,0 +1,26 @@
+{
+  "aliases": ["Fridge", "Icebox"],
+  "name": "Refrigerator",
+  "traits": {
+    "door": { "name": "Door" },
+    "fast_cool": { "aliases": ["Super cool"], "name": "Fast cool" },
+    "fast_freeze": { "aliases": ["Super freeze"], "name": "Fast freeze" },
+    "freezer_compartment_door": { "name": "Freezer compartment door" },
+    "freezer_compartment_target_temperature": {
+      "name": "Freezer compartment target temperature"
+    },
+    "freezer_compartment_temperature": {
+      "aliases": ["Freezer temperature"],
+      "name": "Freezer compartment temperature"
+    },
+    "fridge_compartment_door": { "name": "Fridge compartment door" },
+    "fridge_compartment_target_temperature": {
+      "name": "Fridge compartment target temperature"
+    },
+    "fridge_compartment_temperature": {
+      "aliases": ["Fridge temperature"],
+      "name": "Fridge compartment temperature"
+    },
+    "temperature_alarm": { "name": "Temperature alarm" }
+  }
+}
