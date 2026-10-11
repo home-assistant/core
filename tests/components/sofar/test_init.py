@@ -480,29 +480,6 @@ async def test_setup_while_asleep_keeps_the_device_versions(
 
 
 @pytest.mark.usefixtures("mock_get_unit")
-async def test_no_pack_is_removable_while_asleep(
-    hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
-    device_registry: dr.DeviceRegistry,
-    mock_connection: MockModbusConnection,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test packs can't be removed before the inverter says which exist."""
-    assert await async_setup_component(hass, "config", {})
-    await _setup_asleep(hass, mock_connection, mock_config_entry)
-
-    device = device_registry.async_get_or_create(
-        config_entry_id=mock_config_entry.entry_id,
-        identifiers={(DOMAIN, f"{MOCK_SERIAL}_battery_1")},
-    )
-    client = await hass_ws_client(hass)
-    response = await client.remove_device(device.id)
-
-    assert response["success"] is False
-    assert device_registry.async_get(device.id) is not None
-
-
-@pytest.mark.usefixtures("mock_get_unit")
 async def test_setup_retries_on_an_unexpected_error(
     hass: HomeAssistant,
     mock_connection: MockModbusConnection,

@@ -240,12 +240,6 @@ async def async_remove_config_entry_device(
         if config_entry.state is ConfigEntryState.LOADED
         else None
     )
-    # Until the inverter first answers, every pack looks unwired.
-    if (
-        runtime_data is not None
-        and not runtime_data.readings.device.readings_components
-    ):
-        return False
     packs: set[int] = set()
     for domain, identifier in device_entry.identifiers:
         if domain != DOMAIN:
