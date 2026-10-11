@@ -316,7 +316,7 @@ aioimaplib==2.0.1
 aioimmich==0.18.0
 
 # homeassistant.components.indi_allsky
-aioindiallsky==0.1.4
+aioindiallsky==0.1.5
 
 # homeassistant.components.ipp
 aioipp==0.19.3
