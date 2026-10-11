@@ -352,10 +352,10 @@ def get_api_events(
     async def api_call(entity_id: str) -> dict[str, Any]:
         client = await hass_client()
         response = await client.get(
-            # The start/end times are arbitrary since they are
-            # ignored by `_mock_calendar` which just returns all
-            # events for the calendar.
-            f"/api/calendars/{entity_id}?start=2022-01-01&end=2022-01-01"
+            # `_mock_calendar` returns all events regardless of the search
+            # window, but the coordinator filters by the requested range,
+            # so use a range that covers all test events.
+            f"/api/calendars/{entity_id}?start=2015-01-01&end=2023-01-01"
         )
         assert response.status == HTTPStatus.OK
         return await response.json()
@@ -1352,6 +1352,101 @@ async def test_config_entry_supported_components(
     # No entity created when no components exist
     state = hass.states.get("calendar.calendar_4")
     assert not state
+
+
+def _ics_event(uid: str, dates: str) -> str:
+    """Return a VCALENDAR holding a single VEVENT with the given dates."""
+    return (
+        "BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//Test//CalDAV Client//EN\n"
+        f"BEGIN:VEVENT\nUID:{uid}\nDTSTAMP:20240801T000000Z\n{dates}\n"
+        f"SUMMARY:{uid}\nEND:VEVENT\nEND:VCALENDAR\n"
+    )
+
+
+@pytest.mark.parametrize("tz", [AMERICA_NEW_YORK])
+@pytest.mark.parametrize(
+    "calendars",
+    [
+        [
+            _mock_calendar_holding(
+                CALENDAR_NAME,
+                [
+                    _ics_event(
+                        "aug-29",
+                        "DTSTART;VALUE=DATE:20240829\nDTEND;VALUE=DATE:20240830",
+                    ),
+                    _ics_event(
+                        "aug-30",
+                        "DTSTART;VALUE=DATE:20240830\nDTEND;VALUE=DATE:20240831",
+                    ),
+                ],
+            )
+        ]
+    ],
+)
+async def test_get_events_all_day_adjacent_day(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    setup_platform_cb: Callable[[], Awaitable[None]],
+) -> None:
+    """Test all-day events of an adjacent day are not returned.
+
+    A server matches all-day events in UTC, so it may return the event of the
+    next day for a local day west of UTC (issue #124884).
+    """
+    await setup_platform_cb()
+
+    client = await hass_client()
+    response = await client.get(
+        f"/api/calendars/{TEST_ENTITY}"
+        "?start=2024-08-29T00:00:00-04:00&end=2024-08-30T00:00:00-04:00"
+    )
+    assert response.status == HTTPStatus.OK
+    assert [event["summary"] for event in await response.json()] == ["aug-29"]
+
+
+@pytest.mark.parametrize("tz", [AMERICA_NEW_YORK])
+@pytest.mark.parametrize(
+    "calendars",
+    [
+        [
+            _mock_calendar_holding(
+                CALENDAR_NAME,
+                [
+                    _ics_event(
+                        "late", "DTSTART:20240829T150000Z\nDTEND:20240829T160000Z"
+                    ),
+                    _ics_event(
+                        "all-day",
+                        "DTSTART;VALUE=DATE:20240829\nDTEND;VALUE=DATE:20240830",
+                    ),
+                    _ics_event(
+                        "early", "DTSTART:20240829T120000Z\nDTEND:20240829T130000Z"
+                    ),
+                ],
+            )
+        ]
+    ],
+)
+async def test_get_events_sorted(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    setup_platform_cb: Callable[[], Awaitable[None]],
+) -> None:
+    """Test events are returned in order, including all-day events."""
+    await setup_platform_cb()
+
+    client = await hass_client()
+    response = await client.get(
+        f"/api/calendars/{TEST_ENTITY}"
+        "?start=2024-08-29T00:00:00-04:00&end=2024-08-30T00:00:00-04:00"
+    )
+    assert response.status == HTTPStatus.OK
+    assert [event["summary"] for event in await response.json()] == [
+        "all-day",
+        "early",
+        "late",
+    ]
 
 
 @pytest.mark.parametrize("tz", [UTC])
