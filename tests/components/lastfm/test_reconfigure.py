@@ -13,6 +13,7 @@ from homeassistant.components.lastfm.const import (
     CONF_SESSION_KEY,
     CONF_USERS,
     DOMAIN,
+    ERROR_CODE_TOKEN_UNAUTHORIZED,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_RECONFIGURE
 from homeassistant.const import CONF_API_KEY
@@ -441,6 +442,64 @@ async def test_reconfigure_abort(
     assert polling_task.cancelled()
     assert authenticated_config_entry.options == CONF_DATA_WITH_SESSION_KEY
     assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+
+
+async def test_reconfigure_overlapping_submissions_restart_polling(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Replace polling when overlapping submissions start a second authorization."""
+    config_entry.add_to_hass(hass)
+    result = await config_entry.start_reconfigure_flow(hass)
+    first_user = BlockingAccountUser()
+    second_user = BlockingAccountUser()
+    generator = MockSessionKeyGenerator(
+        session_key_error=WSError(
+            "network", ERROR_CODE_TOKEN_UNAUTHORIZED, "Token not authorized"
+        )
+    )
+    with (
+        patch("pylast.User", side_effect=[first_user, second_user]),
+        patch(SESSION_KEY_GENERATOR_PATH, return_value=generator),
+        patch(POLLING_INTERVAL_PATH, 60),
+    ):
+        first_submission = hass.async_create_task(
+            hass.config_entries.flow.async_configure(
+                result["flow_id"], user_input=RECONFIGURE_DATA
+            )
+        )
+        try:
+            assert await hass.async_add_executor_job(
+                first_user.validation_started.wait, 5
+            )
+            second_submission = hass.async_create_task(
+                hass.config_entries.flow.async_configure(
+                    result["flow_id"], user_input=RECONFIGURE_DATA
+                )
+            )
+            assert await hass.async_add_executor_job(
+                second_user.validation_started.wait, 5
+            )
+
+            first_user.validation_release.set()
+            first_result = await first_submission
+            assert first_result["type"] is FlowResultType.EXTERNAL_STEP
+            first_polling_task = get_session_key_polling_task(hass, result["flow_id"])
+
+            second_user.validation_release.set()
+            second_result = await second_submission
+            assert second_result["type"] is FlowResultType.EXTERNAL_STEP
+            assert first_polling_task.cancelled()
+            assert (
+                get_session_key_polling_task(hass, result["flow_id"])
+                is not first_polling_task
+            )
+            assert config_entry.options == CONF_DATA
+        finally:
+            first_user.validation_release.set()
+            second_user.validation_release.set()
+            hass.config_entries.flow.async_abort(result["flow_id"])
+            await hass.async_block_till_done()
 
 
 @pytest.mark.parametrize(
