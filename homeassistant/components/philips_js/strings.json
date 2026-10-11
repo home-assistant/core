@@ -49,6 +49,29 @@
         "name": "Ambilight"
       }
     },
+    "number": {
+      "ambilight_brightness": {
+        "name": "Ambilight brightness"
+      },
+      "black_level": {
+        "name": "Black level"
+      },
+      "colour": {
+        "name": "Colour"
+      },
+      "contrast": {
+        "name": "Contrast"
+      },
+      "gamma": {
+        "name": "Gamma"
+      },
+      "sharpness": {
+        "name": "Sharpness"
+      },
+      "video_contrast": {
+        "name": "Video contrast"
+      }
+    },
     "remote": {
       "remote": {
         "name": "[%key:component::remote::title%]"

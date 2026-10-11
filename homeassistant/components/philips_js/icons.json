@@ -13,6 +13,29 @@
         "default": "mdi:television-ambient-light"
       }
     },
+    "number": {
+      "ambilight_brightness": {
+        "default": "mdi:television-ambient-light"
+      },
+      "black_level": {
+        "default": "mdi:brightness-6"
+      },
+      "colour": {
+        "default": "mdi:palette"
+      },
+      "contrast": {
+        "default": "mdi:contrast-circle"
+      },
+      "gamma": {
+        "default": "mdi:chart-bell-curve-cumulative"
+      },
+      "sharpness": {
+        "default": "mdi:image-filter-center-focus"
+      },
+      "video_contrast": {
+        "default": "mdi:contrast-box"
+      }
+    },
     "switch": {
       "ambilight_hue": {
         "default": "mdi:television-ambient-light"

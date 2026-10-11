@@ -11,7 +11,7 @@ from haphilipsjs import (
     GeneralFailure,
     PhilipsTV,
 )
-from haphilipsjs.typing import SystemType
+from haphilipsjs.typing import MenuItemsSettingsCurrentValueValue, SystemType
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -20,7 +20,7 @@ from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_ALLOW_NOTIFY, CONF_SYSTEM, DOMAIN
+from .const import CONF_ALLOW_NOTIFY, CONF_SYSTEM, DOMAIN, TV_STATE_ON
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,6 +40,8 @@ class PhilipsTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
     ) -> None:
         """Set up the coordinator."""
         self.api = api
+        self.menu_node_ids: set[int] = set()
+        self.menu_values: dict[int, MenuItemsSettingsCurrentValueValue | None] = {}
         self._notify_future: asyncio.Task | None = None
 
         super().__init__(
@@ -132,11 +134,29 @@ class PhilipsTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
         super()._unschedule_refresh()
         self._async_notify_stop()
 
+    async def async_update_menu_values(self) -> None:
+        """Fetch the current values of the registered menu settings."""
+        if (
+            not self.api.on
+            or self.api.powerstate not in (TV_STATE_ON, None)
+            or not self.menu_node_ids
+        ):
+            return
+        try:
+            self.menu_values = await self.api.getMenuItemsSettingsCurrentValue(
+                sorted(self.menu_node_ids)
+            )
+        except KeyError:
+            # The TV answered without values, for instance while switching state
+            _LOGGER.debug("The TV did not return any menu setting values")
+            self.menu_values = {}
+
     @override
     async def _async_update_data(self):
         """Fetch the latest data from the source."""
         try:
             await self.api.update()
+            await self.async_update_menu_values()
             self._async_notify_schedule()
         except ConnectionFailure:
             pass
