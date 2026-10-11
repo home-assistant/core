@@ -21,11 +21,14 @@ from homeassistant.components.backup import (
     suggested_filename,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.util.async_ import gather_with_limited_concurrency
 
 from . import DropboxConfigEntry
 from .const import DATA_BACKUP_AGENT_LISTENERS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+METADATA_DOWNLOAD_CONCURRENCY = 8
 
 
 def _suggested_filenames(backup: AgentBackup) -> tuple[str, str]:
@@ -128,7 +131,24 @@ class DropboxBackupAgent(BackupAgent):
         tar_files = {f.name for f in files if f.name.endswith(".tar")}
         metadata_files = [f for f in files if f.name.endswith(".metadata.json")]
 
-        backups: list[tuple[AgentBackup, str]] = []
+        async def _download_metadata(
+            metadata_name: str, tar_name: str
+        ) -> tuple[AgentBackup, str] | None:
+            metadata_stream = self._api.download_file(f"/{metadata_name}")
+            raw = b"".join([chunk async for chunk in metadata_stream])
+            try:
+                data = json.loads(raw)
+                backup = AgentBackup.from_dict(data)
+            except (json.JSONDecodeError, ValueError, TypeError, KeyError) as err:
+                _LOGGER.warning(
+                    "Skipping invalid metadata file '%s': %s",
+                    metadata_name,
+                    err,
+                )
+                return None
+            return backup, tar_name
+
+        downloads = []
         for metadata_file in metadata_files:
             tar_name = metadata_file.name.removesuffix(".metadata.json") + ".tar"
             if tar_name not in tar_files:
@@ -137,22 +157,12 @@ class DropboxBackupAgent(BackupAgent):
                     metadata_file.name,
                 )
                 continue
+            downloads.append(_download_metadata(metadata_file.name, tar_name))
 
-            metadata_stream = self._api.download_file(f"/{metadata_file.name}")
-            raw = b"".join([chunk async for chunk in metadata_stream])
-            try:
-                data = json.loads(raw)
-                backup = AgentBackup.from_dict(data)
-            except (json.JSONDecodeError, ValueError, TypeError, KeyError) as err:
-                _LOGGER.warning(
-                    "Skipping invalid metadata file '%s': %s",
-                    metadata_file.name,
-                    err,
-                )
-                continue
-            backups.append((backup, tar_name))
-
-        return backups
+        results = await gather_with_limited_concurrency(
+            METADATA_DOWNLOAD_CONCURRENCY, *downloads
+        )
+        return [result for result in results if result is not None]
 
     @handle_backup_errors
     @override
