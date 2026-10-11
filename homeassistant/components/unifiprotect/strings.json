@@ -172,12 +172,6 @@
       }
     },
     "binary_sensor": {
-      "alarm_hub_battery": {
-        "name": "Battery"
-      },
-      "alarm_hub_tamper": {
-        "name": "Tamper"
-      },
       "alarm_hub_zone": {
         "name": "Zone {zone}"
       },
