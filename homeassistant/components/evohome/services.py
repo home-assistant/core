@@ -34,7 +34,6 @@ from .const import (
     DOMAIN,
     REFRESH_BREAKS_IN_HA_VERSION,
     RESET_BREAKS_IN_HA_VERSION,
-    SERVICE_BREAKS_IN_HA_VERSION,
     EvoService,
 )
 from .coordinator import EvoDataUpdateCoordinator
@@ -58,7 +57,7 @@ SET_SYSTEM_MODE_SCHEMA: Final[dict[str | probatio.Marker, Any]] = {
         cv.time_period,
         probatio.Range(min=timedelta(days=1), max=timedelta(days=99)),
     ),
-    probatio.Optional(ATTR_ENTITY_ID): cv.entity_id,
+    probatio.Required(ATTR_ENTITY_ID): cv.entity_id,
 }
 
 # Zone service schemas (registered as entity services)
@@ -108,21 +107,9 @@ def _resolve_ctl_unique_id(
     call: ServiceCall,
     tcs_id: str,
 ) -> str:
-    """Resolve the target controller unique_id from an optional entity_id.
+    """Resolve the target controller unique_id from the (required) entity_id."""
 
-    During the deprecation window, advise users to switch to targeting the controller.
-    """
-
-    if (entity_id := call.data.get(ATTR_ENTITY_ID)) is None:
-        async_create_deprecation_issue_once(
-            hass,
-            f"deprecated_{call.service}_service",
-            SERVICE_BREAKS_IN_HA_VERSION,
-            translation_key="deprecated_controller_service",
-            translation_placeholders={"service": call.service},
-        )
-        return tcs_id
-
+    entity_id: str = call.data[ATTR_ENTITY_ID]
     entry = er.async_get(hass).async_get(entity_id)
 
     if entry is None:
