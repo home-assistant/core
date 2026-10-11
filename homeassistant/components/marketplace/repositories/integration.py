@@ -410,6 +410,9 @@ class IntegrationRepository(Repository):
             if PACKAGE_CUSTOM_COMPONENTS not in sys.modules:
                 async_mount_config_dir(self.marketplace.hass)
             async_clear_custom_components_cache(self.marketplace.hass)
+            if self.data.domain:
+                # Requests during discovery must wait for the refreshed metadata.
+                async_invalidate_translations(self.marketplace.hass, {self.data.domain})
             found = await async_get_custom_components(self.marketplace.hass)
         finally:
             if self.data.domain:

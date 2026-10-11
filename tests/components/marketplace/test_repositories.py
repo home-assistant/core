@@ -1,6 +1,6 @@
 """Tests for the Marketplace repositories."""
 
-from asyncio import CancelledError
+from asyncio import CancelledError, Future, sleep
 from collections.abc import AsyncIterator
 from http import HTTPStatus
 import io
@@ -1283,6 +1283,40 @@ async def test_update_integration_translations(
     assert await translation.async_get_translations(
         hass, "en", "title", {"example"}
     ) == {"component.example.title": new_title}
+
+
+@pytest.mark.usefixtures("_isolated_translations")
+@pytest.mark.parametrize("hook", ["async_post_installation", "async_post_uninstall"])
+async def test_translation_invalidation_during_rescan(
+    hass: HomeAssistant,
+    marketplace: MarketplaceManager,
+    hook: str,
+) -> None:
+    """Translation requests wait for discovery instead of returning stale strings."""
+    repository = marketplace.repositories.get_by_full_name(REPOSITORY_INTEGRATION)
+    mock_integration(hass, MockModule("example"), built_in=False)
+    assert await translation.async_get_translations(hass, "en", "title", {"example"})
+
+    scan: Future[dict[str, loader.Integration]] = hass.loop.create_future()
+    with patch.object(hass, "async_add_executor_job", return_value=scan):
+        reload_task = hass.async_create_task(getattr(repository, hook)())
+        await sleep(0)
+        cached_during_scan = translation.async_get_cached_translations(
+            hass, "en", "title", "example"
+        )
+        request = hass.async_create_task(
+            translation.async_get_translations(hass, "en", "title", {"example"})
+        )
+        await sleep(0)
+        request_finished_during_scan = request.done()
+
+    scan.set_result({})
+    await reload_task
+    result = await request
+
+    assert not cached_during_scan
+    assert not request_finished_during_scan
+    assert not result
 
 
 @pytest.mark.usefixtures("_isolated_translations")
