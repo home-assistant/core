@@ -45,7 +45,7 @@
     'attributes': ReadOnlyDict({
       <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: None,
       <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: None,
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DALI Line 0',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DALI line 0',
       <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
       ]),
@@ -105,7 +105,7 @@
     'attributes': ReadOnlyDict({
       <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: None,
       <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: None,
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DALI Line 1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DALI line 1',
       <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
       ]),

@@ -2073,3 +2073,40 @@ async def test_refresh_notifications(
 
     client.async_send_command.reset_mock()
     client.async_send_command_no_wait.reset_mock()
+
+
+@pytest.mark.parametrize("target", [ATTR_ENTITY_ID, ATTR_DEVICE_ID])
+async def test_service_driver_not_ready(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    client: MagicMock,
+    multisensor_6: MagicMock,
+    integration: MockConfigEntry,
+    target: str,
+) -> None:
+    """Test a service call fails with a runtime error while the driver is not ready."""
+    entity_entry = entity_registry.async_get(AIR_TEMPERATURE_SENSOR)
+    assert entity_entry
+    targets = {
+        ATTR_ENTITY_ID: AIR_TEMPERATURE_SENSOR,
+        ATTR_DEVICE_ID: entity_entry.device_id,
+    }
+
+    with (
+        patch.object(client, "driver", None),
+        pytest.raises(HomeAssistantError) as exc_info,
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_CONFIG_PARAMETER,
+            {
+                target: targets[target],
+                ATTR_CONFIG_PARAMETER: 102,
+                ATTR_CONFIG_PARAMETER_BITMASK: 1,
+                ATTR_CONFIG_VALUE: 1,
+            },
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "driver_not_ready"

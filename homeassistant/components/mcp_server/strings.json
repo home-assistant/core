@@ -4,11 +4,11 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "create_entry": {
-      "default": "The Model Context Protocol Server is active. To expose only some LLM APIs, select **Configure** on the integration."
+      "default": "The Model Context Protocol server is active. To expose only some LLM APIs, select **Configure** on the integration."
     },
     "step": {
       "user": {
-        "description": "The Model Context Protocol Server exposes all LLM APIs. See the [integration documentation]({more_info_url}) for setup instructions."
+        "description": "The Model Context Protocol server exposes all LLM APIs. See the [integration documentation]({more_info_url}) for setup instructions."
       }
     }
   },

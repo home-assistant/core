@@ -16,7 +16,6 @@ from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.httpx_client import get_async_client
 
-from .config_flow import PrusaLinkConfigFlow
 from .const import DOMAIN
 from .coordinator import (
     InfoUpdateCoordinator,
@@ -67,13 +66,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: PrusaLinkConfigEntry) ->
 
 async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Migrate old entry."""
-    if (config_entry.version, config_entry.minor_version) > (
-        PrusaLinkConfigFlow.VERSION,
-        PrusaLinkConfigFlow.MINOR_VERSION,
-    ):
-        # This means the user has downgraded from a future version
-        return False
-
     new_data = dict(config_entry.data)
     if config_entry.version == 1:
         if config_entry.minor_version < 2:

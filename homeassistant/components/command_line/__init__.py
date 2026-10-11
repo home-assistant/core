@@ -1,9 +1,6 @@
 """The command_line component."""
 
-import asyncio
-from collections.abc import Coroutine
 import logging
-from typing import Any
 
 import probatio
 
@@ -46,14 +43,9 @@ from homeassistant.const import (
     CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_VALUE_TEMPLATE,
-    SERVICE_RELOAD,
-    Platform,
 )
-from homeassistant.core import Event, HomeAssistant, ServiceCall
-from homeassistant.helpers import config_validation as cv, discovery
-from homeassistant.helpers.entity_platform import async_get_platforms
-from homeassistant.helpers.reload import async_integration_yaml_config
-from homeassistant.helpers.service import async_register_admin_service
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.trigger_template_entity import (
     CONF_AVAILABILITY,
     ValueTemplate,
@@ -67,21 +59,14 @@ from .const import (
     DEFAULT_TIMEOUT,
     DOMAIN,
 )
-from .utils import async_prune_shell_template_issues, build_shell_template_issue_id
+from .helpers import async_load_platforms
+from .services import async_setup_services
 
 BINARY_SENSOR_DEFAULT_NAME = "Binary Command Sensor"
 DEFAULT_PAYLOAD_ON = "ON"
 DEFAULT_PAYLOAD_OFF = "OFF"
 SENSOR_DEFAULT_NAME = "Command Sensor"
 CONF_NOTIFIERS = "notifiers"
-
-PLATFORM_MAPPING = {
-    BINARY_SENSOR_DOMAIN: Platform.BINARY_SENSOR,
-    COVER_DOMAIN: Platform.COVER,
-    NOTIFY_DOMAIN: Platform.NOTIFY,
-    SENSOR_DOMAIN: Platform.SENSOR,
-    SWITCH_DOMAIN: Platform.SWITCH,
-}
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -203,89 +188,8 @@ CONFIG_SCHEMA = probatio.Schema(
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Command Line from yaml config."""
 
-    async def _reload_config(call: Event | ServiceCall) -> None:
-        """Reload Command Line."""
-        reload_config = await async_integration_yaml_config(hass, DOMAIN)
-        reset_platforms = async_get_platforms(hass, DOMAIN)
-        for reset_platform in reset_platforms:
-            _LOGGER.debug("Reload resetting platform: %s", reset_platform.domain)
-            await reset_platform.async_reset()
-        # Prune template deprecation issues for entities that no longer exist,
-        # keeping issues for still-configured entities so an ignored issue is not
-        # reset by a delete-and-recreate. Each entity refreshes or clears its own
-        # issue on its next update after reload.
-        valid_issue_ids = _shell_template_issue_ids(
-            reload_config.get(DOMAIN, []) if reload_config else []
-        )
-        async_prune_shell_template_issues(hass, valid_issue_ids)
-        if not reload_config:
-            return
-        await async_load_platforms(hass, reload_config.get(DOMAIN, []), reload_config)
-
-    async_register_admin_service(hass, DOMAIN, SERVICE_RELOAD, _reload_config)
+    async_setup_services(hass)
 
     await async_load_platforms(hass, config.get(DOMAIN, []), config)
 
     return True
-
-
-def _shell_template_issue_ids(
-    command_line_config: list[dict[str, dict[str, Any]]],
-) -> set[str]:
-    """Return the shell template deprecation issue ids for the given config.
-
-    Only sensor, binary_sensor and notify run templated commands and can raise
-    the issue. The name mirrors each platform's setup: sensor and binary_sensor
-    always have a name (schema default), while notify falls back to the
-    integration domain when no name is configured.
-    """
-    issue_ids: set[str] = set()
-    for platform_config in command_line_config:
-        for platform, platform_conf in platform_config.items():
-            if platform == NOTIFY_DOMAIN:
-                name = platform_conf.get(CONF_NAME) or DOMAIN
-            elif platform in (SENSOR_DOMAIN, BINARY_SENSOR_DOMAIN):
-                name = platform_conf[CONF_NAME]
-            else:
-                continue
-            issue_ids.add(build_shell_template_issue_id(platform, name))
-    return issue_ids
-
-
-async def async_load_platforms(
-    hass: HomeAssistant,
-    command_line_config: list[dict[str, dict[str, Any]]],
-    config: ConfigType,
-) -> None:
-    """Load platforms from yaml."""
-    if not command_line_config:
-        return
-
-    _LOGGER.debug("Full config loaded: %s", command_line_config)
-
-    load_coroutines: list[Coroutine[Any, Any, None]] = []
-    platforms: list[Platform] = []
-    reload_configs: list[tuple[Platform, dict[str, Any]]] = []
-    for platform_config in command_line_config:
-        for platform, _config in platform_config.items():
-            if (mapped_platform := PLATFORM_MAPPING[platform]) not in platforms:
-                platforms.append(mapped_platform)
-            _LOGGER.debug(
-                "Loading config %s for platform %s",
-                platform_config,
-                PLATFORM_MAPPING[platform],
-            )
-            reload_configs.append((PLATFORM_MAPPING[platform], _config))
-            load_coroutines.append(
-                discovery.async_load_platform(
-                    hass,
-                    PLATFORM_MAPPING[platform],
-                    DOMAIN,
-                    _config,
-                    config,
-                )
-            )
-
-    if load_coroutines:
-        _LOGGER.debug("Loading platforms: %s", platforms)
-        await asyncio.gather(*load_coroutines)

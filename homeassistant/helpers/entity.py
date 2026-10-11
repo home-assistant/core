@@ -109,10 +109,6 @@ _ADD_REMOVE_METHODS = (
     "async_added_to_hass",
     "async_will_remove_from_hass",
 )
-_ENTITY_ID_CHANGED_METHODS = (
-    "async_entity_id_changed",
-    "async_entity_id_change_finished",
-)
 
 
 @ft.cache
@@ -121,19 +117,14 @@ def _entity_class_requires_readd(entity_class: type[Entity]) -> bool:
 
     Add or remove methods in _ADD_REMOVE_METHODS defined by a class are covered
     when that class, or a subclass of it in the MRO, defines
-    async_entity_id_changed or async_entity_id_change_finished. A sibling which
-    is merely earlier in the MRO does not cover them. Entity itself does not
-    count, and neither do the internal add and remove methods, which core handles
-    in async_internal_entity_id_changed.
+    async_entity_id_changed. A sibling which is merely earlier in the MRO does
+    not cover them. Entity itself does not count, and neither do the internal add
+    and remove methods, which core handles in async_internal_entity_id_changed.
 
     This can be removed in Home Assistant Core 2027.11.
     """
     mro = [cls for cls in entity_class.__mro__ if cls is not Entity]
-    hook_owners = [
-        cls
-        for cls in mro
-        if any(method in cls.__dict__ for method in _ENTITY_ID_CHANGED_METHODS)
-    ]
+    hook_owners = [cls for cls in mro if "async_entity_id_changed" in cls.__dict__]
     return any(
         any(method in cls.__dict__ for method in _ADD_REMOVE_METHODS)
         and not any(issubclass(owner, cls) for owner in hook_owners)
@@ -1653,7 +1644,7 @@ class Entity(
         """Move bookkeeping from old_entity_id to the new self.entity_id.
 
         Called on entity_id change, when self.entity_id is already the new
-        entity_id and before the new state is written.
+        entity_id and before the state is written under it.
 
         When changed in place, it is called after core moved the entity's
         registrations and before async_registry_entry_updated and
@@ -1681,40 +1672,29 @@ class Entity(
     def async_entity_id_changed(self, old_entity_id: str) -> None:
         """Run when the entity_id has been changed in the entity registry.
 
-        This method is called when self.entity_id is already the new entity_id,
-        core bookkeeping (entity registry and device registry tracking, entity
-        sources, restore state) has been moved to it and async_registry_entry_updated
-        has run, but before the state is written under the new entity_id; the old
-        state has already been removed.
+        Called when self.entity_id is already the new entity_id, core bookkeeping
+        (entity registry and device registry tracking, entity sources, restore
+        state) has been moved to it and async_registry_entry_updated has run; the
+        old state has already been removed.
 
-        Implement this to update anything set up by the entity which depends on
-        its entity_id, in particular anything the state or attributes are derived
-        from, e.g. state change listeners or signals keyed on self.entity_id. Do
-        not write the state, core writes it after calling this method.
+        Re-key anything the state or attributes are derived from which depends on
+        the entity_id, e.g. state change listeners or signals keyed on
+        self.entity_id. Writing the state is optional, core writes it after this
+        method returns if it has not been written under the new entity_id.
+
+        Work which needs the state under the new entity_id, e.g. templates
+        rendering `this`, writes it with self.async_write_ha_state() first. This
+        method must not await; work which must await can be done in a task,
+        registry events are not serialized with it, so after an await re-check
+        that the entity is still added and that self.entity_id is unchanged.
 
         Call super() so base classes can do the same.
 
         To be extended by integrations.
 
         Note: During the deprecation period ending in 2027.11, custom integrations
-        may implement this method, even as a no-op, to opt in to changing the entity_id
-        in place.
-        """
-
-    @callback
-    def async_entity_id_change_finished(self, old_entity_id: str) -> None:
-        """Run when the state has been written under the new entity_id.
-
-        Only for work which reads the entity's own state under the new entity_id,
-        e.g. templates rendering `this`, or which may write state. Anything else
-        belongs in async_entity_id_changed. Call super() so base classes can do
-        the same.
-
-        Work which must await can be done in a task; registry events are not
-        serialized with it, so after an await re-check that the entity is still
-        added and that self.entity_id is unchanged.
-
-        To be extended by integrations.
+        may implement this method, even as a no-op, to opt in to changing the
+        entity_id in place.
         """
 
     @callback
@@ -1784,7 +1764,6 @@ class Entity(
         self._async_move_entity_id(old_entity_id)
         self.async_internal_entity_id_changed(old_entity_id)
         self.async_registry_entry_updated()
-        # The old state is gone, a failing hook must not leave the entity without one
         try:
             self.async_entity_id_changed(old_entity_id)
         except Exception:
@@ -1793,15 +1772,9 @@ class Entity(
                 self.entity_id,
                 old_entity_id,
             )
-        self.async_write_ha_state()
-        try:
-            self.async_entity_id_change_finished(old_entity_id)
-        except Exception:
-            _LOGGER.exception(
-                "Error finishing entity_id change of %s from %s",
-                self.entity_id,
-                old_entity_id,
-            )
+        # The old state is gone, write the new one unless the hook already did
+        if self.hass.states.get(self.entity_id) is None:
+            self.async_write_ha_state()
 
     async def _async_readd_on_entity_id_change(
         self, old_entity_id: str, registry_entry: er.RegistryEntry

@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock
 
+import pytest
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
@@ -14,6 +15,7 @@ from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
 
+@pytest.mark.freeze_time("2026-06-08 12:00:00+00:00")
 async def test_get_config_entry_diagnostics(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,

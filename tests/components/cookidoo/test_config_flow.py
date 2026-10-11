@@ -26,7 +26,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .conftest import AUTH_DATA, COUNTRY, EMAIL, LANGUAGE, PASSWORD
+from .conftest import AUTH_DATA, COUNTRY, EMAIL, LANGUAGE, PASSWORD, TEST_UUID
 from .test_init import setup_integration
 
 from tests.common import MockConfigEntry
@@ -107,6 +107,7 @@ async def test_flow_user_success(
         **MOCK_DATA_LANGUAGE_STEP,
         CONF_TOKEN: expected_token,
     }
+    assert result["result"].unique_id == TEST_UUID
     assert len(mock_setup_entry.mock_calls) == 1
 
 

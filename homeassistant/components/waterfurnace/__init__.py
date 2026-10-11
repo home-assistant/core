@@ -8,9 +8,14 @@ from waterfurnace.waterfurnace import WaterFurnace, WFCredentialError, WFExcepti
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 from homeassistant.helpers.start import async_at_started
 
+from .const import DOMAIN
 from .coordinator import (
     WaterFurnaceCoordinator,
     WaterFurnaceDeviceData,
@@ -107,13 +112,24 @@ async def async_migrate_entry(
         client = WaterFurnace(entry.data[CONF_USERNAME], entry.data[CONF_PASSWORD])
         try:
             await hass.async_add_executor_job(client.login)
-        except WFCredentialError, WFException:
-            _LOGGER.error("Failed to login during migration to account_id")
-            return False
+        except WFCredentialError as err:
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_auth",
+                translation_placeholders={CONF_USERNAME: entry.data[CONF_USERNAME]},
+            ) from err
+        except WFException as err:
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="login_failed",
+                translation_placeholders={CONF_USERNAME: entry.data[CONF_USERNAME]},
+            ) from err
 
         if client.account_id is None:
-            _LOGGER.error("Account ID is invalid during migration")
-            return False
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_account_id",
+            )
 
         hass.config_entries.async_update_entry(
             entry, unique_id=str(client.account_id), minor_version=2
