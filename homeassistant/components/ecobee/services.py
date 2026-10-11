@@ -9,6 +9,7 @@ from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.service import async_register_platform_entity_service
+from homeassistant.util.hass_dict import HassKey
 
 from .const import DOMAIN
 from .util import ecobee_date, ecobee_time
@@ -35,7 +36,7 @@ ATTR_VACATION_NAME = "vacation_name"
 
 DEFAULT_RESUME_ALL = False
 
-DATA_THERMOSTATS = "thermostats"
+ECOBEE_THERMOSTATS: HassKey[list[Thermostat]] = HassKey(DOMAIN)
 
 SERVICE_CREATE_VACATION = "create_vacation"
 SERVICE_DELETE_VACATION = "delete_vacation"
@@ -108,8 +109,7 @@ SET_FAN_MIN_ON_TIME_SCHEMA = probatio.Schema(
 @callback
 def _async_get_thermostats(hass: HomeAssistant) -> list[Thermostat]:
     """Return loaded ecobee thermostat entities."""
-    # pylint: disable-next=home-assistant-use-runtime-data
-    return hass.data[DOMAIN][DATA_THERMOSTATS]
+    return hass.data[ECOBEE_THERMOSTATS]
 
 
 def _create_vacation_service(call: ServiceCall) -> None:
@@ -165,8 +165,7 @@ def _resume_program_set_service(call: ServiceCall) -> None:
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Register ecobee services."""
-    # pylint: disable-next=home-assistant-use-runtime-data
-    hass.data.setdefault(DOMAIN, {})[DATA_THERMOSTATS] = []
+    hass.data[ECOBEE_THERMOSTATS] = []
 
     hass.services.async_register(
         DOMAIN,
