@@ -156,9 +156,13 @@ def mock_stream_listen():
 @pytest.fixture(autouse=True)
 def mock_add_listener():
     """Mock Teslemetry Stream add listener method."""
-    with patch(
-        "teslemetry_stream.TeslemetryStream.async_add_listener",
-    ) as mock_add_listener:
+    with (
+        patch(
+            "teslemetry_stream.TeslemetryStream.async_add_listener",
+        ) as mock_add_listener,
+        # Route ingest() into this registry, as the real one is never populated.
+        patch("teslemetry_stream.TeslemetryStream._dispatch") as mock_dispatch,
+    ):
         mock_add_listener.listeners = []
 
         def unsubscribe() -> None:
@@ -175,6 +179,7 @@ def mock_add_listener():
 
         mock_add_listener.send = send
         mock_add_listener.side_effect = side_effect
+        mock_dispatch.side_effect = send
         yield mock_add_listener
 
 

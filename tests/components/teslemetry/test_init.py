@@ -1,7 +1,7 @@
 """Test the Teslemetry init."""
 
 import asyncio
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Callable
 from contextlib import asynccontextmanager
 from copy import deepcopy
 from datetime import timedelta
@@ -39,13 +39,17 @@ from tesla_fleet_api.exceptions import (
     TeslaFleetError,
 )
 from tesla_fleet_api.tesla import EnergySiteRouter, VehicleRouter
+from tesla_fleet_api.tesla.vehicle.bluetooth import VehicleBluetooth
+from tesla_fleet_api.tesla.vehicle.stream_glue import BleBroadcastStreamGlue
 from tesla_fleet_api.teslemetry import EnergySite, Vehicle
+from tesla_protocol.command import vcsec_pb2
 from teslemetry_stream import TeslemetryStreamAuthenticationError
 
 from homeassistant.components.homeassistant import (
     DOMAIN as HOMEASSISTANT_DOMAIN,
     SERVICE_UPDATE_ENTITY,
 )
+from homeassistant.components.lock import LockState
 from homeassistant.components.teslemetry import (
     STREAM_TOPICS,
     _async_get_rsa_key_pem,
@@ -2418,7 +2422,7 @@ async def _paired_entry(
     """Set up a BLE-paired entry, yielding its router and both backends."""
     entry = _entry_with_ble()
     entry.add_to_hass(hass)
-    bluetooth_vehicle = AsyncMock()
+    bluetooth_vehicle = AsyncMock(spec=VehicleBluetooth)
     bluetooth_vehicle.set_device = MagicMock()
 
     with (
@@ -2442,6 +2446,9 @@ async def _paired_entry(
         cloud = AsyncMock(return_value=CLOUD_RESULT)
         router.secondary.flash_lights = cloud
         yield router, bluetooth_vehicle, cloud
+
+        assert await hass.config_entries.async_unload(entry.entry_id)
+        await hass.async_block_till_done()
 
 
 async def test_vehicle_bluetooth_out_of_range(hass: HomeAssistant) -> None:
@@ -2546,14 +2553,19 @@ async def test_vehicle_paired_but_never_seen(hass: HomeAssistant) -> None:
         patch("homeassistant.components.teslemetry.PLATFORMS", []),
     ):
         mock_parent.return_value.get_private_key = AsyncMock()
-        mock_parent.return_value.vehicles.createBluetooth.return_value = AsyncMock()
+        mock_parent.return_value.vehicles.createBluetooth.return_value = AsyncMock(
+            spec=VehicleBluetooth
+        )
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    assert (
-        "device"
-        not in mock_parent.return_value.vehicles.createBluetooth.call_args.kwargs
-    )
+        assert (
+            "device"
+            not in mock_parent.return_value.vehicles.createBluetooth.call_args.kwargs
+        )
+
+        assert await hass.config_entries.async_unload(entry.entry_id)
+        await hass.async_block_till_done()
 
 
 @pytest.mark.parametrize(
@@ -2567,7 +2579,7 @@ async def test_unload_disconnects_bluetooth(
     """Unloading a routed entry disconnects its Bluetooth backend, errors and all."""
     entry = _entry_with_ble()
     entry.add_to_hass(hass)
-    bluetooth_vehicle = AsyncMock()
+    bluetooth_vehicle = AsyncMock(spec=VehicleBluetooth)
     bluetooth_vehicle.disconnect = AsyncMock(side_effect=disconnect_error)
 
     with (
@@ -2598,7 +2610,7 @@ async def test_unload_never_connected_bluetooth(hass: HomeAssistant) -> None:
     """Unloading a paired vehicle that was never in range does not raise."""
     entry = _entry_with_ble()
     entry.add_to_hass(hass)
-    bluetooth_vehicle = AsyncMock()
+    bluetooth_vehicle = AsyncMock(spec=VehicleBluetooth)
 
     with (
         patch(
@@ -2623,13 +2635,114 @@ async def test_unload_never_connected_bluetooth(hass: HomeAssistant) -> None:
     bluetooth_vehicle.disconnect.assert_awaited_once()
 
 
+async def test_ble_broadcast_updates_stream_backed_entity(hass: HomeAssistant) -> None:
+    """A paired vehicle's Bluetooth broadcast reaches its stream-backed lock entity."""
+    entry = _entry_with_ble()
+    entry.add_to_hass(hass)
+    bluetooth_vehicle = AsyncMock(spec=VehicleBluetooth)
+    lock_callbacks: list[Callable[[int], None]] = []
+    bluetooth_vehicle.listen_vehicle_lock_state.side_effect = lambda callback: (
+        lock_callbacks.append(callback) or MagicMock()
+    )
+
+    with (
+        patch(
+            "homeassistant.components.teslemetry.async_ble_device_from_address",
+            return_value=MagicMock(),
+        ),
+        patch(
+            "homeassistant.components.teslemetry.helpers.TeslaBluetooth"
+        ) as mock_parent,
+        patch("homeassistant.components.teslemetry.PLATFORMS", [Platform.LOCK]),
+    ):
+        mock_parent.return_value.get_private_key = AsyncMock()
+        mock_parent.return_value.vehicles.createBluetooth.return_value = (
+            bluetooth_vehicle
+        )
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert lock_callbacks
+        assert hass.states.get("lock.test_lock").state == STATE_UNKNOWN
+
+        lock_callbacks[0](vcsec_pb2.VEHICLELOCKSTATE_LOCKED)
+        await hass.async_block_till_done()
+
+    assert hass.states.get("lock.test_lock").state == LockState.LOCKED
+
+
+async def test_unload_stops_ble_broadcast_glue(hass: HomeAssistant) -> None:
+    """Unloading a routed entry stops its BLE broadcast glue."""
+    entry = _entry_with_ble()
+    entry.add_to_hass(hass)
+    bluetooth_vehicle = AsyncMock(spec=VehicleBluetooth)
+
+    with (
+        patch(
+            "homeassistant.components.teslemetry.async_ble_device_from_address",
+            return_value=MagicMock(),
+        ),
+        patch(
+            "homeassistant.components.teslemetry.helpers.TeslaBluetooth"
+        ) as mock_parent,
+        patch("homeassistant.components.teslemetry.PLATFORMS", []),
+        patch.object(BleBroadcastStreamGlue, "stop", autospec=True) as mock_stop,
+    ):
+        mock_parent.return_value.get_private_key = AsyncMock()
+        mock_parent.return_value.vehicles.createBluetooth.return_value = (
+            bluetooth_vehicle
+        )
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert await hass.config_entries.async_unload(entry.entry_id)
+        await hass.async_block_till_done()
+
+    mock_stop.assert_called_once()
+
+
+async def test_setup_failure_after_glue_construction_stops_it(
+    hass: HomeAssistant,
+) -> None:
+    """A setup failure after the BLE glue is built still unsubscribes it."""
+    entry = _entry_with_ble()
+    entry.add_to_hass(hass)
+    bluetooth_vehicle = AsyncMock(spec=VehicleBluetooth)
+
+    # async_unload_entry is never called on a failed setup, only async_on_unload callbacks.
+    with (
+        patch(
+            "homeassistant.components.teslemetry.async_setup_stream",
+            side_effect=ConfigEntryNotReady("boom"),
+        ),
+        patch(
+            "homeassistant.components.teslemetry.async_ble_device_from_address",
+            return_value=MagicMock(),
+        ),
+        patch(
+            "homeassistant.components.teslemetry.helpers.TeslaBluetooth"
+        ) as mock_parent,
+        patch("homeassistant.components.teslemetry.PLATFORMS", []),
+        patch.object(BleBroadcastStreamGlue, "stop", autospec=True) as mock_stop,
+    ):
+        mock_parent.return_value.get_private_key = AsyncMock()
+        mock_parent.return_value.vehicles.createBluetooth.return_value = (
+            bluetooth_vehicle
+        )
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+    mock_stop.assert_called_once()
+
+
 async def test_unload_disconnect_timeout(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """A hung Bluetooth disconnect cannot block unload past the timeout."""
     entry = _entry_with_ble()
     entry.add_to_hass(hass)
-    bluetooth_vehicle = AsyncMock()
+    bluetooth_vehicle = AsyncMock(spec=VehicleBluetooth)
     never_set = asyncio.Event()
 
     async def _hang(*args: object, **kwargs: object) -> None:
@@ -2669,7 +2782,7 @@ async def test_unload_disconnect_instant_timeout(
     """A TimeoutError raised by disconnect() itself is not mistaken for the deadline."""
     entry = _entry_with_ble()
     entry.add_to_hass(hass)
-    bluetooth_vehicle = AsyncMock()
+    bluetooth_vehicle = AsyncMock(spec=VehicleBluetooth)
     bluetooth_vehicle.disconnect = AsyncMock(side_effect=TimeoutError("device busy"))
 
     with (
@@ -2776,7 +2889,9 @@ async def _setup_paired_entry(hass: HomeAssistant) -> MockConfigEntry:
         patch("homeassistant.components.teslemetry.PLATFORMS", []),
     ):
         mock_parent.return_value.get_private_key = AsyncMock()
-        mock_parent.return_value.vehicles.createBluetooth.return_value = AsyncMock()
+        mock_parent.return_value.vehicles.createBluetooth.return_value = AsyncMock(
+            spec=VehicleBluetooth
+        )
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
     return entry
@@ -2818,7 +2933,9 @@ async def test_subentry_removal_keeps_vehicle_device_and_entities(
         ) as mock_parent,
     ):
         mock_parent.return_value.get_private_key = AsyncMock()
-        mock_parent.return_value.vehicles.createBluetooth.return_value = AsyncMock()
+        mock_parent.return_value.vehicles.createBluetooth.return_value = AsyncMock(
+            spec=VehicleBluetooth
+        )
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
