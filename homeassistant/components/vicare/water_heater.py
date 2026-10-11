@@ -1,5 +1,6 @@
 """Viessmann ViCare water_heater device."""
 
+from collections.abc import Callable
 from contextlib import suppress
 from datetime import time
 import logging
@@ -200,7 +201,9 @@ class ViCareWater(ViCareEntity, WaterHeaterEntity):
     def set_circulation_schedule(self, **slots_by_day: list[dict[str, Any]]) -> None:
         """Set the DHW circulation pump schedule, keeping days not passed."""
         schedule = self._get_circulation_schedule()
-        supported_modes = self._api.getDomesticHotWaterCirculationScheduleModes()
+        supported_modes = self._read_circulation(
+            self._api.getDomesticHotWaterCirculationScheduleModes
+        )
         for slots in slots_by_day.values():
             for slot in slots:
                 if (
@@ -245,8 +248,12 @@ class ViCareWater(ViCareEntity, WaterHeaterEntity):
 
     def _get_circulation_schedule(self) -> dict[str, Any]:
         """Return the raw circulation schedule or raise if unsupported."""
+        return self._read_circulation(self._api.getDomesticHotWaterCirculationSchedule)
+
+    def _read_circulation[T](self, read: Callable[[], T]) -> T:
+        """Read circulation data, translating unsupported features and API errors."""
         try:
-            return self._api.getDomesticHotWaterCirculationSchedule()
+            return read()
         except PyViCareNotSupportedFeatureError as err:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,

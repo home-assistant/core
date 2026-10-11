@@ -8,6 +8,7 @@ import pytest
 from PyViCare.PyViCareUtils import (
     PyViCareCommandError,
     PyViCareInternalServerError,
+    PyViCareNotSupportedFeatureError,
     PyViCareRateLimitError,
 )
 from syrupy.assertion import SnapshotAssertion
@@ -368,4 +369,33 @@ async def test_set_circulation_schedule_unsupported_mode(
         "mode": "cycles_5_25",
         "modes": "on",
     }
+    mock_vicare.devices[0].service.setProperty.assert_not_called()
+
+
+async def test_set_circulation_schedule_read_only(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a readable schedule without a set command raises a validation error."""
+    mock_vicare = MockPyViCare(CIRCULATION_SCHEDULE_FIXTURES)
+    await _setup_water_heater(hass, mock_config_entry, mock_vicare)
+
+    with (
+        patch(
+            "PyViCare.PyViCareHeatingDevice.HeatingDevice."
+            "getDomesticHotWaterCirculationScheduleModes",
+            side_effect=PyViCareNotSupportedFeatureError("setSchedule"),
+        ),
+        pytest.raises(ServiceValidationError) as exc_info,
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            "set_circulation_schedule",
+            {
+                ATTR_ENTITY_ID: ENTITY_WATER_HEATER,
+                "monday": [{"from": "06:00", "to": "08:00", "mode": "on"}],
+            },
+            blocking=True,
+        )
+    assert exc_info.value.translation_key == "circulation_schedule_not_supported"
     mock_vicare.devices[0].service.setProperty.assert_not_called()
