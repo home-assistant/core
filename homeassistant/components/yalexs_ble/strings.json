@@ -53,18 +53,89 @@
     }
   },
   "exceptions": {
+    "communication_error": {
+      "message": "Failed to communicate with the lock: {error}"
+    },
     "device_not_advertising": {
       "message": "{local_name} ({address}) is not advertising yet: {reason}"
+    },
+    "invalid_pin": {
+      "message": "The PIN must be 4 to 8 digits."
+    },
+    "keycode_error": {
+      "message": "The lock rejected the keypad request: {error}"
+    },
+    "lock_not_running": {
+      "message": "The lock connection is not running."
+    },
+    "pin_already_in_use": {
+      "message": "This PIN is already in use in another slot."
     }
   },
   "options": {
     "step": {
       "device_options": {
         "data": {
-          "always_connected": "Always connected"
+          "always_connected": "Always connected",
+          "master_code_name": "Master code name"
+        },
+        "data_description": {
+          "master_code_name": "Optional name shown when the lock's master code, which is set at the keypad, unlocks the lock. Leave empty to show 'Master code'."
         },
         "description": "If the lock does not support push updates via advertisements or you want lock operation to be more responsive, you can enable always connected mode. Always connected will cause the lock to stay connected to Home Assistant via Bluetooth, which will use more battery."
       }
+    }
+  },
+  "services": {
+    "clear_lock_credential": {
+      "description": "Clears a keypad PIN from a slot on the lock.",
+      "fields": {
+        "credential_index": {
+          "description": "The keypad PIN slot, from 1 to 250.",
+          "name": "Credential index"
+        },
+        "credential_type": {
+          "description": "The type of credential. Only PIN is supported.",
+          "name": "Credential type"
+        }
+      },
+      "name": "Clear lock credential"
+    },
+    "get_lock_credential_status": {
+      "description": "Returns whether a keypad PIN slot is in use and its name. The PIN itself is never returned.",
+      "fields": {
+        "credential_index": {
+          "description": "The keypad PIN slot, from 1 to 250.",
+          "name": "Credential index"
+        },
+        "credential_type": {
+          "description": "The type of credential. Only PIN is supported.",
+          "name": "Credential type"
+        }
+      },
+      "name": "Get lock credential status"
+    },
+    "set_lock_credential": {
+      "description": "Sets a keypad PIN in a slot on the lock.",
+      "fields": {
+        "credential_data": {
+          "description": "The PIN, 4 to 8 digits.",
+          "name": "Credential data"
+        },
+        "credential_index": {
+          "description": "The keypad PIN slot, from 1 to 250.",
+          "name": "Credential index"
+        },
+        "credential_type": {
+          "description": "The type of credential. Only PIN is supported.",
+          "name": "Credential type"
+        },
+        "name": {
+          "description": "A label for the slot, used as the changed by value when the PIN is used. Leave empty to keep the existing label.",
+          "name": "Name"
+        }
+      },
+      "name": "Set lock credential"
     }
   }
 }

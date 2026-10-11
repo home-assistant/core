@@ -32,7 +32,14 @@ from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .config_cache import async_add_validated_config, async_get_validated_config
-from .const import CONF_ALWAYS_CONNECTED, CONF_KEY, CONF_LOCAL_NAME, CONF_SLOT, DOMAIN
+from .const import (
+    CONF_ALWAYS_CONNECTED,
+    CONF_KEY,
+    CONF_LOCAL_NAME,
+    CONF_MASTER_CODE_NAME,
+    CONF_SLOT,
+    DOMAIN,
+)
 from .util import async_find_existing_service_info, human_readable_name
 
 _LOGGER = logging.getLogger(__name__)
@@ -381,7 +388,10 @@ class YaleXSBLEOptionsFlowHandler(OptionsFlowWithReload):
         """Manage the YaleXSBLE devices options."""
         if user_input is not None:
             return self.async_create_entry(
-                data={CONF_ALWAYS_CONNECTED: user_input[CONF_ALWAYS_CONNECTED]},
+                data={
+                    CONF_ALWAYS_CONNECTED: user_input[CONF_ALWAYS_CONNECTED],
+                    CONF_MASTER_CODE_NAME: user_input.get(CONF_MASTER_CODE_NAME, ""),
+                },
             )
 
         return self.async_show_form(
@@ -394,6 +404,14 @@ class YaleXSBLEOptionsFlowHandler(OptionsFlowWithReload):
                             CONF_ALWAYS_CONNECTED, False
                         ),
                     ): bool,
+                    probatio.Optional(
+                        CONF_MASTER_CODE_NAME,
+                        description={
+                            "suggested_value": self.config_entry.options.get(
+                                CONF_MASTER_CODE_NAME
+                            )
+                        },
+                    ): str,
                 }
             ),
         )
