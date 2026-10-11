@@ -44,20 +44,27 @@ class MockIrCommand(InfraredCommand):
         return self._timings
 
 
-async def test_infrared_emitter(
+IR_COMMAND = MockIrCommand(
+    modulation=38000, repeat_count=0, timings=[9000, -4500, 560, -1690]
+)
+
+
+@pytest.mark.parametrize("entity_id", [ENTITY_ID_EMITTER, ENTITY_ID_RECEIVER])
+async def test_infrared_entities(
     hass: HomeAssistant,
     mock_rpc_device: Mock,
     snapshot: SnapshotAssertion,
     entity_registry: EntityRegistry,
+    entity_id: str,
 ) -> None:
-    """Test the infrared emitter entity."""
+    """Test the infrared entities."""
     await init_integration(hass, 4)
 
-    assert (state := hass.states.get(ENTITY_ID_EMITTER))
-    assert state == snapshot(name=f"{ENTITY_ID_EMITTER}-state")
+    assert (state := hass.states.get(entity_id))
+    assert state == snapshot(name=f"{entity_id}-state")
 
-    assert (entry := entity_registry.async_get(ENTITY_ID_EMITTER))
-    assert entry == snapshot(name=f"{ENTITY_ID_EMITTER}-entry")
+    assert (entry := entity_registry.async_get(entity_id))
+    assert entry == snapshot(name=f"{entity_id}-entry")
 
 
 async def test_rpc_send_ir_command(
@@ -67,10 +74,7 @@ async def test_rpc_send_ir_command(
     """Test RPC send IR command."""
     await init_integration(hass, 4)
 
-    ir_command = MockIrCommand(
-        modulation=38000, repeat_count=0, timings=[9000, -4500, 560, -1690]
-    )
-    await async_send_command(hass, ENTITY_ID_EMITTER, ir_command)
+    await async_send_command(hass, ENTITY_ID_EMITTER, IR_COMMAND)
 
     mock_rpc_device.ir_emit_raw.assert_awaited_once_with(
         [9000, -4500, 560, -1690],
@@ -105,11 +109,8 @@ async def test_rpc_send_ir_command_exc(
 
     mock_rpc_device.ir_emit_raw.side_effect = exception
 
-    ir_command = MockIrCommand(
-        modulation=38000, repeat_count=0, timings=[9000, -4500, 560, -1690]
-    )
     with pytest.raises(HomeAssistantError, match=error):
-        await async_send_command(hass, ENTITY_ID_EMITTER, ir_command)
+        await async_send_command(hass, ENTITY_ID_EMITTER, IR_COMMAND)
 
 
 async def test_rpc_send_ir_command_reauth(
@@ -121,10 +122,7 @@ async def test_rpc_send_ir_command_reauth(
 
     mock_rpc_device.ir_emit_raw.side_effect = InvalidAuthError
 
-    ir_command = MockIrCommand(
-        modulation=38000, repeat_count=0, timings=[9000, -4500, 560, -1690]
-    )
-    await async_send_command(hass, ENTITY_ID_EMITTER, ir_command)
+    await async_send_command(hass, ENTITY_ID_EMITTER, IR_COMMAND)
 
     assert entry.state is ConfigEntryState.LOADED
 
@@ -138,22 +136,6 @@ async def test_rpc_send_ir_command_reauth(
     assert "context" in flow
     assert flow["context"].get("source") == SOURCE_REAUTH
     assert flow["context"].get("entry_id") == entry.entry_id
-
-
-async def test_infrared_receiver(
-    hass: HomeAssistant,
-    mock_rpc_device: Mock,
-    snapshot: SnapshotAssertion,
-    entity_registry: EntityRegistry,
-) -> None:
-    """Test the infrared receiver entity."""
-    await init_integration(hass, 4)
-
-    assert (state := hass.states.get(ENTITY_ID_RECEIVER))
-    assert state == snapshot(name=f"{ENTITY_ID_RECEIVER}-state")
-
-    assert (entry := entity_registry.async_get(ENTITY_ID_RECEIVER))
-    assert entry == snapshot(name=f"{ENTITY_ID_RECEIVER}-entry")
 
 
 async def test_infrared_receiver_signal(
@@ -190,43 +172,18 @@ async def test_infrared_receiver_signal(
     [
         {"events": [{"component": "ir", "event": "other_event", "timings": [100]}]},
         {"events": [{"component": "switch", "event": "raw_receive", "timings": [100]}]},
-    ],
-)
-async def test_infrared_receiver_ignores_irrelevant_events(
-    hass: HomeAssistant,
-    mock_rpc_device: Mock,
-    monkeypatch: pytest.MonkeyPatch,
-    event: dict,
-) -> None:
-    """Test that irrelevant events do not change the receiver state."""
-    await init_integration(hass, 4)
-
-    received_signals: list[InfraredReceivedSignal] = []
-    async_subscribe_receiver(hass, ENTITY_ID_RECEIVER, received_signals.append)
-
-    inject_rpc_device_event(monkeypatch, mock_rpc_device, event)
-    await hass.async_block_till_done()
-
-    assert received_signals == []
-    assert (state := hass.states.get(ENTITY_ID_RECEIVER))
-    assert state.state == STATE_UNKNOWN
-
-
-@pytest.mark.parametrize(
-    "event",
-    [
         {"events": [{"component": "ir", "event": "raw_receive", "timings": []}]},
         {"events": [{"component": "ir", "event": "raw_receive", "timings": None}]},
         {"events": [{"component": "ir", "event": "raw_receive"}]},
     ],
 )
-async def test_infrared_receiver_ignores_empty_timings(
+async def test_infrared_receiver_ignores_events(
     hass: HomeAssistant,
     mock_rpc_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
     event: dict,
 ) -> None:
-    """Test that events with empty or missing timings do not change state."""
+    """Test that irrelevant or empty events do not change the receiver state."""
     await init_integration(hass, 4)
 
     received_signals: list[InfraredReceivedSignal] = []

@@ -14,7 +14,7 @@ from homeassistant.components.infrared import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import ShellyConfigEntry, ShellyRpcCoordinator
+from .coordinator import ShellyConfigEntry
 from .entity import (
     RpcEntityDescription,
     ShellyRpcAttributeEntity,
@@ -42,18 +42,7 @@ class RpcInfraredReceiverEntityDescription(
 class ShellyInfraredEmitter(ShellyRpcAttributeEntity, InfraredEmitterEntity):
     """Representation of a Shelly infrared emitter."""
 
-    _attr_has_entity_name = True
     entity_description: RpcInfraredEmitterEntityDescription
-
-    def __init__(
-        self,
-        coordinator: ShellyRpcCoordinator,
-        key: str,
-        attribute: str,
-        description: RpcInfraredEmitterEntityDescription,
-    ) -> None:
-        """Initialize the infrared emitter."""
-        super().__init__(coordinator, key, attribute, description)
 
     @rpc_call
     @override
@@ -69,18 +58,7 @@ class ShellyInfraredEmitter(ShellyRpcAttributeEntity, InfraredEmitterEntity):
 class ShellyInfraredReceiver(ShellyRpcAttributeEntity, InfraredReceiverEntity):
     """Representation of a Shelly infrared receiver."""
 
-    _attr_has_entity_name = True
     entity_description: RpcInfraredReceiverEntityDescription
-
-    def __init__(
-        self,
-        coordinator: ShellyRpcCoordinator,
-        key: str,
-        attribute: str,
-        description: RpcInfraredReceiverEntityDescription,
-    ) -> None:
-        """Initialize the infrared receiver."""
-        super().__init__(coordinator, key, attribute, description)
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -96,8 +74,7 @@ class ShellyInfraredReceiver(ShellyRpcAttributeEntity, InfraredReceiverEntity):
         if event.get("component") != "ir" or event.get("event") != "raw_receive":
             return
 
-        timings = event.get("timings")
-        if not isinstance(timings, list) or not timings:
+        if not (timings := event.get("timings")):
             return
 
         self._handle_received_signal(InfraredReceivedSignal(timings=timings))
@@ -113,9 +90,7 @@ RPC_INFRARED_ENTITIES: Final = {
         key="ir",
         translation_key="infrared_receiver",
         entity_class=ShellyInfraredReceiver,
-        removal_condition=lambda config, _, key: (
-            not config[key].get("raw_receive", False)
-        ),
+        removal_condition=lambda config, _, key: not config[key].get("raw_receive"),
     ),
 }
 
