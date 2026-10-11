@@ -78,8 +78,8 @@ def mock_config_entry(api_key_present: bool) -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_forecast_solar(hass: HomeAssistant) -> Generator[MagicMock]:
-    """Return a mocked Forecast.Solar client.
+def mock_forecast_solar_class(hass: HomeAssistant) -> Generator[MagicMock]:
+    """Return the mocked Forecast.Solar client class.
 
     hass fixture included because it sets the time zone.
     """
@@ -130,7 +130,13 @@ def mock_forecast_solar(hass: HomeAssistant) -> Generator[MagicMock]:
         }
 
         forecast_solar.estimate.return_value = estimate
-        yield forecast_solar
+        yield forecast_solar_mock
+
+
+@pytest.fixture
+def mock_forecast_solar(mock_forecast_solar_class: MagicMock) -> MagicMock:
+    """Return the mocked Forecast.Solar client instance."""
+    return mock_forecast_solar_class.return_value
 
 
 @pytest.fixture
