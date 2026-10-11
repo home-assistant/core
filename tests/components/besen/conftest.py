@@ -174,7 +174,7 @@ def mock_besen_client() -> Generator[Mock]:
         client = mock_client.return_value
         _configure_client_mock(client)
 
-        async def async_start_charging() -> None:
+        async def async_start_charging(**kwargs: datetime | int | None) -> None:
             publish_besen_state(client, charger_state(charger_status=True))
 
         async def async_stop_charging() -> None:

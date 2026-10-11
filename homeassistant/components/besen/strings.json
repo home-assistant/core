@@ -171,8 +171,27 @@
     "command_failed": {
       "message": "The charger did not accept the command."
     },
+    "invalid_start": {
+      "message": "The start time must be in the future and at most 24 hours ahead."
+    },
     "no_connectable_path": {
       "message": "No connectable Bluetooth path is available for this charger: {reason}"
+    }
+  },
+  "services": {
+    "start_charging": {
+      "description": "Starts charging at a later time, for a limited time, or both.",
+      "fields": {
+        "duration": {
+          "description": "How long the charger charges before it ends the session. Leave empty for no time limit.",
+          "name": "Duration"
+        },
+        "start": {
+          "description": "When the charger starts charging, at most 24 hours ahead. Leave empty to start now.",
+          "name": "Start"
+        }
+      },
+      "name": "Start charging"
     }
   }
 }
