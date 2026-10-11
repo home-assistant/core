@@ -51,10 +51,8 @@ TEST_DHCP_UNIQUE_ID = str(int("7c2c67ecf7d4", 16))
 def _generate_test_der_cert(common_name: str) -> bytes:
     """Generate a minimal self-signed DER certificate with a specific CN."""
     key = rsa.generate_private_key(public_exponent=65537, key_size=1024)
-    subject = issuer = x509.Name(
-        [x509.NameAttribute(NameOID.COMMON_NAME, common_name)]
-    )
-    now = datetime.datetime.now(datetime.timezone.utc)
+    subject = issuer = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, common_name)])
+    now = datetime.datetime.now(datetime.UTC)
     cert = (
         x509.CertificateBuilder()
         .subject_name(subject)
