@@ -594,6 +594,7 @@ homeassistant.components.solaredge_modbus.*
 homeassistant.components.solarlog.*
 homeassistant.components.solyx_energy_cloud.*
 homeassistant.components.sonarr.*
+homeassistant.components.sony_tv_rs232.*
 homeassistant.components.spaceapi.*
 homeassistant.components.specialized_turbo.*
 homeassistant.components.speedtestdotnet.*

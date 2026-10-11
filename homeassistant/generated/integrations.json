@@ -14204,6 +14204,18 @@
             "cloud"
           ],
           "name": "PlayStation Network"
+        },
+        "sony_tv_rs232": {
+          "integration_type": "device",
+          "config_flow": true,
+          "iot_class": "local_polling",
+          "categories": [
+            "media_entertainment.tv_streaming"
+          ],
+          "connectivity": [
+            "serial"
+          ],
+          "name": "Sony TV RS-232"
         }
       }
     },

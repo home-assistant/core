@@ -1859,6 +1859,8 @@ AGENTS.md @home-assistant/core
 /tests/components/songpal/ @rytilahti @shenxn
 /homeassistant/components/sonos/ @peterager @jjlawren
 /tests/components/sonos/ @peterager @jjlawren
+/homeassistant/components/sony_tv_rs232/ @bbangert
+/tests/components/sony_tv_rs232/ @bbangert
 /homeassistant/components/soundtouch/ @kroimon
 /tests/components/soundtouch/ @kroimon
 /homeassistant/components/spaceapi/ @fabaff

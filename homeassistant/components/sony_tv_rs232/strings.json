@@ -1,0 +1,69 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "port": "[%key:common::config_flow::data::port%]"
+        },
+        "data_description": {
+          "port": "Serial port the TV is wired to. Local USB adapters and ESPHome serial proxy ports are listed automatically."
+        },
+        "description": "Sony's protocol has no handshake, so only the port can be checked here; a wiring problem shows up later as commands that are never acknowledged."
+      }
+    }
+  },
+  "entity": {
+    "media_player": {
+      "tv": {
+        "state_attributes": {
+          "sound_mode": {
+            "state": {
+              "custom": "Custom",
+              "dynamic": "Dynamic",
+              "standard": "Standard"
+            }
+          },
+          "source": {
+            "state": {
+              "component1": "Component 1",
+              "component2": "Component 2",
+              "hdmi1": "HDMI 1",
+              "hdmi2": "HDMI 2",
+              "hdmi3": "HDMI 3",
+              "hdmi4": "HDMI 4",
+              "pc": "PC",
+              "tv": "TV",
+              "video1": "Video 1",
+              "video2": "Video 2",
+              "video3": "Video 3"
+            }
+          }
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Failed to open the serial port: {error}"
+    },
+    "command_failed": {
+      "message": "Failed to send the command to the TV: {error}"
+    },
+    "command_rejected": {
+      "message": "The TV rejected the command: {error}"
+    },
+    "not_connected": {
+      "message": "Not connected to the TV"
+    },
+    "update_failed": {
+      "message": "The TV did not answer the power query: {error}"
+    }
+  }
+}
