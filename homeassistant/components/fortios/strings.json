@@ -1,0 +1,53 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:component::fortios::config::error::cannot_connect%]",
+      "invalid_auth": "[%key:component::fortios::config::error::invalid_auth%]",
+      "unique_id_mismatch": "The serial number does not match the previously configured FortiOS device.",
+      "unsupported_version": "[%key:component::fortios::config::error::unsupported_version%]"
+    },
+    "error": {
+      "cannot_connect": "Failed to connect",
+      "invalid_auth": "Invalid API token",
+      "unsupported_version": "FortiOS 6.4.3 or newer is required"
+    },
+    "step": {
+      "reauth_confirm": {
+        "data": {
+          "token": "[%key:component::fortios::config::step::user::data::token%]"
+        },
+        "description": "Update the API token for your FortiOS device."
+      },
+      "user": {
+        "data": {
+          "host": "Host",
+          "token": "API token",
+          "verify_ssl": "Verify SSL certificate"
+        },
+        "title": "Connect to FortiOS"
+      }
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Failed to connect to FortiOS"
+    },
+    "invalid_auth": {
+      "message": "Invalid API token"
+    },
+    "unique_id_mismatch": {
+      "message": "The FortiGate at {host} does not match the configured device. Check the hostname or IP address."
+    }
+  },
+  "issues": {
+    "legacy_known_devices": {
+      "description": "FortiOS now creates device tracker entities from a config entry. The following legacy entries in `{path}` for devices reported by `{host}` can prevent the new entities from updating:\n\n{devices}\n\nReview references in your automations, remove these legacy entries from `{path}`, and restart Home Assistant.",
+      "title": "Remove leftover known devices for FortiOS"
+    },
+    "yaml_import_failed": {
+      "description": "The FortiOS YAML configuration at `{host}` could not be imported. Check the host, API token and supported firmware version in `configuration.yaml`, then restart Home Assistant.",
+      "title": "FortiOS YAML import failed"
+    }
+  }
+}
