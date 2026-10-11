@@ -1,0 +1,28 @@
+{
+  "id": "uuid:0dd7f9c9-b9a0-4b7e-8c3e-1f2b3c4d5e6f",
+  "name": "[TV] Samsung 6 Series (55)",
+  "version": "2.1.0",
+  "device": {
+    "type": "Samsung SmartTV",
+    "duid": "uuid:0dd7f9c9-b9a0-4b7e-8c3e-1f2b3c4d5e6f",
+    "model": "16_JAZZL_UHD_BASIC",
+    "modelName": "UN55KU6290",
+    "description": "Samsung DTV RCR",
+    "networkType": "wired",
+    "ssid": "",
+    "ip": "1.2.3.4",
+    "firmwareVersion": "Unknown",
+    "name": "[TV] Samsung 6 Series (55)",
+    "id": "uuid:0dd7f9c9-b9a0-4b7e-8c3e-1f2b3c4d5e6f",
+    "udn": "uuid:0dd7f9c9-b9a0-4b7e-8c3e-1f2b3c4d5e6f",
+    "resolution": "3840x2160",
+    "countryCode": "US",
+    "msfVersion": "2.1.0",
+    "smartHubAgreement": "true",
+    "wifiMac": "aa:bb:aa:aa:aa:aa",
+    "developerMode": "0",
+    "developerIP": ""
+  },
+  "type": "Samsung SmartTV",
+  "uri": "https://1.2.3.4:8002/api/v2/"
+}

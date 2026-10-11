@@ -26,6 +26,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity, EntityDescription
 
 from .const import ATTR_MANUFACTURER, DOMAIN
+from .coordinator import UnifiDataUpdateCoordinator
 
 if TYPE_CHECKING:
     from .hub import UnifiHub
@@ -136,6 +137,7 @@ class UnifiEntity[HandlerT: APIHandler, ItemT: ApiItem](Entity):
     """Representation of a UniFi entity."""
 
     entity_description: UnifiEntityDescription[HandlerT, ItemT]
+    coordinator: UnifiDataUpdateCoordinator[HandlerT]
     _attr_unique_id: str
 
     def __init__(
@@ -149,6 +151,9 @@ class UnifiEntity[HandlerT: APIHandler, ItemT: ApiItem](Entity):
         self.hub = hub
         self.api = hub.api
         self.entity_description = description
+        self.coordinator = hub.entity_loader.get_data_update_coordinator(
+            description.api_handler_fn(self.api)
+        )
 
         hub.entity_loader.known_objects.add((description.key, obj_id))
 
@@ -172,7 +177,6 @@ class UnifiEntity[HandlerT: APIHandler, ItemT: ApiItem](Entity):
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         description = self.entity_description
-        handler = description.api_handler_fn(self.api)
 
         @callback
         def unregister_object() -> None:
@@ -183,11 +187,11 @@ class UnifiEntity[HandlerT: APIHandler, ItemT: ApiItem](Entity):
 
         self.async_on_remove(unregister_object)
 
-        # New data from handler
+        # New data from coordinator
         self.async_on_remove(
-            handler.subscribe(
-                self.async_signalling_callback,
-                id_filter=self._obj_id,
+            self.coordinator.async_add_listener(
+                self._async_coordinator_updated,
+                context=(self._obj_id, self._obj_id.partition("_")[0]),
             )
         )
 
@@ -219,10 +223,29 @@ class UnifiEntity[HandlerT: APIHandler, ItemT: ApiItem](Entity):
             )
 
     @callback
-    def async_signalling_callback(self, event: ItemEvent, obj_id: str) -> None:
-        """Update the entity state."""
-        if event is ItemEvent.DELETED and obj_id == self._obj_id:
-            self.hass.async_create_task(self.remove_item({obj_id}))
+    def _async_coordinator_updated(self) -> None:
+        """Skip coordinator updates that changed a different object."""
+        coordinator_data = self.coordinator.data
+        if coordinator_data is None:
+            event = ItemEvent.CHANGED
+            changed_obj_id = None
+        else:
+            event, changed_obj_id = coordinator_data
+
+        own_obj_id = self._obj_id.partition("_")[0]
+        if changed_obj_id is not None and changed_obj_id not in (
+            self._obj_id,
+            own_obj_id,
+        ):
+            return
+        self._async_process_update(event)
+
+    @callback
+    def _async_process_update(self, event: ItemEvent = ItemEvent.CHANGED) -> None:
+        """Update the entity state from the handler."""
+        handler = self.entity_description.api_handler_fn(self.api)
+        if self._obj_id not in handler:
+            self.hass.async_create_task(self.remove_item({self._obj_id}))
             return
 
         description = self.entity_description
@@ -230,9 +253,21 @@ class UnifiEntity[HandlerT: APIHandler, ItemT: ApiItem](Entity):
             self.hass.async_create_task(self.remove_item({self._obj_id}))
             return
 
-        self._attr_available = description.available_fn(self.hub, self._obj_id)
-        self.async_update_state(event, obj_id)
+        self._attr_available = (
+            description.available_fn(self.hub, self._obj_id)
+            and self.coordinator.last_update_success
+        )
+        self.async_update_state(event, self._obj_id)
         self.async_write_ha_state()
+
+    @callback
+    def async_signalling_callback(self, event: ItemEvent, obj_id: str) -> None:
+        """Update the entity state from a handler event."""
+        if event is ItemEvent.DELETED and obj_id == self._obj_id:
+            self.hass.async_create_task(self.remove_item({obj_id}))
+            return
+
+        self._async_process_update(event)
 
     @callback
     def async_signal_reachable_callback(self) -> None:
@@ -257,6 +292,11 @@ class UnifiEntity[HandlerT: APIHandler, ItemT: ApiItem](Entity):
     async def async_update(self) -> None:
         """Update state if polling is configured."""
         self.async_update_state(ItemEvent.CHANGED, self._obj_id)
+
+    async def async_refresh_after_control(self) -> None:
+        """Refresh handler data after a control call when polling."""
+        if self.coordinator.update_interval is not None:
+            await self.coordinator.async_refresh()
 
     @callback
     def async_initiate_state(self) -> None:

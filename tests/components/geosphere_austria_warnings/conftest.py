@@ -55,4 +55,5 @@ def mock_config_entry() -> MockConfigEntry:
         title="Schwechat",
         data={CONF_LATITUDE: TEST_LATITUDE, CONF_LONGITUDE: TEST_LONGITUDE},
         unique_id="30740",
+        version=2,
     )

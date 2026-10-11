@@ -1,5 +1,6 @@
 """Diagnostics support for Rituals Perfume Genie."""
 
+from dataclasses import asdict
 from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
@@ -19,7 +20,13 @@ async def async_get_config_entry_diagnostics(
     """Return diagnostics for a config entry."""
     return {
         "diffusers": [
-            async_redact_data(coordinator.diffuser.data, TO_REDACT)
+            async_redact_data(
+                {
+                    "hub": coordinator.data.hub.to_dict(),
+                    "sensors": asdict(coordinator.data.sensors),
+                },
+                TO_REDACT,
+            )
             for coordinator in entry.runtime_data.values()
         ]
     }

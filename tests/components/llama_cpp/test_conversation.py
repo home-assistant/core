@@ -6,7 +6,7 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from freezegun import freeze_time
-import httpx
+import httpx2
 import openai
 from openai.types.chat import (
     ChatCompletion,
@@ -100,6 +100,22 @@ async def test_conversation_entity(
 
     assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
     assert mock_chat_log.content[1:] == snapshot
+
+
+@pytest.mark.parametrize(
+    ("config_entry_data", "supports_streaming"),
+    [({CONF_STREAMING: True}, True), ({CONF_STREAMING: False}, False)],
+)
+async def test_conversation_entity_streaming_support(
+    hass: HomeAssistant, supports_streaming: bool
+) -> None:
+    """Verify the conversation entity advertises streaming support."""
+    agent_info = conversation.async_get_agent_info(
+        hass, "conversation.llama_cpp_conversation"
+    )
+
+    assert agent_info is not None
+    assert agent_info.supports_streaming is supports_streaming
 
 
 @pytest.mark.parametrize(("config_entry_options"), [ASSIST_OPTIONS])
@@ -584,6 +600,75 @@ async def test_streaming_response_redundant_role(
     assert content[1].content == "Hello world"
 
 
+@pytest.mark.parametrize(("config_entry_options"), [{CONF_STREAMING: True}])
+@pytest.mark.parametrize(
+    ("error", "expected_speech"),
+    [
+        pytest.param(
+            openai.APIConnectionError(
+                request=httpx2.Request(method="POST", url="test")
+            ),
+            "Cannot connect to the server: Connection error.",
+            id="connection_error",
+        ),
+        pytest.param(
+            openai.APITimeoutError(request=httpx2.Request(method="POST", url="test")),
+            "Connection timed out: Request timed out.",
+            id="timeout",
+        ),
+        pytest.param(
+            openai.APIError(
+                message="An error occurred during streaming",
+                request=httpx2.Request(method="POST", url="test"),
+                body=None,
+            ),
+            "API error: An error occurred during streaming",
+            id="api_error",
+        ),
+    ],
+)
+async def test_streaming_response_error(
+    hass: HomeAssistant,
+    mock_chat_log: MockChatLog,
+    mock_config_entry: MockConfigEntry,
+    error: openai.OpenAIError,
+    expected_speech: str,
+) -> None:
+    """Test an API error raised while consuming the stream."""
+
+    async def mock_stream() -> AsyncGenerator[ChatCompletionChunk]:
+        yield ChatCompletionChunk.model_construct(
+            id="chatcmpl-1234567890ABCDEFGHIJKLMNOPQRS",
+            choices=[
+                ChunkChoice.model_construct(
+                    index=0,
+                    delta=ChoiceDelta(role="assistant", content="Hello"),
+                    finish_reason=None,
+                )
+            ],
+            created=1700000000,
+            model="gpt-3.5-turbo-0613",
+            object="chat.completion.chunk",
+        )
+        raise error
+
+    with patch(
+        "openai.resources.chat.completions.AsyncCompletions.create",
+        new_callable=AsyncMock,
+        return_value=mock_stream(),
+    ):
+        result = await conversation.async_converse(
+            hass,
+            "hello",
+            mock_chat_log.conversation_id,
+            Context(),
+            agent_id="conversation.llama_cpp_conversation",
+        )
+
+    assert result.response.response_type == intent.IntentResponseType.ERROR
+    assert result.response.speech["plain"]["speech"] == expected_speech
+
+
 @pytest.mark.parametrize(
     ("config_entry_options"), [{CONF_LLM_HASS_API: ["non-existing"]}]
 )
@@ -608,7 +693,7 @@ async def test_conversation_agent_error(
     with patch(
         "openai.resources.chat.completions.AsyncCompletions.create",
         side_effect=openai.APIConnectionError(
-            request=httpx.Request(method="POST", url="test")
+            request=httpx2.Request(method="POST", url="test")
         ),
     ):
         result = await conversation.async_converse(
@@ -631,9 +716,9 @@ async def test_conversation_agent_structured_error(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test handling of OpenAI API structured errors in conversation entity."""
-    response = httpx.Response(
+    response = httpx2.Response(
         status_code=402,
-        request=httpx.Request(
+        request=httpx2.Request(
             method="POST", url="https://api.openai.com/v1/chat/completions"
         ),
         json={

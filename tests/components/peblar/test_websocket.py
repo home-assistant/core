@@ -1,15 +1,17 @@
 """Tests for the Peblar event stream."""
 
 import asyncio
+from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 from peblar import PeblarConnectionError, PeblarSessionStatus, SessionState
 import pytest
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 pytestmark = [
     pytest.mark.parametrize("init_integration", [Platform.SENSOR], indirect=True),
@@ -24,22 +26,59 @@ async def test_the_stream_is_subscribed_to(mock_peblar: MagicMock) -> None:
     websocket.subscribe_session_status.assert_awaited_once()
 
 
-async def test_a_session_change_pulls_the_poll_forward(
+def _async_report(mock_peblar: MagicMock, state: SessionState) -> None:
+    """Have the charger report a session state on the stream."""
+    websocket = mock_peblar.websocket.return_value
+    handle_session_status = websocket.subscribe_session_status.call_args.args[0]
+    handle_session_status(PeblarSessionStatus(state=state, meter_data=None))
+
+
+async def test_a_session_change_pulls_the_polls_forward(
     hass: HomeAssistant,
     mock_peblar: MagicMock,
 ) -> None:
-    """Test an event asks the poll to catch up rather than waiting it out."""
+    """Test an event asks the polls to catch up rather than waiting them out."""
     meter = mock_peblar.rest_api.return_value.meter
     meter.reset_mock()
+    mock_peblar.meter_history.reset_mock()
 
-    websocket = mock_peblar.websocket.return_value
-    handle_session_status = websocket.subscribe_session_status.call_args.args[0]
-    handle_session_status(
-        PeblarSessionStatus(state=SessionState.CHARGING, meter_data=None)
-    )
+    _async_report(mock_peblar, SessionState.CHARGING)
     await hass.async_block_till_done()
 
     meter.assert_awaited()
+    mock_peblar.meter_history.assert_awaited()
+
+
+async def test_a_session_saying_the_same_thing_is_let_be(
+    hass: HomeAssistant,
+    mock_peblar: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the charger repeating itself does not set the polls off again.
+
+    While a car charges the status arrives every couple of seconds and
+    says the same thing every time. Acting on each one would have the
+    meter history, a request many times heavier than the poll beside it,
+    fetched around the clock for as long as the car is plugged in.
+
+    The repeats are spread out here on purpose. Sent back to back the
+    coordinator's own debouncer would swallow them, and this would pass
+    whether or not anything looked at the state.
+    """
+    _async_report(mock_peblar, SessionState.CHARGING)
+    await hass.async_block_till_done()
+
+    mock_peblar.meter_history.reset_mock()
+
+    for _ in range(3):
+        freezer.tick(timedelta(seconds=30))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+        _async_report(mock_peblar, SessionState.CHARGING)
+        await hass.async_block_till_done()
+
+    mock_peblar.meter_history.assert_not_awaited()
 
 
 async def test_the_wait_backs_off_and_settles_once_the_charger_answers(

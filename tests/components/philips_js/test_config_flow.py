@@ -1,7 +1,7 @@
 """Test the Philips TV config flow."""
 
 from ipaddress import ip_address
-from unittest.mock import ANY
+from unittest.mock import ANY, MagicMock
 
 from haphilipsjs import PairingFailure
 import pytest
@@ -18,6 +18,7 @@ from . import (
     MOCK_HOSTNAME,
     MOCK_NAME,
     MOCK_PASSWORD,
+    MOCK_SERIAL_NO,
     MOCK_SYSTEM,
     MOCK_SYSTEM_UNPAIRED,
     MOCK_USERINPUT,
@@ -61,6 +62,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry) -> None:
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Philips TV (1234567890)"
     assert result2["data"] == MOCK_CONFIG
+    assert result2["result"].unique_id == MOCK_SERIAL_NO
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -92,7 +94,7 @@ async def test_reauth(
     assert len(mock_setup_entry.mock_calls) == 2
 
 
-async def test_form_cannot_connect(hass: HomeAssistant, mock_tv) -> None:
+async def test_form_cannot_connect(hass: HomeAssistant, mock_tv: MagicMock) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -105,6 +107,13 @@ async def test_form_cannot_connect(hass: HomeAssistant, mock_tv) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
+
+    mock_tv.system = MOCK_SYSTEM
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], MOCK_USERINPUT
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_pairing(hass: HomeAssistant, mock_tv_pairable, mock_setup_entry) -> None:
@@ -210,6 +219,7 @@ async def test_pair_grant_failed(hass: HomeAssistant, mock_tv_pairable) -> None:
     )
 
     assert result["type"] is FlowResultType.FORM
+    # pylint: disable-next=home-assistant-tests-config-flow-error-recovery
     assert result["errors"] == {"pin": "invalid_pin"}
 
     # Test with unexpected failure

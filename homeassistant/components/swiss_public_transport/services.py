@@ -1,6 +1,6 @@
 """Define services for the Swiss public transport integration."""
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.const import ATTR_CONFIG_ENTRY_ID
 from homeassistant.core import (
@@ -28,10 +28,10 @@ from .const import (
 )
 from .coordinator import SwissPublicTransportConfigEntry
 
-SERVICE_FETCH_CONNECTIONS_SCHEMA = vol.Schema(
+SERVICE_FETCH_CONNECTIONS_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_CONFIG_ENTRY_ID): str,
-        vol.Optional(ATTR_LIMIT, default=CONNECTIONS_COUNT): NumberSelector(
+        probatio.Required(ATTR_CONFIG_ENTRY_ID): str,
+        probatio.Optional(ATTR_LIMIT, default=CONNECTIONS_COUNT): NumberSelector(
             NumberSelectorConfig(
                 min=1, max=CONNECTIONS_MAX, mode=NumberSelectorMode.BOX
             )

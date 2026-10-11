@@ -34,10 +34,10 @@ from homeassistant.helpers.typing import StateType
 from .const import (
     DOMAIN,
     INVERTER_ERROR_CODES,
-    SOLAR_NET_DISCOVERY_NEW,
     InverterStatusCodeOption,
     MeterLocationCodeOption,
     OhmPilotStateCodeOption,
+    discovery_signal,
     get_inverter_status_message,
     get_meter_location_description,
     get_ohmpilot_state_message,
@@ -101,6 +101,8 @@ async def async_setup_entry(
     @callback
     def async_add_new_entities(coordinator: FroniusCoordinatorBase) -> None:
         """Add newly found inverter entities."""
+        if Platform.SENSOR not in coordinator.valid_descriptions:
+            return
         constructor = (
             ModbusInverterSensor
             if coordinator in solar_net.modbus_inverter_coordinators
@@ -113,7 +115,7 @@ async def async_setup_entry(
     config_entry.async_on_unload(
         async_dispatcher_connect(
             hass,
-            SOLAR_NET_DISCOVERY_NEW,
+            discovery_signal(config_entry.entry_id),
             async_add_new_entities,
         )
     )
@@ -336,10 +338,11 @@ def _modbus_mppt_descriptions(
 
 
 MODBUS_INVERTER_ENTITY_DESCRIPTIONS: list[FroniusSensorEntityDescription] = [
-    # SunSpec model 160 supports up to 4 MPPT modules (GEN24 hybrid, Tauro)
+    # Verto Plus exposes 5 modules (3 PV trackers plus storage charge/discharge),
+    # one more leaves headroom for a hybrid with 4 PV trackers
     *(
         description
-        for mppt_no in range(1, 5)
+        for mppt_no in range(1, 7)
         for description in _modbus_mppt_descriptions(mppt_no)
     ),
     FroniusSensorEntityDescription(

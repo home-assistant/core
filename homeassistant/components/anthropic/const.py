@@ -39,7 +39,7 @@ class PromptCaching(StrEnum):
 MIN_THINKING_BUDGET = 1024
 
 DEFAULT = {
-    CONF_CHAT_MODEL: "claude-haiku-4-5",
+    CONF_CHAT_MODEL: "claude-haiku-5-5",
     CONF_CODE_EXECUTION: False,
     CONF_MAX_TOKENS: 3000,
     CONF_PROMPT_CACHING: PromptCaching.PROMPT.value,
@@ -56,3 +56,12 @@ DEFAULT = {
 TOOL_SEARCH_UNSUPPORTED_MODELS = [
     "claude-haiku",
 ]
+
+THINKING_EFFORT_NONE_SUPPORTED_MODELS = {
+    "claude-opus-4-6",
+    "claude-opus-4-7",
+    "claude-opus-4-8",
+    "claude-opus-5",
+    "claude-sonnet-4-6",
+    "claude-sonnet-5",
+}

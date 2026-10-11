@@ -17,9 +17,8 @@ from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
+    ConfigEntryError,
     ConfigEntryNotReady,
-    OAuth2TokenRequestError,
-    OAuth2TokenRequestReauthError,
 )
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -149,9 +148,16 @@ async def async_migrate_entry(hass: HomeAssistant, entry: OneDriveConfigEntry) -
             folder = await client.get_drive_item(
                 f"{approot.id}:/backups_{instance_id[:8]}:"
             )
-        except OneDriveException:
-            _LOGGER.exception("Migration to version 1.2 failed")
-            return False
+        except AuthenticationError as err:
+            raise ConfigEntryError(
+                translation_domain=DOMAIN, translation_key="authentication_failed"
+            ) from err
+        except OneDriveException as err:
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="failed_to_get_folder",
+                translation_placeholders={"folder": f"backups_{instance_id[:8]}"},
+            ) from err
 
         hass.config_entries.async_update_entry(
             entry,
@@ -174,16 +180,7 @@ async def _get_onedrive_client(
     session = OAuth2Session(hass, entry, implementation)
 
     # Refresh up front, so a failure surfaces here instead of from inside the client
-    try:
-        await session.async_ensure_token_valid()
-    except OAuth2TokenRequestReauthError as err:
-        raise ConfigEntryAuthFailed(
-            translation_domain=DOMAIN, translation_key="authentication_failed"
-        ) from err
-    except OAuth2TokenRequestError as err:
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN, translation_key="connection_error"
-        ) from err
+    await session.async_ensure_token_valid()
 
     async def get_access_token() -> str:
         await session.async_ensure_token_valid()

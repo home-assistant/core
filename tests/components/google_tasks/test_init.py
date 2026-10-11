@@ -8,7 +8,7 @@ import time
 from unittest.mock import Mock, patch
 
 from aiohttp import ClientError
-from httplib2 import Response
+from httplib2 import Response, ServerNotFoundError
 import pytest
 
 from homeassistant.components.google_tasks import DOMAIN
@@ -131,16 +131,23 @@ async def test_expired_token_refresh_failure(
 @pytest.mark.parametrize(
     "response_handler",
     [
-        ([(Response({"status": HTTPStatus.INTERNAL_SERVER_ERROR}), b"")]),
-        # First request succeeds, second request fails
-        (
+        pytest.param(
+            [(Response({"status": HTTPStatus.INTERNAL_SERVER_ERROR}), b"")],
+            id="first_request_fails",
+        ),
+        pytest.param(
             [
                 (
                     Response({"status": HTTPStatus.OK}),
                     json.dumps(LIST_TASK_LIST_RESPONSE),
                 ),
                 (Response({"status": HTTPStatus.INTERNAL_SERVER_ERROR}), b""),
-            ]
+            ],
+            id="second_request_fails",
+        ),
+        pytest.param(
+            [ServerNotFoundError("Unable to find the server at tasks.googleapis.com")],
+            id="server_not_found",
         ),
     ],
 )

@@ -170,6 +170,7 @@ async def test_form_fallback_title_when_device_name_missing(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "NRGkick"
     assert result["data"] == {CONF_HOST: "192.168.1.100"}
+    assert result["result"].unique_id == "ABC"
 
 
 @pytest.mark.usefixtures("mock_setup_entry")

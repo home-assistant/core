@@ -14,7 +14,7 @@ from datetime import datetime
 import secrets
 from typing import Any
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
@@ -38,8 +38,7 @@ CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Map tiles integration."""
-    # Leaflet asks for raster tiles with an <img>, which can carry no header, so
-    # the token has to live in the URL.
+    # Two live at a time, so a URL minted just before a rotation still loads.
     access_tokens: deque[str] = deque([secrets.token_hex(TOKEN_SIZE)], maxlen=2)
     hass.data[DATA_ACCESS_TOKENS] = access_tokens
 
@@ -68,7 +67,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 
 @callback
-@websocket_api.websocket_command({vol.Required("type"): "map_tiles/access_token"})
+@websocket_api.websocket_command({probatio.Required("type"): "map_tiles/access_token"})
 def ws_access_token(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,

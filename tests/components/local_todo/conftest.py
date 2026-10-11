@@ -49,13 +49,16 @@ class FakeStore(LocalTodoListStore):
         mock_path.read_text.return_value = ics_content
         mock_path.read_text.side_effect = read_side_effect
         mock_path.write_text = self._mock_write_text
+        mock_path.__str__ = Mock(return_value=str(path))
 
         super().__init__(hass, mock_path)
 
     def _mock_exists(self) -> bool:
         return self._mock_path.read_text.return_value is not None
 
-    def _mock_write_text(self, content: str) -> None:
+    def _mock_write_text(self, content: str, encoding: str | None = None) -> None:
+        if encoding is None:
+            content.encode("ascii")
         self._mock_path.read_text.return_value = content
 
 

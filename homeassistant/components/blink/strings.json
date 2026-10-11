@@ -1,8 +1,7 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -82,6 +81,9 @@
     },
     "integration_not_found": {
       "message": "Integration \"{target}\" not found in registry."
+    },
+    "migration_reauth_required": {
+      "message": "Cannot migrate configuration entry from version {version}, re-authentication is required"
     },
     "no_path": {
       "message": "Can't write to directory {target}, no access to path!"

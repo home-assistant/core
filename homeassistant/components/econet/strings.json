@@ -19,6 +19,11 @@
       }
     }
   },
+  "exceptions": {
+    "invalid_credentials": {
+      "message": "Invalid credentials provided"
+    }
+  },
   "issues": {
     "migrate_aux_heat": {
       "fix_flow": {

@@ -14,8 +14,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryNotReady,
-    OAuth2TokenRequestError,
-    OAuth2TokenRequestReauthError,
+    OAuth2TokenRequestBaseError,
 )
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.helpers.config_entry_oauth2_flow import (
@@ -44,15 +43,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: AugustConfigEntry) -> bo
     august_gateway = AugustGateway(Path(hass.config.config_dir), session, oauth_session)
     try:
         await async_setup_august(hass, entry, august_gateway)
-    except OAuth2TokenRequestReauthError as err:
-        raise ConfigEntryAuthFailed from err
+    except OAuth2TokenRequestBaseError:
+        raise
     except (RequireValidation, InvalidAuth) as err:
         raise ConfigEntryAuthFailed from err
     except TimeoutError as err:
         raise ConfigEntryNotReady("Timed out connecting to august api") from err
     except (
         AugustApiAIOHTTPError,
-        OAuth2TokenRequestError,
         ClientError,
         CannotConnect,
     ) as err:
