@@ -1,0 +1,21 @@
+migrate_network:
+  fields:
+    config_entry:
+      required: false
+      selector:
+        config_entry:
+          integration: otbr
+    dataset:
+      required: false
+      selector:
+        text:
+          type: password
+    delay:
+      required: false
+      default: 300
+      selector:
+        number:
+          min: 30
+          max: 3600
+          unit_of_measurement: seconds
+          mode: box
