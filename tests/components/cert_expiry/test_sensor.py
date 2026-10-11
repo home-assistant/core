@@ -7,9 +7,11 @@ from unittest.mock import patch
 
 from cryptography import x509
 from freezegun import freeze_time
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.cert_expiry.const import DOMAIN
+from homeassistant.components.cert_expiry.errors import ValidationFailure
 from homeassistant.const import (
     CONF_HOST,
     CONF_PORT,
@@ -91,6 +93,89 @@ async def test_certificate_verification_status(
     assert state.state == certificate.not_valid_after_utc.isoformat()
     assert state.attributes["is_valid"] is is_valid
     assert state.attributes["error"] is None
+
+
+@pytest.mark.parametrize(
+    "initial_verification",
+    [pytest.param(True, id="disable"), pytest.param(False, id="enable")],
+)
+@pytest.mark.freeze_time(static_datetime())
+async def test_verification_changes_with_same_expiry(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    initial_verification: bool,
+) -> None:
+    """Publish validity changes even when the expiration timestamp is unchanged."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: HOST,
+            CONF_PORT: PORT,
+            CONF_VERIFY_SSL: initial_verification,
+        },
+        unique_id=f"{HOST}:{PORT}",
+    )
+    entry.add_to_hass(hass)
+    timestamp = future_timestamp(100)
+
+    with patch(
+        "homeassistant.components.cert_expiry.coordinator.get_cert_expiry_timestamp",
+        return_value=timestamp,
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        state = hass.states.get("sensor.example_com_cert_expiry")
+        assert state is not None
+        assert state.attributes["is_valid"] is initial_verification
+
+        hass.config_entries.async_update_entry(
+            entry, data={**entry.data, CONF_VERIFY_SSL: not initial_verification}
+        )
+        freezer.tick(timedelta(hours=12))
+        async_fire_time_changed(hass, utcnow())
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.example_com_cert_expiry")
+    assert state is not None
+    assert state.state == timestamp.isoformat()
+    assert state.attributes["is_valid"] is not initial_verification
+    assert state.attributes["error"] is None
+
+
+@pytest.mark.freeze_time(static_datetime())
+async def test_validation_error_changes(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Publish a new validation error when both polls have an unknown expiry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: HOST, CONF_PORT: PORT},
+        unique_id=f"{HOST}:{PORT}",
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.cert_expiry.coordinator.get_cert_expiry_timestamp",
+        side_effect=ValidationFailure("untrusted issuer"),
+    ) as get_timestamp:
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        state = hass.states.get("sensor.example_com_cert_expiry")
+        assert state is not None
+        assert state.attributes["error"] == "untrusted issuer"
+
+        get_timestamp.side_effect = ValidationFailure("certificate has expired")
+        freezer.tick(timedelta(hours=12))
+        async_fire_time_changed(hass, utcnow())
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.example_com_cert_expiry")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes["is_valid"] is False
+    assert state.attributes["error"] == "certificate has expired"
 
 
 async def test_async_setup_entry_bad_cert(hass: HomeAssistant) -> None:

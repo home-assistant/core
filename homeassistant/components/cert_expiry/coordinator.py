@@ -45,7 +45,6 @@ class CertExpiryDataUpdateCoordinator(DataUpdateCoordinator[datetime | None]):
             config_entry=config_entry,
             name=name,
             update_interval=timedelta(hours=12),
-            always_update=False,
         )
 
     @override
