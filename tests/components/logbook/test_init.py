@@ -58,7 +58,7 @@ from .common import (
     simulate_thermostat_context_chain,
 )
 
-from tests.common import MockConfigEntry, async_capture_events, mock_platform
+from tests.common import MockConfigEntry, MockUser, async_capture_events, mock_platform
 from tests.components.recorder.common import (
     async_recorder_block_till_done,
     async_wait_recording_done,
@@ -390,6 +390,84 @@ async def test_logbook_view_invalid_end_date_time(
         f"/api/logbook/{dt_util.utcnow().isoformat()}?end_time=INVALID"
     )
     assert response.status == HTTPStatus.BAD_REQUEST
+
+
+@pytest.mark.usefixtures("recorder_mock", "set_utc")
+async def test_logbook_view_filters_unauthorized_entities(
+    hass: HomeAssistant,
+    hass_read_only_user: MockUser,
+    hass_read_only_access_token: str,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test the logbook view filters by per-entity read permissions."""
+    assert not hass_read_only_user.is_admin
+    hass_read_only_user.mock_policy(
+        {"entities": {"entity_ids": {"switch.allowed": True}}}
+    )
+    await async_setup_component(hass, DOMAIN, {})
+    await async_recorder_block_till_done(hass)
+
+    hass.states.async_set("switch.allowed", STATE_OFF)
+    hass.states.async_set("switch.allowed", STATE_ON)
+    hass.states.async_set("switch.forbidden", STATE_OFF)
+    hass.states.async_set("switch.forbidden", STATE_ON)
+    await async_wait_recording_done(hass)
+
+    client = await hass_client(hass_read_only_access_token)
+    start = dt_util.utcnow().date()
+    start_date = datetime(start.year, start.month, start.day, tzinfo=dt_util.UTC)
+
+    # Without entity_ids the logbook covers everything, so the entries
+    # themselves have to be filtered
+    response = await client.get(f"/api/logbook/{start_date.isoformat()}")
+    assert response.status == HTTPStatus.OK
+    response_json = await response.json()
+    assert [entry["entity_id"] for entry in response_json] == ["switch.allowed"]
+
+    response = await client.get(
+        f"/api/logbook/{start_date.isoformat()}?entity=switch.allowed,switch.forbidden"
+    )
+    assert response.status == HTTPStatus.OK
+    response_json = await response.json()
+    assert [entry["entity_id"] for entry in response_json] == ["switch.allowed"]
+
+    response = await client.get(
+        f"/api/logbook/{start_date.isoformat()}?entity=switch.forbidden"
+    )
+    assert response.status == HTTPStatus.OK
+    assert await response.json() == []
+
+
+@pytest.mark.usefixtures("recorder_mock", "set_utc")
+async def test_logbook_view_all_entities_for_unrestricted_users(
+    hass: HomeAssistant,
+    hass_read_only_user: MockUser,
+    hass_read_only_access_token: str,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test a user with blanket read access sees every entity."""
+    assert not hass_read_only_user.is_admin
+    hass_read_only_user.mock_policy({"entities": {"all": {"read": True}}})
+    await async_setup_component(hass, DOMAIN, {})
+    await async_recorder_block_till_done(hass)
+
+    hass.states.async_set("switch.one", STATE_OFF)
+    hass.states.async_set("switch.one", STATE_ON)
+    hass.states.async_set("switch.two", STATE_OFF)
+    hass.states.async_set("switch.two", STATE_ON)
+    await async_wait_recording_done(hass)
+
+    client = await hass_client(hass_read_only_access_token)
+    start = dt_util.utcnow().date()
+    start_date = datetime(start.year, start.month, start.day, tzinfo=dt_util.UTC)
+
+    response = await client.get(f"/api/logbook/{start_date.isoformat()}")
+    assert response.status == HTTPStatus.OK
+    response_json = await response.json()
+    assert [entry["entity_id"] for entry in response_json] == [
+        "switch.one",
+        "switch.two",
+    ]
 
 
 @pytest.mark.usefixtures("recorder_mock", "set_utc")
