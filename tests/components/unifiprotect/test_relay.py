@@ -36,6 +36,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .utils import (
     MockUFPFixture,
+    bind_public_device_properties,
     init_entry,
     make_public_bootstrap,
     public_device_ws_message,
@@ -44,7 +45,8 @@ from .utils import (
 RELAY_ID = "relay-id-1"
 RELAY_MAC = "AA:BB:CC:DD:EE:01"
 RELAY_NAME = "Garage Relay"
-OUTPUT_ID = 1
+RELAY_TYPE = "USL-Relay-EU"
+OUTPUT_ID = 2
 OUTPUT_NAME = "output1"
 INPUT_ID = 1
 INPUT_NAME = "input1"
@@ -90,6 +92,7 @@ def _make_relay(
     relay.id = RELAY_ID
     relay.mac = RELAY_MAC
     relay.name = RELAY_NAME
+    relay.type = RELAY_TYPE
     relay.model = ModelType.RELAY
     relay.state = state
     relay.outputs = outputs if outputs is not None else [_make_output()]
@@ -98,7 +101,12 @@ def _make_relay(
     def get_output(output_id: int) -> Mock | None:
         return next((o for o in relay.outputs if o.id == output_id), None)
 
+    def get_input(input_id: int) -> Mock | None:
+        return next((i for i in relay.inputs if i.id == input_id), None)
+
     relay.get_output = get_output
+    relay.get_input = get_input
+    bind_public_device_properties(relay, Relay)
     relay.activate_output = AsyncMock()
     return relay
 
@@ -141,6 +149,17 @@ def _send_relay_update(ufp: MockUFPFixture, relay: Mock) -> None:
     message.changed_data = {}
     message.old_obj = relay
     message.new_obj = relay
+    assert ufp.devices_ws_subscription is not None
+    ufp.devices_ws_subscription(message)
+
+
+def _send_relay_delete(ufp: MockUFPFixture, relay: Mock) -> None:
+    """Drop a relay from the public bootstrap and dispatch its delete frame."""
+    ufp.api.public_bootstrap.relays = {}
+    message = Mock()
+    message.changed_data = {}
+    message.old_obj = relay
+    message.new_obj = None
     assert ufp.devices_ws_subscription is not None
     ufp.devices_ws_subscription(message)
 
@@ -433,17 +452,16 @@ async def test_public_only_relay_channels_resignaled_after_reconnect(
     assert state.state == STATE_OFF
 
 
+def _remove_relay_input(ufp: MockUFPFixture, relay: Mock) -> None:
+    relay.inputs = []
+    _send_relay_update(ufp, relay)
+
+
 @pytest.mark.parametrize(
     "remove_channel",
     [
-        pytest.param(
-            lambda ufp, _relay: setattr(ufp.api.public_bootstrap, "relays", {}),
-            id="relay_removed",
-        ),
-        pytest.param(
-            lambda _ufp, relay: setattr(relay, "inputs", []),
-            id="input_removed",
-        ),
+        pytest.param(_send_relay_delete, id="relay_removed"),
+        pytest.param(_remove_relay_input, id="input_removed"),
     ],
 )
 async def test_relay_input_unavailable_when_channel_missing(
@@ -457,7 +475,6 @@ async def test_relay_input_unavailable_when_channel_missing(
     await init_entry(hass, ufp, [])
 
     remove_channel(ufp, relay)
-    _send_relay_update(ufp, relay)
     await hass.async_block_till_done()
 
     state = hass.states.get(BINARY_SENSOR_ENTITY_ID)
@@ -488,9 +505,10 @@ async def test_relay_input_uses_same_relay_and_nvr_device(
     assert relay_device is not None
     assert nvr_device is not None
     assert relay_device.connections == {(dr.CONNECTION_NETWORK_MAC, RELAY_MAC.lower())}
-    assert relay_device.identifiers == {(DOMAIN, RELAY_MAC)}
+    assert relay_device.identifiers == set()
     assert relay_device.manufacturer == "Ubiquiti"
-    assert relay_device.model == "Relay"
+    assert relay_device.model == RELAY_TYPE
+    assert relay_device.model_id == RELAY_TYPE
     assert relay_device.via_device_id == nvr_device.id
 
 
@@ -562,8 +580,8 @@ async def test_relay_switch_device_links_to_nvr_via_device_id(
     )
     assert nvr_device is not None
 
-    relay_device = device_registry.async_get_device_by_identifier(
-        (DOMAIN, RELAY_MAC), ufp.entry.entry_id
+    relay_device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, RELAY_MAC.lower()), ufp.entry.entry_id
     )
     assert relay_device is not None
     assert relay_device.via_device_id == nvr_device.id
@@ -781,26 +799,12 @@ async def test_relay_switch_becomes_unavailable_when_relay_removed(
     hass: HomeAssistant,
     ufp_with_relay: tuple[MockUFPFixture, Mock],
 ) -> None:
-    """Entity becomes unavailable when the relay disappears from the bootstrap."""
+    """A delete WS frame makes the relay output unavailable."""
     ufp, relay = ufp_with_relay
     relay.outputs[0].state = RelayOutputState.OFF
     await init_entry(hass, ufp, [])
 
-    # Drop the relay from the public bootstrap.
-    ufp.api.public_bootstrap.relays = {}
-
-    # Send a WS update whose output list is still valid; the entity must still
-    # become unavailable because _relay now resolves to None.
-    relay2 = _make_relay()
-    relay2.id = relay.id
-    relay2.mac = relay.mac
-
-    mock_msg = Mock()
-    mock_msg.changed_data = {}
-    mock_msg.old_obj = relay2
-    mock_msg.new_obj = relay2
-    assert ufp.devices_ws_subscription is not None
-    ufp.devices_ws_subscription(mock_msg)
+    _send_relay_delete(ufp, relay)
     await hass.async_block_till_done()
 
     state = hass.states.get(SWITCH_ENTITY_ID)
