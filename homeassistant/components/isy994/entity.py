@@ -54,6 +54,7 @@ class ISYEntity(Entity):
     @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to the node change events."""
+        await super().async_added_to_hass()
         self._async_subscribe_to_events()
 
     @callback
@@ -254,6 +255,7 @@ class ISYAuxControlEntity(Entity):
     @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to the node control change events."""
+        await super().async_added_to_hass()
         self._async_subscribe_to_events()
 
     @callback
