@@ -28,6 +28,9 @@ class TPLinkSelectEntityDescription(
 ):
     """Base class for a TPLink feature based select entity description."""
 
+    #: False when the device can not report the current option
+    has_current_option: bool = True
+
 
 # Coordinator is used to centralize the data updates
 # For actions the integration handles locking of concurrent device request
@@ -45,6 +48,8 @@ SELECT_DESCRIPTIONS: Final = [
     ),
     TPLinkSelectEntityDescription(
         key="ptz_preset",
+        # Camera does not report on which preset it stands
+        has_current_option=False,
     ),
 ]
 
@@ -112,5 +117,6 @@ class TPLinkSelectEntity(CoordinatedTPLinkFeatureEntity, SelectEntity):
     @override
     def _async_update_attrs(self) -> bool:
         """Update the entity's attributes."""
-        self._attr_current_option = cast(str | None, self._feature.value)
+        if self.entity_description.has_current_option:
+            self._attr_current_option = cast(str | None, self._feature.value)
         return True
