@@ -90,12 +90,14 @@ async def test_full_flow_pick_frame(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Cottage Frame"
     assert result["data"][CONF_FRAME_ID] == "frame-2"
+    assert result["result"].unique_id == "skylight_frame_frame-2"
 
 
 async def test_flow_invalid_code(
     hass: HomeAssistant,
     mock_exchange_token: AsyncMock,
     mock_get_frames: AsyncMock,
+    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test submitting a pasted value without any code in it."""
     result = await hass.config_entries.flow.async_init(
@@ -107,6 +109,13 @@ async def test_flow_invalid_code(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"code": "invalid_code"}
     mock_exchange_token.assert_not_awaited()
+
+    # Submitting a valid code finishes the same flow.
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"code": CODE}
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_flow_full_url_pasted(
@@ -126,11 +135,14 @@ async def test_flow_full_url_pasted(
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == f"skylight_frame_{FRAME_ID}"
 
 
 async def test_flow_code_exchange_auth_error(
     hass: HomeAssistant,
+    mock_exchange_token: AsyncMock,
     mock_get_frames: AsyncMock,
+    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test an auth failure during the code exchange."""
     with patch(
@@ -143,13 +155,22 @@ async def test_flow_code_exchange_auth_error(
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"code": CODE}
         )
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "invalid_auth"}
+        assert result["type"] is FlowResultType.FORM
+        assert result["errors"] == {"base": "invalid_auth"}
+
+    # The user retries with a good code; the same flow finishes.
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"code": CODE}
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_flow_code_exchange_connect_error(
     hass: HomeAssistant,
+    mock_exchange_token: AsyncMock,
     mock_get_frames: AsyncMock,
+    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test a connection failure during the code exchange."""
     with patch(
@@ -162,8 +183,15 @@ async def test_flow_code_exchange_connect_error(
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"code": CODE}
         )
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
+        assert result["type"] is FlowResultType.FORM
+        assert result["errors"] == {"base": "cannot_connect"}
+
+    # The endpoint recovers; the same flow finishes.
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"code": CODE}
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_flow_get_frames_connect_error(
@@ -253,6 +281,7 @@ async def test_reauth_flow_wrong_account(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_exchange_token: AsyncMock,
+    mock_get_frames: AsyncMock,
     mock_setup_entry: AsyncMock,
 ) -> None:
     """Test reauth with a code from an account that does not own the frame."""
@@ -274,11 +303,20 @@ async def test_reauth_flow_wrong_account(
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "wrong_account"}
 
+    # The user signs in with the right account; the reauth completes.
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"code": CODE}
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+
 
 async def test_reauth_flow_frame_check_connect_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_exchange_token: AsyncMock,
+    mock_get_frames: AsyncMock,
     mock_setup_entry: AsyncMock,
 ) -> None:
     """Test reauth when frame ownership verification cannot connect."""
@@ -299,3 +337,11 @@ async def test_reauth_flow_frame_check_connect_error(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "cannot_connect"}
+
+    # The endpoint recovers; the reauth completes.
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"code": CODE}
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
