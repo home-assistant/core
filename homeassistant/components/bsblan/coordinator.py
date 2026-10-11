@@ -10,6 +10,7 @@ from bsblan import (
     BSBLANConnectionError,
     BSBLANError,
     BSBLANMalformedResponseError,
+    Device,
     HeatingTimeSwitchPrograms,
     HotWaterConfig,
     HotWaterSchedule,
@@ -96,6 +97,7 @@ class BSBLanFastCoordinator(BSBLanCoordinator[BSBLanFastData]):
         config_entry: BSBLanConfigEntry,
         client: BSBLAN,
         circuits: list[int],
+        device: Device,
     ) -> None:
         """Initialize the BSB-LAN fast coordinator."""
         super().__init__(
@@ -106,6 +108,7 @@ class BSBLanFastCoordinator(BSBLanCoordinator[BSBLanFastData]):
             update_interval=SCAN_INTERVAL_FAST,
         )
         self.circuits: list[int] = circuits
+        self._uses_pps_bus = device.is_pps_bus
 
     @override
     async def _async_update_data(self) -> BSBLanFastData:
@@ -132,8 +135,6 @@ class BSBLanFastCoordinator(BSBLanCoordinator[BSBLanFastData]):
                             "circuit": str(circuit),
                         },
                     ) from err
-            sensor = await self.client.sensor(include=SENSOR_INCLUDE)
-
         except BSBLANAuthError as err:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
@@ -145,6 +146,30 @@ class BSBLanFastCoordinator(BSBLanCoordinator[BSBLanFastData]):
                 translation_key="coordinator_connection_error",
                 translation_placeholders={"host": host},
             ) from err
+
+        try:
+            sensor = await self.client.sensor(include=SENSOR_INCLUDE)
+        except BSBLANAuthError as err:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="coordinator_auth_error",
+            ) from err
+        except BSBLANConnectionError as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="coordinator_connection_error",
+                translation_placeholders={"host": host},
+            ) from err
+        except BSBLANError as err:
+            if not self._uses_pps_bus or isinstance(err, BSBLANMalformedResponseError):
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="coordinator_sensor_error",
+                    translation_placeholders={"host": host},
+                ) from err
+            # PPS devices may not expose generic sensor parameters.
+            sensor = Sensor()
+            LOGGER.debug("Sensor data not available on PPS device at %s: %s", host, err)
 
         # Fetch DHW state separately - device may not support hot water
         dhw: HotWaterState | None = None

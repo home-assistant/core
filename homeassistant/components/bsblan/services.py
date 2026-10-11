@@ -244,9 +244,18 @@ async def set_heating_schedule(service_call: ServiceCall) -> None:
 async def async_sync_time(service_call: ServiceCall) -> None:
     """Synchronize BSB-LAN device time with Home Assistant."""
     entry, device_entry = _resolve_config_entry(service_call)
-    client = entry.runtime_data.client
+    if not entry.runtime_data.device.supports_time_sync:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="sync_time_unsupported",
+            translation_placeholders={
+                "device_name": device_entry.name or service_call.data[ATTR_DEVICE_ID]
+            },
+        )
+
     await async_sync_device_time(
-        client, device_entry.name or service_call.data[ATTR_DEVICE_ID]
+        entry.runtime_data.client,
+        device_entry.name or service_call.data[ATTR_DEVICE_ID],
     )
 
 
