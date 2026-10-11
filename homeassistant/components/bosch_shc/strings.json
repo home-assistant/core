@@ -57,6 +57,18 @@
       }
     },
     "event": {
+      "smoke_detection_system_alarm": {
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "alarm_muted": "Alarm muted",
+              "alarm_off": "Idle",
+              "alarm_on": "Alarm",
+              "pre_alarm": "Pre-alarm"
+            }
+          }
+        }
+      },
       "smoke_detector_alarm": {
         "state_attributes": {
           "event_type": {
