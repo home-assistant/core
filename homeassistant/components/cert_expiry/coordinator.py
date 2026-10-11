@@ -5,6 +5,7 @@ import logging
 from typing import override
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -51,7 +52,12 @@ class CertExpiryDataUpdateCoordinator(DataUpdateCoordinator[datetime | None]):
     async def _async_update_data(self) -> datetime | None:
         """Fetch certificate."""
         try:
-            timestamp = await get_cert_expiry_timestamp(self.hass, self.host, self.port)
+            timestamp = await get_cert_expiry_timestamp(
+                self.hass,
+                self.host,
+                self.port,
+                verify_ssl=self.config_entry.data.get(CONF_VERIFY_SSL, True),
+            )
         except TemporaryFailure as err:
             raise UpdateFailed(err.args[0]) from err
         except ValidationFailure as err:

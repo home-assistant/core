@@ -38,6 +38,7 @@ class CertexpiryConfigFlow(ConfigFlow, domain=DOMAIN):
                 self.hass,
                 user_input[CONF_HOST],
                 user_input.get(CONF_PORT, DEFAULT_PORT),
+                verify_ssl=user_input.get(CONF_VERIFY_SSL, True),
             )
         except ResolveFailed:
             self._errors[CONF_HOST] = "resolve_failed"

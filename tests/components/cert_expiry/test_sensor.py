@@ -300,7 +300,7 @@ async def test_async_setup_entry_empty_cert(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.cert_expiry.helper.async_get_cert",
-        return_value={},
+        return_value=None,
     ):
         entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(entry.entry_id)
