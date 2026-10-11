@@ -1,7 +1,7 @@
 """Test the INDI Allsky Config flow."""
 
 import ssl
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 from aioindiallsky import IndiAllSkyAuthError, IndiAllSkyConnectionError
 import pytest
@@ -9,7 +9,14 @@ import pytest
 from homeassistant import config_entries
 from homeassistant.components.indi_allsky.const import DOMAIN
 from homeassistant.components.indi_allsky.util import get_ssl_context, normalize_host
-from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL, CONF_VERIFY_SSL
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_SSL,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -241,3 +248,224 @@ def test_get_ssl_context() -> None:
     ctx_no_verify = get_ssl_context(ssl_enabled=True, verify_ssl=False)
     assert isinstance(ctx_no_verify, ssl.SSLContext)
     assert ctx_no_verify.verify_mode == ssl.CERT_NONE
+
+
+async def test_form_with_credentials_success(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_indi_allsky_client: AsyncMock,
+) -> None:
+    """Test user step creates entry with credentials when username and password are provided."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {}
+
+    with patch(
+        "homeassistant.components.indi_allsky.config_flow.IndiAllSkyClient",
+        return_value=mock_indi_allsky_client,
+    ) as mock_client_cls:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: "127.0.0.1",
+                CONF_PORT: 443,
+                CONF_USERNAME: "test_user",
+                CONF_PASSWORD: "test_password",
+            },
+        )
+        mock_client_cls.assert_called_once()
+        assert mock_client_cls.call_args.kwargs["username"] == "test_user"
+        assert mock_client_cls.call_args.kwargs["password"] == "test_password"
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "INDI Allsky (127.0.0.1)"
+    assert result["data"] == {
+        CONF_HOST: "127.0.0.1",
+        CONF_PORT: 443,
+        CONF_SSL: True,
+        CONF_VERIFY_SSL: True,
+        CONF_USERNAME: "test_user",
+        CONF_PASSWORD: "test_password",
+    }
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.parametrize(
+    "credentials_input",
+    [
+        {CONF_USERNAME: "test_user"},
+        {CONF_PASSWORD: "test_password"},
+    ],
+)
+async def test_form_missing_credentials_failure(
+    hass: HomeAssistant,
+    mock_indi_allsky_client: AsyncMock,
+    credentials_input: dict[str, str],
+) -> None:
+    """Test entering only username or only password yields missing_credentials error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+
+    user_input = {
+        CONF_HOST: "127.0.0.1",
+        CONF_PORT: 443,
+        **credentials_input,
+    }
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "missing_credentials"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: "127.0.0.1",
+            CONF_PORT: 443,
+            CONF_USERNAME: "test-user",
+            CONF_PASSWORD: "test-password",
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        CONF_HOST: "127.0.0.1",
+        CONF_PORT: 443,
+        CONF_SSL: True,
+        CONF_VERIFY_SSL: True,
+        CONF_USERNAME: "test-user",
+        CONF_PASSWORD: "test-password",
+    }
+
+
+async def test_reauth_successful(
+    hass: HomeAssistant,
+    mock_indi_allsky_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test successful re-authentication updates the config entry data."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {}
+
+    with patch(
+        "homeassistant.components.indi_allsky.config_flow.IndiAllSkyClient",
+        return_value=mock_indi_allsky_client,
+    ) as mock_client_cls:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_USERNAME: "updated_user",
+                CONF_PASSWORD: "updated_password",
+            },
+        )
+        mock_client_cls.assert_called_once()
+        assert mock_client_cls.call_args.kwargs["username"] == "updated_user"
+        assert mock_client_cls.call_args.kwargs["password"] == "updated_password"
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data[CONF_USERNAME] == "updated_user"
+    assert mock_config_entry.data[CONF_PASSWORD] == "updated_password"
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "error_key"),
+    [
+        (IndiAllSkyAuthError("Invalid credentials"), "invalid_auth"),
+        (IndiAllSkyConnectionError("Cannot connect"), "cannot_connect"),
+        (Exception("Unexpected"), "unknown"),
+    ],
+)
+async def test_reauth_failures(
+    hass: HomeAssistant,
+    mock_indi_allsky_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    side_effect: Exception,
+    error_key: str,
+) -> None:
+    """Test reauth errors and subsequent recovery."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    mock_indi_allsky_client.fetch_image.side_effect = side_effect
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: "new_user",
+            CONF_PASSWORD: "new_password",
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": error_key}
+
+    mock_indi_allsky_client.fetch_image.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: "new_user",
+            CONF_PASSWORD: "new_password",
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data[CONF_USERNAME] == "new_user"
+    assert mock_config_entry.data[CONF_PASSWORD] == "new_password"
+
+
+@pytest.mark.parametrize(
+    "credentials_input",
+    [
+        {CONF_USERNAME: "new_user", CONF_PASSWORD: ""},
+        {CONF_USERNAME: "", CONF_PASSWORD: "new_password"},
+    ],
+)
+async def test_reauth_missing_credentials_failure(
+    hass: HomeAssistant,
+    mock_indi_allsky_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    credentials_input: dict[str, str],
+) -> None:
+    """Test entering empty username or password during reauth yields missing_credentials error."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        credentials_input,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "missing_credentials"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: "valid_user",
+            CONF_PASSWORD: "valid_password",
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data[CONF_USERNAME] == "valid_user"
+    assert mock_config_entry.data[CONF_PASSWORD] == "valid_password"
