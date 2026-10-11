@@ -52,3 +52,41 @@ device_usage_report:
       selector:
         device:
           integration: nintendo_parental_controls
+update_daily_restrictions:
+  fields:
+    device_id:
+      required: true
+      example: 1234567890abcdef1234567890abcdef
+      selector:
+        device:
+          integration: nintendo_parental_controls
+    day_of_week:
+      required: true
+      example: "monday"
+      selector:
+        select:
+          translation_key: day_of_week
+          options:
+            - "monday"
+            - "tuesday"
+            - "wednesday"
+            - "thursday"
+            - "friday"
+            - "saturday"
+            - "sunday"
+    bedtime_start:
+      example: "20:00:00"
+      selector:
+        time:
+    bedtime_end:
+      example: "07:00:00"
+      selector:
+        time:
+    max_play_time:
+      example: 120
+      selector:
+        number:
+          min: 0
+          max: 360
+          unit_of_measurement: minutes
+          mode: box

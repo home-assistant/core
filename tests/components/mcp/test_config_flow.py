@@ -459,6 +459,7 @@ async def test_authentication_flow(
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TEST_API_NAME
+    assert result["result"].unique_id is None
     data = result["data"]
     token = data.pop(CONF_TOKEN)
     assert data == {
@@ -1121,6 +1122,8 @@ async def test_hassio_discovery_flow(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "hassio_confirm"
     assert result["description_placeholders"] == {"addon": ADDON_NAME}
+    flows = hass.config_entries.flow.async_progress()
+    assert flows[0]["context"]["title_placeholders"] == {"name": ADDON_NAME}
 
     response = Mock()
     response.serverInfo.name = TEST_API_NAME

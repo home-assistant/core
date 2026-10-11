@@ -106,6 +106,7 @@ async def test_user_custom_url(
         CONF_URL: "apiieu.ezvizlife.com",
         CONF_TYPE: ATTR_TYPE_CLOUD,
     }
+    assert result["result"].unique_id == "test-username"
 
     assert len(mock_setup_entry.mock_calls) == 1
 

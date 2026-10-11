@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 from homeassistant.config_entries import SOURCE_IGNORE
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.hass_dict import HassKey
@@ -114,12 +115,11 @@ async def async_migrate_entry(
                     ]
                 )
             if len(duplicate_entries) - len(ignored_entries) > 1:
-                _LOGGER.warning(
-                    "Found multiple WLED config entries with"
-                    " the same MAC address, cannot migrate"
-                    " to version 1.2"
+                raise ConfigEntryError(
+                    translation_domain=DOMAIN,
+                    translation_key="duplicate_mac_address",
+                    translation_placeholders={"mac_address": normalized_mac_address},
                 )
-                return False
 
             hass.config_entries.async_update_entry(
                 config_entry,

@@ -5,6 +5,7 @@ import logging
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.device_registry import AnyDeviceEntry, DeviceEntry
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -25,8 +26,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: MySensorsConfigEntry) ->
     gateway = await setup_gateway(hass, entry)
 
     if not gateway:
-        _LOGGER.error("Gateway setup failed for %s", entry.data)
-        return False
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="gateway_setup_failed",
+        )
 
     entry.runtime_data = MySensorsData(gateway=gateway)
 

@@ -599,8 +599,10 @@
           "emergency_power_supply": "Emergency power supply",
           "grid_connected": "Grid connected",
           "permanent_fault": "Permanent fault",
+          "pid_state": "PID",
           "recoverable_fault": "Recoverable fault",
           "self_charging": "Self charging",
+          "svg_state": "SVG",
           "upgrading": "Upgrading",
           "waiting": "Waiting"
         }

@@ -712,6 +712,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/google_travel_time/ @eifinger
 /homeassistant/components/google_weather/ @tronikos
 /tests/components/google_weather/ @tronikos
+/homeassistant/components/google_wifi/ @EReaso
+/tests/components/google_wifi/ @EReaso
 /homeassistant/components/govee_ble/ @bdraco
 /tests/components/govee_ble/ @bdraco
 /homeassistant/components/govee_light_local/ @Galorhallen
@@ -846,8 +848,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/huum/ @frwickst @vincentwolsink
 /homeassistant/components/hvv_departures/ @vigonotion
 /tests/components/hvv_departures/ @vigonotion
-/homeassistant/components/hydrawise/ @dknowles2 @thomaskistler @ptcryan
-/tests/components/hydrawise/ @dknowles2 @thomaskistler @ptcryan
+/homeassistant/components/hydrawise/ @dknowles2 @thomaskistler @ptcryan @frenck
+/tests/components/hydrawise/ @dknowles2 @thomaskistler @ptcryan @frenck
 /homeassistant/components/hydroquebec_peak/ @Beat-YT
 /tests/components/hydroquebec_peak/ @Beat-YT
 /homeassistant/components/hyperion/ @dermotduffy
@@ -891,8 +893,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/improv_ble/ @emontnemery
 /homeassistant/components/incomfort/ @jbouwh
 /tests/components/incomfort/ @jbouwh
-/homeassistant/components/indevolt/ @xirt
-/tests/components/indevolt/ @xirt
+/homeassistant/components/indevolt/ @xirt @INDEVOLT @indevolt-y
+/tests/components/indevolt/ @xirt @INDEVOLT @indevolt-y
 /homeassistant/components/indi_allsky/ @TN-1
 /tests/components/indi_allsky/ @TN-1
 /homeassistant/components/inels/ @epdevlab
@@ -991,6 +993,7 @@ CLAUDE.md @home-assistant/core
 /homeassistant/components/kegtron/ @Ernst79
 /tests/components/kegtron/ @Ernst79
 /homeassistant/components/keyboard_remote/ @bendavid @lanrat
+/tests/components/keyboard_remote/ @bendavid @lanrat
 /homeassistant/components/keymitt_ble/ @spycle
 /tests/components/keymitt_ble/ @spycle
 /homeassistant/components/kiosker/ @Claeysson
@@ -1768,8 +1771,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/snooz/ @AustinBrunkhorst
 /homeassistant/components/sofar/ @darkrain-nl
 /tests/components/sofar/ @darkrain-nl
-/homeassistant/components/solaredge/ @frenck @bdraco @tronikos
-/tests/components/solaredge/ @frenck @bdraco @tronikos
+/homeassistant/components/solaredge/ @bdraco @tronikos
+/tests/components/solaredge/ @bdraco @tronikos
 /homeassistant/components/solaredge_modbus/ @frenck
 /tests/components/solaredge_modbus/ @frenck
 /homeassistant/components/solarlog/ @Ernst79 @dontinelli
@@ -1833,6 +1836,7 @@ CLAUDE.md @home-assistant/core
 /homeassistant/components/sunsynk/ @jamesridgway
 /tests/components/sunsynk/ @jamesridgway
 /homeassistant/components/supla/ @mwegrzynek
+/tests/components/supla/ @mwegrzynek
 /homeassistant/components/surepetcare/ @benleb @danielhiversen
 /tests/components/surepetcare/ @benleb @danielhiversen
 /homeassistant/components/swiss_hydrological_data/ @fabaff

@@ -1,6 +1,6 @@
 """Support for Broadlink sensors."""
 
-from typing import override
+from typing import TYPE_CHECKING, override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -21,7 +21,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
+from .const import BROADLINK_DATA
 from .entity import BroadlinkEntity
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
@@ -108,10 +108,12 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Broadlink sensor."""
-    # Uses legacy hass.data[DOMAIN] pattern
-    # pylint: disable-next=home-assistant-use-runtime-data
-    device = hass.data[DOMAIN].devices[config_entry.entry_id]
+    device = hass.data[BROADLINK_DATA].devices[config_entry.entry_id]
+    if TYPE_CHECKING:
+        assert device.update_manager is not None
     sensor_data = device.update_manager.coordinator.data
+    if TYPE_CHECKING:
+        assert sensor_data is not None
     sensors = [
         BroadlinkSensor(device, description)
         for description in SENSOR_TYPES

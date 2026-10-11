@@ -146,19 +146,16 @@ class ProtectMediaPlayer(ProtectDeviceEntity, MediaPlayerEntity):
         await self.async_media_stop()
         try:
             await self.device.play_audio(media_id, blocking=False)
+            self._async_updated_event(self.device)
+            await self.device.wait_until_audio_completes()
         except StreamError as err:
             _LOGGER.debug("Error playing audio: %s", err)
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="stream_error",
             ) from err
-
-        # update state after starting player
-        self._async_updated_event(self.device)
-        # wait until player finishes to update state again
-        await self.device.wait_until_audio_completes()
-
-        self._async_updated_event(self.device)
+        finally:
+            self._async_updated_event(self.device)
 
     @override
     async def async_browse_media(

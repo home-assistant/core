@@ -19,6 +19,7 @@ from .discovery import (
     async_stop_discovery,
     yaml_excluded_uids,
 )
+from .services import async_setup_services
 
 PLATFORMS = [Platform.CLIMATE, Platform.SENSOR]
 
@@ -38,6 +39,7 @@ CONFIG_SCHEMA = probatio.Schema(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Register the iZone component config."""
+    async_setup_services(hass)
     if conf := config.get(DOMAIN):
         hass.data[DATA_CONFIG] = conf
 

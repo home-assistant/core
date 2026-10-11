@@ -90,6 +90,19 @@ async def test_user_flow_errors(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": expected_error}
 
+    with (
+        patch(
+            "homeassistant.components.wolflink.config_flow.WolfClient.fetch_system_list",
+            return_value=[DEVICE],
+        ),
+        patch("homeassistant.components.wolflink.async_setup_entry", return_value=True),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=INPUT_CONFIG
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_no_devices_abort(hass: HomeAssistant) -> None:
     """Test we abort if the account has no devices."""
