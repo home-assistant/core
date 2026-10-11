@@ -170,6 +170,11 @@ async def test_image_fetch_error(
     assert img2.content == b"\xff\xd8\xff\xe0recovered_keogram"
     mock_indi_allsky_client.fetch_image.assert_not_called()
 
+    # Background fetch failure for the same media does not clear valid cached image
+    coordinator.async_set_keogram_image(mock_keogram_data, None)
+    assert coordinator.latest_keogram_image == b"\xff\xd8\xff\xe0recovered_keogram"
+    coordinator.async_set_startrail_image(mock_startrail_data, None)
+
 
 async def test_stale_media_fetch_ignored(
     hass: HomeAssistant,
@@ -266,6 +271,62 @@ async def test_stale_media_fetch_ignored(
 
     img = await image.async_get_image(hass, "image.indi_allsky_latest_star_trail")
     assert img.content == b"new_startrail"
+
+
+async def test_on_demand_fetch_captures_media_identity_before_fetch(
+    hass: HomeAssistant,
+    mock_indi_allsky_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    mock_keogram_data: MediaData,
+) -> None:
+    """Test on-demand fetch does not overwrite newer media arriving mid-fetch."""
+    with patch("homeassistant.components.indi_allsky._PLATFORMS", [Platform.IMAGE]):
+        await setup_integration(hass, mock_config_entry)
+
+    keogram_2 = replace(mock_keogram_data, filename="keogram_2.jpg")
+    coordinator = mock_config_entry.runtime_data
+
+    fetch_started = asyncio.Event()
+    unblock_fetch = asyncio.Event()
+
+    async def _mock_fetch(filename: str) -> bytes:
+        fetch_started.set()
+        await unblock_fetch.wait()
+        return b"\xff\xd8\xff\xe0old_image_bytes"
+
+    mock_indi_allsky_client.fetch_image.side_effect = _mock_fetch
+
+    # Set initial media in coordinator without spawning background task
+    coordinator.latest_keogram = mock_keogram_data
+    coordinator.async_set_updated_data(
+        replace(coordinator.data, latest_keogram=mock_keogram_data)
+    )
+
+    # Start on-demand image fetch
+    fetch_task = asyncio.create_task(
+        image.async_get_image(hass, "image.indi_allsky_latest_keogram")
+    )
+    await fetch_started.wait()
+
+    # While on-demand fetch is suspended, a newer media event arrives
+    coordinator.latest_keogram = keogram_2
+    coordinator.latest_keogram_image = b"\xff\xd8\xff\xe0newer_image_bytes"
+    coordinator.async_set_updated_data(
+        replace(
+            coordinator.data,
+            latest_keogram=keogram_2,
+            latest_keogram_image=b"\xff\xd8\xff\xe0newer_image_bytes",
+        )
+    )
+
+    # Complete the on-demand fetch
+    unblock_fetch.set()
+    img = await fetch_task
+    assert img.content == b"\xff\xd8\xff\xe0old_image_bytes"
+
+    # Coordinator preserves newer media and does not overwrite it with old bytes
+    assert coordinator.latest_keogram is keogram_2
+    assert coordinator.latest_keogram_image == b"\xff\xd8\xff\xe0newer_image_bytes"
 
 
 async def test_image_fetching_before_events(

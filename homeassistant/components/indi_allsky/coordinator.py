@@ -129,6 +129,8 @@ class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[IndiAllSkyData]):
         """Update cached keogram image if media matches current."""
         if media is not self.latest_keogram:
             return
+        if image_bytes is None and self.latest_keogram_image is not None:
+            return
         self.latest_keogram_image = image_bytes
         self.latest_keogram_updated = (
             dt_util.utcnow() if image_bytes is not None else None
@@ -173,6 +175,8 @@ class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[IndiAllSkyData]):
     ) -> None:
         """Update cached startrail image if media matches current."""
         if media is not self.latest_startrail:
+            return
+        if image_bytes is None and self.latest_startrail_image is not None:
             return
         self.latest_startrail_image = image_bytes
         self.latest_startrail_updated = (

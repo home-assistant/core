@@ -135,6 +135,7 @@ class IndiAllSkyImageEntity(IndiAllSkyEntity, ImageEntity):
                 self._attr_content_type = content_type
             return image_bytes
 
+        media = self.entity_description.media_fn(self.coordinator.data)
         try:
             image_bytes = await self.coordinator.client.fetch_image(
                 self.entity_description.image_filename
@@ -144,7 +145,7 @@ class IndiAllSkyImageEntity(IndiAllSkyEntity, ImageEntity):
         else:
             if content_type := infer_image_type(image_bytes):
                 self._attr_content_type = content_type
-            if media := self.entity_description.media_fn(self.coordinator.data):
+            if media is not None:
                 self.entity_description.set_image_fn(
                     self.coordinator, media, image_bytes
                 )
