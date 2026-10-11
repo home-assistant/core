@@ -101,7 +101,6 @@ class AdaxConfigFlow(ConfigFlow, domain=DOMAIN):
             updates={CONF_IP_ADDRESS: discovery_info.ip}
         )
 
-        # Actively verify TLS certificate identity before prompting the user
         if not await is_adax_tls_device(discovery_info.ip):
             _LOGGER.debug(
                 "Device at %s matched DHCP rule but is not an ADAX DEVICE. Aborting",
