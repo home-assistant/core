@@ -7,9 +7,10 @@ from typing import Any, Self, override
 
 import probatio
 
-from homeassistant.components.number import NumberEntity
+from homeassistant.components.number import DEVICE_CLASSES_SCHEMA, RestoreNumber
 from homeassistant.const import (  # noqa: F401
     ATTR_MODE,
+    CONF_DEVICE_CLASS,
     CONF_ICON,
     CONF_ID,
     CONF_MODE,
@@ -20,7 +21,6 @@ from homeassistant.const import (  # noqa: F401
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import collection, config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType, VolDictType
 
@@ -78,6 +78,7 @@ STORAGE_FIELDS: VolDictType = {
     ),
     probatio.Optional(CONF_ICON): cv.icon,
     probatio.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+    probatio.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
     probatio.Optional(CONF_MODE, default=MODE_SLIDER): probatio.In(
         [MODE_BOX, MODE_SLIDER]
     ),
@@ -97,6 +98,7 @@ CONFIG_SCHEMA = probatio.Schema(
                     ),
                     probatio.Optional(CONF_ICON): cv.icon,
                     probatio.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+                    probatio.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
                     probatio.Optional(CONF_MODE, default=MODE_SLIDER): probatio.In(
                         [MODE_BOX, MODE_SLIDER]
                     ),
@@ -196,7 +198,7 @@ class NumberStorageCollection(collection.DictStorageCollection):
 
 
 # pylint: disable-next=home-assistant-enforce-class-module
-class InputNumber(collection.CollectionEntity, NumberEntity, RestoreEntity):
+class InputNumber(collection.CollectionEntity, RestoreNumber):
     """Representation of a slider."""
 
     _unrecorded_attributes = frozenset({InputNumberEntityStateAttribute.EDITABLE})
@@ -220,6 +222,7 @@ class InputNumber(collection.CollectionEntity, NumberEntity, RestoreEntity):
         self._attr_native_step = config[CONF_STEP]
         self._attr_unique_id = config[CONF_ID]
         self._attr_native_unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
+        self._attr_device_class = config.get(CONF_DEVICE_CLASS)
 
     @classmethod
     @override
@@ -255,7 +258,10 @@ class InputNumber(collection.CollectionEntity, NumberEntity, RestoreEntity):
             return
 
         value: float | None = None
-        if state := await self.async_get_last_state():
+        if (number_data := await self.async_get_last_number_data()) is not None:
+            value = number_data.native_value
+        elif state := await self.async_get_last_state():
+            # Without extra data, the state was stored without unit conversion
             with suppress(ValueError):
                 value = float(state.state)
 
@@ -271,15 +277,7 @@ class InputNumber(collection.CollectionEntity, NumberEntity, RestoreEntity):
     @override
     async def async_set_native_value(self, value):
         """Set new value."""
-        num_value = float(value)
-
-        if num_value < self.native_min_value or num_value > self.native_max_value:
-            raise probatio.Invalid(
-                f"Invalid value for {self.entity_id}: {value} (range "
-                f"{self.native_min_value} - {self.native_max_value})"
-            )
-
-        self._attr_native_value = num_value
+        self._attr_native_value = float(value)
         self.async_write_ha_state()
 
     async def async_increment(self):
@@ -298,6 +296,9 @@ class InputNumber(collection.CollectionEntity, NumberEntity, RestoreEntity):
     async def async_update_config(self, config: ConfigType) -> None:
         """Handle when the config is updated."""
         self._update_config_attributes(config)
+        if self.registry_entry:
+            # Drop a display unit that no longer fits the device class or native unit
+            self.async_registry_entry_updated()
         # just in case min/max values changed
         if self._attr_native_value is None:
             return

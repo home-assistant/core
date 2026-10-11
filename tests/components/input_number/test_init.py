@@ -1,5 +1,6 @@
 """The tests for the Input number component."""
 
+from collections.abc import Awaitable, Callable
 from typing import Any
 from unittest.mock import patch
 
@@ -15,6 +16,7 @@ from homeassistant.components.input_number import (
     SERVICE_SET_VALUE,
 )
 from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
     ATTR_EDITABLE,
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
@@ -25,8 +27,13 @@ from homeassistant.core import Context, CoreState, HomeAssistant, State
 from homeassistant.exceptions import Unauthorized
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
-from tests.common import MockUser, mock_restore_cache
+from tests.common import (
+    MockUser,
+    mock_restore_cache,
+    mock_restore_cache_with_extra_data,
+)
 from tests.typing import WebSocketGenerator
 
 
@@ -106,6 +113,7 @@ async def decrement(hass: HomeAssistant, entity_id: str) -> None:
         {"name with space": None},
         {"test_1": {"min": 50, "max": 50}},
         {"test_1": {"min": 0, "max": 10, "initial": 11}},
+        {"test_1": {"min": 0, "max": 10, "device_class": "invalid"}},
     ],
 )
 async def test_config(hass: HomeAssistant, invalid_config) -> None:
@@ -258,6 +266,124 @@ async def test_unit_of_measurement(hass: HomeAssistant) -> None:
     state = hass.states.get("input_number.without_unit")
     assert state
     assert ATTR_UNIT_OF_MEASUREMENT not in state.attributes
+
+
+async def test_device_class(hass: HomeAssistant) -> None:
+    """Test device class is exposed in the state attributes."""
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: {
+                "with_device_class": {
+                    "min": 0,
+                    "max": 100,
+                    "device_class": "temperature",
+                    "unit_of_measurement": "°C",
+                },
+                "without_device_class": {"min": 0, "max": 100},
+            }
+        },
+    )
+
+    state = hass.states.get("input_number.with_device_class")
+    assert state
+    assert state.attributes[ATTR_DEVICE_CLASS] == "temperature"
+
+    state = hass.states.get("input_number.without_device_class")
+    assert state
+    assert ATTR_DEVICE_CLASS not in state.attributes
+
+
+async def test_set_value_unit_conversion(hass: HomeAssistant) -> None:
+    """Test set_value takes the value in the unit of the converted state."""
+    hass.config.units = US_CUSTOMARY_SYSTEM
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: {
+                "temperature": {
+                    "initial": 20,
+                    "min": 0,
+                    "max": 40,
+                    "device_class": "temperature",
+                    "unit_of_measurement": "°C",
+                }
+            }
+        },
+    )
+    entity_id = "input_number.temperature"
+
+    state = hass.states.get(entity_id)
+    assert float(state.state) == 68
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "°F"
+    assert state.attributes["min"] == 32
+    assert state.attributes["max"] == 104
+
+    await set_value(hass, entity_id, "86")
+    state = hass.states.get(entity_id)
+    assert float(state.state) == 86
+
+    # The upper bound in °F must not be rejected by rounding in the conversion
+    await set_value(hass, entity_id, "104")
+    state = hass.states.get(entity_id)
+    assert float(state.state) == 104
+
+    with pytest.raises(probatio.Invalid) as excinfo:
+        await set_value(hass, entity_id, "110")
+    assert "Invalid value for input_number.temperature: 110.0 (range 32.0 - 104.0)" in (
+        str(excinfo.value)
+    )
+
+    await increment(hass, entity_id)
+    state = hass.states.get(entity_id)
+    assert float(state.state) == 104
+
+    await decrement(hass, entity_id)
+    state = hass.states.get(entity_id)
+    assert float(state.state) == 102.2
+
+
+async def test_restore_state_unit_conversion(hass: HomeAssistant) -> None:
+    """Test the native value is restored for a converted state."""
+    hass.config.units = US_CUSTOMARY_SYSTEM
+    mock_restore_cache_with_extra_data(
+        hass,
+        (
+            (
+                State("input_number.with_extra_data", "86.0"),
+                {
+                    "native_max_value": 40.0,
+                    "native_min_value": 0.0,
+                    "native_step": 1.0,
+                    "native_unit_of_measurement": "°C",
+                    "native_value": 30.0,
+                },
+            ),
+            # Stored before unit conversion was possible, so in the native unit
+            (State("input_number.without_extra_data", "25"), {}),
+        ),
+    )
+    hass.set_state(CoreState.starting)
+
+    config = {
+        "min": 0,
+        "max": 40,
+        "device_class": "temperature",
+        "unit_of_measurement": "°C",
+    }
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {DOMAIN: {"with_extra_data": config, "without_extra_data": config}},
+    )
+
+    state = hass.states.get("input_number.with_extra_data")
+    assert float(state.state) == 86
+
+    state = hass.states.get("input_number.without_extra_data")
+    assert float(state.state) == 77
 
 
 async def test_restore_state(hass: HomeAssistant) -> None:
@@ -603,6 +729,191 @@ async def test_update_min_max(
 
     state = hass.states.get(input_entity_id)
     assert float(state.state) == 5
+
+
+async def test_ws_update_device_class(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    storage_setup: Callable[..., Awaitable[bool]],
+) -> None:
+    """Test setting, removing and rejecting a device class via WS."""
+    settings = {
+        "name": "from storage",
+        "max": 100,
+        "min": 0,
+        "step": 1,
+        "mode": "slider",
+    }
+    assert await storage_setup([{"id": "from_storage"} | settings])
+    input_entity_id = f"{DOMAIN}.from_storage"
+
+    client = await hass_ws_client(hass)
+
+    updated_settings = settings | {
+        "device_class": "temperature",
+        "unit_of_measurement": "°C",
+    }
+    await client.send_json_auto_id(
+        {
+            "type": f"{DOMAIN}/update",
+            f"{DOMAIN}_id": "from_storage",
+            **updated_settings,
+        }
+    )
+    resp = await client.receive_json()
+    assert resp["success"]
+    assert resp["result"] == {"id": "from_storage"} | updated_settings
+
+    state = hass.states.get(input_entity_id)
+    assert state.attributes[ATTR_DEVICE_CLASS] == "temperature"
+
+    await client.send_json_auto_id(
+        {"type": f"{DOMAIN}/update", f"{DOMAIN}_id": "from_storage", **settings}
+    )
+    resp = await client.receive_json()
+    assert resp["success"]
+
+    state = hass.states.get(input_entity_id)
+    assert ATTR_DEVICE_CLASS not in state.attributes
+
+    await client.send_json_auto_id(
+        {
+            "type": f"{DOMAIN}/update",
+            f"{DOMAIN}_id": "from_storage",
+            **settings,
+            "device_class": "invalid",
+        }
+    )
+    resp = await client.receive_json()
+    assert not resp["success"]
+
+
+async def test_ws_create_unit_conversion(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    storage_setup: Callable[..., Awaitable[bool]],
+) -> None:
+    """Test unit conversion for a helper created via the UI."""
+    hass.config.units = US_CUSTOMARY_SYSTEM
+    assert await storage_setup(items=[])
+    input_entity_id = f"{DOMAIN}.new_input"
+
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {
+            "type": f"{DOMAIN}/create",
+            "name": "New Input",
+            "min": 0,
+            "max": 40,
+            "initial": 20,
+            "step": 1,
+            "mode": "slider",
+            "device_class": "temperature",
+            "unit_of_measurement": "°C",
+        }
+    )
+    resp = await client.receive_json()
+    assert resp["success"]
+    assert resp["result"]["unit_of_measurement"] == "°C"
+
+    state = hass.states.get(input_entity_id)
+    assert float(state.state) == 68
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "°F"
+    assert state.attributes["min"] == 32
+    assert state.attributes["max"] == 104
+
+    await set_value(hass, input_entity_id, "86")
+    state = hass.states.get(input_entity_id)
+    assert float(state.state) == 86
+
+    # Removing the device class stops the conversion
+    await client.send_json_auto_id(
+        {
+            "type": f"{DOMAIN}/update",
+            f"{DOMAIN}_id": "new_input",
+            "name": "New Input",
+            "min": 0,
+            "max": 40,
+            "step": 1,
+            "mode": "slider",
+            "unit_of_measurement": "°C",
+        }
+    )
+    resp = await client.receive_json()
+    assert resp["success"]
+
+    state = hass.states.get(input_entity_id)
+    assert float(state.state) == 30
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "°C"
+    assert state.attributes["max"] == 40
+
+
+@pytest.mark.parametrize(
+    ("updated_settings", "expected_unit"),
+    [
+        pytest.param({"unit_of_measurement": "°C"}, "°C", id="remove_device_class"),
+        pytest.param(
+            {"device_class": "pressure", "unit_of_measurement": "hPa"},
+            "hPa",
+            id="change_device_class",
+        ),
+        pytest.param({"device_class": "temperature"}, None, id="remove_unit"),
+    ],
+)
+async def test_ws_update_drops_incompatible_display_unit(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    hass_ws_client: WebSocketGenerator,
+    storage_setup: Callable[..., Awaitable[bool]],
+    updated_settings: dict[str, Any],
+    expected_unit: str | None,
+) -> None:
+    """Test a display unit from the entity settings is dropped when it no longer fits."""
+    settings = {
+        "name": "from storage",
+        "min": 0,
+        "max": 40,
+        "step": 1,
+        "mode": "slider",
+    }
+    assert await storage_setup(
+        [
+            {"id": "from_storage"}
+            | settings
+            | {"device_class": "temperature", "unit_of_measurement": "°C"}
+        ]
+    )
+    input_entity_id = f"{DOMAIN}.from_storage"
+
+    entity_registry.async_update_entity_options(
+        input_entity_id, "number", {"unit_of_measurement": "°F"}
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get(input_entity_id)
+    assert float(state.state) == 32
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "°F"
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {
+            "type": f"{DOMAIN}/update",
+            f"{DOMAIN}_id": "from_storage",
+            **settings,
+            **updated_settings,
+        }
+    )
+    resp = await client.receive_json()
+    assert resp["success"]
+
+    state = hass.states.get(input_entity_id)
+    assert float(state.state) == 0
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == expected_unit
+
+    # The native unit is used again, so setting a value needs no conversion
+    await set_value(hass, input_entity_id, "10")
+    state = hass.states.get(input_entity_id)
+    assert float(state.state) == 10
 
 
 async def test_ws_create(
