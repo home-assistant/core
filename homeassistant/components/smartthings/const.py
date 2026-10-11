@@ -1,5 +1,7 @@
 """Constants used by the SmartThings component and platforms."""
 
+from datetime import timedelta
+
 from pysmartthings import Attribute, Capability, Category
 
 from homeassistant.const import UnitOfTemperature
@@ -39,6 +41,9 @@ OLD_DATA = "old_data"
 
 CONF_SUBSCRIPTION_ID = "subscription_id"
 EVENT_BUTTON = "smartthings.button"
+
+SIGNAL_DEVICE_STATUS_REFRESHED = "smartthings_device_status_refreshed_{}"
+STATUS_REFRESH_INTERVAL = timedelta(hours=1)
 
 BINARY_SENSOR_ATTRIBUTES_TO_CAPABILITIES: dict[str, str] = {
     Attribute.ACCELERATION: Capability.ACCELERATION_SENSOR,

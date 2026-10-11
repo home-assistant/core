@@ -13,11 +13,13 @@ from pysmartthings import (
 )
 from pysmartthings.models import HealthStatus
 
+from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
 from . import FullDevice
-from .const import DOMAIN, MAIN
+from .const import DOMAIN, MAIN, SIGNAL_DEVICE_STATUS_REFRESHED
 
 
 class SmartThingsEntity(Entity):
@@ -68,11 +70,30 @@ class SmartThingsEntity(Entity):
                 self.device.device.device_id, self._availability_handler
             )
         )
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                SIGNAL_DEVICE_STATUS_REFRESHED.format(self.device.device.device_id),
+                self._status_refresh_handler,
+            )
+        )
         self._update_attr()
 
     def _availability_handler(self, event: DeviceHealthEvent) -> None:
         self._attr_available = event.status != HealthStatus.OFFLINE
         self.async_write_ha_state()
+
+    @callback
+    def _status_refresh_handler(self) -> None:
+        """Handle a full status refresh pulled from the API."""
+        component_status = self.device.status.get(self.component, {})
+        self._internal_state = {
+            capability: component_status[capability]
+            for capability in self.capabilities
+            if capability in component_status
+        }
+        self._attr_available = self.device.online
+        self._handle_update()
 
     def _update_handler(self, event: DeviceEvent) -> None:
         self._internal_state[event.capability][event.attribute].value = event.value
