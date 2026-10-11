@@ -88,6 +88,7 @@ class PooldoseConfigFlow(ConfigFlow, domain=DOMAIN):
         # Else: Continue with new flow
         self._discovered_ip = discovery_info.ip
         self._discovered_mac = discovery_info.macaddress
+        # pylint: disable-next=home-assistant-step_id-match-method
         return self.async_show_form(
             step_id="dhcp_confirm",
             description_placeholders={
