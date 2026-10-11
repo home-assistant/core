@@ -339,5 +339,15 @@
     "unsupported_firmware": {
       "message": "[%key:component::plugwise::config::error::unsupported%]"
     }
+  },
+  "issues": {
+    "deprecated_dhw_cm_switch": {
+      "description": "The `{entity_id}` ({entity_name}) switch is deprecated and will be removed in Home Assistant 2027.5.0. It has been replaced by the **DHW mode** select, which provides the available modes for your heater.\n\nUpdate dashboards, templates, automations, and scripts to use the DHW mode select and choose the required mode. Then disable `{entity_id}` in Settings > Devices & services > Entities. Home Assistant will remove it after the next restart.",
+      "title": "The Plugwise DHW comfort switch is deprecated"
+    },
+    "deprecated_dhw_cm_switch_scripts": {
+      "description": "The `{entity_id}` ({entity_name}) switch is deprecated and will be removed in Home Assistant 2027.5.0. It has been replaced by the **DHW mode** select, which provides the available modes for your heater.\n\nIt is used in the following automations or scripts:\n{items}\n\nUpdate these automations or scripts to use the DHW mode select and choose the required mode, then disable `{entity_id}` in Settings > Devices & services > Entities. Home Assistant will remove it after the next restart.",
+      "title": "[%key:component::plugwise::issues::deprecated_dhw_cm_switch::title%]"
+    }
   }
 }
