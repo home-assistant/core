@@ -359,6 +359,22 @@ class UpdateEntity(
         return _version_is_newer(latest_version, installed_version)
 
     @property
+    def has_update(self) -> bool:
+        """Return True if there is an update available.
+
+        Integrations can override this property to implement custom logic.
+        """
+        if (installed_version := self.installed_version) is None:
+            return False
+        if (latest_version := self.latest_version) is None:
+            return False
+        try:
+            return self.version_is_newer(latest_version, installed_version)
+        except AwesomeVersionCompareException:
+            # Can't compare versions, already tried exact match
+            return True
+
+    @property
     @final
     @override
     def state(self) -> str | None:
@@ -373,12 +389,8 @@ class UpdateEntity(
         if latest_version == installed_version:
             return STATE_OFF
 
-        try:
-            newer = self.version_is_newer(latest_version, installed_version)
-        except AwesomeVersionCompareException:
-            # Can't compare versions, already tried exact match
-            return STATE_ON
-        return STATE_ON if newer else STATE_OFF
+        has_update = self.has_update
+        return STATE_ON if has_update else STATE_OFF
 
     @final
     @property
