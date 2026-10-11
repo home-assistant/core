@@ -22,6 +22,7 @@ from homeassistant.components.google_travel_time.const import (
     CONF_TRAFFIC_MODEL,
     CONF_TRANSIT_MODE,
     CONF_TRANSIT_ROUTING_PREFERENCE,
+    CONF_TRAVEL_ROUTING_PREFERENCE,
     CONF_UNITS,
     DEFAULT_NAME,
     DEPARTURE_TIME,
@@ -213,6 +214,7 @@ async def test_options_flow(hass: HomeAssistant, mock_config: MockConfigEntry) -
             CONF_TIME_TYPE: ARRIVAL_TIME,
             CONF_TIME: "08:00",
             CONF_TRAFFIC_MODEL: "best_guess",
+            CONF_TRAVEL_ROUTING_PREFERENCE: "traffic_aware_optimal",
             CONF_TRANSIT_MODE: "train",
             CONF_TRANSIT_ROUTING_PREFERENCE: "less_walking",
         },
@@ -228,6 +230,7 @@ async def test_options_flow(hass: HomeAssistant, mock_config: MockConfigEntry) -
         CONF_TRAFFIC_MODEL: "best_guess",
         CONF_TRANSIT_MODE: "train",
         CONF_TRANSIT_ROUTING_PREFERENCE: "less_walking",
+        CONF_TRAVEL_ROUTING_PREFERENCE: "traffic_aware_optimal",
     }
 
     assert mock_config.options == {
@@ -239,6 +242,7 @@ async def test_options_flow(hass: HomeAssistant, mock_config: MockConfigEntry) -
         CONF_TRAFFIC_MODEL: "best_guess",
         CONF_TRANSIT_MODE: "train",
         CONF_TRANSIT_ROUTING_PREFERENCE: "less_walking",
+        CONF_TRAVEL_ROUTING_PREFERENCE: "traffic_aware_optimal",
     }
 
 
@@ -292,6 +296,81 @@ async def test_options_flow_departure_time(
         CONF_TRAFFIC_MODEL: "best_guess",
         CONF_TRANSIT_MODE: "train",
         CONF_TRANSIT_ROUTING_PREFERENCE: "less_walking",
+    }
+
+
+@pytest.mark.parametrize(
+    ("data", "options"),
+    [(MOCK_CONFIG, DEFAULT_OPTIONS)],
+)
+@pytest.mark.parametrize(
+    "travel_routing_preference",
+    ["traffic_aware", "traffic_unaware"],
+)
+@pytest.mark.parametrize(
+    "traffic_model",
+    ["best_guess", "pessimistic", "optimistic"],
+)
+@pytest.mark.usefixtures("routes_mock")
+async def test_options_flow_traffic_model_error(
+    hass: HomeAssistant,
+    mock_config: MockConfigEntry,
+    travel_routing_preference: str,
+    traffic_model: str,
+) -> None:
+    """Test options flow for traffic model error."""
+    result = await hass.config_entries.options.async_init(mock_config.entry_id)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_MODE: "driving",
+            CONF_UNITS: UNITS_IMPERIAL,
+            CONF_TIME_TYPE: ARRIVAL_TIME,
+            CONF_TIME: "08:00",
+            CONF_TRAFFIC_MODEL: traffic_model,
+            CONF_TRAVEL_ROUTING_PREFERENCE: travel_routing_preference,
+        },
+    )
+
+    # Verify the expected error, and the data schema contains all expected fields.
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == {"base": "traffic_model_not_allowed"}
+    data_schema = result["data_schema"].schema
+    assert set(data_schema) == {
+        CONF_AVOID,
+        CONF_UNITS,
+        CONF_LANGUAGE,
+        CONF_TRANSIT_MODE,
+        CONF_TRANSIT_ROUTING_PREFERENCE,
+        CONF_MODE,
+        CONF_TIME_TYPE,
+        CONF_TIME,
+        CONF_TRAFFIC_MODEL,
+        CONF_TRAVEL_ROUTING_PREFERENCE,
+    }
+
+    # Removing the traffic model allows the user to finish the flow
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_MODE: "driving",
+            CONF_UNITS: UNITS_IMPERIAL,
+            CONF_TIME_TYPE: ARRIVAL_TIME,
+            CONF_TIME: "08:00",
+            CONF_TRAVEL_ROUTING_PREFERENCE: travel_routing_preference,
+        },
+    )
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        CONF_MODE: "driving",
+        CONF_UNITS: UNITS_IMPERIAL,
+        CONF_ARRIVAL_TIME: "08:00",
+        CONF_TRAVEL_ROUTING_PREFERENCE: travel_routing_preference,
     }
 
 
@@ -406,6 +485,7 @@ async def test_reset_arrival_time(
                 CONF_TRAFFIC_MODEL: "best_guess",
                 CONF_TRANSIT_MODE: "train",
                 CONF_TRANSIT_ROUTING_PREFERENCE: "less_walking",
+                CONF_TRAVEL_ROUTING_PREFERENCE: "traffic_aware_optimal",
             },
         )
     ],

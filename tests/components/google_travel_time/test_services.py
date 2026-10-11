@@ -71,6 +71,7 @@ async def test_service_get_travel_times_with_all_options(
             "units": "imperial",
             "language": "en",
             "avoid": "tolls",
+            "travel_routing_preference": "traffic_aware_optimal",
             "traffic_model": "best_guess",
             "departure_time": "08:00:00",
         },
@@ -146,6 +147,51 @@ async def test_service_get_travel_times_errors(
                 "destination": "location2",
                 "mode": "driving",
                 "units": "metric",
+            },
+            blocking=True,
+            return_response=True,
+        )
+
+
+@pytest.mark.parametrize(
+    ("data", "options"),
+    [(MOCK_CONFIG, DEFAULT_OPTIONS)],
+)
+@pytest.mark.parametrize(
+    "travel_routing_preference",
+    ["traffic_aware", "traffic_unaware"],
+)
+@pytest.mark.parametrize(
+    "traffic_model",
+    ["best_guess", "pessimistic", "optimistic"],
+)
+async def test_service_get_travel_times_traffic_model_error(
+    hass: HomeAssistant,
+    routes_mock: AsyncMock,
+    mock_config: MockConfigEntry,
+    travel_routing_preference: str,
+    traffic_model: str,
+) -> None:
+    """Test service get_travel_times with invalid traffic model for the routing preference."""
+
+    with pytest.raises(
+        HomeAssistantError,
+        match="Traffic model requires traffic-aware optimal routing",
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            "get_travel_times",
+            {
+                "config_entry_id": mock_config.entry_id,
+                "origin": "location1",
+                "destination": "location2",
+                "mode": "driving",
+                "units": "imperial",
+                "language": "en",
+                "avoid": "tolls",
+                "travel_routing_preference": travel_routing_preference,
+                "traffic_model": traffic_model,
+                "departure_time": "08:00:00",
             },
             blocking=True,
             return_response=True,

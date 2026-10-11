@@ -46,6 +46,15 @@ get_travel_times:
             - highways
             - ferries
             - indoor
+    travel_routing_preference:
+      required: false
+      selector:
+        select:
+          translation_key: travel_routing_preference
+          options:
+            - traffic_aware_optimal
+            - traffic_aware
+            - traffic_unaware
     traffic_model:
       required: false
       selector:
