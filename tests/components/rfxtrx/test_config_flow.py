@@ -614,6 +614,19 @@ async def test_options_reconfigure_invalid_and_duplicate_event_code(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"]["event_code"] == "incompatible_device"
 
+    # Reconfigure A, with a valid, non-colliding event code succeeds
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={"event_code": "0b1100cd0213c7f330010f71"},
+    )
+    assert result["step_id"] == "device_options"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], user_input={}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
 
 async def test_options_reconfigure_ignores_broken_subentries(
     hass: HomeAssistant,
@@ -899,6 +912,13 @@ async def test_options_add_device_data_bits_conflict(hass: HomeAssistant) -> Non
     assert result["step_id"] == "device_options"
     assert result["errors"]["data_bits"] == "already_configured_device"
 
+    # A data_bits value that doesn't mask onto the conflicting id succeeds
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={"data_bits": 0},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_options_add_device_matching_masked_device_unmasked(
     hass: HomeAssistant,
@@ -947,6 +967,18 @@ async def test_options_add_device_matching_masked_device_unmasked(
     assert result["step_id"] == "user"
     assert result["errors"]["event_code"] == "already_configured_device"
 
+    # Entering a different, unrelated event code succeeds
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={"event_code": "0b1100cd0213c7f230010f71"},
+    )
+    assert result["step_id"] == "device_options"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], user_input={}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_options_add_duplicate_device(hass: HomeAssistant) -> None:
     """Test we can not add a duplicate device."""
@@ -992,6 +1024,18 @@ async def test_options_add_duplicate_device(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
     assert result["errors"]
     assert result["errors"]["event_code"] == "already_configured_device"
+
+    # Entering a different, unrelated event code succeeds
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={"event_code": "0b1100100118cdea02010f70"},
+    )
+    assert result["step_id"] == "device_options"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], user_input={}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_options_add_and_configure_device(
