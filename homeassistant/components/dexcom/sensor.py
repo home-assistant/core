@@ -1,5 +1,6 @@
 """Support for Dexcom sensors."""
 
+from datetime import datetime
 from typing import override
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
@@ -35,6 +36,9 @@ async def async_setup_entry(
         [
             DexcomGlucoseTrendSensor(coordinator, username, config_entry.entry_id),
             DexcomGlucoseValueSensor(coordinator, username, config_entry.entry_id),
+            DexcomGlucoseReadingTimeSensor(
+                coordinator, username, config_entry.entry_id
+            ),
         ],
     )
 
@@ -115,3 +119,24 @@ class DexcomGlucoseTrendSensor(DexcomSensorEntity):
         return super().available and (
             self.coordinator.data is None or self.coordinator.data.trend != 9
         )
+
+
+class DexcomGlucoseReadingTimeSensor(DexcomSensorEntity):
+    """Representation of a Dexcom glucose reading time sensor."""
+
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
+    _attr_translation_key = "glucose_reading_time"
+
+    def __init__(
+        self, coordinator: DexcomCoordinator, username: str, entry_id: str
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator, username, entry_id, "reading_time")
+
+    @property
+    @override
+    def native_value(self) -> datetime | None:
+        """Return the time the glucose reading was taken."""
+        if self.coordinator.data:
+            return self.coordinator.data.datetime
+        return None
