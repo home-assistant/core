@@ -75,7 +75,7 @@ async def test_sensors_unavailable_when_data_is_stale(
 
     freezer.tick(STALE_DATA_TIMEOUT)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
     assert hass.states.get(LAST_UPDATE_ENTITY_ID).state == "2024-05-10T07:44:30+00:00"
@@ -84,6 +84,6 @@ async def test_sensors_unavailable_when_data_is_stale(
     softener.diagnostics.last_update = dt_util.utcnow()
     freezer.tick(UPDATE_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert hass.states.get(ENTITY_ID).state == "40"
