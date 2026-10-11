@@ -12,7 +12,7 @@ from homeassistant.components.image import (
     ImageEntityDescription,
     infer_image_type,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
@@ -31,6 +31,11 @@ class IndiAllSkyImageEntityDescription(ImageEntityDescription):
     """Class describing INDI Allsky image entities."""
 
     media_fn: Callable[[IndiAllSkyData], MediaData | None]
+    image_fn: Callable[[IndiAllSkyData], bytes | None]
+    updated_fn: Callable[[IndiAllSkyData], datetime | None]
+    set_image_fn: Callable[
+        [IndiAllSkyDataUpdateCoordinator, MediaData, bytes | None], None
+    ]
     image_filename: str
 
 
@@ -39,12 +44,22 @@ IMAGE_DESCRIPTIONS: tuple[IndiAllSkyImageEntityDescription, ...] = (
         key="latest_keogram",
         translation_key="latest_keogram",
         media_fn=lambda data: data.latest_keogram,
+        image_fn=lambda data: data.latest_keogram_image,
+        updated_fn=lambda data: data.latest_keogram_updated,
+        set_image_fn=lambda coord, media, img: coord.async_set_keogram_image(
+            media, img
+        ),
         image_filename="latestkeogram",
     ),
     IndiAllSkyImageEntityDescription(
         key="latest_startrail",
         translation_key="latest_startrail",
         media_fn=lambda data: data.latest_startrail,
+        image_fn=lambda data: data.latest_startrail_image,
+        updated_fn=lambda data: data.latest_startrail_updated,
+        set_image_fn=lambda coord, media, img: coord.async_set_startrail_image(
+            media, img
+        ),
         image_filename="lateststartrail",
     ),
 )
@@ -81,6 +96,17 @@ class IndiAllSkyImageEntity(IndiAllSkyEntity, ImageEntity):
         self.entity_description = description
         self._attr_unique_id = f"{entry.entry_id}_{description.key}"
         self._last_fetched: datetime | None = None
+        self._last_image_updated: datetime | None = None
+
+    @callback
+    @override
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        image_updated = self.entity_description.updated_fn(self.coordinator.data)
+        if image_updated != self._last_image_updated:
+            self._last_image_updated = image_updated
+            self.async_update_token()
+        super()._handle_coordinator_update()
 
     @property
     @override
@@ -89,14 +115,27 @@ class IndiAllSkyImageEntity(IndiAllSkyEntity, ImageEntity):
         media = self.entity_description.media_fn(self.coordinator.data)
         if media and media.day_date:
             if dt := dt_util.parse_datetime(media.day_date):
+                if dt.hour == 0 and dt.minute == 0 and dt.second == 0:
+                    if updated := self.entity_description.updated_fn(
+                        self.coordinator.data
+                    ):
+                        return updated
                 if dt.tzinfo is None:
                     return dt.replace(tzinfo=dt_util.UTC)
                 return dt_util.as_utc(dt)
+        if updated := self.entity_description.updated_fn(self.coordinator.data):
+            return updated
         return self._last_fetched
 
     @override
     async def async_image(self) -> bytes | None:
         """Return bytes of the image."""
+        if image_bytes := self.entity_description.image_fn(self.coordinator.data):
+            if content_type := infer_image_type(image_bytes):
+                self._attr_content_type = content_type
+            return image_bytes
+
+        media = self.entity_description.media_fn(self.coordinator.data)
         try:
             image_bytes = await self.coordinator.client.fetch_image(
                 self.entity_description.image_filename
@@ -109,10 +148,11 @@ class IndiAllSkyImageEntity(IndiAllSkyEntity, ImageEntity):
         else:
             if content_type := infer_image_type(image_bytes):
                 self._attr_content_type = content_type
-            if (
-                self.entity_description.media_fn(self.coordinator.data) is None
-                and self._last_fetched is None
-            ):
+            if media is not None:
+                self.entity_description.set_image_fn(
+                    self.coordinator, media, image_bytes
+                )
+            elif self._last_fetched is None:
                 self._last_fetched = dt_util.utcnow()
                 self.async_write_ha_state()
             return image_bytes

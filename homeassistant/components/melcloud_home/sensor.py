@@ -48,7 +48,10 @@ ATW_OPERATION_STATUS: dict[ATWOperationMode, str] = {
     ATWOperationMode.HOT_WATER: "heating_water",
     ATWOperationMode.HEAT: "heating_zones",
     ATWOperationMode.HEAT_ZONES: "heating_zones",
+    ATWOperationMode.HEATING: "heating_zones",
+    ATWOperationMode.FREEZE_STAT: "heating_zones",
     ATWOperationMode.COOL: "cooling",
+    ATWOperationMode.COOLING: "cooling",
 }
 
 OUTDOOR_TEMPERATURE_DESCRIPTION = SensorEntityDescription(

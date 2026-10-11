@@ -193,7 +193,7 @@ class GroupSelect(KNXSelectorBase):
 
 
 class GASelector(KNXSelectorBase):
-    """Selector for a KNX group address structure.
+    """Selector for a KNX group address structure yielding a `GroupAddressConfig`.
 
     `dpt_required` optional dpt only apply to dpt-class lists, enums are always required.
     `valid_dpt` is used in frontend to filter dropdown menu - no validation is done.
@@ -253,6 +253,28 @@ class GASelector(KNXSelectorBase):
             "type": self.selector_type,
             "options": options,
         }
+
+    @override
+    def __call__(self, data: Any) -> GroupAddressConfig | None:
+        """Validate the passed data."""
+        if data is None:  # `Optional(key, default=None)` passes its default through
+            return None
+        return GroupAddressConfig(**self.schema(data))
+
+    def to_storage(self, value: GroupAddressConfig | None) -> dict[str, Any] | None:
+        """Render a validated value to exactly the keys its schema emits."""
+        if value is None:
+            return None
+        data: dict[str, Any] = {}
+        if self.write:
+            data[CONF_GA_WRITE] = value.write
+        if self.state:
+            data[CONF_GA_STATE] = value.state
+        if self.passive:
+            data[CONF_GA_PASSIVE] = value.passive
+        if value.dpt is not None:
+            data[CONF_DPT] = value.dpt
+        return data
 
     def build_schema(self) -> probatio.Schema:
         """Create the schema based on configuration."""
@@ -367,32 +389,6 @@ def group_select(
     )
 
 
-class GroupAddressSelector(GASelector):
-    """`GASelector` yielding a `GroupAddressConfig` instead of a dict."""
-
-    @override
-    def __call__(self, data: Any) -> GroupAddressConfig | None:
-        """Validate the passed data."""
-        if data is None:  # `Optional(key, default=None)` passes its default through
-            return None
-        return GroupAddressConfig(**self.schema(data))
-
-    def to_storage(self, value: GroupAddressConfig | None) -> dict[str, Any] | None:
-        """Render a validated value to exactly the keys its schema emits."""
-        if value is None:
-            return None
-        data: dict[str, Any] = {}
-        if self.write:
-            data[CONF_GA_WRITE] = value.write
-        if self.state:
-            data[CONF_GA_STATE] = value.state
-        if self.passive:
-            data[CONF_GA_PASSIVE] = value.passive
-        if value.dpt is not None:
-            data[CONF_DPT] = value.dpt
-        return data
-
-
 def ga(
     write: bool = True,
     state: bool = True,
@@ -409,7 +405,7 @@ def ga(
     the selector receives the raw mapping instead of a constructed instance.
     """
     return probatio.Coerce(
-        GroupAddressSelector(
+        GASelector(
             write=write,
             state=state,
             passive=passive,
