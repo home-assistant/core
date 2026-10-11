@@ -4,6 +4,7 @@ from unittest.mock import Mock, patch
 
 from aiohttp import ClientConnectorError
 from freezegun.api import FrozenDateTimeFactory
+from pyoverkiz.enums import ExecutionState
 from pyoverkiz.exceptions import (
     InvalidEventListenerIdError,
     MaintenanceError,
@@ -13,14 +14,29 @@ from pyoverkiz.exceptions import (
 )
 import pytest
 
-from homeassistant.components.overkiz.const import DOMAIN, UPDATE_INTERVAL
+from homeassistant.components.cover import (
+    DOMAIN as COVER_DOMAIN,
+    SERVICE_OPEN_COVER,
+    CoverState,
+)
+from homeassistant.components.overkiz.const import (
+    DOMAIN,
+    RATE_LIMIT_RETRY_AFTER,
+    UPDATE_INTERVAL,
+    UPDATE_INTERVAL_EXECUTION,
+)
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .conftest import FixtureDevice, MockOverkizClient, SetupOverkizIntegration
-from .helpers import async_deliver_events, device_created_event, device_removed_event
+from .helpers import (
+    async_deliver_events,
+    device_created_event,
+    device_removed_event,
+    execution_state_changed_event,
+)
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -37,13 +53,20 @@ MAIN_GATEWAY_ID = "1234-1234-6233"
 SECONDARY_GATEWAY_ID = "1234-1234-8983"
 MAIN_GATEWAY_CHILD_URL = "io://1234-1234-6233/12184029"
 SECONDARY_GATEWAY_CHILD_URL = "io://1234-1234-8983/1959462"
+SHUTTER = FixtureDevice(
+    TAHOMA_V2_FIXTURE, MAIN_GATEWAY_CHILD_URL, "cover.office_garden_house_shutter"
+)
+GARAGE = FixtureDevice(
+    TAHOMA_V2_FIXTURE,
+    "io://1234-1234-6233/1166863",
+    "cover.living_room_main_garage_door",
+)
 
 
 @pytest.mark.parametrize(
     "exception",
     [
         TooManyConcurrentRequestsError("Too many concurrent requests"),
-        TooManyRequestsError("Too many requests"),
         MaintenanceError("Server is down for maintenance"),
         ServiceUnavailableError("Server is unavailable"),
         InvalidEventListenerIdError("Invalid event listener id"),
@@ -52,7 +75,6 @@ SECONDARY_GATEWAY_CHILD_URL = "io://1234-1234-8983/1959462"
     ],
     ids=[
         "too_many_concurrent_requests",
-        "too_many_requests",
         "maintenance",
         "service_unavailable",
         "invalid_event_listener_id",
@@ -89,6 +111,94 @@ async def test_transient_error_is_retried(
     await hass.async_block_till_done()
 
     assert hass.states.get(TEMPERATURE_SENSOR.entity_id).state == initial_state.state
+
+
+async def test_rate_limit_delays_next_refresh(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A rate limited refresh waits RATE_LIMIT_RETRY_AFTER before polling again."""
+    await setup_overkiz_integration(fixture=TEMPERATURE_SENSOR.fixture)
+    initial_state = hass.states.get(TEMPERATURE_SENSOR.entity_id)
+
+    mock_client.fetch_events.side_effect = TooManyRequestsError("Too many requests")
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(TEMPERATURE_SENSOR.entity_id).state == STATE_UNAVAILABLE
+
+    mock_client.fetch_events.side_effect = None
+    mock_client.fetch_events.return_value = []
+    mock_client.fetch_events.reset_mock()
+
+    # Polling at the normal interval would keep the quota exhausted.
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_client.fetch_events.await_count == 0
+
+    freezer.tick(RATE_LIMIT_RETRY_AFTER - UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_client.fetch_events.await_count == 1
+    assert hass.states.get(TEMPERATURE_SENSOR.entity_id).state == initial_state.state
+
+
+async def test_commands_share_the_execution_poll(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Commands don't fetch events themselves; one poll runs while they execute."""
+    await setup_overkiz_integration(fixture=SHUTTER.fixture)
+    mock_client.fetch_events.reset_mock()
+
+    for cover in (SHUTTER, GARAGE):
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_OPEN_COVER,
+            {ATTR_ENTITY_ID: cover.entity_id},
+            blocking=True,
+        )
+
+    assert mock_client.fetch_events.await_count == 0
+    # The in-progress state comes from the local executions, not from a fetch.
+    assert hass.states.get(SHUTTER.entity_id).state == CoverState.OPENING
+    assert hass.states.get(GARAGE.entity_id).state == CoverState.OPENING
+
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
+        [
+            execution_state_changed_event(
+                exec_id, ExecutionState.COMPLETED, ExecutionState.IN_PROGRESS
+            )
+            for exec_id in ("exec-1", "exec-2")
+        ],
+        update_interval=UPDATE_INTERVAL_EXECUTION,
+    )
+
+    assert mock_client.fetch_events.await_count == 1
+
+    # Without pending executions, polling falls back to the default interval.
+    freezer.tick(UPDATE_INTERVAL_EXECUTION)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_client.fetch_events.await_count == 1
+
+    freezer.tick(UPDATE_INTERVAL - UPDATE_INTERVAL_EXECUTION)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_client.fetch_events.await_count == 2
 
 
 async def test_device_removed_deletes_device(
