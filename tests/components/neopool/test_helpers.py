@@ -26,6 +26,12 @@ from homeassistant.const import CONF_HOST, CONF_PORT
                 device="socket://[2001:db8::1]:502", framer="rtu", baudrate=115200
             ),
         ),
+        (
+            {CONF_HOST: "Gateway.Local", CONF_PORT: 502, "modbus_framer": "rtu"},
+            ModbusSerialParams(
+                device="socket://gateway.local:502", framer="rtu", baudrate=115200
+            ),
+        ),
     ],
 )
 def test_build_modbus_params(

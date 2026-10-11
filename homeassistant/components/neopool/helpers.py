@@ -21,6 +21,18 @@ def prepare_device_time(hass: HomeAssistant) -> int:
     return encode_device_time(dt_util.now(tz))
 
 
+def _normalize_host(host: str) -> str:
+    """Fold the host to lower case, matching ModbusTcpParams.
+
+    ModbusTcpParams lower-cases the host it is given, so a TCP endpoint dedupes
+    regardless of case. The socket:// device string an RTU/ASCII link builds has
+    to be folded the same way, or Device.local and device.local would open two
+    links to one gateway. An IPv6 scope id after a % is left untouched.
+    """
+    address, separator, scope = host.partition("%")
+    return address.lower() + separator + scope
+
+
 def build_modbus_params(
     data: Mapping[str, Any],
 ) -> ModbusTcpParams | ModbusSerialParams:
@@ -35,7 +47,7 @@ def build_modbus_params(
     socket-carried serial framing; 115200 matches the value the modbus
     integration canonicalises to, so consumers sharing a gateway compare equal.
     """
-    host = data[CONF_HOST]
+    host = _normalize_host(data[CONF_HOST])
     port = data.get(CONF_PORT, DEFAULT_PORT)
     framer = framer_to_socket_name(data.get(CONF_MODBUS_FRAMER, "tcp"))
     if framer == "socket":
