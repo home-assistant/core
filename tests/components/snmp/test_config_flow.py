@@ -1165,6 +1165,7 @@ async def test_user_flow_v3_is_checked_after_credentials(hass: HomeAssistant) ->
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "192.168.1.1 (other-context)"
     assert result["data"]["context_name"] == "other-context"
 
 

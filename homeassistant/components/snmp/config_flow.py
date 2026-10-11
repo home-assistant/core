@@ -190,6 +190,16 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
         )
 
 
+def _entry_title(data: dict[str, Any]) -> str:
+    """Return the entry title, qualified by the context name when there is one.
+
+    Two SNMPv3 devices on the same host can only be told apart by their context.
+    """
+    if context_name := data.get(CONF_CONTEXT_NAME):
+        return f"{data[CONF_HOST]} ({context_name})"
+    return data[CONF_HOST]
+
+
 class SnmpConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for an SNMP device."""
 
@@ -353,7 +363,7 @@ class SnmpConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
         return self.async_create_entry(
-            title=entry_data[CONF_HOST],
+            title=_entry_title(entry_data),
             data=entry_data,
             subentries=[
                 {
@@ -412,15 +422,16 @@ class SnmpConfigFlow(ConfigFlow, domain=DOMAIN):
         except InvalidAuth:
             errors["base"] = "invalid_auth"
         else:
+            title = _entry_title(data)
             if self.source == SOURCE_RECONFIGURE:
                 return self.async_update_and_abort(
-                    self._get_reconfigure_entry(), title=data[CONF_HOST], data=data
+                    self._get_reconfigure_entry(), title=title, data=data
                 )
             if self.source == SOURCE_REAUTH:
                 return self.async_update_and_abort(
-                    self._get_reauth_entry(), title=data[CONF_HOST], data=data
+                    self._get_reauth_entry(), title=title, data=data
                 )
-            return self.async_create_entry(title=data[CONF_HOST], data=data)
+            return self.async_create_entry(title=title, data=data)
         return None
 
 
