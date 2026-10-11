@@ -327,6 +327,18 @@ def _get_timestring(timediff: float, precision: int = 1) -> str:
 
     factors = (365 * 24 * 60 * 60, 30 * 24 * 60 * 60, 24 * 60 * 60, 60 * 60, 60, 1)
 
+    # Round at the last shown unit up front, so it carries into the larger units
+    remainder = timediff
+    current_precision = 0
+    for current_factor in factors:
+        if remainder < current_factor:
+            continue
+        current_precision += 1
+        if current_precision == precision:
+            timediff += round(remainder / current_factor) * current_factor - remainder
+            break
+        remainder %= current_factor
+
     result_string: str = ""
     current_precision = 0
 
