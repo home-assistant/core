@@ -1,7 +1,9 @@
 """Utility functions for the Open Thread Border Router integration."""
 
+import asyncio
 from collections.abc import Callable, Coroutine
 import dataclasses
+from datetime import datetime, timedelta
 from functools import wraps
 import logging
 import random
@@ -22,6 +24,7 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 
@@ -46,6 +49,21 @@ INSECURE_PASSPHRASES = (
 
 class GetBorderAgentIdNotSupported(HomeAssistantError):
     """Raised from python_otbr_api.GetBorderAgentIdNotSupportedError."""
+
+
+class EphemeralKeyNotSupported(HomeAssistantError):
+    """Raised when the router does not expose ephemeral key mode."""
+
+
+class EphemeralKeyInUse(HomeAssistantError):
+    """Raised when a device is connected through the active ephemeral key."""
+
+
+# Deactivating the key in these states drops a commissioner mid-session
+EPHEMERAL_KEY_IN_USE_STATES = (
+    python_otbr_api.EphemeralKeyState.CONNECTED,
+    python_otbr_api.EphemeralKeyState.ACCEPTED,
+)
 
 
 def compose_default_network_name(pan_id: int) -> str:
@@ -81,6 +99,14 @@ class OTBRData:
     url: str
     api: python_otbr_api.OTBR
     entry_id: str
+    # None until the router has been probed successfully
+    ephemeral_key_supported: bool | None = None
+    active_ephemeral_key: str | None = None
+    active_ephemeral_key_expires: datetime | None = None
+    unloading: bool = False
+    ephemeral_key_lock: asyncio.Lock = dataclasses.field(
+        default_factory=asyncio.Lock, repr=False
+    )
 
     @_handle_otbr_error
     async def factory_reset(self, hass: HomeAssistant) -> None:
@@ -159,6 +185,94 @@ class OTBRData:
     async def get_coprocessor_version(self) -> str:
         """Get coprocessor firmware version."""
         return await self.api.get_coprocessor_version()
+
+    @_handle_otbr_error
+    async def get_ephemeral_key_supported(self) -> bool:
+        """Return whether the router supports ephemeral key mode."""
+        try:
+            await self.api.get_ephemeral_key_enabled()
+        except python_otbr_api.EphemeralKeyNotSupportedError:
+            return False
+        return True
+
+    @_handle_otbr_error
+    async def activate_ephemeral_key(self, lifetime: int) -> tuple[str, int]:
+        """Activate ephemeral key mode, returning the passcode and its UDP port.
+
+        The lifetime is in milliseconds, as the OpenThread border agent API
+        takes it.
+        """
+        async with self.ephemeral_key_lock:
+            try:
+                return await self._activate_ephemeral_key(lifetime)
+            except python_otbr_api.EphemeralKeyNotSupportedError as exc:
+                raise EphemeralKeyNotSupported from exc
+
+    async def _activate_ephemeral_key(self, lifetime: int) -> tuple[str, int]:
+        """Activate ephemeral key mode while holding the lock."""
+        if self.unloading:
+            raise HomeAssistantError("OTBR entry is unloading")
+        # A key handed out by this instance stays valid until its dialog is
+        # closed, so don't silently replace it for a second caller
+        if (
+            self.active_ephemeral_key is not None
+            and self.active_ephemeral_key_expires is not None
+            and self.active_ephemeral_key_expires > dt_util.utcnow()
+        ):
+            raise EphemeralKeyInUse
+
+        # The feature has to be enabled before a key can be activated
+        await self.api.set_ephemeral_key_enabled(True)
+        # The router starts the lifetime when it activates the key, so count it
+        # from the request to never consider the key active after it expired
+        expires = dt_util.utcnow() + timedelta(milliseconds=lifetime)
+        try:
+            activation = await self.api.activate_ephemeral_key(lifetime)
+        except python_otbr_api.EphemeralKeyConflictError as err:
+            # A key is already active, and one can only be started from the
+            # stopped state, so replace it unless a device is using it right now
+            status = await self.api.get_ephemeral_key_status()
+            if status.state in EPHEMERAL_KEY_IN_USE_STATES:
+                raise EphemeralKeyInUse from err
+            await self.api.deactivate_ephemeral_key()
+            expires = dt_util.utcnow() + timedelta(milliseconds=lifetime)
+            activation = await self.api.activate_ephemeral_key(lifetime)
+        self.active_ephemeral_key = activation.tap
+        self.active_ephemeral_key_expires = expires
+        return activation.tap, activation.port
+
+    @_handle_otbr_error
+    async def deactivate_ephemeral_key(
+        self,
+        ephemeral_key: str | None = None,
+        only_if_active: bool = False,
+    ) -> bool:
+        """Deactivate the active ephemeral key, returning whether one was deleted.
+
+        With a key given, only that key is deactivated, so a stale request
+        cannot revoke a key handed out after it.
+        """
+        async with self.ephemeral_key_lock:
+            # The router dropped an expired key on its own; deleting now could
+            # revoke a key another controller activated since
+            if (
+                self.active_ephemeral_key_expires is not None
+                and self.active_ephemeral_key_expires <= dt_util.utcnow()
+            ):
+                self.active_ephemeral_key = None
+                self.active_ephemeral_key_expires = None
+            if only_if_active and self.active_ephemeral_key is None:
+                return False
+            if ephemeral_key is not None and ephemeral_key != self.active_ephemeral_key:
+                return False
+            try:
+                await self.api.deactivate_ephemeral_key()
+            except python_otbr_api.EphemeralKeyNotSupportedError as exc:
+                raise EphemeralKeyNotSupported from exc
+            # Only forget the key once the router confirmed it is gone
+            self.active_ephemeral_key = None
+            self.active_ephemeral_key_expires = None
+            return True
 
 
 async def get_allowed_channel(hass: HomeAssistant, otbr_url: str) -> int | None:
