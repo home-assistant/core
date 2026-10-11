@@ -5,8 +5,11 @@ from unittest.mock import patch
 
 from midealocal.const import DeviceType
 from midealocal.devices.ac import DeviceAttributes as ACAttributes
+from midealocal.devices.ca import DeviceAttributes as CAAttributes
 from midealocal.devices.dc import DeviceAttributes as DCAttributes
 from midealocal.devices.e1 import DeviceAttributes as E1Attributes
+from midealocal.devices.e2 import DeviceAttributes as E2Attributes
+from midealocal.devices.e3 import DeviceAttributes as E3Attributes
 from midealocal.devices.x26 import DeviceAttributes as X26Attributes
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -45,6 +48,18 @@ def _ac_device() -> DummyDevice:
     )
 
 
+def _ca_device() -> DummyDevice:
+    return DummyDevice(
+        DeviceType.CA,
+        attributes={
+            CAAttributes.refrigerator_door: True,
+            CAAttributes.freezer_door: False,
+            CAAttributes.refrigerator_door_overtime: True,
+            CAAttributes.freezer_door_overtime: False,
+        },
+    )
+
+
 def _e1_device() -> DummyDevice:
     return DummyDevice(
         DeviceType.E1,
@@ -52,6 +67,26 @@ def _e1_device() -> DummyDevice:
             E1Attributes.door: True,
             E1Attributes.rinse_aid: False,
             E1Attributes.salt: True,
+        },
+    )
+
+
+def _e2_device() -> DummyDevice:
+    return DummyDevice(
+        DeviceType.E2,
+        attributes={
+            E2Attributes.protection: True,
+            E2Attributes.heating: True,
+            E2Attributes.keep_warm: False,
+        },
+    )
+
+
+def _e3_device() -> DummyDevice:
+    return DummyDevice(
+        DeviceType.E3,
+        attributes={
+            E3Attributes.protection: False,
         },
     )
 
@@ -76,8 +111,11 @@ def _dc_device() -> DummyDevice:
     "device",
     [
         pytest.param(_ac_device(), id="ac"),
+        pytest.param(_ca_device(), id="ca"),
         pytest.param(_dc_device(), id="dc"),
         pytest.param(_e1_device(), id="e1"),
+        pytest.param(_e2_device(), id="e2"),
+        pytest.param(_e3_device(), id="e3"),
         pytest.param(_x26_device(), id="x26"),
     ],
 )

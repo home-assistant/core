@@ -1,12 +1,20 @@
 """Platform for select integration."""
 
-from collections.abc import Callable, Coroutine, Sequence
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, override
+from typing import TYPE_CHECKING, override
 
-from boschshcpy import OutdoorSirenService, SHCMotionDetector2, SHCOutdoorSiren
+from boschshcpy import (
+    OutdoorSirenService,
+    SHCMotionDetector2,
+    SHCOutdoorSiren,
+    SHCShutterContact2Plus,
+)
 from boschshcpy.device import SHCDevice
-from boschshcpy.services_impl import PirSensorConfigurationService
+from boschshcpy.services_impl import (
+    PirSensorConfigurationService,
+    VibrationSensorService,
+)
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory
@@ -24,7 +32,7 @@ class SHCSelectEntityDescription[_DeviceT: SHCDevice](SelectEntityDescription):
     """Describes a SHC select entity."""
 
     current_option_fn: Callable[[_DeviceT, Sequence[str] | None], str | None]
-    select_option_fn: Callable[[_DeviceT, str], Coroutine[Any, Any, None]]
+    select_option_fn: Callable[[_DeviceT, str], None]
 
 
 def _siren_current_option(
@@ -37,10 +45,11 @@ def _siren_current_option(
         return None
 
 
-async def _siren_select_option(device: SHCOutdoorSiren, option: str) -> None:
+def _siren_select_option(device: SHCOutdoorSiren, option: str) -> None:
     """Write the Outdoor Siren's sound level."""
-    level = OutdoorSirenService.SoundLevel[option.upper()]
-    await device.siren.async_set_configuration(sound_level=level)
+    device.siren.set_configuration(
+        sound_level=OutdoorSirenService.SoundLevel[option.upper()]
+    )
 
 
 SIREN_SOUND_LEVEL_DESCRIPTION = SHCSelectEntityDescription[SHCOutdoorSiren](
@@ -53,11 +62,11 @@ SIREN_SOUND_LEVEL_DESCRIPTION = SHCSelectEntityDescription[SHCOutdoorSiren](
 )
 
 
-async def _motion_select_option(device: SHCMotionDetector2, option: str) -> None:
+def _motion_select_option(device: SHCMotionDetector2, option: str) -> None:
     """Write the Motion Detector II's motion sensitivity."""
-    await device.async_set_motion_sensitivity(
-        PirSensorConfigurationService.MotionSensitivity[option.upper()]
-    )
+    device.motion_sensitivity = PirSensorConfigurationService.MotionSensitivity[
+        option.upper()
+    ]
 
 
 MOTION_SENSITIVITY_DESCRIPTION = SHCSelectEntityDescription[SHCMotionDetector2](
@@ -67,6 +76,21 @@ MOTION_SENSITIVITY_DESCRIPTION = SHCSelectEntityDescription[SHCMotionDetector2](
     options=["high", "middle", "low"],
     current_option_fn=lambda device, options: device.motion_sensitivity.name.lower(),
     select_option_fn=_motion_select_option,
+)
+
+
+def _vibration_select_option(device: SHCShutterContact2Plus, option: str) -> None:
+    """Write the Door/Window Contact II Plus's vibration sensitivity."""
+    device.sensitivity = VibrationSensorService.SensitivityState[option.upper()]
+
+
+VIBRATION_SENSITIVITY_DESCRIPTION = SHCSelectEntityDescription[SHCShutterContact2Plus](
+    key="vibration_sensitivity",
+    translation_key="vibration_sensitivity",
+    entity_category=EntityCategory.CONFIG,
+    options=["very_high", "high", "medium", "low", "very_low"],
+    current_option_fn=lambda device, options: device.sensitivity.name.lower(),
+    select_option_fn=_vibration_select_option,
 )
 
 
@@ -112,6 +136,18 @@ async def async_setup_entry(
         for detector in motion_detectors
     )
 
+    async_add_entities(
+        SHCSelect(
+            hass=hass,
+            device=contact,
+            parent_id=shc_info.unique_id,
+            entry_id=config_entry.entry_id,
+            description=VIBRATION_SENSITIVITY_DESCRIPTION,
+        )
+        for contact in session.device_helper.shutter_contacts2
+        if isinstance(contact, SHCShutterContact2Plus)
+    )
+
 
 class SHCSelect[_DeviceT: SHCDevice](SHCEntity, SelectEntity):
     """Generic SHC select entity, driven by a SHCSelectEntityDescription."""
@@ -141,6 +177,6 @@ class SHCSelect[_DeviceT: SHCDevice](SHCEntity, SelectEntity):
         return self.entity_description.current_option_fn(self._device, self.options)
 
     @override
-    async def async_select_option(self, option: str) -> None:
+    def select_option(self, option: str) -> None:
         """Select an option, writing it to the device."""
-        await self.entity_description.select_option_fn(self._device, option)
+        self.entity_description.select_option_fn(self._device, option)

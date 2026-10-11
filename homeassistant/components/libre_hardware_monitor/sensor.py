@@ -13,14 +13,14 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
-from homeassistant.const import UnitOfDataRate
+from homeassistant.const import UnitOfDataRate, UnitOfInformation
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import LibreHardwareMonitorConfigEntry, LibreHardwareMonitorCoordinator
-from .const import DOMAIN
+from .const import DOMAIN, LEGACY_DATA_SIZE_UNIT_EQUIVALENTS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -113,6 +113,9 @@ class LibreHardwareMonitorSensor(
             elif device_class is SensorDeviceClass.VOLTAGE:
                 # Device class default rounds voltages to whole volts
                 self._attr_suggested_display_precision = 3
+            elif device_class is SensorDeviceClass.DATA_SIZE:
+                # LHM versions >= 0.9.7 report data sizes in raw bytes
+                self._attr_suggested_unit_of_measurement = UnitOfInformation.GIBIBYTES
 
         self._set_state(sensor_data)
         self._attr_unique_id: str = f"{entry_id}_{sensor_data.sensor_id}"
@@ -128,7 +131,12 @@ class LibreHardwareMonitorSensor(
 
     def _set_state(self, sensor_data: LibreHardwareMonitorSensorData) -> None:
         self._attr_native_value: str | None = sensor_data.value
-        self._attr_native_unit_of_measurement = sensor_data.unit
+        # This conversion is only needed for LHM versions < 0.9.7
+        self._attr_native_unit_of_measurement = (
+            LEGACY_DATA_SIZE_UNIT_EQUIVALENTS.get(sensor_data.unit, sensor_data.unit)
+            if sensor_data.type in (SensorType.DATA, SensorType.SMALL_DATA)
+            else sensor_data.unit
+        )
         self._native_min_value = sensor_data.min
         self._native_max_value = sensor_data.max
 

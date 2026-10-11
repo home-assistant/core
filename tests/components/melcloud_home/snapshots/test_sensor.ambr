@@ -58,7 +58,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.4505',
+    'state': '450.5',
   })
 # ---
 # name: test_all_entities[sensor.heat_pump_operation_status-entry]

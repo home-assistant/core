@@ -58,7 +58,6 @@
     },
     "event": {
       "button": {
-        "name": "Button",
         "state_attributes": {
           "event_type": {
             "state": {

@@ -153,7 +153,7 @@ class VenstarThermostat(VenstarEntity, ClimateEntity):
 
     @property
     @override
-    def temperature_unit(self) -> str:
+    def native_temperature_unit(self) -> str:
         """Return the unit of measurement, as defined by the API."""
         if self._client.tempunits == self._client.TEMPUNITS_F:
             return UnitOfTemperature.FAHRENHEIT
@@ -161,7 +161,7 @@ class VenstarThermostat(VenstarEntity, ClimateEntity):
 
     @property
     @override
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self._client.get_indoor_temp()
 
@@ -214,7 +214,7 @@ class VenstarThermostat(VenstarEntity, ClimateEntity):
 
     @property
     @override
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the target temperature we try to reach."""
         if self._client.mode == self._client.MODE_HEAT:
             return self._client.heattemp
@@ -224,7 +224,7 @@ class VenstarThermostat(VenstarEntity, ClimateEntity):
 
     @property
     @override
-    def target_temperature_low(self) -> float | None:
+    def native_target_temperature_low(self) -> float | None:
         """Return the lower bound temp if auto mode is on."""
         if self._client.mode == self._client.MODE_AUTO:
             return self._client.heattemp
@@ -232,7 +232,7 @@ class VenstarThermostat(VenstarEntity, ClimateEntity):
 
     @property
     @override
-    def target_temperature_high(self) -> float | None:
+    def native_target_temperature_high(self) -> float | None:
         """Return the upper bound temp if auto mode is on."""
         if self._client.mode == self._client.MODE_AUTO:
             return self._client.cooltemp

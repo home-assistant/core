@@ -8,8 +8,9 @@ from cookidoo_api import (
     CookidooRequestException,
 )
 
-from homeassistant.const import Platform
+from homeassistant.const import CONF_EMAIL, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .const import DOMAIN
@@ -102,13 +103,17 @@ async def async_migrate_entry(
         try:
             await cookidoo.login()
             user_info = await cookidoo.get_user_info()
-        except (
-            CookidooAuthException,
-            CookidooParseException,
-            CookidooRequestException,
-        ) as e:
-            _LOGGER.error("Could not migrate config entry: %s", e)
-            return False
+        except CookidooAuthException as e:
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="setup_authentication_exception",
+                translation_placeholders={CONF_EMAIL: config_entry.data[CONF_EMAIL]},
+            ) from e
+        except (CookidooParseException, CookidooRequestException) as e:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="setup_request_exception",
+            ) from e
 
         _migrate_identifiers(hass, config_entry, config_entry.entry_id, user_info.id)
         hass.config_entries.async_update_entry(
@@ -122,13 +127,17 @@ async def async_migrate_entry(
         try:
             await cookidoo.login()
             user_info = await cookidoo.get_user_info()
-        except (
-            CookidooAuthException,
-            CookidooParseException,
-            CookidooRequestException,
-        ) as e:
-            _LOGGER.error("Could not migrate config entry: %s", e)
-            return False
+        except CookidooAuthException as e:
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="setup_authentication_exception",
+                translation_placeholders={CONF_EMAIL: config_entry.data[CONF_EMAIL]},
+            ) from e
+        except (CookidooParseException, CookidooRequestException) as e:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="setup_request_exception",
+            ) from e
 
         old_unique_id = config_entry.unique_id
         if old_unique_id:
