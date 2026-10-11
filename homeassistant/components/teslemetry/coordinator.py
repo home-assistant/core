@@ -1,9 +1,13 @@
 """Teslemetry Data Coordinator."""
 
+from copy import deepcopy
 from dataclasses import asdict
 from datetime import date, datetime, time, timedelta, tzinfo
+from functools import partial
+import logging
 from typing import TYPE_CHECKING, Any, override
 
+from aiopowerwall import PowerwallEnergySite, PowerwallError
 from tesla_fleet_api.const import VehicleDataEndpoint
 from tesla_fleet_api.exceptions import (
     GatewayTimeout,
@@ -16,11 +20,17 @@ from tesla_fleet_api.exceptions import (
     SubscriptionRequired,
     TeslaFleetError,
 )
+from tesla_fleet_api.router import (
+    LOCAL_SITE_INFO_KEYS,
+    merge_live_status,
+    merge_site_info,
+)
 from tesla_fleet_api.teslemetry import EnergySite, Teslemetry, Vehicle
 from teslemetry_stream.const import EnergyTotalsEvent
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
@@ -49,6 +59,11 @@ def _get_retry_after(e: TeslaFleetError) -> float:
 VEHICLE_INTERVAL = timedelta(seconds=60)
 VEHICLE_WAIT = timedelta(minutes=15)
 METADATA_INTERVAL = timedelta(hours=1)
+# A paired Powerwall's LAN gateway is not on the stream, so it is polled: the
+# live document every 5s and the slower-changing config.json every 30s.
+ENERGY_LIVE_INTERVAL = timedelta(seconds=5)
+ENERGY_LIVE_LOCAL_MAX_BACKOFF = timedelta(minutes=1)
+ENERGY_CONFIG_INTERVAL = timedelta(seconds=30)
 
 # Start of the day the energy history totals cover. Kept out of
 # ENERGY_HISTORY_FIELDS, which is the list of keys that become sensors.
@@ -194,9 +209,11 @@ def _index_wall_connectors(data: dict[str, Any]) -> dict[str, Any]:
 class TeslemetryEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Class to manage energy site live status from the Teslemetry stream.
 
-    Updates are driven by ``live_status`` stream events; the REST update
+    Cloud updates are driven by ``live_status`` stream events; the REST update
     method is retained for the deterministic setup cold read and manual
-    recovery only.
+    recovery only, so success/error state is stream-owned. A paired site also
+    polls its LAN gateway and overlays the locally-owned keys, without touching
+    that state.
     """
 
     config_entry: TeslemetryConfigEntry
@@ -217,15 +234,88 @@ class TeslemetryEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]])
             name="Teslemetry Energy Site Live",
         )
         self.api = api
+        self._local: PowerwallEnergySite | None = None
+        # Kept un-indexed as the merge base, since _index_wall_connectors mutates.
+        self._cloud_live = deepcopy(data)
+        self._local_live: dict[str, Any] | None = None
+        self._local_poll_in_progress = False
+        self._local_backoff_ticks = 1
+        self._local_ticks_to_skip = 0
         self.data = _index_wall_connectors(data)
+
+    def enable_local_polling(self, local: PowerwallEnergySite) -> None:
+        """Poll a paired site's LAN gateway and merge it over the cloud stream."""
+        self._local = local
+        # Its own timer, not update_interval, so stream pushes cannot postpone it.
+        self.config_entry.async_on_unload(
+            async_track_time_interval(
+                self.hass,
+                partial(self._async_local_poll, local),
+                ENERGY_LIVE_INTERVAL,
+            )
+        )
+
+    async def _async_local_poll(
+        self, local: PowerwallEnergySite, now: datetime
+    ) -> None:
+        """Read the LAN gateway and publish the merged view.
+
+        A failed read falls back to the cloud values and doubles the gap between
+        reads up to ENERGY_LIVE_LOCAL_MAX_BACKOFF.
+        """
+        # live_status is several sequential reads and can outrun the interval.
+        if self._local_poll_in_progress:
+            return
+        # Skip ticks rather than reschedule so the unload-cancelled timer is kept.
+        if self._local_ticks_to_skip:
+            self._local_ticks_to_skip -= 1
+            return
+        self._local_poll_in_progress = True
+        try:
+            try:
+                self._local_live = (await local.live_status())["response"]
+            except PowerwallError as e:
+                self._local_live = None
+                LOGGER.log(
+                    logging.DEBUG if self._local_backoff_ticks > 1 else logging.WARNING,
+                    "Local live poll for %s failed, using cloud values: %s",
+                    self.api.energy_site_id,
+                    e,
+                )
+                self._local_backoff_ticks = min(
+                    self._local_backoff_ticks * 2,
+                    ENERGY_LIVE_LOCAL_MAX_BACKOFF // ENERGY_LIVE_INTERVAL,
+                )
+                self._local_ticks_to_skip = self._local_backoff_ticks - 1
+            else:
+                if self._local_backoff_ticks > 1:
+                    LOGGER.info(
+                        "Local live poll for %s recovered", self.api.energy_site_id
+                    )
+                self._local_backoff_ticks = 1
+            self.data = self._merged()
+            # Not async_set_updated_data: availability stays with the stream.
+            self.async_update_listeners()
+        finally:
+            self._local_poll_in_progress = False
+
+    def _merged(self) -> dict[str, Any]:
+        """Overlay the cached local snapshot onto the cached cloud snapshot."""
+        return _index_wall_connectors(
+            merge_live_status(self._cloud_live, self._local_live)
+        )
 
     def handle_stream_update(self, data: dict[str, Any]) -> None:
         """Handle a live_status document from the stream."""
-        self.async_set_updated_data(_index_wall_connectors(data))
+        if self._local is None:
+            self.async_set_updated_data(_index_wall_connectors(data))
+            return
+        self._cloud_live = data
+        self.async_set_updated_data(self._merged())
 
     @override
     async def _async_update_data(self) -> dict[str, Any]:
-        """Update energy site data using Teslemetry API."""
+        """Cold-read the cloud live_status (setup and manual recovery only)."""
         try:
             data: dict[str, Any] = (await self.api.live_status())["response"]
         except (InvalidToken, SubscriptionRequired, LoginRequired) as e:
@@ -243,7 +333,10 @@ class TeslemetryEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]])
                 translation_key="update_failed",
                 translation_placeholders={"message": e.message},
             ) from e
-        return _index_wall_connectors(data)
+        if self._local is None:
+            return _index_wall_connectors(data)
+        self._cloud_live = data
+        return self._merged()
 
 
 class TeslemetryEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]]):
@@ -251,9 +344,11 @@ class TeslemetryEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]])
 
     Site info and the V2 tariff are two independently replaceable partitions.
     The flattened coordinator view is recomposed from both whenever either
-    changes, so a removed field or a cleared tariff never lingers. Stream
-    events drive updates; the REST update method is retained for the
-    deterministic setup cold read and manual recovery only.
+    changes, so a removed field or a cleared tariff never lingers. Cloud updates
+    are driven by stream events; the REST update method is retained for the
+    deterministic setup cold read and manual recovery only, so success/error
+    state is stream-owned. A paired site also polls its LAN ``config.json`` and
+    overlays the locally-owned keys, without touching that state.
     """
 
     config_entry: TeslemetryConfigEntry
@@ -275,7 +370,77 @@ class TeslemetryEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]])
         self.api = api
         self._site_info: dict[str, Any] = product
         self._tariff_content_v2: dict[str, Any] | None = None
+        self._local: PowerwallEnergySite | None = None
+        self._local_config: dict[str, Any] | None = None
+        self._cloud_optimistic: dict[str, Any] = {}
+        # Lets a poll in flight detect a command that landed during its read.
+        self._local_config_generation = 0
+        self._local_poll_in_progress = False
         self.data = product
+
+    def enable_local_polling(self, local: PowerwallEnergySite) -> None:
+        """Poll a paired site's LAN config.json and merge it over the cloud."""
+        self._local = local
+        # Its own timer, not update_interval, so stream pushes cannot postpone it.
+        self.config_entry.async_on_unload(
+            async_track_time_interval(
+                self.hass,
+                partial(self._async_local_poll, local),
+                ENERGY_CONFIG_INTERVAL,
+            )
+        )
+
+    async def _async_local_poll(
+        self, local: PowerwallEnergySite, now: datetime
+    ) -> None:
+        """Read the LAN config.json and publish the merged view.
+
+        A failed read falls back to the cloud values.
+        """
+        if self._local_poll_in_progress:
+            return
+        self._local_poll_in_progress = True
+        generation = self._local_config_generation
+        try:
+            try:
+                local_config = await local.local_config()
+            except PowerwallError as e:
+                local_config = None
+                LOGGER.debug(
+                    "Local config poll for %s failed, using cloud values: %s",
+                    self.api.energy_site_id,
+                    e,
+                )
+            # A command landed mid-read, so this snapshot predates its value.
+            if self._local_config_generation != generation:
+                return
+            self._local_config = local_config
+            if local_config is not None:
+                for key in LOCAL_SITE_INFO_KEYS:
+                    # A key the gateway did not report keeps its held value.
+                    if local_config.get(key) is not None:
+                        self._cloud_optimistic.pop(key, None)
+            self.data = self._merged()
+            # Not async_set_updated_data: availability stays with the stream.
+            self.async_update_listeners()
+        finally:
+            self._local_poll_in_progress = False
+
+    def async_set_command_value(self, key: str, value: Any) -> None:
+        """Hold a paired site's successful command value until its source next reports.
+
+        A locally-owned key is held until a LAN poll reports it, and every key
+        until the next cloud site_info, so neither a poll in between nor a
+        failed LAN poll can revert it.
+        """
+        if self._local is None:
+            return
+        if key in LOCAL_SITE_INFO_KEYS:
+            self._local_config = {**(self._local_config or {}), key: value}
+            self._local_config_generation += 1
+        self._cloud_optimistic[key] = value
+        self.data = self._merged()
+        self.async_update_listeners()
 
     def _compose(self) -> dict[str, Any]:
         """Flatten the two partitions into the coordinator view."""
@@ -289,6 +454,12 @@ class TeslemetryEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]])
             )
         return result
 
+    def _merged(self) -> dict[str, Any]:
+        """Overlay the local config onto the cloud view and held command values."""
+        return merge_site_info(
+            self._compose() | self._cloud_optimistic, self._local_config
+        )
+
     def _ingest_site_info(self, site_info: dict[str, Any]) -> dict[str, Any]:
         """Split a full REST site_info response into both partitions.
 
@@ -299,21 +470,23 @@ class TeslemetryEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]])
         site_info = dict(site_info)
         self._tariff_content_v2 = site_info.pop("tariff_content_v2", None)
         self._site_info = site_info
-        return self._compose()
+        self._cloud_optimistic = {}
+        return self._merged()
 
     def handle_site_info(self, site_info: dict[str, Any]) -> None:
         """Handle a slim site_info document from the stream."""
         self._site_info = site_info
-        self.async_set_updated_data(self._compose())
+        self._cloud_optimistic = {}
+        self.async_set_updated_data(self._merged())
 
     def handle_tariff_content_v2(self, tariff: dict[str, Any] | None) -> None:
         """Handle a V2 tariff document (or removal) from the stream."""
         self._tariff_content_v2 = tariff
-        self.async_set_updated_data(self._compose())
+        self.async_set_updated_data(self._merged())
 
     @override
     async def _async_update_data(self) -> dict[str, Any]:
-        """Update energy site data using Teslemetry API."""
+        """Cold-read the cloud site_info (setup and manual recovery only)."""
         try:
             data = (await self.api.site_info())["response"]
         except (InvalidToken, SubscriptionRequired, LoginRequired) as e:

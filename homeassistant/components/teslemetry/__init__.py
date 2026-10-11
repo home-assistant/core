@@ -792,6 +792,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
                 hass, entry, bool(battery), site_id, energy_site
             )
 
+            if isinstance(energy_site_api, EnergySiteRouter):
+                info_coordinator.enable_local_polling(energy_site_api.primary)
+                if live_coordinator is not None:
+                    live_coordinator.enable_local_polling(energy_site_api.primary)
+
             energysites.append(
                 TeslemetryEnergyData(
                     api=energy_site_api,
