@@ -177,6 +177,9 @@ class HueBridge:
         )
 
         if unload_success:
+            # Close the aiohue client so its event stream, keepalive task and
+            # (for v2) its private aiohttp session do not outlive the entry.
+            await self.api.close()
             delattr(self.config_entry, "runtime_data")
 
         return unload_success

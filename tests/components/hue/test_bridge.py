@@ -1,7 +1,7 @@
 """Test Hue bridge."""
 
 import asyncio
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 from aiohttp import client_exceptions
 from aiohue.errors import Unauthorized
@@ -356,6 +356,56 @@ async def test_reset_unloads_entry_if_setup(
 
     assert len(mock_forward.mock_calls) == 3
     assert len(hass.services.async_services()) == 0
+
+
+async def test_reset_closes_api_v2(hass: HomeAssistant, mock_api_v2: Mock) -> None:
+    """Test reset closes the aiohue client so a reload does not leak it."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={"host": "1.2.3.4", "api_key": "mock-api-key", "api_version": 2},
+    )
+    mock_api_v2.close = AsyncMock()
+
+    with (
+        patch.object(bridge, "HueBridgeV2", return_value=mock_api_v2),
+        patch.object(hass.config_entries, "async_forward_entry_setups"),
+    ):
+        hue_bridge = bridge.HueBridge(hass, config_entry)
+        async with config_entry.setup_lock:
+            assert await hue_bridge.async_initialize_bridge() is True
+
+    mock_api_v2.close.assert_not_awaited()
+
+    with patch.object(hass.config_entries, "async_unload_platforms", return_value=True):
+        assert await hue_bridge.async_reset()
+
+    mock_api_v2.close.assert_awaited_once()
+
+
+async def test_reset_keeps_api_if_unload_fails(
+    hass: HomeAssistant, mock_api_v2: Mock
+) -> None:
+    """Test reset leaves the client running if the platforms did not unload."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={"host": "1.2.3.4", "api_key": "mock-api-key", "api_version": 2},
+    )
+    mock_api_v2.close = AsyncMock()
+
+    with (
+        patch.object(bridge, "HueBridgeV2", return_value=mock_api_v2),
+        patch.object(hass.config_entries, "async_forward_entry_setups"),
+    ):
+        hue_bridge = bridge.HueBridge(hass, config_entry)
+        async with config_entry.setup_lock:
+            assert await hue_bridge.async_initialize_bridge() is True
+
+    with patch.object(
+        hass.config_entries, "async_unload_platforms", return_value=False
+    ):
+        assert not await hue_bridge.async_reset()
+
+    mock_api_v2.close.assert_not_awaited()
 
 
 async def test_handle_unauthorized(hass: HomeAssistant, mock_api_v1: Mock) -> None:
