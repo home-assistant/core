@@ -129,7 +129,10 @@ class CometBlueDataUpdateCoordinator(DataUpdateCoordinator[CometBlueCoordinatorD
                 if retry_count >= MAX_RETRIES:
                     raise UpdateFailed(
                         translation_domain=DOMAIN,
-                        translation_key="bluetooth_error",
+                        translation_key="update_failed",
+                        translation_placeholders={
+                            "error": str(ex),
+                        },
                         retry_after=30,
                     ) from ex
                 LOGGER.info(
@@ -142,7 +145,10 @@ class CometBlueDataUpdateCoordinator(DataUpdateCoordinator[CometBlueCoordinatorD
             except Exception as ex:
                 raise UpdateFailed(
                     translation_domain=DOMAIN,
-                    translation_key="unknown_error",
+                    translation_key="update_failed",
+                    translation_placeholders={
+                        "error": str(ex),
+                    },
                     retry_after=30,
                 ) from ex
 

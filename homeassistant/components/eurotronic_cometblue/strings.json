@@ -48,9 +48,6 @@
     }
   },
   "exceptions": {
-    "bluetooth_error": {
-      "message": "A bluetooth error occurred while communicating with the TRV"
-    },
     "cannot_adjust_during_holiday": {
       "message": "Cannot adjust TRV remotely, manually disable holiday mode on TRV first"
     },
@@ -90,14 +87,14 @@
     "overlapping_schedule_times": {
       "message": "Overlapping times found in schedule, {start} is earlier than previous entry {previous_end} ends"
     },
-    "unknown_error": {
-      "message": "An unknown error occurred while communicating with the TRV"
-    },
     "unknown_hvac_mode": {
       "message": "Unknown HVAC mode {hvac_mode}"
     },
     "unsupported_preset_mode": {
       "message": "Unsupported preset_mode {preset_mode}"
+    },
+    "update_failed": {
+      "message": "An unexpected error occurred while communicating with the TRV: {error}"
     }
   },
   "services": {
