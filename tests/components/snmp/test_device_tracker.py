@@ -15,6 +15,7 @@ from homeassistant.components.snmp.const import DEFAULT_SCAN_INTERVAL, DOMAIN
 from homeassistant.components.snmp.coordinator import MAX_CONSECUTIVE_FAILURES
 from homeassistant.components.snmp.device_tracker import (
     SnmpTrackerEntity,
+    _async_legacy_tracked_macs,
     async_setup_scanner,
 )
 from homeassistant.config_entries import SOURCE_IMPORT
@@ -584,7 +585,7 @@ async def test_mac_normalization(
             None,
             id="mac_indexed_table",
         ),
-        pytest.param(_arp_oid(192, 168, 70000), None, id="octet_out_of_range"),
+        pytest.param(_arp_oid(192, 168, 70000, 1), None, id="octet_out_of_range"),
         pytest.param((*ARP_MAC_OID, 1, 192, 168, 1), None, id="missing_octet"),
     ],
 )
@@ -830,3 +831,21 @@ async def test_walk_end_of_mib(
         DEVICE_TRACKER_DOMAIN, DOMAIN, "aa:bb:cc:dd:ee:ff"
     )
     assert entity_id_2 is None
+
+
+async def test_legacy_tracked_macs_skips_unusable_macs(hass: HomeAssistant) -> None:
+    """Test that tracked devices without a usable MAC are left out."""
+    devices = [
+        Mock(track=True, mac=None),
+        Mock(track=True, mac="not-a-mac"),
+        Mock(track=False, mac="00:11:22:33:44:55"),
+        Mock(track=True, mac="00:11:22:33:44:66"),
+    ]
+
+    with patch(
+        "homeassistant.components.snmp.device_tracker.async_load_config",
+        return_value=devices,
+    ):
+        macs = await _async_legacy_tracked_macs(hass)
+
+    assert macs == {"00:11:22:33:44:66"}
