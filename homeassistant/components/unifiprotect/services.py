@@ -442,12 +442,6 @@ SERVICES = [
         PTZ_GOTO_PRESET_SCHEMA,
         SupportsResponse.NONE,
     ),
-    (
-        SERVICE_TRIGGER_ALARM_WEBHOOK,
-        trigger_alarm_webhook,
-        TRIGGER_ALARM_WEBHOOK_SCHEMA,
-        SupportsResponse.NONE,
-    ),
 ]
 
 
@@ -459,3 +453,12 @@ def async_setup_services(hass: HomeAssistant) -> None:
         hass.services.async_register(
             DOMAIN, name, method, schema=schema, supports_response=supports_response
         )
+    # Admin-only: alarms can sound sirens or start recording, and a device ID
+    # action has no entity permission check.
+    service.async_register_admin_service(
+        hass,
+        DOMAIN,
+        SERVICE_TRIGGER_ALARM_WEBHOOK,
+        trigger_alarm_webhook,
+        schema=TRIGGER_ALARM_WEBHOOK_SCHEMA,
+    )
