@@ -31,7 +31,7 @@ from homeassistant.components.application_credentials import (
 )
 from homeassistant.components.overkiz.const import DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.data_entry_flow import FlowResultType, InvalidData
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
@@ -146,6 +146,19 @@ async def test_form_cloud(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> N
     await hass.async_block_till_done()
 
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_form_somfy_multi_account_hidden(hass: HomeAssistant) -> None:
+    """Test the experimental Somfy multi-account server cannot be selected."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with pytest.raises(InvalidData):
+        await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"hub": "somfy"},
+        )
 
 
 async def test_form_only_cloud_supported(

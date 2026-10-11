@@ -169,7 +169,12 @@ class OverkizConfigFlow(
             data_schema=probatio.Schema(
                 {
                     probatio.Required(CONF_HUB, default=self._server): probatio.In(
-                        {key: hub.name for key, hub in SUPPORTED_SERVERS.items()}
+                        {
+                            key: hub.name
+                            for key, hub in SUPPORTED_SERVERS.items()
+                            # Needs multi-account site selection, not supported yet
+                            if key != Server.SOMFY
+                        }
                     ),
                 }
             ),
