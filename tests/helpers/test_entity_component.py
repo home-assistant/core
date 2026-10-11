@@ -411,18 +411,19 @@ async def test_unload_entry_resets_platform(hass: HomeAssistant) -> None:
     component = EntityComponent(_LOGGER, DOMAIN, hass)
     entry = MockConfigEntry(domain="entry_domain")
 
-    assert await component.async_setup_entry(entry)
-    assert len(mock_setup_entry.mock_calls) == 1
-    add_entities = mock_setup_entry.mock_calls[0][1][2]
-    add_entities([MockEntity()])
-    await hass.async_block_till_done()
+    for _ in range(3):
+        assert await component.async_setup_entry(entry)
+        add_entities = mock_setup_entry.call_args.args[2]
+        add_entities([MockEntity()])
+        await hass.async_block_till_done()
 
-    assert len(hass.states.async_entity_ids()) == 1
-    assert len(async_get_platforms(hass, "entry_domain")) == 1
+        assert len(hass.states.async_entity_ids()) == 1
+        assert len(async_get_platforms(hass, "entry_domain")) == 1
 
-    assert await component.async_unload_entry(entry)
-    assert len(hass.states.async_entity_ids()) == 0
-    assert async_get_platforms(hass, "entry_domain") == []
+        assert await component.async_unload_entry(entry)
+        assert len(hass.states.async_entity_ids()) == 0
+        assert async_get_platforms(hass, "entry_domain") == []
+    assert mock_setup_entry.await_count == 3
 
 
 async def test_unload_entry_tolerates_never_loaded(
@@ -907,3 +908,26 @@ async def test_platforms_shutdown_on_stop(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert mock_async_shutdown.called
+
+
+async def test_reset_preserves_only_component_platform(hass: HomeAssistant) -> None:
+    """Reset releases entry platforms and permits registering them again."""
+    mock_platform(
+        hass,
+        "entry_domain.test_domain",
+        MockPlatform(async_setup_entry=AsyncMock(return_value=True)),
+    )
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    entries = [MockConfigEntry(domain="entry_domain") for _ in range(2)]
+    for entry in entries:
+        assert await component.async_setup_entry(entry)
+    assert len(async_get_platforms(hass, "entry_domain")) == 2
+
+    await component._async_reset()
+
+    assert async_get_platforms(hass, "entry_domain") == []
+    assert len(async_get_platforms(hass, DOMAIN)) == 1
+    for entry in entries:
+        assert await component.async_setup_entry(entry)
+        assert await component.async_unload_entry(entry)
+    assert async_get_platforms(hass, "entry_domain") == []

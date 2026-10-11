@@ -89,10 +89,10 @@ class EntityComponent[_EntityT: entity.Entity = entity.Entity]:
 
         self.config: ConfigType | None = None
 
-        domain_platform = self._async_init_entity_platform(domain, None)
         self._platforms: dict[
             str | tuple[str, timedelta | None, str | None], EntityPlatform
-        ] = {domain: domain_platform}
+        ] = {}
+        domain_platform = self._async_init_entity_platform(domain, domain, None)
         self.async_add_entities = domain_platform.async_add_entities
         self.add_entities = domain_platform.add_entities
         self._entities: dict[str, _EntityT] = domain_platform.domain_entities  # type: ignore[assignment]
@@ -185,19 +185,20 @@ class EntityComponent[_EntityT: entity.Entity = entity.Entity]:
                 f"{platform_type}.{self.domain} has already been setup!"
             )
 
-        self._platforms[key] = self._async_init_entity_platform(
+        entity_platform = self._async_init_entity_platform(
+            key,
             platform_type,
             platform,
             scan_interval=getattr(platform, "SCAN_INTERVAL", None),
         )
 
-        return await self._platforms[key].async_setup_entry(config_entry)
+        return await entity_platform.async_setup_entry(config_entry)
 
     async def async_unload_entry(self, config_entry: ConfigEntry) -> bool:
         """Unload a config entry."""
         key = config_entry.entry_id
 
-        if (platform := self._platforms.pop(key, None)) is None:
+        if key not in self._platforms:
             self.logger.warning(
                 (
                     "Ignored unload request for config entry %s (%s) in %s.%s; "
@@ -211,8 +212,15 @@ class EntityComponent[_EntityT: entity.Entity = entity.Entity]:
             )
             return True
 
-        await platform.async_destroy()
+        await self._async_destroy_platform(key)
         return True
+
+    async def _async_destroy_platform(
+        self, key: str | tuple[str, timedelta | None, str | None]
+    ) -> None:
+        """Remove an owned platform from the component and global registry."""
+        platform = self._platforms.pop(key)
+        await platform.async_destroy()
 
     async def async_extract_from_service(
         self, service_call: ServiceCall, expand_group: bool = True
@@ -311,8 +319,8 @@ class EntityComponent[_EntityT: entity.Entity = entity.Entity]:
         key = (platform_type, scan_interval, entity_namespace)
 
         if key not in self._platforms:
-            self._platforms[key] = self._async_init_entity_platform(
-                platform_type, platform, scan_interval, entity_namespace
+            self._async_init_entity_platform(
+                key, platform_type, platform, scan_interval, entity_namespace
             )
 
         await self._platforms[key].async_setup(platform_config, discovery_info)
@@ -328,12 +336,11 @@ class EntityComponent[_EntityT: entity.Entity = entity.Entity]:
             if key == self.domain:
                 tasks.append(platform.async_reset())
             else:
-                tasks.append(platform.async_destroy())
+                tasks.append(self._async_destroy_platform(key))
 
         if tasks:
             await asyncio.gather(*tasks)
 
-        self._platforms = {self.domain: self._platforms[self.domain]}
         self.config = None
 
     async def async_remove_entity(self, entity_id: str) -> None:
@@ -382,12 +389,15 @@ class EntityComponent[_EntityT: entity.Entity = entity.Entity]:
     @callback
     def _async_init_entity_platform(
         self,
+        key: str | tuple[str, timedelta | None, str | None],
         platform_type: str,
         platform: ModuleType | None,
         scan_interval: timedelta | None = None,
         entity_namespace: str | None = None,
     ) -> EntityPlatform:
-        """Initialize an entity platform."""
+        """Create and register a platform owned by this component."""
+        if key in self._platforms:
+            raise ValueError(f"Platform {key} is already registered")
         if scan_interval is None:
             scan_interval = self.scan_interval
 
@@ -401,6 +411,7 @@ class EntityComponent[_EntityT: entity.Entity = entity.Entity]:
             entity_namespace=entity_namespace,
         )
         entity_platform.async_prepare()
+        self._platforms[key] = entity_platform
         return entity_platform
 
     @callback
