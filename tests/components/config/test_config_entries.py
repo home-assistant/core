@@ -19,6 +19,7 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_RADIUS
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_entry_flow, config_validation as cv
 from homeassistant.helpers.discovery_flow import DiscoveryKey
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
@@ -2301,6 +2302,100 @@ async def test_disable_entry(
     assert entry.state == core_ce.ConfigEntryState.FAILED_UNLOAD
 
 
+@pytest.mark.parametrize(
+    ("side_effect", "expected_state"),
+    [
+        pytest.param(
+            ConfigEntryNotReady,
+            core_ce.ConfigEntryState.SETUP_RETRY,
+            id="setup_retry",
+        ),
+        pytest.param(None, core_ce.ConfigEntryState.SETUP_ERROR, id="setup_error"),
+    ],
+)
+@pytest.mark.parametrize(
+    "loaded_components",
+    [
+        pytest.param(set(), id="integration_not_loaded"),
+        pytest.param({"comp"}, id="integration_loaded"),
+    ],
+)
+async def test_enable_entry_setup_fails(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    side_effect: type[Exception] | None,
+    expected_state: core_ce.ConfigEntryState,
+    loaded_components: set[str],
+) -> None:
+    """Test enabling an entry that fails setup does not require a restart."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    ws_client = await hass_ws_client(hass)
+
+    mock_setup_entry = AsyncMock(side_effect=side_effect, return_value=False)
+    mock_integration(hass, MockModule("comp", async_setup_entry=mock_setup_entry))
+    mock_platform(hass, "comp.config_flow", None)
+    entry = MockConfigEntry(domain="comp", disabled_by=core_ce.ConfigEntryDisabler.USER)
+    entry.add_to_hass(hass)
+    # With the integration already loaded, enabling reloads only the entry
+    hass.config.components.update(loaded_components)
+
+    with mock_config_flow("comp", ConfigFlow):
+        await ws_client.send_json(
+            {
+                "id": 5,
+                "type": "config_entries/disable",
+                "entry_id": entry.entry_id,
+                "disabled_by": None,
+            }
+        )
+        response = await ws_client.receive_json()
+
+    assert response["success"]
+    assert response["result"] == {"require_restart": False}
+    assert entry.disabled_by is None
+    assert entry.state is expected_state
+    mock_setup_entry.assert_called_once()
+
+
+async def test_enable_entry_component_setup_fails(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test enabling an entry whose integration fails setup requires a restart."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    ws_client = await hass_ws_client(hass)
+
+    mock_setup_entry = AsyncMock(return_value=True)
+    mock_integration(
+        hass,
+        MockModule(
+            "comp",
+            async_setup=AsyncMock(return_value=False),
+            async_setup_entry=mock_setup_entry,
+        ),
+    )
+    mock_platform(hass, "comp.config_flow", None)
+    entry = MockConfigEntry(domain="comp", disabled_by=core_ce.ConfigEntryDisabler.USER)
+    entry.add_to_hass(hass)
+
+    with mock_config_flow("comp", ConfigFlow):
+        await ws_client.send_json(
+            {
+                "id": 5,
+                "type": "config_entries/disable",
+                "entry_id": entry.entry_id,
+                "disabled_by": None,
+            }
+        )
+        response = await ws_client.receive_json()
+
+    assert response["success"]
+    # A failed integration setup is not retried until Home Assistant restarts
+    assert response["result"] == {"require_restart": True}
+    assert entry.disabled_by is None
+    assert entry.state is core_ce.ConfigEntryState.NOT_LOADED
+    mock_setup_entry.assert_not_called()
+
+
 async def test_disable_entry_nonexisting(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
@@ -2317,6 +2412,39 @@ async def test_disable_entry_nonexisting(
         }
     )
     response = await ws_client.receive_json()
+
+    assert not response["success"]
+    assert response["error"]["code"] == "not_found"
+
+
+async def test_enable_entry_removed_during_reload(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test enabling an entry that is removed while it is being reloaded."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    ws_client = await hass_ws_client(hass)
+
+    entry = MockConfigEntry(domain="test", disabled_by=core_ce.ConfigEntryDisabler.USER)
+    entry.add_to_hass(hass)
+
+    async def remove_entry(
+        entry_id: str, disabled_by: core_ce.ConfigEntryDisabler | None
+    ) -> bool:
+        await hass.config_entries.async_remove(entry_id)
+        return False
+
+    with patch.object(
+        hass.config_entries, "async_set_disabled_by", side_effect=remove_entry
+    ):
+        await ws_client.send_json(
+            {
+                "id": 5,
+                "type": "config_entries/disable",
+                "entry_id": entry.entry_id,
+                "disabled_by": None,
+            }
+        )
+        response = await ws_client.receive_json()
 
     assert not response["success"]
     assert response["error"]["code"] == "not_found"
