@@ -855,6 +855,7 @@ class ThinQEnergySensorEntity(ThinQEntity, SensorEntity):
         return super().available or self.native_value is not None
 
     @override
+    # pylint: disable-next=home-assistant-coordinator-entity-async-update
     async def async_update(self, now: datetime | None = None) -> None:
         """Update the state of the sensor."""
         await self._async_update_and_schedule()

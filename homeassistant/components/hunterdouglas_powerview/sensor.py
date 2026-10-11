@@ -154,6 +154,7 @@ class PowerViewSensor(ShadeEntity, SensorEntity):
         self.async_write_ha_state()
 
     @override
+    # pylint: disable-next=home-assistant-coordinator-entity-async-update
     async def async_update(self) -> None:
         """Refresh sensor entity."""
         async with self.coordinator.radio_operation_lock:
