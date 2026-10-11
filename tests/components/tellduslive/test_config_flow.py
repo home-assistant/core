@@ -5,15 +5,8 @@ from unittest.mock import MagicMock, Mock, patch
 import pytest
 
 from homeassistant import data_entry_flow
-from homeassistant.components.tellduslive import (
-    APPLICATION_NAME,
-    DOMAIN,
-    KEY_SCAN_INTERVAL,
-    SCAN_INTERVAL,
-    config_flow,
-)
+from homeassistant.components.tellduslive import APPLICATION_NAME, DOMAIN, config_flow
 from homeassistant.config_entries import SOURCE_DISCOVERY
-from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -69,11 +62,6 @@ async def test_abort_if_already_setup(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_setup"
 
-    with patch.object(hass.config_entries, "async_entries", return_value=[{}]):
-        result = await flow.async_step_import(None)
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_setup"
-
 
 async def test_full_flow_implementation(hass: HomeAssistant, mock_tellduslive) -> None:
     """Test registering an implementation and finishing flow works."""
@@ -102,80 +90,6 @@ async def test_full_flow_implementation(hass: HomeAssistant, mock_tellduslive) -
     assert result["data"]["host"] == "localhost"
     assert result["data"]["scan_interval"] == 60
     assert result["data"]["session"] == {"token": "token", "host": "localhost"}
-
-
-async def test_step_import(hass: HomeAssistant, mock_tellduslive) -> None:
-    """Test that we trigger auth when configuring from import."""
-    flow = init_config_flow(hass)
-
-    result = await flow.async_step_import({CONF_HOST: DOMAIN, KEY_SCAN_INTERVAL: 0})
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "auth"
-
-
-async def test_step_import_add_host(hass: HomeAssistant, mock_tellduslive) -> None:
-    """Test that we add host and trigger user when configuring from import."""
-    flow = init_config_flow(hass)
-
-    result = await flow.async_step_import(
-        {CONF_HOST: "localhost", KEY_SCAN_INTERVAL: 0}
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-
-
-async def test_step_import_no_config_file(
-    hass: HomeAssistant, mock_tellduslive
-) -> None:
-    """Test that we trigger user with no config_file configuring from import."""
-    flow = init_config_flow(hass)
-
-    result = await flow.async_step_import(
-        {CONF_HOST: "localhost", KEY_SCAN_INTERVAL: 0}
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-
-
-async def test_step_import_load_json_matching_host(
-    hass: HomeAssistant, mock_tellduslive
-) -> None:
-    """Test that we add host and trigger user when configuring from import."""
-    flow = init_config_flow(hass)
-
-    with (
-        patch(
-            "homeassistant.components.tellduslive.config_flow.load_json_object",
-            return_value={"tellduslive": {}},
-        ),
-        patch("os.path.isfile"),
-    ):
-        result = await flow.async_step_import(
-            {CONF_HOST: "Cloud API", KEY_SCAN_INTERVAL: 0}
-        )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-
-
-async def test_step_import_load_json(hass: HomeAssistant, mock_tellduslive) -> None:
-    """Test that we create entry when configuring from import."""
-    flow = init_config_flow(hass)
-
-    with (
-        patch(
-            "homeassistant.components.tellduslive.config_flow.load_json_object",
-            return_value={"localhost": {}},
-        ),
-        patch("os.path.isfile"),
-    ):
-        result = await flow.async_step_import(
-            {CONF_HOST: "localhost", KEY_SCAN_INTERVAL: SCAN_INTERVAL}
-        )
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "localhost"
-    assert result["data"]["host"] == "localhost"
-    assert result["data"]["scan_interval"] == 60
-    assert result["data"]["session"] == {}
 
 
 @pytest.mark.parametrize("supports_local_api", [False])
