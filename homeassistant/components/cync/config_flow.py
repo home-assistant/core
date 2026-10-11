@@ -42,10 +42,12 @@ class CyncConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @override
     async def async_step_user(
-        self, user_input: dict[str, Any] | None = None
+        self,
+        user_input: dict[str, Any] | None = None,
+        errors: dict[str, str] | None = None,
     ) -> ConfigFlowResult:
         """Attempt login with user credentials."""
-        errors: dict[str, str] = {}
+        errors = errors or {}
 
         if user_input:
             try:
@@ -72,9 +74,10 @@ class CyncConfigFlow(ConfigFlow, domain=DOMAIN):
             if not errors:
                 return await self._create_config_entry(self.cync_auth.username)
 
-            return self.async_show_form(
-                step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
-            )
+            if self.source == SOURCE_REAUTH:
+                return await self.async_step_reauth_confirm(errors=errors)
+
+            return await self.async_step_user(errors=errors)
 
         return self.async_show_form(
             step_id="two_factor", data_schema=STEP_TWO_FACTOR_SCHEMA, errors=errors
@@ -87,10 +90,12 @@ class CyncConfigFlow(ConfigFlow, domain=DOMAIN):
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
-        self, user_input: dict[str, Any] | None = None
+        self,
+        user_input: dict[str, Any] | None = None,
+        errors: dict[str, str] | None = None,
     ) -> ConfigFlowResult:
         """Inform the user that reauth is required and prompt for Cync credentials."""
-        errors: dict[str, str] = {}
+        errors = errors or {}
 
         reauth_entry = self._get_reauth_entry()
 
@@ -114,7 +119,7 @@ class CyncConfigFlow(ConfigFlow, domain=DOMAIN):
         """Attempt to log in with user email and password, and return the error dict."""
         errors: dict[str, str] = {}
 
-        if not self.cync_auth:
+        if CONF_EMAIL in user_input:
             self.cync_auth = Auth(
                 async_get_clientsession(self.hass),
                 username=user_input[CONF_EMAIL],
