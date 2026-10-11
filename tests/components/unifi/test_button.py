@@ -7,6 +7,7 @@ from unittest.mock import patch
 
 import aiounifi
 from aiounifi.models.message import MessageKey
+import orjson
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -26,9 +27,12 @@ from homeassistant.helpers.entity_registry import RegistryEntryDisabler
 from homeassistant.util import dt as dt_util
 
 from .conftest import (
+    NETWORK_API_URL,
+    NETWORK_SITE_ID,
     ConfigEntryFactoryType,
     WebsocketMessageMock,
     WebsocketStateManager,
+    mock_network_api_lists,
 )
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
@@ -364,3 +368,55 @@ async def test_button_request_failed(
         )
     assert exc_info.value.translation_domain == DOMAIN
     assert exc_info.value.translation_key == "action_request_failed"
+
+
+NETWORK_DEVICE = {
+    "id": "90edff53-2df1-3c0a-be00-516fb6e88bdc",
+    "macAddress": "00:00:00:00:01:01",
+    "ipAddress": "10.8.0.188",
+    "name": "switch",
+    "model": "USW Enterprise 8 PoE",
+    "state": "ONLINE",
+    "supported": True,
+    "firmwareVersion": "7.5.15",
+    "firmwareUpdatable": False,
+    "features": ["switching"],
+    "interfaces": ["ports"],
+}
+
+
+@pytest.mark.parametrize(
+    "network_device_payload", [[{**NETWORK_DEVICE, "supported": False}]]
+)
+@pytest.mark.usefixtures("network_api_config_entry_setup")
+async def test_network_api_unsupported_device_has_no_restart_button(
+    hass: HomeAssistant,
+) -> None:
+    """Test a device the Integration API cannot act on gets no restart button."""
+    assert hass.states.get("button.switch_restart") is None
+
+
+@pytest.mark.parametrize("network_device_payload", [[NETWORK_DEVICE]])
+@pytest.mark.usefixtures("network_api_config_entry_setup")
+async def test_network_api_restart_button(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test the restart button of an Integration API device posts the action."""
+    url = (
+        f"{NETWORK_API_URL}/v1/sites/{NETWORK_SITE_ID}/devices/"
+        f"{NETWORK_DEVICE['id']}/actions"
+    )
+    aioclient_mock.clear_requests()
+    aioclient_mock.post(url)
+    mock_network_api_lists(aioclient_mock, devices=[NETWORK_DEVICE])
+
+    await hass.services.async_call(
+        BUTTON_DOMAIN,
+        "press",
+        {"entity_id": "button.switch_restart"},
+        blocking=True,
+    )
+
+    post_calls = [call for call in aioclient_mock.mock_calls if call[0] == "post"]
+    assert len(post_calls) == 1
+    assert orjson.loads(post_calls[0][2]) == {"action": "RESTART"}
