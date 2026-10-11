@@ -1,5 +1,9 @@
 """Test different accessory types: Covers."""
 
+from datetime import timedelta
+
+from freezegun.api import FrozenDateTimeFactory
+
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
     ATTR_CURRENT_TILT_POSITION,
@@ -21,6 +25,7 @@ from homeassistant.components.homekit.const import (
     PROP_MIN_VALUE,
 )
 from homeassistant.components.homekit.type_covers import (
+    POSITION_DEBOUNCE_TIME,
     Door,
     GarageDoorOpener,
     Window,
@@ -39,8 +44,20 @@ from homeassistant.const import (
 )
 from homeassistant.core import CoreState, Event, HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util import dt as dt_util
 
-from tests.common import async_mock_service
+from tests.common import (
+    async_fire_time_changed,
+    async_fire_time_changed_exact,
+    async_mock_service,
+)
+
+
+async def _wait_for_position_debounce(hass: HomeAssistant) -> None:
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + timedelta(seconds=POSITION_DEBOUNCE_TIME)
+    )
+    await hass.async_block_till_done()
 
 
 async def test_garage_door_open_close(
@@ -278,6 +295,8 @@ async def test_windowcovering_set_cover_position(
 
     acc.char_target_position.client_update_value(25)
     await hass.async_block_till_done()
+    assert not call_set_cover_position
+    await _wait_for_position_debounce(hass)
     assert call_set_cover_position[0]
     assert call_set_cover_position[0].data[ATTR_ENTITY_ID] == entity_id
     assert call_set_cover_position[0].data[ATTR_POSITION] == 25
@@ -287,7 +306,7 @@ async def test_windowcovering_set_cover_position(
     assert events[-1].data[ATTR_VALUE] == 25
 
     acc.char_target_position.client_update_value(75)
-    await hass.async_block_till_done()
+    await _wait_for_position_debounce(hass)
     assert call_set_cover_position[1]
     assert call_set_cover_position[1].data[ATTR_ENTITY_ID] == entity_id
     assert call_set_cover_position[1].data[ATTR_POSITION] == 75
@@ -295,6 +314,49 @@ async def test_windowcovering_set_cover_position(
     assert acc.char_target_position.value == 75
     assert len(events) == 2
     assert events[-1].data[ATTR_VALUE] == 75
+
+
+async def test_windowcovering_set_cover_position_while_dragging(
+    hass: HomeAssistant,
+    hk_driver,
+    events: list[Event],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test only the last position is sent while the slider is dragged."""
+    entity_id = "cover.window"
+
+    hass.states.async_set(
+        entity_id,
+        CoverState.CLOSED,
+        {
+            ATTR_SUPPORTED_FEATURES: CoverEntityFeature.SET_POSITION,
+            ATTR_CURRENT_POSITION: 0,
+        },
+    )
+    await hass.async_block_till_done()
+    acc = WindowCovering(hass, hk_driver, "Cover", entity_id, 2, None)
+    acc.run()
+    await hass.async_block_till_done()
+
+    call_set_cover_position = async_mock_service(
+        hass, COVER_DOMAIN, "set_cover_position"
+    )
+
+    # The Home app writes about once a second while the slider is dragged
+    for position in (1, 21, 47, 55):
+        acc.char_target_position.client_update_value(position)
+        await hass.async_block_till_done()
+        assert acc.char_target_position.value == position
+        freezer.tick(1)
+        async_fire_time_changed_exact(hass)
+        await hass.async_block_till_done()
+        assert not call_set_cover_position
+
+    await _wait_for_position_debounce(hass)
+    assert len(call_set_cover_position) == 1
+    assert call_set_cover_position[0].data[ATTR_POSITION] == 55
+    assert len(events) == 1
+    assert events[-1].data[ATTR_VALUE] == 55
 
 
 async def test_windowcovering_target_position_while_moving(
