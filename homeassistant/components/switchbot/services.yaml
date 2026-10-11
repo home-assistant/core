@@ -12,3 +12,12 @@ add_password:
       selector:
         text:
           type: password
+
+get_keypad_info:
+  fields:
+    device_id:
+      required: true
+      example: "c2d01328efd261f586e56d914e3af07e"
+      selector:
+        device:
+          integration: switchbot
