@@ -184,6 +184,13 @@ async def test_no_conflict_with_similar_configuration(
             CONF_SECTION_CREDENTIALS,
             "invalid_auth",
         ),
+        (
+            # A missing translation key would be a programming error in our component, but the
+            # config flow should still be able to handle it.
+            ConfigEntryAuthFailed(translation_key=None),
+            CONF_SECTION_CREDENTIALS,
+            "invalid_auth",
+        ),
     ],
 )
 async def test_form_failed_connection_check(
