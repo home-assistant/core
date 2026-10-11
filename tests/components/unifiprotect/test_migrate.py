@@ -829,7 +829,7 @@ async def test_deprecate_private_only_entity_in_use(
     async_deprecate_private_only_entities(hass, ufp.entry, _private_only_bootstrap())
 
     issue = issue_registry.async_get_issue(
-        DOMAIN, f"private_only_entity_deprecated_{mac}_{key}"
+        DOMAIN, f"private_only_entity_deprecated_{platform}_{mac}_{key}"
     )
     assert issue is not None
     assert issue.translation_key == "private_only_entity_deprecated"
@@ -869,6 +869,35 @@ async def test_deprecate_private_only_entity_not_matched(
     assert not issue_registry.issues
 
 
+async def test_deprecate_private_only_entity_shared_unique_id(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    ufp: MockUFPFixture,
+) -> None:
+    """An unused entity does not clear the repair of its counterpart."""
+    # The used entity comes first, so the unused one is scanned after it.
+    used = entity_registry.async_get_or_create(
+        Platform.BINARY_SENSOR, DOMAIN, f"{CAMERA_MAC}_ssh", config_entry=ufp.entry
+    )
+    entity_registry.async_get_or_create(
+        Platform.SWITCH, DOMAIN, f"{CAMERA_MAC}_ssh", config_entry=ufp.entry
+    )
+    await _load_automation(hass, used.entity_id)
+
+    async_deprecate_private_only_entities(hass, ufp.entry, _private_only_bootstrap())
+
+    assert issue_registry.async_get_issue(
+        DOMAIN, f"private_only_entity_deprecated_binary_sensor_{CAMERA_MAC}_ssh"
+    )
+    assert (
+        issue_registry.async_get_issue(
+            DOMAIN, f"private_only_entity_deprecated_switch_{CAMERA_MAC}_ssh"
+        )
+        is None
+    )
+
+
 async def test_deprecate_private_only_entity_disabled(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -900,7 +929,7 @@ async def test_deprecate_private_only_entity_repair_clears_when_unused(
     entity = entity_registry.async_get_or_create(
         Platform.SWITCH, DOMAIN, f"{CAMERA_MAC}_ssh", config_entry=ufp.entry
     )
-    issue_id = f"private_only_entity_deprecated_{CAMERA_MAC}_ssh"
+    issue_id = f"private_only_entity_deprecated_switch_{CAMERA_MAC}_ssh"
     ir.async_create_issue(
         hass,
         DOMAIN,
@@ -942,7 +971,7 @@ async def test_deprecate_private_only_entity_waits_for_start(
     await hass.async_block_till_done()
 
     assert issue_registry.async_get_issue(
-        DOMAIN, f"private_only_entity_deprecated_{CAMERA_MAC}_ssh"
+        DOMAIN, f"private_only_entity_deprecated_switch_{CAMERA_MAC}_ssh"
     )
 
 
@@ -965,7 +994,7 @@ async def test_deprecate_private_only_entities_on_setup(
     await init_entry(hass, ufp, [])
 
     assert issue_registry.async_get_issue(
-        DOMAIN, f"private_only_entity_deprecated_{nvr_mac}_analytics_enabled"
+        DOMAIN, f"private_only_entity_deprecated_switch_{nvr_mac}_analytics_enabled"
     )
 
 

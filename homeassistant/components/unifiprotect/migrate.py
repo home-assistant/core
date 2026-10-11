@@ -465,7 +465,9 @@ def async_deprecate_private_only_entities(
             _async_repair_if_used(
                 hass,
                 entity,
-                f"private_only_entity_deprecated_{entity.unique_id}",
+                # SSH, mount type and paired camera share a unique_id across
+                # two platforms.
+                f"private_only_entity_deprecated_{entity.domain}_{entity.unique_id}",
                 "private_only_entity_deprecated",
                 breaks_in=PRIVATE_ONLY_BREAKS_IN,
             )
