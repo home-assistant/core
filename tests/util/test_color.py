@@ -514,6 +514,21 @@ def test_color_temperature_to_rgbww() -> None:
         56,
         72,
     )
+    # Color temperatures outside the range -> clamped to the range
+    assert color_util.color_temperature_to_rgbww(1000, 255, 2000, 6535) == (
+        0,
+        0,
+        0,
+        0,
+        255,
+    )
+    assert color_util.color_temperature_to_rgbww(9000, 255, 2000, 6535) == (
+        0,
+        0,
+        0,
+        255,
+        0,
+    )
 
 
 def test_rgbww_to_color_temperature() -> None:
