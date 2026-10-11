@@ -320,7 +320,7 @@ def make_public_bootstrap(**attrs: Any) -> Mock:
     may replace a whole map after setup (``pb.lights = {...}``).
     """
     pb = Mock(spec=PublicBootstrap)
-    for attr in (*_PUBLIC_STORE_ATTRS.values(), "relays", "sirens", "arm_profiles"):
+    for attr in (*_PUBLIC_STORE_ATTRS.values(), "relays", "arm_profiles"):
         setattr(pb, attr, {})
     pb.arm_mode = None
     pb.nvr = None
@@ -339,7 +339,7 @@ def make_public_bootstrap(**attrs: Any) -> Mock:
     def _all_devices(*, include_nvr: bool = False) -> Iterator[Any]:
         if include_nvr and pb.nvr is not None:
             yield pb.nvr
-        for attr in (*_PUBLIC_STORE_ATTRS.values(), "relays", "sirens"):
+        for attr in (*_PUBLIC_STORE_ATTRS.values(), "relays"):
             yield from getattr(pb, attr).values()
 
     pb.store_for = Mock(side_effect=_store_for)

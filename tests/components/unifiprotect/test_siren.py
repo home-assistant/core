@@ -546,6 +546,14 @@ async def test_siren_unavailable_on_delete_event(
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
 
+    # Re-adding the siren as a new object brings the entity back with its state.
+    _add_siren_frame(ufp_with_siren, _make_siren(is_active=True))
+    await hass.async_block_till_done()
+
+    state = hass.states.get(SIREN_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_ON
+
 
 @pytest.fixture(name="setup_hybrid")
 def setup_hybrid_fixture(
