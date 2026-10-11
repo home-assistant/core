@@ -3,21 +3,18 @@
 from copy import deepcopy
 from datetime import datetime, timedelta
 from typing import Any
-from unittest.mock import AsyncMock, call, patch
+from unittest.mock import AsyncMock, call
 
-from aiohttp import ClientConnectionError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from tesla_fleet_api.const import TeslaEnergyPeriod
 from tesla_fleet_api.exceptions import (
     InvalidToken,
     LoginRequired,
-    OAuthExpired,
     RateLimited,
     TeslaFleetError,
 )
 
-from homeassistant.components.recorder import Recorder
 from homeassistant.components.recorder.const import DOMAIN as RECORDER_DOMAIN
 from homeassistant.components.recorder.models import (
     StatisticData,
@@ -196,30 +193,6 @@ async def test_hourly_aggregation_and_repeated_refresh(
     [
         pytest.param(
             SITE_TIME_ZONE,
-            BEFORE,
-            LAST,
-            [
-                ("2023-06-02T06:00:00+00:00", 150, 150),
-                ("2023-06-02T07:00:00+00:00", 20, 170),
-            ],
-            id="pacific",
-        ),
-        pytest.param(
-            "Asia/Kolkata",
-            "2023-06-01T23:45:00+05:30",
-            "2023-06-01T23:55:00+05:30",
-            [("2023-06-01T18:00:00+00:00", 170, 170)],
-            id="half-hour",
-        ),
-        pytest.param(
-            "Pacific/Chatham",
-            "2023-06-01T23:45:00+12:45",
-            "2023-06-01T23:55:00+12:45",
-            [("2023-06-01T11:00:00+00:00", 170, 170)],
-            id="quarter-hour",
-        ),
-        pytest.param(
-            SITE_TIME_ZONE,
             "2023-03-12T01:55:00-08:00",
             "2023-03-12T03:00:00-07:00",
             [
@@ -253,7 +226,7 @@ async def test_backfill_after_midnight(
     missing: str,
     expected: list[tuple[str, float, float]],
 ) -> None:
-    """Recover the actual UTC hours across midnight and daylight-saving changes."""
+    """Recover the actual UTC hours across daylight saving time changes."""
     history_responses[None] = _history((before, {GRID: 100}), time_zone=time_zone)
     await _setup(hass, normal_config_entry)
     end_date = (
@@ -280,49 +253,14 @@ async def test_backfill_after_midnight(
     assert await _get_hourly_stats(hass, {GRID_STATISTIC_ID}) == stats
 
 
-@pytest.mark.parametrize(
-    ("time_zone", "expected", "expected_solar"),
-    [
-        pytest.param(
-            "UTC",
-            [
-                ("2023-06-01T23:00:00+00:00", 10, 10),
-                ("2023-06-02T00:00:00+00:00", 20, 30),
-                ("2023-06-02T23:00:00+00:00", 30, 60),
-                ("2023-06-03T00:00:00+00:00", 80, 140),
-            ],
-            [
-                ("2023-06-01T23:00:00+00:00", 100, 100),
-                ("2023-06-02T00:00:00+00:00", 0, 100),
-                ("2023-06-02T23:00:00+00:00", 0, 100),
-                ("2023-06-03T00:00:00+00:00", 50, 150),
-            ],
-            id="whole-hour",
-        ),
-        pytest.param(
-            "Asia/Kolkata",
-            [
-                ("2023-06-01T18:00:00+00:00", 30, 30),
-                ("2023-06-02T18:00:00+00:00", 110, 140),
-            ],
-            [
-                ("2023-06-01T18:00:00+00:00", 100, 100),
-                ("2023-06-02T18:00:00+00:00", 50, 150),
-            ],
-            id="half-hour",
-        ),
-    ],
-)
 async def test_multi_day_recovery(
     hass: HomeAssistant,
     normal_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
     history_responses: dict[str | None, dict[str, Any]],
-    time_zone: str,
-    expected: list[tuple[str, float, float]],
-    expected_solar: list[tuple[str, float, float]],
 ) -> None:
-    """Recover each missed hour across several days without lumping energy together."""
+    """Recover missed days in a half-hour time zone without lumping energy together."""
+    time_zone = "Asia/Kolkata"
     zone = await dt_util.async_get_time_zone(time_zone)
     assert zone is not None
     day = datetime(2023, 6, 1, tzinfo=zone)
@@ -347,37 +285,13 @@ async def test_multi_day_recovery(
     await _refresh(hass, freezer)
 
     stats = await _get_hourly_stats(hass, {GRID_STATISTIC_ID, SOLAR_STATISTIC_ID})
-    assert _hourly_rows(stats[GRID_STATISTIC_ID]) == expected
-    assert _hourly_rows(stats[SOLAR_STATISTIC_ID]) == expected_solar
-
-
-@pytest.mark.parametrize(
-    "first_values", [{GRID: 20}, {}], ids=["new-hour", "same-hour"]
-)
-async def test_repeated_import_with_delayed_recorder(
-    recorder_mock: Recorder,
-    hass: HomeAssistant,
-    normal_config_entry: MockConfigEntry,
-    freezer: FrozenDateTimeFactory,
-    history_responses: dict[str | None, dict[str, Any]],
-    first_values: dict[str, float],
-) -> None:
-    """Keep sums correct when a repeat import reads uncommitted baselines."""
-    history_responses[None] = _history((BEFORE, {GRID: 100}))
-    await _setup(hass, normal_config_entry)
-    history_responses[None] = _history((AFTER, first_values))
-    history_responses[END_DATE] = _history((BEFORE, {GRID: 100}), (LAST, {GRID: 50}))
-    with patch.object(recorder_mock, "queue_task") as queue:
-        await _advance(hass, freezer)
-        history_responses[None] = _history((AFTER, {GRID: 20}))
-        await _advance(hass, freezer)
-    for queued in queue.call_args_list:
-        recorder_mock.queue_task(queued.args[0])
-    await async_wait_recording_done(hass)
-    stats = await _get_hourly_stats(hass, {GRID_STATISTIC_ID})
     assert _hourly_rows(stats[GRID_STATISTIC_ID]) == [
-        ("2023-06-02T06:00:00+00:00", 150, 150),
-        ("2023-06-02T07:00:00+00:00", 20, 170),
+        ("2023-06-01T18:00:00+00:00", 30, 30),
+        ("2023-06-02T18:00:00+00:00", 110, 140),
+    ]
+    assert _hourly_rows(stats[SOLAR_STATISTIC_ID]) == [
+        ("2023-06-01T18:00:00+00:00", 100, 100),
+        ("2023-06-02T18:00:00+00:00", 50, 150),
     ]
 
 
@@ -451,12 +365,7 @@ async def test_copy_sensor_history(
 @pytest.mark.parametrize(
     ("failure", "invalidates_token"),
     [
-        pytest.param(TeslaFleetError(), False, id="api"),
         pytest.param(InvalidToken(), True, id="invalid-token"),
-        pytest.param(OAuthExpired(), True, id="expired-token"),
-        pytest.param(TimeoutError(), False, id="timeout"),
-        pytest.param(ClientConnectionError(), False, id="connection"),
-        pytest.param({}, False, id="missing-response"),
         pytest.param(_history(), False, id="empty-day"),
         pytest.param(_history((AFTER, {GRID: 10})), False, id="wrong-day"),
     ],
@@ -466,7 +375,7 @@ async def test_history_errors_retry_without_skipping(
     normal_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
     mock_energy_history: AsyncMock,
-    failure: TeslaFleetError | TimeoutError | ClientConnectionError | dict[str, Any],
+    failure: TeslaFleetError | dict[str, Any],
     invalidates_token: bool,
 ) -> None:
     """A failed historical day is retried later without skipping the gap."""

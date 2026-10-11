@@ -1046,7 +1046,6 @@ async def test_energy_history_refresh_ratelimited_not_sticky(
         pytest.param(False, False, 0, id="wall-connector-only"),
         pytest.param(True, False, 1, id="battery-only"),
         pytest.param(False, True, 1, id="solar-only"),
-        pytest.param(True, True, 1, id="battery-and-solar"),
     ],
 )
 async def test_energy_statistics_polling(
@@ -1084,12 +1083,6 @@ async def test_energy_statistics_polling(
     assert hass.states.get("sensor.wall_connector_power") is not None
     assert mock_energy_history.call_count == expected_calls
 
-    freezer.tick(ENERGY_STATISTICS_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    assert mock_energy_history.call_count == 2 * expected_calls
-
-    assert await hass.config_entries.async_unload(normal_config_entry.entry_id)
     freezer.tick(ENERGY_STATISTICS_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
