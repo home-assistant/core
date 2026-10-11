@@ -35,7 +35,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -47,7 +46,6 @@ from .const import (
     EVENT_KEY_ID,
     EVENT_KEY_SENSOR,
     EVENT_KEY_UNIT,
-    SIGNAL_AVAILABILITY,
     TMP_ENTITY,
 )
 from .entity import RflinkDevice
@@ -384,10 +382,10 @@ class RflinkSensor(RflinkDevice, SensorEntity):
         """
         super().async_entity_id_changed(old_entity_id)
 
+    @callback
     @override
-    # pylint: disable-next=home-assistant-missing-super-call
-    async def async_added_to_hass(self) -> None:
-        """Register update callback."""
+    def _async_register_lookups(self) -> None:
+        """Route sensor events for the device id and aliases to this entity."""
         # Remove temporary bogus entity_id if added
         tmp_entity = TMP_ENTITY.format(self._device_id)
         if (
@@ -404,17 +402,6 @@ class RflinkSensor(RflinkDevice, SensorEntity):
         if self._aliases:
             for _id in self._aliases:
                 self._async_register_lookup(lookup, _id)
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass, SIGNAL_AVAILABILITY, self._availability_callback
-            )
-        )
-        self._async_subscribe_handle_event()
-        self.async_on_remove(self._async_unsubscribe_handle_event)
-
-        # Process the initial event now that the entity is created
-        if self._initial_event:
-            self.handle_event_callback(self._initial_event)
 
     @property
     @override

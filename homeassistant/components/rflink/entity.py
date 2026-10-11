@@ -165,6 +165,22 @@ class RflinkDevice(Entity):
     async def async_added_to_hass(self) -> None:
         """Register update callback."""
         await super().async_added_to_hass()
+        self._async_register_lookups()
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass, SIGNAL_AVAILABILITY, self._availability_callback
+            )
+        )
+        self._async_subscribe_handle_event()
+        self.async_on_remove(self._async_unsubscribe_handle_event)
+
+        # Process the initial event now that the entity is created
+        if self._initial_event:
+            self.handle_event_callback(self._initial_event)
+
+    @callback
+    def _async_register_lookups(self) -> None:
+        """Route command events for the device id and aliases to this entity."""
         # Remove temporary bogus entity_id if added
         tmp_entity = TMP_ENTITY.format(self._device_id)
         if (
@@ -194,17 +210,6 @@ class RflinkDevice(Entity):
         if self._nogroup_aliases:
             for _id in self._nogroup_aliases:
                 self._async_register_lookup(lookup, _id)
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass, SIGNAL_AVAILABILITY, self._availability_callback
-            )
-        )
-        self._async_subscribe_handle_event()
-        self.async_on_remove(self._async_unsubscribe_handle_event)
-
-        # Process the initial event now that the entity is created
-        if self._initial_event:
-            self.handle_event_callback(self._initial_event)
 
 
 class RflinkCommand(RflinkDevice):
