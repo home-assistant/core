@@ -147,12 +147,20 @@ async def test_set_circulation_schedule(
     )
 
 
+@pytest.mark.parametrize(
+    "fixture",
+    [
+        pytest.param("vicare/Vitocal250A.json", id="vitocal250a"),
+        pytest.param("vicare/Vitocal222G_Vitovent300W.json", id="vitocal222g"),
+    ],
+)
 async def test_circulation_schedule_round_trip(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    fixture: str,
 ) -> None:
     """Test the schedule returned by get can be passed to set unchanged."""
-    mock_vicare = MockPyViCare(CIRCULATION_SCHEDULE_FIXTURES)
+    mock_vicare = MockPyViCare([Fixture({"type:heatpump"}, fixture)])
     await _setup_water_heater(hass, mock_config_entry, mock_vicare)
     device = mock_vicare.devices[0]
     current = device.service.getProperty(
@@ -194,6 +202,9 @@ async def test_circulation_schedule_round_trip(
         ),
         pytest.param({"from": "06:00", "to": "06:00", "mode": "on"}, id="empty_range"),
         pytest.param({"from": "06:00", "to": "08:00"}, id="missing_mode"),
+        pytest.param(
+            {"from": "06:00", "to": "08:00", "mode": "5/25-cycles"}, id="vicare_mode"
+        ),
     ],
 )
 async def test_set_circulation_schedule_invalid_slot(
@@ -332,3 +343,29 @@ async def test_circulation_schedule_not_supported(
             return_response=return_response,
         )
     assert exc_info.value.translation_key == "circulation_schedule_not_supported"
+
+
+async def test_set_circulation_schedule_unsupported_mode(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a mode the device does not support is rejected before sending."""
+    mock_vicare = MockPyViCare(CIRCULATION_SCHEDULE_FIXTURES)
+    await _setup_water_heater(hass, mock_config_entry, mock_vicare)
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            "set_circulation_schedule",
+            {
+                ATTR_ENTITY_ID: ENTITY_WATER_HEATER,
+                "monday": [{"from": "06:00", "to": "08:00", "mode": "cycles_5_25"}],
+            },
+            blocking=True,
+        )
+    assert exc_info.value.translation_key == "circulation_mode_not_supported"
+    assert exc_info.value.translation_placeholders == {
+        "mode": "cycles_5_25",
+        "modes": "on",
+    }
+    mock_vicare.devices[0].service.setProperty.assert_not_called()

@@ -682,6 +682,9 @@
     "api_error": {
       "message": "Unable to communicate with the ViCare API"
     },
+    "circulation_mode_not_supported": {
+      "message": "Circulation mode {mode} is not supported by this device, supported modes: {modes}"
+    },
     "circulation_schedule_not_set": {
       "message": "Unable to set the circulation schedule: {error}"
     },
@@ -707,6 +710,15 @@
       "title": "Update your API client in the Viessmann Developer Portal"
     }
   },
+  "selector": {
+    "circulation_mode": {
+      "options": {
+        "cycles_5_10": "5/10 cycles",
+        "cycles_5_25": "5/25 cycles",
+        "on": "[%key:common::state::on%]"
+      }
+    }
+  },
   "services": {
     "get_circulation_schedule": {
       "description": "Gets the domestic hot water circulation pump schedule.",
@@ -720,7 +732,7 @@
           "name": "[%key:common::time::friday%]"
         },
         "monday": {
-          "description": "Circulation slots for this day. Each slot has a from and to time on a 10-minute grid (use 00:00 or 24:00 as end time for the end of the day) and a mode supported by the device. Days not passed keep their current schedule.",
+          "description": "Circulation slots for this day. Each slot has a from and to time on a 10-minute grid (use 00:00 or 24:00 as end time for the end of the day) and a circulation mode supported by the device. Days not passed keep their current schedule.",
           "name": "[%key:common::time::monday%]"
         },
         "saturday": {

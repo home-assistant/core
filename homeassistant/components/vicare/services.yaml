@@ -19,9 +19,9 @@
             select:
               options:
                 - "on"
-                - "5/25-cycles"
-                - "5/10-cycles"
-              custom_value: true
+                - "cycles_5_25"
+                - "cycles_5_10"
+              translation_key: circulation_mode
 
 get_circulation_schedule:
   target:

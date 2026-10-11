@@ -32,6 +32,12 @@ WEEKDAYS = (
 ATTR_FROM = "from"
 ATTR_TO = "to"
 
+HA_TO_VICARE_CIRCULATION_MODE = {
+    "on": "on",
+    "cycles_5_25": "5/25-cycles",
+    "cycles_5_10": "5/10-cycles",
+}
+
 
 def _slot_time(value: Any) -> time:
     """Parse a slot time on a 10-minute grid, 24:00 is the end of the day."""
@@ -59,7 +65,7 @@ CIRCULATION_SCHEDULE_SLOT_SCHEMA = probatio.All(
         {
             probatio.Required(ATTR_FROM): _slot_time,
             probatio.Required(ATTR_TO): _slot_time,
-            probatio.Required(ATTR_MODE): cv.string,
+            probatio.Required(ATTR_MODE): probatio.In(HA_TO_VICARE_CIRCULATION_MODE),
         }
     ),
     _validate_slot,

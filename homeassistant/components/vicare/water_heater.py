@@ -33,7 +33,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .entity import ViCareEntity
-from .services import ATTR_FROM, ATTR_TO, WEEKDAYS
+from .services import ATTR_FROM, ATTR_TO, HA_TO_VICARE_CIRCULATION_MODE, WEEKDAYS
 from .types import ViCareConfigEntry, ViCareDevice
 from .utils import get_circuits
 
@@ -68,6 +68,10 @@ HA_TO_VICARE_HVAC_DHW = {
     OPERATION_MODE_ON: VICARE_MODE_DHW,
 }
 
+
+VICARE_TO_HA_CIRCULATION_MODE = {
+    value: key for key, value in HA_TO_VICARE_CIRCULATION_MODE.items()
+}
 
 VICARE_API_ERRORS = (
     PyViCareDeviceCommunicationError,
@@ -184,7 +188,7 @@ class ViCareWater(ViCareEntity, WaterHeaterEntity):
                 {
                     ATTR_FROM: f"{slot['start']}:00",
                     ATTR_TO: f"{slot['end']}:00",
-                    ATTR_MODE: slot["mode"],
+                    ATTR_MODE: VICARE_TO_HA_CIRCULATION_MODE[slot["mode"]],
                 }
                 for slot in sorted(
                     schedule[day[:3]], key=lambda entry: entry["position"]
@@ -196,13 +200,31 @@ class ViCareWater(ViCareEntity, WaterHeaterEntity):
     def set_circulation_schedule(self, **slots_by_day: list[dict[str, Any]]) -> None:
         """Set the DHW circulation pump schedule, keeping days not passed."""
         schedule = self._get_circulation_schedule()
+        supported_modes = self._api.getDomesticHotWaterCirculationScheduleModes()
+        for slots in slots_by_day.values():
+            for slot in slots:
+                if (
+                    HA_TO_VICARE_CIRCULATION_MODE[slot[ATTR_MODE]]
+                    not in supported_modes
+                ):
+                    raise ServiceValidationError(
+                        translation_domain=DOMAIN,
+                        translation_key="circulation_mode_not_supported",
+                        translation_placeholders={
+                            "mode": slot[ATTR_MODE],
+                            "modes": ", ".join(
+                                VICARE_TO_HA_CIRCULATION_MODE[mode]
+                                for mode in supported_modes
+                            ),
+                        },
+                    )
         new_schedule = {day[:3]: schedule[day[:3]] for day in WEEKDAYS}
         for day, slots in slots_by_day.items():
             new_schedule[day[:3]] = [
                 {
                     "start": _to_vicare_time(slot[ATTR_FROM]),
                     "end": _to_vicare_time(slot[ATTR_TO]),
-                    "mode": slot[ATTR_MODE],
+                    "mode": HA_TO_VICARE_CIRCULATION_MODE[slot[ATTR_MODE]],
                     "position": position,
                 }
                 for position, slot in enumerate(slots)
