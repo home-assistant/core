@@ -11,7 +11,15 @@ from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from . import API_KEY, USERNAME_1, USERNAME_2, MockNetwork, MockUser
+from . import (
+    API_KEY,
+    CONF_DATA_WITH_SESSION_KEY,
+    LOGIN_REQUIRED_ERROR,
+    USERNAME_1,
+    USERNAME_2,
+    MockNetwork,
+    MockUser,
+)
 
 from tests.common import MockConfigEntry
 
@@ -30,6 +38,12 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_USERS: [USERNAME_1, USERNAME_2],
         },
     )
+
+
+@pytest.fixture(name="authenticated_config_entry")
+def mock_authenticated_config_entry() -> MockConfigEntry:
+    """Create an authenticated LastFM entry in Home Assistant."""
+    return MockConfigEntry(domain=DOMAIN, data={}, options=CONF_DATA_WITH_SESSION_KEY)
 
 
 @pytest.fixture(name="imported_config_entry")
@@ -99,9 +113,7 @@ def mock_hidden_user() -> MockUser:
     """Return mock user who hides their recent listening information."""
     return MockUser(
         recent_tracks=[Track("artist", "title", MockNetwork("lastfm"))],
-        recent_tracks_error=WSError(
-            "network", "17", "Login: User required to be logged in"
-        ),
+        recent_tracks_error=LOGIN_REQUIRED_ERROR,
     )
 
 
@@ -111,4 +123,14 @@ def mock_recent_tracks_error_user() -> MockUser:
     return MockUser(
         recent_tracks=[Track("artist", "title", MockNetwork("lastfm"))],
         recent_tracks_error=WSError("network", "status", "Something strange"),
+    )
+
+
+@pytest.fixture(name="hidden_now_playing_user")
+def mock_hidden_now_playing_user() -> MockUser:
+    """Return mock user with now playing available but hidden listening info."""
+    return MockUser(
+        now_playing_result=Track("artist", "title", MockNetwork("lastfm")),
+        recent_tracks=[Track("artist", "title", MockNetwork("lastfm"))],
+        recent_tracks_error=LOGIN_REQUIRED_ERROR,
     )
