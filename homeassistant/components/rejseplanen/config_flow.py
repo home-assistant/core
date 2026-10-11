@@ -136,8 +136,14 @@ class RejseplanenConfigFlow(ConfigFlow, domain=DOMAIN):
             if error := await self._async_validate_auth_key(auth_key):
                 errors["base"] = error
             else:
+                entry = self._get_reauth_entry()
+                if entry.update_listeners:
+                    return self.async_update_and_abort(
+                        entry,
+                        data_updates={CONF_API_KEY: auth_key},
+                    )
                 return self.async_update_reload_and_abort(
-                    self._get_reauth_entry(),
+                    entry,
                     data_updates={CONF_API_KEY: auth_key},
                 )
 
