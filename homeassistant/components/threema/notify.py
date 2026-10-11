@@ -14,6 +14,8 @@ from . import ThreemaConfigEntry
 from .client import ThreemaAuthError, ThreemaConnectionError, ThreemaSendError
 from .const import DOMAIN, SUBENTRY_TYPE_RECIPIENT
 
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
