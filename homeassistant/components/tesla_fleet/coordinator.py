@@ -98,28 +98,22 @@ ENDPOINTS = [
 ]
 
 
-def _get_last_statistics_for_statistic_ids(
-    hass: HomeAssistant,
-    statistic_ids: list[str],
+def _get_latest_field_statistics(
+    hass: HomeAssistant, site_id: str | int
 ) -> dict[str, StatisticData]:
-    """Return the latest long-term statistics for each statistic ID."""
-    return {
-        statistic_id: StatisticData(
-            start=dt_util.utc_from_timestamp(stats[0]["start"]),
-            state=stats[0]["state"] or 0.0,
-            sum=stats[0]["sum"] or 0.0,
-        )
-        for statistic_id in statistic_ids
-        if (
-            stats := get_last_statistics(
-                hass,
-                1,
-                statistic_id,
-                False,
-                {"state", "sum"},
-            ).get(statistic_id)
-        )
-    }
+    """Return the latest long-term statistic for each energy field."""
+    latest: dict[str, StatisticData] = {}
+    for key in ENERGY_HISTORY_FIELDS:
+        statistic_id = build_statistic_id(site_id, key)
+        if stats := get_last_statistics(
+            hass, 1, statistic_id, False, {"state", "sum"}
+        ).get(statistic_id):
+            latest[key] = StatisticData(
+                start=dt_util.utc_from_timestamp(stats[0]["start"]),
+                state=stats[0]["state"] or 0.0,
+                sum=stats[0]["sum"] or 0.0,
+            )
+    return latest
 
 
 def _get_sensor_statistics(
@@ -559,16 +553,9 @@ class TeslaFleetEnergySiteStatisticsCoordinator(DataUpdateCoordinator[None]):
         today = period_start.astimezone(site_time_zone).replace(
             hour=0, minute=0, second=0, microsecond=0
         )
-        site_id = self.api.energy_site_id
         recorder = get_instance(self.hass)
-        statistic_ids = [
-            build_statistic_id(site_id, key) for key in ENERGY_HISTORY_FIELDS
-        ]
-
         last_stats = await recorder.async_add_executor_job(
-            _get_last_statistics_for_statistic_ids,
-            self.hass,
-            statistic_ids,
+            _get_latest_field_statistics, self.hass, self.api.energy_site_id
         )
 
         first_run_start = dt_util.as_utc(today).replace(
@@ -636,7 +623,7 @@ class TeslaFleetEnergySiteStatisticsCoordinator(DataUpdateCoordinator[None]):
         )
         for key, statistics in history.items():
             async_add_external_statistics(self.hass, self._metadata(key), statistics)
-            last_stats[build_statistic_id(site_id, key)] = statistics[-1]
+            last_stats[key] = statistics[-1]
 
     def _metadata(self, key: str) -> StatisticMetaData:
         """Return the external statistic metadata for a field."""
@@ -661,8 +648,7 @@ class TeslaFleetEnergySiteStatisticsCoordinator(DataUpdateCoordinator[None]):
         """Write each field's hours from its latest one, continuing its total."""
         hourly_periods = _aggregate_energy_history_by_hour(time_series)
         for key in ENERGY_HISTORY_FIELDS:
-            statistic_id = build_statistic_id(self.api.energy_site_id, key)
-            latest = last_stats.get(statistic_id)
+            latest = last_stats.get(key)
             running_sum = latest["sum"] if latest else 0.0
             field_start = (
                 max(latest["start"], window_start) if latest else first_run_start
@@ -685,7 +671,7 @@ class TeslaFleetEnergySiteStatisticsCoordinator(DataUpdateCoordinator[None]):
                 async_add_external_statistics(
                     self.hass, self._metadata(key), statistics
                 )
-                last_stats[statistic_id] = statistics[-1]
+                last_stats[key] = statistics[-1]
 
 
 class TeslaFleetEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]]):
