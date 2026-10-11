@@ -73,9 +73,10 @@ class GreeAcState:
 class GreeIrRuntimeData:
     """Runtime data for a Gree IR config entry.
 
-    Holds the latest known state of the unit — the last frame sent to it, or the
-    last one a configured receiver saw the remote send — shared by every entity of
-    the entry so each one can build a full frame from it.
+    Holds the latest known state of the unit — the last frame sent to it, the last
+    one a configured receiver saw the remote send, and any changes made while it is
+    off that the next frame will carry — shared by every entity of the entry so
+    each one can build a full frame from it.
     """
 
     configured_modes: tuple[GreeAcMode, ...]
