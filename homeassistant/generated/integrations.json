@@ -5677,6 +5677,12 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "plexilent": {
+      "name": "Plexilent",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "plugwise": {
       "name": "Plugwise",
       "integration_type": "hub",
