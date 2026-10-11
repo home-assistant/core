@@ -113,9 +113,10 @@ class LondonAirConfigFlow(ConfigFlow, domain=DOMAIN):
     async def _async_merge_when_ready(self, import_config: Mapping[str, Any]) -> None:
         """Merge imported locations once a concurrent import creates the entry."""
         loop = asyncio.get_running_loop()
-        # The concurrent import's connection test takes at most REQUEST_TIMEOUT;
-        # add a margin so we do not give up just before the entry is created.
-        deadline = loop.time() + (REQUEST_TIMEOUT.total or 10.0) + 5.0
+        # Two sequential REQUEST_TIMEOUT-bounded requests (connection test and
+        # first refresh) can elapse while the entry stays SETUP_IN_PROGRESS;
+        # add a margin so we do not give up just before the entry is ready.
+        deadline = loop.time() + 2 * (REQUEST_TIMEOUT.total or 10.0) + 5.0
         while loop.time() < deadline:
             entry = self.hass.config_entries.async_entry_for_domain_unique_id(
                 DOMAIN, DOMAIN

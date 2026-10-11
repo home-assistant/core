@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, Mock
 
 from aiohttp import ClientConnectorError
 from freezegun.api import FrozenDateTimeFactory
+import pytest
 
 from homeassistant.components.london_air.const import DOMAIN, SCAN_INTERVAL
 from homeassistant.components.london_air.coordinator import NO_SPECIES_DATA
@@ -280,12 +281,14 @@ async def test_yaml_migration_existing_entry(
     )
 
 
+@pytest.mark.parametrize("delay", [0, 0.5], ids=["instant", "slow_setup"])
 async def test_yaml_migration_multiple_blocks(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     issue_registry: ir.IssueRegistry,
     mock_session: MagicMock,
     api_payload: dict[str, Any],
+    delay: float,
 ) -> None:
     """Test that multiple YAML blocks merge into a single entry."""
     response = MagicMock()
@@ -293,8 +296,9 @@ async def test_yaml_migration_multiple_blocks(
     response.json = AsyncMock(return_value=api_payload)
 
     async def _get(*args: Any, **kwargs: Any) -> MagicMock:
-        # Yield so both import flows are in progress at the same time.
-        await asyncio.sleep(0)
+        # Yield so both import flows run concurrently; a non-zero delay keeps
+        # the entry SETUP_IN_PROGRESS for several merge-poll cycles.
+        await asyncio.sleep(delay)
         return response
 
     mock_session.get.side_effect = _get
