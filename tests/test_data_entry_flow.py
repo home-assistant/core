@@ -1390,3 +1390,52 @@ async def test_show_advanced_options(
         "removed in HA Core 2027.6. Use a user friendly way to present additional "
         "options in the UI, for example a section instead"
     ) in caplog.text
+
+
+async def test_step_id_is_none(manager: MockFlowManager) -> None:
+    """Test that step_id can always be None."""
+
+    @manager.mock_reg_handler("test")
+    class TestFlow(data_entry_flow.FlowHandler):
+        VERSION = 1
+        data: list[str] | None = None
+
+        async def async_step_first(self, user_input=None):
+            if user_input is not None:
+                self.data = user_input
+                return await self.async_step_second()
+            return self.async_show_form(data_schema=probatio.Schema([str]))
+
+        async def async_step_second(self, user_input=None):
+            return await self.async_step_third()
+
+        async def async_step_third(self, user_input=None):
+            if user_input is not None:
+                return self.async_create_entry(
+                    title="Test Entry", data=self.data + user_input
+                )
+            return self.async_show_form(data_schema=probatio.Schema([str]))
+
+    form = await manager.async_init("test", context={"init_step": "first"})
+    assert form["step_id"] == "first"
+    form = await manager.async_configure(form["flow_id"], ["FIRST-DATA"])
+    assert form["step_id"] == "third"
+    form = await manager.async_configure(form["flow_id"], ["THIRD-DATA"])
+    assert form["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert form["data"] == ["FIRST-DATA", "THIRD-DATA"]
+
+
+async def test_step_id_after_nested_step_returns(manager: MockFlowManager) -> None:
+    """Test step_id is the outer step when it shows a form after a nested step."""
+
+    @manager.mock_reg_handler("test")
+    class TestFlow(data_entry_flow.FlowHandler):
+        async def async_step_init(self, user_input=None):
+            await self.async_step_helper()
+            return self.async_show_form(data_schema=probatio.Schema([str]))
+
+        async def async_step_helper(self, user_input=None):
+            return self.async_abort(reason="unused")
+
+    form = await manager.async_init("test")
+    assert form["step_id"] == "init"
