@@ -127,7 +127,8 @@ def create_dyad_trait() -> Mock:
 def create_zeo_trait() -> Mock:
     """Create zeo trait for A01 devices."""
     zeo_trait = AsyncMock()
-    zeo_trait.query_values.return_value = {
+    zeo_trait.add_update_listener = Mock(return_value=Mock())
+    zeo_trait.values = {
         RoborockZeoProtocol.STATE: ZeoState.drying.name,
         RoborockZeoProtocol.COUNTDOWN: 0,
         RoborockZeoProtocol.WASHING_LEFT: 253,

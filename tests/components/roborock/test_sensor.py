@@ -48,8 +48,6 @@ def setup_coordinator_side_effect(
             device.v1_properties.status.refresh.side_effect = side_effect
         if device.dyad is not None:
             device.dyad.query_values.side_effect = side_effect
-        if device.zeo is not None:
-            device.zeo.query_values.side_effect = side_effect
         if device.b01_q10_properties is not None:
             device.b01_q10_properties.refresh.side_effect = side_effect
         if device.b01_q7_properties is not None:
@@ -87,7 +85,7 @@ async def test_sensors_coordinator_state(
 
     state = hass.states.get("sensor.zeo_one_washing_left")
     assert state is not None
-    assert state.state == expected_state
+    assert state.state == "253"
 
     # B01 Q7 sensors
     state = hass.states.get("sensor.roborock_q7_battery")
