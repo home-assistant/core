@@ -57,13 +57,18 @@ async def test_pick_frame_excludes_configured(
     assert result["data"]["frame_id"] == "frame-2"
 
 
-async def test_pick_frame_all_configured_after_list(
+async def test_pick_frame_taken_concurrently_rerenders(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_exchange_token: AsyncMock,
     mock_setup_entry: AsyncMock,
 ) -> None:
-    """Test the picker aborts when every listed frame got configured meanwhile."""
+    """Test the picker re-renders when the picked frame was taken meanwhile.
+
+    A concurrent flow configured the submitted frame while the picker was
+    open; frame-3 is still free, so the user gets the picker again with
+    the stale option removed instead of a dead-end abort.
+    """
     mock_config_entry.add_to_hass(hass)
 
     # Two free frames so the flow shows the picker instead of auto-creating
@@ -99,14 +104,25 @@ async def test_pick_frame_all_configured_after_list(
         },
     ).add_to_hass(hass)
 
-    # frame-3 is still free, so the submitted frame-2 is no longer in the
-    # picker's available list: the concurrent-configuration abort fires.
+    # The submitted frame-2 is no longer in the picker's available list;
+    # the flow re-renders the picker offering only the still-free frame-3.
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"frame_id": "frame-2"}
     )
     await hass.async_block_till_done()
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "all_frames_configured"
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "pick_frame"
+    schema = result["data_schema"].schema
+    options = [option["value"] for option in schema["frame_id"].config["options"]]
+    assert options == ["frame-3"]
+
+    # The re-rendered picker completes the flow with the remaining frame.
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"frame_id": "frame-3"}
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"]["frame_id"] == "frame-3"
 
 
 async def test_pick_frame_shows_abort_when_nothing_free(
