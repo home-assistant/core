@@ -255,3 +255,32 @@ async def test_websocket_retry_delay_resets_after_successful_listen(
         ((WEBSOCKET_RETRY_DELAY,), {}),
         ((WEBSOCKET_RETRY_DELAY,), {}),
     ]
+
+
+async def test_websocket_start_and_restart_are_logged(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    patch_simplisafe_api,
+) -> None:
+    """Test initial websocket starts and restarts are logged distinctly."""
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    patch_simplisafe_api.stop()
+    manager = config_entry.runtime_data
+
+    with (
+        patch.object(manager, "_async_websocket_loop", return_value=Mock()),
+        patch.object(
+            manager.entry,
+            "async_create_background_task",
+            return_value=Mock(done=Mock(return_value=False)),
+        ),
+        patch("homeassistant.components.simplisafe.LOGGER.debug") as mock_debug,
+    ):
+        manager._async_start_websocket_if_needed()
+        manager._websocket_task = Mock(done=Mock(return_value=True))
+        manager._async_start_websocket_if_needed()
+
+    mock_debug.assert_any_call("Starting websocket loop task")
+    mock_debug.assert_any_call("Restarting websocket loop task")
