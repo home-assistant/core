@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, Mock
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
-from uiprotect.data import LinkStation, WSAction
+from uiprotect.data import DeviceState, LinkStation, WSAction
 from uiprotect.websocket import WebsocketState
 
 from homeassistant.const import STATE_UNAVAILABLE
@@ -315,6 +315,75 @@ async def test_alarm_hub_state_updates_from_public_ws(
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id).state == "on"
+
+
+async def test_alarm_hub_values_update_from_public_ws(
+    hass: HomeAssistant,
+    ufp_with_alarm_hub: MockUFPFixture,
+    alarm_hub: LinkStation,
+) -> None:
+    """Hub-level values follow a public devices WS update."""
+    await init_entry(hass, ufp_with_alarm_hub, [])
+    assert hass.states.get("binary_sensor.alarm_hub_tamper").state == "off"
+    assert hass.states.get("sensor.alarm_hub_battery_voltage").state == "12.108427"
+
+    alarm_hub.alarm_hub["cover"]["status"] = "open"
+    alarm_hub.alarm_hub["battery"]["voltage"] = 11.5
+    assert ufp_with_alarm_hub.devices_ws_subscription is not None
+    ufp_with_alarm_hub.devices_ws_subscription(public_device_ws_message(alarm_hub))
+    await hass.async_block_till_done()
+
+    assert hass.states.get("binary_sensor.alarm_hub_tamper").state == "on"
+    assert hass.states.get("sensor.alarm_hub_battery_voltage").state == "11.5"
+
+
+async def test_alarm_hub_reads_replaced_object_after_resync(
+    hass: HomeAssistant,
+    ufp_with_alarm_hub: MockUFPFixture,
+    alarm_hub: LinkStation,
+) -> None:
+    """A resync that replaces the hub object is picked up from the bootstrap."""
+    await init_entry(hass, ufp_with_alarm_hub, [])
+
+    replaced = _make_alarm_hub()
+    replaced.alarm_hub["cover"]["status"] = "open"
+    replaced.alarm_hub["battery"]["voltage"] = 11.5
+    ufp_with_alarm_hub.api.public_bootstrap.alarm_hubs[alarm_hub.id] = replaced
+    msg = public_device_ws_message(None)
+    msg.old_obj = alarm_hub
+    assert ufp_with_alarm_hub.devices_ws_subscription is not None
+    ufp_with_alarm_hub.devices_ws_subscription(msg)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("binary_sensor.alarm_hub_tamper").state == "on"
+    assert hass.states.get("sensor.alarm_hub_battery_voltage").state == "11.5"
+
+
+async def test_alarm_hub_unavailable_while_disconnected(
+    hass: HomeAssistant,
+    ufp_with_alarm_hub: MockUFPFixture,
+    alarm_hub: LinkStation,
+) -> None:
+    """A disconnected hub takes all of its entities offline until it is back."""
+    await init_entry(hass, ufp_with_alarm_hub, [])
+    entity_ids = (
+        "binary_sensor.alarm_hub_tamper",
+        "sensor.alarm_hub_battery_voltage",
+        "binary_sensor.alarm_hub_hallway",
+    )
+    assert ufp_with_alarm_hub.devices_ws_subscription is not None
+
+    alarm_hub.state = DeviceState.DISCONNECTED
+    ufp_with_alarm_hub.devices_ws_subscription(public_device_ws_message(alarm_hub))
+    await hass.async_block_till_done()
+    for entity_id in entity_ids:
+        assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+    alarm_hub.state = DeviceState.CONNECTED
+    ufp_with_alarm_hub.devices_ws_subscription(public_device_ws_message(alarm_hub))
+    await hass.async_block_till_done()
+    for entity_id in entity_ids:
+        assert hass.states.get(entity_id).state != STATE_UNAVAILABLE
 
 
 async def test_alarm_hub_becomes_unavailable_when_removed(
