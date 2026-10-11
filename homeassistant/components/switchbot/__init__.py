@@ -103,6 +103,12 @@ PLATFORMS_BY_TYPE = {
         Platform.SWITCH,
         Platform.SENSOR,
     ],
+    SupportedModels.CIRCULATOR_FAN_PRO.value: [
+        Platform.FAN,
+        Platform.LIGHT,
+        Platform.SENSOR,
+        Platform.SWITCH,
+    ],
     SupportedModels.S10_VACUUM.value: [Platform.VACUUM, Platform.SENSOR],
     SupportedModels.S20_VACUUM.value: [Platform.VACUUM, Platform.SENSOR],
     SupportedModels.K10_VACUUM.value: [Platform.VACUUM, Platform.SENSOR],
@@ -163,7 +169,11 @@ PLATFORMS_BY_TYPE = {
     SupportedModels.PLUG_MINI_EU.value: [Platform.SWITCH, Platform.SENSOR],
     SupportedModels.RELAY_SWITCH_2PM.value: [Platform.SWITCH, Platform.SENSOR],
     SupportedModels.GARAGE_DOOR_OPENER.value: [Platform.COVER, Platform.SENSOR],
-    SupportedModels.CLIMATE_PANEL.value: [Platform.SENSOR, Platform.BINARY_SENSOR],
+    SupportedModels.CLIMATE_PANEL.value: [
+        Platform.SENSOR,
+        Platform.BINARY_SENSOR,
+        Platform.EVENT,
+    ],
     SupportedModels.SMART_THERMOSTAT_RADIATOR.value: [
         Platform.CLIMATE,
         Platform.SENSOR,
@@ -228,6 +238,7 @@ CLASS_BY_DEVICE = {
     SupportedModels.ROLLER_SHADE.value: switchbot.SwitchbotRollerShade,
     SupportedModels.CIRCULATOR_FAN.value: switchbot.SwitchbotFan,
     SupportedModels.STANDING_FAN.value: switchbot.SwitchbotStandingFan,
+    SupportedModels.CIRCULATOR_FAN_PRO.value: switchbot.SwitchbotCirculatorFanPro,
     SupportedModels.UNIVERSAL_REMOTE.value: switchbot.SwitchbotUniversalRemote,
     SupportedModels.S10_VACUUM.value: switchbot.SwitchbotVacuum,
     SupportedModels.S20_VACUUM.value: switchbot.SwitchbotVacuum,

@@ -6,6 +6,7 @@ from aiomelcloudhome import UserContext
 from aiomelcloudhome.exceptions import (
     MelCloudHomeAuthenticationError,
     MelCloudHomeConnectionError,
+    MelCloudHomeNotFoundError,
     MelCloudHomeTimeoutError,
 )
 from freezegun.api import FrozenDateTimeFactory
@@ -46,11 +47,32 @@ async def test_entry_setup_unload(
 
 
 @pytest.mark.parametrize(
-    ("exception", "setup_state"),
+    ("exception", "setup_state", "translation_key"),
     [
-        (MelCloudHomeAuthenticationError("bad creds"), ConfigEntryState.SETUP_ERROR),
-        (MelCloudHomeConnectionError("cannot connect"), ConfigEntryState.SETUP_RETRY),
-        (MelCloudHomeTimeoutError("timeout"), ConfigEntryState.SETUP_RETRY),
+        pytest.param(
+            MelCloudHomeAuthenticationError("bad creds"),
+            ConfigEntryState.SETUP_ERROR,
+            "invalid_auth",
+            id="auth",
+        ),
+        pytest.param(
+            MelCloudHomeConnectionError("cannot connect"),
+            ConfigEntryState.SETUP_RETRY,
+            "cannot_connect",
+            id="connection",
+        ),
+        pytest.param(
+            MelCloudHomeTimeoutError("timeout"),
+            ConfigEntryState.SETUP_RETRY,
+            "timeout_connect",
+            id="timeout",
+        ),
+        pytest.param(
+            MelCloudHomeNotFoundError("not found"),
+            ConfigEntryState.SETUP_RETRY,
+            "api_error",
+            id="api_error",
+        ),
     ],
 )
 async def test_entry_setup_retry_on_update_failure(
@@ -59,6 +81,7 @@ async def test_entry_setup_retry_on_update_failure(
     mock_melcloud_client: AsyncMock,
     exception: Exception,
     setup_state: ConfigEntryState,
+    translation_key: str,
 ) -> None:
     """Test setup retries when initial coordinator refresh fails."""
     mock_melcloud_client.get_context.side_effect = exception
@@ -68,6 +91,7 @@ async def test_entry_setup_retry_on_update_failure(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is setup_state
+    assert mock_config_entry.error_reason_translation_key == translation_key
 
 
 async def test_new_ata_unit_callback(
@@ -112,16 +136,96 @@ async def test_new_ata_unit_callback(
     assert ata_entities
 
 
+@pytest.mark.parametrize(
+    (
+        "removed_units_key",
+        "removed_unit_id",
+        "removed_entity_id",
+        "kept_unit_id",
+        "kept_entity_id",
+    ),
+    [
+        pytest.param(
+            "airToAirUnits",
+            "ata-unit-uuid-1",
+            "climate.living_room_ac",
+            "atw-unit-uuid-1",
+            "climate.heat_pump_zone_1",
+            id="ata",
+        ),
+        pytest.param(
+            "airToWaterUnits",
+            "atw-unit-uuid-1",
+            "climate.heat_pump_zone_1",
+            "ata-unit-uuid-1",
+            "climate.living_room_ac",
+            id="atw",
+        ),
+    ],
+)
 async def test_stale_devices_removed(
     hass: HomeAssistant,
     mock_melcloud_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
     freezer: FrozenDateTimeFactory,
+    removed_units_key: str,
+    removed_unit_id: str,
+    removed_entity_id: str,
+    kept_unit_id: str,
+    kept_entity_id: str,
 ) -> None:
     """Test that devices are removed when units disappear from the account."""
     fixture = await async_load_json_object_fixture(hass, "context.json", DOMAIN)
     await setup_integration(hass, mock_config_entry)
+
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, removed_unit_id), mock_config_entry.entry_id
+    )
+
+    mock_melcloud_client.get_context.return_value = UserContext.model_validate(
+        {
+            **fixture,
+            "buildings": [
+                {**building, removed_units_key: []} for building in fixture["buildings"]
+            ],
+        }
+    )
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, removed_unit_id), mock_config_entry.entry_id
+        )
+        is None
+    )
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, kept_unit_id), mock_config_entry.entry_id
+    )
+    assert hass.states.get(removed_entity_id) is None
+    assert (state := hass.states.get(kept_entity_id))
+    assert state.state != STATE_UNAVAILABLE
+
+
+async def test_empty_context_keeps_devices(
+    hass: HomeAssistant,
+    mock_melcloud_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that a context without any units keeps the devices but marks them unavailable."""
+    fixture = await async_load_json_object_fixture(hass, "context.json", DOMAIN)
+    await setup_integration(hass, mock_config_entry)
+
+    mock_melcloud_client.get_context.return_value = UserContext.model_validate(
+        {**fixture, "buildings": [], "guestBuildings": []}
+    )
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert device_registry.async_get_device_by_identifier(
         (DOMAIN, "ata-unit-uuid-1"), mock_config_entry.entry_id
@@ -129,33 +233,16 @@ async def test_stale_devices_removed(
     assert device_registry.async_get_device_by_identifier(
         (DOMAIN, "atw-unit-uuid-1"), mock_config_entry.entry_id
     )
+    assert hass.states.get("climate.living_room_ac").state == STATE_UNAVAILABLE
+    assert hass.states.get("climate.heat_pump_zone_1").state == STATE_UNAVAILABLE
 
-    # Poof, now they're gone
-    mock_melcloud_client.get_context.return_value = UserContext.model_validate(
-        {
-            **fixture,
-            "buildings": [
-                {**building, "airToAirUnits": [], "airToWaterUnits": []}
-                for building in fixture["buildings"]
-            ],
-        }
-    )
+    mock_melcloud_client.get_context.return_value = UserContext.model_validate(fixture)
     freezer.tick(UPDATE_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert (
-        device_registry.async_get_device_by_identifier(
-            (DOMAIN, "ata-unit-uuid-1"), mock_config_entry.entry_id
-        )
-        is None
-    )
-    assert (
-        device_registry.async_get_device_by_identifier(
-            (DOMAIN, "atw-unit-uuid-1"), mock_config_entry.entry_id
-        )
-        is None
-    )
+    assert hass.states.get("climate.living_room_ac").state != STATE_UNAVAILABLE
+    assert hass.states.get("climate.heat_pump_zone_1").state != STATE_UNAVAILABLE
 
 
 async def test_new_atw_unit_callback(
@@ -206,6 +293,7 @@ async def test_new_atw_unit_callback(
         pytest.param(MelCloudHomeAuthenticationError("bad creds"), id="auth"),
         pytest.param(MelCloudHomeConnectionError("cannot connect"), id="connection"),
         pytest.param(MelCloudHomeTimeoutError("timeout"), id="timeout"),
+        pytest.param(MelCloudHomeNotFoundError("not found"), id="api_error"),
     ],
 )
 async def test_energy_update_cycle_fails(
@@ -246,6 +334,7 @@ async def test_energy_update_cycle_fails(
         pytest.param(MelCloudHomeAuthenticationError("bad creds"), id="auth"),
         pytest.param(MelCloudHomeConnectionError("cannot connect"), id="connection"),
         pytest.param(MelCloudHomeTimeoutError("timeout"), id="timeout"),
+        pytest.param(MelCloudHomeNotFoundError("not found"), id="api_error"),
     ],
 )
 async def test_energy_telemetry_fetch_failure(
@@ -261,7 +350,7 @@ async def test_energy_telemetry_fetch_failure(
     mock_melcloud_client.get_energy_telemetry.side_effect = exception
     freezer.tick(TELEMETRY_UPDATE_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert (
         mock_config_entry.runtime_data.telemetry_coordinator.last_update_success is True
@@ -332,6 +421,7 @@ async def test_telemetry_skipped_while_context_fetch_fails(
         pytest.param(MelCloudHomeAuthenticationError("bad creds"), id="auth"),
         pytest.param(MelCloudHomeConnectionError("cannot connect"), id="connection"),
         pytest.param(MelCloudHomeTimeoutError("timeout"), id="timeout"),
+        pytest.param(MelCloudHomeNotFoundError("not found"), id="api_error"),
     ],
 )
 async def test_outdoor_temperature_update_cycle_fails(

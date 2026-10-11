@@ -104,7 +104,13 @@ from homeassistant.const import (
     HTTP_BEARER_AUTHENTICATION,
     HTTP_DIGEST_AUTHENTICATION,
 )
-from homeassistant.core import Context, Event, HomeAssistant, ServiceResponse
+from homeassistant.core import (
+    DOMAIN as HOMEASSISTANT_DOMAIN,
+    Context,
+    Event,
+    HomeAssistant,
+    ServiceResponse,
+)
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.issue_registry import IssueRegistry
 from homeassistant.util import dt as dt_util, json as json_util
@@ -2610,6 +2616,118 @@ async def test_download_file_when_error_when_downloading(
     assert err.value.translation_placeholders is not None
     assert "error" in err.value.translation_placeholders
     assert err.value.translation_placeholders["error"] == "failed to download file"
+
+
+@pytest.mark.parametrize(
+    ("error", "translation_key"),
+    [
+        pytest.param(
+            errno.EACCES, "os_write_permission_denied", id="permission_denied"
+        ),
+        pytest.param(errno.ENOSPC, "os_write_no_space", id="no_space"),
+        pytest.param(errno.EROFS, "os_write_read_only", id="read_only"),
+        pytest.param(errno.ENOENT, "os_write_dir_not_found", id="dir_not_found"),
+        pytest.param(errno.EIO, "os_write_error", id="other"),
+    ],
+)
+@pytest.mark.usefixtures("mock_external_calls")
+async def test_download_file_write_error(
+    hass: HomeAssistant,
+    mock_broadcast_config_entry: MockConfigEntry,
+    allowlist_tmp_path: Path,
+    error: int,
+    translation_key: str,
+) -> None:
+    """Test download file when the file can't be written."""
+    mock_broadcast_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    directory_path = (allowlist_tmp_path / "downloads").as_posix()
+    telegram_file = File(
+        file_id="some-file-id",
+        file_unique_id="file_unique_id",
+        file_path="file/path/custom_name.jpg",
+    )
+
+    with (
+        patch(
+            "homeassistant.components.telegram_bot.bot.Bot.get_file",
+            AsyncMock(return_value=telegram_file),
+        ),
+        patch(
+            "telegram.File.download_as_bytearray",
+            AsyncMock(return_value=bytearray(b"file_content")),
+        ) as download_mock,
+        patch("pathlib.Path.write_bytes", side_effect=OSError(error, "Error")),
+        pytest.raises(HomeAssistantError) as err,
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            "download_file",
+            {
+                ATTR_FILE_ID: "some-file-id",
+                ATTR_DIRECTORY_PATH: directory_path,
+                ATTR_FILE_NAME: "custom_name.jpg",
+            },
+            blocking=True,
+            return_response=True,
+        )
+
+    download_mock.assert_awaited_once()
+    assert err.value.translation_domain == HOMEASSISTANT_DOMAIN
+    assert err.value.translation_key == translation_key
+    assert err.value.translation_placeholders == {
+        "path": f"{directory_path}/custom_name.jpg"
+    }
+
+
+@pytest.mark.usefixtures("mock_external_calls")
+async def test_download_file_create_directory_error(
+    hass: HomeAssistant,
+    mock_broadcast_config_entry: MockConfigEntry,
+    allowlist_tmp_path: Path,
+) -> None:
+    """Test download file when the download directory can't be created."""
+    mock_broadcast_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    directory_path = (allowlist_tmp_path / "downloads").as_posix()
+    telegram_file = File(
+        file_id="some-file-id",
+        file_unique_id="file_unique_id",
+        file_path="file/path/custom_name.jpg",
+    )
+
+    with (
+        patch(
+            "homeassistant.components.telegram_bot.bot.Bot.get_file",
+            AsyncMock(return_value=telegram_file),
+        ),
+        patch("telegram.File.download_as_bytearray") as download_mock,
+        patch(
+            "homeassistant.components.telegram_bot.bot.os.makedirs",
+            side_effect=OSError(errno.EACCES, "Error"),
+        ),
+        pytest.raises(HomeAssistantError) as err,
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            "download_file",
+            {
+                ATTR_FILE_ID: "some-file-id",
+                ATTR_DIRECTORY_PATH: directory_path,
+                ATTR_FILE_NAME: "custom_name.jpg",
+            },
+            blocking=True,
+            return_response=True,
+        )
+
+    download_mock.assert_not_called()
+    assert err.value.translation_domain == HOMEASSISTANT_DOMAIN
+    assert err.value.translation_key == "os_write_permission_denied"
+    assert err.value.translation_placeholders == {"path": directory_path}
 
 
 @pytest.mark.parametrize(

@@ -934,7 +934,13 @@ jobs:
           set -o pipefail
           cov_params=()
           if [[ "${SKIP_COVERAGE}" != "true" ]]; then
-            cov_params+=(--cov="homeassistant")
+            if [[ "${TEST_GROUP}" == "1" ]]; then
+              # Also report never-imported files as 0%. Listing every file
+              # is slow, so only one group does it.
+              cov_params+=(--cov="homeassistant")
+            else
+              cov_params+=(--cov)
+            fi
             cov_params+=(--cov-report=xml)
             cov_params+=(--junitxml=junit.xml -o junit_family=legacy)
           fi
@@ -1419,13 +1425,10 @@ jobs:
     runs-on: ubuntu-24.04
     permissions:
       contents: read
+    # Partial runs are short, so start the tests in parallel with the lint jobs
     needs:
       - info
       - base
-      - gen-requirements-all
-      - hassfest
-      - prek
-      - mypy
     if: |
       needs.info.outputs.lint_only != 'true'
       && needs.info.outputs.tests_glob
