@@ -1,0 +1,117 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: This integration does not provide additional actions.
+
+  appropriate-polling: done
+
+  brands: done
+
+  common-modules: done
+
+  config-flow-test-coverage: done
+
+  config-flow: done
+
+  dependency-transparency: done
+
+  docs-actions:
+    status: exempt
+    comment: This integration does not provide additional actions.
+
+  docs-conditions:
+    status: exempt
+    comment: This integration does not have any conditions.
+
+  docs-high-level-description: done
+
+  docs-installation-instructions: done
+
+  docs-removal-instructions: done
+
+  docs-triggers:
+    status: exempt
+    comment: This integration does not have any triggers.
+
+  entity-event-setup: done
+
+  entity-unique-id: done
+
+  has-entity-name: done
+
+  runtime-data: done
+
+  test-before-configure: done
+
+  test-before-setup: done
+
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions: done
+  config-entry-unloading: done
+  docs-configuration-parameters: done
+  docs-installation-parameters: done
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable:
+    status: todo
+    comment: Availability logging has not been verified for all connection and device failure paths.
+  parallel-updates: done
+  reauthentication-flow:
+    status: todo
+    comment: Reauthentication is deferred from this initial contribution.
+  test-coverage:
+    status: todo
+    comment: Config flow coverage is complete, but overall branch coverage is below 95 percent.
+
+  # Gold
+  devices: done
+  diagnostics:
+    status: todo
+    comment: No diagnostics download is implemented.
+  discovery-update-info: done
+  discovery: done
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting:
+    status: todo
+    comment: Discovery guidance is documented, but a complete troubleshooting section is not provided.
+  docs-use-cases: done
+  dynamic-devices:
+    status: exempt
+    comment: This contribution supports one thermostat per entry, without dynamic child-device discovery.
+  entity-category:
+    status: done
+    comment: The only entity controls the thermostat's primary function, not configuration or diagnostics.
+  entity-device-class:
+    status: done
+    comment: The climate platform has no device classes.
+  entity-disabled-by-default:
+    status: done
+    comment: The only entity is the thermostat's primary control and should be enabled by default.
+  entity-translations:
+    status: done
+    comment: The primary climate entity has no separate name and uses the device name.
+  exception-translations: done
+  icon-translations:
+    status: exempt
+    comment: The climate entity uses the standard platform icons without custom icons.
+  reconfiguration-flow:
+    status: todo
+    comment: No reconfiguration flow is implemented.
+  repair-issues:
+    status: todo
+    comment: No integration-specific repair flows are implemented.
+  stale-devices:
+    status: exempt
+    comment: Each config entry represents one thermostat and cannot accumulate stale child devices.
+
+  # Platinum
+  async-dependency: done
+  inject-websession: done
+  strict-typing: done
