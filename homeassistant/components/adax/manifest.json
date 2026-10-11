@@ -4,12 +4,12 @@
   "codeowners": ["@danielhiversen", "@lazytarget"],
   "config_flow": true,
   "dhcp": [
-      {
-        "hostname": "adax-heater*"
-      },
-      {
-        "hostname": "heater*"
-      }
+    {
+      "hostname": "adax-heater*"
+    },
+    {
+      "hostname": "heater*"
+    }
   ],
   "documentation": "https://www.home-assistant.io/integrations/adax",
   "iot_class": "local_polling",

@@ -23,8 +23,8 @@
         "data": {
           "token": "Authentication Token"
         },
-        "title": "Discovered Adax Heater",
-        "description": "An Adax heater was discovered at IP `{ip_address}` (MAC: `{mac}`). Please enter your local authentication token to complete setup."
+        "description": "An Adax heater was discovered at IP `{ip_address}` (MAC: `{mac}`). Please enter your local authentication token to complete setup.",
+        "title": "Discovered Adax Heater"
       },
       "local": {
         "data": {
