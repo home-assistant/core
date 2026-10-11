@@ -53,6 +53,12 @@ def platforms() -> list[Platform]:
             RoborockCommand.SET_WATER_BOX_CUSTOM_MODE,
             [201],
         ),
+        (
+            "select.roborock_s7_maxv_dock_empty_mode",
+            "light",
+            RoborockCommand.SET_DUST_COLLECTION_MODE,
+            {"mode": 1},
+        ),
     ],
 )
 async def test_update_success(
