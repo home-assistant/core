@@ -4,11 +4,10 @@ from typing import Any, override
 
 from homeassistant.components.device_tracker import SourceType, TrackerEntity
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import Trackables, TractiveClient, TractiveConfigEntry
-from .const import SERVER_UNAVAILABLE, TRACKER_POSITION_UPDATED
+from .const import TRACKER_POSITION_UPDATED
 from .entity import TractiveEntity
 
 
@@ -66,33 +65,12 @@ class TractiveDeviceTracker(TractiveEntity, TrackerEntity):
         return SourceType.GPS
 
     @callback
-    def _handle_position_update(self, event: dict[str, Any]) -> None:
+    @override
+    def handle_status_update(self, event: dict[str, Any]) -> None:
+        """Handle position update."""
         self._attr_latitude = event["latitude"]
         self._attr_longitude = event["longitude"]
         self._attr_location_accuracy = event["accuracy"]
         self._source_type = event["sensor_used"]
         self._attr_available = True
         self.async_write_ha_state()
-
-    @override
-    # pylint: disable-next=home-assistant-missing-super-call
-    async def async_added_to_hass(self) -> None:
-        """Handle entity which will be added."""
-        if not self._client.subscribed:
-            self._client.subscribe()
-
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                f"{TRACKER_POSITION_UPDATED}-{self._tracker_id}",
-                self._handle_position_update,
-            )
-        )
-
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                f"{SERVER_UNAVAILABLE}-{self._user_id}",
-                self.handle_server_unavailable,
-            )
-        )
