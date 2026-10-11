@@ -9,7 +9,7 @@ from slack_sdk.web.async_client import AsyncWebClient
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_validation as cv, discovery
 from homeassistant.helpers.typing import ConfigType
 
@@ -55,7 +55,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SlackConfigEntry) -> boo
         res = await slack.auth_test()
     except (SlackApiError, ClientError) as ex:
         if isinstance(ex, SlackApiError) and ex.response["error"] == "invalid_auth":
-            raise ConfigEntryError(
+            raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="invalid_api_key",
             ) from ex
