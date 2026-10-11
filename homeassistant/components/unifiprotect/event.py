@@ -160,10 +160,12 @@ class ProtectFireOnceMixin(EventEntity):
 class ProtectPublicEventSubscriberEntity(ProtectDeviceEntity):
     """Base for entities fired from public events keyed by the device id.
 
-    The subscriptions move to the new id when the device is re-adopted.
+    A re-adopted device gets a new id. In hybrid mode the private and public
+    objects learn it independently, so both ids are subscribed while they differ.
     """
 
     _public_event_unsubs: list[CALLBACK_TYPE] | None = None
+    _public_event_device_ids: frozenset[str] = frozenset()
 
     @abstractmethod
     def _async_public_event_subscriptions(
@@ -173,11 +175,18 @@ class ProtectPublicEventSubscriberEntity(ProtectDeviceEntity):
 
     @callback
     def _async_subscribe_public_events(self) -> None:
+        device_ids = frozenset(
+            obj.id for obj in (self.device, self._ufp_public_obj) if obj is not None
+        )
+        if device_ids == self._public_event_device_ids:
+            return
         self._async_unsubscribe_public_events()
+        self._public_event_device_ids = device_ids
         self._public_event_unsubs = [
             self.data.async_subscribe_public_event(
-                self.device.id, event_type, update_callback
+                device_id, event_type, update_callback
             )
+            for device_id in device_ids
             for event_type, update_callback in self._async_public_event_subscriptions()
         ]
 
@@ -186,11 +195,14 @@ class ProtectPublicEventSubscriberEntity(ProtectDeviceEntity):
         for unsub in self._public_event_unsubs or ():
             unsub()
         self._public_event_unsubs = None
+        self._public_event_device_ids = frozenset()
 
     @callback
     @override
-    def _async_device_id_changed(self) -> None:
-        self._async_subscribe_public_events()
+    def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
+        super()._async_update_device_from_protect(device)
+        if self._public_event_unsubs is not None:
+            self._async_subscribe_public_events()
 
     @override
     async def async_added_to_hass(self) -> None:

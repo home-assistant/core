@@ -375,7 +375,7 @@ class BaseProtectEntity(Entity):
         """Update Entity object from Protect device."""
         was_available = self._attr_available
         if last_updated_success := self.data.last_update_success:
-            self._async_set_device(device)
+            self.device = device
 
         if self._ufp_uses_public:
             # Migrated entities are fully public: availability tracks the public
@@ -468,21 +468,10 @@ class BaseProtectEntity(Entity):
         if obj is None:
             obj = self.data.async_get_public_device(self.device)
         if obj is not None and not self._ufp_has_private:
-            self._async_set_device(obj)
+            # A re-adopted device keeps its mac but gets a new id.
+            self.device = obj
         self._ufp_public_obj = obj
         self._async_updated_event(self.device)
-
-    @callback
-    def _async_set_device(self, device: ProtectDeviceType) -> None:
-        # A re-adopted device keeps its mac but gets a new id.
-        id_changed = device.id != self.device.id
-        self.device = device
-        if id_changed:
-            self._async_device_id_changed()
-
-    @callback
-    def _async_device_id_changed(self) -> None:
-        """Handle a device that was re-adopted under a new id."""
 
     @override
     async def async_added_to_hass(self) -> None:

@@ -2308,12 +2308,34 @@ async def test_detection_event_removed_change_ignored(
     assert events == []
 
 
+def _send_private_camera(ufp: MockUFPFixture, camera: Camera) -> None:
+    ufp.api.bootstrap.cameras = {camera.id: camera}
+    mock_msg = Mock()
+    mock_msg.changed_data = {}
+    mock_msg.new_obj = camera
+    ufp.ws_msg(mock_msg)
+
+
+def _send_public_camera(ufp: MockUFPFixture, camera: Camera) -> None:
+    assert ufp.devices_ws_subscription is not None
+    ufp.devices_ws_subscription(public_device_ws_message(make_public_camera(camera)))
+
+
+@pytest.mark.parametrize(
+    ("learns_first", "learns_last"),
+    [
+        pytest.param(_send_private_camera, _send_public_camera, id="private_first"),
+        pytest.param(_send_public_camera, _send_private_camera, id="public_first"),
+    ],
+)
 async def test_doorbell_ring_follows_readopted_camera(
     hass: HomeAssistant,
     ufp: MockUFPFixture,
     doorbell: Camera,
     unadopted_camera: Camera,
     fixed_now: datetime,
+    learns_first: Callable[[MockUFPFixture, Camera], None],
+    learns_last: Callable[[MockUFPFixture, Camera], None],
 ) -> None:
     """Hybrid ring events follow a camera re-adopted under a new id."""
     setup_public_camera(ufp)
@@ -2321,23 +2343,13 @@ async def test_doorbell_ring_follows_readopted_camera(
     _, entity_id = await ids_from_device_description(
         hass, Platform.EVENT, doorbell, EVENT_DESCRIPTIONS[0]
     )
-
-    readopted = doorbell.model_copy(update={"id": "readopted-doorbell"})
-    ufp.api.bootstrap.cameras = {readopted.id: readopted}
-    mock_msg = Mock()
-    mock_msg.changed_data = {}
-    mock_msg.new_obj = readopted
-    ufp.ws_msg(mock_msg)
-    await hass.async_block_till_done()
-
     events: list[HAEvent] = []
 
     @callback
     def _capture(event: HAEvent) -> None:
         events.append(event)
 
-    unsub = async_track_state_change_event(hass, entity_id, _capture)
-    for event_id, device_id in (("ring-new", readopted.id), ("ring-old", doorbell.id)):
+    def _ring(event_id: str, device_id: str) -> None:
         ufp.events_msg(
             ProtectEvent(
                 id=event_id,
@@ -2350,12 +2362,27 @@ async def test_doorbell_ring_follows_readopted_camera(
             ),
             EventChange.STARTED,
         )
+
+    unsub = async_track_state_change_event(hass, entity_id, _capture)
+    readopted = doorbell.model_copy(update={"id": "readopted-doorbell"})
+
+    # Only one side knows the new id yet.
+    learns_first(ufp, readopted)
+    await hass.async_block_till_done()
+    _ring("ring-1", readopted.id)
+    await hass.async_block_till_done()
+
+    # Once both do, the old id is dropped.
+    learns_last(ufp, readopted)
+    await hass.async_block_till_done()
+    _ring("ring-2", readopted.id)
+    _ring("ring-3", doorbell.id)
     await hass.async_block_till_done()
     unsub()
 
-    # The old id no longer belongs to this camera.
     assert [event.data["new_state"].attributes[ATTR_EVENT_ID] for event in events] == [
-        "ring-new"
+        "ring-1",
+        "ring-2",
     ]
 
 
