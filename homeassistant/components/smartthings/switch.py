@@ -12,7 +12,7 @@ from homeassistant.components.switch import (
     SwitchEntityDescription,
 )
 from homeassistant.const import STATE_OFF, STATE_ON, EntityCategory
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -378,7 +378,7 @@ async def async_setup_entry(
         if attribute in DISHWASHER_WASHING_OPTIONS_TO_SWITCHES
     )
     entities.extend(
-        SmartThingsOcfDisplayLightingSwitch(entry_data.client, device)
+        SmartThingsOcfDisplayLightingSwitch(entry, device)
         for device in entry_data.devices.values()
         if _supports_ocf_display_lighting(device)
     )
@@ -462,9 +462,10 @@ class SmartThingsOcfDisplayLightingSwitch(
     _attr_translation_key = "display_lighting"
     _attr_entity_category = EntityCategory.CONFIG
 
-    def __init__(self, client: SmartThings, device: FullDevice) -> None:
+    def __init__(self, entry: SmartThingsConfigEntry, device: FullDevice) -> None:
         """Initialize the switch."""
-        super().__init__(client, device, {Capability.EXECUTE})
+        super().__init__(entry.runtime_data.client, device, {Capability.EXECUTE})
+        self._entry = entry
         self._attr_unique_id = (
             f"{device.device.device_id}_{MAIN}_{Capability.EXECUTE}_display_lighting"
         )
@@ -483,16 +484,11 @@ class SmartThingsOcfDisplayLightingSwitch(
             # The display is lit by default when the unit is powered
             self._attr_is_on = True
         self.async_write_ha_state()
-        task = self.hass.async_create_background_task(
+        self._entry.async_create_background_task(
+            self.hass,
             self._async_request_state(),
             f"smartthings_ocf_display_lighting_{self.device.device.device_id}",
         )
-
-        @callback
-        def _cancel_state_request() -> None:
-            task.cancel()
-
-        self.async_on_remove(_cancel_state_request)
 
     async def _async_request_state(self) -> None:
         """Ask the device to report the OCF mode resource."""
