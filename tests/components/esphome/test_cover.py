@@ -22,6 +22,7 @@ from homeassistant.components.cover import (
     SERVICE_SET_COVER_POSITION,
     SERVICE_SET_COVER_TILT_POSITION,
     SERVICE_STOP_COVER,
+    SERVICE_STOP_COVER_TILT,
     CoverState,
 )
 from homeassistant.const import ATTR_ENTITY_ID
@@ -44,6 +45,7 @@ async def test_cover_entity(
             supports_position=True,
             supports_tilt=True,
             supports_stop=True,
+            supports_stop_tilt=True,
         )
     ]
     states = [
@@ -128,6 +130,17 @@ async def test_cover_entity(
         blocking=True,
     )
     mock_client.cover_command.assert_has_calls([call(key=1, tilt=0.5, device_id=0)])
+    mock_client.cover_command.reset_mock()
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_STOP_COVER_TILT,
+        {ATTR_ENTITY_ID: "cover.test_my_cover"},
+        blocking=True,
+    )
+    mock_client.cover_command.assert_has_calls(
+        [call(key=1, stop_tilt=True, device_id=0)]
+    )
     mock_client.cover_command.reset_mock()
 
     mock_device.set_state(
