@@ -1,9 +1,15 @@
 """Remote control support for Panasonic Viera TV."""
 
+import asyncio
 from collections.abc import Iterable
 from typing import Any, override
 
-from homeassistant.components.remote import RemoteEntity
+from homeassistant.components.remote import (
+    ATTR_DELAY_SECS,
+    ATTR_NUM_REPEATS,
+    DEFAULT_DELAY_SECS,
+    RemoteEntity,
+)
 from homeassistant.const import ATTR_MANUFACTURER, CONF_NAME, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -100,5 +106,12 @@ class PanasonicVieraRemoteEntity(RemoteEntity):
     @override
     async def async_send_command(self, command: Iterable[str], **kwargs: Any) -> None:
         """Send a command to one device."""
-        for cmd in command:
-            await self._remote.async_send_key(cmd)
+        num_repeats: int = kwargs[ATTR_NUM_REPEATS]
+        delay_secs: float = kwargs.get(ATTR_DELAY_SECS, DEFAULT_DELAY_SECS)
+        command_list = list(command)
+
+        for repeat in range(num_repeats):
+            for index, cmd in enumerate(command_list):
+                if repeat or index:
+                    await asyncio.sleep(delay_secs)
+                await self._remote.async_send_key(cmd)
