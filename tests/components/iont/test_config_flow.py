@@ -105,6 +105,13 @@ async def test_user_flow_link_settings_in_use(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
 
+    # The other link settings are gone.
+    result = await hass.config_entries.flow.async_configure(flow_id, MOCK_USER_INPUT)
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == MOCK_TITLE
+
 
 async def test_user_flow_no_iont_charger(
     hass: HomeAssistant, mock_modbus_unit: MockModbusUnit

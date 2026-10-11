@@ -96,7 +96,6 @@ async def test_setup_error_when_link_settings_in_use(
 
 
 async def test_devices(
-    hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     init_integration: MockConfigEntry,
 ) -> None:
