@@ -44,6 +44,7 @@ from .entity import (
     async_all_device_entities,
     async_remove_unsupported_sense_entities,
 )
+from .migrate import async_is_new_private_only_entity
 from .utils import async_ufp_instance_command
 
 ATTR_PREV_MIC = "prev_mic_level"
@@ -582,6 +583,9 @@ async def async_setup_entry(
             entities.extend(
                 ProtectNVRSwitch(data, device=nvr, description=switch)
                 for switch in NVR_SWITCHES
+                if not async_is_new_private_only_entity(
+                    hass, ModelType.NVR, nvr.mac, switch.key
+                )
             )
     async_add_entities(entities)
 

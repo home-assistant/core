@@ -2,7 +2,7 @@
 
 import logging
 
-from uiprotect.data import Bootstrap
+from uiprotect.data import Bootstrap, ModelType
 
 from homeassistant.components.automation import automations_with_entity
 from homeassistant.components.script import scripts_with_entity
@@ -14,6 +14,7 @@ from homeassistant.helpers import (
     issue_registry as ir,
 )
 from homeassistant.helpers.issue_registry import IssueSeverity
+from homeassistant.helpers.start import async_at_started
 
 from .const import DOMAIN
 from .data import UFPConfigEntry
@@ -353,6 +354,123 @@ def async_deprecate_light_setting_mirrors(
         _LIGHT_MIRROR_REPLACEMENTS,
         LIGHT_SETTING_MIRROR_BREAKS_IN,
     )
+
+
+# Release that removes the deprecated private-only entities.
+PRIVATE_ONLY_BREAKS_IN = "2027.1.0"
+
+# Device setup and device data entities that rely on the private API, keyed by
+# device model and then by (platform, key). Scoped by model because other
+# devices may reuse the keys.
+PRIVATE_ONLY_ENTITIES: dict[ModelType, frozenset[tuple[Platform, str]]] = {
+    ModelType.CAMERA: frozenset(
+        {
+            (Platform.SWITCH, "ssh"),
+            (Platform.BINARY_SENSOR, "ssh"),
+            (Platform.SENSOR, "lens_type"),
+            (Platform.SENSOR, "voltage"),
+        }
+    ),
+    ModelType.LIGHT: frozenset(
+        {
+            (Platform.SWITCH, "ssh"),
+            (Platform.BINARY_SENSOR, "ssh"),
+            (Platform.SELECT, "paired_camera"),
+            (Platform.SENSOR, "paired_camera"),
+        }
+    ),
+    ModelType.VIEWPORT: frozenset(
+        {
+            (Platform.SWITCH, "ssh"),
+            (Platform.BINARY_SENSOR, "ssh"),
+        }
+    ),
+    ModelType.SENSOR: frozenset(
+        {
+            (Platform.SELECT, "mount_type"),
+            (Platform.SENSOR, "mount_type"),
+            (Platform.SELECT, "paired_camera"),
+            (Platform.SENSOR, "paired_camera"),
+        }
+    ),
+    ModelType.NVR: frozenset(
+        {
+            (Platform.SWITCH, "analytics_enabled"),
+            (Platform.SWITCH, "insights_enabled"),
+        }
+    ),
+}
+
+
+@callback
+def async_is_new_private_only_entity(
+    hass: HomeAssistant, model: ModelType | None, mac: str, key: str
+) -> bool:
+    """Return whether a deprecated private-only entity is not registered yet.
+
+    New installs do not get entities that are about to be removed.
+    """
+    if model is None or model not in PRIVATE_ONLY_ENTITIES:
+        return False
+    platforms = [
+        platform
+        for platform, entity_key in PRIVATE_ONLY_ENTITIES[model]
+        if entity_key == key
+    ]
+    if not platforms:
+        return False
+    registry = er.async_get(hass)
+    return not any(
+        registry.async_get_entity_id(platform, DOMAIN, f"{mac}_{key}")
+        for platform in platforms
+    )
+
+
+@callback
+def async_deprecate_private_only_entities(
+    hass: HomeAssistant, entry: UFPConfigEntry, bootstrap: Bootstrap
+) -> None:
+    """Deprecate the device setup and device data entities on the private API.
+
+    The official API cannot change them, and most of them it cannot read either.
+    They are not useful in automations; the UniFi Protect app manages them.
+
+    Waits for startup to finish: before the automations are loaded, every entity
+    looks unused and the repair would be dropped.
+
+    Added in 2026.11.0
+    """
+
+    @callback
+    def _async_deprecate(_hass: HomeAssistant) -> None:
+        models: dict[str, ModelType] = {bootstrap.nvr.mac: ModelType.NVR}
+        for devices, device_model in (
+            (bootstrap.cameras, ModelType.CAMERA),
+            (bootstrap.lights, ModelType.LIGHT),
+            (bootstrap.viewers, ModelType.VIEWPORT),
+            (bootstrap.sensors, ModelType.SENSOR),
+        ):
+            models.update(
+                dict.fromkeys((d.mac for d in devices.values()), device_model)
+            )
+        registry = er.async_get(hass)
+        for entity in er.async_entries_for_config_entry(registry, entry.entry_id):
+            mac, _, key = entity.unique_id.partition("_")
+            model = models.get(mac)
+            if (
+                model is None
+                or (entity.domain, key) not in PRIVATE_ONLY_ENTITIES[model]
+            ):
+                continue
+            _async_repair_if_used(
+                hass,
+                entity,
+                f"private_only_entity_deprecated_{entity.unique_id}",
+                "private_only_entity_deprecated",
+                breaks_in=PRIVATE_ONLY_BREAKS_IN,
+            )
+
+    entry.async_on_unload(async_at_started(hass, _async_deprecate))
 
 
 @callback

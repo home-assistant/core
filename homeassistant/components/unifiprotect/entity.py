@@ -49,6 +49,7 @@ from .const import (
     DOMAIN,
 )
 from .data import ProtectData, ProtectDeviceType
+from .migrate import async_is_new_private_only_entity
 from .utils import _async_unifi_mac_from_hass
 
 _LOGGER = logging.getLogger(__name__)
@@ -223,6 +224,11 @@ def _async_device_entities(
                 continue
 
             if not _async_capability_supported(public, device, description):
+                continue
+
+            if async_is_new_private_only_entity(
+                data.hass, device.model, device.mac, description.key
+            ):
                 continue
 
             entities.append(

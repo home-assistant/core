@@ -910,6 +910,10 @@
       "description": "The binary sensor `{entity_id}` for package detection has been removed. Package detection is a momentary smart-detect event, so it is now provided by the package event entity instead.\n\nUpdate the following automations and scripts:\n{items}",
       "title": "Package binary sensor removed"
     },
+    "private_only_entity_deprecated": {
+      "description": "The entity `{entity_id}` is deprecated and will be removed in a future release. It depends on a private API that the integration is phasing out. Use the UniFi Protect app instead.\n\nUpdate the following automations and scripts:\n{items}",
+      "title": "Entity deprecated"
+    },
     "rtsp_disabled": {
       "fix_flow": {
         "step": {
