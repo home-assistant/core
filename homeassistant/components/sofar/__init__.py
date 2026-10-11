@@ -185,14 +185,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> boo
         # Retry unless the adapter is up and the inverter merely silent.
         if not link.connected or not isinstance(readings.last_exception, UpdateFailed):
             raise
-        answered = False
         _LOGGER.info(
             "%s: inverter is not answering, setting up without it: %s",
             entry.title,
             err,
         )
+
+        @callback
+        def _async_reload_once_answered() -> None:
+            """Set up again in full once the inverter answers."""
+            if readings.last_update_success:
+                hass.config_entries.async_schedule_reload(entry.entry_id)
+
+        entry.async_on_unload(readings.async_add_listener(_async_reload_once_answered))
     else:
-        answered = True
         await settings.async_refresh()
         # Not tied to a coordinator: identity never changes once read.
         await _async_read_identity(entry, device)
@@ -205,16 +211,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> boo
     _async_remove_denied_meter_energy(
         hass, serial, entry.runtime_data.served_components
     )
-
-    if not answered:
-
-        @callback
-        def _async_reload_once_answered() -> None:
-            """Set up again in full once the inverter answers."""
-            if readings.last_update_success:
-                hass.config_entries.async_schedule_reload(entry.entry_id)
-
-        entry.async_on_unload(readings.async_add_listener(_async_reload_once_answered))
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True

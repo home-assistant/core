@@ -42,7 +42,8 @@ SET_FEED_IN_LIMIT_SCHEMA = _ENTRY_SCHEMA.extend(
         probatio.Required(ATTR_MODE): probatio.In(
             [mode.name.lower() for mode in FeedinLimitationMode]
         ),
-        # Fractional, so 3000.9 fails the multiple-of-100 check below.
+        # Kept fractional so the multiple-of-100 check below sees the real
+        # value; cv.positive_int would truncate 3000.9 into a valid 3000.
         probatio.Required(ATTR_MAX_POWER): probatio.All(
             probatio.Coerce(float), probatio.Range(min=0, max=100000)
         ),
