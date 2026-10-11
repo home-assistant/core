@@ -1,7 +1,9 @@
 """DataUpdateCoordinator for INDI Allsky integration."""
 
+import asyncio
+from contextlib import suppress
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 import logging
 from typing import override
 
@@ -17,6 +19,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
@@ -24,6 +27,8 @@ from .const import DOMAIN
 from .util import get_ssl_context
 
 _LOGGER = logging.getLogger(__name__)
+
+SCAN_INTERVAL = timedelta(minutes=10)
 
 type IndiAllSkyConfigEntry = ConfigEntry[IndiAllSkyDataUpdateCoordinator]
 
@@ -66,6 +71,8 @@ class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[IndiAllSkyData]):
         self.latest_startrail_image: bytes | None = None
         self.latest_startrail_updated: datetime | None = None
         self.latest_sensor: SensorData | None = None
+        self._sensor_fetch_task: asyncio.Task[None] | None = None
+        self._sensor_fetch_queued = False
 
         entry.async_on_unload(
             self.client.register_callback(
@@ -86,6 +93,14 @@ class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[IndiAllSkyData]):
             self.client.register_callback("sensor_update", self._handle_sensor_update)
         )
         entry.async_on_unload(self.client.disconnect)
+        if not entry.pref_disable_polling:
+            entry.async_on_unload(
+                async_track_time_interval(
+                    hass,
+                    self._async_handle_interval_refresh,
+                    SCAN_INTERVAL,
+                )
+            )
 
         super().__init__(
             hass,
@@ -95,9 +110,14 @@ class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[IndiAllSkyData]):
             update_interval=None,
         )
 
+    async def _async_handle_interval_refresh(self, _now: datetime) -> None:
+        """Handle periodic fallback sensor polling."""
+        self._async_trigger_fetch_sensors()
+
     def _handle_exposure_complete(self, exposure: ExposureData) -> None:
         """Handle new exposure_complete event from WebSocket stream."""
         self.latest_exposure = exposure
+        self._async_trigger_fetch_sensors()
         self.async_set_updated_data(
             IndiAllSkyData(
                 exposure=exposure,
@@ -110,6 +130,30 @@ class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[IndiAllSkyData]):
                 sensor=self.latest_sensor,
             )
         )
+
+    def _async_trigger_fetch_sensors(self) -> None:
+        """Trigger sensor fetch if no fetch task is active, or queue a trailing run."""
+        if self._sensor_fetch_task is not None and not self._sensor_fetch_task.done():
+            self._sensor_fetch_queued = True
+            return
+        self._sensor_fetch_task = self.config_entry.async_create_background_task(
+            self.hass,
+            self._async_fetch_sensors(),
+            "indi_allsky_fetch_sensors",
+        )
+
+    async def _async_fetch_sensors(self) -> None:
+        """Fetch sensor update from indi-allsky, processing any queued trailing fetch."""
+        while True:
+            self._sensor_fetch_queued = False
+            try:
+                with suppress(IndiAllSkyError):
+                    await self.client.fetch_sensors()
+            finally:
+                if not self._sensor_fetch_queued:
+                    self._sensor_fetch_task = None
+            if not self._sensor_fetch_queued:
+                break
 
     def _handle_keogram_complete(self, media: MediaData) -> None:
         """Handle new keogram_complete event from WebSocket stream."""
@@ -283,11 +327,11 @@ class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[IndiAllSkyData]):
     async def _async_update_data(self) -> IndiAllSkyData:
         """Fetch INDI Allsky metadata and verify connection."""
         try:
-            await self.client.fetch_image("latestimage")
+            if self.latest_exposure is None:
+                await self.client.fetch_image("latestimage")
             if not self.client.is_connected:
                 await self.client.connect()
-            if self.latest_sensor is None:
-                await self.client.fetch_sensors()
+            await self.client.fetch_sensors()
         except IndiAllSkyError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
