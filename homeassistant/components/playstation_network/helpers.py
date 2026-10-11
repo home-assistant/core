@@ -5,6 +5,7 @@ from functools import partial
 from typing import Any
 
 from psnawp_api import PSNAWP
+from psnawp_api.core.authenticator import TokenResponse
 from psnawp_api.models.client import Client
 from psnawp_api.models.trophies import PlatformType, TrophySummary, TrophyTitle
 from psnawp_api.models.user import User
@@ -48,17 +49,46 @@ class PlaystationNetwork:
 
     shareable_profile_link: dict[str, str]
 
-    def __init__(self, hass: HomeAssistant, npsso: str) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        npsso: str,
+        token_response: TokenResponse | None = None,
+    ) -> None:
         """Initialize the class with the npsso token."""
         rate = Rate(300, Duration.MINUTE * 15)
         self.psn = PSNAWP(npsso, rate_limit=rate)
+        self._persisted_token_response = (
+            token_response.copy() if token_response is not None else None
+        )
+        if token_response is not None:
+            self.psn.authenticator.token_response = token_response.copy()
         self.client: Client
         self.hass = hass
+        self.npsso = npsso
         self.user: User
         self.legacy_profile: dict[str, Any] | None = None
         self.trophy_titles: list[TrophyTitle] = []
         self._title_icon_urls: dict[str, str] = {}
         self.friends_list: dict[str, User] = {}
+
+    @property
+    def token_response(self) -> TokenResponse | None:
+        """Return a copy of the current authentication token response."""
+        if (token_response := self.psn.authenticator.token_response) is None:
+            return None
+        return token_response.copy()
+
+    @property
+    def persisted_token_response(self) -> TokenResponse | None:
+        """Return the token response generation owned by this runtime client."""
+        if self._persisted_token_response is None:
+            return None
+        return self._persisted_token_response.copy()
+
+    def set_persisted_token_response(self, token_response: TokenResponse) -> None:
+        """Record the token response generation persisted by this runtime client."""
+        self._persisted_token_response = token_response.copy()
 
     def _setup(self) -> None:
         """Setup PSN."""

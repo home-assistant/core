@@ -6,6 +6,7 @@ from datetime import timedelta
 import logging
 from typing import TYPE_CHECKING, Any, override
 
+from psnawp_api.core.authenticator import TokenResponse
 from psnawp_api.core.psnawp_exceptions import (
     PSNAWPAuthenticationError,
     PSNAWPClientError,
@@ -29,7 +30,7 @@ from homeassistant.exceptions import (
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN
+from .const import CONF_NPSSO, CONF_TOKEN_RESPONSE, DOMAIN
 from .helpers import PlaystationNetwork, PlaystationNetworkData
 
 _LOGGER = logging.getLogger(__name__)
@@ -75,21 +76,48 @@ class PlayStationNetworkBaseCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
     async def update_data(self) -> _DataT:
         """Update coordinator data."""
 
+    def _persist_token_response(
+        self, persisted_token_response: TokenResponse | None
+    ) -> None:
+        """Persist a token response refreshed by this runtime client."""
+        if (
+            self.config_entry.data[CONF_NPSSO] == self.psn.npsso
+            and self.config_entry.data.get(CONF_TOKEN_RESPONSE)
+            == persisted_token_response
+            and (token_response := self.psn.token_response) is not None
+            and token_response != persisted_token_response
+        ):
+            self.hass.config_entries.async_update_entry(
+                self.config_entry,
+                data={
+                    **self.config_entry.data,
+                    CONF_TOKEN_RESPONSE: token_response,
+                },
+            )
+            self.psn.set_persisted_token_response(token_response)
+
     @override
     async def _async_update_data(self) -> _DataT:
         """Get the latest data from the PSN."""
+        persisted_token_response = self.psn.persisted_token_response
+
         try:
-            return await self.update_data()
+            data = await self.update_data()
         except PSNAWPAuthenticationError as error:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="not_ready",
             ) from error
         except (PSNAWPServerError, PSNAWPClientError) as error:
+            self._persist_token_response(persisted_token_response)
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
             ) from error
+
+        self._persist_token_response(persisted_token_response)
+
+        return data
 
 
 class PlaystationNetworkUserDataCoordinator(
@@ -102,6 +130,7 @@ class PlaystationNetworkUserDataCoordinator(
     @override
     async def _async_setup(self) -> None:
         """Set up the coordinator."""
+        persisted_token_response = self.psn.persisted_token_response
 
         try:
             await self.psn.async_setup()
@@ -111,10 +140,13 @@ class PlaystationNetworkUserDataCoordinator(
                 translation_key="not_ready",
             ) from error
         except (PSNAWPServerError, PSNAWPClientError) as error:
+            self._persist_token_response(persisted_token_response)
             raise ConfigEntryNotReady(
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
             ) from error
+
+        self._persist_token_response(persisted_token_response)
 
     @override
     async def update_data(self) -> PlaystationNetworkData:
