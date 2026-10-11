@@ -385,6 +385,7 @@ FLOWS = {
         "intelliclima",
         "intellifire",
         "iometer",
+        "iont",
         "ios",
         "iotawatt",
         "iotty",
