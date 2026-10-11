@@ -1,19 +1,24 @@
 """Test FortiOS legacy migration and authentication failures."""
 
 from datetime import timedelta
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiofortiosapi import FortiOSAuthenticationError, FortiOSConnectionError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.device_tracker.legacy import Device
-from homeassistant.components.fortios.client import FortiOSDevice
+from homeassistant.components.fortios.client import FortiOSDevice, UnsupportedVersion
 from homeassistant.components.fortios.const import DOMAIN
+from homeassistant.components.fortios.device_tracker import (
+    PLATFORM_SCHEMA,
+    async_setup_scanner,
+)
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import CONF_HOST, CONF_PLATFORM
+from homeassistant.const import CONF_HOST, CONF_PLATFORM, STATE_HOME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers.translation import async_get_translations
 from homeassistant.setup import async_setup_component
 
 from .conftest import MAC, SERIAL, USER_INPUT
@@ -68,6 +73,76 @@ async def test_yaml_import_failure(
     assert (
         issue_registry.async_get_issue("homeassistant", f"deprecated_yaml_{DOMAIN}")
         is None
+    )
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_unsupported_firmware_and_recovery(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Show the firmware requirement without retrying, then recover after an upgrade."""
+    mock_config_entry.add_to_hass(hass)
+    mock_client.connect.side_effect = UnsupportedVersion
+    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.error_reason_translation_key == "unsupported_version"
+    translations = await async_get_translations(hass, "en", "exceptions", {DOMAIN})
+    assert translations["component.fortios.exceptions.unsupported_version.message"] == (
+        "FortiOS 6.4.3 or newer is required"
+    )
+    mock_client.update.assert_not_called()
+    assert hass.states.async_all("device_tracker") == []
+    assert hass.config_entries.flow.async_progress() == []
+
+    mock_client.connect.side_effect = None
+    assert await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert hass.states.get("device_tracker.phone").state == STATE_HOME
+
+
+@pytest.mark.usefixtures(
+    "mock_device_tracker_conf", "entity_registry_enabled_by_default"
+)
+async def test_yaml_unsupported_firmware_and_recovery(
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Keep YAML on a failed import and remove its failure repair after recovery."""
+    config = {CONF_PLATFORM: DOMAIN} | USER_INPUT
+    mock_client.connect.side_effect = UnsupportedVersion
+    assert await async_setup_component(
+        hass, "device_tracker", {"device_tracker": config}
+    )
+    await hass.async_block_till_done()
+    issue_id = f"yaml_import_{USER_INPUT[CONF_HOST]}"
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert issue is not None
+    translations = await async_get_translations(hass, "en", "issues", {DOMAIN})
+    message = translations["component.fortios.issues.yaml_import_failed.description"]
+    assert "FortiOS 6.4.3 or newer is required" in message
+    assert "Keep the FortiOS YAML configuration until you confirm" in message
+    assert "Only then remove the FortiOS YAML block" in message
+    assert hass.config_entries.async_entries(DOMAIN) == []
+    assert (
+        issue_registry.async_get_issue("homeassistant", f"deprecated_yaml_{DOMAIN}")
+        is None
+    )
+
+    mock_client.connect.side_effect = None
+    assert await async_setup_scanner(hass, PLATFORM_SCHEMA(config), AsyncMock())
+    await hass.async_block_till_done()
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    assert entry.state is ConfigEntryState.LOADED
+    assert hass.states.get("device_tracker.phone").state == STATE_HOME
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
+    assert (
+        issue_registry.async_get_issue("homeassistant", f"deprecated_yaml_{DOMAIN}")
+        is not None
     )
 
 

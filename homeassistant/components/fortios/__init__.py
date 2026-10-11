@@ -35,7 +35,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: FortiOSConfigEntry) -> b
         raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN, translation_key="invalid_auth"
         ) from err
-    except (FortiOSError, UnsupportedVersion) as err:
+    except UnsupportedVersion as err:
+        raise ConfigEntryError(
+            translation_domain=DOMAIN, translation_key="unsupported_version"
+        ) from err
+    except FortiOSError as err:
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN, translation_key="cannot_connect"
         ) from err

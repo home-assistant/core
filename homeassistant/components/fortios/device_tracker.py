@@ -60,6 +60,7 @@ async def async_setup_scanner(
             translation_placeholders={"host": config[CONF_HOST]},
         )
         return True
+    ir.async_delete_issue(hass, DOMAIN, f"yaml_import_{config[CONF_HOST]}")
     ir.async_create_issue(
         hass,
         HOMEASSISTANT_DOMAIN,

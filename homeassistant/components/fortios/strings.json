@@ -38,6 +38,9 @@
     },
     "unique_id_mismatch": {
       "message": "The FortiGate at {host} does not match the configured device. Check the hostname or IP address."
+    },
+    "unsupported_version": {
+      "message": "[%key:component::fortios::config::error::unsupported_version%]"
     }
   },
   "issues": {
@@ -46,7 +49,7 @@
       "title": "Remove leftover known devices for FortiOS"
     },
     "yaml_import_failed": {
-      "description": "The FortiOS YAML configuration at `{host}` could not be imported. Check the host, API token and supported firmware version in `configuration.yaml`, then restart Home Assistant.",
+      "description": "The FortiOS YAML configuration at `{host}` could not be imported. FortiOS 6.4.3 or newer is required. Update incompatible firmware and check the host, API token and SSL verification setting in `configuration.yaml`, then restart Home Assistant to retry the import. Keep the FortiOS YAML configuration until you confirm that the import succeeded and a FortiOS config entry is available in Devices & services. Only then remove the FortiOS YAML block.",
       "title": "FortiOS YAML import failed"
     }
   }
