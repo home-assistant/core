@@ -525,12 +525,10 @@ class TeslaFleetEnergySiteStatisticsCoordinator(DataUpdateCoordinator[None]):
                 TeslaEnergyPeriod.DAY, end_date=end_date
             )
         except RateLimited as e:
-            retry_after = (
-                float(e.data["after"])
-                if isinstance(e.data, dict) and "after" in e.data
-                else None
-            )
-            raise UpdateFailed(e.message, retry_after=retry_after) from e
+            after = e.data.get("after") if isinstance(e.data, dict) else None
+            raise UpdateFailed(
+                e.message, retry_after=float(after) if after else None
+            ) from e
         except (InvalidToken, OAuthExpired) as e:
             _invalidate_access_token(self.hass, self.config_entry)
             raise UpdateFailed(e.message) from e

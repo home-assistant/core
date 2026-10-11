@@ -536,7 +536,8 @@ async def test_history_rate_limit_backoff(
     mock_energy_history.side_effect = [
         _history((BEFORE, {GRID: 100})),
         _history((AFTER, {GRID: 20})),
-        RateLimited({"after": 600}),
+        # The library passes the raw Retry-After header through as a string
+        RateLimited({"after": "600"}),
         _history((AFTER, {GRID: 20})),
         _history((BEFORE, {GRID: 100}), (LAST, {GRID: 50})),
     ]
