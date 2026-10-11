@@ -184,12 +184,10 @@ class ReolinkHost:
                     translation_placeholders={"name": self._config_entry.title},
                 )
 
-            # pylint: disable-next=home-assistant-exception-not-translated
             raise PasswordIncompatible(
-                "Reolink password contains incompatible special character or "
-                "is too long, please change the password to only contain characters: "
-                f"a-z, A-Z, 0-9 or {ALLOWED_SPECIAL_CHARS} "
-                "and not be longer than 31 characters"
+                translation_domain=DOMAIN,
+                translation_key="password_incompatible",
+                translation_placeholders={"special_chars": ALLOWED_SPECIAL_CHARS},
             )
 
         store: Store[str] | None = None
@@ -206,14 +204,19 @@ class ReolinkHost:
         await self._api.get_host_data()
 
         if self._api.mac_address is None:
-            # pylint: disable-next=home-assistant-exception-not-translated
-            raise ReolinkSetupException("Could not get mac address")
+            raise ReolinkSetupException(
+                translation_domain=DOMAIN,
+                translation_key="no_mac_address",
+            )
 
         if not self._api.is_admin:
-            # pylint: disable-next=home-assistant-exception-not-translated
             raise UserNotAdmin(
-                f"User '{self._api.username}' has authorization level "
-                f"'{self._api.user_level}', only admin users can change camera settings"
+                translation_domain=DOMAIN,
+                translation_key="user_not_admin",
+                translation_placeholders={
+                    "username": self._api.username,
+                    "userlevel": self._api.user_level,
+                },
             )
 
         self.privacy_mode = self._api.baichuan.privacy_mode()
