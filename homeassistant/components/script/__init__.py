@@ -21,6 +21,7 @@ from homeassistant.const import (
     CONF_MODE,
     CONF_NAME,
     CONF_PATH,
+    CONF_PERMISSION_CHECK,
     CONF_SEQUENCE,
     CONF_VARIABLES,
     SERVICE_RELOAD,
@@ -607,6 +608,7 @@ class ScriptEntity(BaseScriptEntity, RestoreEntity):
             max_exceeded=cfg[CONF_MAX_EXCEEDED],
             logger=logging.getLogger(f"{__name__}.{key}"),
             variables=cfg.get(CONF_VARIABLES),
+            permission_check=cfg.get(CONF_PERMISSION_CHECK, True),
         )
         self._changed = asyncio.Event()
         self.raw_config = raw_config

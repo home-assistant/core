@@ -61,6 +61,7 @@ from homeassistant.const import (
     CONF_MATCH,
     CONF_NOTE,
     CONF_PARALLEL,
+    CONF_PERMISSION_CHECK,
     CONF_PLATFORM,
     CONF_REPEAT,
     CONF_RESPONSE_VARIABLE,
@@ -1423,6 +1424,7 @@ SCRIPT_ACTION_BASE_SCHEMA: VolDictType = {
     probatio.Remove(CONF_NOTE): str,  # Is only used in frontend
     probatio.Optional(CONF_CONTINUE_ON_ERROR): boolean,
     probatio.Optional(CONF_ENABLED): probatio.Any(boolean, template),
+    probatio.Optional(CONF_PERMISSION_CHECK): boolean,
 }
 
 EVENT_SCHEMA = probatio.Schema(
