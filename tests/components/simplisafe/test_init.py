@@ -1,7 +1,8 @@
 """Define tests for SimpliSafe setup."""
 
+import asyncio
 import copy
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import AsyncMock, Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -10,6 +11,7 @@ from simplipy.errors import (
     InvalidCredentialsError,
     RequestError,
     SimplipyError,
+    WebsocketError,
 )
 from simplipy.system.v3 import SystemV3
 from simplipy.websocket import WebsocketEvent
@@ -18,7 +20,7 @@ from homeassistant.components.binary_sensor import (
     DOMAIN as BINARY_SENSOR_DOMAIN,
     BinarySensorDeviceClass,
 )
-from homeassistant.components.simplisafe import DOMAIN
+from homeassistant.components.simplisafe import DOMAIN, WEBSOCKET_RETRY_DELAY
 from homeassistant.components.simplisafe.coordinator import DEFAULT_SCAN_INTERVAL
 from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import ATTR_DEVICE_CLASS, STATE_UNAVAILABLE
@@ -222,3 +224,34 @@ async def test_websocket_event_updates_entity_state(
     await hass.async_block_till_done()
 
     assert hass.states.get("lock.front_door_lock").state == "unlocked"
+
+
+async def test_websocket_retry_delay_resets_after_successful_listen(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    patch_simplisafe_api,
+    websocket: Mock,
+) -> None:
+    """Test websocket retries restart at the initial delay after a success."""
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    websocket.async_connect.side_effect = [
+        WebsocketError("first failure"),
+        None,
+        WebsocketError("second failure"),
+    ]
+
+    with (
+        patch(
+            "homeassistant.components.simplisafe.asyncio.sleep",
+            new=AsyncMock(side_effect=[None, asyncio.CancelledError]),
+        ) as mock_sleep,
+        pytest.raises(asyncio.CancelledError),
+    ):
+        await config_entry.runtime_data._async_websocket_loop()
+
+    assert mock_sleep.await_args_list == [
+        ((WEBSOCKET_RETRY_DELAY,), {}),
+        ((WEBSOCKET_RETRY_DELAY,), {}),
+    ]
