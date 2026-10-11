@@ -1,6 +1,7 @@
 """Tests for the LaMetric config flow."""
 
 from http import HTTPStatus
+from typing import Any
 from unittest.mock import MagicMock
 
 from demetriek import (
@@ -1181,20 +1182,18 @@ async def test_press_button_not_in_time(
     assert result["step_id"] == "press_button_timeout"
     mock_lametric_local_auth.api_key.assert_not_called()
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={}
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "press_button"
-
-    # Once the problem is gone, the same flow still finishes the setup.
+    # Trying again asks the same device for a button press right away.
     mock_lametric_local_auth.challenge.return_value = AuthChallenge(
         challenge_id="mock-challenge", duration=60, state="resolved"
     )
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={CONF_HOST: "127.0.0.1"}
+        result["flow_id"], user_input={}
     )
+
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "press_button_wait"
+    assert mock_lametric_local_auth.request_challenge.call_count == 2
+
     await hass.async_block_till_done()
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
@@ -1337,9 +1336,9 @@ async def test_press_button_discovered(
 @pytest.mark.parametrize(
     ("supported", "menu_options"),
     [
-        (False, ["pick_implementation", "manual_entry"]),
+        ({"return_value": False}, ["pick_implementation", "manual_entry"]),
         (
-            LaMetricConnectionError,
+            {"side_effect": LaMetricConnectionError},
             ["press_button", "pick_implementation", "manual_entry"],
         ),
     ],
@@ -1349,14 +1348,11 @@ async def test_press_button_discovered(
 async def test_press_button_discovered_menu(
     hass: HomeAssistant,
     mock_lametric_local_auth: MagicMock,
-    supported: bool | type[Exception],
+    supported: dict[str, Any],
     menu_options: list[str],
 ) -> None:
     """Test a discovered device only offers the button press when it can."""
-    if isinstance(supported, bool):
-        mock_lametric_local_auth.supported.return_value = supported
-    else:
-        mock_lametric_local_auth.supported.side_effect = supported
+    mock_lametric_local_auth.supported.configure_mock(**supported)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_SSDP}, data=SSDP_DISCOVERY_INFO

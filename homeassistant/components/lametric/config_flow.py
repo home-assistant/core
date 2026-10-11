@@ -362,7 +362,7 @@ class LaMetricFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
         """Handle the button not being pressed in time."""
         if user_input is None:
             return self.async_show_form(step_id="press_button_timeout")
-        return await self.async_step_press_button()
+        return await self.async_step_press_button({CONF_HOST: self.button_host})
 
     async def async_step_press_button_finish(
         self, user_input: dict[str, Any] | None = None
