@@ -59,6 +59,18 @@
     "oauth2_unknown_implementation": {
       "message": "The configured authentication method is no longer available, re-authentication required"
     },
+    "os_read_error": {
+      "message": "Cannot read {path}."
+    },
+    "os_read_is_directory": {
+      "message": "Cannot read {path}: it is a folder, not a file."
+    },
+    "os_read_not_found": {
+      "message": "Cannot read {path}: the file does not exist."
+    },
+    "os_read_permission_denied": {
+      "message": "Cannot read {path}: permission denied."
+    },
     "os_write_dir_not_found": {
       "message": "Cannot write {path}: the folder does not exist."
     },

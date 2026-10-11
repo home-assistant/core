@@ -101,6 +101,9 @@
       "info_leds_max_power": {
         "name": "Max current"
       },
+      "internal_temperature": {
+        "name": "Internal temperature"
+      },
       "ip": {
         "name": "IP"
       },
