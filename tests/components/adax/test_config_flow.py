@@ -1,8 +1,8 @@
 """Test the Adax config flow."""
 
-import datetime
+from datetime import timedelta
 from typing import Any
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import adax_local
 import aiohttp
