@@ -29,30 +29,44 @@ class TeslemetryButtonEntityDescription(ButtonEntityDescription):
 
 DESCRIPTIONS: tuple[TeslemetryButtonEntityDescription, ...] = (
     TeslemetryButtonEntityDescription(
-        key="wake", func=lambda self: handle_command(self.api.wake_up())
+        key="wake",
+        func=lambda self: handle_command(
+            self.hass, self.config_entry, self.api.wake_up()
+        ),
     ),
     TeslemetryButtonEntityDescription(
         key="flash_lights",
-        func=lambda self: handle_vehicle_command(self.api.flash_lights()),
+        func=lambda self: handle_vehicle_command(
+            self.hass, self.config_entry, self.api.flash_lights()
+        ),
     ),
     TeslemetryButtonEntityDescription(
-        key="honk", func=lambda self: handle_vehicle_command(self.api.honk_horn())
+        key="honk",
+        func=lambda self: handle_vehicle_command(
+            self.hass, self.config_entry, self.api.honk_horn()
+        ),
     ),
     TeslemetryButtonEntityDescription(
         key="enable_keyless_driving",
-        func=lambda self: handle_vehicle_command(self.api.remote_start_drive()),
+        func=lambda self: handle_vehicle_command(
+            self.hass, self.config_entry, self.api.remote_start_drive()
+        ),
     ),
     TeslemetryButtonEntityDescription(
         key="boombox",
-        func=lambda self: handle_vehicle_command(self.api.remote_boombox(0)),
+        func=lambda self: handle_vehicle_command(
+            self.hass, self.config_entry, self.api.remote_boombox(0)
+        ),
     ),
     TeslemetryButtonEntityDescription(
         key="homelink",
         func=lambda self: handle_vehicle_command(
+            self.hass,
+            self.config_entry,
             self.api.trigger_homelink(
                 lat=self.hass.config.latitude,
                 lon=self.hass.config.longitude,
-            )
+            ),
         ),
     ),
 )
