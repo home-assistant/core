@@ -687,7 +687,7 @@ async def test_simple_upload(
     mock_s3_response_factory: MockS3ResponseFactory,
     mock_agent_backup: AgentBackup,
     mock_agent_backup_object_key: str,
-    agent_id,
+    agent_id: str,
 ) -> None:
     """Test upload smaller than the multipart threshold."""
     mock_response, mock_response_context = mock_s3_response_factory(status_code=200)

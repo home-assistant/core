@@ -131,7 +131,7 @@ async def read_object_metadata(
 
     try:
         return AgentBackup.from_dict(json.loads(meta))
-    except (KeyError, ValueError) as e:
+    except (TypeError, KeyError, ValueError) as e:
         _LOGGER.warning("Found invalid metadata on object %s", object_key, exc_info=e)
         raise exceptions.MissingMetadataException(object_key=object_key) from None
 
