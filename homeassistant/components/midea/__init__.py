@@ -2,11 +2,12 @@
 
 from collections.abc import Mapping
 from functools import partial
-from typing import Any
+from typing import Any, cast
 
-from midealocal.const import ProtocolVersion
+from midealocal.const import DeviceType, ProtocolVersion
 from midealocal.device import MideaDevice
 from midealocal.devices import device_selector
+from midealocal.devices.ac import MideaACDevice
 from midealocal.discover import discover
 
 from homeassistant.const import (
@@ -27,6 +28,7 @@ from homeassistant.helpers import device_registry as dr
 
 from .const import CONF_KEY, CONF_SN, CONF_SUBTYPE, DOMAIN, LOGGER
 from .entity import MideaConfigEntry
+from .repairs import async_sync_full_dust_issue
 
 _PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
@@ -151,6 +153,34 @@ async def async_setup_entry(hass: HomeAssistant, entry: MideaConfigEntry) -> boo
     device.daemon = True
     await hass.async_add_executor_job(device.open)
     entry.runtime_data = device
+
+    if (
+        device.device_type == DeviceType.AC
+        and cast("MideaACDevice", device).is_filter_reset_supported
+    ):
+
+        def _update_full_dust_issue(status: Mapping[str, Any]) -> None:
+            if "full_dust" in status:
+                hass.add_job(
+                    async_sync_full_dust_issue,
+                    hass,
+                    entry.entry_id,
+                    status["full_dust"],
+                )
+
+        device.register_update(_update_full_dust_issue)
+        entry.async_on_unload(
+            partial(device.unregister_update, _update_full_dust_issue)
+        )
+        entry.async_on_unload(
+            partial(async_sync_full_dust_issue, hass, entry.entry_id, False)
+        )
+
+        async_sync_full_dust_issue(
+            hass,
+            entry.entry_id,
+            device.get_attribute("full_dust"),
+        )
 
     async def _close_device() -> None:
         await hass.async_add_executor_job(device.close)
