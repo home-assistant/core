@@ -10,6 +10,13 @@
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
     },
     "step": {
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "description": "The password for {email} is no longer valid. Please enter the new password.",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      },
       "user": {
         "data": {
           "email": "[%key:common::config_flow::data::email%]",

@@ -7,7 +7,7 @@ from pyeconet.errors import InvalidCredentialsError, PyeconetError
 import pytest
 
 from homeassistant.components.econet.const import DOMAIN
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 
@@ -39,7 +39,7 @@ async def test_login_error_retries_setup(
 
 
 async def test_invalid_credentials(hass: HomeAssistant) -> None:
-    """Test setup fails with invalid credentials."""
+    """Test setup fails and starts reauth with invalid credentials."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_EMAIL: "admin@localhost.com", CONF_PASSWORD: "password0"},
@@ -54,3 +54,8 @@ async def test_invalid_credentials(hass: HomeAssistant) -> None:
 
     assert entry.state is ConfigEntryState.SETUP_ERROR
     assert entry.reason == "Invalid credentials provided"
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+    assert flows[0]["context"]["entry_id"] == entry.entry_id
