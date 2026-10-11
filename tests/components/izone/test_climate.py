@@ -446,7 +446,7 @@ async def test_const_control_zone_current_temperature_unknown(
     climate = hass.data[CLIMATE_DOMAIN].get_entity(CONTROLLER_ENTITY)
     assert climate is not None
     with caplog.at_level(logging.ERROR):
-        assert climate.current_temperature is None
+        assert climate.native_current_temperature is None
     assert caplog.text.count("Unexpected iZone control zone") == 1
 
 
