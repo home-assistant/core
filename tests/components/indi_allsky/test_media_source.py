@@ -1,6 +1,6 @@
 """Test INDI Allsky Media Source."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 from aioindiallsky import ImageItem, IndiAllSkyError, MediaData, MonthItem, VideoItem
 import pytest
@@ -16,6 +16,7 @@ from homeassistant.components.media_source import (
 )
 from homeassistant.const import CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
@@ -197,11 +198,17 @@ async def test_async_resolve_media_redirect_resolution(
         status=302,
         headers={"Location": "/indi-allsky/images/startrail_1234.jpg"},
     )
-    resolved_no_verify = await async_resolve_media(
-        hass,
-        f"{URI_SCHEME}{DOMAIN}/{entry_no_verify.entry_id}#media#lateststartrail",
-        None,
-    )
+    with patch(
+        "homeassistant.components.indi_allsky.media_source.async_get_clientsession",
+        wraps=async_get_clientsession,
+    ) as mock_get_session:
+        resolved_no_verify = await async_resolve_media(
+            hass,
+            f"{URI_SCHEME}{DOMAIN}/{entry_no_verify.entry_id}#media#lateststartrail",
+            None,
+        )
+        assert mock_get_session.call_args.kwargs["verify_ssl"] is False
+
     assert resolved_no_verify == PlayMedia(
         "https://127.0.0.1/indi-allsky/images/startrail_1234.jpg",
         "image/jpeg",
@@ -286,6 +293,18 @@ async def test_async_browse_media_root(
             hass, f"{URI_SCHEME}{DOMAIN}/{unloaded_entry.entry_id}"
         )
 
+    # Malformed numeric date path segments raise BrowseError
+    with pytest.raises(BrowseError):
+        await async_browse_media(
+            hass,
+            f"{URI_SCHEME}{DOMAIN}/{mock_config_entry.entry_id}#videos#invalid_year",
+        )
+    with pytest.raises(BrowseError):
+        await async_browse_media(
+            hass,
+            f"{URI_SCHEME}{DOMAIN}/{mock_config_entry.entry_id}#images#2026#invalid_month",
+        )
+
 
 async def test_async_browse_latest_media(
     hass: HomeAssistant,
@@ -363,7 +382,6 @@ async def test_async_browse_videos_hierarchy(
         f"https://127.0.0.1/{p}"
     )
 
-    # 1. Years
     res_years = await async_browse_media(
         hass, f"{URI_SCHEME}{DOMAIN}/{mock_config_entry.entry_id}#videos"
     )
@@ -371,14 +389,12 @@ async def test_async_browse_videos_hierarchy(
     assert res_years.children[0].title == "2026"
     assert res_years.children[1].title == "2025"
 
-    # 2. Months
     res_months = await async_browse_media(
         hass, f"{URI_SCHEME}{DOMAIN}/{mock_config_entry.entry_id}#videos#2026"
     )
     assert len(res_months.children) == 2
     assert res_months.children[0].title == "October"
 
-    # 3. Videos & associated media
     res_videos = await async_browse_media(
         hass, f"{URI_SCHEME}{DOMAIN}/{mock_config_entry.entry_id}#videos#2026#10"
     )
@@ -419,35 +435,30 @@ async def test_async_browse_images_hierarchy(
         f"https://127.0.0.1/{p}"
     )
 
-    # 1. Years
     res_years = await async_browse_media(
         hass, f"{URI_SCHEME}{DOMAIN}/{mock_config_entry.entry_id}#images"
     )
     assert len(res_years.children) == 1
     assert res_years.children[0].title == "2026"
 
-    # 2. Months
     res_months = await async_browse_media(
         hass, f"{URI_SCHEME}{DOMAIN}/{mock_config_entry.entry_id}#images#2026"
     )
     assert len(res_months.children) == 1
     assert res_months.children[0].title == "October"
 
-    # 3. Days
     res_days = await async_browse_media(
         hass, f"{URI_SCHEME}{DOMAIN}/{mock_config_entry.entry_id}#images#2026#10"
     )
     assert len(res_days.children) == 2
     assert res_days.children[0].title == "Day 11"
 
-    # 4. Hours
     res_hours = await async_browse_media(
         hass, f"{URI_SCHEME}{DOMAIN}/{mock_config_entry.entry_id}#images#2026#10#11"
     )
     assert len(res_hours.children) == 2
     assert res_hours.children[0].title == "20:00 - 20:59"
 
-    # 5. Images
     res_images = await async_browse_media(
         hass, f"{URI_SCHEME}{DOMAIN}/{mock_config_entry.entry_id}#images#2026#10#11#20"
     )

@@ -128,6 +128,11 @@ class IndiAllSkyMediaSource(MediaSource):
 
             if category == CATEGORY_IMAGES:
                 return await self._browse_images(entry, parts[2:])
+        except ValueError as err:
+            raise BrowseError(
+                translation_domain=DOMAIN,
+                translation_key="incomplete_media_identifier",
+            ) from err
         except IndiAllSkyError as err:
             raise BrowseError(
                 translation_domain=DOMAIN,
@@ -379,7 +384,6 @@ class IndiAllSkyMediaSource(MediaSource):
                 )
             )
 
-            # If keogram or star trail exists for that session, include them as child media
             if vid.keogram_url and vid.keogram_url not in seen_media_urls:
                 seen_media_urls.add(vid.keogram_url)
                 children.append(
