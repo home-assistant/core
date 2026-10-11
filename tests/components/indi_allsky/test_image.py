@@ -159,8 +159,12 @@ async def test_stale_media_fetch_ignored(
 
     first_keogram_fetch_started = asyncio.Event()
     unblock_first_keogram_fetch = asyncio.Event()
+    second_keogram_fetch_started = asyncio.Event()
+    unblock_second_keogram_fetch = asyncio.Event()
     first_startrail_fetch_started = asyncio.Event()
     unblock_first_startrail_fetch = asyncio.Event()
+    second_startrail_fetch_started = asyncio.Event()
+    unblock_second_startrail_fetch = asyncio.Event()
 
     async def _mock_fetch_image(filename: str) -> bytes:
         if filename == "latestkeogram":
@@ -168,12 +172,16 @@ async def test_stale_media_fetch_ignored(
                 first_keogram_fetch_started.set()
                 await unblock_first_keogram_fetch.wait()
                 return b"stale_keogram"
+            second_keogram_fetch_started.set()
+            await unblock_second_keogram_fetch.wait()
             return b"new_keogram"
         if filename == "lateststartrail":
             if not first_startrail_fetch_started.is_set():
                 first_startrail_fetch_started.set()
                 await unblock_first_startrail_fetch.wait()
                 return b"stale_startrail"
+            second_startrail_fetch_started.set()
+            await unblock_second_startrail_fetch.wait()
             return b"new_startrail"
         return b""
 
@@ -193,14 +201,26 @@ async def test_stale_media_fetch_ignored(
     await first_startrail_fetch_started.wait()
 
     # Fire a newer media event for both while the first fetch is in-flight
+    coordinator = mock_config_entry.runtime_data
     for cb in keogram_callbacks:
         cb(keogram_2)
+    assert coordinator.latest_keogram is keogram_2
+    assert coordinator.latest_keogram_image is None
+    assert coordinator.latest_keogram_updated is None
+
     for cb in startrail_callbacks:
         cb(startrail_2)
+    assert coordinator.latest_startrail is startrail_2
+    assert coordinator.latest_startrail_image is None
+    assert coordinator.latest_startrail_updated is None
 
     # Allow the first (stale) fetches to complete
     unblock_first_keogram_fetch.set()
     unblock_first_startrail_fetch.set()
+
+    # Allow the second (new) fetches to complete
+    unblock_second_keogram_fetch.set()
+    unblock_second_startrail_fetch.set()
     await hass.async_block_till_done(wait_background_tasks=True)
 
     img = await image.async_get_image(hass, "image.indi_allsky_latest_keogram")

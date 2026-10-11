@@ -114,6 +114,8 @@ class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[IndiAllSkyData]):
     def _handle_keogram_complete(self, media: MediaData) -> None:
         """Handle new keogram_complete event from WebSocket stream."""
         self.latest_keogram = media
+        self.latest_keogram_image = None
+        self.latest_keogram_updated = None
         self.config_entry.async_create_background_task(
             self.hass,
             self._async_fetch_keogram_and_update(media),
@@ -150,6 +152,8 @@ class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[IndiAllSkyData]):
     def _handle_startrail_complete(self, media: MediaData) -> None:
         """Handle new startrail_complete event from WebSocket stream."""
         self.latest_startrail = media
+        self.latest_startrail_image = None
+        self.latest_startrail_updated = None
         self.config_entry.async_create_background_task(
             self.hass,
             self._async_fetch_startrail_and_update(media),
