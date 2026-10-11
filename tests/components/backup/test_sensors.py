@@ -81,6 +81,7 @@ async def test_sensor_updates(
             "retention": {"copies": None, "days": None},
             "last_attempted_automatic_backup": "2024-11-11T04:45:00+01:00",
             "last_completed_automatic_backup": "2024-11-11T04:45:00+01:00",
+            "last_completed_automatic_backup_size": 2097152,
             "schedule": {
                 "days": [],
                 "recurrence": "daily",
@@ -108,6 +109,8 @@ async def test_sensor_updates(
     assert state.state == "2024-11-11T03:45:00+00:00"
     state = hass.states.get("sensor.backup_next_scheduled_automatic_backup")
     assert state.state == "2024-11-13T05:00:00+00:00"
+    state = hass.states.get("sensor.backup_last_successful_automatic_backup_size")
+    assert state.state == "2.0"
 
     freezer.move_to("2024-11-13T12:00:00+01:00")
     async_fire_time_changed(hass)
@@ -119,3 +122,5 @@ async def test_sensor_updates(
     assert state.state == "2024-11-13T11:00:00+00:00"
     state = hass.states.get("sensor.backup_next_scheduled_automatic_backup")
     assert state.state == "2024-11-14T05:00:00+00:00"
+    state = hass.states.get("sensor.backup_last_successful_automatic_backup_size")
+    assert state.state == "4.0"

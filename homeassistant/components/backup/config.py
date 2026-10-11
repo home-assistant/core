@@ -45,6 +45,7 @@ class StoredBackupConfig(TypedDict):
     create_backup: StoredCreateBackupConfig
     last_attempted_automatic_backup: str | None
     last_completed_automatic_backup: str | None
+    last_completed_automatic_backup_size: int | None
     retention: StoredRetentionConfig
     schedule: StoredBackupSchedule
 
@@ -58,6 +59,7 @@ class BackupConfigData:
     create_backup: CreateBackupConfig
     last_attempted_automatic_backup: datetime | None = None
     last_completed_automatic_backup: datetime | None = None
+    last_completed_automatic_backup_size: int | None = None
     retention: RetentionConfig
     schedule: BackupSchedule
 
@@ -118,6 +120,9 @@ class BackupConfigData:
             ),
             last_attempted_automatic_backup=last_attempted,
             last_completed_automatic_backup=last_completed,
+            last_completed_automatic_backup_size=data[
+                "last_completed_automatic_backup_size"
+            ],
             retention=RetentionConfig(
                 copies=retention["copies"],
                 days=retention["days"],
@@ -149,6 +154,7 @@ class BackupConfigData:
             create_backup=self.create_backup.to_dict(),
             last_attempted_automatic_backup=last_attempted,
             last_completed_automatic_backup=last_completed,
+            last_completed_automatic_backup_size=self.last_completed_automatic_backup_size,
             retention=self.retention.to_dict(),
             schedule=self.schedule.to_dict(),
         )
