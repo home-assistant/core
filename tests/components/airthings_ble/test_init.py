@@ -10,15 +10,22 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.airthings_ble.const import (
+    CONNECTIVITY_ISSUE_PREFIX,
     DEFAULT_SCAN_INTERVAL,
     DEVICE_MODEL,
     DEVICE_SPECIFIC_SCAN_INTERVAL,
     DOMAIN,
 )
+from homeassistant.components.homeassistant import (
+    DOMAIN as HA_DOMAIN,
+    SERVICE_UPDATE_ENTITY,
+)
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, issue_registry as ir
+from homeassistant.helpers.update_coordinator import REQUEST_REFRESH_DEFAULT_COOLDOWN
+from homeassistant.setup import async_setup_component
 
 from . import (
     CORENTIUM_HOME_2_DEVICE_INFO,
@@ -33,7 +40,11 @@ from . import (
 )
 
 from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.components.bluetooth import inject_bluetooth_service_info
+from tests.components.bluetooth import (
+    generate_advertisement_data,
+    generate_ble_device,
+    inject_bluetooth_service_info,
+)
 
 # A read that ends early leaves the address empty. The coordinator treats
 # such a read as incomplete instead of creating entities from it.
@@ -419,3 +430,457 @@ async def test_device_registry_sw_version_updates_on_refresh(
     device = device_registry.async_get(device.id)
     assert device is not None
     assert device.sw_version == "G-BLE-2.2.3-master+0"
+
+
+def _with_mode(
+    device_info: AirthingsDevice, connectivity_mode: str | None
+) -> AirthingsDevice:
+    """Return device data reporting the given connectivity mode."""
+    device_info = deepcopy(device_info)
+    if connectivity_mode is None:
+        del device_info.sensors["connectivity_mode"]
+    else:
+        device_info.sensors["connectivity_mode"] = connectivity_mode
+    return device_info
+
+
+async def _setup_device(
+    hass: HomeAssistant,
+    service_info: BluetoothServiceInfoBleak,
+    device_info: AirthingsDevice,
+    connectivity_mode: str | None,
+) -> MockConfigEntry:
+    """Set up a device reporting the given connectivity mode."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=service_info.address,
+        data={DEVICE_MODEL: device_info.model.value},
+    )
+    entry.add_to_hass(hass)
+
+    inject_bluetooth_service_info(hass, service_info)
+
+    with (
+        patch_async_ble_device_from_address(service_info.device),
+        patch_airthings_ble(_with_mode(device_info, connectivity_mode)),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    return entry
+
+
+def _second_corentium_home_2() -> tuple[BluetoothServiceInfoBleak, AirthingsDevice]:
+    """Return a second Corentium Home 2 with its own address and identifier."""
+    address = "dd:dd:dd:dd:dd:dd"
+    service_info = BluetoothServiceInfoBleak(
+        name="dd-dd-dd-dd-dd-dd",
+        address=address,
+        device=generate_ble_device(address=address, name="Airthings Corentium Home 2"),
+        rssi=-61,
+        manufacturer_data={},
+        service_data={},
+        service_uuids=[],
+        source="local",
+        advertisement=generate_advertisement_data(),
+        connectable=True,
+        time=0,
+        tx_power=0,
+    )
+    device_info = deepcopy(CORENTIUM_HOME_2_DEVICE_INFO)
+    device_info.address = address
+    device_info.identifier = "654321"
+    return service_info, device_info
+
+
+def _issues(issue_registry: ir.IssueRegistry) -> dict[str, str | None]:
+    """Return the translation key of each Airthings BLE issue by issue id."""
+    return {
+        issue_id: issue.translation_key
+        for (domain, issue_id), issue in issue_registry.issues.items()
+        if domain == DOMAIN
+    }
+
+
+async def _refresh_corentium_home_2(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    device_info: AirthingsDevice,
+) -> None:
+    """Run one scheduled Corentium Home 2 refresh returning the given data."""
+    with patch_airthings_ble(device_info) as update_device:
+        freezer.tick(
+            DEVICE_SPECIFIC_SCAN_INTERVAL[AirthingsDeviceType.CORENTIUM_HOME_2.value]
+        )
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+    update_device.assert_awaited_once()
+
+
+@pytest.mark.parametrize(
+    ("connectivity_mode", "expected_key"),
+    [
+        pytest.param("SmartLink", "connectivity_smartlink", id="smartlink"),
+        pytest.param(
+            "Not configured", "connectivity_not_configured", id="not_configured"
+        ),
+        pytest.param("Bluetooth", None, id="bluetooth"),
+        pytest.param("unknown", None, id="unknown"),
+        pytest.param(None, None, id="not_reported"),
+    ],
+)
+async def test_connectivity_mode_issue(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    connectivity_mode: str | None,
+    expected_key: str | None,
+) -> None:
+    """Test an issue is created only for unsupported connectivity modes."""
+    entry = await _setup_device(
+        hass,
+        CORENTIUM_HOME_2_SERVICE_INFO,
+        CORENTIUM_HOME_2_DEVICE_INFO,
+        connectivity_mode,
+    )
+
+    assert entry.state is ConfigEntryState.LOADED
+    expected = (
+        {f"{CONNECTIVITY_ISSUE_PREFIX}{entry.entry_id}": expected_key}
+        if expected_key
+        else {}
+    )
+    assert _issues(issue_registry) == expected
+
+
+@pytest.mark.parametrize(
+    ("connectivity_mode", "translation_key"),
+    [
+        pytest.param("SmartLink", "connectivity_smartlink", id="smartlink"),
+        pytest.param(
+            "Not configured", "connectivity_not_configured", id="not_configured"
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    ("service_info", "device_info", "update_interval"),
+    [
+        pytest.param(
+            CORENTIUM_HOME_2_SERVICE_INFO,
+            CORENTIUM_HOME_2_DEVICE_INFO,
+            "30",
+            id="corentium_home_2",
+        ),
+        pytest.param(
+            WAVE_ENHANCE_SERVICE_INFO,
+            WAVE_ENHANCE_DEVICE_INFO,
+            "5",
+            id="wave_enhance",
+        ),
+    ],
+)
+async def test_connectivity_mode_issue_details(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    service_info: BluetoothServiceInfoBleak,
+    device_info: AirthingsDevice,
+    update_interval: str,
+    connectivity_mode: str,
+    translation_key: str,
+) -> None:
+    """Test the connectivity mode issue identifies the device."""
+    entry = await _setup_device(hass, service_info, device_info, connectivity_mode)
+
+    issue = issue_registry.async_get_issue(
+        DOMAIN, f"{CONNECTIVITY_ISSUE_PREFIX}{entry.entry_id}"
+    )
+    assert issue is not None
+    assert issue.severity is ir.IssueSeverity.WARNING
+    assert not issue.is_fixable
+    assert issue.is_persistent
+    assert issue.translation_key == translation_key
+    assert issue.translation_placeholders == {
+        "device_name": device_info.friendly_name(),
+        "serial_number": f"{device_info.model.value}{device_info.identifier}",
+        "update_interval": update_interval,
+        "airthings_url": "https://www.home-assistant.io/integrations/airthings",
+    }
+
+
+@pytest.mark.parametrize(
+    ("name_by_user", "expected_name"),
+    [
+        pytest.param("Living room", "Living room", id="named_by_user"),
+        pytest.param(None, "Airthings Corentium Home 2", id="not_named_by_user"),
+    ],
+)
+async def test_connectivity_mode_issue_device_name(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
+    name_by_user: str | None,
+    expected_name: str,
+) -> None:
+    """Test the connectivity mode issue uses the name the user gave the device."""
+    entry = await _setup_device(
+        hass, CORENTIUM_HOME_2_SERVICE_INFO, CORENTIUM_HOME_2_DEVICE_INFO, "SmartLink"
+    )
+    device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_BLUETOOTH, CORENTIUM_HOME_2_DEVICE_INFO.address),
+        entry.entry_id,
+    )
+    assert device is not None
+    device_registry.async_update_device(device.id, name_by_user=name_by_user)
+
+    await _refresh_corentium_home_2(
+        hass, freezer, _with_mode(CORENTIUM_HOME_2_DEVICE_INFO, "SmartLink")
+    )
+
+    issue = issue_registry.async_get_issue(
+        DOMAIN, f"{CONNECTIVITY_ISSUE_PREFIX}{entry.entry_id}"
+    )
+    assert issue is not None
+    assert issue.translation_placeholders["device_name"] == expected_name
+
+
+@pytest.mark.parametrize(
+    ("initial_mode", "new_mode", "initial_key", "expected_key"),
+    [
+        pytest.param(
+            "SmartLink",
+            "Bluetooth",
+            "connectivity_smartlink",
+            None,
+            id="smartlink_to_bluetooth",
+        ),
+        pytest.param(
+            "Not configured",
+            "Bluetooth",
+            "connectivity_not_configured",
+            None,
+            id="not_configured_to_bluetooth",
+        ),
+        pytest.param(
+            "Bluetooth",
+            "SmartLink",
+            None,
+            "connectivity_smartlink",
+            id="bluetooth_to_smartlink",
+        ),
+        pytest.param(
+            "Bluetooth",
+            "Not configured",
+            None,
+            "connectivity_not_configured",
+            id="bluetooth_to_not_configured",
+        ),
+        pytest.param(
+            "Not configured",
+            "SmartLink",
+            "connectivity_not_configured",
+            "connectivity_smartlink",
+            id="not_configured_to_smartlink",
+        ),
+        pytest.param(
+            "SmartLink",
+            "Not configured",
+            "connectivity_smartlink",
+            "connectivity_not_configured",
+            id="smartlink_to_not_configured",
+        ),
+        pytest.param(
+            "SmartLink",
+            "unknown",
+            "connectivity_smartlink",
+            "connectivity_smartlink",
+            id="smartlink_to_unknown",
+        ),
+        pytest.param(
+            "SmartLink",
+            None,
+            "connectivity_smartlink",
+            "connectivity_smartlink",
+            id="smartlink_to_not_reported",
+        ),
+    ],
+)
+async def test_connectivity_mode_issue_updated_on_refresh(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    freezer: FrozenDateTimeFactory,
+    initial_mode: str,
+    new_mode: str | None,
+    initial_key: str | None,
+    expected_key: str | None,
+) -> None:
+    """Test the connectivity mode issue follows the mode reported on refresh."""
+    entry = await _setup_device(
+        hass, CORENTIUM_HOME_2_SERVICE_INFO, CORENTIUM_HOME_2_DEVICE_INFO, initial_mode
+    )
+    issue_id = f"{CONNECTIVITY_ISSUE_PREFIX}{entry.entry_id}"
+
+    assert _issues(issue_registry) == ({issue_id: initial_key} if initial_key else {})
+
+    await _refresh_corentium_home_2(
+        hass, freezer, _with_mode(CORENTIUM_HOME_2_DEVICE_INFO, new_mode)
+    )
+
+    assert _issues(issue_registry) == ({issue_id: expected_key} if expected_key else {})
+
+
+async def test_connectivity_mode_issue_kept_on_incomplete_read(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test an incomplete read reporting Bluetooth does not delete the issue."""
+    entry = await _setup_device(
+        hass, CORENTIUM_HOME_2_SERVICE_INFO, CORENTIUM_HOME_2_DEVICE_INFO, "SmartLink"
+    )
+    incomplete = _with_mode(CORENTIUM_HOME_2_DEVICE_INFO, "Bluetooth")
+    incomplete.address = ""
+
+    await _refresh_corentium_home_2(hass, freezer, incomplete)
+
+    assert _issues(issue_registry) == {
+        f"{CONNECTIVITY_ISSUE_PREFIX}{entry.entry_id}": "connectivity_smartlink"
+    }
+
+
+async def test_connectivity_mode_issue_kept_on_reload_until_removed(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test the issue survives an unreadable reload and goes with the entry."""
+    entry = await _setup_device(
+        hass, CORENTIUM_HOME_2_SERVICE_INFO, CORENTIUM_HOME_2_DEVICE_INFO, "SmartLink"
+    )
+
+    with patch_airthings_ble(side_effect=BleakError("Device not reachable")):
+        await hass.config_entries.async_reload(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert _issues(issue_registry) == {
+        f"{CONNECTIVITY_ISSUE_PREFIX}{entry.entry_id}": "connectivity_smartlink"
+    }
+
+    await hass.config_entries.async_remove(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert _issues(issue_registry) == {}
+
+
+async def test_existing_connectivity_mode_issue_kept_when_setup_fails(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test an existing issue survives a setup that cannot read the device."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=CORENTIUM_HOME_2_SERVICE_INFO.address,
+        data={DEVICE_MODEL: CORENTIUM_HOME_2_DEVICE_INFO.model.value},
+    )
+    entry.add_to_hass(hass)
+    issue_id = f"{CONNECTIVITY_ISSUE_PREFIX}{entry.entry_id}"
+    placeholders = {
+        "device_name": "Living room",
+        "serial_number": "3250123456",
+        "update_interval": "30",
+        "airthings_url": "https://www.home-assistant.io/integrations/airthings",
+    }
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        issue_id,
+        is_fixable=False,
+        is_persistent=True,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="connectivity_smartlink",
+        translation_placeholders=placeholders,
+    )
+    inject_bluetooth_service_info(hass, CORENTIUM_HOME_2_SERVICE_INFO)
+
+    with (
+        patch_async_ble_device_from_address(CORENTIUM_HOME_2_SERVICE_INFO.device),
+        patch_airthings_ble(side_effect=BleakError("Device not reachable")),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert issue is not None
+    assert issue.active
+    assert issue.translation_placeholders == placeholders
+
+
+async def test_connectivity_mode_issue_deleted_on_remove(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test the connectivity mode issue is deleted when the entry is removed."""
+    entry = await _setup_device(
+        hass, CORENTIUM_HOME_2_SERVICE_INFO, CORENTIUM_HOME_2_DEVICE_INFO, "SmartLink"
+    )
+
+    assert _issues(issue_registry) == {
+        f"{CONNECTIVITY_ISSUE_PREFIX}{entry.entry_id}": "connectivity_smartlink"
+    }
+
+    await hass.config_entries.async_remove(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert _issues(issue_registry) == {}
+
+
+async def test_connectivity_mode_issues_are_per_entry(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test recovering or removing one device leaves the other device's issue alone."""
+    assert await async_setup_component(hass, HA_DOMAIN, {})
+    first = await _setup_device(
+        hass, CORENTIUM_HOME_2_SERVICE_INFO, CORENTIUM_HOME_2_DEVICE_INFO, "SmartLink"
+    )
+    second_service_info, second_device_info = _second_corentium_home_2()
+    second = await _setup_device(
+        hass, second_service_info, second_device_info, "Not configured"
+    )
+    first_issue = f"{CONNECTIVITY_ISSUE_PREFIX}{first.entry_id}"
+    second_issue = f"{CONNECTIVITY_ISSUE_PREFIX}{second.entry_id}"
+    both_issues = {
+        first_issue: "connectivity_smartlink",
+        second_issue: "connectivity_not_configured",
+    }
+
+    async def update_first_device(connectivity_mode: str) -> None:
+        with patch_airthings_ble(
+            _with_mode(CORENTIUM_HOME_2_DEVICE_INFO, connectivity_mode)
+        ) as update_device:
+            await hass.services.async_call(
+                HA_DOMAIN,
+                SERVICE_UPDATE_ENTITY,
+                {ATTR_ENTITY_ID: "sensor.airthings_corentium_home_2_123456_battery"},
+                blocking=True,
+            )
+            freezer.tick(timedelta(seconds=REQUEST_REFRESH_DEFAULT_COOLDOWN + 1))
+            async_fire_time_changed(hass)
+            await hass.async_block_till_done()
+        update_device.assert_awaited_once()
+
+    assert _issues(issue_registry) == both_issues
+
+    await update_first_device("Bluetooth")
+
+    assert _issues(issue_registry) == {second_issue: "connectivity_not_configured"}
+
+    await update_first_device("SmartLink")
+
+    assert _issues(issue_registry) == both_issues
+
+    await hass.config_entries.async_remove(first.entry_id)
+    await hass.async_block_till_done()
+
+    assert _issues(issue_registry) == {second_issue: "connectivity_not_configured"}

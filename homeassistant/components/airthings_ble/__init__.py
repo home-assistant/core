@@ -2,8 +2,9 @@
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 
-from .const import MAX_RETRIES_AFTER_STARTUP
+from .const import CONNECTIVITY_ISSUE_PREFIX, DOMAIN, MAX_RETRIES_AFTER_STARTUP
 from .coordinator import AirthingsBLEConfigEntry, AirthingsBLEDataUpdateCoordinator
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
@@ -34,3 +35,10 @@ async def async_unload_entry(
 ) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def async_remove_entry(
+    hass: HomeAssistant, entry: AirthingsBLEConfigEntry
+) -> None:
+    """Remove the connectivity mode issue of a removed config entry."""
+    ir.async_delete_issue(hass, DOMAIN, f"{CONNECTIVITY_ISSUE_PREFIX}{entry.entry_id}")

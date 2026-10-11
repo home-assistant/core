@@ -11,16 +11,20 @@ from bleak_retry_connector import close_stale_connections_by_address
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import BluetoothReachabilityIntent
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
+    AIRTHINGS_CLOUD_DOCUMENTATION_URL,
+    CONNECTIVITY_ISSUE_PREFIX,
     DEFAULT_SCAN_INTERVAL,
     DEVICE_MODEL,
     DEVICE_SPECIFIC_SCAN_INTERVAL,
     DOMAIN,
+    UNSUPPORTED_CONNECTIVITY_MODES,
+    get_connectivity_mode,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -114,11 +118,44 @@ class AirthingsBLEDataUpdateCoordinator(DataUpdateCoordinator[AirthingsDevice]):
             )
 
         device_registry = dr.async_get(self.hass)
-        if (
-            device := device_registry.async_get_device_by_connection(
-                (dr.CONNECTION_BLUETOOTH, data.address), self.config_entry.entry_id
-            )
-        ) and device.sw_version != data.sw_version:
+        device = device_registry.async_get_device_by_connection(
+            (dr.CONNECTION_BLUETOOTH, data.address), self.config_entry.entry_id
+        )
+        if device and device.sw_version != data.sw_version:
             device_registry.async_update_device(device.id, sw_version=data.sw_version)
 
+        self._async_update_connectivity_mode_issue(data, device)
         return data
+
+    @callback
+    def _async_update_connectivity_mode_issue(
+        self, data: AirthingsDevice, device: dr.DeviceEntry | None
+    ) -> None:
+        """Create or delete the issue for an unsupported connectivity mode."""
+        mode = get_connectivity_mode(data.sensors.get("connectivity_mode"))
+        if mode is None:
+            return
+
+        issue_id = f"{CONNECTIVITY_ISSUE_PREFIX}{self.config_entry.entry_id}"
+        if mode not in UNSUPPORTED_CONNECTIVITY_MODES:
+            ir.async_delete_issue(self.hass, DOMAIN, issue_id)
+            return
+
+        scan_interval = DEVICE_SPECIFIC_SCAN_INTERVAL.get(
+            data.model.value, DEFAULT_SCAN_INTERVAL
+        )
+        ir.async_create_issue(
+            self.hass,
+            DOMAIN,
+            issue_id,
+            is_fixable=False,
+            is_persistent=True,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key=f"connectivity_{mode}",
+            translation_placeholders={
+                "device_name": (device and device.name_by_user) or data.friendly_name(),
+                "serial_number": f"{data.model.value}{data.identifier}",
+                "update_interval": str(scan_interval // 60),
+                "airthings_url": AIRTHINGS_CLOUD_DOCUMENTATION_URL,
+            },
+        )
