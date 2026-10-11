@@ -15,6 +15,11 @@
         "name": "Grease filter"
       }
     },
+    "button": {
+      "reset_grease_filter": {
+        "name": "Reset grease filter"
+      }
+    },
     "number": {
       "periodic_venting": {
         "name": "Periodic venting"

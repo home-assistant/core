@@ -10,6 +10,7 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from reolink_aio.exceptions import (
     CredentialsInvalidError,
+    LoginAccountDeviceError,
     LoginPrivacyModeError,
     ReolinkError,
 )
@@ -113,6 +114,11 @@ async def test_wait(*args, **key_args) -> None:
         (
             "get_host_data",
             AsyncMock(side_effect=CredentialsInvalidError("Test error")),
+            ConfigEntryState.SETUP_ERROR,
+        ),
+        (
+            "get_host_data",
+            AsyncMock(side_effect=LoginAccountDeviceError("Test error")),
             ConfigEntryState.SETUP_ERROR,
         ),
         (

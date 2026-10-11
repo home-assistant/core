@@ -12,6 +12,7 @@ from midealocal.devices.cf import DeviceAttributes as CFAttributes
 from midealocal.devices.da import DeviceAttributes as DAAttributes
 from midealocal.devices.db import DeviceAttributes as DBAttributes
 from midealocal.devices.dc import DeviceAttributes as DCAttributes
+from midealocal.devices.e2 import DeviceAttributes as E2Attributes
 from midealocal.exceptions import SocketException
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -26,6 +27,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNKNOWN,
+    EntityCategory,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -168,6 +170,20 @@ async def _assert_service_call(
             ),
             id="dc",
         ),
+        pytest.param(
+            DummyDevice(
+                DeviceType.E2,
+                attributes={
+                    E2Attributes.power: True,
+                    E2Attributes.heating: True,
+                    E2Attributes.protection: False,
+                    E2Attributes.whole_tank_heating: False,
+                    E2Attributes.variable_heating: False,
+                    E2Attributes.sterilization: False,
+                },
+            ),
+            id="e2",
+        ),
     ],
 )
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -224,6 +240,74 @@ async def test_ac_switch_services(
         [("set_attribute", ACAttributes.aux_heating, False)],
         device,
     )
+
+
+@pytest.mark.parametrize(
+    "device_type",
+    [
+        pytest.param(DeviceType.A1, id="dehumidifier"),
+        pytest.param(DeviceType.AC, id="air_conditioner"),
+    ],
+)
+async def test_prompt_tone_switch_services(
+    hass: HomeAssistant,
+    mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
+    device_type: DeviceType,
+) -> None:
+    """Test prompt tone can be disabled and enabled through switch services."""
+    device = DummyDevice(device_type, attributes={"prompt_tone": True})
+    config_entry = mock_config_entry(device)
+    with patch("homeassistant.components.midea._PLATFORMS", [Platform.SWITCH]):
+        await setup_integration(hass, config_entry, device)
+
+    entity_entry = entity_entries(hass, config_entry)[f"{TEST_DEVICE_ID}_prompt_tone"]
+    assert entity_entry.entity_category is EntityCategory.CONFIG
+    assert (state := hass.states.get(entity_entry.entity_id)) is not None
+    assert state.state == STATE_ON
+
+    await _assert_service_call(
+        hass,
+        entity_entry.entity_id,
+        SERVICE_TURN_OFF,
+        [("set_attribute", "prompt_tone", False)],
+        device,
+    )
+    await hass.async_block_till_done()
+    assert (state := hass.states.get(entity_entry.entity_id)) is not None
+    assert state.state == STATE_OFF
+
+    await _assert_service_call(
+        hass,
+        entity_entry.entity_id,
+        SERVICE_TURN_ON,
+        [("set_attribute", "prompt_tone", True)],
+        device,
+    )
+    await hass.async_block_till_done()
+    assert (state := hass.states.get(entity_entry.entity_id)) is not None
+    assert state.state == STATE_ON
+
+
+@pytest.mark.parametrize(
+    ("device_type", "attributes"),
+    [
+        pytest.param(DeviceType.A1, {}, id="a1_missing_attribute"),
+        pytest.param(DeviceType.CC, {"prompt_tone": True}, id="unsupported_type"),
+    ],
+)
+async def test_prompt_tone_switch_not_created(
+    hass: HomeAssistant,
+    mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
+    device_type: DeviceType,
+    attributes: dict[str, bool],
+) -> None:
+    """Test prompt tone requires a supported device type and its attribute."""
+    device = DummyDevice(device_type, attributes=attributes)
+    config_entry = mock_config_entry(device)
+    with patch("homeassistant.components.midea._PLATFORMS", [Platform.SWITCH]):
+        await setup_integration(hass, config_entry, device)
+
+    assert f"{TEST_DEVICE_ID}_prompt_tone" not in entity_entries(hass, config_entry)
 
 
 async def test_dc_ai_switch_services(
@@ -417,6 +501,73 @@ async def test_a1_pump_not_created_without_capability(
         await setup_integration(hass, config_entry, device)
 
     assert f"{TEST_DEVICE_ID}_pump" not in entity_entries(hass, config_entry)
+
+
+@pytest.mark.parametrize(
+    "attribute",
+    [
+        pytest.param(E2Attributes.protection, id="protection"),
+        pytest.param(E2Attributes.whole_tank_heating, id="whole_tank_heating"),
+        pytest.param(E2Attributes.variable_heating, id="variable_heating"),
+        pytest.param(E2Attributes.sterilization, id="sterilization"),
+    ],
+)
+async def test_e2_switch_services(
+    hass: HomeAssistant,
+    mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
+    attribute: str,
+) -> None:
+    """Test E2 switch services."""
+    device = DummyDevice(
+        DeviceType.E2,
+        attributes={
+            E2Attributes.power: True,
+            E2Attributes.heating: False,
+            E2Attributes.protection: False,
+            E2Attributes.whole_tank_heating: False,
+            E2Attributes.variable_heating: False,
+            E2Attributes.sterilization: False,
+        },
+    )
+
+    config_entry = mock_config_entry(device)
+    with patch("homeassistant.components.midea._PLATFORMS", [Platform.SWITCH]):
+        await setup_integration(hass, config_entry, device)
+
+    entity_entry = entity_entries(hass, config_entry)[f"{TEST_DEVICE_ID}_{attribute}"]
+    assert (state := hass.states.get(entity_entry.entity_id))
+    assert state.state == STATE_OFF
+
+    device.attributes[attribute] = True
+    device.notify_update({attribute: True})
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(entity_entry.entity_id))
+    assert state.state == STATE_ON
+
+    await _assert_service_call(
+        hass,
+        entity_entry.entity_id,
+        SERVICE_TURN_OFF,
+        [("set_attribute", attribute, False)],
+        device,
+    )
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(entity_entry.entity_id))
+    assert state.state == STATE_OFF
+
+    await _assert_service_call(
+        hass,
+        entity_entry.entity_id,
+        SERVICE_TURN_ON,
+        [("set_attribute", attribute, True)],
+        device,
+    )
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(entity_entry.entity_id))
+    assert state.state == STATE_ON
 
 
 async def test_switch_unknown_when_attribute_becomes_non_bool(

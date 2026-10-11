@@ -83,7 +83,7 @@ async def test_user_flow(hass: HomeAssistant) -> None:
         # step: station_select
         result_station_select = await hass.config_entries.flow.async_configure(
             result_user["flow_id"],
-            {CONF_STATION: "Wartenau"},
+            {CONF_STATION: "Master:10901"},
         )
 
         assert result_station_select["type"] is FlowResultType.CREATE_ENTRY
@@ -103,6 +103,78 @@ async def test_user_flow(hass: HomeAssistant) -> None:
                 "hasStationInformation": True,
             },
         }
+
+
+async def test_user_flow_stations_with_same_name(hass: HomeAssistant) -> None:
+    """Test that stations with the same name in different cities can be selected."""
+
+    with (
+        patch(
+            "homeassistant.components.hvv_departures.hub.GTI.init",
+            return_value=FIXTURE_INIT,
+        ),
+        patch(
+            "homeassistant.components.hvv_departures.hub.GTI.checkName",
+            return_value=CNResponse.model_validate(
+                {
+                    "returnCode": "OK",
+                    "results": [
+                        {
+                            "name": "Rathaus",
+                            "city": "Hamburg",
+                            "id": "Master:1",
+                            "type": "STATION",
+                        },
+                        {
+                            "name": "Rathaus",
+                            "city": "Barsbüttel",
+                            "id": "Master:2",
+                            "type": "STATION",
+                        },
+                    ],
+                }
+            ),
+        ),
+        patch(
+            "homeassistant.components.hvv_departures.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_HOST: "api-test.geofox.de",
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
+            },
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_STATION: "Rathaus"},
+        )
+
+        assert result["step_id"] == "station_select"
+        assert result["data_schema"].schema[CONF_STATION].container == {
+            "Master:1": "Rathaus (Hamburg)",
+            "Master:2": "Rathaus (Barsbüttel)",
+        }
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_STATION: "Master:1"},
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Rathaus"
+    assert result["data"][CONF_STATION] == {
+        "name": "Rathaus",
+        "city": "Hamburg",
+        "id": "Master:1",
+        "type": "STATION",
+    }
 
 
 async def test_user_flow_no_results(hass: HomeAssistant) -> None:
@@ -164,7 +236,7 @@ async def test_user_flow_no_results(hass: HomeAssistant) -> None:
 
         result_station_select = await hass.config_entries.flow.async_configure(
             result_user["flow_id"],
-            {CONF_STATION: "Wartenau"},
+            {CONF_STATION: "Master:10901"},
         )
 
         assert result_station_select["type"] is FlowResultType.CREATE_ENTRY
@@ -231,7 +303,7 @@ async def test_user_flow_invalid_auth(hass: HomeAssistant) -> None:
 
         result_station_select = await hass.config_entries.flow.async_configure(
             result_user["flow_id"],
-            {CONF_STATION: "Wartenau"},
+            {CONF_STATION: "Master:10901"},
         )
 
     assert result_station_select["type"] is FlowResultType.CREATE_ENTRY
@@ -298,7 +370,7 @@ async def test_user_flow_cannot_connect(hass: HomeAssistant) -> None:
 
         result_station_select = await hass.config_entries.flow.async_configure(
             result_user["flow_id"],
-            {CONF_STATION: "Wartenau"},
+            {CONF_STATION: "Master:10901"},
         )
 
     assert result_station_select["type"] is FlowResultType.CREATE_ENTRY

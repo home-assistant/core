@@ -63,11 +63,13 @@ class LunatoneInfoDataUpdateCoordinator(DataUpdateCoordinator[InfoData]):
             await self.info_api.async_update()
         except aiohttp.ClientConnectionError as ex:
             raise UpdateFailed(
-                "Unable to retrieve info data from Lunatone REST API"
+                translation_domain=DOMAIN, translation_key="cannot_retrieve_info_data"
             ) from ex
 
         if self.info_api.data is None:
-            raise UpdateFailed("Did not receive info data from Lunatone REST API")
+            raise UpdateFailed(
+                translation_domain=DOMAIN, translation_key="missing_info_data"
+            )
         return self.info_api.data
 
 
@@ -102,7 +104,8 @@ class LunatoneDevicesDataUpdateCoordinator(
             await self.devices_api.async_update()
         except aiohttp.ClientConnectionError as ex:
             raise UpdateFailed(
-                "Unable to retrieve devices data from Lunatone REST API"
+                translation_domain=DOMAIN,
+                translation_key="cannot_retrieve_devices_data",
             ) from ex
 
         data: dict[int, dict[int, Device]] = defaultdict(dict)
@@ -141,7 +144,8 @@ class LunatoneSensorsDataUpdateCoordinator(DataUpdateCoordinator[dict[int, Senso
             await self.sensors_api.async_update()
         except aiohttp.ClientConnectionError as ex:
             raise UpdateFailed(
-                "Unable to retrieve sensors data from Lunatone REST API"
+                translation_domain=DOMAIN,
+                translation_key="cannot_retrieve_sensors_data",
             ) from ex
         return self.sensors_api.sensors
 
@@ -176,7 +180,8 @@ class LunatoneScanDataUpdateCoordinator(DataUpdateCoordinator[ScanData]):
             await self.dali_scan_api.async_update()
         except aiohttp.ClientConnectionError as ex:
             raise UpdateFailed(
-                "Unable to retrieve scan data from Lunatone REST API"
+                translation_domain=DOMAIN,
+                translation_key="cannot_retrieve_scan_data",
             ) from ex
 
         update_interval = DEFAULT_SCAN_UPDATE_INTERVAL
