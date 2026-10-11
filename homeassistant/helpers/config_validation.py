@@ -60,6 +60,8 @@ from homeassistant.const import (
     CONF_IF,
     CONF_MATCH,
     CONF_NOTE,
+    CONF_ON_TIMEOUT,
+    CONF_ON_TRIGGER,
     CONF_PARALLEL,
     CONF_PLATFORM,
     CONF_REPEAT,
@@ -1960,13 +1962,36 @@ _SCRIPT_CHOOSE_SCHEMA = probatio.Schema(
     }
 )
 
-_SCRIPT_WAIT_FOR_TRIGGER_SCHEMA = probatio.Schema(
-    {
-        **SCRIPT_ACTION_BASE_SCHEMA,
-        probatio.Required(CONF_WAIT_FOR_TRIGGER): TRIGGER_SCHEMA,
-        probatio.Optional(CONF_TIMEOUT): positive_time_period_template,
-        probatio.Optional(CONF_CONTINUE_ON_TIMEOUT): boolean,
-    }
+
+def _validate_wait_for_trigger_branches(value: dict[str, Any]) -> dict[str, Any]:
+    """Only allow on_trigger/on_timeout when the wait can time out and continue."""
+    for key in (CONF_ON_TRIGGER, CONF_ON_TIMEOUT):
+        if key not in value:
+            continue
+        if CONF_TIMEOUT not in value:
+            raise probatio.Invalid(
+                f"{key} requires {CONF_TIMEOUT} to be set", path=[key]
+            )
+        if not value.get(CONF_CONTINUE_ON_TIMEOUT, True):
+            raise probatio.Invalid(
+                f"{key} cannot be used when {CONF_CONTINUE_ON_TIMEOUT} is false",
+                path=[key],
+            )
+    return value
+
+
+_SCRIPT_WAIT_FOR_TRIGGER_SCHEMA = probatio.All(
+    probatio.Schema(
+        {
+            **SCRIPT_ACTION_BASE_SCHEMA,
+            probatio.Required(CONF_WAIT_FOR_TRIGGER): TRIGGER_SCHEMA,
+            probatio.Optional(CONF_TIMEOUT): positive_time_period_template,
+            probatio.Optional(CONF_CONTINUE_ON_TIMEOUT): boolean,
+            probatio.Optional(CONF_ON_TRIGGER): SCRIPT_SCHEMA,
+            probatio.Optional(CONF_ON_TIMEOUT): SCRIPT_SCHEMA,
+        }
+    ),
+    _validate_wait_for_trigger_branches,
 )
 
 _SCRIPT_IF_SCHEMA = probatio.Schema(
