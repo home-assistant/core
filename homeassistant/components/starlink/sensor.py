@@ -168,6 +168,28 @@ SENSORS: tuple[StarlinkSensorEntityDescription, ...] = (
         entity_class=StarlinkSensorEntity,
     ),
     StarlinkSensorEntityDescription(
+        key="obstruction",
+        translation_key="obstruction",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=PERCENTAGE,
+        suggested_display_precision=2,
+        value_fn=lambda data: (
+            value * 100
+            if (value := data.status["fraction_obstructed"]) is not None
+            else None
+        ),
+        entity_class=StarlinkSensorEntity,
+    ),
+    StarlinkSensorEntityDescription(
+        key="gps_satellites",
+        translation_key="gps_satellites",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        value_fn=lambda data: data.status["gps_sats"],
+        entity_class=StarlinkSensorEntity,
+    ),
+    StarlinkSensorEntityDescription(
         key="power",
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
