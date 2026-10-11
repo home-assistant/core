@@ -47,5 +47,16 @@
         "default": "mdi:counter"
       }
     }
+  },
+  "services": {
+    "clear_override": {
+      "service": "mdi:cancel"
+    },
+    "get_override": {
+      "service": "mdi:tune-variant"
+    },
+    "set_override": {
+      "service": "mdi:tune-variant"
+    }
   }
 }

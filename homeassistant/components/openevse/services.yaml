@@ -1,0 +1,57 @@
+set_override:
+  target:
+    entity:
+      integration: openevse
+  fields:
+    state:
+      required: false
+      selector:
+        select:
+          translation_key: override_state
+          options:
+            - active
+            - disabled
+    charge_current:
+      required: false
+      selector:
+        number:
+          min: 6
+          max: 80
+          step: 1
+          unit_of_measurement: "A"
+          mode: box
+    max_current:
+      required: false
+      selector:
+        number:
+          min: 6
+          max: 80
+          step: 1
+          unit_of_measurement: "A"
+          mode: box
+    energy_limit:
+      required: false
+      selector:
+        number:
+          min: 1
+          step: 1
+          unit_of_measurement: "Wh"
+          mode: box
+    time_limit:
+      required: false
+      selector:
+        duration:
+    auto_release:
+      required: false
+      selector:
+        boolean:
+
+clear_override:
+  target:
+    entity:
+      integration: openevse
+
+get_override:
+  target:
+    entity:
+      integration: openevse
