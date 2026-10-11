@@ -650,7 +650,7 @@ async def test_trigger_alarm_webhook(
         },
         blocking=True,
     )
-    ufp_public_only.api.send_alarm_webhook_public.assert_called_once_with(
+    ufp_public_only.api.send_alarm_webhook_public.assert_awaited_once_with(
         "test-trigger"
     )
 
