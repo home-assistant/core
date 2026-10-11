@@ -2,19 +2,19 @@
 
 from unittest.mock import AsyncMock
 
-from aioindiallsky import ImageItem, MediaData, MonthItem, VideoItem
+from aioindiallsky import ImageItem, IndiAllSkyError, MediaData, MonthItem, VideoItem
 import pytest
 
 from homeassistant.components.indi_allsky.const import DOMAIN
 from homeassistant.components.media_player import BrowseError, MediaType
 from homeassistant.components.media_source import (
     URI_SCHEME,
-    MediaSourceError,
     PlayMedia,
     Unresolvable,
     async_browse_media,
     async_resolve_media,
 )
+from homeassistant.const import CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -85,7 +85,7 @@ async def test_async_resolve_media_errors(
         )
 
     # Unknown config entry
-    with pytest.raises(MediaSourceError):
+    with pytest.raises(Unresolvable):
         await async_resolve_media(
             hass,
             f"{URI_SCHEME}{DOMAIN}/unknown_entry_id#media#test.mp4",
@@ -95,7 +95,7 @@ async def test_async_resolve_media_errors(
     # Entry from another domain
     other_entry = MockConfigEntry(domain="other_domain", data={})
     other_entry.add_to_hass(hass)
-    with pytest.raises(MediaSourceError):
+    with pytest.raises(Unresolvable):
         await async_resolve_media(
             hass,
             f"{URI_SCHEME}{DOMAIN}/{other_entry.entry_id}#media#test.mp4",
@@ -105,7 +105,7 @@ async def test_async_resolve_media_errors(
     # Unloaded config entry
     await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
-    with pytest.raises(MediaSourceError):
+    with pytest.raises(Unresolvable):
         await async_resolve_media(
             hass,
             f"{URI_SCHEME}{DOMAIN}/{mock_config_entry.entry_id}#media#test.mp4",
@@ -177,6 +177,33 @@ async def test_async_resolve_media_redirect_resolution(
     )
     assert resolved_fallback == PlayMedia(
         "https://127.0.0.1:443/indi-allsky/latestkeogram",
+        "image/jpeg",
+    )
+
+    # Respect verify_ssl=False setting
+    entry_no_verify = MockConfigEntry(
+        domain=DOMAIN,
+        data={**mock_config_entry.data, CONF_VERIFY_SSL: False},
+    )
+    entry_no_verify.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry_no_verify.entry_id)
+    await hass.async_block_till_done()
+
+    mock_indi_allsky_client.get_media_url.return_value = (
+        "https://127.0.0.1:443/indi-allsky/lateststartrail"
+    )
+    aioclient_mock.get(
+        "https://127.0.0.1:443/indi-allsky/lateststartrail",
+        status=302,
+        headers={"Location": "/indi-allsky/images/startrail_1234.jpg"},
+    )
+    resolved_no_verify = await async_resolve_media(
+        hass,
+        f"{URI_SCHEME}{DOMAIN}/{entry_no_verify.entry_id}#media#lateststartrail",
+        None,
+    )
+    assert resolved_no_verify == PlayMedia(
+        "https://127.0.0.1/indi-allsky/images/startrail_1234.jpg",
         "image/jpeg",
     )
 
@@ -427,3 +454,23 @@ async def test_async_browse_images_hierarchy(
     assert len(res_images.children) == 1
     assert "20:00:00 (4056x3140)" in res_images.children[0].title
     assert res_images.children[0].media_content_type == MediaType.IMAGE
+
+
+async def test_async_browse_catalog_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_indi_allsky_client: AsyncMock,
+) -> None:
+    """Test catalog API failures raise BrowseError."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    mock_indi_allsky_client.get_video_years.side_effect = IndiAllSkyError(
+        "Communication failed"
+    )
+
+    with pytest.raises(BrowseError):
+        await async_browse_media(
+            hass, f"{URI_SCHEME}{DOMAIN}/{mock_config_entry.entry_id}#videos"
+        )

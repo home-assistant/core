@@ -4,19 +4,20 @@ import logging
 import mimetypes
 from typing import override
 
-from aiohttp import ClientError
+from aiohttp import ClientError, ClientTimeout
+from aioindiallsky import IndiAllSkyError
 import yarl
 
 from homeassistant.components.media_player import BrowseError, MediaClass, MediaType
 from homeassistant.components.media_source import (
     BrowseMediaSource,
     MediaSource,
-    MediaSourceError,
     MediaSourceItem,
     PlayMedia,
     Unresolvable,
 )
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -24,6 +25,8 @@ from .const import DOMAIN
 from .coordinator import IndiAllSkyConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
+
+REDIRECT_TIMEOUT = ClientTimeout(total=10)
 
 CATEGORY_LATEST = "latest"
 CATEGORY_VIDEOS = "videos"
@@ -68,9 +71,12 @@ class IndiAllSkyMediaSource(MediaSource):
         # Endpoints like latestimage, latestkeogram, lateststartrail, latesttimelapse
         # return a 302 redirect with Location header pointing to the actual media asset file.
         if path.startswith("latest"):
-            session = async_get_clientsession(self.hass)
+            verify_ssl: bool = entry.data.get(CONF_VERIFY_SSL, True)
+            session = async_get_clientsession(self.hass, verify_ssl=verify_ssl)
             try:
-                async with session.get(url, allow_redirects=False) as resp:
+                async with session.get(
+                    url, allow_redirects=False, timeout=REDIRECT_TIMEOUT
+                ) as resp:
                     if resp.status in (301, 302, 303, 307, 308):
                         location = resp.headers.get("Location")
                         if location:
@@ -102,7 +108,7 @@ class IndiAllSkyMediaSource(MediaSource):
         entry_id = parts[0]
         try:
             entry = self._get_config_entry_or_raise(entry_id)
-        except MediaSourceError as err:
+        except Unresolvable as err:
             raise BrowseError(
                 translation_domain=err.translation_domain,
                 translation_key=err.translation_key,
@@ -113,14 +119,20 @@ class IndiAllSkyMediaSource(MediaSource):
             return self._build_instance_categories(entry)
 
         category = parts[1]
-        if category == CATEGORY_LATEST:
-            return self._build_latest_media(entry)
+        try:
+            if category == CATEGORY_LATEST:
+                return self._build_latest_media(entry)
 
-        if category == CATEGORY_VIDEOS:
-            return await self._browse_videos(entry, parts[2:])
+            if category == CATEGORY_VIDEOS:
+                return await self._browse_videos(entry, parts[2:])
 
-        if category == CATEGORY_IMAGES:
-            return await self._browse_images(entry, parts[2:])
+            if category == CATEGORY_IMAGES:
+                return await self._browse_images(entry, parts[2:])
+        except IndiAllSkyError as err:
+            raise BrowseError(
+                translation_domain=DOMAIN,
+                translation_key="update_failed",
+            ) from err
 
         raise BrowseError(
             translation_domain=DOMAIN,
@@ -139,14 +151,14 @@ class IndiAllSkyMediaSource(MediaSource):
         return identifier, None
 
     def _get_config_entry_or_raise(self, entry_id: str) -> IndiAllSkyConfigEntry:
-        """Get config entry or raise MediaSourceError."""
+        """Get config entry or raise Unresolvable."""
         entry = self.hass.config_entries.async_get_entry(entry_id)
         if (
             not entry
             or entry.domain != DOMAIN
             or entry.state is not ConfigEntryState.LOADED
         ):
-            raise MediaSourceError(
+            raise Unresolvable(
                 translation_domain=DOMAIN,
                 translation_key="config_entry_not_found",
             )
