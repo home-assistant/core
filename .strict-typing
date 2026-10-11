@@ -448,6 +448,7 @@ homeassistant.components.open_router.*
 homeassistant.components.openai_conversation.*
 homeassistant.components.openevse.*
 homeassistant.components.openexchangerates.*
+homeassistant.components.openresponses.*
 homeassistant.components.opensky.*
 homeassistant.components.openuv.*
 homeassistant.components.opnsense.*
