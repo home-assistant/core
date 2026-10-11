@@ -297,20 +297,14 @@ async def test_options_flow_cached_menu(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
     mock_menu_config_entry: MockConfigEntry,
-    mock_tv: MagicMock,
 ) -> None:
-    """Test options flow uses the cached menu while the TV is off."""
+    """Test options flow uses the stored menu, also when the entry is not loaded."""
     hass_storage[MOCK_MENU_STORAGE_KEY] = {
         "version": 1,
         "minor_version": 1,
         "key": MOCK_MENU_STORAGE_KEY,
         "data": MOCK_MENU_DATA,
     }
-    mock_tv.update.return_value = False
-    mock_tv.settings = None
-
-    assert await hass.config_entries.async_setup(mock_menu_config_entry.entry_id)
-    await hass.async_block_till_done()
 
     result = await hass.config_entries.options.async_init(
         mock_menu_config_entry.entry_id
@@ -323,18 +317,10 @@ async def test_options_flow_cached_menu(
 
 
 async def test_options_flow_menu_not_supported(
-    hass: HomeAssistant, mock_menu_config_entry: MockConfigEntry, mock_tv: MagicMock
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test options flow on a TV without menu settings support."""
-    mock_tv.json_feature_supported.return_value = False
-    mock_tv.settings = None
-
-    assert await hass.config_entries.async_setup(mock_menu_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    result = await hass.config_entries.options.async_init(
-        mock_menu_config_entry.entry_id
-    )
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
 
     assert result["type"] is FlowResultType.FORM
     schema = _get_schema(result)
@@ -347,7 +333,7 @@ async def test_options_flow_menu_not_supported(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert mock_menu_config_entry.options == {
+    assert mock_config_entry.options == {
         CONF_ALLOW_NOTIFY: True,
         CONF_MENU_NODES: [],
     }

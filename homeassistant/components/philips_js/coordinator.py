@@ -262,17 +262,26 @@ class PhilipsTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
             return
         self.async_update_listeners()
 
+    async def _async_update_menu_settings(self) -> None:
+        """Refresh the menu and settings, failures only affect menu entities."""
+        try:
+            await self._async_update_menu()
+            await self._async_update_settings()
+        except AutenticationFailure:
+            raise
+        except GeneralFailure as err:
+            _LOGGER.debug("Unable to read menu settings: %s", err)
+            self.settings = {}
+
     @override
     async def _async_update_data(self):
         """Fetch the latest data from the source."""
         try:
             if await self.api.update():
-                await self._async_update_menu()
-                await self._async_update_settings()
+                await self._async_update_menu_settings()
             self._async_notify_schedule()
         except ConnectionFailure:
-            # The TV went away after the update, the old settings are stale
-            self.settings = {}
+            pass
         except AutenticationFailure as exception:
             raise ConfigEntryAuthFailed(str(exception)) from exception
         except GeneralFailure as exception:

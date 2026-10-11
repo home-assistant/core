@@ -8,10 +8,11 @@ from typing import Any
 from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
-from haphilipsjs import ConnectionFailure, GeneralFailure
+from haphilipsjs import AutenticationFailure, ConnectionFailure, GeneralFailure
 import pytest
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
@@ -33,6 +34,7 @@ from . import (
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 MENU_SWITCH_ENTITY_ID = "switch.philips_tv_toggle"
+SCREEN_SWITCH_ENTITY_ID = "switch.philips_tv_screen_state"
 NEW_STRING_ID = "org.droidtv.ui.strings.R.string.MAIN_NEW"
 
 
@@ -258,22 +260,59 @@ async def test_notify_settings_update_failed(
     assert state.state == STATE_ON
 
 
+@pytest.mark.parametrize(
+    "exception",
+    [
+        pytest.param(ConnectionFailure(""), id="connection-failure"),
+        pytest.param(GeneralFailure(""), id="general-failure"),
+    ],
+)
 async def test_settings_read_failed(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_menu_config_entry: MockConfigEntry,
     mock_tv: MagicMock,
+    exception: Exception,
 ) -> None:
-    """Test menu entities are unavailable when reading settings fails."""
+    """Test only menu entities are unavailable when reading settings fails."""
     assert await hass.config_entries.async_setup(mock_menu_config_entry.entry_id)
     await hass.async_block_till_done()
     assert (state := hass.states.get(MENU_SWITCH_ENTITY_ID))
     assert state.state == STATE_ON
 
-    mock_tv.getMenuItemsSettingsCurrentValue.side_effect = ConnectionFailure("")
+    mock_tv.getMenuItemsSettingsCurrentValue.side_effect = exception
     freezer.tick(timedelta(seconds=30))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert (state := hass.states.get(MENU_SWITCH_ENTITY_ID))
     assert state.state == STATE_UNAVAILABLE
+    assert (state := hass.states.get(SCREEN_SWITCH_ENTITY_ID))
+    assert state.state != STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize(
+    ("exception", "entry_state"),
+    [
+        pytest.param(GeneralFailure(""), ConfigEntryState.LOADED, id="general-failure"),
+        pytest.param(
+            AutenticationFailure(""),
+            ConfigEntryState.SETUP_ERROR,
+            id="authentication-failure",
+        ),
+    ],
+)
+async def test_setup_menu_read_failed(
+    hass: HomeAssistant,
+    mock_menu_config_entry: MockConfigEntry,
+    mock_tv: MagicMock,
+    exception: Exception,
+    entry_state: ConfigEntryState,
+) -> None:
+    """Test a failed menu read only fails setup for authentication failures."""
+    mock_tv.getMenuItemsSettingsCurrentValue.side_effect = exception
+
+    await hass.config_entries.async_setup(mock_menu_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_menu_config_entry.state is entry_state

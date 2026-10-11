@@ -27,6 +27,7 @@ from . import (
     MOCK_NAME,
     MOCK_SERIAL_NO,
     MOCK_SYSTEM,
+    MOCK_SYSTEM_UNPAIRED,
 )
 
 from tests.common import MockConfigEntry
@@ -114,6 +115,7 @@ def mock_device(
 @pytest.fixture
 def mock_tv_menu(mock_tv: MagicMock) -> MagicMock:
     """Return a mock tv with menu settings."""
+    mock_tv.system = MOCK_SYSTEM | {"featuring": MOCK_SYSTEM_UNPAIRED["featuring"]}
     mock_tv.json_feature_supported.return_value = True
     mock_tv.settings = {"node": MOCK_MENU_ROOT}
     mock_tv.getMenuItemsSettingsCurrentValue.side_effect = lambda node_ids: {

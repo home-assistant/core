@@ -6,7 +6,7 @@ import logging
 from typing import TypedDict
 
 from haphilipsjs import PhilipsTV
-from haphilipsjs.typing import MenuItemsSettingsNode
+from haphilipsjs.typing import MenuItemsSettingsNode, SystemType
 
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF_TYPE
 from homeassistant.exceptions import HomeAssistantError
@@ -58,6 +58,13 @@ class EntitySetupData(TypedDict):
 
     node: MenuItemsSettingsNode
     name: str
+
+
+def menu_supported(system: SystemType) -> bool:
+    """Return if the TV provides menu settings."""
+    return "Setup_Menu" in system.get("featuring", {}).get("jsonfeatures", {}).get(
+        "menuitems", []
+    )
 
 
 async def async_fetch_menu_data(api: PhilipsTV) -> MenuData:

@@ -46,7 +46,8 @@ from .const import (
     CONST_APP_NAME,
     DOMAIN,
 )
-from .coordinator import PhilipsTVConfigEntry
+from .coordinator import PhilipsTVConfigEntry, get_menu_store
+from .helpers import get_menu_nodes, menu_supported
 
 USER_SCHEMA = probatio.Schema(
     {
@@ -268,15 +269,13 @@ class OptionsFlowHandler(OptionsFlow):
                 }
             )
 
-        coordinator = self.config_entry.runtime_data
-        if (
-            coordinator.api.json_feature_supported("menuitems", "Setup_Menu")
-            and coordinator.menu is None
-        ):
+        # The entry may not be loaded, so read the menu stored by the coordinator
+        menu = await get_menu_store(self.hass, self.config_entry.entry_id).async_load()
+        if menu is None and menu_supported(self.config_entry.data[CONF_SYSTEM]):
             return self.async_abort(reason="menu_not_available")
 
         options = self.config_entry.options
-        menu_nodes = coordinator.menu_nodes
+        menu_nodes = get_menu_nodes(menu) if menu else {}
 
         menu_nodes_selector = SelectSelector(
             SelectSelectorConfig(
