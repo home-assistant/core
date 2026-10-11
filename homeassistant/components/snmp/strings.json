@@ -94,5 +94,35 @@
       "description": "The SNMP device tracker for `{mac}` could not keep its entity id `{entity_id}` because it is already in use, so it is now `{new_entity_id}`.\n\nUpdate the automations and scripts that refer to `{entity_id}`.",
       "title": "SNMP device tracker entity id changed"
     }
+  },
+  "selector": {
+    "auth_protocol": {
+      "options": {
+        "hmac-md5": "HMAC-MD5",
+        "hmac-sha": "HMAC-SHA",
+        "hmac128-sha224": "HMAC-128-SHA-224",
+        "hmac192-sha256": "HMAC-192-SHA-256",
+        "hmac256-sha384": "HMAC-256-SHA-384",
+        "hmac384-sha512": "HMAC-384-SHA-512",
+        "none": "None"
+      }
+    },
+    "priv_protocol": {
+      "options": {
+        "3des-ede": "3DES-EDE",
+        "aes-cfb-128": "AES-128",
+        "aes-cfb-192": "AES-192",
+        "aes-cfb-256": "AES-256",
+        "des": "DES",
+        "none": "None"
+      }
+    },
+    "version": {
+      "options": {
+        "1": "SNMP v1",
+        "2c": "SNMP v2c",
+        "3": "SNMP v3"
+      }
+    }
   }
 }

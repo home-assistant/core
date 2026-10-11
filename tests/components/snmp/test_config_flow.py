@@ -9,11 +9,24 @@ from pysnmp.smi.error import WrongValueError
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.snmp.config_flow import CannotConnect, InvalidAuth
-from homeassistant.components.snmp.const import DOMAIN, SUBENTRY_TYPE_DEVICE_TRACKER
+from homeassistant.components.snmp.config_flow import (
+    AUTH_PROTOCOL_SELECTOR,
+    PRIV_PROTOCOL_SELECTOR,
+    SNMP_VERSION_SELECTOR,
+    CannotConnect,
+    InvalidAuth,
+)
+from homeassistant.components.snmp.const import (
+    DOMAIN,
+    MAP_AUTH_PROTOCOLS,
+    MAP_PRIV_PROTOCOLS,
+    SNMP_VERSIONS,
+    SUBENTRY_TYPE_DEVICE_TRACKER,
+)
 from homeassistant.config_entries import SubentryFlowContext
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.selector import SelectSelector
 
 from . import mock_entry
 
@@ -978,3 +991,38 @@ async def test_user_flow_v3_auth_without_privacy(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"]["auth_protocol"] == "hmac-sha"
     assert "priv_key" not in result["data"]
+
+
+@pytest.mark.parametrize(
+    ("selector", "translation_key", "options"),
+    [
+        pytest.param(
+            AUTH_PROTOCOL_SELECTOR,
+            "auth_protocol",
+            list(MAP_AUTH_PROTOCOLS),
+            id="auth_protocol",
+        ),
+        pytest.param(
+            PRIV_PROTOCOL_SELECTOR,
+            "priv_protocol",
+            list(MAP_PRIV_PROTOCOLS),
+            id="priv_protocol",
+        ),
+        pytest.param(
+            SNMP_VERSION_SELECTOR,
+            "version",
+            list(SNMP_VERSIONS),
+            id="version",
+        ),
+    ],
+)
+def test_selectors_offer_translated_values(
+    selector: SelectSelector,
+    translation_key: str,
+    options: list[str],
+) -> None:
+    """Test that every supported value is offered through a translated dropdown."""
+    select = selector.serialize()["selector"]["select"]
+
+    assert select["options"] == options
+    assert select["translation_key"] == translation_key

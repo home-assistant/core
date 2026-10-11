@@ -21,6 +21,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import (
+    SelectSelector,
+    SelectSelectorConfig,
     TextSelector,
     TextSelectorConfig,
     TextSelectorType,
@@ -61,13 +63,25 @@ _LOGGER = logging.getLogger(__name__)
 
 PASSWORD_SELECTOR = TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD))
 
+SNMP_VERSION_SELECTOR = SelectSelector(
+    SelectSelectorConfig(options=list(SNMP_VERSIONS), translation_key="version")
+)
+AUTH_PROTOCOL_SELECTOR = SelectSelector(
+    SelectSelectorConfig(
+        options=list(MAP_AUTH_PROTOCOLS), translation_key="auth_protocol"
+    )
+)
+PRIV_PROTOCOL_SELECTOR = SelectSelector(
+    SelectSelectorConfig(
+        options=list(MAP_PRIV_PROTOCOLS), translation_key="priv_protocol"
+    )
+)
+
 STEP_USER_DATA_SCHEMA = probatio.Schema(
     {
         probatio.Required(CONF_HOST): str,
         probatio.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        probatio.Optional(CONF_VERSION, default=DEFAULT_VERSION): probatio.In(
-            SNMP_VERSIONS
-        ),
+        probatio.Optional(CONF_VERSION, default=DEFAULT_VERSION): SNMP_VERSION_SELECTOR,
     }
 )
 
@@ -83,11 +97,11 @@ STEP_V3_DATA_SCHEMA = probatio.Schema(
         probatio.Optional(CONF_AUTH_KEY): PASSWORD_SELECTOR,
         probatio.Optional(
             CONF_AUTH_PROTOCOL, default=DEFAULT_AUTH_PROTOCOL
-        ): probatio.In(MAP_AUTH_PROTOCOLS),
+        ): AUTH_PROTOCOL_SELECTOR,
         probatio.Optional(CONF_PRIV_KEY): PASSWORD_SELECTOR,
         probatio.Optional(
             CONF_PRIV_PROTOCOL, default=DEFAULT_PRIV_PROTOCOL
-        ): probatio.In(MAP_PRIV_PROTOCOLS),
+        ): PRIV_PROTOCOL_SELECTOR,
         probatio.Optional(CONF_CONTEXT_NAME): str,
     }
 )
