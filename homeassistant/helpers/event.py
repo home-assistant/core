@@ -41,7 +41,6 @@ from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.event_type import EventType
 from homeassistant.util.hass_dict import HassKey
 
-from . import frame
 from .device_registry import (
     EVENT_DEVICE_REGISTRY_UPDATED,
     EventDeviceRegistryUpdatedData,
@@ -194,112 +193,6 @@ def threaded_listener_factory[**_P](
         return remove
 
     return factory
-
-
-@callback
-def async_track_state_change(
-    hass: HomeAssistant,
-    entity_ids: str | Iterable[str],
-    action: Callable[
-        [str, State | None, State | None], Coroutine[Any, Any, None] | None
-    ],
-    from_state: str | Iterable[str] | None = None,
-    to_state: str | Iterable[str] | None = None,
-) -> CALLBACK_TYPE:
-    """Track specific state changes.
-
-    entity_ids, from_state and to_state can be string or list.
-    Use list to match multiple.
-
-    Returns a function that can be called to remove the listener.
-
-    If entity_ids are not MATCH_ALL along with from_state and to_state
-    being None, async_track_state_change_event should be used instead
-    as it is slightly faster.
-
-    This function is deprecated and will be removed in Home Assistant 2025.5.
-
-    Must be run within the event loop.
-    """
-    frame.report_usage(
-        "calls `async_track_state_change` instead of `async_track_state_change_event`"
-        " which is deprecated and will be removed in Home Assistant 2025.5",
-        core_behavior=frame.ReportBehavior.LOG,
-    )
-
-    if from_state is not None:
-        match_from_state = process_state_match(from_state)
-    if to_state is not None:
-        match_to_state = process_state_match(to_state)
-
-    # Ensure it is a lowercase list with entity ids we want to match on
-    if entity_ids == MATCH_ALL:
-        pass
-    elif isinstance(entity_ids, str):
-        entity_ids = (entity_ids.lower(),)
-    else:
-        entity_ids = tuple(entity_id.lower() for entity_id in entity_ids)
-
-    job = HassJob(action, f"track state change {entity_ids} {from_state} {to_state}")
-
-    @callback
-    def state_change_filter(event_data: EventStateChangedData) -> bool:
-        """Handle specific state changes."""
-        if from_state is not None:
-            old_state_str: str | None = None
-            if (old_state := event_data["old_state"]) is not None:
-                old_state_str = old_state.state
-
-            if not match_from_state(old_state_str):
-                return False
-
-        if to_state is not None:
-            new_state_str: str | None = None
-            if (new_state := event_data["new_state"]) is not None:
-                new_state_str = new_state.state
-
-            if not match_to_state(new_state_str):
-                return False
-
-        return True
-
-    @callback
-    def state_change_dispatcher(event: Event[EventStateChangedData]) -> None:
-        """Handle specific state changes."""
-        hass.async_run_hass_job(
-            job,
-            event.data["entity_id"],
-            event.data["old_state"],
-            event.data["new_state"],
-        )
-
-    @callback
-    def state_change_listener(event: Event[EventStateChangedData]) -> None:
-        """Handle specific state changes."""
-        if not state_change_filter(event.data):
-            return
-
-        state_change_dispatcher(event)
-
-    if entity_ids != MATCH_ALL:
-        # If we have a list of entity ids we use
-        # async_track_state_change_event to route
-        # by entity_id to avoid iterating though state change
-        # events and creating a jobs where the most
-        # common outcome is to return right away because
-        # the entity_id does not match since usually
-        # only one or two listeners want that specific
-        # entity_id.
-        return async_track_state_change_event(hass, entity_ids, state_change_listener)
-
-    return hass.bus.async_listen(
-        EVENT_STATE_CHANGED,
-        state_change_dispatcher,
-        event_filter=state_change_filter,
-    )
-
-
-track_state_change = threaded_listener_factory(async_track_state_change)
 
 
 def async_track_state_change_event(
