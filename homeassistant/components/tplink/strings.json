@@ -207,6 +207,9 @@
       },
       "light_preset": {
         "name": "Light preset"
+      },
+      "ptz_preset": {
+        "name": "PTZ preset"
       }
     },
     "sensor": {
