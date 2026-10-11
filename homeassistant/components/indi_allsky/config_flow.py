@@ -60,7 +60,7 @@ STEP_USER_DATA_SCHEMA = probatio.Schema(
                 autocomplete="username",
             ),
         ),
-        probatio.Optional(CONF_PASSWORD): TextSelector(
+        probatio.Optional(probatio.Secret(CONF_PASSWORD)): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.PASSWORD,
                 autocomplete="current-password",
@@ -79,7 +79,7 @@ REAUTH_CONFIRM_SCHEMA = probatio.Schema(
                 autocomplete="username",
             ),
         ),
-        probatio.Required(CONF_PASSWORD): TextSelector(
+        probatio.Required(probatio.Secret(CONF_PASSWORD)): TextSelector(
             TextSelectorConfig(
                 type=TextSelectorType.PASSWORD,
                 autocomplete="current-password",

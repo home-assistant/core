@@ -1,7 +1,7 @@
 """Test the INDI Allsky Config flow."""
 
 import ssl
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 from aioindiallsky import IndiAllSkyAuthError, IndiAllSkyConnectionError
 import pytest
@@ -262,15 +262,22 @@ async def test_form_with_credentials_success(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_HOST: "127.0.0.1",
-            CONF_PORT: 443,
-            CONF_USERNAME: "test_user",
-            CONF_PASSWORD: "test_password",
-        },
-    )
+    with patch(
+        "homeassistant.components.indi_allsky.config_flow.IndiAllSkyClient",
+        return_value=mock_indi_allsky_client,
+    ) as mock_client_cls:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: "127.0.0.1",
+                CONF_PORT: 443,
+                CONF_USERNAME: "test_user",
+                CONF_PASSWORD: "test_password",
+            },
+        )
+        mock_client_cls.assert_called_once()
+        assert mock_client_cls.call_args.kwargs["username"] == "test_user"
+        assert mock_client_cls.call_args.kwargs["password"] == "test_password"
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "INDI Allsky (127.0.0.1)"
@@ -350,13 +357,20 @@ async def test_reauth_successful(
     assert result["step_id"] == "reauth_confirm"
     assert result["errors"] == {}
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_USERNAME: "updated_user",
-            CONF_PASSWORD: "updated_password",
-        },
-    )
+    with patch(
+        "homeassistant.components.indi_allsky.config_flow.IndiAllSkyClient",
+        return_value=mock_indi_allsky_client,
+    ) as mock_client_cls:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_USERNAME: "updated_user",
+                CONF_PASSWORD: "updated_password",
+            },
+        )
+        mock_client_cls.assert_called_once()
+        assert mock_client_cls.call_args.kwargs["username"] == "updated_user"
+        assert mock_client_cls.call_args.kwargs["password"] == "updated_password"
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
