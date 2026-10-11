@@ -5,7 +5,7 @@ from unittest.mock import patch
 from pydexcom.errors import AccountError, SessionError
 
 from homeassistant.components.dexcom.const import DOMAIN
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from . import CONFIG, init_integration
@@ -14,7 +14,7 @@ from tests.common import MockConfigEntry
 
 
 async def test_setup_entry_account_error(hass: HomeAssistant) -> None:
-    """Test entry setup failed due to account error."""
+    """Test entry setup failed due to account error starts reauth."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="test_username",
@@ -36,6 +36,10 @@ async def test_setup_entry_account_error(hass: HomeAssistant) -> None:
         entry.reason
         == "Failed to log in to Dexcom, the account credentials are invalid"
     )
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+    assert flows[0]["context"]["entry_id"] == entry.entry_id
 
 
 async def test_setup_entry_session_error(hass: HomeAssistant) -> None:

@@ -5,7 +5,7 @@ from pydexcom.errors import AccountError, SessionError
 
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 from .const import CONF_SERVER, DOMAIN, PLATFORMS, SERVER_OUS
 from .coordinator import DexcomConfigEntry, DexcomCoordinator
@@ -24,7 +24,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: DexcomConfigEntry) -> bo
             )
         )
     except AccountError as error:
-        raise ConfigEntryError(
+        raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
             translation_key="account_error",
         ) from error
