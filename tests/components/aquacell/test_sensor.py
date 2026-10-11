@@ -50,14 +50,14 @@ async def test_sensors_unavailable_when_softener_missing(
     mock_aquacell_api.get_all_softeners.return_value = []
     freezer.tick(UPDATE_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
 
     mock_aquacell_api.get_all_softeners.return_value = softeners
     freezer.tick(UPDATE_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert hass.states.get(ENTITY_ID).state == "40"
 
