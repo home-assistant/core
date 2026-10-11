@@ -1,7 +1,7 @@
 """Test the NeoPool integration setup, unload, and lifecycle."""
 
 from datetime import timedelta
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from neopool_modbus.registers import MAX_RELAY_GPIO
@@ -11,6 +11,7 @@ from homeassistant.components.neopool.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
 
 from . import setup_integration
@@ -43,6 +44,48 @@ async def test_setup_first_refresh_fails_marks_retry(
         side_effect=ConnectionError("Modbus down")
     )
     await setup_integration(hass, mock_config_entry)
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_setup_borrows_shared_unit(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_neopool_client: MagicMock,
+) -> None:
+    """Setup borrows a shared Modbus unit and injects it into the client."""
+    unit = MagicMock()
+    with (
+        patch(
+            "homeassistant.components.neopool.async_get_unit", return_value=unit
+        ) as mock_get_unit,
+        patch(
+            "homeassistant.components.neopool.NeoPoolModbusClient",
+            return_value=mock_neopool_client,
+        ) as mock_client_cls,
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    mock_get_unit.assert_called_once()
+    get_unit_args = mock_get_unit.call_args.args
+    assert get_unit_args[0] is hass
+    assert get_unit_args[1] is mock_config_entry
+    assert get_unit_args[3] == mock_config_entry.data["unit_id"]
+    assert mock_client_cls.call_args.kwargs["unit"] is unit
+
+
+async def test_setup_link_conflict_marks_retry(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_neopool_client: MagicMock,
+) -> None:
+    """A link conflict on the shared connection re-tries setup."""
+    with patch(
+        "homeassistant.components.neopool.async_get_unit",
+        side_effect=HomeAssistantError("already in use over different settings"),
+    ):
+        await setup_integration(hass, mock_config_entry)
+
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
