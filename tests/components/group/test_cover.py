@@ -427,6 +427,41 @@ async def test_attributes(
     assert entry.unique_id == "unique_identifier"
 
 
+@pytest.mark.parametrize("config_count", [(CONFIG_ATTRIBUTES, 1)])
+@pytest.mark.parametrize(
+    ("positions", "expected"),
+    [
+        pytest.param((0, 0, 0, 0), 0, id="all_closed"),
+        pytest.param((2, 0, 0, 0), 1, id="one_slightly_open"),
+        pytest.param((10, 11, 11, 11), 11, id="rounded"),
+        pytest.param((100, 100, 100, 98), 99, id="one_not_fully_open"),
+        pytest.param((100, 100, 100, 100), 100, id="all_open"),
+    ],
+)
+@pytest.mark.usefixtures("setup_comp")
+async def test_position_mean(
+    hass: HomeAssistant, positions: tuple[int, ...], expected: int
+) -> None:
+    """Test the group position is 0 or 100 only when every member is."""
+    for entity_id, position in zip(
+        CONFIG_ATTRIBUTES[COVER_DOMAIN][CONF_ENTITIES], positions, strict=True
+    ):
+        hass.states.async_set(
+            entity_id,
+            CoverState.OPEN,
+            {
+                ATTR_SUPPORTED_FEATURES: 132,
+                ATTR_CURRENT_POSITION: position,
+                ATTR_CURRENT_TILT_POSITION: position,
+            },
+        )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(COVER_GROUP)
+    assert state.attributes[ATTR_CURRENT_POSITION] == expected
+    assert state.attributes[ATTR_CURRENT_TILT_POSITION] == expected
+
+
 @pytest.mark.parametrize("config_count", [(CONFIG_TILT_ONLY, 2)])
 @pytest.mark.usefixtures("setup_comp")
 async def test_cover_that_only_supports_tilt_removed(hass: HomeAssistant) -> None:

@@ -52,6 +52,17 @@ DEFAULT_NAME = "Cover Group"
 # No limit on parallel updates to enable a group calling another group
 PARALLEL_UPDATES = 0
 
+
+def mean_position(*positions: int) -> int:
+    """Return the rounded mean, which is 0 or 100 only if every position is."""
+    mean = round(sum(positions) / len(positions))
+    if max(positions) > 0:
+        mean = max(mean, 1)
+    if min(positions) < 100:
+        mean = min(mean, 99)
+    return mean
+
+
 PLATFORM_SCHEMA = COVER_PLATFORM_SCHEMA.extend(
     {
         probatio.Required(CONF_ENTITIES): cv.entities_domain(COVER_DOMAIN),
@@ -312,14 +323,18 @@ class CoverGroup(GroupEntity, CoverEntity):
         all_position_states = [self.hass.states.get(x) for x in position_covers]
         position_states: list[State] = list(filter(None, all_position_states))
         self._attr_current_cover_position = reduce_attribute(
-            position_states, CoverEntityStateAttribute.CURRENT_POSITION
+            position_states,
+            CoverEntityStateAttribute.CURRENT_POSITION,
+            reduce=mean_position,
         )
 
         tilt_covers = self._tilts[KEY_POSITION]
         all_tilt_states = [self.hass.states.get(x) for x in tilt_covers]
         tilt_states: list[State] = list(filter(None, all_tilt_states))
         self._attr_current_cover_tilt_position = reduce_attribute(
-            tilt_states, CoverEntityStateAttribute.CURRENT_TILT_POSITION
+            tilt_states,
+            CoverEntityStateAttribute.CURRENT_TILT_POSITION,
+            reduce=mean_position,
         )
 
         supported_features = CoverEntityFeature(0)
