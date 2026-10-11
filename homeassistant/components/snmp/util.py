@@ -61,22 +61,33 @@ type RequestArgsType = tuple[
 def create_auth_data(
     data: Mapping[str, Any], version: str
 ) -> UsmUserData | CommunityData:
-    """Create SNMP auth data from config dict."""
+    """Create SNMP auth data from config dict.
+
+    A protocol is only applied when its key is set, so credentials which were
+    left half configured can not build a session with a security level the
+    user did not select.
+    """
     if version == "3":
         username: str = data[CONF_USERNAME]
         auth_key: str | None = data.get(CONF_AUTH_KEY) or None
-        auth_proto: str = data.get(CONF_AUTH_PROTOCOL, DEFAULT_AUTH_PROTOCOL)
         priv_key: str | None = data.get(CONF_PRIV_KEY) or None
-        priv_proto: str = data.get(CONF_PRIV_PROTOCOL, DEFAULT_PRIV_PROTOCOL)
+        auth_proto: str = (
+            data.get(CONF_AUTH_PROTOCOL, DEFAULT_AUTH_PROTOCOL)
+            if auth_key
+            else DEFAULT_AUTH_PROTOCOL
+        )
+        priv_proto: str = (
+            data.get(CONF_PRIV_PROTOCOL, DEFAULT_PRIV_PROTOCOL)
+            if priv_key
+            else DEFAULT_PRIV_PROTOCOL
+        )
 
         return UsmUserData(
             username,
             authKey=auth_key,
             authProtocol=getattr(hlapi, MAP_AUTH_PROTOCOLS[auth_proto]),
             privKey=priv_key,
-            privProtocol=getattr(hlapi, MAP_PRIV_PROTOCOLS[priv_proto])
-            if (data.get(CONF_PRIV_PROTOCOL) or priv_key)
-            else getattr(hlapi, MAP_PRIV_PROTOCOLS["none"]),
+            privProtocol=getattr(hlapi, MAP_PRIV_PROTOCOLS[priv_proto]),
         )
 
     community: str = data.get(CONF_COMMUNITY, DEFAULT_COMMUNITY)

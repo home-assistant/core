@@ -5,9 +5,13 @@
       "credentials_required": "SNMPv3 credentials cannot be imported from YAML"
     },
     "error": {
+      "auth_key_required_for_auth_protocol": "Authentication Key is required when an Authentication Protocol is selected (SNMP v3)",
       "auth_key_required_for_priv": "Authentication Key is required when using a Privacy Key (SNMP v3)",
+      "auth_protocol_required_for_auth_key": "Authentication Protocol is required when an Authentication Key is set (SNMP v3)",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "priv_key_required_for_priv_protocol": "Privacy Key is required when a Privacy Protocol is selected (SNMP v3)",
+      "priv_protocol_required_for_priv_key": "Privacy Protocol is required when a Privacy Key is set (SNMP v3)",
       "snmp_timeout": "SNMP request timed out.",
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "usm_wrong_digests": "Invalid authentication credentials or protocols"

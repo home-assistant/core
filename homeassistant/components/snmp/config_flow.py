@@ -233,8 +233,7 @@ class SnmpConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle V3 authentication."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            if user_input.get(CONF_PRIV_KEY) and not user_input.get(CONF_AUTH_KEY):
-                errors["base"] = "auth_key_required_for_priv"
+            errors = self._validate_v3_coherence(user_input)
 
             if not errors:
                 data = {**self._user_data, **user_input}
@@ -248,6 +247,31 @@ class SnmpConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
         )
+
+    @staticmethod
+    def _validate_v3_coherence(data: dict[str, Any]) -> dict[str, str]:
+        """Return an error for every key and protocol which does not pair up.
+
+        A protocol without its key is dropped by pysnmp, which silently builds a
+        session with a lower security level than the user selected, and a key
+        without a protocol is refused with a generic authentication error.
+        """
+        auth_key = data.get(CONF_AUTH_KEY) or None
+        priv_key = data.get(CONF_PRIV_KEY) or None
+        auth_proto: str = data.get(CONF_AUTH_PROTOCOL, DEFAULT_AUTH_PROTOCOL)
+        priv_proto: str = data.get(CONF_PRIV_PROTOCOL, DEFAULT_PRIV_PROTOCOL)
+
+        if priv_key and not auth_key:
+            return {CONF_AUTH_KEY: "auth_key_required_for_priv"}
+        if auth_key and auth_proto == DEFAULT_AUTH_PROTOCOL:
+            return {CONF_AUTH_PROTOCOL: "auth_protocol_required_for_auth_key"}
+        if auth_proto != DEFAULT_AUTH_PROTOCOL and not auth_key:
+            return {CONF_AUTH_KEY: "auth_key_required_for_auth_protocol"}
+        if priv_key and priv_proto == DEFAULT_PRIV_PROTOCOL:
+            return {CONF_PRIV_PROTOCOL: "priv_protocol_required_for_priv_key"}
+        if priv_proto != DEFAULT_PRIV_PROTOCOL and not priv_key:
+            return {CONF_PRIV_KEY: "priv_key_required_for_priv_protocol"}
+        return {}
 
     async def async_step_import(self, user_input: dict[str, Any]) -> ConfigFlowResult:
         """Import the YAML configuration as a device and a device tracker subentry."""

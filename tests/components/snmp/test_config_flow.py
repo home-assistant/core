@@ -267,7 +267,7 @@ async def test_user_flow_v3_invalid_auth(
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"username": "user", "auth_key": "pass"},
+            {"username": "user", "auth_key": "pass", "auth_protocol": "hmac-sha"},
         )
 
     assert result["type"] is FlowResultType.FORM
@@ -282,7 +282,11 @@ async def test_user_flow_v3_invalid_auth(
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"username": "user", "auth_key": "correct_pass"},
+            {
+                "username": "user",
+                "auth_key": "correct_pass",
+                "auth_protocol": "hmac-sha",
+            },
         )
         await hass.async_block_till_done()
 
@@ -315,7 +319,7 @@ async def test_user_flow_v3_vacm_denied_sysdescr(
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"username": "user", "auth_key": "pass"},
+            {"username": "user", "auth_key": "pass", "auth_protocol": "hmac-sha"},
         )
         await hass.async_block_till_done()
 
@@ -336,17 +340,21 @@ async def test_user_flow_v3_vacm_denied_sysdescr(
         pytest.param(
             "3",
             errind.wrongDigest,
-            {"username": "user", "auth_key": "pass"},
+            {"username": "user", "auth_key": "pass", "auth_protocol": "hmac-sha"},
             "usm_wrong_digests",
-            {"username": "user", "auth_key": "correct_pass"},
+            {
+                "username": "user",
+                "auth_key": "correct_pass",
+                "auth_protocol": "hmac-sha",
+            },
             id="wrong_digest",
         ),
         pytest.param(
             "3",
             errind.unknownUserName,
-            {"username": "nouser", "auth_key": "pass"},
+            {"username": "nouser", "auth_key": "pass", "auth_protocol": "hmac-sha"},
             "invalid_auth",
-            {"username": "validuser", "auth_key": "pass"},
+            {"username": "validuser", "auth_key": "pass", "auth_protocol": "hmac-sha"},
             id="unknown_user",
         ),
     ],
@@ -572,7 +580,7 @@ async def test_user_flow_v3_auth_key_required_for_priv(
     )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "auth_key_required_for_priv"}
+    assert result["errors"] == {"auth_key": "auth_key_required_for_priv"}
 
     # Retry with auth_key provided succeeds
     with (
@@ -613,7 +621,8 @@ async def test_user_flow_v3_unknown_error(
         side_effect=PySnmpError("Unknown error"),
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"username": "user", "auth_key": "pass"}
+            result["flow_id"],
+            {"username": "user", "auth_key": "pass", "auth_protocol": "hmac-sha"},
         )
 
     assert result["type"] is FlowResultType.FORM
@@ -627,7 +636,8 @@ async def test_user_flow_v3_unknown_error(
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"username": "user", "auth_key": "pass"}
+            result["flow_id"],
+            {"username": "user", "auth_key": "pass", "auth_protocol": "hmac-sha"},
         )
         await hass.async_block_till_done()
 
@@ -707,7 +717,8 @@ async def test_user_flow_v3_wrong_value_error(
         side_effect=WrongValueError,
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"username": "test-user", "auth_key": "pass"}
+            result["flow_id"],
+            {"username": "test-user", "auth_key": "pass", "auth_protocol": "hmac-sha"},
         )
 
     assert result["type"] is FlowResultType.FORM
@@ -775,7 +786,8 @@ async def test_user_flow_v3_cannot_connect(
         side_effect=CannotConnect("Cannot connect"),
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"username": "user", "auth_key": "pass"}
+            result["flow_id"],
+            {"username": "user", "auth_key": "pass", "auth_protocol": "hmac-sha"},
         )
 
     assert result["type"] is FlowResultType.FORM
@@ -789,7 +801,8 @@ async def test_user_flow_v3_cannot_connect(
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"username": "user", "auth_key": "pass"}
+            result["flow_id"],
+            {"username": "user", "auth_key": "pass", "auth_protocol": "hmac-sha"},
         )
         await hass.async_block_till_done()
 
@@ -873,3 +886,95 @@ async def test_user_flow_context_is_part_of_the_device(
         await hass.async_block_till_done()
 
     assert result["type"] is expected_type
+
+
+@pytest.mark.parametrize(
+    ("user_input", "expected_errors"),
+    [
+        pytest.param(
+            {"username": "user", "auth_key": "auth-key", "auth_protocol": "none"},
+            {"auth_protocol": "auth_protocol_required_for_auth_key"},
+            id="auth_key_without_protocol",
+        ),
+        pytest.param(
+            {"username": "user", "auth_protocol": "hmac-sha"},
+            {"auth_key": "auth_key_required_for_auth_protocol"},
+            id="auth_protocol_without_key",
+        ),
+        pytest.param(
+            {
+                "username": "user",
+                "priv_key": "priv-key",
+                "priv_protocol": "aes-cfb-128",
+            },
+            {"auth_key": "auth_key_required_for_priv"},
+            id="priv_without_auth",
+        ),
+        pytest.param(
+            {
+                "username": "user",
+                "auth_key": "auth-key",
+                "auth_protocol": "hmac-sha",
+                "priv_key": "priv-key",
+                "priv_protocol": "none",
+            },
+            {"priv_protocol": "priv_protocol_required_for_priv_key"},
+            id="priv_key_without_protocol",
+        ),
+        pytest.param(
+            {
+                "username": "user",
+                "auth_key": "auth-key",
+                "auth_protocol": "hmac-sha",
+                "priv_protocol": "aes-cfb-128",
+            },
+            {"priv_key": "priv_key_required_for_priv_protocol"},
+            id="priv_protocol_without_key",
+        ),
+    ],
+)
+async def test_user_flow_v3_incoherent_credentials(
+    hass: HomeAssistant,
+    user_input: dict[str, str],
+    expected_errors: dict[str, str],
+) -> None:
+    """Test that keys and protocols which do not pair up are rejected."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"host": "192.168.1.1", "version": "3"}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "v3"
+    assert result["errors"] == expected_errors
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_user_flow_v3_auth_without_privacy(hass: HomeAssistant) -> None:
+    """Test that authentication without privacy is accepted."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"host": "192.168.1.1", "version": "3"}
+    )
+
+    with patch(
+        "homeassistant.components.snmp.config_flow.get_cmd",
+        return_value=(None, None, None, [[OctetString("98F")]]),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"username": "user", "auth_key": "auth-key", "auth_protocol": "hmac-sha"},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"]["auth_protocol"] == "hmac-sha"
+    assert "priv_key" not in result["data"]

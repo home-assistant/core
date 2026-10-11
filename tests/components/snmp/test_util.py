@@ -42,18 +42,68 @@ def test_create_auth_data_v3() -> None:
     assert not isinstance(auth_data.privProtocol, str)
 
 
-def test_create_auth_data_v3_defaults() -> None:
-    """Test create_auth_data handles defaults correctly."""
-    data = {
-        CONF_USERNAME: "test_user",
-        # Missing auth_proto and priv_proto
-    }
-
+@pytest.mark.parametrize(
+    ("data", "expected_auth_protocol", "expected_priv_protocol"),
+    [
+        pytest.param(
+            {CONF_USERNAME: "test_user"},
+            hlapi.usmNoAuthProtocol,
+            hlapi.usmNoPrivProtocol,
+            id="no_keys",
+        ),
+        pytest.param(
+            {CONF_USERNAME: "test_user", CONF_AUTH_KEY: "test_auth_key"},
+            hlapi.usmNoAuthProtocol,
+            hlapi.usmNoPrivProtocol,
+            id="auth_key_without_protocol",
+        ),
+        pytest.param(
+            {CONF_USERNAME: "test_user", CONF_AUTH_PROTOCOL: "hmac-md5"},
+            hlapi.usmNoAuthProtocol,
+            hlapi.usmNoPrivProtocol,
+            id="auth_protocol_without_key",
+        ),
+        pytest.param(
+            {
+                CONF_USERNAME: "test_user",
+                CONF_AUTH_KEY: "test_auth_key",
+                CONF_AUTH_PROTOCOL: "hmac-md5",
+            },
+            hlapi.usmHMACMD5AuthProtocol,
+            hlapi.usmNoPrivProtocol,
+            id="authentication_without_privacy",
+        ),
+        pytest.param(
+            {CONF_USERNAME: "test_user", CONF_PRIV_PROTOCOL: "aes-cfb-128"},
+            hlapi.usmNoAuthProtocol,
+            hlapi.usmNoPrivProtocol,
+            id="priv_protocol_without_key",
+        ),
+        pytest.param(
+            {
+                CONF_USERNAME: "test_user",
+                CONF_AUTH_KEY: "test_auth_key",
+                CONF_AUTH_PROTOCOL: "hmac-md5",
+                CONF_PRIV_KEY: "test_priv_key",
+                CONF_PRIV_PROTOCOL: "aes-cfb-128",
+            },
+            hlapi.usmHMACMD5AuthProtocol,
+            hlapi.usmAesCfb128Protocol,
+            id="authentication_and_privacy",
+        ),
+    ],
+)
+def test_create_auth_data_v3_protocols_need_keys(
+    data: dict[str, str],
+    expected_auth_protocol: object,
+    expected_priv_protocol: object,
+) -> None:
+    """Test that a protocol is only applied together with its key."""
     auth_data = create_auth_data(data, "3")
 
     assert isinstance(auth_data, UsmUserData)
-    assert auth_data.authProtocol == hlapi.usmNoAuthProtocol
-    assert auth_data.privProtocol == hlapi.usmNoPrivProtocol
+    assert auth_data.authProtocol == expected_auth_protocol
+    assert auth_data.privProtocol == expected_priv_protocol
 
 
 async def test_async_create_transport_target_ipv4_success(
