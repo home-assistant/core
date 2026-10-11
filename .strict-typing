@@ -614,6 +614,7 @@ homeassistant.components.tilt_ble.*
 homeassistant.components.time.*
 homeassistant.components.time_date.*
 homeassistant.components.timer.*
+homeassistant.components.timer_list.*
 homeassistant.components.tod.*
 homeassistant.components.todo.*
 homeassistant.components.tolo.*

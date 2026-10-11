@@ -69,6 +69,7 @@ _MODULES: dict[str, set[str]] = {
     Platform.SWITCH: {"SwitchEntity", "SwitchEntityDescription"},
     Platform.TEXT: {"TextEntity", "TextEntityDescription"},
     Platform.TIME: {"TimeEntity", "TimeEntityDescription"},
+    Platform.TIMER_LIST: {"TimerListEntity"},
     Platform.TODO: {"TodoListEntity"},
     Platform.TTS: {"TextToSpeechEntity"},
     Platform.UPDATE: {"UpdateEntity", "UpdateEntityDescription"},
