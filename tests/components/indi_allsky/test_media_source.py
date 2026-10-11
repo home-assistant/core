@@ -423,6 +423,14 @@ async def test_async_browse_videos_hierarchy(
     assert "Night Timelapse - October 11, 2026" in titles
     assert "Night Keogram - October 11, 2026" in titles
     assert "Night Star Trail - October 11, 2026" in titles
+    assert (
+        res_videos.children[1].thumbnail
+        == "https://127.0.0.1/images/keogram20261011.jpg"
+    )
+    assert (
+        res_videos.children[2].thumbnail
+        == "https://127.0.0.1/images/startrail20261011.jpg"
+    )
 
 
 async def test_async_browse_images_hierarchy(

@@ -386,6 +386,7 @@ class IndiAllSkyMediaSource(MediaSource):
 
             if vid.keogram_url and vid.keogram_url not in seen_media_urls:
                 seen_media_urls.add(vid.keogram_url)
+                keo_thumb = vid.keogram_thumbnail_url or vid.keogram_url
                 children.append(
                     BrowseMediaSource(
                         domain=DOMAIN,
@@ -395,8 +396,8 @@ class IndiAllSkyMediaSource(MediaSource):
                         title=f"{tod_str} Keogram - {date_str}",
                         can_play=True,
                         can_expand=False,
-                        thumbnail=client.get_media_url(vid.keogram_thumbnail_url)
-                        if vid.keogram_thumbnail_url
+                        thumbnail=client.get_media_url(keo_thumb)
+                        if keo_thumb
                         else None,
                     )
                 )
