@@ -1,0 +1,30 @@
+{
+  "entity": {
+    "sensor": {
+      "battery_health": {
+        "default": "mdi:battery-heart-variant"
+      },
+      "current": {
+        "default": "mdi:current-dc"
+      },
+      "cycles": {
+        "default": "mdi:autorenew"
+      },
+      "delta_cell_voltage": {
+        "default": "mdi:battery-sync"
+      },
+      "link_quality": {
+        "default": "mdi:link"
+      },
+      "max_cell_voltage": {
+        "default": "mdi:battery-arrow-up"
+      },
+      "min_cell_voltage": {
+        "default": "mdi:battery-arrow-down"
+      },
+      "rssi": {
+        "default": "mdi:bluetooth-connect"
+      }
+    }
+  }
+}
