@@ -14,6 +14,7 @@ from pyoverkiz.exceptions import (
     MaintenanceError,
     NotAuthenticatedError,
     ServiceUnavailableError,
+    SomfyServiceError,
     TooManyConcurrentRequestsError,
     TooManyRequestsError,
 )
@@ -108,6 +109,8 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
             raise UpdateFailed("Server is down for maintenance.") from exception
         except ServiceUnavailableError as exception:
             raise UpdateFailed("Server is unavailable.") from exception
+        except SomfyServiceError as exception:
+            raise UpdateFailed("Somfy service error.") from exception
         except InvalidEventListenerIdError as exception:
             raise UpdateFailed(exception) from exception
         except (TimeoutError, ClientConnectorError) as exception:

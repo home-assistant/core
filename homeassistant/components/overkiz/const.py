@@ -37,7 +37,9 @@ LOGGER: logging.Logger = logging.getLogger(__package__)
 CONF_API_TYPE: Final = "api_type"
 CONF_HUB: Final = "hub"
 CONF_GATEWAY_ID: Final = "gateway_id"
-DEFAULT_SERVER: Final = Server.SOMFY_EUROPE
+CONF_REFRESH_TOKEN: Final = "refresh_token"
+CONF_SITE_OID: Final = "site_oid"
+DEFAULT_SERVER: Final = Server.SOMFY
 DEFAULT_HOST: Final = "gateway-xxxx-xxxx-xxxx.local:8443"
 
 UPDATE_INTERVAL: Final = timedelta(seconds=30)
