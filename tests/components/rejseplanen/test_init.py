@@ -79,6 +79,9 @@ async def test_setup_first_refresh_auth_fails(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == "reauth"
 
 
 @pytest.mark.freeze_time("2024-01-01 11:00:00+00:00")
