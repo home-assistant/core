@@ -7,6 +7,7 @@ from homeassistant.helpers import config_validation as cv
 
 from .const import (
     ATTR_CACHE,
+    ATTR_DAYS,
     ATTR_LANGUAGE,
     ATTR_MEDIA_PLAYER_ENTITY_ID,
     ATTR_MESSAGE,
@@ -18,12 +19,20 @@ from .const import (
     SERVICE_CLEAR_CACHE,
 )
 
-SCHEMA_SERVICE_CLEAR_CACHE = probatio.Schema({})
+SCHEMA_SERVICE_CLEAR_CACHE = probatio.Schema(
+    {
+        probatio.Optional(ATTR_DAYS): probatio.All(
+            probatio.Coerce(int), probatio.Range(min=1, max=3650)
+        )
+    }
+)
 
 
 async def _async_clear_cache_handle(service: ServiceCall) -> None:
     """Handle clear cache service call."""
-    await service.hass.data[DATA_TTS_MANAGER].async_clear_cache()
+    await service.hass.data[DATA_TTS_MANAGER].async_clear_cache(
+        service.data.get(ATTR_DAYS)
+    )
 
 
 @callback
