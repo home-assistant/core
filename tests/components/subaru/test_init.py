@@ -9,7 +9,7 @@ from homeassistant.components.homeassistant import (
     SERVICE_UPDATE_ENTITY,
 )
 from homeassistant.components.subaru.const import DOMAIN, SERVICE_UNLOCK_SPECIFIC_DOOR
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -126,6 +126,10 @@ async def test_invalid_credentials(hass: HomeAssistant, subaru_config_entry) -> 
     assert check_entry
     assert check_entry.state is ConfigEntryState.SETUP_ERROR
     assert check_entry.reason == "Invalid MySubaru account credentials"
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+    assert flows[0]["context"]["entry_id"] == check_entry.entry_id
 
 
 async def test_update_skip_unsubscribed(
