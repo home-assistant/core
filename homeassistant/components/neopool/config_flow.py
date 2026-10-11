@@ -1,6 +1,5 @@
 """Config flow for the NeoPool integration."""
 
-from collections.abc import Mapping
 from typing import Any, override
 
 from neopool_modbus import async_probe_serial_unit
@@ -10,8 +9,6 @@ import probatio
 
 from homeassistant.components.modbus import async_get_temporary_unit
 from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlowWithReload,
@@ -53,23 +50,6 @@ async def _async_probe(
     except NeoPoolModbusError:
         return None, "cannot_read_modbus"
     return serial, None
-
-
-def _needs_relink(entry: ConfigEntry, data: Mapping[str, Any]) -> bool:
-    """Whether probing these settings clashes with the connection in use.
-
-    One connection is shared per endpoint and cannot serve two sets of line
-    settings at once, so changing the line settings of the port an entry polls
-    needs that entry off the bus before the new settings can be probed. An entry
-    waiting to retry counts as being on the bus; unloading it cancels the retry.
-    """
-    if entry.state not in (ConfigEntryState.LOADED, ConfigEntryState.SETUP_RETRY):
-        return False
-
-    current = build_modbus_params(entry.data)
-    new = build_modbus_params(data)
-
-    return new.endpoint == current.endpoint and new != current
 
 
 class NeoPoolConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -153,19 +133,7 @@ class NeoPoolConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             merged = {**current, **user_input}
-
-            relinking = False
-            if _needs_relink(entry, merged):
-                # A failed unload leaves the entry loaded; let the probe run.
-                relinking = await self.hass.config_entries.async_unload(entry.entry_id)
-
             serial, error_key = await _async_probe(self.hass, merged)
-
-            # A mismatch or probe error left the entry off the bus: put it back.
-            # A match falls through to the reload below on the new settings.
-            if relinking and serial != entry.unique_id:
-                await self.hass.config_entries.async_setup(entry.entry_id)
-
             if error_key:
                 errors[CONF_HOST] = error_key
             else:

@@ -4,7 +4,7 @@ from neopool_modbus import NeoPoolModbusClient
 
 from homeassistant.components.modbus import async_get_unit
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
+from homeassistant.exceptions import ConfigEntryError, HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
@@ -39,8 +39,9 @@ def _async_build_client(
         )
     except HomeAssistantError as err:
         # The device is already in use over different link settings, which one
-        # shared connection cannot honour.
-        raise ConfigEntryNotReady(
+        # shared connection cannot honour. Retrying cannot clear this; it needs
+        # the entry reconfigured, so fail setup instead of scheduling retries.
+        raise ConfigEntryError(
             translation_domain=DOMAIN,
             translation_key="setup_link_conflict",
             translation_placeholders={"error": str(err)},

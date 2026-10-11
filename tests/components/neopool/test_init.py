@@ -74,19 +74,19 @@ async def test_setup_borrows_shared_unit(
     assert mock_client_cls.call_args.kwargs["unit"] is unit
 
 
-async def test_setup_link_conflict_marks_retry(
+async def test_setup_link_conflict_fails_setup(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_neopool_client: MagicMock,
 ) -> None:
-    """A link conflict on the shared connection re-tries setup."""
+    """A link conflict on the shared connection fails setup without retrying."""
     with patch(
         "homeassistant.components.neopool.async_get_unit",
         side_effect=HomeAssistantError("already in use over different settings"),
     ):
         await setup_integration(hass, mock_config_entry)
 
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
 @pytest.mark.usefixtures("mock_neopool_client")

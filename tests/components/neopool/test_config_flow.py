@@ -5,14 +5,12 @@ from unittest.mock import AsyncMock, patch
 from neopool_modbus.exceptions import NeoPoolModbusError, NeoPoolTimeoutError
 import pytest
 
-from homeassistant.components.neopool.config_flow import _needs_relink
 from homeassistant.components.neopool.const import (
     CONF_USE_LIGHT,
-    CURRENT_VERSION,
     DEFAULT_UNIT_ID,
     DOMAIN,
 )
-from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -213,32 +211,6 @@ async def test_reconfigure_flow_serial_mismatch(
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "serial_mismatch"
-
-
-@pytest.mark.usefixtures("mock_neopool_client")
-async def test_needs_relink(hass: HomeAssistant) -> None:
-    """A line-setting change on the same endpoint needs the entry relinked."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=MOCK_SERIAL,
-        version=CURRENT_VERSION,
-        data={**USER_INPUT, CONF_HOST: MOCK_HOST, "modbus_framer": "rtu"},
-    )
-    await setup_integration(hass, entry)
-    assert entry.state is ConfigEntryState.LOADED
-
-    # Same host and port, RTU vs ASCII framing: same socket endpoint, different
-    # line settings, so the loaded entry has to come off the bus to be probed.
-    assert _needs_relink(entry, {**entry.data, "modbus_framer": "ascii"})
-    # Framing left unchanged does not clash with the connection in use.
-    assert not _needs_relink(entry, dict(entry.data))
-    # A different host and port is a different endpoint, so nothing to relink.
-    assert not _needs_relink(entry, {**entry.data, CONF_HOST: "192.0.2.50"})
-
-    await hass.config_entries.async_unload(entry.entry_id)
-    assert entry.state is ConfigEntryState.NOT_LOADED
-    # An unloaded entry holds no connection, so there is nothing to relink.
-    assert not _needs_relink(entry, {**entry.data, "modbus_framer": "ascii"})
 
 
 @pytest.mark.usefixtures("mock_neopool_client")
