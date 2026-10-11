@@ -48,3 +48,4 @@ class ResetGreaseFilter(CoordinatorEntity[FjaraskupanCoordinator], ButtonEntity)
         """Reset the grease filter."""
         async with self.coordinator.async_connect_and_update() as device:
             await device.send_command(COMMAND_RESETGREASEFILTER)
+            await device.update()
