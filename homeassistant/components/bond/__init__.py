@@ -14,7 +14,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import SLOW_UPDATE_WARNING
@@ -62,7 +62,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: BondConfigEntry) -> bool
         await hub.setup()
     except ClientResponseError as ex:
         if ex.status == HTTPStatus.UNAUTHORIZED:
-            raise ConfigEntryError(
+            raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="invalid_token",
             ) from ex

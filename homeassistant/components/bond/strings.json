@@ -1,7 +1,8 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "wrong_device": "The access token belongs to a different Bond device than the one configured."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -16,6 +17,13 @@
           "access_token": "[%key:common::config_flow::data::access_token%]"
         },
         "description": "Do you want to set up {name}?"
+      },
+      "reauth_confirm": {
+        "data": {
+          "access_token": "[%key:common::config_flow::data::access_token%]"
+        },
+        "description": "The access token for the Bond device at {host} is no longer valid. Please enter the new access token.",
+        "title": "[%key:common::config_flow::title::reauth%]"
       },
       "user": {
         "data": {
