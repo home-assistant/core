@@ -229,7 +229,6 @@ async def test_stale_media_fetch_ignored(
     await first_keogram_fetch_started.wait()
     await first_startrail_fetch_started.wait()
 
-    # Fire a newer media event for both while the first fetch is in-flight
     coordinator = mock_config_entry.runtime_data
     for cb in keogram_callbacks:
         cb(keogram_2)
@@ -243,23 +242,18 @@ async def test_stale_media_fetch_ignored(
     assert coordinator.latest_startrail_image is None
     assert coordinator.latest_startrail_updated is None
 
-    # Wait for the second (newer) fetches to start
     await asyncio.sleep(0)
     await second_keogram_fetch_started.wait()
     await second_startrail_fetch_started.wait()
 
-    # Complete the second (newer) fetches first
     unblock_second_keogram_fetch.set()
     await asyncio.sleep(0)
-
-    # The newer keogram image is now loaded, while the first keogram fetch is still in flight
     assert coordinator.latest_keogram_image == b"new_keogram"
 
     unblock_second_startrail_fetch.set()
     await asyncio.sleep(0)
     assert coordinator.latest_startrail_image == b"new_startrail"
 
-    # Now allow the first (stale) fetches to complete; their results must be ignored
     unblock_first_keogram_fetch.set()
     unblock_first_startrail_fetch.set()
     await hass.async_block_till_done(wait_background_tasks=True)
