@@ -8,6 +8,7 @@ from dataclasses import dataclass, replace
 import datetime
 import mimetypes
 from pathlib import Path
+import re
 from typing import TYPE_CHECKING, Any, Literal, cast
 
 from google.genai import Client
@@ -95,19 +96,65 @@ SUPPORTED_SCHEMA_KEYS = {
 }
 
 
-def _is_thinking_model(model: str) -> bool:
-    """Check if the model supports thinking configuration."""
+_GEMINI_VERSION = re.compile(r"^gemini-(\d+)(?:\.(\d+))?(?=-|$)")
+_GEMINI_TEXT_ALIASES = {
+    "gemini-flash-latest",
+    "gemini-pro-latest",
+    "gemini-flash-lite-latest",
+}
+
+
+def _gemini_version(name: str) -> tuple[int, int] | None:
+    """Parse the numeric Gemini version without confusing 3.10 with 3.1."""
+    if match := _GEMINI_VERSION.match(name):
+        return int(match[1]), int(match[2] or 0)
+    return None
+
+
+def supports_custom_sampling(model: str) -> bool:
+    """Keep sampling for older models and omit it for newer Gemini models."""
     name = model.removeprefix("models/")
-    # Exclude non-text models (TTS, image generation)
+    if not name.startswith("gemini-"):
+        return True
+    # These newer families are exceptions to numeric version ordering.
+    for stem in ("gemini-3.5-flash-lite", "gemini-3.5-transcribe"):
+        if name == stem or name.startswith(f"{stem}-"):
+            return False
+    if version := _gemini_version(name):
+        return version < (3, 6)
+    # Preserve sampling behavior for the established older Robotics family.
+    stem = "gemini-robotics-er-1.6"
+    return name == stem or name.startswith(f"{stem}-")
+
+
+def _is_thinking_model(model: str) -> bool:
+    """Check if the model uses the integration's thinking configuration."""
+    name = model.removeprefix("models/")
+    # Preserve existing Gemini 2.5/3 handling of non-text models.
     if name.endswith(("tts", "image", "image-preview")):
         return False
-    return name.startswith(("gemini-2.5", "gemini-3"))
+    if name in _GEMINI_TEXT_ALIASES:
+        return True
+    if (version := _gemini_version(name)) is None:
+        return False
+    if version == (2, 5) or version[0] == 3:
+        return True
+    # Only extend thinking to ordinary text families, not new specialized APIs.
+    tokens = name.split("-")[2:]
+    return (
+        version[0] > 3
+        and bool(tokens)
+        and tokens[0] in {"flash", "pro"}
+        and not {"tts", "image", "live", "transcribe", "embedding"}.intersection(tokens)
+    )
 
 
 def _is_gemini_3_model(model: str) -> bool:
-    """Check if the model is a Gemini 3 series model."""
+    """Check if the model uses thinking levels rather than numeric budgets."""
     name = model.removeprefix("models/")
-    return name.startswith("gemini-3")
+    return name in _GEMINI_TEXT_ALIASES or (
+        (version := _gemini_version(name)) is not None and version[0] >= 3
+    )
 
 
 def _is_gemma_4_model(model: str) -> bool:
@@ -155,7 +202,20 @@ def _create_thinking_config(
             "medium": ThinkingLevel.MEDIUM,
             "high": ThinkingLevel.HIGH,
         }
-        if name.startswith("gemini-3") and "pro" in name:
+        version = _gemini_version(name)
+        if (
+            "pro" in name
+            or name in _GEMINI_TEXT_ALIASES
+            or (
+                version is not None
+                and version >= (3, 6)
+                and not (
+                    version == (3, 6)
+                    and name.startswith("gemini-3.6-flash")
+                    and "lite" not in name.split("-")
+                )
+            )
+        ):
             level_map.pop("minimal")
         if thinking_level and thinking_level in level_map:
             return ThinkingConfig(
@@ -646,10 +706,7 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
                 tool_results.append(chat_content)
                 continue
 
-            if (
-                not isinstance(chat_content, conversation.ToolResultContent)
-                and chat_content.content == ""
-            ):
+            if chat_content.content == "":
                 # Skipping is not possible since the number of
                 # function calls need to match the number of
                 # function responses and skipping one would
@@ -763,10 +820,7 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
             options.get(CONF_THINKING_LEVEL, RECOMMENDED_THINKING_LEVEL),
         )
 
-        return GenerateContentConfig(
-            temperature=options.get(CONF_TEMPERATURE, RECOMMENDED_TEMPERATURE),
-            top_k=options.get(CONF_TOP_K, RECOMMENDED_TOP_K),
-            top_p=options.get(CONF_TOP_P, RECOMMENDED_TOP_P),
+        config = GenerateContentConfig(
             max_output_tokens=options.get(
                 CONF_MAX_TOKENS,
                 default_max_tokens
@@ -802,6 +856,11 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
             ],
             thinking_config=thinking_config,
         )
+        if supports_custom_sampling(model):
+            config.temperature = options.get(CONF_TEMPERATURE, RECOMMENDED_TEMPERATURE)
+            config.top_k = options.get(CONF_TOP_K, RECOMMENDED_TOP_K)
+            config.top_p = options.get(CONF_TOP_P, RECOMMENDED_TOP_P)
+        return config
 
 
 async def async_prepare_files_for_prompt(
