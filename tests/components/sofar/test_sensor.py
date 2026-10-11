@@ -102,6 +102,31 @@ async def test_sensor_entities_created_and_state(
 
 
 @pytest.mark.parametrize(
+    ("raw", "expected"),
+    [
+        pytest.param(8, "svg_state", id="svg"),
+        pytest.param(9, "pid_state", id="pid"),
+    ],
+)
+async def test_system_state_reports_every_state(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_connection: MockModbusConnection,
+    init_integration: MockConfigEntry,
+    raw: int,
+    expected: str,
+) -> None:
+    """Test the system state sensor takes on states past self charging."""
+    mock_connection.for_unit(1).holding[0x0404] = raw
+    freezer.tick(timedelta(seconds=SCAN_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert (state := hass.states.get("sensor.4_4_ktlx_g3_system_state")) is not None
+    assert state.state == expected
+
+
+@pytest.mark.parametrize(
     ("serial", "model", "seed", "created", "enabled"),
     [
         pytest.param(MOCK_SERIAL, MOCK_MODEL, seed_pv_inverter, 74, 21, id="pv"),
