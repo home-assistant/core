@@ -9,5 +9,5 @@
   "integration_type": "hub",
   "iot_class": "local_polling",
   "loggers": ["motioneye_client"],
-  "requirements": ["motioneye-client==0.3.14"]
+  "requirements": ["motioneye-client==0.4.1"]
 }

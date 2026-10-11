@@ -1,6 +1,7 @@
 """KNX configuration storage for entity state exposes."""
 
-from typing import Any, NotRequired, TypedDict
+from dataclasses import dataclass
+from typing import Annotated, Any, NotRequired, TypedDict
 
 import probatio
 from xknx import XKNX
@@ -15,8 +16,9 @@ from homeassistant.helpers import (
 )
 
 from ..expose import KnxExposeEntity, KnxExposeOptions
+from . import knx_selector
 from .entity_store_validation import validate_config_store_data
-from .knx_selector import GASelector
+from .knx_selector import GroupAddressConfig
 
 
 class KNXExposeStoreOptionModel(TypedDict):
@@ -43,10 +45,10 @@ type KNXExposeStoreModel = dict[str, KNXExposeStoreConfigModel]  # dict[entity_i
 
 
 class KNXExposeDataModel(TypedDict):
-    """Represent a loaded KNX expose config for validation."""
+    """Represent validated KNX expose data of an update request."""
 
     entity_id: str
-    data: KNXExposeStoreConfigModel
+    data: ExposeConfig
 
 
 def validate_expose_template_no_coerce(value: str) -> str:
@@ -61,35 +63,46 @@ def validate_expose_template_no_coerce(value: str) -> str:
     return value  # return original string for storage and later template creation
 
 
-EXPOSE_OPTION_SCHEMA = probatio.Schema(
-    {
-        probatio.Required("ga"): GASelector(
+@dataclass(kw_only=True, slots=True)
+class ExposeOption:
+    """An entity state or attribute sent to a group address."""
+
+    # `knx_selector.ga` - a bare `ga` would resolve to this field
+    ga: Annotated[
+        GroupAddressConfig,
+        knx_selector.ga(
             state=False,
             passive=False,
             write_required=True,
             dpt=["numeric", "enum", "complex", "string"],
         ),
-        probatio.Optional("attribute"): str,
-        probatio.Optional("default"): object,
-        probatio.Optional(
-            "cooldown"
-        ): cv.positive_float,  # frontend renders to duration
-        probatio.Optional("send_on_init"): bool,
-        probatio.Optional("periodic_send"): cv.positive_float,
-        probatio.Optional("respond_to_read"): bool,
-        probatio.Optional("value_template"): validate_expose_template_no_coerce,
-    }
-)
+    ]
+    attribute: str | None = None
+    default: Any = None
+    # frontend renders to duration
+    cooldown: Annotated[float | None, probatio.Maybe(cv.positive_float)] = None
+    send_on_init: bool = False
+    periodic_send: Annotated[float | None, probatio.Maybe(cv.positive_float)] = None
+    respond_to_read: bool = True
+    value_template: Annotated[
+        str | None, probatio.Maybe(validate_expose_template_no_coerce)
+    ] = None
+
+
+@dataclass(kw_only=True, slots=True)
+class ExposeConfig:
+    """Expose configuration of an entity."""
+
+    options: list[ExposeOption]
+    notes: str | None = None
+
+
+EXPOSE_STORE_SCHEMA = probatio.DataclassSchema(ExposeConfig)
 
 EXPOSE_CONFIG_SCHEMA = probatio.Schema(
     {
         probatio.Required("entity_id"): selector.EntitySelector(),
-        probatio.Required("data"): probatio.Schema(
-            {
-                probatio.Required("options"): [EXPOSE_OPTION_SCHEMA],
-                probatio.Optional("notes"): str,
-            }
-        ),
+        probatio.Required("data"): EXPOSE_STORE_SCHEMA,
     },
     extra=probatio.REMOVE_EXTRA,
 )
@@ -97,27 +110,31 @@ EXPOSE_CONFIG_SCHEMA = probatio.Schema(
 
 def validate_expose_data(data: dict) -> KNXExposeDataModel:
     """Validate and convert expose configuration data."""
-    return validate_config_store_data(EXPOSE_CONFIG_SCHEMA, data)  # type: ignore[return-value]
+    return validate_config_store_data(EXPOSE_CONFIG_SCHEMA, data)  # type: ignore[no-any-return]
 
 
-def _store_to_expose_option(
-    hass: HomeAssistant, config: KNXExposeStoreOptionModel
-) -> KnxExposeOptions:
-    """Convert config store option model to expose options."""
-    ga = parse_device_group_address(config["ga"]["write"])
-    dpt: type[DPTBase] = DPTBase.parse_transcoder(config["ga"]["dpt"])  # type: ignore[assignment]
+def validate_stored_expose_config(config: dict) -> ExposeConfig:
+    """Validate a stored expose configuration of an entity."""
+    return validate_config_store_data(EXPOSE_STORE_SCHEMA, config)
+
+
+def _to_expose_options(hass: HomeAssistant, option: ExposeOption) -> KnxExposeOptions:
+    """Convert a validated expose option to expose options."""
+    assert option.ga.write is not None  # write is required
+    assert option.ga.dpt is not None  # dpt is required
+    dpt: type[DPTBase] = DPTBase.parse_transcoder(option.ga.dpt)  # type: ignore[assignment]
     value_template = None
-    if (_value_template_config := config.get("value_template")) is not None:
-        value_template = template_helper.Template(_value_template_config, hass)
+    if option.value_template is not None:
+        value_template = template_helper.Template(option.value_template, hass)
     return KnxExposeOptions(
-        group_address=ga,
+        group_address=parse_device_group_address(option.ga.write),
         dpt=dpt,
-        attribute=config.get("attribute"),
-        cooldown=config.get("cooldown", 0),
-        default=config.get("default"),
-        send_on_init=config.get("send_on_init", False),
-        periodic_send=config.get("periodic_send", 0),
-        respond_to_read=config.get("respond_to_read", True),
+        attribute=option.attribute,
+        cooldown=option.cooldown or 0,
+        default=option.default,
+        send_on_init=option.send_on_init,
+        periodic_send=option.periodic_send or 0,
+        respond_to_read=option.respond_to_read,
         value_template=value_template,
     )
 
@@ -138,7 +155,7 @@ class ExposeController:
 
     @callback
     def start(
-        self, hass: HomeAssistant, xknx: XKNX, config: KNXExposeStoreModel
+        self, hass: HomeAssistant, xknx: XKNX, config: dict[str, ExposeConfig]
     ) -> None:
         """Update entity expose configuration."""
         if self._entity_exposes:
@@ -152,13 +169,13 @@ class ExposeController:
         hass: HomeAssistant,
         xknx: XKNX,
         entity_id: str,
-        expose_config: KNXExposeStoreConfigModel,
+        expose_config: ExposeConfig,
     ) -> None:
         """Update entity expose configuration for an entity."""
         self.remove_entity_expose(entity_id)
 
         expose_options = [
-            _store_to_expose_option(hass, config) for config in expose_config["options"]
+            _to_expose_options(hass, option) for option in expose_config.options
         ]
         expose = KnxExposeEntity(hass, xknx, entity_id, expose_options)
         self._entity_exposes[entity_id] = expose

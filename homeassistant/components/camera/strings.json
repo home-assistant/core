@@ -34,6 +34,20 @@
       }
     }
   },
+  "exceptions": {
+    "path_not_allowed": {
+      "message": "Cannot write to {filename} because access to this path is not allowed. `allowlist_external_dirs` may need to be adjusted in `configuration.yaml`."
+    },
+    "record_not_supported": {
+      "message": "Camera {entity_id} does not support recording."
+    },
+    "snapshot_timeout": {
+      "message": "Unable to get snapshot: timed out after {timeout} seconds."
+    },
+    "stream_not_supported": {
+      "message": "Camera {entity_id} does not support streaming."
+    }
+  },
   "selector": {},
   "services": {
     "disable_motion_detection": {
