@@ -180,3 +180,40 @@ async def test_subscribe_retries_on_unexpected_exception(
         await hass.async_block_till_done(wait_background_tasks=True)
 
     assert calls == 3
+
+
+async def test_unload_stops_subscription_when_client_swallows_cancel(
+    hass: HomeAssistant,
+    mock_traccar_api_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Unloading must stop the subscription loop even if the client swallows cancel.
+
+    pytraccar's ApiClient.subscribe() catches asyncio.CancelledError and
+    returns normally, so the loop must not treat that as a normal return
+    and reconnect.
+    """
+    subscribed = asyncio.Event()
+
+    async def _swallow_cancel(_callback: object) -> None:
+        subscribed.set()
+        try:
+            await asyncio.Event().wait()
+        except asyncio.CancelledError:
+            return
+
+    mock_traccar_api_client.subscribe = AsyncMock(side_effect=_swallow_cancel)
+
+    with patch(
+        "homeassistant.components.traccar_server.coordinator._SUBSCRIPTION_RECONNECT_DELAY",
+        0,
+    ):
+        await setup_integration(hass, mock_config_entry)
+        await subscribed.wait()
+        background_tasks = list(mock_config_entry._background_tasks)
+        assert len(background_tasks) == 1
+
+        assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+
+    assert background_tasks[0].done()
+    assert mock_traccar_api_client.subscribe.call_count == 1
