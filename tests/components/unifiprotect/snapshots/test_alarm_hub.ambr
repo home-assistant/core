@@ -380,10 +380,6 @@
     'hw_version': None,
     'id': <ANY>,
     'identifiers': set({
-      tuple(
-        'unifiprotect',
-        'AABBCCDDEEFF',
-      ),
     }),
     'labels': set({
     }),

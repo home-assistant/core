@@ -1,5 +1,6 @@
 """Tests for the UniFi Protect key fob (Public API) entities."""
 
+from collections.abc import Callable
 from datetime import datetime
 from unittest.mock import AsyncMock, Mock
 
@@ -33,6 +34,7 @@ from homeassistant.helpers.event import async_track_state_change_event
 
 from .utils import (
     MockUFPFixture,
+    bind_public_device_properties,
     enable_entity,
     init_entry,
     make_public_bootstrap,
@@ -61,12 +63,16 @@ def _make_fob(
     signal_quality: int | None = 90,
     state: DeviceState = DeviceState.CONNECTED,
     name: str | None = FOB_NAME,
+    device_type: str | None = None,
 ) -> Mock:
     """Build a mock :class:`Fob` backed by real public sub-models."""
     fob = Mock(spec=Fob)
+    bind_public_device_properties(fob, Fob)
     fob.id = FOB_ID
     fob.mac = FOB_MAC
     fob.name = name
+    # Consoles before Protect 7.3 send no type for a fob.
+    fob.type = device_type
     fob.model = ModelType.FOB
     fob.state = state
     fob.away_state = away_state
@@ -153,6 +159,8 @@ async def test_fob_entities_created(
     )
     assert device is not None
     assert device.name == FOB_NAME
+    assert device.model == "Key Fob"
+    assert device.model_id is None
 
     battery = entity_registry.async_get(BATTERY_SENSOR)
     assert battery is not None
@@ -175,6 +183,117 @@ async def test_fob_entities_created(
     battery_low = hass.states.get(BATTERY_LOW_BINARY)
     assert battery_low is not None
     assert battery_low.state == "off"
+
+
+async def test_fob_with_type_uses_it_as_model(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    ufp: MockUFPFixture,
+) -> None:
+    """A fob that reports its type uses it as the device model."""
+    fob = _make_fob(device_type="USL-FOB")
+    ufp.api.has_public_bootstrap = True
+    ufp.api.public_bootstrap = _make_public_bootstrap(fob)
+    await init_entry(hass, ufp, [])
+
+    device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, FOB_MAC), ufp.entry.entry_id
+    )
+    assert device is not None
+    assert device.model == "USL-FOB"
+    assert device.model_id == "USL-FOB"
+
+
+@pytest.mark.parametrize(
+    ("device_type", "expected_name"),
+    [
+        pytest.param(None, f"Key Fob {FOB_MAC}", id="without_type"),
+        pytest.param("USL-FOB", f"USL-FOB {FOB_MAC}", id="with_type"),
+    ],
+)
+async def test_unnamed_fob_name_falls_back_to_model_and_mac(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    ufp: MockUFPFixture,
+    device_type: str | None,
+    expected_name: str,
+) -> None:
+    """A freshly paired fob without a name gets a unique device name."""
+    fob = _make_fob(name=None, device_type=device_type)
+    ufp.api.has_public_bootstrap = True
+    ufp.api.public_bootstrap = _make_public_bootstrap(fob)
+    await init_entry(hass, ufp, [])
+
+    device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, FOB_MAC), ufp.entry.entry_id
+    )
+    assert device is not None
+    assert device.name == expected_name
+
+
+@pytest.mark.parametrize(
+    "state",
+    [
+        pytest.param(s, id=s.value)
+        for s in DeviceState
+        if s is not DeviceState.CONNECTED
+    ],
+)
+async def test_fob_available_regardless_of_state(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    state: DeviceState,
+) -> None:
+    """A fob's state is no link state, so it does not gate availability."""
+    fob = _make_fob(state=state)
+    ufp.api.has_public_bootstrap = True
+    ufp.api.public_bootstrap = _make_public_bootstrap(fob)
+    await init_entry(hass, ufp, [])
+
+    assert hass.states.get(BATTERY_SENSOR).state == "80"
+    assert hass.states.get(BATTERY_LOW_BINARY).state == "off"
+    assert hass.states.get(BUTTON_EVENT).state != STATE_UNAVAILABLE
+
+
+async def test_fob_battery_low_updates_from_public_ws(
+    hass: HomeAssistant,
+    ufp_with_fob: tuple[MockUFPFixture, Mock],
+) -> None:
+    """The battery binary sensor follows a low battery from the websocket."""
+    ufp, fob = ufp_with_fob
+    await init_entry(hass, ufp, [])
+    assert hass.states.get(BATTERY_LOW_BINARY).state == "off"
+
+    fob.wireless_connection_state = PublicWirelessConnectionState(
+        battery_status=PublicWirelessBatteryStatus(percentage=5, is_low=True),
+        signal_state=PublicSignalState(signal_strength=-55, signal_quality=90),
+    )
+    assert ufp.devices_ws_subscription is not None
+    ufp.devices_ws_subscription(public_device_ws_message(fob))
+    await hass.async_block_till_done()
+
+    assert hass.states.get(BATTERY_LOW_BINARY).state == "on"
+
+
+async def test_fob_reads_replaced_object_after_resync(
+    hass: HomeAssistant,
+    ufp_with_fob: tuple[MockUFPFixture, Mock],
+) -> None:
+    """A resync that replaces the fob object is picked up from the bootstrap."""
+    ufp, fob = ufp_with_fob
+    await init_entry(hass, ufp, [])
+    assert hass.states.get(BATTERY_SENSOR).state == "80"
+
+    ufp.api.public_bootstrap.fobs[fob.id] = _make_fob(percentage=40)
+    mock_msg = Mock()
+    mock_msg.changed_data = {}
+    mock_msg.old_obj = fob
+    mock_msg.new_obj = None
+    assert ufp.devices_ws_subscription is not None
+    ufp.devices_ws_subscription(mock_msg)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(BATTERY_SENSOR).state == "40"
 
 
 async def test_fob_button_event_types(
@@ -522,6 +641,72 @@ async def test_fob_unavailable_when_removed_from_bootstrap(
     assert state.state == STATE_UNAVAILABLE
 
 
+def _readopt_with_add_frame(ufp: MockUFPFixture, fob: Mock, readopted: Mock) -> None:
+    """Delete the fob, then deliver the add frame of the re-adopted one."""
+    del ufp.api.public_bootstrap.fobs[fob.id]
+    mock_msg = Mock()
+    mock_msg.old_obj = fob
+    mock_msg.new_obj = None
+    assert ufp.devices_ws_subscription is not None
+    ufp.devices_ws_subscription(mock_msg)
+    ufp.api.public_bootstrap.fobs[readopted.id] = readopted
+    msg = public_device_ws_message(readopted)
+    msg.action = WSAction.ADD
+    ufp.devices_ws_subscription(msg)
+
+
+def _readopt_during_outage(ufp: MockUFPFixture, fob: Mock, readopted: Mock) -> None:
+    """Re-adopt the fob while the devices websocket is down."""
+
+    async def resync_public_bootstrap() -> Mock:
+        ufp.api.public_bootstrap.fobs = {readopted.id: readopted}
+        return ufp.api.public_bootstrap
+
+    ufp.api.update_public.side_effect = resync_public_bootstrap
+    assert ufp.devices_ws_state_subscription is not None
+    ufp.devices_ws_state_subscription(WebsocketState.DISCONNECTED)
+    ufp.devices_ws_state_subscription(WebsocketState.CONNECTED)
+
+
+@pytest.mark.parametrize(
+    "readopt",
+    [
+        pytest.param(_readopt_with_add_frame, id="add_frame"),
+        pytest.param(_readopt_during_outage, id="websocket_outage"),
+    ],
+)
+async def test_fob_readopted_with_new_id_fires_button_events(
+    hass: HomeAssistant,
+    ufp_with_fob: tuple[MockUFPFixture, Mock],
+    readopt: Callable[[MockUFPFixture, Mock, Mock], None],
+) -> None:
+    """Button presses follow a fob re-adopted under a new id."""
+    ufp, fob = ufp_with_fob
+    await init_entry(hass, ufp, [])
+    readopted = _make_fob()
+    readopted.id = "fob-id-2"
+    readopt(ufp, fob, readopted)
+    await hass.async_block_till_done()
+
+    events: list[HAEvent] = []
+
+    @callback
+    def _capture(event: HAEvent) -> None:
+        events.append(event)
+
+    unsub = async_track_state_change_event(hass, BUTTON_EVENT, _capture)
+
+    ufp.events_msg(_button_event(readopted, event_id="evt-new"), EventChange.STARTED)
+    # The old id no longer belongs to this fob.
+    ufp.events_msg(_button_event(fob, event_id="evt-old"), EventChange.STARTED)
+    await hass.async_block_till_done()
+
+    assert [event.data["new_state"].attributes[ATTR_EVENT_ID] for event in events] == [
+        "evt-new"
+    ]
+    unsub()
+
+
 async def test_fob_without_wireless_data_is_unknown(
     hass: HomeAssistant,
     ufp: MockUFPFixture,
@@ -557,10 +742,11 @@ async def test_fob_unavailable_when_public_bootstrap_lost(
     assert hass.states.get(BATTERY_SENSOR).state == "80"
 
     ufp.api.has_public_bootstrap = False
+    # A frame without a merged object makes the entities re-read the bootstrap.
     mock_msg = Mock()
     mock_msg.changed_data = {}
     mock_msg.old_obj = fob
-    mock_msg.new_obj = fob
+    mock_msg.new_obj = None
     assert ufp.devices_ws_subscription is not None
     ufp.devices_ws_subscription(mock_msg)
     await hass.async_block_till_done()

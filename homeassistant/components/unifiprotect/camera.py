@@ -7,7 +7,6 @@ from typing import override
 from uiprotect.data import (
     Camera as UFPCamera,
     ChannelQuality,
-    DeviceState,
     ModelType,
     ProtectAdoptableDeviceModel,
     PublicDeviceModel,
@@ -177,7 +176,7 @@ def _async_camera_entities(
         # get the repair too; third-party is only knowable with a private fill.
         if (
             disable_stream
-            or public.state is not DeviceState.CONNECTED
+            or not public.is_reachable
             or (camera is not None and camera.is_third_party_camera)
         ):
             ir.async_delete_issue(hass, DOMAIN, issue_id)
@@ -368,7 +367,7 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
         self._attr_available = (
             self.data.last_public_update_success
             and not self._public_missing
-            and public.state is DeviceState.CONNECTED
+            and public.is_reachable
         )
         self._async_set_stream_source()
         self._attr_extra_state_attributes = {
