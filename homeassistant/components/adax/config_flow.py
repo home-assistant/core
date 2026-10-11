@@ -55,14 +55,16 @@ async def is_adax_tls_device(ip: str, timeout: float = 2.0) -> bool:
     ssl_ctx.verify_mode = ssl.CERT_NONE
 
     try:
-        _, writer = await asyncio.wait_for(
-            asyncio.open_connection(ip, 443, ssl=ssl_ctx),
-            timeout=timeout,
-        )
-        ssl_obj = writer.get_extra_info("ssl_object")
-        der_cert = ssl_obj.getpeercert(binary_form=True) if ssl_obj else None
-        writer.close()
-        await writer.wait_closed()
+        async with asyncio.timeout(timeout):
+            reader, writer = await asyncio.open_connection(
+                ip, 443, ssl=ssl_ctx, server_hostname=ip
+            )
+            try:
+                ssl_obj = writer.get_extra_info("ssl_object")
+                der_cert = ssl_obj.getpeercert(binary_form=True) if ssl_obj else None
+            finally:
+                writer.close()
+                await writer.wait_closed()
 
         if not der_cert:
             return False
