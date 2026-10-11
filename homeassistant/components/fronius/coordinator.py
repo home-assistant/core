@@ -2,7 +2,7 @@
 
 from abc import ABC, abstractmethod
 import asyncio
-from collections.abc import Mapping, Sequence
+from collections.abc import Awaitable, Callable, Mapping, Sequence
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Any, cast, override
 
@@ -10,7 +10,6 @@ from fronius_modbus import (
     Controls,
     FroniusModbusInverter,
     Mppt,
-    Storage,
     SunSpecError,
     SunSpecMapShiftError,
 )
@@ -35,14 +34,14 @@ from .const import (
     FroniusDeviceInfo,
     SolarNetId,
 )
-from .entity import FroniusEntity, FroniusEntityDescription, ModbusComponentFn
-from .number import MODBUS_NUMBER_ENTITY_DESCRIPTIONS
-from .select import (
-    BATTERY_FORCED_MODE_CHARGE,
-    BATTERY_FORCED_MODE_DISCHARGE,
-    BATTERY_FORCED_MODE_OFF,
-    MODBUS_SELECT_ENTITY_DESCRIPTIONS,
+from .entity import (
+    FroniusEntity,
+    FroniusEntityDescription,
+    ModbusComponent,
+    ModbusComponentFn,
 )
+from .number import MODBUS_NUMBER_ENTITY_DESCRIPTIONS
+from .select import MODBUS_SELECT_ENTITY_DESCRIPTIONS
 from .sensor import (
     INVERTER_ENTITY_DESCRIPTIONS,
     LOGGER_ENTITY_DESCRIPTIONS,
@@ -244,7 +243,7 @@ class FroniusModbusCoordinatorBase(FroniusCoordinatorBase):
             await self._refresh_components()
 
     def _as_device_data(
-        self, values: Mapping[str, float | bool | None]
+        self, values: Mapping[str, float | bool | str | None]
     ) -> dict[SolarNetId, Any]:
         """Wrap values in the SolarAPI's {"value": ...} shape entities read."""
         return {
@@ -433,21 +432,12 @@ class FroniusModbusSettingsUpdateCoordinator(FroniusModbusCoordinatorBase):
     async def async_write(
         self,
         component_fn: ModbusComponentFn,
-        writes: Mapping[str, float | bool],
+        field: str,
+        value: float | bool,
         *,
         enable_field: str | None = None,
     ) -> None:
-        """Write settings to the device and refresh what it reports back.
-
-        ``writes`` maps fields to values and is written in order.
-
-        The model is refreshed first so its header check catches a shifted
-        register map before anything is written - the register addresses
-        move when the data type setting is changed on the device.
-
-        A device holding a different fallback period than the configured one
-        is corrected first, so an output power limit the user sets reverts on
-        the schedule they chose.
+        """Write a setpoint to the device and refresh what it reports back.
 
         ``enable_field`` names the register that puts a setpoint into effect.
         It is written again after a change, because the device only picks up a
@@ -457,6 +447,29 @@ class FroniusModbusSettingsUpdateCoordinator(FroniusModbusCoordinatorBase):
         setpoint change should not quietly take it back.
         """
         component = component_fn(self.modbus_inverter)
+
+        async def write(component: ModbusComponent) -> None:
+            await component.write(field, value)
+            if enable_field is not None and getattr(component, enable_field):
+                await component.write(enable_field, True)
+
+        await self.async_write_component(component, write)
+
+    async def async_write_component[_ComponentT: ModbusComponent](
+        self,
+        component: _ComponentT | None,
+        write: Callable[[_ComponentT], Awaitable[None]],
+    ) -> None:
+        """Run writes to a model of the device and refresh what it reports back.
+
+        The model is refreshed first so its header check catches a shifted
+        register map before anything is written - the register addresses
+        move when the data type setting is changed on the device.
+
+        A device holding a different fallback period than the configured one
+        is corrected first, so an output power limit the user sets reverts on
+        the schedule they chose.
+        """
         if component is None:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
@@ -470,11 +483,10 @@ class FroniusModbusSettingsUpdateCoordinator(FroniusModbusCoordinatorBase):
                     and component.revert_seconds != self._revert_seconds
                 ):
                     await component.write("revert_seconds", self._revert_seconds)
-                for field, value in writes.items():
-                    await component.write(field, value)
-                if enable_field is not None and getattr(component, enable_field):
-                    await component.write(enable_field, True)
+                await write(component)
         except (ModbusError, SunSpecError) as err:
+            # writes before the failing one may have gone through
+            await self.async_refresh()
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="modbus_write_failed",
@@ -491,7 +503,7 @@ class FroniusModbusSettingsUpdateCoordinator(FroniusModbusCoordinatorBase):
         """Return the settings per solar net id from the Modbus interface."""
         await self._refresh()
         inverter = self.modbus_inverter
-        values: dict[str, float | bool | None] = {}
+        values: dict[str, float | bool | str | None] = {}
 
         if (controls := inverter.controls) is not None:
             values["ac_power_limit"] = controls.power_limit
@@ -505,27 +517,9 @@ class FroniusModbusSettingsUpdateCoordinator(FroniusModbusCoordinatorBase):
             )
             values["battery_minimum_reserve"] = storage.minimum_reserve
             values["battery_grid_charging"] = storage.grid_charging
-            values["battery_forced_mode"] = _battery_forced_mode(storage)
+            values["battery_forced_mode"] = storage.forced_mode
 
         return self._as_device_data(values)
-
-
-def _battery_forced_mode(storage: Storage) -> str | None:
-    """Return which way an active negative battery limit forces the power.
-
-    A negative rate forces the opposite direction - whoever wrote it, so a
-    battery forced by another controller shows as forced too.
-    """
-    charge, discharge = storage.charge_limit, storage.discharge_limit
-    charge_on = storage.charge_limit_enabled
-    discharge_on = storage.discharge_limit_enabled
-    if charge is None or discharge is None or charge_on is None or discharge_on is None:
-        return None
-    if discharge_on and discharge < 0:
-        return BATTERY_FORCED_MODE_CHARGE
-    if charge_on and charge < 0:
-        return BATTERY_FORCED_MODE_DISCHARGE
-    return BATTERY_FORCED_MODE_OFF
 
 
 class FroniusLoggerUpdateCoordinator(FroniusCoordinatorBase):

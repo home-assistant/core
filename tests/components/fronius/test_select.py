@@ -2,6 +2,7 @@
 
 from unittest.mock import patch
 
+from fronius_modbus import ForcedMode
 from fronius_modbus.testing import build_sunspec_map
 from modbus_connection import IllegalDataValueError
 from modbus_connection.mock import MockModbusConnection
@@ -63,91 +64,54 @@ async def test_forced_mode_read_from_the_device(
     assert_state(hass, FORCED_MODE, "off")
 
 
-@pytest.mark.parametrize(
-    ("option", "charge_limit", "discharge_limit", "grid_charging"),
-    [
-        ("charge", 100.0, -100.0, True),
-        ("discharge", -100.0, 100.0, False),
-    ],
-)
+@pytest.mark.parametrize("mode", [ForcedMode.CHARGE, ForcedMode.DISCHARGE])
 async def test_forcing_the_battery(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     mock_fronius_modbus: MockModbusConnection,
-    option: str,
-    charge_limit: float,
-    discharge_limit: float,
-    grid_charging: bool,
+    mode: ForcedMode,
 ) -> None:
-    """Test forcing sets both limits at full power and off resets them."""
+    """Test forcing reaches the device and off releases it again."""
     config_entry = await _setup(hass, aioclient_mock, mock_fronius_modbus)
     storage = config_entry.runtime_data.modbus_settings_coordinators[
         0
     ].modbus_inverter.storage
 
-    await _select(hass, option)
+    await _select(hass, mode)
 
-    assert_state(hass, FORCED_MODE, option)
-    assert storage.charge_limit == charge_limit
-    assert storage.discharge_limit == discharge_limit
-    assert storage.charge_limit_enabled is True
-    assert storage.discharge_limit_enabled is True
-    assert storage.grid_charging is grid_charging
+    assert_state(hass, FORCED_MODE, mode)
+    assert storage.forced_mode is mode
 
     await _select(hass, "off")
 
     assert_state(hass, FORCED_MODE, "off")
-    assert storage.charge_limit == 100.0
-    assert storage.discharge_limit == 100.0
     assert storage.charge_limit_enabled is False
     assert storage.discharge_limit_enabled is False
-    assert storage.grid_charging is False
 
 
-@pytest.mark.parametrize(
-    ("start", "target"), [("charge", "discharge"), ("discharge", "charge")]
-)
-async def test_reversing_never_sets_both_rates_negative(
+async def test_a_refused_write_raises_and_refreshes(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     mock_fronius_modbus: MockModbusConnection,
-    start: str,
-    target: str,
 ) -> None:
-    """Test going straight from one direction to the other.
+    """Test a device rejecting a write surfaces and shows what did go through.
 
-    The device refuses a write that leaves both rates negative, so the
-    positive rate has to be written before the negative one.
+    The mode is a sequence of writes, so ones before the refused write may
+    have reached the device.
     """
     config_entry = await _setup(hass, aioclient_mock, mock_fronius_modbus)
     storage = config_entry.runtime_data.modbus_settings_coordinators[
         0
     ].modbus_inverter.storage
-    await _select(hass, start)
-    rates = {
-        "charge_limit": storage.charge_limit,
-        "discharge_limit": storage.discharge_limit,
-    }
 
-    with patch.object(storage, "write", wraps=storage.write) as write:
-        await _select(hass, target)
+    async def force_then_refuse(mode: ForcedMode) -> None:
+        await storage.set_limits(discharge=-100)
+        raise IllegalDataValueError
 
-    for call in write.call_args_list:
-        field, value = call.args
-        if field in rates:
-            rates[field] = value
-            assert not all(rate < 0 for rate in rates.values())
-    assert_state(hass, FORCED_MODE, target)
-
-
-async def test_a_refused_write_raises(
-    hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
-    mock_fronius_modbus: MockModbusConnection,
-) -> None:
-    """Test a device rejecting the write surfaces as an error to the user."""
-    await _setup(hass, aioclient_mock, mock_fronius_modbus)
-    mock_fronius_modbus.for_unit(1).fail_requests(IllegalDataValueError())
-
-    with pytest.raises(HomeAssistantError, match="Could not write"):
+    with (
+        patch.object(storage, "set_forced_mode", side_effect=force_then_refuse),
+        pytest.raises(HomeAssistantError, match="Could not write"),
+    ):
         await _select(hass, "charge")
+
+    assert_state(hass, FORCED_MODE, "charge")

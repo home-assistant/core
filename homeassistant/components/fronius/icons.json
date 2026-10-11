@@ -22,6 +22,15 @@
         "default": "mdi:battery-lock"
       }
     },
+    "select": {
+      "battery_forced_mode": {
+        "default": "mdi:battery-sync",
+        "state": {
+          "charge": "mdi:battery-charging-high",
+          "discharge": "mdi:battery-arrow-down"
+        }
+      }
+    },
     "sensor": {
       "cash_factor": {
         "default": "mdi:cash-plus"
@@ -73,15 +82,6 @@
       },
       "voltage_dc_mppt_no": {
         "default": "mdi:current-dc"
-      }
-    },
-    "select": {
-      "battery_forced_mode": {
-        "default": "mdi:battery-sync",
-        "state": {
-          "charge": "mdi:battery-charging-high",
-          "discharge": "mdi:battery-arrow-down"
-        }
       }
     },
     "switch": {

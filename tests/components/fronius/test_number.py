@@ -97,7 +97,7 @@ async def test_setting_a_value_re_enables_an_active_limit(
     config_entry = await _setup(hass, aioclient_mock, mock_fronius_modbus)
     coordinator = config_entry.runtime_data.modbus_settings_coordinators[0]
     controls = coordinator.modbus_inverter.controls
-    await coordinator.async_write(lambda inverter: inverter.controls, {"enabled": True})
+    await coordinator.async_write(lambda inverter: inverter.controls, "enabled", True)
     assert controls.enabled is True
 
     writes: list[WriteEvent] = []
@@ -139,6 +139,38 @@ async def test_battery_setpoint_leaves_the_mode_bits_alone(
     assert_state(hass, CHARGE_LIMIT, 50.0)
     assert storage.charge_limit_enabled is False
     assert storage.discharge_limit_enabled is False
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "field"),
+    [
+        (CHARGE_LIMIT, "charge_limit"),
+        ("number.gen24_storage_battery_discharge_power_limit", "discharge_limit"),
+    ],
+)
+async def test_battery_rates_are_signed(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_fronius_modbus: MockModbusConnection,
+    entity_id: str,
+    field: str,
+) -> None:
+    """Test a negative battery rate is written as the device takes it."""
+    config_entry = await _setup(hass, aioclient_mock, mock_fronius_modbus)
+    storage = config_entry.runtime_data.modbus_settings_coordinators[
+        0
+    ].modbus_inverter.storage
+
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: -50},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    assert_state(hass, entity_id, -50.0)
+    assert getattr(storage, field) == -50.0
 
 
 async def test_a_refused_write_raises(

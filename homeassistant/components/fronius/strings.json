@@ -65,6 +65,16 @@
         "name": "Battery minimum reserve"
       }
     },
+    "select": {
+      "battery_forced_mode": {
+        "name": "Battery forced mode",
+        "state": {
+          "charge": "Charge",
+          "discharge": "Discharge",
+          "off": "[%key:common::state::off%]"
+        }
+      }
+    },
     "sensor": {
       "capacity_designed": {
         "name": "Designed capacity"
@@ -431,16 +441,6 @@
       },
       "voltage_dc_mppt_no": {
         "name": "DC voltage {mppt_no}"
-      }
-    },
-    "select": {
-      "battery_forced_mode": {
-        "name": "Battery forced mode",
-        "state": {
-          "charge": "Charge",
-          "discharge": "Discharge",
-          "off": "[%key:common::state::off%]"
-        }
       }
     },
     "switch": {

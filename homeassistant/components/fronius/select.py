@@ -1,17 +1,18 @@
 """Select entities for the Fronius Modbus controls."""
 
-from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Final, override
 
+from fronius_modbus import ForcedMode
+
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
-from homeassistant.const import Platform
+from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import discovery_signal
-from .entity import FroniusEntity, FroniusEntityDescription, ModbusComponentFn
+from .entity import FroniusEntity, FroniusEntityDescription
 
 if TYPE_CHECKING:
     from . import FroniusConfigEntry
@@ -23,60 +24,21 @@ if TYPE_CHECKING:
 # writes go to one device at a time
 PARALLEL_UPDATES: Final = 1
 
-BATTERY_FORCED_MODE_OFF: Final = "off"
-BATTERY_FORCED_MODE_CHARGE: Final = "charge"
-BATTERY_FORCED_MODE_DISCHARGE: Final = "discharge"
-
 
 @dataclass(frozen=True, kw_only=True)
 class FroniusSelectEntityDescription(FroniusEntityDescription, SelectEntityDescription):
-    """Describes a Fronius Modbus select entity.
-
-    ``option_writes`` maps each option to the fields of the model the control
-    lives in, with the values to write to them in order.
-    """
-
-    component_fn: ModbusComponentFn
-    option_writes: Mapping[str, Mapping[str, float | bool]]
+    """Describes a Fronius Modbus select entity."""
 
 
-# The battery limits are rates in percent of the maximum charge power, and a
-# negative one turns the direction around: a discharge limit of -100% makes
-# the battery charge at full power. The device refuses both rates negative at
-# once, so the positive rate is written before the negative one. Turning
-# forcing off releases both limits at 100%, so a limit switched on later
-# doesn't pick up a negative rate.
+# Forcing takes over the rate limit of the opposite direction and leaves the
+# one of the forced direction to the user - an active limit there caps the
+# forced power. The library sequences the writes so the device never sees
+# both rates negative, which it refuses.
 MODBUS_SELECT_ENTITY_DESCRIPTIONS: list[FroniusSelectEntityDescription] = [
     FroniusSelectEntityDescription(
         key="battery_forced_mode",
-        component_fn=lambda inverter: inverter.storage,
-        options=[
-            BATTERY_FORCED_MODE_OFF,
-            BATTERY_FORCED_MODE_CHARGE,
-            BATTERY_FORCED_MODE_DISCHARGE,
-        ],
-        option_writes={
-            BATTERY_FORCED_MODE_OFF: {
-                "charge_limit_enabled": False,
-                "discharge_limit_enabled": False,
-                "charge_limit": 100,
-                "discharge_limit": 100,
-                "grid_charging": False,
-            },
-            BATTERY_FORCED_MODE_CHARGE: {
-                "grid_charging": True,
-                "charge_limit": 100,
-                "discharge_limit": -100,
-                "charge_limit_enabled": True,
-                "discharge_limit_enabled": True,
-            },
-            BATTERY_FORCED_MODE_DISCHARGE: {
-                "discharge_limit": 100,
-                "charge_limit": -100,
-                "charge_limit_enabled": True,
-                "discharge_limit_enabled": True,
-            },
-        },
+        options=[mode.value for mode in ForcedMode],
+        entity_category=EntityCategory.CONFIG,
     ),
 ]
 
@@ -90,7 +52,7 @@ async def async_setup_entry(
     solar_net = config_entry.runtime_data
     for coordinator in solar_net.modbus_settings_coordinators:
         coordinator.add_entities_for_seen_keys(
-            async_add_entities, Platform.SELECT, ModbusControlSelect
+            async_add_entities, Platform.SELECT, BatteryForcedModeSelect
         )
 
     @callback
@@ -99,7 +61,7 @@ async def async_setup_entry(
         if Platform.SELECT not in coordinator.valid_descriptions:
             return
         coordinator.add_entities_for_seen_keys(
-            async_add_entities, Platform.SELECT, ModbusControlSelect
+            async_add_entities, Platform.SELECT, BatteryForcedModeSelect
         )
 
     config_entry.async_on_unload(
@@ -109,8 +71,8 @@ async def async_setup_entry(
     )
 
 
-class ModbusControlSelect(FroniusEntity, SelectEntity):
-    """A control of an inverters Modbus interface with exclusive modes."""
+class BatteryForcedModeSelect(FroniusEntity, SelectEntity):
+    """Force the battery of an inverter to charge or discharge."""
 
     entity_description: FroniusSelectEntityDescription
     coordinator: FroniusModbusSettingsUpdateCoordinator
@@ -121,7 +83,7 @@ class ModbusControlSelect(FroniusEntity, SelectEntity):
         description: FroniusSelectEntityDescription,
         solar_net_id: str,
     ) -> None:
-        """Set up an individual Fronius Modbus control select."""
+        """Set up the battery forced mode select of an inverter."""
         super().__init__(coordinator, description, solar_net_id)
         self._attr_device_info = coordinator.inverter_info.device_info
         self._attr_unique_id = (
@@ -136,8 +98,8 @@ class ModbusControlSelect(FroniusEntity, SelectEntity):
 
     @override
     async def async_select_option(self, option: str) -> None:
-        """Put the device into the selected mode."""
-        await self.coordinator.async_write(
-            self.entity_description.component_fn,
-            self.entity_description.option_writes[option],
+        """Put the battery into the selected mode."""
+        await self.coordinator.async_write_component(
+            self.coordinator.modbus_inverter.storage,
+            lambda storage: storage.set_forced_mode(ForcedMode(option)),
         )
