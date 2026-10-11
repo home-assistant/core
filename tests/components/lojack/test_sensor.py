@@ -8,7 +8,7 @@ from lojack_api import ApiError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.lojack.const import DOMAIN
+from homeassistant.components.lojack.const import DEFAULT_UPDATE_INTERVAL, DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -104,7 +104,7 @@ async def test_sensor_becomes_unavailable_on_api_error(
 
     mock_device.get_location = AsyncMock(side_effect=ApiError("API unavailable"))
 
-    freezer.tick(timedelta(minutes=5))
+    freezer.tick(timedelta(minutes=DEFAULT_UPDATE_INTERVAL))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
