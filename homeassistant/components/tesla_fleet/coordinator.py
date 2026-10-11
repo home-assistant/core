@@ -160,16 +160,19 @@ def _aggregate_energy_history_by_hour(
 
     for period in time_series:
         timestamp = period.get("timestamp")
-        if (parsed_time := dt_util.parse_datetime(timestamp or "")) is None:
+        # Tesla omits a field instead of sending zero, so an omitted field is zero
+        # only when the period has a reading; without one the period stays missing
+        if (parsed_time := dt_util.parse_datetime(timestamp or "")) is None or not any(
+            key in period for key in ENERGY_HISTORY_FIELDS
+        ):
             continue
 
         start = dt_util.as_utc(parsed_time).replace(minute=0, second=0, microsecond=0)
-        hour_values = hourly_periods.setdefault(start, {})
-
+        hour_values = hourly_periods.setdefault(
+            start, dict.fromkeys(ENERGY_HISTORY_FIELDS, 0.0)
+        )
         for key in ENERGY_HISTORY_FIELDS:
-            if (value := period.get(key)) is None:
-                continue
-            hour_values[key] = hour_values.get(key, 0.0) + float(value)
+            hour_values[key] += float(period.get(key) or 0)
 
     return sorted(hourly_periods.items())
 
@@ -575,9 +578,9 @@ class TeslaFleetEnergySiteStatisticsCoordinator(DataUpdateCoordinator[None]):
         )
         if not last_stats:
             await self._async_copy_sensor_history(last_stats, first_run_start)
-        # Resume from the newest field so one that stops reporting can't hold
-        # imports back. Fields commit separately, so a crash between commits
-        # can leave a gap in a field that fell behind.
+        # Resume from the newest field so one that fell behind, such as a sensor
+        # whose copied history ends earlier, can't force refetching old days.
+        # Fields commit separately, so a crash between commits can leave a gap.
         start = max(
             (stat["start"] for stat in last_stats.values()),
             default=dt_util.as_utc(today),
@@ -679,9 +682,7 @@ class TeslaFleetEnergySiteStatisticsCoordinator(DataUpdateCoordinator[None]):
                 ):
                     continue
 
-                if (state := hour_values.get(key)) is None:
-                    continue
-
+                state = hour_values[key]
                 if latest and start == latest["start"]:
                     running_sum -= latest["state"]
                 running_sum += state

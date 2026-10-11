@@ -49,8 +49,6 @@ GRID = "grid_energy_imported"
 SOLAR = "solar_energy_exported"
 GRID_STATISTIC_ID = f"tesla_fleet:{SITE_ID}_{GRID}"
 SOLAR_STATISTIC_ID = f"tesla_fleet:{SITE_ID}_{SOLAR}"
-DISCHARGE = "total_battery_discharge"
-DISCHARGE_STATISTIC_ID = f"tesla_fleet:{SITE_ID}_{DISCHARGE}"
 BEFORE = "2023-06-01T23:45:00-07:00"
 LAST = "2023-06-01T23:55:00-07:00"
 AFTER = "2023-06-02T00:05:00-07:00"
@@ -150,7 +148,7 @@ async def test_hourly_aggregation_and_repeated_refresh(
     freezer: FrozenDateTimeFactory,
     mock_energy_history: AsyncMock,
 ) -> None:
-    """Bucket samples by UTC hour, skip untimed ones, and replace the latest hour."""
+    """Bucket by UTC hour, zero omitted fields, and skip samples without data."""
     mock_energy_history.return_value = _history(
         ("2023-06-01T08:12:34-07:00", {GRID: 100, SOLAR: 200}),
         ("2023-06-01T15:30:00Z", {GRID: 150}),
@@ -174,6 +172,7 @@ async def test_hourly_aggregation_and_repeated_refresh(
         [
             {"timestamp": "2023-06-01T09:05:00-07:00", GRID: 25},
             {"timestamp": "2023-06-01T10:00:00-07:00", GRID: 75},
+            {"timestamp": "2023-06-01T11:00:00-07:00"},
         ]
     )
     await _refresh(hass, freezer)
@@ -182,6 +181,11 @@ async def test_hourly_aggregation_and_repeated_refresh(
         ("2023-06-01T15:00:00+00:00", 300, 300),
         ("2023-06-01T16:00:00+00:00", 100, 400),
         ("2023-06-01T17:00:00+00:00", 75, 475),
+    ]
+    assert _hourly_rows(stats[SOLAR_STATISTIC_ID]) == [
+        ("2023-06-01T15:00:00+00:00", 200, 200),
+        ("2023-06-01T16:00:00+00:00", 100, 300),
+        ("2023-06-01T17:00:00+00:00", 0, 300),
     ]
     await _refresh(hass, freezer)
     assert await _get_hourly_stats(hass, ids) == stats
@@ -277,7 +281,7 @@ async def test_backfill_after_midnight(
 
 
 @pytest.mark.parametrize(
-    ("time_zone", "expected"),
+    ("time_zone", "expected", "expected_solar"),
     [
         pytest.param(
             "UTC",
@@ -287,6 +291,12 @@ async def test_backfill_after_midnight(
                 ("2023-06-02T23:00:00+00:00", 30, 60),
                 ("2023-06-03T00:00:00+00:00", 80, 140),
             ],
+            [
+                ("2023-06-01T23:00:00+00:00", 100, 100),
+                ("2023-06-02T00:00:00+00:00", 0, 100),
+                ("2023-06-02T23:00:00+00:00", 0, 100),
+                ("2023-06-03T00:00:00+00:00", 50, 150),
+            ],
             id="whole-hour",
         ),
         pytest.param(
@@ -294,6 +304,10 @@ async def test_backfill_after_midnight(
             [
                 ("2023-06-01T18:00:00+00:00", 30, 30),
                 ("2023-06-02T18:00:00+00:00", 110, 140),
+            ],
+            [
+                ("2023-06-01T18:00:00+00:00", 100, 100),
+                ("2023-06-02T18:00:00+00:00", 50, 150),
             ],
             id="half-hour",
         ),
@@ -306,6 +320,7 @@ async def test_multi_day_recovery(
     history_responses: dict[str | None, dict[str, Any]],
     time_zone: str,
     expected: list[tuple[str, float, float]],
+    expected_solar: list[tuple[str, float, float]],
 ) -> None:
     """Recover each missed hour across several days without lumping energy together."""
     zone = await dt_util.async_get_time_zone(time_zone)
@@ -333,10 +348,7 @@ async def test_multi_day_recovery(
 
     stats = await _get_hourly_stats(hass, {GRID_STATISTIC_ID, SOLAR_STATISTIC_ID})
     assert _hourly_rows(stats[GRID_STATISTIC_ID]) == expected
-    assert _hourly_rows(stats[SOLAR_STATISTIC_ID]) == [
-        (expected[0][0], 100, 100),
-        (expected[-1][0], 50, 150),
-    ]
+    assert _hourly_rows(stats[SOLAR_STATISTIC_ID]) == expected_solar
 
 
 @pytest.mark.parametrize(
@@ -369,89 +381,13 @@ async def test_repeated_import_with_delayed_recorder(
     ]
 
 
-@pytest.mark.parametrize(
-    ("past_values", "current_values", "expected"),
-    [
-        pytest.param(
-            {},
-            {},
-            [("2023-06-02T06:00:00+00:00", 10, 10)],
-            id="stays-absent",
-        ),
-        pytest.param(
-            {DISCHARGE: 15},
-            {DISCHARGE: 5},
-            [
-                ("2023-06-02T06:00:00+00:00", 10, 10),
-                ("2023-06-03T06:00:00+00:00", 15, 25),
-                ("2023-06-03T07:00:00+00:00", 5, 30),
-            ],
-            id="returns",
-        ),
-    ],
-)
-async def test_inactive_field_does_not_block_progress(
-    hass: HomeAssistant,
-    normal_config_entry: MockConfigEntry,
-    freezer: FrozenDateTimeFactory,
-    mock_energy_history: AsyncMock,
-    history_responses: dict[str | None, dict[str, Any]],
-    past_values: dict[str, float],
-    current_values: dict[str, float],
-    expected: list[tuple[str, float, float]],
-) -> None:
-    """An inactive field cannot make already imported days a permanent dependency."""
-    old = _history((BEFORE, {GRID: 100, DISCHARGE: 10}))
-    history_responses[None] = old
-    await _setup(hass, normal_config_entry)
-    history_responses[END_DATE] = old
-    history_responses[None] = _history((AFTER, {GRID: 20}))
-    await _refresh(hass, freezer)
-
-    history_responses[END_DATE] = _history()
-    history_responses[None] = _history(
-        (AFTER, {GRID: 20}),
-        ("2023-06-02T01:05:00-07:00", {GRID: 30}),
-    )
-    mock_energy_history.reset_mock()
-    await _refresh(hass, freezer)
-    mock_energy_history.assert_called_once_with(TeslaEnergyPeriod.DAY, end_date=None)
-    stats = await _get_hourly_stats(hass, {GRID_STATISTIC_ID, DISCHARGE_STATISTIC_ID})
-    assert _hourly_rows(stats[GRID_STATISTIC_ID]) == [
-        ("2023-06-02T06:00:00+00:00", 100, 100),
-        ("2023-06-02T07:00:00+00:00", 20, 120),
-        ("2023-06-02T08:00:00+00:00", 30, 150),
-    ]
-    assert _hourly_rows(stats[DISCHARGE_STATISTIC_ID]) == [
-        ("2023-06-02T06:00:00+00:00", 10, 10)
-    ]
-
-    history_responses["2023-06-02T23:59:59-07:00"] = _history(
-        (AFTER, {GRID: 20}),
-        ("2023-06-02T01:05:00-07:00", {GRID: 30}),
-        ("2023-06-02T23:55:00-07:00", {GRID: 10, **past_values}),
-    )
-    history_responses[None] = _history(
-        ("2023-06-03T00:05:00-07:00", {GRID: 40, **current_values})
-    )
-    mock_energy_history.reset_mock()
-    await _refresh(hass, freezer)
-    assert mock_energy_history.call_args_list == [
-        call(TeslaEnergyPeriod.DAY, end_date=None),
-        call(TeslaEnergyPeriod.DAY, end_date="2023-06-02T23:59:59-07:00"),
-    ]
-    stats = await _get_hourly_stats(hass, {GRID_STATISTIC_ID, DISCHARGE_STATISTIC_ID})
-    assert stats[GRID_STATISTIC_ID][-1]["sum"] == 200
-    assert _hourly_rows(stats[DISCHARGE_STATISTIC_ID]) == expected
-
-
-async def test_independent_baselines_and_new_fields(
+async def test_independent_baselines(
     hass: HomeAssistant,
     normal_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
     history_responses: dict[str | None, dict[str, Any]],
 ) -> None:
-    """Respect each field's own baseline and initialize new fields from today."""
+    """Replace each field's latest hour using that field's own baseline."""
     before = [
         ("2023-06-01T08:00:00-07:00", {GRID: 10, SOLAR: 100}),
         ("2023-06-01T09:00:00-07:00", {SOLAR: 200}),
@@ -472,7 +408,7 @@ async def test_independent_baselines_and_new_fields(
     expected = {
         GRID_STATISTIC_ID: 60,
         SOLAR_STATISTIC_ID: 750,
-        f"tesla_fleet:{SITE_ID}_battery_energy_exported": 5,
+        f"tesla_fleet:{SITE_ID}_battery_energy_exported": 1005,
     }
     stats = await _get_hourly_stats(hass, set(expected))
     assert {key: rows[-1]["sum"] for key, rows in stats.items()} == expected
@@ -482,46 +418,66 @@ async def test_copy_sensor_history(
     hass: HomeAssistant,
     normal_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
+    mock_energy_history: AsyncMock,
     history_responses: dict[str | None, dict[str, Any]],
 ) -> None:
-    """Start a new statistic from its sensor's history, in Wh per hour."""
-    sensor = entity_registry.async_get_or_create(
-        Platform.SENSOR, DOMAIN, f"{SITE_ID}-{GRID}"
-    )
-    async_import_statistics(
-        hass,
-        StatisticMetaData(
-            mean_type=StatisticMeanType.NONE,
-            has_sum=True,
-            name=None,
-            source=RECORDER_DOMAIN,
-            statistic_id=sensor.entity_id,
-            unit_class=EnergyConverter.UNIT_CLASS,
-            unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        ),
-        [
-            StatisticData(start=datetime.fromisoformat(start), state=state, sum=total)
-            for start, state, total in (
+    """Start statistics from sensor history and resume from the newest sensor."""
+    for key, rows in (
+        (
+            GRID,
+            (
                 ("2023-06-02T04:00:00+00:00", 2.0, 0.0),
                 ("2023-06-02T05:00:00+00:00", 2.1, 0.1),
                 ("2023-06-02T06:00:00+00:00", 2.25, 0.25),
                 # From the first import onward, Tesla's history is used instead.
                 ("2023-06-02T07:00:00+00:00", 0.4, 0.4),
-            )
-        ],
-    )
+            ),
+        ),
+        # A sensor disabled earlier must not force refetching its missing days.
+        (SOLAR, (("2023-05-31T06:00:00+00:00", 0.3, 0.3),)),
+    ):
+        sensor = entity_registry.async_get_or_create(
+            Platform.SENSOR, DOMAIN, f"{SITE_ID}-{key}"
+        )
+        async_import_statistics(
+            hass,
+            StatisticMetaData(
+                mean_type=StatisticMeanType.NONE,
+                has_sum=True,
+                name=None,
+                source=RECORDER_DOMAIN,
+                statistic_id=sensor.entity_id,
+                unit_class=EnergyConverter.UNIT_CLASS,
+                unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+            ),
+            [
+                StatisticData(
+                    start=datetime.fromisoformat(start), state=state, sum=total
+                )
+                for start, state, total in rows
+            ],
+        )
     await async_wait_recording_done(hass)
     history_responses[None] = _history((AFTER, {GRID: 20}))
     history_responses[END_DATE] = _history((LAST, {GRID: 50}))
 
     await _setup(hass, normal_config_entry)
 
-    stats = await _get_hourly_stats(hass, {GRID_STATISTIC_ID})
+    assert mock_energy_history.call_args_list == [
+        call(TeslaEnergyPeriod.DAY, end_date=None),
+        call(TeslaEnergyPeriod.DAY, end_date=END_DATE),
+    ]
+    stats = await _get_hourly_stats(hass, {GRID_STATISTIC_ID, SOLAR_STATISTIC_ID})
     assert _hourly_rows(stats[GRID_STATISTIC_ID]) == [
         ("2023-06-02T04:00:00+00:00", 0, 0),
         ("2023-06-02T05:00:00+00:00", 100, 100),
         ("2023-06-02T06:00:00+00:00", 50, 150),
         ("2023-06-02T07:00:00+00:00", 20, 170),
+    ]
+    assert _hourly_rows(stats[SOLAR_STATISTIC_ID]) == [
+        ("2023-05-31T06:00:00+00:00", 300, 300),
+        ("2023-06-02T06:00:00+00:00", 0, 300),
+        ("2023-06-02T07:00:00+00:00", 0, 300),
     ]
 
 
