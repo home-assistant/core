@@ -38,7 +38,7 @@ on:
 
 env:
   CACHE_VERSION: 4
-  MYPY_CACHE_VERSION: 2
+  MYPY_CACHE_VERSION: 3
   HA_SHORT_VERSION: "2026.11"
   ADDITIONAL_PYTHON_VERSIONS: "[]"
   # LTS versions: 10.3, 10.6, 10.11, 11.4, 11.8, 12.3
@@ -768,7 +768,7 @@ jobs:
           uv-cache-dir: ${{ env.UV_CACHE_DIR }}
           apt-cache-version: ${{ env.APT_CACHE_VERSION }}
       - name: Run benchmarks
-        uses: CodSpeedHQ/action@373d6868929f444bc08d901fd0eb0ad52a8875ea # v5.2.1
+        uses: CodSpeedHQ/action@c4fd08a3a159bd0cc208da1e0edf32b8c47d75e5 # v5.4.0
         with:
           mode: simulation,memory
           # No token: auth uses the OIDC id-token minted by the job permissions.
@@ -934,7 +934,13 @@ jobs:
           set -o pipefail
           cov_params=()
           if [[ "${SKIP_COVERAGE}" != "true" ]]; then
-            cov_params+=(--cov="homeassistant")
+            if [[ "${TEST_GROUP}" == "1" ]]; then
+              # Also report never-imported files as 0%. Listing every file
+              # is slow, so only one group does it.
+              cov_params+=(--cov="homeassistant")
+            else
+              cov_params+=(--cov)
+            fi
             cov_params+=(--cov-report=xml)
             cov_params+=(--junitxml=junit.xml -o junit_family=legacy)
           fi
@@ -1419,13 +1425,10 @@ jobs:
     runs-on: ubuntu-24.04
     permissions:
       contents: read
+    # Partial runs are short, so start the tests in parallel with the lint jobs
     needs:
       - info
       - base
-      - gen-requirements-all
-      - hassfest
-      - prek
-      - mypy
     if: |
       needs.info.outputs.lint_only != 'true'
       && needs.info.outputs.tests_glob

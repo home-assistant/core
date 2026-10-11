@@ -7,7 +7,10 @@ from freezegun.api import FrozenDateTimeFactory
 from jvcprojector import JvcProjectorTimeoutError, command as cmd
 import pytest
 
-from homeassistant.components.jvc_projector.coordinator import INTERVAL_FAST
+from homeassistant.components.jvc_projector.coordinator import (
+    INTERVAL_FAST,
+    INTERVAL_SLOW,
+)
 from homeassistant.components.select import (
     ATTR_OPTIONS,
     DOMAIN as SELECT_DOMAIN,
@@ -64,15 +67,16 @@ async def test_motion_enhance_timeout_is_unknown(
     entity_registry: er.EntityRegistry,
     mock_device: MagicMock,
     mock_integration: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test a motion enhance timeout does not make the select unavailable."""
     entity_registry.async_update_entity(MOTION_ENHANCE_ENTITY_ID, disabled_by=None)
 
     await hass.config_entries.async_reload(mock_integration.entry_id)
     await hass.async_block_till_done()
-    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
-    await mock_integration.runtime_data.async_refresh()
-    await hass.async_block_till_done()
+    freezer.tick(INTERVAL_SLOW)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(MOTION_ENHANCE_ENTITY_ID)
     assert state is not None

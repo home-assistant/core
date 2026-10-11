@@ -4,6 +4,7 @@ import asyncio
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from operator import attrgetter
 from typing import Any, Self, cast, override
 
 from lifx import (
@@ -648,22 +649,12 @@ class LIFXComponentDescription[
     colors_fn: Callable[[StateT], list[HSBK]]
     partner_colors_fn: Callable[[StateT], list[HSBK]]
     stored_colors_fn: Callable[[StateT], list[HSBK] | None]
-    turn_on_fn: Callable[[DeviceT, list[HSBK] | None, float], Awaitable[None]]
-    turn_off_fn: Callable[[DeviceT, list[HSBK] | None, float], Awaitable[None]]
-
-
-async def _turn_uplight_on(
-    device: CeilingLight, colors: list[HSBK] | None, duration: float
-) -> None:
-    """Turn the single-zone uplight on."""
-    await device.turn_uplight_on(colors[0] if colors else None, duration)
-
-
-async def _turn_uplight_off(
-    device: CeilingLight, colors: list[HSBK] | None, duration: float
-) -> None:
-    """Turn the single-zone uplight off, remembering a color if given."""
-    await device.turn_uplight_off(colors[0] if colors else None, duration)
+    turn_on_fn: Callable[
+        [DeviceT], Callable[[list[HSBK] | None, float], Awaitable[None]]
+    ]
+    turn_off_fn: Callable[
+        [DeviceT], Callable[[list[HSBK] | None, float], Awaitable[None]]
+    ]
 
 
 CEILING_COMPONENTS: tuple[
@@ -678,8 +669,8 @@ CEILING_COMPONENTS: tuple[
         stored_colors_fn=lambda state: (
             None if state.stored_uplight_color is None else [state.stored_uplight_color]
         ),
-        turn_on_fn=_turn_uplight_on,
-        turn_off_fn=_turn_uplight_off,
+        turn_on_fn=attrgetter("turn_uplight_on"),
+        turn_off_fn=attrgetter("turn_uplight_off"),
     ),
     LIFXComponentDescription[CeilingLight, CeilingLightState](
         key="downlight",
@@ -688,12 +679,8 @@ CEILING_COMPONENTS: tuple[
         colors_fn=lambda state: state.downlight_colors,
         partner_colors_fn=lambda state: [state.uplight_color],
         stored_colors_fn=lambda state: state.stored_downlight_colors,
-        turn_on_fn=lambda device, colors, duration: device.turn_downlight_on(
-            colors, duration
-        ),
-        turn_off_fn=lambda device, colors, duration: device.turn_downlight_off(
-            colors, duration
-        ),
+        turn_on_fn=attrgetter("turn_downlight_on"),
+        turn_off_fn=attrgetter("turn_downlight_off"),
     ),
 )
 
@@ -707,12 +694,8 @@ MIRROR_COMPONENTS: tuple[
         colors_fn=lambda state: state.front_colors,
         partner_colors_fn=lambda state: state.back_colors,
         stored_colors_fn=lambda state: state.stored_front_colors,
-        turn_on_fn=lambda device, colors, duration: device.turn_front_on(
-            colors, duration
-        ),
-        turn_off_fn=lambda device, colors, duration: device.turn_front_off(
-            colors, duration
-        ),
+        turn_on_fn=attrgetter("turn_front_on"),
+        turn_off_fn=attrgetter("turn_front_off"),
     ),
     LIFXComponentDescription[MirrorLight, MirrorLightState](
         key="back",
@@ -721,12 +704,8 @@ MIRROR_COMPONENTS: tuple[
         colors_fn=lambda state: state.back_colors,
         partner_colors_fn=lambda state: state.front_colors,
         stored_colors_fn=lambda state: state.stored_back_colors,
-        turn_on_fn=lambda device, colors, duration: device.turn_back_on(
-            colors, duration
-        ),
-        turn_off_fn=lambda device, colors, duration: device.turn_back_off(
-            colors, duration
-        ),
+        turn_on_fn=attrgetter("turn_back_on"),
+        turn_off_fn=attrgetter("turn_back_off"),
     ),
 )
 
@@ -804,6 +783,15 @@ class LIFXComponentLight[
             self._restored_colors = LIFXComponentExtraData.from_dict(
                 extra.as_dict()
             ).colors
+
+    @callback
+    @override
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Opt in to in-place entity_id changes.
+
+        This can be removed in Home Assistant Core 2027.11.
+        """
+        super().async_entity_id_changed(old_entity_id)
 
     @property
     @override
@@ -914,9 +902,9 @@ class LIFXComponentLight[
             self.entity_description.turn_on_fn
             if power
             else self.entity_description.turn_off_fn
-        )
+        )(self.device)
         try:
-            await write(self.device, colors, duration)
+            await write(colors, duration)
         except LifxError as err:
             raise device_error(err) from err
         await self.coordinator.async_request_refresh()

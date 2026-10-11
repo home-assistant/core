@@ -349,6 +349,7 @@ async def test_new_vm_creates_entity(
     mock_proxmox_client: MagicMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that a VM appearing after initial load gets an entity created."""
     mock_proxmox_client._node_mock.qemu.get.return_value = []
@@ -363,10 +364,9 @@ async def test_new_vm_creates_entity(
         await async_load_json_array_fixture(hass, "nodes/qemu.json", DOMAIN)
     )
 
-    coordinator = mock_config_entry.runtime_data
-    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
-    await coordinator.async_refresh()
-    await hass.async_block_till_done()
+    freezer.tick(DEFAULT_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert (
         len(
@@ -383,6 +383,7 @@ async def test_new_container_creates_entity(
     mock_proxmox_client: MagicMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that a container appearing after initial load gets an entity created."""
     mock_proxmox_client._node_mock.lxc.get.return_value = []
@@ -397,10 +398,9 @@ async def test_new_container_creates_entity(
         await async_load_json_array_fixture(hass, "nodes/lxc.json", DOMAIN)
     )
 
-    coordinator = mock_config_entry.runtime_data
-    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
-    await coordinator.async_refresh()
-    await hass.async_block_till_done()
+    freezer.tick(DEFAULT_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert (
         len(
@@ -519,6 +519,7 @@ async def test_stale_devices_removed(
     mock_proxmox_client: MagicMock,
     mock_config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that devices are removed when their resource disappears."""
     await setup_integration(hass, mock_config_entry)
@@ -539,10 +540,9 @@ async def test_stale_devices_removed(
         if vm["vmid"] != 100
     ]
 
-    coordinator = mock_config_entry.runtime_data
-    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
-    await coordinator.async_refresh()
-    await hass.async_block_till_done()
+    freezer.tick(DEFAULT_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert (
         device_registry.async_get_device_by_identifier(

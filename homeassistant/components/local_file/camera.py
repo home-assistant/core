@@ -1,6 +1,5 @@
 """Camera that loads a picture from a local file."""
 
-import logging
 import mimetypes
 from typing import override
 
@@ -8,12 +7,11 @@ from homeassistant.components.camera import Camera
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_FILE_PATH, CONF_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import DOMAIN
 from .util import check_file_path_access
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -56,14 +54,12 @@ class LocalFile(Camera):
         try:
             with open(self._file_path, "rb") as file:
                 return file.read()
-        # pylint: disable-next=home-assistant-action-swallowed-exception
-        except FileNotFoundError:
-            _LOGGER.warning(
-                "Could not read camera %s image from file: %s",
-                self.name,
-                self._file_path,
-            )
-        return None
+        except FileNotFoundError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="file_not_found",
+                translation_placeholders={"file_path": self._file_path},
+            ) from err
 
     async def update_file_path(self, file_path: str) -> None:
         """Update the file_path."""

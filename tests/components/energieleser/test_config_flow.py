@@ -123,6 +123,14 @@ async def test_user_flow_client_errors(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": expected_error}
 
+    mock_energieleser_client.get_device.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: "192.168.1.100"},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 @pytest.mark.usefixtures("mock_setup_entry", "mock_energieleser_client")
 async def test_user_flow_duplicate(
@@ -166,6 +174,7 @@ async def test_zeroconf_flow(hass: HomeAssistant) -> None:
     assert result["title"] == "stromleser.one"
     assert result["data"][CONF_DEVICE_ID] == STROMLESER_DEVICE_ID
     assert result["data"][CONF_SW_VERSION] == STROMLESER_SW_VERSION
+    assert result["result"].unique_id == STROMLESER_DEVICE_ID
 
 
 @pytest.mark.usefixtures("mock_setup_entry")

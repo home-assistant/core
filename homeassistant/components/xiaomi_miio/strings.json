@@ -314,6 +314,14 @@
       }
     }
   },
+  "exceptions": {
+    "invalid_fan_speed": {
+      "message": "Fan speed {fan_speed} is not recognized. Valid speeds are: {fan_speeds}."
+    },
+    "unsupported_model": {
+      "message": "Unsupported Xiaomi Miio device model: {model}"
+    }
+  },
   "options": {
     "error": {
       "cloud_credentials_incomplete": "[%key:component::xiaomi_miio::config::error::cloud_credentials_incomplete%]"

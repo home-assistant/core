@@ -10,6 +10,7 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.axle_energy.const import UPDATE_INTERVAL
 from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
 from homeassistant.const import (
     CONF_API_KEY,
@@ -109,14 +110,14 @@ async def test_boundaries(
     ("before", "boundary", "initial", "expected"),
     [
         pytest.param(
-            "2026-09-11T16:59:00Z",
+            "2026-09-11T16:49:00Z",
             "2026-09-11T17:00:00Z",
             STATE_OFF,
             STATE_ON,
             id="start",
         ),
         pytest.param(
-            "2026-09-11T17:59:00Z",
+            "2026-09-11T17:49:00Z",
             "2026-09-11T18:00:00Z",
             STATE_ON,
             STATE_OFF,
@@ -141,15 +142,19 @@ async def test_unchanged_refresh_at_boundary(
     freezer.move_to(before)
     await setup(hass, mock_config_entry)
     assert hass.states.get(ENTITY_ID).state == initial
-    mock_client.get_event.return_value = replace(mock_event)
-    mock_client.get_event.reset_mock()
 
-    freezer.move_to(boundary)
-    freezer.tick(timedelta(seconds=delay))
-    # pylint: disable-next=home-assistant-tests-coordinator-async-refresh
-    await mock_config_entry.runtime_data.async_refresh()
+    async def get_event() -> GridEvent:
+        freezer.move_to(boundary)
+        freezer.tick(timedelta(seconds=delay))
+        return replace(mock_event)
+
+    mock_client.get_event.side_effect = get_event
+    mock_client.get_event.reset_mock()
+    freezer.tick(UPDATE_INTERVAL)
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert hass.states.get(ENTITY_ID).state == expected
     mock_client.get_event.assert_awaited_once_with()

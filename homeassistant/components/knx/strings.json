@@ -250,6 +250,7 @@
         },
         "description": "You can use the hotkey `s` to spawn this dialog from anywhere in the KNX config panel.",
         "read_button": "Read",
+        "read_response": "Response from {source} for {address}: {value}",
         "response": {
           "description": "Send as GroupValueResponse telegram.",
           "label": "Response"
@@ -1577,6 +1578,12 @@
     "service_exposure_remove_not_found": {
       "message": "Could not find exposure for `{group_address}` to remove."
     },
+    "service_read_no_response": {
+      "message": "No response received for `{address}`."
+    },
+    "service_read_response_single_address": {
+      "message": "Response data is only available when reading a single group address."
+    },
     "service_send_invalid_payload": {
       "message": "Invalid payload for `knx.send` service. {error}"
     },
@@ -1611,9 +1618,17 @@
       "description": "The stored configuration of the following KNX {platform} entities is invalid, so they were not set up:\n\n{entities}\n\nCorrect or delete them. Check the logs for details.",
       "title": "Invalid KNX entity configuration"
     },
+    "expose_validation_error": {
+      "description": "The stored expose configuration of the following entities is invalid, so it was not set up:\n\n{entities}\n\nCorrect or delete it in the KNX panel. Check the logs for details.",
+      "title": "Invalid KNX expose configuration"
+    },
     "telegram_storage_error": {
       "description": "The configured KNX telegram storage backend failed to initialize. As a result, KNX telegrams are currently not being stored. Check the logs for details on the error and ensure your database is accessible.",
       "title": "KNX telegram storage error"
+    },
+    "time_server_validation_error": {
+      "description": "The stored KNX time server configuration is invalid, so the time server was not started. Correct it in the KNX panel.",
+      "title": "Invalid KNX time server configuration"
     }
   },
   "options": {
@@ -1732,7 +1747,7 @@
       "name": "Expose to KNX bus"
     },
     "read": {
-      "description": "Sends GroupValueRead requests to the KNX bus. Response can be used from `knx_event` and will be processed in KNX entities.",
+      "description": "Sends GroupValueRead requests to the KNX bus. Response can be used from `knx_event` and will be processed in KNX entities. When response data is requested, waits for the answer to a single group address and returns it.",
       "fields": {
         "address": {
           "description": "Group address(es) to send read request to. Lists will read multiple group addresses.",

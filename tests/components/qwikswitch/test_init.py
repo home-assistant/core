@@ -1,6 +1,5 @@
 """Test qwikswitch sensors."""
 
-import asyncio
 from typing import Any
 from unittest.mock import Mock
 
@@ -78,7 +77,6 @@ async def test_binary_sensor_device(
     listen_mock.queue_response(
         json={"id": "@a00001", "cmd": "STATUS.ACK", "data": "4e0e1601", "rssi": "61%"}
     )
-    await asyncio.sleep(0.01)
     await hass.async_block_till_done()
     state_obj = hass.states.get("binary_sensor.s1")
     assert state_obj.state == "on"
@@ -87,7 +85,6 @@ async def test_binary_sensor_device(
     listen_mock.queue_response(
         json={"id": "@a00001", "cmd": "STATUS.ACK", "data": "4e0e1701", "rssi": "61%"},
     )
-    await asyncio.sleep(0.01)
     await hass.async_block_till_done()
     state_obj = hass.states.get("binary_sensor.s1")
     assert state_obj.state == "off"
@@ -123,7 +120,6 @@ async def test_sensor_device(
     listen_mock.queue_response(
         json={"id": "@a00001", "name": "ss1", "type": "rel", "val": "4733800001a00000"},
     )
-    await asyncio.sleep(0.01)
     await hass.async_block_till_done()
     state_obj = hass.states.get("sensor.ss1")
     assert state_obj.state == "416"
@@ -157,7 +153,7 @@ async def test_switch_device(
     await hass.services.async_call(
         "switch", "turn_on", {"entity_id": "switch.switch_1"}, blocking=True
     )
-    await asyncio.sleep(0.01)
+    await hass.async_block_till_done()
     assert (
         "GET",
         URL("http://127.0.0.1:2020/@a00001=100"),
@@ -222,7 +218,7 @@ async def test_light_device(
     await hass.services.async_call(
         "light", "turn_off", {"entity_id": "light.dim_3"}, blocking=True
     )
-    await asyncio.sleep(0.01)
+    await hass.async_block_till_done()
     assert (
         "GET",
         URL("http://127.0.0.1:2020/@a00003=0"),
@@ -235,7 +231,6 @@ async def test_light_device(
     # change brightness in network and check that hass updates
     qs_devices[2]["val"] = "280c55"  # half dimmed
     listen_mock.queue_response(json=EMPTY_PACKET)
-    await asyncio.sleep(0.01)
     await hass.async_block_till_done()
     state_obj = hass.states.get("light.dim_3")
     assert state_obj.state == "on"
@@ -244,7 +239,6 @@ async def test_light_device(
     # turn off in the network and see that it is off in hass as well
     qs_devices[2]["val"] = "280c78"  # off
     listen_mock.queue_response(json=EMPTY_PACKET)
-    await asyncio.sleep(0.01)
     await hass.async_block_till_done()
     state_obj = hass.states.get("light.dim_3")
     assert state_obj.state == "off"
@@ -290,7 +284,6 @@ async def test_button(
     listen_mock.queue_response(
         json={"id": "@a00002", "cmd": "TOGGLE"},
     )
-    await asyncio.sleep(0.01)
     await hass.async_block_till_done()
     button_pressed.assert_called_once()
 
@@ -332,7 +325,6 @@ async def test_single_invalid_sensor(
     assert await async_setup_component(hass, DOMAIN, config)
     await hass.async_start()
     await hass.async_block_till_done()
-    await asyncio.sleep(0.01)
     assert hass.states.get("sensor.ss1")
     assert not hass.states.get("sensor.ss2")
     assert hass.states.get("sensor.ss3")
@@ -366,8 +358,6 @@ async def test_non_binary_sensor_with_binary_args(
     assert await async_setup_component(hass, DOMAIN, config)
     await hass.async_start()
     await hass.async_block_till_done()
-    await asyncio.sleep(0.01)
-    await hass.async_block_till_done()
     assert hass.states.get("sensor.ss1")
     assert "invert should only be used for binary_sensors" in caplog.text
     listen_mock.stop()
@@ -387,8 +377,6 @@ async def test_non_relay_switch(
     aioclient_mock.get("http://127.0.0.1:2020/&listen", side_effect=listen_mock)
     assert await async_setup_component(hass, DOMAIN, config)
     await hass.async_start()
-    await hass.async_block_till_done()
-    await asyncio.sleep(0.01)
     await hass.async_block_till_done()
     assert not hass.states.get("switch.dim_3")
     assert "You specified a switch that is not a relay @a00003" in caplog.text
@@ -410,8 +398,6 @@ async def test_unknown_device(
     aioclient_mock.get("http://127.0.0.1:2020/&listen", side_effect=listen_mock)
     assert await async_setup_component(hass, DOMAIN, config)
     await hass.async_start()
-    await hass.async_block_till_done()
-    await asyncio.sleep(0.01)
     await hass.async_block_till_done()
     assert hass.states.get("light.switch_1")
     assert not hass.states.get("light.light_2")

@@ -22,7 +22,7 @@ from homeassistant.components.mqtt.const import (
     SUPPORTED_COMPONENTS,
 )
 from homeassistant.components.mqtt.entity import MQTT_ATTRIBUTES_BLOCKED
-from homeassistant.components.mqtt.models import PublishPayloadType
+from homeassistant.components.mqtt.models import DATA_MQTT, PublishPayloadType
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
@@ -2126,17 +2126,17 @@ async def help_test_entity_id_update_subscriptions(
     config: ConfigType,
     topics: list[str] | None = None,
 ) -> None:
-    """Test MQTT subscriptions are managed when entity_id is updated."""
+    """Test MQTT subscriptions are kept when entity_id is updated."""
     # Add unique_id to config
     config = copy.deepcopy(config)
     config[DOMAIN][domain]["unique_id"] = "TOTALLY_UNIQUE"
+    config[DOMAIN][domain]["availability_topic"] = "avty-topic"
 
     if topics is None:
         # Add default topics to config
-        config[DOMAIN][domain]["availability_topic"] = "avty-topic"
         config[DOMAIN][domain]["state_topic"] = "test-topic"
         topics = ["avty-topic", "test-topic"]
-    assert len(topics) > 0
+    assert "avty-topic" in topics
     entity_registry = er.async_get(hass)
 
     with patch("homeassistant.config.load_yaml_config_file", return_value=config):
@@ -2163,15 +2163,21 @@ async def help_test_entity_id_update_subscriptions(
     )
     await hass.async_block_till_done()
 
-    state = hass.states.get(f"{domain}.test")
-    assert state is None
+    # The entity is not re-added, so its subscriptions are kept
+    mqtt_mock.async_subscribe.assert_not_called()
+    assert hass.states.get(f"{domain}.test") is None
+    debug_info_entities = hass.data[DATA_MQTT].debug_info_entities
+    assert f"{domain}.test" not in debug_info_entities
+    assert debug_info_entities[f"{domain}.milk"]["subscriptions"].keys() >= set(topics)
 
+    async_fire_mqtt_message(hass, "avty-topic", "online")
     state = hass.states.get(f"{domain}.milk")
-    assert state is not None
-    for topic in topics:
-        mqtt_mock.async_subscribe.assert_any_call(
-            topic, ANY, ANY, ANY, HassJobType.Callback
-        )
+    assert state and state.state != STATE_UNAVAILABLE
+
+    async_fire_mqtt_message(hass, "avty-topic", "offline")
+    state = hass.states.get(f"{domain}.milk")
+    assert state and state.state == STATE_UNAVAILABLE
+    assert hass.states.get(f"{domain}.test") is None
 
 
 async def help_test_entity_id_update_discovery_update(
@@ -2215,6 +2221,12 @@ async def help_test_entity_id_update_discovery_update(
     async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", data)
     await hass.async_block_till_done()
     assert len(hass.states.async_entity_ids(domain)) == 1
+    # The debug info of the replaced subscription is removed from the renamed entity
+    subscriptions = hass.data[DATA_MQTT].debug_info_entities[f"{domain}.milk"][
+        "subscriptions"
+    ]
+    assert topic not in subscriptions
+    assert f"{topic}_2" in subscriptions
 
     async_fire_mqtt_message(hass, f"{topic}_2", "online")
     state = hass.states.get(f"{domain}.milk")
