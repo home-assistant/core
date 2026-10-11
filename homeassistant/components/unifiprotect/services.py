@@ -10,7 +10,7 @@ from pydantic import ValidationError
 from uiprotect.api import ProtectApiClient
 from uiprotect.data import Camera, Chime
 from uiprotect.data.public_devices import PublicCamera
-from uiprotect.exceptions import ClientError
+from uiprotect.exceptions import ClientError, GlobalAlarmManagerError, NotAuthorized
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.const import ATTR_DEVICE_ID, ATTR_NAME, Platform
@@ -56,8 +56,10 @@ SERVICE_REMOVE_PRIVACY_ZONE = "remove_privacy_zone"
 SERVICE_SET_CHIME_PAIRED = "set_chime_paired_doorbells"
 SERVICE_GET_USER_KEYRING_INFO = "get_user_keyring_info"
 SERVICE_PTZ_GOTO_PRESET = "ptz_goto_preset"
+SERVICE_TRIGGER_ALARM_WEBHOOK = "trigger_alarm_webhook"
 
 ATTR_PRESET = "preset"
+ATTR_TRIGGER_ID = "trigger_id"
 
 ALL_GLOBAL_SERVICES = [
     SERVICE_ADD_DOORBELL_TEXT,
@@ -66,6 +68,7 @@ ALL_GLOBAL_SERVICES = [
     SERVICE_REMOVE_PRIVACY_ZONE,
     SERVICE_GET_USER_KEYRING_INFO,
     SERVICE_PTZ_GOTO_PRESET,
+    SERVICE_TRIGGER_ALARM_WEBHOOK,
 ]
 
 DOORBELL_TEXT_SCHEMA = probatio.Schema(
@@ -102,21 +105,34 @@ PTZ_GOTO_PRESET_SCHEMA = probatio.Schema(
     },
 )
 
+TRIGGER_ALARM_WEBHOOK_SCHEMA = probatio.Schema(
+    {
+        probatio.Required(ATTR_DEVICE_ID): str,
+        probatio.Required(ATTR_TRIGGER_ID): cv.string,
+    },
+)
+
 
 @callback
-def _async_get_ufp_instance(hass: HomeAssistant, device_id: str) -> ProtectApiClient:
+def _async_get_ufp_instance(
+    hass: HomeAssistant, device_id: str, *, allow_public_only: bool = False
+) -> ProtectApiClient:
     device_registry = dr.async_get(hass)
     device_entry = device_registry.async_get(device_id)
 
     if isinstance(device_entry, dr.ChildDeviceEntry):
-        return _async_get_ufp_instance(hass, device_entry.parent_device_id)
+        return _async_get_ufp_instance(
+            hass, device_entry.parent_device_id, allow_public_only=allow_public_only
+        )
 
     if device_entry is not None and device_entry.via_device_id is not None:
-        return _async_get_ufp_instance(hass, device_entry.via_device_id)
+        return _async_get_ufp_instance(
+            hass, device_entry.via_device_id, allow_public_only=allow_public_only
+        )
 
     _, config_entry = service.async_get_device_and_config_entry(hass, DOMAIN, device_id)
     ufp_instance = cast(UFPConfigEntry, config_entry).runtime_data.api
-    if ufp_instance.is_public_only:
+    if ufp_instance.is_public_only and not allow_public_only:
         # Actions read/write through the private bootstrap, which an
         # API-key-only entry never initializes.
         raise HomeAssistantError(
@@ -362,6 +378,33 @@ async def get_user_keyring_info(call: ServiceCall) -> ServiceResponse:
     return response
 
 
+async def trigger_alarm_webhook(call: ServiceCall) -> None:
+    """Fire an Alarm Manager webhook trigger."""
+    # The webhook goes through the public Integration API, so it also works
+    # for API-key-only entries.
+    instance = _async_get_ufp_instance(
+        call.hass, call.data[ATTR_DEVICE_ID], allow_public_only=True
+    )
+    try:
+        await instance.send_alarm_webhook_public(call.data[ATTR_TRIGGER_ID])
+    except GlobalAlarmManagerError as err:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="global_alarm_manager",
+        ) from err
+    except NotAuthorized as err:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="not_authorized",
+        ) from err
+    except ClientError as err:
+        _LOGGER.debug("Error calling UniFi Protect alarm webhook: %s", err)
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="service_error",
+        ) from err
+
+
 SERVICES = [
     (
         SERVICE_ADD_DOORBELL_TEXT,
@@ -397,6 +440,12 @@ SERVICES = [
         SERVICE_PTZ_GOTO_PRESET,
         ptz_goto_preset,
         PTZ_GOTO_PRESET_SCHEMA,
+        SupportsResponse.NONE,
+    ),
+    (
+        SERVICE_TRIGGER_ALARM_WEBHOOK,
+        trigger_alarm_webhook,
+        TRIGGER_ALARM_WEBHOOK_SCHEMA,
         SupportsResponse.NONE,
     ),
 ]

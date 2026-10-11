@@ -7,7 +7,12 @@ from unittest.mock import AsyncMock, Mock
 import pytest
 from uiprotect.data import Camera, Chime, Light, ModelType, PTZPreset
 from uiprotect.data.devices import CameraZone
-from uiprotect.exceptions import BadRequest, ClientError
+from uiprotect.exceptions import (
+    BadRequest,
+    ClientError,
+    GlobalAlarmManagerError,
+    NotAuthorized,
+)
 
 from homeassistant.components.unifiprotect.const import (
     ATTR_MESSAGE,
@@ -21,12 +26,14 @@ from homeassistant.components.unifiprotect.const import (
 )
 from homeassistant.components.unifiprotect.services import (
     ATTR_PRESET,
+    ATTR_TRIGGER_ID,
     SERVICE_ADD_DOORBELL_TEXT,
     SERVICE_GET_USER_KEYRING_INFO,
     SERVICE_PTZ_GOTO_PRESET,
     SERVICE_REMOVE_DOORBELL_TEXT,
     SERVICE_REMOVE_PRIVACY_ZONE,
     SERVICE_SET_CHIME_PAIRED,
+    SERVICE_TRIGGER_ALARM_WEBHOOK,
 )
 from homeassistant.config_entries import ConfigEntryDisabler
 from homeassistant.const import ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_NAME
@@ -618,3 +625,89 @@ async def test_public_only_action_rejected(
             {ATTR_DEVICE_ID: device.id, ATTR_MESSAGE: "Test Message"},
             blocking=True,
         )
+
+
+async def test_trigger_alarm_webhook(
+    hass: HomeAssistant, device: dr.DeviceEntry, ufp: MockUFPFixture
+) -> None:
+    """Test trigger_alarm_webhook service."""
+
+    ufp.api.send_alarm_webhook_public = AsyncMock()
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_TRIGGER_ALARM_WEBHOOK,
+        {ATTR_DEVICE_ID: device.id, ATTR_TRIGGER_ID: "test-trigger"},
+        blocking=True,
+    )
+    ufp.api.send_alarm_webhook_public.assert_called_once_with("test-trigger")
+
+
+async def test_trigger_alarm_webhook_subdevice(
+    hass: HomeAssistant, subdevice: dr.DeviceEntry, ufp: MockUFPFixture
+) -> None:
+    """Test trigger_alarm_webhook service resolves the NVR from a subdevice."""
+
+    ufp.api.send_alarm_webhook_public = AsyncMock()
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_TRIGGER_ALARM_WEBHOOK,
+        {ATTR_DEVICE_ID: subdevice.id, ATTR_TRIGGER_ID: "test-trigger"},
+        blocking=True,
+    )
+    ufp.api.send_alarm_webhook_public.assert_called_once_with("test-trigger")
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "translation_key"),
+    [
+        (GlobalAlarmManagerError("global"), "global_alarm_manager"),
+        (NotAuthorized("forbidden"), "not_authorized"),
+        (BadRequest("unknown trigger"), "service_error"),
+    ],
+)
+async def test_trigger_alarm_webhook_error(
+    hass: HomeAssistant,
+    device: dr.DeviceEntry,
+    ufp: MockUFPFixture,
+    side_effect: Exception,
+    translation_key: str,
+) -> None:
+    """Test trigger_alarm_webhook service maps Protect errors."""
+
+    ufp.api.send_alarm_webhook_public = AsyncMock(side_effect=side_effect)
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_TRIGGER_ALARM_WEBHOOK,
+            {ATTR_DEVICE_ID: device.id, ATTR_TRIGGER_ID: "test-trigger"},
+            blocking=True,
+        )
+    assert exc_info.value.translation_key == translation_key
+
+
+async def test_trigger_alarm_webhook_public_only(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    ufp_public_only: MockUFPFixture,
+    setup_public_only: Callable[[], Coroutine[Any, Any, None]],
+) -> None:
+    """Test trigger_alarm_webhook works on an API-key-only entry."""
+    await setup_public_only()
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, UNIFI_MAC), ufp_public_only.entry.entry_id
+    )
+    assert device is not None
+    ufp_public_only.api.send_alarm_webhook_public = AsyncMock()
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_TRIGGER_ALARM_WEBHOOK,
+        {ATTR_DEVICE_ID: device.id, ATTR_TRIGGER_ID: "test-trigger"},
+        blocking=True,
+    )
+    ufp_public_only.api.send_alarm_webhook_public.assert_called_once_with(
+        "test-trigger"
+    )
