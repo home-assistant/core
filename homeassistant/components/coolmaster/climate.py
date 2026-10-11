@@ -17,7 +17,7 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import CONF_SUPPORTED_MODES, DOMAIN
@@ -92,7 +92,6 @@ class CoolmasterClimate(CoolmasterEntity, ClimateEntity):
         super().__init__(coordinator, unit_id)
         self._attr_hvac_modes = supported_modes
         self._attr_unique_id = unit_id
-        self._unsupported_fan_modes: set[str] = set()
 
     @property
     @override
@@ -163,7 +162,7 @@ class CoolmasterClimate(CoolmasterEntity, ClimateEntity):
     @override
     def fan_modes(self) -> list[str]:
         """Return the list of available fan modes."""
-        return [mode for mode in FAN_MODES if mode not in self._unsupported_fan_modes]
+        return FAN_MODES
 
     @property
     @override
@@ -189,24 +188,7 @@ class CoolmasterClimate(CoolmasterEntity, ClimateEntity):
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new fan mode."""
         _LOGGER.debug("Setting fan mode of %s to %s", self.unique_id, fan_mode)
-        fan_speed = HA_FAN_TO_CM[fan_mode]
-        self._unit = await self._unit.set_fan_speed(fan_speed)
-
-        if self._unit.fan_speed.lower() != fan_speed:
-            # A speed the indoor unit does not have "will have no effect" per the
-            # protocol reference, so the refreshed unit still reports the previous
-            # speed. Stop offering it on this unit.
-            self._unsupported_fan_modes.add(fan_mode)
-            self.async_write_ha_state()
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="fan_mode_unsupported",
-                translation_placeholders={
-                    "fan_mode": fan_mode,
-                    "unit_id": self._unit_id,
-                },
-            )
-
+        self._unit = await self._unit.set_fan_speed(HA_FAN_TO_CM[fan_mode])
         self.async_write_ha_state()
 
     @override

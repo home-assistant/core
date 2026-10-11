@@ -105,10 +105,5 @@
         "name": "Error code"
       }
     }
-  },
-  "exceptions": {
-    "fan_mode_unsupported": {
-      "message": "Fan speed {fan_mode} is not supported by unit {unit_id}"
-    }
   }
 }
