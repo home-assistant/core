@@ -664,6 +664,39 @@ async def test_relay_readopted_with_new_id(
     readopted.activate_output.assert_awaited_once_with(OUTPUT_ID, state="off")
 
 
+async def test_relay_readopted_during_websocket_outage(
+    hass: HomeAssistant,
+    ufp_with_relay: tuple[MockUFPFixture, Mock],
+) -> None:
+    """A relay re-adopted while the devices websocket was down is found by mac."""
+    ufp, relay = ufp_with_relay
+    await init_entry(hass, ufp, [])
+
+    readopted = _make_relay()
+    readopted.id = "relay-id-2"
+    _set_channel_state(readopted, _OUTPUT, RelayOutputState.ON)
+
+    async def resync_public_bootstrap() -> Mock:
+        ufp.api.public_bootstrap.relays = {readopted.id: readopted}
+        return ufp.api.public_bootstrap
+
+    ufp.api.update_public.side_effect = resync_public_bootstrap
+    assert ufp.devices_ws_state_subscription is not None
+    ufp.devices_ws_state_subscription(WebsocketState.DISCONNECTED)
+    ufp.devices_ws_state_subscription(WebsocketState.CONNECTED)
+    await hass.async_block_till_done()
+
+    assert _state(hass, SWITCH_ENTITY_ID) == STATE_ON
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: SWITCH_ENTITY_ID},
+        blocking=True,
+    )
+    readopted.activate_output.assert_awaited_once_with(OUTPUT_ID, state="off")
+    relay.activate_output.assert_not_awaited()
+
+
 async def test_relay_channels_share_relay_device_linked_to_nvr(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,

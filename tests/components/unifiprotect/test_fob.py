@@ -1,5 +1,6 @@
 """Tests for the UniFi Protect key fob (Public API) entities."""
 
+from collections.abc import Callable
 from datetime import datetime
 from unittest.mock import AsyncMock, Mock
 
@@ -640,26 +641,51 @@ async def test_fob_unavailable_when_removed_from_bootstrap(
     assert state.state == STATE_UNAVAILABLE
 
 
-async def test_fob_readopted_with_new_id_fires_button_events(
-    hass: HomeAssistant,
-    ufp_with_fob: tuple[MockUFPFixture, Mock],
-) -> None:
-    """Button presses follow a fob re-adopted under a new id."""
-    ufp, fob = ufp_with_fob
-    await init_entry(hass, ufp, [])
+def _readopt_with_add_frame(ufp: MockUFPFixture, fob: Mock, readopted: Mock) -> None:
+    """Delete the fob, then deliver the add frame of the re-adopted one."""
     del ufp.api.public_bootstrap.fobs[fob.id]
     mock_msg = Mock()
     mock_msg.old_obj = fob
     mock_msg.new_obj = None
     assert ufp.devices_ws_subscription is not None
     ufp.devices_ws_subscription(mock_msg)
-
-    readopted = _make_fob()
-    readopted.id = "fob-id-2"
     ufp.api.public_bootstrap.fobs[readopted.id] = readopted
     msg = public_device_ws_message(readopted)
     msg.action = WSAction.ADD
     ufp.devices_ws_subscription(msg)
+
+
+def _readopt_during_outage(ufp: MockUFPFixture, fob: Mock, readopted: Mock) -> None:
+    """Re-adopt the fob while the devices websocket is down."""
+
+    async def resync_public_bootstrap() -> Mock:
+        ufp.api.public_bootstrap.fobs = {readopted.id: readopted}
+        return ufp.api.public_bootstrap
+
+    ufp.api.update_public.side_effect = resync_public_bootstrap
+    assert ufp.devices_ws_state_subscription is not None
+    ufp.devices_ws_state_subscription(WebsocketState.DISCONNECTED)
+    ufp.devices_ws_state_subscription(WebsocketState.CONNECTED)
+
+
+@pytest.mark.parametrize(
+    "readopt",
+    [
+        pytest.param(_readopt_with_add_frame, id="add_frame"),
+        pytest.param(_readopt_during_outage, id="websocket_outage"),
+    ],
+)
+async def test_fob_readopted_with_new_id_fires_button_events(
+    hass: HomeAssistant,
+    ufp_with_fob: tuple[MockUFPFixture, Mock],
+    readopt: Callable[[MockUFPFixture, Mock, Mock], None],
+) -> None:
+    """Button presses follow a fob re-adopted under a new id."""
+    ufp, fob = ufp_with_fob
+    await init_entry(hass, ufp, [])
+    readopted = _make_fob()
+    readopted.id = "fob-id-2"
+    readopt(ufp, fob, readopted)
     await hass.async_block_till_done()
 
     events: list[HAEvent] = []

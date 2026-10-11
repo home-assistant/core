@@ -465,11 +465,11 @@ class BaseProtectEntity(Entity):
         unavailable), and after a reconnect a value that changed during the
         outage is picked up.
         """
+        if obj is None:
+            obj = self.data.async_get_public_device(self.device)
         if obj is not None and not self._ufp_has_private:
             self._async_set_device(obj)
-        self._ufp_public_obj = (
-            obj if obj is not None else self.data.async_get_public_device(self.device)
-        )
+        self._ufp_public_obj = obj
         self._async_updated_event(self.device)
 
     @callback
