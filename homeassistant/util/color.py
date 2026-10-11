@@ -539,7 +539,9 @@ def color_temperature_to_rgbww(
     """
     max_mireds = color_temperature_kelvin_to_mired(min_kelvin)
     min_mireds = color_temperature_kelvin_to_mired(max_kelvin)
-    temperature = color_temperature_kelvin_to_mired(temperature)
+    temperature = color_temperature_kelvin_to_mired(
+        min(max(temperature, min_kelvin), max_kelvin)
+    )
     mired_range = max_mireds - min_mireds
     cold = ((max_mireds - temperature) / mired_range) * brightness
     warm = brightness - cold

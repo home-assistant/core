@@ -242,7 +242,7 @@ def process_turn_on_params(  # noqa: C901
             and ColorMode.RGBWW in supported_color_modes
         ):
             color_temp = params.pop(ATTR_COLOR_TEMP_KELVIN)
-            brightness = cast(int, params.get(ATTR_BRIGHTNESS, light.brightness))
+            brightness = cast(int, params.get(ATTR_BRIGHTNESS, light.brightness or 255))
             params[ATTR_RGBWW_COLOR] = color_util.color_temperature_to_rgbww(
                 color_temp,
                 brightness,
