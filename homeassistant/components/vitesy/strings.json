@@ -52,9 +52,9 @@
       "fan_speed": {
         "name": "Fan speed",
         "state": {
-          "high": "High",
-          "low": "Low",
-          "mid": "Medium"
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "mid": "[%key:common::state::medium%]"
         }
       },
       "filter_change_due": {
