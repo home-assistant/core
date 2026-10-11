@@ -31,7 +31,7 @@ from homeassistant.helpers.selector import SelectSelector
 
 from . import mock_entry
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, get_schema_suggested_value
 
 
 async def test_user_flow_success(hass: HomeAssistant, mock_setup_entry: Mock) -> None:
@@ -1103,6 +1103,41 @@ async def test_reconfigure_flow_aborts_on_duplicate_device(
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_flow_suggests_credentials(hass: HomeAssistant) -> None:
+    """Test that reconfiguring prefills everything but the keys."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="192.168.1.1 (other-context)",
+        data={
+            "host": "192.168.1.1",
+            CONF_PORT: 161,
+            "version": "3",
+            "username": "user",
+            "auth_key": "auth_password",
+            "auth_protocol": "hmac-sha",
+            "priv_key": "priv_password",
+            "priv_protocol": "aes-cfb-128",
+            "context_name": "other-context",
+        },
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"host": "192.168.1.1", CONF_PORT: 161, "version": "3"}
+    )
+    assert result["step_id"] == "v3"
+
+    data_schema = result["data_schema"].schema
+    assert get_schema_suggested_value(data_schema, "username") == "user"
+    assert get_schema_suggested_value(data_schema, "auth_protocol") == "hmac-sha"
+    assert get_schema_suggested_value(data_schema, "priv_protocol") == "aes-cfb-128"
+    assert get_schema_suggested_value(data_schema, "context_name") == "other-context"
+    assert get_schema_suggested_value(data_schema, "auth_key") is None
+    assert get_schema_suggested_value(data_schema, "priv_key") is None
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reauth_flow_updates_credentials(hass: HomeAssistant) -> None:
     """Test that a v3 entry can be reauthenticated with new keys."""
     entry = MockConfigEntry(
@@ -1122,6 +1157,9 @@ async def test_reauth_flow_updates_credentials(hass: HomeAssistant) -> None:
     result = await entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "v3"
+    data_schema = result["data_schema"].schema
+    assert get_schema_suggested_value(data_schema, "username") == "user"
+    assert get_schema_suggested_value(data_schema, "auth_key") is None
 
     with patch(
         "homeassistant.components.snmp.config_flow.get_cmd",

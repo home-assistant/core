@@ -200,6 +200,19 @@ def _entry_title(data: dict[str, Any]) -> str:
     return data[CONF_HOST]
 
 
+def _suggested_credentials(data: Mapping[str, Any]) -> dict[str, Any]:
+    """Return the credentials which may be shown in a form.
+
+    The keys and the community string are never sent back to the frontend, so
+    editing an entry only requires retyping those.
+    """
+    return {
+        key: value
+        for key, value in data.items()
+        if key not in (CONF_AUTH_KEY, CONF_PRIV_KEY, CONF_COMMUNITY)
+    }
+
+
 class SnmpConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for an SNMP device."""
 
@@ -289,22 +302,19 @@ class SnmpConfigFlow(ConfigFlow, domain=DOMAIN):
                 if result := await self._async_finish(data, errors):
                     return result
 
-        # Credentials are never sent back to the frontend on an error
-        suggested_values = (
-            {
-                key: value
-                for key, value in user_input.items()
-                if key not in (CONF_AUTH_KEY, CONF_PRIV_KEY, CONF_COMMUNITY)
-            }
-            if user_input
-            else None
-        )
+        suggestions: Mapping[str, Any]
+        if user_input is not None:
+            suggestions = user_input
+        elif self.source == SOURCE_RECONFIGURE:
+            suggestions = self._get_reconfigure_entry().data
+        else:
+            suggestions = self._user_data
 
         return self.async_show_form(
             step_id="v3" if is_v3 else "v1_v2c",
             data_schema=self.add_suggested_values_to_schema(
                 STEP_V3_DATA_SCHEMA if is_v3 else STEP_V1_V2C_DATA_SCHEMA,
-                suggested_values,
+                _suggested_credentials(suggestions) or None,
             ),
             errors=errors,
         )
