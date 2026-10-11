@@ -24,5 +24,13 @@
         }
       }
     }
+  },
+  "exceptions": {
+    "authentication_failed": {
+      "message": "Authentication failed connecting to {host}"
+    },
+    "cannot_connect": {
+      "message": "Error connecting to {host}"
+    }
   }
 }

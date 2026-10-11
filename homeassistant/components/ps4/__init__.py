@@ -17,7 +17,7 @@ from homeassistant.components.media_player import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_LOCKED, CONF_REGION, CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ConfigEntryError, HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.json import save_json
@@ -132,7 +132,10 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         message=msg,
         notification_id="config_entry_migration",
     )
-    return False
+    raise ConfigEntryError(
+        translation_domain=DOMAIN,
+        translation_key="region_migration_failed",
+    )
 
 
 def format_unique_id(creds, mac_address):

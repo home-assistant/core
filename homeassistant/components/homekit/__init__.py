@@ -34,12 +34,10 @@ from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.components.humidifier import DOMAIN as HUMIDIFIER_DOMAIN
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_BATTERY_CHARGING,
     ATTR_BATTERY_LEVEL,
-    ATTR_DEVICE_ID,
-    ATTR_ENTITY_ID,
     ATTR_HW_VERSION,
     ATTR_MANUFACTURER,
     ATTR_MODEL,
@@ -50,16 +48,9 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_TYPE,
     EVENT_HOMEASSISTANT_STOP,
-    SERVICE_RELOAD,
 )
-from homeassistant.core import (
-    CALLBACK_TYPE,
-    HomeAssistant,
-    ServiceCall,
-    State,
-    callback,
-)
-from homeassistant.exceptions import HomeAssistantError, Unauthorized
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, State, callback
+from homeassistant.exceptions import Unauthorized
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -72,16 +63,9 @@ from homeassistant.helpers.entityfilter import (
     FILTER_SCHEMA,
     EntityFilter,
 )
-from homeassistant.helpers.reload import async_integration_yaml_config
-from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.start import async_at_started
-from homeassistant.helpers.target import (
-    TargetSelection,
-    async_extract_referenced_entity_ids,
-)
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import IntegrationNotFound, async_get_integration
-from homeassistant.util.async_ import create_eager_task
 
 from . import (  # noqa: F401
     type_air_purifiers,
@@ -113,7 +97,6 @@ from .const import (
     BRIDGE_SERIAL_NUMBER,
     CONF_ADVERTISE_IP,
     CONF_ENTITY_CONFIG,
-    CONF_ENTRY_INDEX,
     CONF_EXCLUDE_ACCESSORY_MODE,
     CONF_FILTER,
     CONF_HOMEKIT_MODE,
@@ -133,20 +116,24 @@ from .const import (
     HOMEKIT_MODES,
     MANUFACTURER,
     PERSIST_LOCK_DATA,
-    SERVICE_HOMEKIT_RESET_ACCESSORY,
-    SERVICE_HOMEKIT_UNPAIR,
     SHUTDOWN_TIMEOUT,
     SIGNAL_RELOAD_ENTITIES,
+    STATUS_READY,
+    STATUS_RUNNING,
+    STATUS_STOPPED,
+    STATUS_WAIT,
     TYPE_AIR_PURIFIER,
 )
 from .iidmanager import AccessoryIIDStorage
 from .models import HomeKitConfigEntry, HomeKitEntryData
+from .services import async_setup_services
 from .type_triggers import DeviceTriggerAccessory
 from .util import (
     accessory_friendly_name,
     async_dismiss_setup_message,
     async_port_is_available,
     async_show_setup_message,
+    async_update_entries_from_yaml,
     get_persist_fullpath_for_entry_id,
     remove_state_files_for_entry_id,
     state_needs_accessory_mode,
@@ -156,12 +143,6 @@ from .util import (
 _LOGGER = logging.getLogger(__name__)
 
 MAX_DEVICES = 150  # includes the bridge
-
-# #### Driver Status ####
-STATUS_READY = 0
-STATUS_RUNNING = 1
-STATUS_STOPPED = 2
-STATUS_WAIT = 3
 
 PORT_CLEANUP_CHECK_INTERVAL_SECS = 1
 
@@ -230,71 +211,6 @@ CONFIG_SCHEMA = probatio.Schema(
 )
 
 
-RESET_ACCESSORY_SERVICE_SCHEMA = probatio.Schema(
-    {probatio.Required(ATTR_ENTITY_ID): cv.entity_ids}
-)
-
-
-UNPAIR_SERVICE_SCHEMA = probatio.Schema(
-    {probatio.Required(ATTR_DEVICE_ID): probatio.All(probatio.EnsureList(), [str])}
-)
-
-
-@callback
-def _async_update_entries_from_yaml(
-    hass: HomeAssistant, config: ConfigType, start_import_flow: bool
-) -> None:
-    current_entries = hass.config_entries.async_entries(DOMAIN)
-    entries_by_name, entries_by_port = _async_get_imported_entries_indices(
-        current_entries
-    )
-    hk_config: list[dict[str, Any]] = config[DOMAIN]
-
-    for index, conf in enumerate(hk_config):
-        if _async_update_config_entry_from_yaml(
-            hass, entries_by_name, entries_by_port, conf
-        ):
-            continue
-
-        if start_import_flow:
-            conf[CONF_ENTRY_INDEX] = index
-            hass.async_create_task(
-                hass.config_entries.flow.async_init(
-                    DOMAIN,
-                    context={"source": SOURCE_IMPORT},
-                    data=conf,
-                ),
-                eager_start=True,
-            )
-
-
-def _async_all_homekit_instances(hass: HomeAssistant) -> list[HomeKit]:
-    """All active HomeKit instances."""
-    hk_data: HomeKitEntryData | None
-    return [
-        hk_data.homekit
-        for entry in hass.config_entries.async_entries(DOMAIN)
-        if (hk_data := getattr(entry, "runtime_data", None))
-    ]
-
-
-def _async_get_imported_entries_indices(
-    current_entries: list[ConfigEntry],
-) -> tuple[dict[str, ConfigEntry], dict[int, ConfigEntry]]:
-    """Return a dicts of the entries by name and port."""
-
-    # For backwards compat, its possible the first bridge is using the default
-    # name.
-    entries_by_name: dict[str, ConfigEntry] = {}
-    entries_by_port: dict[int, ConfigEntry] = {}
-    for entry in current_entries:
-        if entry.source != SOURCE_IMPORT:
-            continue
-        entries_by_name[entry.data.get(CONF_NAME, BRIDGE_NAME)] = entry
-        entries_by_port[entry.data.get(CONF_PORT, DEFAULT_PORT)] = entry
-    return entries_by_name, entries_by_port
-
-
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the HomeKit from yaml."""
     hass.data[PERSIST_LOCK_DATA] = asyncio.Lock()
@@ -304,44 +220,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     # at the same time.
     await hass.async_add_executor_job(get_loader)
 
-    _async_register_events_and_services(hass)
+    hass.http.register_view(HomeKitPairingQRView)
+    async_setup_services(hass)
     if DOMAIN not in config:
         return True
 
-    _async_update_entries_from_yaml(hass, config, start_import_flow=True)
-    return True
-
-
-@callback
-def _async_update_config_entry_from_yaml(
-    hass: HomeAssistant,
-    entries_by_name: dict[str, ConfigEntry],
-    entries_by_port: dict[int, ConfigEntry],
-    conf: ConfigType,
-) -> bool:
-    """Update a config entry with the latest yaml.
-
-    Returns True if a matching config entry was found
-
-    Returns False if there is no matching config entry
-    """
-    if not (
-        matching_entry := entries_by_name.get(conf.get(CONF_NAME, BRIDGE_NAME))
-        or entries_by_port.get(conf.get(CONF_PORT, DEFAULT_PORT))
-    ):
-        return False
-
-    # If they alter the yaml config we import the changes
-    # since there currently is no practical way to support
-    # all the options in the UI at this time.
-    data = conf.copy()
-    options = {}
-    for key in CONFIG_OPTIONS:
-        if key in data:
-            options[key] = data[key]
-            del data[key]
-
-    hass.config_entries.async_update_entry(matching_entry, data=data, options=options)
+    async_update_entries_from_yaml(hass, config, start_import_flow=True)
     return True
 
 
@@ -462,88 +346,6 @@ def _async_import_options_from_data_if_missing(
 
     if modified:
         hass.config_entries.async_update_entry(entry, data=data, options=options)
-
-
-@callback
-def _async_register_events_and_services(hass: HomeAssistant) -> None:
-    """Register events and services for HomeKit."""
-    hass.http.register_view(HomeKitPairingQRView)
-
-    async def async_handle_homekit_reset_accessory(service: ServiceCall) -> None:
-        """Handle reset accessory HomeKit service call."""
-        for homekit in _async_all_homekit_instances(hass):
-            if homekit.status != STATUS_RUNNING:
-                _LOGGER.warning(
-                    "HomeKit is not running. Either it is waiting to be "
-                    "started or has been stopped"
-                )
-                continue
-
-            entity_ids = cast(list[str], service.data.get("entity_id"))
-            await homekit.async_reset_accessories(entity_ids)
-
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_HOMEKIT_RESET_ACCESSORY,
-        async_handle_homekit_reset_accessory,
-        schema=RESET_ACCESSORY_SERVICE_SCHEMA,
-    )
-
-    async def async_handle_homekit_unpair(service: ServiceCall) -> None:
-        """Handle unpair HomeKit service call."""
-        referenced = async_extract_referenced_entity_ids(
-            hass, TargetSelection(service.data)
-        )
-        dev_reg = dr.async_get(hass)
-        for device_id in referenced.referenced_devices:
-            if not (dev_reg_ent := dev_reg.async_get(device_id)):
-                raise HomeAssistantError(f"No device found for device id: {device_id}")
-            if isinstance(dev_reg_ent, dr.ChildDeviceEntry):
-                # A child device carries no HomeKit pairing; only its parent can.
-                continue
-            macs = [
-                cval
-                for ctype, cval in dev_reg_ent.connections
-                if ctype == dr.CONNECTION_NETWORK_MAC
-            ]
-            matching_instances = [
-                homekit
-                for homekit in _async_all_homekit_instances(hass)
-                if homekit.driver and dr.format_mac(homekit.driver.state.mac) in macs
-            ]
-            if not matching_instances:
-                raise HomeAssistantError(
-                    f"No homekit accessory found for device id: {device_id}"
-                )
-            for homekit in matching_instances:
-                homekit.async_unpair()
-
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_HOMEKIT_UNPAIR,
-        async_handle_homekit_unpair,
-        schema=UNPAIR_SERVICE_SCHEMA,
-    )
-
-    async def _handle_homekit_reload(service: ServiceCall) -> None:
-        """Handle start HomeKit service call."""
-        config = await async_integration_yaml_config(hass, DOMAIN)
-        if not config or DOMAIN not in config:
-            return
-        _async_update_entries_from_yaml(hass, config, start_import_flow=False)
-        await asyncio.gather(
-            *(
-                create_eager_task(hass.config_entries.async_reload(entry.entry_id))
-                for entry in hass.config_entries.async_entries(DOMAIN)
-            )
-        )
-
-    async_register_admin_service(
-        hass,
-        DOMAIN,
-        SERVICE_RELOAD,
-        _handle_homekit_reload,
-    )
 
 
 class HomeKit:

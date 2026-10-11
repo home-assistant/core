@@ -6,7 +6,7 @@ aiodns==4.0.4
 aiogithubapi==26.0.0
 aiohttp-asyncmdnsresolver==0.2.0
 aiohttp-fast-zlib==0.3.0
-aiohttp==3.14.4
+aiohttp==3.14.5
 aiohttp_cors==0.8.1
 aiousbwatcher==1.1.2
 aiozoneinfo==0.2.3
@@ -29,7 +29,7 @@ cached-ipaddress==1.1.2
 certifi>=2021.5.30
 ciso8601==2.3.3
 cronsim==2.7
-cryptography==50.0.1
+cryptography==50.0.2
 dbus-fast==5.0.22
 file-read-backwards==2.0.0
 fnv-hash-fast==2.0.3
@@ -40,7 +40,7 @@ habluetooth==7.1.2
 hass-nabucasa==2.7.0
 hassil==3.12.1
 home-assistant-bluetooth==2.0.0
-home-assistant-frontend==20260930.2
+home-assistant-frontend==20260930.3
 home-assistant-intents==2026.10.6
 httpx2==2.13.1
 ifaddr==0.2.0
@@ -256,6 +256,11 @@ auth0-python<5.0
 # pin versions which are mostly compatible to each other
 backoff==2.2.1
 python-backoff<2.4.0
+
+# graphql-core 3.3 removed graphql_input_types, which apischema 0.19.0
+# (used by pydrawise) still imports
+# https://github.com/home-assistant/core/issues/184918
+graphql-core<3.3
 
 # Pin dependencies with '.pth' files to exact versions, only update manually!
 # https://github.com/Azure/azure-kusto-python/ -> '.pth' files removed with >=5.0.5

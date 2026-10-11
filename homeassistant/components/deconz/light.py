@@ -173,8 +173,9 @@ async def async_setup_entry(
         lights = [
             light
             for light_id in group.lights
-            if (light := hub.api.lights.lights.get(light_id)) and light.reachable
+            if (light := hub.api.lights.lights.get(light_id))
         ]
+        lights.sort(key=lambda light: light.reachable)
         update_color_state(group, lights, True)
 
         async_add_entities([DeconzGroup(group, hub)])
