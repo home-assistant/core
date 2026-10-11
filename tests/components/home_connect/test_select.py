@@ -989,14 +989,14 @@ async def test_options_functionality(
 
 
 @pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
-async def test_options_unavailable_when_option_is_missing(
+async def test_options_unknown_when_option_is_missing(
     hass: HomeAssistant,
     client: MagicMock,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     appliance: HomeAppliance,
 ) -> None:
-    """Test that option entities become unavailable when the option is missing."""
+    """Test that a missing program option has an unknown state."""
     entity_id = "select.washer_temperature"
     client.get_available_program = AsyncMock(
         return_value=ProgramDefinition(
@@ -1046,7 +1046,7 @@ async def test_options_unavailable_when_option_is_missing(
 
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == STATE_UNAVAILABLE
+    assert state.state == STATE_UNKNOWN
 
 
 @pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
@@ -1129,8 +1129,8 @@ async def test_restore_option_entity(
 ) -> None:
     """Test restoration of option entities when program options are missing.
 
-    This test ensures that number entities representing options are restored
-    to the entity registry and set to unavailable if the current available
+    This test ensures that select entities representing options are restored
+    to the entity registry and set to unknown if the current available
     program does not include them, but they existed previously.
     """
     entity_id = "select.washer_temperature"
@@ -1153,7 +1153,7 @@ async def test_restore_option_entity(
 
     state = hass.states.get(entity_id)
     assert state is not None
-    assert state.state == STATE_UNAVAILABLE
+    assert state.state == STATE_UNKNOWN
     assert not state.attributes.get(ATTR_RESTORED)
 
 
