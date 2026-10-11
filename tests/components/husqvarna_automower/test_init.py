@@ -28,6 +28,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.husqvarna_automower.const import DOMAIN, OAUTH2_TOKEN
 from homeassistant.components.husqvarna_automower.coordinator import SCAN_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.config_entry_oauth2_flow import (
@@ -715,3 +716,51 @@ async def test_oauth_implementation_not_available(
         await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.usefixtures(
+    "entity_registry_enabled_by_default",
+    "mock_automower_client",
+)
+async def test_number_workarea_cutting_height_legacy_registry_entry_removed(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    legacy_mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test removal of a legacy global cutting height registry entry and migration to minor version 2."""
+    legacy_mock_config_entry.add_to_hass(hass)
+    assert legacy_mock_config_entry.minor_version == 1
+    unique_id = f"{TEST_MOWER_ID}_0_cutting_height_work_area"
+    registry_entry = entity_registry.async_get_or_create(
+        Platform.NUMBER,
+        DOMAIN,
+        unique_id,
+        config_entry=legacy_mock_config_entry,
+    )
+
+    await hass.config_entries.async_setup(legacy_mock_config_entry.entry_id)
+    assert legacy_mock_config_entry.minor_version == 2
+    assert entity_registry.async_get(registry_entry.entity_id) is None
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "expected_state"),
+    [
+        (AuthError(), ConfigEntryState.MIGRATION_ERROR),
+        (ApiError(), ConfigEntryState.SETUP_RETRY),
+    ],
+)
+async def test_migration_failure(
+    hass: HomeAssistant,
+    mock_automower_client: AsyncMock,
+    legacy_mock_config_entry: MockConfigEntry,
+    side_effect: Exception,
+    expected_state: ConfigEntryState,
+) -> None:
+    """Test removal of a legacy global cutting height registry entry."""
+    mock_automower_client.get_status.side_effect = side_effect
+    legacy_mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(legacy_mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert legacy_mock_config_entry.minor_version == 1
+    assert legacy_mock_config_entry.state is expected_state
