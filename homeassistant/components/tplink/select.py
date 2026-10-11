@@ -42,6 +42,9 @@ SELECT_DESCRIPTIONS: Final = [
     TPLinkSelectEntityDescription(
         key="alarm_volume",
     ),
+    TPLinkSelectEntityDescription(
+        key="ptz_preset",
+    ),
 ]
 
 SELECT_DESCRIPTIONS_MAP = {desc.key: desc for desc in SELECT_DESCRIPTIONS}

@@ -84,6 +84,9 @@
       },
       "light_preset": {
         "default": "mdi:sign-direction"
+      },
+      "ptz_preset": {
+        "default": "mdi:camera-switch"
       }
     },
     "sensor": {
