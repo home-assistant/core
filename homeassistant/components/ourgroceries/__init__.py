@@ -6,7 +6,7 @@ from ourgroceries.exceptions import InvalidLoginException
 
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 from .const import DOMAIN
 from .coordinator import OurGroceriesConfigEntry, OurGroceriesDataUpdateCoordinator
@@ -25,7 +25,7 @@ async def async_setup_entry(
     except (TimeoutError, ClientError) as error:
         raise ConfigEntryNotReady from error
     except InvalidLoginException as error:
-        raise ConfigEntryError(
+        raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
             translation_key="invalid_login",
         ) from error
