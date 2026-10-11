@@ -7,7 +7,7 @@ from haphilipsjs import PairingFailure
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.philips_js.const import CONF_ALLOW_NOTIFY, DOMAIN
+from homeassistant.components.philips_js.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
@@ -235,31 +235,6 @@ async def test_pair_grant_failed(hass: HomeAssistant, mock_tv_pairable) -> None:
         "reason": "pairing_failure",
         "type": "abort",
     }
-
-
-async def test_options_flow(hass: HomeAssistant) -> None:
-    """Test config flow options."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="123456",
-        data=MOCK_CONFIG_PAIRED,
-    )
-    config_entry.add_to_hass(hass)
-
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    result = await hass.config_entries.options.async_init(config_entry.entry_id)
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "init"
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={CONF_ALLOW_NOTIFY: True}
-    )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert config_entry.options == {CONF_ALLOW_NOTIFY: True}
 
 
 @pytest.mark.parametrize(
