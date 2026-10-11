@@ -40,6 +40,9 @@ _DOOR_OPENINGS = "DOC-SY"
 _DOOR_OPEN_DURATION = "DOT-SY"
 _BATTERY = "battery"
 
+# Levels used by the fan and power fields of a program's metadata.
+PROGRAM_LEVELS = ["low", "mid", "high"]
+
 
 def _reading(device: VitesyDevice, group: str, reading_id: str) -> float | None:
     """Return a numeric value from a measurement group entry by its id."""
@@ -68,6 +71,23 @@ def _air_quality_score(device: VitesyDevice) -> float | None:
     return score * 100 if score is not None else None
 
 
+def _parse_timestamp(device: VitesyDevice, label: str, value: str) -> datetime | None:
+    """Parse a timestamp reported by Vitesy Hub, warning when it is invalid."""
+    try:
+        return dt_util.parse_datetime(value, raise_on_error=True)
+    except ValueError:
+        LOGGER.warning("Ignoring unparsable %s for %s: %s", label, device.name, value)
+        return None
+
+
+def _last_update(device: VitesyDevice) -> datetime | None:
+    """Return when the device last reported a measurement."""
+    timestamp = device.measurement.get("timestamp")
+    if not timestamp:
+        return None
+    return _parse_timestamp(device, "measurement timestamp", timestamp)
+
+
 def _maintenance_due(component: str) -> Callable[[VitesyDevice], datetime | None]:
     """Return a value function for a maintenance component's due date."""
 
@@ -75,16 +95,27 @@ def _maintenance_due(component: str) -> Callable[[VitesyDevice], datetime | None
         due_date = device.maintenance.get(component, {}).get("due_date")
         if not due_date:
             return None
-        try:
-            return dt_util.parse_datetime(due_date, raise_on_error=True)
-        except ValueError:
-            LOGGER.warning(
-                "Ignoring unparsable %s due date for %s: %s",
-                component,
-                device.name,
-                due_date,
-            )
+        return _parse_timestamp(device, f"{component} due date", due_date)
+
+    return _value
+
+
+def _program_level(field: str) -> Callable[[VitesyDevice], str | None]:
+    """Return a value function for a level in the active program's metadata."""
+
+    def _value(device: VitesyDevice) -> str | None:
+        program = device.programs.get(device.program_id)
+        if program is None:
             return None
+        level = program.get("metadata", {}).get(field)
+        if level is None:
+            return None
+        if (level := str(level).lower()) in PROGRAM_LEVELS:
+            return level
+        LOGGER.warning(
+            "Ignoring unknown program %s level for %s: %s", field, device.name, level
+        )
+        return None
 
     return _value
 
@@ -134,6 +165,29 @@ SENSORS: tuple[VitesySensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda device: _reading(device, _STATUS_DATA, _BATTERY),
+    ),
+    VitesySensorEntityDescription(
+        key="fan_speed",
+        translation_key="fan_speed",
+        device_class=SensorDeviceClass.ENUM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        options=PROGRAM_LEVELS,
+        value_fn=_program_level("fan"),
+    ),
+    VitesySensorEntityDescription(
+        key="power_level",
+        translation_key="power_level",
+        device_class=SensorDeviceClass.ENUM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        options=PROGRAM_LEVELS,
+        value_fn=_program_level("power"),
+    ),
+    VitesySensorEntityDescription(
+        key="last_update",
+        translation_key="last_update",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=_last_update,
     ),
     VitesySensorEntityDescription(
         key="filter_change_due",
