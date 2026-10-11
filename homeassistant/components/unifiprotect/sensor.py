@@ -749,6 +749,8 @@ def _async_public_entities(
             ProtectFobSensor(data, device, description) for description in FOB_SENSORS
         ]
     if isinstance(device, LinkStation):
+        if not device.is_alarm_hub:
+            return []
         return [
             ProtectAlarmHubSensor(data, device, description)
             for description in ALARM_HUB_SENSORS
