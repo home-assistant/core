@@ -28,8 +28,9 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
     MediaType,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
@@ -292,57 +293,117 @@ async def test_device_info_uses_entry_title_when_name_missing(
     assert device_info["model"] == "AirLino"
 
 
+async def _setup_group_devices(
+    hass: HomeAssistant,
+    devices: list[tuple[str, str, bool, str | None]],
+) -> list[MockConfigEntry]:
+    apis: list[MagicMock] = []
+    entries: list[MockConfigEntry] = []
+    for index, (title, mac, sender_enabled, receiver_sender) in enumerate(devices):
+        host = f"192.0.2.{index + 1}"
+        entry = MockConfigEntry(
+            domain=DOMAIN,
+            title=title,
+            data={"host": host, CONF_SETUP_VERIFIED: True},
+            unique_id=mac,
+        )
+        entry.add_to_hass(hass)
+        api = MagicMock()
+        api.async_get_device_info = AsyncMock(
+            return_value={"devicename": title, "model": "AirLino"}
+        )
+        api.async_get_player_status = AsyncMock(return_value={"state": "stopped"})
+        api.async_get_master_volume = AsyncMock(return_value=50)
+        api.async_get_sender_status = AsyncMock(
+            return_value={
+                "enabled": sender_enabled,
+                "uuid": f"sender-{title}" if sender_enabled else None,
+            }
+        )
+        api.async_get_receiver_state = AsyncMock(
+            return_value={"sender": receiver_sender}
+        )
+        apis.append(api)
+        entries.append(entry)
+
+    with (
+        patch(
+            "homeassistant.components.airlino.AirlinoApi",
+            side_effect=apis,
+        ),
+        patch(
+            "homeassistant.components.airlino.async_get_clientsession",
+            return_value=MagicMock(),
+        ),
+    ):
+        assert await hass.config_entries.async_setup(entries[0].entry_id)
+
+    assert all(entry.state is ConfigEntryState.LOADED for entry in entries)
+    return entries
+
+
 async def test_group_members_include_master_and_receivers(
-    make_player: PlayerFactory,
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
 ) -> None:
-    """Return sorted entity IDs for the sender and its linked receivers."""
-    player, entry, coordinator, _ = make_player(
-        {"sender": {"enabled": True, "uuid": "sender-uuid"}}
+    """Return sorted entity IDs for the loaded master and receiver entries."""
+    master, receiver = await _setup_group_devices(
+        hass,
+        [
+            ("Living room", "00:11:22:33:44:55", True, None),
+            ("Kitchen", "00:11:22:33:44:66", False, "sender-Living room"),
+        ],
     )
-    receiver_coordinator = MagicMock()
-    receiver_coordinator.data = {"receiver": {"sender": "sender-uuid"}}
-    receiver_entry = MagicMock()
-    player._all_runtimes = MagicMock(
-        return_value=[
-            (entry, AirlinoRuntimeData(api=MagicMock(), coordinator=coordinator)),
-            (
-                receiver_entry,
-                AirlinoRuntimeData(api=MagicMock(), coordinator=receiver_coordinator),
-            ),
-        ]
-    )
-    player._entity_id_for_entry = MagicMock(
-        side_effect=["media_player.living_room", "media_player.kitchen"]
+    player = AirlinoMediaPlayer(master.runtime_data.coordinator, master)
+    player.hass = hass
+    player.entity_id = entity_registry.async_get_entity_id(
+        "media_player", DOMAIN, master.unique_id
     )
 
-    assert player.group_members == ["media_player.kitchen", "media_player.living_room"]
+    assert player.group_members == [
+        "media_player.kitchen",
+        "media_player.living_room",
+    ]
+    assert (
+        entity_registry.async_get_entity_id("media_player", DOMAIN, master.unique_id)
+        == "media_player.living_room"
+    )
+    assert (
+        entity_registry.async_get_entity_id("media_player", DOMAIN, receiver.unique_id)
+        == "media_player.kitchen"
+    )
 
 
 async def test_group_members_skips_unrelated_devices(
-    make_player: PlayerFactory,
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
 ) -> None:
-    """Ignore devices that are neither sender nor receiver in this group."""
-    player, entry, coordinator, _ = make_player(
-        {"sender": {"enabled": True, "uuid": "sender-uuid"}}
+    """Ignore loaded entries that are not part of the sender's group."""
+    master, _receiver, unrelated = await _setup_group_devices(
+        hass,
+        [
+            ("Living room", "00:11:22:33:44:55", True, None),
+            ("Kitchen", "00:11:22:33:44:66", False, "sender-Living room"),
+            ("Bedroom", "00:11:22:33:44:77", True, None),
+        ],
     )
-    unrelated_coordinator = MagicMock()
-    unrelated_coordinator.data = {
-        "sender": {"enabled": True, "uuid": "different-sender"},
-        "receiver": {"sender": "different-sender"},
-    }
-    player._all_runtimes = MagicMock(
-        return_value=[
-            (entry, AirlinoRuntimeData(api=MagicMock(), coordinator=coordinator)),
-            (
-                MagicMock(),
-                AirlinoRuntimeData(api=MagicMock(), coordinator=unrelated_coordinator),
-            ),
-        ]
+    player = AirlinoMediaPlayer(master.runtime_data.coordinator, master)
+    player.hass = hass
+    player.entity_id = entity_registry.async_get_entity_id(
+        "media_player", DOMAIN, master.unique_id
     )
-    player._entity_id_for_entry = MagicMock(return_value="media_player.living_room")
 
-    assert player.group_members == ["media_player.living_room"]
-    player._entity_id_for_entry.assert_called_once_with(entry)
+    group_members = player.group_members
+
+    assert group_members == [
+        "media_player.kitchen",
+        "media_player.living_room",
+    ]
+    assert (
+        entity_registry.async_get_entity_id("media_player", DOMAIN, unrelated.unique_id)
+        == "media_player.bedroom"
+    )
+    assert "media_player.bedroom" not in group_members
 
 
 async def test_group_members_is_none_without_sender(make_player: PlayerFactory) -> None:
@@ -457,7 +518,7 @@ async def test_receiver_has_restricted_features_and_cannot_play(
         | MediaPlayerEntityFeature.VOLUME_STEP
         | MediaPlayerEntityFeature.GROUPING
     )
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(ServiceValidationError):
         await player.async_media_play()
     api.async_play.assert_not_awaited()
 
@@ -538,7 +599,7 @@ async def test_play_media_rejects_unsupported_types(make_player: PlayerFactory) 
     """Reject non-URL media types without calling the device API."""
     player, _, _, api = make_player()
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(ServiceValidationError):
         await player.async_play_media("music", "track-id")
     api.async_play_station.assert_not_awaited()
 
@@ -658,7 +719,7 @@ async def test_join_rejects_unknown_member_before_mutations(
     """Validate unknown group members before enabling the sender."""
     player, _, _, api = make_player()
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(ServiceValidationError):
         await player.async_join_players(["media_player.unknown"])
 
     api.async_enable_sender.assert_not_awaited()
@@ -670,7 +731,7 @@ async def test_join_requires_sender_uuid(make_player: PlayerFactory) -> None:
     player, _, _, api = make_player()
     api.async_get_sender_status.return_value = {"enabled": False}
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(ServiceValidationError):
         await player.async_join_players(["media_player.kitchen"])
 
     api.async_enable_sender.assert_not_awaited()
@@ -828,7 +889,7 @@ async def test_offline_member_fails_before_enabling_sender(
     runtime = AirlinoRuntimeData(api=offline_api, coordinator=offline_coordinator)
     player._async_find_runtime_by_entity_id = AsyncMock(return_value=runtime)
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(ServiceValidationError):
         await player.async_join_players(["media_player.kitchen"])
 
     api.async_enable_sender.assert_not_awaited()
@@ -857,7 +918,7 @@ async def test_join_rejects_member_already_in_group(
     runtime = AirlinoRuntimeData(api=member_api, coordinator=member_coordinator)
     player._async_find_runtime_by_entity_id = AsyncMock(return_value=runtime)
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(ServiceValidationError):
         await player.async_join_players(["media_player.kitchen"])
 
     sender_api.async_enable_sender.assert_not_awaited()

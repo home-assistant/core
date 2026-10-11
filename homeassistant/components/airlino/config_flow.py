@@ -141,15 +141,7 @@ class AirlinoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                await self.async_set_unique_id(info["mac"], raise_on_progress=False)
-                for progress in self.hass.config_entries.flow.async_progress_by_handler(
-                    DOMAIN
-                ):
-                    if (
-                        progress["flow_id"] != self.flow_id
-                        and progress["context"].get("unique_id") == info["mac"]
-                    ):
-                        self.hass.config_entries.flow.async_abort(progress["flow_id"])
+                await self.async_set_unique_id(info["mac"])
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=info["title"],

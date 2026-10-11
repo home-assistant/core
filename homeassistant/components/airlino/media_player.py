@@ -30,7 +30,7 @@ from homeassistant.components.media_player import (
 from homeassistant.components.media_source import is_media_source_id
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -220,7 +220,7 @@ class AirlinoMediaPlayer(
         )
         uuid: str | None = (sender_status or {}).get("uuid")
         if not uuid:
-            raise HomeAssistantError(
+            raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="sender_uuid_missing",
             )
@@ -231,7 +231,7 @@ class AirlinoMediaPlayer(
         for entity_id in requested_entity_ids:
             runtime = await self._async_find_runtime_by_entity_id(entity_id)
             if runtime is None:
-                raise HomeAssistantError(
+                raise ServiceValidationError(
                     translation_domain=DOMAIN,
                     translation_key="entity_not_found",
                     translation_placeholders={"entity_id": entity_id},
@@ -240,7 +240,7 @@ class AirlinoMediaPlayer(
                 # The device is unreachable (e.g. powered off): abort so the
                 # user gets a visible error in the UI instead of a group that
                 # silently misses one member.
-                raise HomeAssistantError(
+                raise ServiceValidationError(
                     translation_domain=DOMAIN,
                     translation_key="device_unavailable",
                     translation_placeholders={"entity_id": entity_id},
@@ -255,7 +255,7 @@ class AirlinoMediaPlayer(
             if (receiver_master and receiver_master != uuid) or (
                 sender_state or {}
             ).get("enabled"):
-                raise HomeAssistantError(
+                raise ServiceValidationError(
                     translation_domain=DOMAIN,
                     translation_key="member_already_grouped",
                     translation_placeholders={"entity_id": entity_id},
@@ -395,7 +395,7 @@ class AirlinoMediaPlayer(
     def _ensure_not_multiroom_receiver(self) -> None:
         """Reject commands that a multiroom slave cannot execute."""
         if self.is_multiroom_receiver:
-            raise HomeAssistantError(
+            raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="multiroom_receiver_control",
             )
@@ -426,7 +426,7 @@ class AirlinoMediaPlayer(
             )
             media_id = play_item.url
         elif media_type not in (MediaType.URL, "url"):
-            raise HomeAssistantError(
+            raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="media_type_unsupported",
                 translation_placeholders={"media_type": media_type},

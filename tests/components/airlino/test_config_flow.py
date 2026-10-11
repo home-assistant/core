@@ -151,34 +151,44 @@ async def test_user_flow_aborts_if_device_is_configured(hass: HomeAssistant) -> 
 
 async def test_user_flow_aborts_duplicate_in_progress_flow(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Verify an in-progress duplicate setup is aborted."""
-    aborted_flow_id = "another-flow"
-    monkeypatch.setattr(
-        hass.config_entries.flow,
-        "async_progress_by_handler",
-        MagicMock(
-            return_value=[{"flow_id": aborted_flow_id, "context": {"unique_id": MAC}}]
-        ),
+    """Verify the built-in guard aborts a duplicate flow for the same device."""
+    validate = AsyncMock(
+        return_value={"title": "AirLino", "mac": MAC, "api_version": "v22"}
     )
-    abort = MagicMock()
-    monkeypatch.setattr(hass.config_entries.flow, "async_abort", abort)
     with patch(
         "homeassistant.components.airlino.config_flow.validate_input",
-        return_value={"title": "AirLino", "mac": MAC, "api_version": "v22"},
+        validate,
     ):
-        result = await hass.config_entries.flow.async_init(
+        first_flow = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
         )
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_HOST: HOST}
+        monkeypatch.setattr(
+            hass.config_entries.flow,
+            "async_progress_by_handler",
+            MagicMock(
+                return_value=[
+                    {
+                        "flow_id": first_flow["flow_id"],
+                        "context": {
+                            "unique_id": MAC,
+                            "source": SOURCE_USER,
+                        },
+                    }
+                ]
+            ),
+        )
+        second_flow = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        second_result = await hass.config_entries.flow.async_configure(
+            second_flow["flow_id"], {CONF_HOST: HOST}
         )
 
-    abort.assert_any_call(aborted_flow_id)
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["result"].unique_id == MAC
+    assert second_result["type"] is FlowResultType.ABORT
+    assert second_result["reason"] == "already_in_progress"
+    assert validate.await_count == 1
 
 
 @pytest.fixture
