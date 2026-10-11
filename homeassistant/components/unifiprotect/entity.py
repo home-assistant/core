@@ -871,7 +871,7 @@ class BaseAlarmHubEntity(Entity):
             identifiers={(DOMAIN, hub.mac)},
             manufacturer=DEFAULT_BRAND,
             model="Alarm Hub",
-            name=hub.name,
+            name=hub.name or f"Alarm Hub {hub.mac}",
             via_device_id=data.nvr_device_id,
         )
         self._async_update_attrs(hub)

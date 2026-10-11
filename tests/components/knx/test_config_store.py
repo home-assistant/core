@@ -10,6 +10,8 @@ from homeassistant.components.knx.const import (
     DOMAIN,
     KNX_MODULE_KEY,
     REPAIR_ISSUE_ENTITY_VALIDATION_ERROR,
+    REPAIR_ISSUE_EXPOSE_VALIDATION_ERROR,
+    REPAIR_ISSUE_TIME_SERVER_VALIDATION_ERROR,
 )
 from homeassistant.components.knx.storage.config_store import (
     STORAGE_KEY as KNX_CONFIG_STORAGE_KEY,
@@ -742,6 +744,44 @@ async def test_load_skips_invalid_entity_config(
     assert issue.translation_placeholders == {
         "platform": Platform.SWITCH,
         "entities": f"- {INVALID_SWITCH_UID}",
+    }
+
+
+async def test_load_skips_invalid_expose_and_time_server_config(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test invalid stored exposes and time server configs are skipped."""
+    await knx.setup_integration(
+        config_store_fixture="config_store_invalid.json", state_updater=False
+    )
+    # the time server isn't started - it would write its addresses on startup
+    await knx.assert_no_telegram()
+
+    hass.states.async_set("light.valid", "on", {"brightness": 50})
+    hass.states.async_set("light.valid", "on", {"brightness": 100})
+    await hass.async_block_till_done()
+    await knx.assert_write("5/5/5", (100,))
+
+    expose_issue = issue_registry.async_get_issue(
+        DOMAIN, REPAIR_ISSUE_EXPOSE_VALIDATION_ERROR
+    )
+    assert expose_issue is not None
+    assert expose_issue.severity is ir.IssueSeverity.ERROR
+    assert expose_issue.translation_placeholders == {"entities": "- light.invalid"}
+    time_server_issue = issue_registry.async_get_issue(
+        DOMAIN, REPAIR_ISSUE_TIME_SERVER_VALIDATION_ERROR
+    )
+    assert time_server_issue is not None
+    assert time_server_issue.severity is ir.IssueSeverity.ERROR
+
+    # invalid configs stay in storage so they can be corrected
+    config_store = hass.data[KNX_MODULE_KEY].config_store
+    assert "light.invalid" in config_store.data["expose"]
+    assert config_store.get_time_server_config() == {
+        "time": {"write": "6/6/6"},
+        "date": {"state": "6/6/7"},
     }
 
 

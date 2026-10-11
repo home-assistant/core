@@ -190,13 +190,13 @@ def gpu_usage_percentage(gpu: GPU) -> float | None:
 
 
 def memory_free(data: SystemBridgeData) -> float | None:
-    """Return the free memory."""
+    """Return the free memory, counting reclaimable cache as free."""
     if (
         data.memory is not None
         and (virtual := data.memory.virtual) is not None
-        and (free := virtual.free) is not None
+        and (available := virtual.available) is not None
     ):
-        return round(free / 1000**3, 2)
+        return round(available / 1000**3, 2)
     return None
 
 
