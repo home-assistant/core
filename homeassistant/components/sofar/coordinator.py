@@ -55,14 +55,18 @@ class SofarDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
         """Return device information."""
         serial = self.device.serial_number
         identity = self.device.identity
-        return dr.DeviceInfo(
+        info = dr.DeviceInfo(
             identifiers={(DOMAIN, serial)},
             manufacturer=ATTR_MANUFACTURER,
             model=self.device.model or None,
             serial_number=serial,
-            hw_version=identity.hardware_version or None,
-            sw_version=identity.software_version or None,
         )
+        # Left out until read, so an unread identity keeps stored versions.
+        if identity.hardware_version:
+            info["hw_version"] = identity.hardware_version
+        if identity.software_version:
+            info["sw_version"] = identity.software_version
+        return info
 
     @override
     async def _async_update_data(self) -> UpdateReport:
@@ -169,8 +173,8 @@ class SofarRuntimeData:
     def served_components(self) -> frozenset[str]:
         """Component names this inverter polls, answered or not."""
         device = self.readings.device
-        return frozenset(device.readings_components) | frozenset(
-            device.settings_components
+        return frozenset(device.expected_readings_components) | frozenset(
+            device.expected_settings_components
         )
 
     def pack_is_wired(self, number: int) -> bool:
@@ -182,7 +186,7 @@ class SofarRuntimeData:
 
     def coordinator_for(self, component: str) -> SofarDataUpdateCoordinator:
         """Which coordinator owns a given component's data."""
-        if component in self.readings.device.readings_components:
+        if component in self.readings.device.expected_readings_components:
             return self.readings
         return self.settings
 

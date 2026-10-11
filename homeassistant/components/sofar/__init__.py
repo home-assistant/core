@@ -20,7 +20,7 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_TYPE, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryError
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -28,6 +28,7 @@ from homeassistant.helpers import (
     restore_state,
 )
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .const import (
     CONF_UNIT_ID,
@@ -178,11 +179,29 @@ async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> boo
         timedelta(seconds=SETTINGS_SCAN_INTERVAL),
         tuner,
     )
-    await readings.async_config_entry_first_refresh()
-    await settings.async_refresh()
+    try:
+        await readings.async_config_entry_first_refresh()
+    except ConfigEntryNotReady as err:
+        # Retry unless the adapter is up and the inverter merely silent.
+        if not link.connected or not isinstance(readings.last_exception, UpdateFailed):
+            raise
+        _LOGGER.info(
+            "%s: inverter is not answering, setting up without it: %s",
+            entry.title,
+            err,
+        )
 
-    # Not tied to a coordinator: identity never changes once read.
-    await _async_read_identity(entry, device)
+        @callback
+        def _async_reload_once_answered() -> None:
+            """Set up again in full once the inverter answers."""
+            if readings.last_update_success:
+                hass.config_entries.async_schedule_reload(entry.entry_id)
+
+        entry.async_on_unload(readings.async_add_listener(_async_reload_once_answered))
+    else:
+        await settings.async_refresh()
+        # Not tied to a coordinator: identity never changes once read.
+        await _async_read_identity(entry, device)
 
     # Up front: a part's device must name an inverter that has an id.
     inverter = dr.async_get(hass).async_get_or_create(
