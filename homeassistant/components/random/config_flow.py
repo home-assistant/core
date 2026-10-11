@@ -26,10 +26,9 @@ from homeassistant.helpers.schema_config_entry_flow import (
 from homeassistant.helpers.selector import (
     DeviceClassSelector,
     DeviceClassSelectorConfig,
-    SelectSelector,
-    SelectSelectorConfig,
-    SelectSelectorMode,
     TextSelector,
+    UnitOfMeasurementSelector,
+    UnitOfMeasurementSelectorConfig,
 )
 
 from .const import DOMAIN
@@ -61,18 +60,9 @@ def _generate_schema(domain: str, flow_type: _FlowType) -> probatio.Schema:
                 probatio.Optional(CONF_DEVICE_CLASS): DeviceClassSelector(
                     DeviceClassSelectorConfig(domain=Platform.NUMBER)
                 ),
-                probatio.Optional(CONF_UNIT_OF_MEASUREMENT): SelectSelector(
-                    SelectSelectorConfig(
-                        options=[
-                            str(unit)
-                            for units in DEVICE_CLASS_UNITS.values()
-                            for unit in units
-                            if unit is not None
-                        ],
-                        sort=True,
-                        mode=SelectSelectorMode.DROPDOWN,
-                        translation_key="sensor_unit_of_measurement",
-                        custom_value=True,
+                probatio.Optional(CONF_UNIT_OF_MEASUREMENT): UnitOfMeasurementSelector(
+                    UnitOfMeasurementSelectorConfig(
+                        context={"filter_device_class": CONF_DEVICE_CLASS}
                     ),
                 ),
             }
