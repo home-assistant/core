@@ -1010,6 +1010,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/knx/ @Julius2342 @farmio @marvin-w
 /homeassistant/components/kodi/ @OnFreund
 /tests/components/kodi/ @OnFreund
+/homeassistant/components/koito/ @ryanep
+/tests/components/koito/ @ryanep
 /homeassistant/components/kostal_plenticore/ @stegm
 /tests/components/kostal_plenticore/ @stegm
 /homeassistant/components/kraken/ @eifinger

@@ -3763,6 +3763,12 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "koito": {
+      "name": "Koito",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "konnected": {
       "name": "Konnected",
       "integrations": {
