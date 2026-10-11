@@ -10,6 +10,7 @@ from homeassistant.util import dt as dt_util, ulid as ulid_util
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.limited_size_dict import LimitedSizeDict
 
+from .audio_output import PipelineAudioOutputManager
 from .const import DOMAIN
 from .models import PipelineEvent
 
@@ -76,6 +77,7 @@ class PipelineData:
 
     def __init__(self, pipeline_store: PipelineStorageCollection) -> None:
         """Initialize."""
+        self.audio_output_manager = PipelineAudioOutputManager(pipeline_store.hass)
         self.pipeline_store = pipeline_store
         self.pipeline_debug: dict[str, LimitedSizeDict[str, PipelineRunDebug]] = {}
         self.pipeline_devices: dict[str, AssistDevice] = {}
