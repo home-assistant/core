@@ -83,3 +83,17 @@ authorize_charge_session:
     description:
       selector:
         text:
+
+get_meter_history:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: peblar
+    after:
+      selector:
+        datetime:
+    before:
+      selector:
+        datetime:
