@@ -36,6 +36,7 @@ def tv_lift_box_fixture(caplog: pytest.LogCaptureFixture):
     product = feature.product
     type(product).name = PropertyMock(return_value="My tvLiftBox")
     type(product).model = PropertyMock(return_value="tvLiftBox")
+    type(product).product = PropertyMock(return_value="tvLiftBox")
     type(product)._query_string = PropertyMock(return_value="open_or_stop")
 
     return (feature, "button.my_tvliftbox")

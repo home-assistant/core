@@ -180,6 +180,7 @@ COFFEE_TEMPERATURE_OPTIONS = {
         "ConsumerProducts.CoffeeMaker.EnumType.CoffeeTemperature.94C",
         "ConsumerProducts.CoffeeMaker.EnumType.CoffeeTemperature.95C",
         "ConsumerProducts.CoffeeMaker.EnumType.CoffeeTemperature.96C",
+        "ConsumerProducts.CoffeeMaker.EnumType.CoffeeTemperature.98C",
     )
 }
 

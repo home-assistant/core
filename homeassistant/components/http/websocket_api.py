@@ -2,7 +2,7 @@
 
 from typing import Any, Final
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components import websocket_api
 from homeassistant.components.homeassistant import (
@@ -13,11 +13,31 @@ from homeassistant.core import CoreState, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 
 from .config import HTTP_STORAGE_SCHEMA, ConfData, async_get_and_load_store
-from .const import ATTR_CONFIG, CONF_SERVER_PORT
+from .const import (
+    ATTR_CONFIG,
+    CONF_SERVER_PORT,
+    CONF_TRUSTED_PROXIES,
+    CONF_USE_X_FORWARDED_FOR,
+)
 from .server import async_verify_can_bind
 
 ERR_BIND_FAILED: Final = "bind_failed"
 ERR_NOT_RUNNING: Final = "not_running"
+
+
+def _validate_trusted_proxies(config: ConfData) -> ConfData:
+    """Reject trusting X-Forwarded-For without a proxy to trust it from.
+
+    Forwarded requests are refused when no proxy is trusted, so the combination
+    breaks the very setup it is meant to enable.
+    """
+    if config.get(CONF_USE_X_FORWARDED_FOR) and not config.get(CONF_TRUSTED_PROXIES):
+        raise probatio.Invalid(
+            "at least one trusted proxy is required to use X-Forwarded-For",
+            path=[CONF_TRUSTED_PROXIES],
+        )
+
+    return config
 
 
 @callback
@@ -29,7 +49,7 @@ def async_register_websocket_commands(hass: HomeAssistant) -> None:
 
 
 @websocket_api.require_admin
-@websocket_api.websocket_command({vol.Required("type"): "http/config"})
+@websocket_api.websocket_command({probatio.Required("type"): "http/config"})
 @websocket_api.async_response
 async def websocket_get_config(
     hass: HomeAssistant,
@@ -63,8 +83,10 @@ async def websocket_get_config(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "http/config/configure",
-        vol.Required(ATTR_CONFIG): vol.Any(None, HTTP_STORAGE_SCHEMA),
+        probatio.Required("type"): "http/config/configure",
+        probatio.Required(ATTR_CONFIG): probatio.Any(
+            None, probatio.All(HTTP_STORAGE_SCHEMA, _validate_trusted_proxies)
+        ),
     }
 )
 @websocket_api.async_response
@@ -118,7 +140,7 @@ async def websocket_set_config(
 
 
 @websocket_api.require_admin
-@websocket_api.websocket_command({vol.Required("type"): "http/config/promote"})
+@websocket_api.websocket_command({probatio.Required("type"): "http/config/promote"})
 @websocket_api.async_response
 async def websocket_promote_config(
     hass: HomeAssistant,

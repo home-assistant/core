@@ -101,7 +101,7 @@ class NoboZone(NoboBaseEntity, ClimateEntity):
     _attr_hvac_mode = HVACMode.AUTO
     _attr_preset_modes = PRESET_MODES
     _attr_supported_features = SUPPORT_FLAGS
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_target_temperature_step = PRECISION_WHOLE
     # Need to poll to get preset change when in HVACMode.AUTO
     _attr_should_poll = True
@@ -214,12 +214,12 @@ class NoboZone(NoboBaseEntity, ClimateEntity):
             self._attr_hvac_mode = HVACMode.HEAT
 
         current_temperature = self._nobo.get_current_zone_temperature(self._id)
-        self._attr_current_temperature = (
+        self._attr_native_current_temperature = (
             None if current_temperature is None else float(current_temperature)
         )
-        self._attr_target_temperature_high = int(
+        self._attr_native_target_temperature_high = int(
             self._nobo.zones[self._id][ATTR_TEMP_COMFORT_C]
         )
-        self._attr_target_temperature_low = int(
+        self._attr_native_target_temperature_low = int(
             self._nobo.zones[self._id][ATTR_TEMP_ECO_C]
         )

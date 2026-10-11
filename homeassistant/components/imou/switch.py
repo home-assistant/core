@@ -2,7 +2,7 @@
 
 from typing import Any, override
 
-from pyimouapi.exceptions import ImouException
+from pyimouapi.const import PARAM_MOTION_DETECT, PARAM_STATE
 from pyimouapi.ha_device import ImouHaDevice
 
 from homeassistant.components.switch import (
@@ -10,24 +10,30 @@ from homeassistant.components.switch import (
     SwitchEntity,
     SwitchEntityDescription,
 )
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     PARAM_AB_ALARM_SOUND,
     PARAM_AUDIO_ENCODE_CONTROL,
     PARAM_CLOSE_CAMERA,
+    PARAM_FRAME_REVERSE,
     PARAM_HEADER_DETECT,
     PARAM_LIGHT,
-    PARAM_MOTION_DETECT,
+    PARAM_LINKAGE_SIREN,
+    PARAM_LINKAGE_WHITE_LIGHT,
+    PARAM_PET_DETECT,
+    PARAM_PLAY_SOUND,
     PARAM_PLUG_SWITCH,
-    PARAM_STATE,
+    PARAM_SMART_TRACK,
     PARAM_WHITE_LIGHT,
+    PARAM_WIDE_DYNAMIC,
     imou_device_identifier,
 )
 from .coordinator import ImouConfigEntry, ImouDataUpdateCoordinator
 from .entity import ImouEntity
+from .helpers import async_wrap_imou_command
 
 PARALLEL_UPDATES = 0
 
@@ -45,6 +51,11 @@ SWITCH_TYPES: tuple[SwitchEntityDescription, ...] = (
         translation_key=PARAM_CLOSE_CAMERA,
     ),
     SwitchEntityDescription(
+        key=PARAM_FRAME_REVERSE,
+        translation_key=PARAM_FRAME_REVERSE,
+        entity_category=EntityCategory.CONFIG,
+    ),
+    SwitchEntityDescription(
         key=PARAM_HEADER_DETECT,
         translation_key=PARAM_HEADER_DETECT,
     ),
@@ -54,13 +65,43 @@ SWITCH_TYPES: tuple[SwitchEntityDescription, ...] = (
         device_class=SwitchDeviceClass.SWITCH,
     ),
     SwitchEntityDescription(
+        key=PARAM_LINKAGE_SIREN,
+        translation_key=PARAM_LINKAGE_SIREN,
+        entity_category=EntityCategory.CONFIG,
+    ),
+    SwitchEntityDescription(
+        key=PARAM_LINKAGE_WHITE_LIGHT,
+        translation_key=PARAM_LINKAGE_WHITE_LIGHT,
+        entity_category=EntityCategory.CONFIG,
+    ),
+    SwitchEntityDescription(
         key=PARAM_MOTION_DETECT,
         translation_key=PARAM_MOTION_DETECT,
+    ),
+    SwitchEntityDescription(
+        key=PARAM_PET_DETECT,
+        translation_key=PARAM_PET_DETECT,
+        entity_category=EntityCategory.CONFIG,
+    ),
+    SwitchEntityDescription(
+        key=PARAM_PLAY_SOUND,
+        translation_key=PARAM_PLAY_SOUND,
+        entity_category=EntityCategory.CONFIG,
+    ),
+    SwitchEntityDescription(
+        key=PARAM_SMART_TRACK,
+        translation_key=PARAM_SMART_TRACK,
+        entity_category=EntityCategory.CONFIG,
     ),
     SwitchEntityDescription(
         key=PARAM_PLUG_SWITCH,
         translation_key=PARAM_PLUG_SWITCH,
         device_class=SwitchDeviceClass.SWITCH,
+    ),
+    SwitchEntityDescription(
+        key=PARAM_WIDE_DYNAMIC,
+        translation_key=PARAM_WIDE_DYNAMIC,
+        entity_category=EntityCategory.CONFIG,
     ),
     SwitchEntityDescription(
         key=PARAM_WHITE_LIGHT,
@@ -122,14 +163,12 @@ class ImouSwitch(ImouEntity, SwitchEntity):
         """Turn the switch off."""
         await self._async_switch_operation(False)
 
+    @async_wrap_imou_command("switch_operation_failed")
     async def _async_switch_operation(self, enable: bool) -> None:
         """Call the vendor library to change switch state."""
-        try:
-            await self.coordinator.device_manager.async_switch_operation(
-                self.device,
-                self._entity_type,
-                enable,
-            )
-        except ImouException as e:
-            raise HomeAssistantError(str(e)) from e
+        await self.coordinator.device_manager.async_switch_operation(
+            self.device,
+            self._entity_type,
+            enable,
+        )
         await self.coordinator.async_request_refresh()

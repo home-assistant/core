@@ -10,7 +10,6 @@ from elkm1_lib.panel import Panel
 from elkm1_lib.settings import Setting
 from elkm1_lib.util import pretty_const
 from elkm1_lib.zones import Zone
-import voluptuous as vol
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -20,12 +19,10 @@ from homeassistant.components.sensor import (
 from homeassistant.const import EntityCategory, UnitOfElectricPotential
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_platform, entity_registry as er
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.typing import VolDictType
 
 from . import ElkM1ConfigEntry
-from .const import ATTR_VALUE, ELK_USER_CODE_SERVICE_SCHEMA
 from .entity import (
     ElkAttachedEntity,
     ElkEntity,
@@ -34,10 +31,6 @@ from .entity import (
 )
 from .util import deprecate_entity
 
-SERVICE_SENSOR_COUNTER_REFRESH = "sensor_counter_refresh"
-SERVICE_SENSOR_COUNTER_SET = "sensor_counter_set"
-SERVICE_SENSOR_ZONE_BYPASS = "sensor_zone_bypass"
-SERVICE_SENSOR_ZONE_TRIGGER = "sensor_zone_trigger"
 UNDEFINED_TEMPERATURE = -40
 
 _DEVICE_CLASS_MAP: dict[ZoneType, SensorDeviceClass] = {
@@ -48,10 +41,6 @@ _DEVICE_CLASS_MAP: dict[ZoneType, SensorDeviceClass] = {
 _STATE_CLASS_MAP: dict[ZoneType, SensorStateClass] = {
     ZoneType.TEMPERATURE: SensorStateClass.MEASUREMENT,
     ZoneType.ANALOG_ZONE: SensorStateClass.MEASUREMENT,
-}
-
-ELK_SET_COUNTER_SERVICE_SCHEMA: VolDictType = {
-    vol.Required(ATTR_VALUE): vol.All(vol.Coerce(int), vol.Range(0, 65535))
 }
 
 
@@ -96,29 +85,6 @@ async def async_setup_entry(
 
     create_elk_entities(elk_data, elk_settings, "setting", ElkSetting, entities)
     async_add_entities(entities)
-
-    platform = entity_platform.async_get_current_platform()
-
-    platform.async_register_entity_service(
-        SERVICE_SENSOR_COUNTER_REFRESH,
-        None,
-        "async_counter_refresh",
-    )
-    platform.async_register_entity_service(
-        SERVICE_SENSOR_COUNTER_SET,
-        ELK_SET_COUNTER_SERVICE_SCHEMA,
-        "async_counter_set",
-    )
-    platform.async_register_entity_service(
-        SERVICE_SENSOR_ZONE_BYPASS,
-        ELK_USER_CODE_SERVICE_SCHEMA,
-        "async_zone_bypass",
-    )
-    platform.async_register_entity_service(
-        SERVICE_SENSOR_ZONE_TRIGGER,
-        None,
-        "async_zone_trigger",
-    )
 
 
 def temperature_to_state(temperature: int, undefined_temperature: int) -> str | None:

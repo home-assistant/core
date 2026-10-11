@@ -258,6 +258,18 @@ DISCOVERY_SCHEMAS = [
             FanValueMapping(speeds=[(1, 25), (26, 50), (51, 75), (76, 99)]),
         ),
     ),
+    # Leviton VRF01 fan controllers using switch multilevel CC
+    ZWaveDiscoverySchema(
+        platform=Platform.FAN,
+        hint="has_fan_value_mapping",
+        manufacturer_id={0x001D},
+        product_id={0x0209, 0x0334},
+        product_type={0x1001},
+        primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
+        data_template=FixedFanValueMappingDataTemplate(
+            FanValueMapping(speeds=[(1, 32), (33, 66), (67, 99)]),
+        ),
+    ),
     # Inovelli LZW36 light / fan controller combo using switch multilevel CC
     # The fan is endpoint 2, the light is endpoint 1.
     ZWaveDiscoverySchema(
@@ -538,12 +550,12 @@ DISCOVERY_SCHEMAS = [
         primary_value=SWITCH_BINARY_CURRENT_VALUE_SCHEMA,
         assumed_state=True,
     ),
-    # Heatit Z-TRM6
+    # Heatit Z-TRM6 / Z-TRM7 (same sensor-mode / endpoint mapping)
     ZWaveDiscoverySchema(
         platform=Platform.CLIMATE,
         hint="dynamic_current_temp",
         manufacturer_id={0x019B},
-        product_id={0x3001},
+        product_id={0x3001, 0x3006},
         product_type={0x0030},
         primary_value=ZWaveValueDiscoverySchema(
             command_class={CommandClass.THERMOSTAT_MODE},

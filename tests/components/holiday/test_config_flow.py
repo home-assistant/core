@@ -101,41 +101,48 @@ async def test_form_translated_title(hass: HomeAssistant) -> None:
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_single_combination_country_province(hass: HomeAssistant) -> None:
     """Test that configuring more than one instance is rejected."""
-    data_de = {
+    data_de_step_1 = {
         CONF_COUNTRY: "DE",
+    }
+    data_de_step_2 = {
         CONF_PROVINCE: "BW",
     }
     data_al = {
         CONF_COUNTRY: "AL",
     }
-    MockConfigEntry(domain=DOMAIN, data=data_de).add_to_hass(hass)
+    MockConfigEntry(
+        domain=DOMAIN, data={**data_de_step_1, **data_de_step_2}
+    ).add_to_hass(hass)
     MockConfigEntry(domain=DOMAIN, data=data_al).add_to_hass(hass)
 
     # Test for country without subdivisions
     result_al = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-        data=data_al,
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result_al = await hass.config_entries.flow.async_configure(
+        result_al["flow_id"],
+        data_al,
     )
     assert result_al["type"] is FlowResultType.ABORT
     assert result_al["reason"] == "already_configured"
 
     # Test for country with subdivisions
-    result_de_step1 = await hass.config_entries.flow.async_init(
+    result_de = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
-        data=data_de,
     )
-    assert result_de_step1["type"] is FlowResultType.FORM
+    result_de = await hass.config_entries.flow.async_configure(
+        result_de["flow_id"],
+        data_de_step_1,
+    )
+    assert result_de["type"] is FlowResultType.FORM
 
-    result_de_step2 = await hass.config_entries.flow.async_configure(
-        result_de_step1["flow_id"],
-        {
-            CONF_PROVINCE: data_de[CONF_PROVINCE],
-        },
+    result_de = await hass.config_entries.flow.async_configure(
+        result_de["flow_id"],
+        data_de_step_2,
     )
-    assert result_de_step2["type"] is FlowResultType.ABORT
-    assert result_de_step2["reason"] == "already_configured"
+    assert result_de["type"] is FlowResultType.ABORT
+    assert result_de["reason"] == "already_configured"
 
 
 @pytest.mark.usefixtures("mock_setup_entry")

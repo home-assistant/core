@@ -1,6 +1,6 @@
 """Onkyo services."""
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID
@@ -11,10 +11,12 @@ from .const import LEGACY_REV_HDMI_OUTPUT_MAPPING
 from .media_player import DATA_MP_ENTITIES, OnkyoMediaPlayer
 
 ATTR_HDMI_OUTPUT = "hdmi_output"
-ONKYO_SELECT_OUTPUT_SCHEMA = vol.Schema(
+ONKYO_SELECT_OUTPUT_SCHEMA = probatio.Schema(
     {
-        vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
-        vol.Required(ATTR_HDMI_OUTPUT): vol.In(LEGACY_REV_HDMI_OUTPUT_MAPPING),
+        probatio.Required(ATTR_ENTITY_ID): cv.entity_ids,
+        probatio.Required(ATTR_HDMI_OUTPUT): probatio.In(
+            LEGACY_REV_HDMI_OUTPUT_MAPPING
+        ),
     }
 )
 SERVICE_SELECT_HDMI_OUTPUT = "onkyo_select_hdmi_output"

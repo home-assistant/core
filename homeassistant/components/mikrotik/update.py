@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from typing import Any, cast, override
 
 from homeassistant.components.update import (
+    UpdateDeviceClass,
     UpdateEntity,
     UpdateEntityDescription,
     UpdateEntityFeature,
@@ -41,6 +42,7 @@ UPDATES = {
     MikrotikUpdateEntityDescription(
         key="fw-update",
         translation_key="firmware_update",
+        device_class=UpdateDeviceClass.FIRMWARE,
         entity_category=EntityCategory.CONFIG,
         supported_features=UpdateEntityFeature.INSTALL | UpdateEntityFeature.BACKUP,
         path=UPDATE,
@@ -51,6 +53,7 @@ UPDATES = {
     MikrotikUpdateEntityDescription(
         key="routerboard-update",
         translation_key="routerboard_update",
+        device_class=UpdateDeviceClass.FIRMWARE,
         entity_category=EntityCategory.CONFIG,
         supported_features=UpdateEntityFeature.INSTALL,
         path=ROUTERBOARD,

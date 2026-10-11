@@ -1,8 +1,5 @@
 {
   "config": {
-    "abort": {
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
-    },
     "error": {
       "directory_does_not_exist": "The directory could not be reached. Please check your settings."
     },
@@ -21,6 +18,9 @@
   "exceptions": {
     "connection_error": {
       "message": "Connection error occurred while downloading {url}"
+    },
+    "download_path_not_found": {
+      "message": "Download path {path} does not exist"
     },
     "invalid_value": {
       "message": "Invalid filename derived from {url}"

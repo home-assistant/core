@@ -2,7 +2,6 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "wrong_apcupsd_daemon": "The reconfigured APC UPS Daemon is not the same as the one already configured."
     },
     "error": {

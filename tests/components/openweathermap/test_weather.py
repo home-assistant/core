@@ -11,7 +11,7 @@ from homeassistant.components.openweathermap.const import (
     OWM_MODE_FREE_FORECAST,
     OWM_MODE_V30,
 )
-from homeassistant.components.openweathermap.weather import SERVICE_GET_MINUTE_FORECAST
+from homeassistant.components.openweathermap.services import SERVICE_GET_MINUTE_FORECAST
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError

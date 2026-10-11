@@ -2,8 +2,8 @@
 
 from unittest.mock import patch
 
+from probatio.error import Invalid
 import pytest
-from voluptuous.error import Invalid
 
 from homeassistant import config_entries
 from homeassistant.components.eafm import const
@@ -66,3 +66,4 @@ async def test_flow_works(
     assert result["data"] == {
         "station": "L12345",
     }
+    assert result["result"].unique_id == "L12345"

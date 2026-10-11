@@ -147,11 +147,11 @@ async def test_async_handle_source_entity_changes_source_entity_removed(
     assert await hass.config_entries.async_setup(trend_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    trend_entity_entry = entity_registry.async_get("binary_sensor.my_trend")
+    trend_entity_entry = entity_registry.async_get("binary_sensor.mock_title_my_trend")
     assert trend_entity_entry.device_id == sensor_entity_entry.device_id
 
     sensor_device = device_registry.async_get(sensor_device.id)
-    assert trend_config_entry.entry_id not in sensor_device.config_entries
+    assert sensor_device.config_entry_id != trend_config_entry.entry_id
 
     events = track_entity_registry_actions(hass, trend_entity_entry.entity_id)
 
@@ -166,7 +166,7 @@ async def test_async_handle_source_entity_changes_source_entity_removed(
     mock_unload_entry.assert_called_once()
 
     # Check that the helper entity is removed
-    assert not entity_registry.async_get("binary_sensor.my_trend")
+    assert not entity_registry.async_get(trend_entity_entry.entity_id)
 
     # Check that the device is removed
     assert not device_registry.async_get(sensor_device.id)
@@ -194,11 +194,11 @@ async def test_async_handle_source_entity_changes_source_entity_removed_shared_d
     assert await hass.config_entries.async_setup(trend_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    trend_entity_entry = entity_registry.async_get("binary_sensor.my_trend")
+    trend_entity_entry = entity_registry.async_get("binary_sensor.mock_title_my_trend")
     assert trend_entity_entry.device_id == sensor_entity_entry.device_id
 
     sensor_device = device_registry.async_get(sensor_device.id)
-    assert trend_config_entry.entry_id not in sensor_device.config_entries
+    assert sensor_device.config_entry_id != trend_config_entry.entry_id
 
     events = track_entity_registry_actions(hass, trend_entity_entry.entity_id)
 
@@ -213,14 +213,14 @@ async def test_async_handle_source_entity_changes_source_entity_removed_shared_d
     mock_unload_entry.assert_called_once()
 
     # Check that the helper entity is removed
-    assert not entity_registry.async_get("binary_sensor.my_trend")
+    assert not entity_registry.async_get(trend_entity_entry.entity_id)
 
     # Check that the source device is not removed
     assert device_registry.async_get(sensor_device.id) is not None
 
     # Check that the trend config entry is not in the device
     sensor_device = device_registry.async_get(sensor_device.id)
-    assert trend_config_entry.entry_id not in sensor_device.config_entries
+    assert sensor_device.config_entry_id != trend_config_entry.entry_id
 
     # Check that the trend config entry is removed
     assert trend_config_entry.entry_id not in hass.config_entries.async_entry_ids()
@@ -241,11 +241,11 @@ async def test_async_handle_source_entity_changes_source_entity_removed_from_dev
     assert await hass.config_entries.async_setup(trend_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    trend_entity_entry = entity_registry.async_get("binary_sensor.my_trend")
+    trend_entity_entry = entity_registry.async_get("binary_sensor.mock_title_my_trend")
     assert trend_entity_entry.device_id == sensor_entity_entry.device_id
 
     sensor_device = device_registry.async_get(sensor_device.id)
-    assert trend_config_entry.entry_id not in sensor_device.config_entries
+    assert sensor_device.config_entry_id != trend_config_entry.entry_id
 
     events = track_entity_registry_actions(hass, trend_entity_entry.entity_id)
 
@@ -261,12 +261,12 @@ async def test_async_handle_source_entity_changes_source_entity_removed_from_dev
     mock_unload_entry.assert_called_once()
 
     # Check that the entity is no longer linked to the source device
-    trend_entity_entry = entity_registry.async_get("binary_sensor.my_trend")
+    trend_entity_entry = entity_registry.async_get(trend_entity_entry.entity_id)
     assert trend_entity_entry.device_id is None
 
     # Check that the trend config entry is not in the device
     sensor_device = device_registry.async_get(sensor_device.id)
-    assert trend_config_entry.entry_id not in sensor_device.config_entries
+    assert sensor_device.config_entry_id != trend_config_entry.entry_id
 
     # Check that the trend config entry is not removed
     assert trend_config_entry.entry_id in hass.config_entries.async_entry_ids()
@@ -293,13 +293,13 @@ async def test_async_handle_source_entity_changes_source_entity_moved_other_devi
     assert await hass.config_entries.async_setup(trend_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    trend_entity_entry = entity_registry.async_get("binary_sensor.my_trend")
+    trend_entity_entry = entity_registry.async_get("binary_sensor.mock_title_my_trend")
     assert trend_entity_entry.device_id == sensor_entity_entry.device_id
 
     sensor_device = device_registry.async_get(sensor_device.id)
-    assert trend_config_entry.entry_id not in sensor_device.config_entries
+    assert sensor_device.config_entry_id != trend_config_entry.entry_id
     sensor_device_2 = device_registry.async_get(sensor_device_2.id)
-    assert trend_config_entry.entry_id not in sensor_device_2.config_entries
+    assert sensor_device_2.config_entry_id != trend_config_entry.entry_id
 
     events = track_entity_registry_actions(hass, trend_entity_entry.entity_id)
 
@@ -315,14 +315,14 @@ async def test_async_handle_source_entity_changes_source_entity_moved_other_devi
     mock_unload_entry.assert_called_once()
 
     # Check that the entity is linked to the other device
-    trend_entity_entry = entity_registry.async_get("binary_sensor.my_trend")
+    trend_entity_entry = entity_registry.async_get(trend_entity_entry.entity_id)
     assert trend_entity_entry.device_id == sensor_device_2.id
 
     # Check that the trend config entry is not in any of the devices
     sensor_device = device_registry.async_get(sensor_device.id)
-    assert trend_config_entry.entry_id not in sensor_device.config_entries
+    assert sensor_device.config_entry_id != trend_config_entry.entry_id
     sensor_device_2 = device_registry.async_get(sensor_device_2.id)
-    assert trend_config_entry.entry_id not in sensor_device_2.config_entries
+    assert sensor_device_2.config_entry_id != trend_config_entry.entry_id
 
     # Check that the trend config entry is not removed
     assert trend_config_entry.entry_id in hass.config_entries.async_entry_ids()
@@ -343,11 +343,11 @@ async def test_async_handle_source_entity_new_entity_id(
     assert await hass.config_entries.async_setup(trend_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    trend_entity_entry = entity_registry.async_get("binary_sensor.my_trend")
+    trend_entity_entry = entity_registry.async_get("binary_sensor.mock_title_my_trend")
     assert trend_entity_entry.device_id == sensor_entity_entry.device_id
 
     sensor_device = device_registry.async_get(sensor_device.id)
-    assert trend_config_entry.entry_id not in sensor_device.config_entries
+    assert sensor_device.config_entry_id != trend_config_entry.entry_id
 
     events = track_entity_registry_actions(hass, trend_entity_entry.entity_id)
 
@@ -367,7 +367,7 @@ async def test_async_handle_source_entity_new_entity_id(
 
     # Check that the helper config is not in the device
     sensor_device = device_registry.async_get(sensor_device.id)
-    assert trend_config_entry.entry_id not in sensor_device.config_entries
+    assert sensor_device.config_entry_id != trend_config_entry.entry_id
 
     # Check that the trend config entry is not removed
     assert trend_config_entry.entry_id in hass.config_entries.async_entry_ids()
@@ -407,8 +407,8 @@ async def test_migration_1_1(
     # Check that the helper config entry is not in the device and the helper entity
     # is linked to the source device
     sensor_device = device_registry.async_get(sensor_device.id)
-    assert trend_config_entry.entry_id not in sensor_device.config_entries
-    trend_entity_entry = entity_registry.async_get("binary_sensor.my_trend")
+    assert sensor_device.config_entry_id != trend_config_entry.entry_id
+    trend_entity_entry = entity_registry.async_get("binary_sensor.mock_title_my_trend")
     assert trend_entity_entry.device_id == sensor_entity_entry.device_id
 
     assert trend_config_entry.version == 1

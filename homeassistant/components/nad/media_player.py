@@ -3,10 +3,11 @@
 from typing import override
 
 from nad_receiver import NADReceiver, NADReceiverTCP, NADReceiverTelnet
-import voluptuous as vol
+import probatio
 
 from homeassistant.components.media_player import (
     PLATFORM_SCHEMA as MEDIA_PLAYER_PLATFORM_SCHEMA,
+    MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
@@ -41,21 +42,21 @@ CONF_VOLUME_STEP = "volume_step"  # for NADReceiverTCP
 CONF_SOURCE_DICT = "sources"  # for NADReceiver
 
 # Max value based on a C658 with an MDC HDM-2 card installed
-SOURCE_DICT_SCHEMA = vol.Schema({vol.Range(min=1, max=12): cv.string})
+SOURCE_DICT_SCHEMA = probatio.Schema({probatio.Range(min=1, max=12): cv.string})
 
 PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_TYPE, default=DEFAULT_TYPE): vol.In(
+        probatio.Optional(CONF_TYPE, default=DEFAULT_TYPE): probatio.In(
             ["RS232", "Telnet", "TCP"]
         ),
-        vol.Optional(CONF_SERIAL_PORT, default=DEFAULT_SERIAL_PORT): cv.string,
-        vol.Optional(CONF_HOST): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_MIN_VOLUME, default=DEFAULT_MIN_VOLUME): int,
-        vol.Optional(CONF_MAX_VOLUME, default=DEFAULT_MAX_VOLUME): int,
-        vol.Optional(CONF_SOURCE_DICT, default={}): SOURCE_DICT_SCHEMA,
-        vol.Optional(CONF_VOLUME_STEP, default=DEFAULT_VOLUME_STEP): int,
+        probatio.Optional(CONF_SERIAL_PORT, default=DEFAULT_SERIAL_PORT): cv.string,
+        probatio.Optional(CONF_HOST): cv.string,
+        probatio.Optional(CONF_PORT, default=DEFAULT_PORT): int,
+        probatio.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        probatio.Optional(CONF_MIN_VOLUME, default=DEFAULT_MIN_VOLUME): int,
+        probatio.Optional(CONF_MAX_VOLUME, default=DEFAULT_MAX_VOLUME): int,
+        probatio.Optional(CONF_SOURCE_DICT, default={}): SOURCE_DICT_SCHEMA,
+        probatio.Optional(CONF_VOLUME_STEP, default=DEFAULT_VOLUME_STEP): int,
     }
 )
 
@@ -82,6 +83,7 @@ def setup_platform(
 class NAD(MediaPlayerEntity):
     """Representation of a NAD Receiver."""
 
+    _attr_device_class = MediaPlayerDeviceClass.RECEIVER
     _attr_icon = "mdi:speaker-multiple"
     _attr_supported_features = SUPPORT_NAD
 
@@ -197,6 +199,7 @@ class NAD(MediaPlayerEntity):
 class NADtcp(MediaPlayerEntity):
     """Representation of a NAD Digital amplifier."""
 
+    _attr_device_class = MediaPlayerDeviceClass.RECEIVER
     _attr_supported_features = SUPPORT_NAD
 
     def __init__(self, config):

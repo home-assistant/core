@@ -2,7 +2,7 @@
 
 from typing import TYPE_CHECKING, Any, NoReturn, overload
 
-import voluptuous as vol
+import probatio
 
 from homeassistant.helpers import (
     area_registry as ar,
@@ -51,20 +51,20 @@ def resolve_area_id(hass: HomeAssistant, lookup_value: Any) -> str | None:
     # Check if it's an entity ID
     try:
         cv.entity_id(lookup_value)
-    except vol.Invalid:
+    except probatio.Invalid:
         pass
     else:
         if entity := ent_reg.async_get(lookup_value):
             # If entity has an area ID, return that
             if entity.area_id:
                 return entity.area_id
-            # If entity has a device ID, return the area ID for the device
+            # If entity has a device ID, return the effective area of the device
             if entity.device_id and (device := dev_reg.async_get(entity.device_id)):
-                return device.area_id
+                return dr.async_get_effective_area_id(hass, device)
 
     # Check if it's a device ID
     if device := dev_reg.async_get(lookup_value):
-        return device.area_id
+        return dr.async_get_effective_area_id(hass, device)
 
     return None
 
@@ -83,7 +83,7 @@ def forgiving_boolean[_T](
     """Try to convert value to a boolean."""
     try:
         return cv.boolean(value)
-    except vol.Invalid:
+    except probatio.Invalid:
         if default is _SENTINEL:
             raise_no_default("bool", value)
         return default

@@ -4,7 +4,7 @@ from typing import Any, override
 from urllib.parse import urlparse
 
 from aioharmanluxury import DeviceInfo, HarmanLuxuryClient, HarmanLuxuryError
-import voluptuous as vol
+import probatio
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
@@ -13,7 +13,7 @@ from homeassistant.helpers.service_info.ssdp import ATTR_UPNP_SERIAL, SsdpServic
 
 from .const import DOMAIN
 
-STEP_USER_DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str})
+STEP_USER_DATA_SCHEMA = probatio.Schema({probatio.Required(CONF_HOST): str})
 
 
 class HarmanLuxuryConfigFlow(ConfigFlow, domain=DOMAIN):

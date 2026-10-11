@@ -272,16 +272,14 @@ async def test_cleanup_device_tracker(
         ("mqtt", "0AFFD2"), mqtt_config_entry.entry_id
     )
     assert device_entry is not None
-    entity_entry = entity_registry.async_get("device_tracker.mqtt_unique")
+    entity_entry = entity_registry.async_get("device_tracker.mqtt")
     assert entity_entry is not None
 
-    state = hass.states.get("device_tracker.mqtt_unique")
+    state = hass.states.get("device_tracker.mqtt")
     assert state is not None
 
     # Remove MQTT from the device
-    response = await ws_client.remove_device(
-        device_entry.id, mqtt_config_entry.entry_id
-    )
+    response = await ws_client.remove_device(device_entry.id)
     assert response["success"]
     await hass.async_block_till_done()
     await hass.async_block_till_done()
@@ -291,11 +289,11 @@ async def test_cleanup_device_tracker(
         ("mqtt", "0AFFD2"), mqtt_config_entry.entry_id
     )
     assert device_entry is None
-    entity_entry = entity_registry.async_get("device_tracker.mqtt_unique")
+    entity_entry = entity_registry.async_get("device_tracker.mqtt")
     assert entity_entry is None
 
     # Verify state is removed
-    state = hass.states.get("device_tracker.mqtt_unique")
+    state = hass.states.get("device_tracker.mqtt")
     assert state is None
     await hass.async_block_till_done()
 

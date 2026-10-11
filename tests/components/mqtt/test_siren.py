@@ -267,8 +267,8 @@ async def test_controlling_state_and_attributes_with_json_message_without_templa
     assert (
         "Unable to update siren state attributes from payload"
         " '{'duration': 6, 'volume_level': 2, 'tone': 'ping'}':"
-        " value must be at most 1 for dictionary value"
-        " @ data['volume_level']" in caplog.text
+        " value must be at most 1"
+        " at 'volume_level'" in caplog.text
     )
     # Only the on/of state was updated, not the attributes
     assert state.state == STATE_ON

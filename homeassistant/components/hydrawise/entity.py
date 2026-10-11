@@ -1,10 +1,15 @@
 """Base classes for Hydrawise entities."""
 
-from typing import override
+from collections.abc import Callable, Coroutine
+from functools import wraps
+from typing import Any, Concatenate, override
 
+from aiohttp import ClientError
+from pydrawise import Error as PydrawiseError, NotAuthorizedError
 from pydrawise.schema import Controller, Sensor, Zone
 
 from homeassistant.core import callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
@@ -80,11 +85,16 @@ class HydrawiseEntity(CoordinatorEntity[HydrawiseDataUpdateCoordinator]):
     @override
     def _handle_coordinator_update(self) -> None:
         """Get the latest data and updates the state."""
-        # Guard against updates arriving after the controller has been removed
+        # Guard against updates arriving after what the entity reads on has gone
         # but before the entity has been unsubscribed from the coordinator.
-        if self.controller.id not in self.coordinator.data.controllers:
+        data = self.coordinator.data
+        if (
+            self.controller.id not in data.controllers
+            or (self.zone_id is not None and self.zone_id not in data.zones)
+            or (self.sensor_id is not None and self.sensor_id not in data.sensors)
+        ):
             return
-        self.controller = self.coordinator.data.controllers[self.controller.id]
+        self.controller = data.controllers[self.controller.id]
         self._update_attrs()
         super()._handle_coordinator_update()
 
@@ -93,3 +103,28 @@ class HydrawiseEntity(CoordinatorEntity[HydrawiseDataUpdateCoordinator]):
     def available(self) -> bool:
         """Set the entity availability."""
         return super().available and self.controller.online
+
+
+def exception_handler[_EntityT: HydrawiseEntity, **_P](
+    func: Callable[Concatenate[_EntityT, _P], Coroutine[Any, Any, Any]],
+) -> Callable[Concatenate[_EntityT, _P], Coroutine[Any, Any, None]]:
+    """Decorate Hydrawise API calls to raise translated errors."""
+
+    @wraps(func)
+    async def handler(self: _EntityT, *args: _P.args, **kwargs: _P.kwargs) -> None:
+        try:
+            await func(self, *args, **kwargs)
+        except NotAuthorizedError as error:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_auth",
+            ) from error
+        # Fetching the auth token happens outside of pydrawise's own error
+        # translation, so raw aiohttp and timeout errors can surface too.
+        except (PydrawiseError, ClientError, TimeoutError) as error:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="command_error",
+            ) from error
+
+    return handler

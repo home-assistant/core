@@ -54,9 +54,19 @@
     "media_player": {
       "media_player": {
         "state_attributes": {
-          "dynamic_range": { "name": "Dynamic range" }
+          "dynamic_range": {
+            "name": "Dynamic range"
+          }
         }
       }
+    }
+  },
+  "exceptions": {
+    "login_failed": {
+      "message": "Login to {host} failed"
+    },
+    "notify_failed": {
+      "message": "Unable to send the notification to Kodi. Is Kodi online?"
     }
   },
   "services": {

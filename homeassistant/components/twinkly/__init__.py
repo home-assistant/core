@@ -1,21 +1,18 @@
 """The twinkly component."""
 
-import logging
-
 from aiohttp import ClientError
 from ttls.client import Twinkly
 
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN
+from .const import DEVICE_TIMEOUT, DOMAIN
 from .coordinator import TwinklyConfigEntry, TwinklyCoordinator
 
 PLATFORMS = [Platform.LIGHT, Platform.SELECT]
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: TwinklyConfigEntry) -> bool:
@@ -25,7 +22,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TwinklyConfigEntry) -> b
     # we will be able to properly share the connection.
     host = entry.data[CONF_HOST]
 
-    client = Twinkly(host, async_get_clientsession(hass))
+    client = Twinkly(host, async_get_clientsession(hass), timeout=DEVICE_TIMEOUT)
 
     coordinator = TwinklyCoordinator(hass, entry, client)
 
@@ -47,12 +44,19 @@ async def async_unload_entry(hass: HomeAssistant, entry: TwinklyConfigEntry) -> 
 async def async_migrate_entry(hass: HomeAssistant, entry: TwinklyConfigEntry) -> bool:
     """Migrate old entry."""
     if entry.minor_version == 1:
-        client = Twinkly(entry.data[CONF_HOST], async_get_clientsession(hass))
+        client = Twinkly(
+            entry.data[CONF_HOST],
+            async_get_clientsession(hass),
+            timeout=DEVICE_TIMEOUT,
+        )
         try:
             device_info = await client.get_details()
         except (TimeoutError, ClientError) as exception:
-            _LOGGER.error("Error while migrating: %s", exception)
-            return False
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+                translation_placeholders={"host": entry.data[CONF_HOST]},
+            ) from exception
         identifier = entry.unique_id
         assert identifier is not None
         entity_registry = er.async_get(hass)

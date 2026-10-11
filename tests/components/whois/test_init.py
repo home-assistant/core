@@ -3,11 +3,11 @@
 from unittest.mock import MagicMock
 
 import pytest
-from whois.exceptions import (
-    FailedParsingWhoisOutput,
-    UnknownDateFormat,
-    UnknownTld,
-    WhoisCommandFailed,
+from whoisdomain.exceptions import (
+    FailedParsingWhoisOutputError,
+    UnknownDateFormatError,
+    UnknownTldError,
+    WhoisCommandFailedError,
 )
 
 from homeassistant.components.whois.const import DOMAIN
@@ -28,18 +28,24 @@ async def test_load_unload_config_entry(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert len(mock_whois.mock_calls) == 1
+    mock_whois.assert_called_once_with("home-assistant.io", whoisOnly=True)
 
     await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert not hass.data.get(DOMAIN)
-    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+    state: ConfigEntryState = mock_config_entry.state
+    assert state is ConfigEntryState.NOT_LOADED
 
 
 @pytest.mark.parametrize(
     "side_effect",
-    [FailedParsingWhoisOutput, UnknownDateFormat, UnknownTld, WhoisCommandFailed],
+    [
+        FailedParsingWhoisOutputError,
+        UnknownDateFormatError,
+        UnknownTldError,
+        WhoisCommandFailedError,
+    ],
 )
 async def test_error_handling(
     hass: HomeAssistant,
@@ -55,4 +61,4 @@ async def test_error_handling(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-    assert len(mock_whois.mock_calls) == 1
+    mock_whois.assert_called_once_with("home-assistant.io", whoisOnly=True)

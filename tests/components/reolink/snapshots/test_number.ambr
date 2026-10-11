@@ -1445,7 +1445,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      <NumberEntityCapabilityAttribute.MAX: 'max'>: 2700,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 6000,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: -1,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
@@ -1484,7 +1484,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test_reolink_cam Auto track limit left',
-      <NumberEntityCapabilityAttribute.MAX: 'max'>: 2700,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 6000,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: -1,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
@@ -1504,7 +1504,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      <NumberEntityCapabilityAttribute.MAX: 'max'>: 2700,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 6000,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: -1,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
@@ -1543,7 +1543,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test_reolink_cam Auto track limit right',
-      <NumberEntityCapabilityAttribute.MAX: 'max'>: 2700,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 6000,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: -1,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,

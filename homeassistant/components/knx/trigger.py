@@ -1,28 +1,33 @@
 """Provide KNX automation triggers."""
 
-from typing import Final
+from collections.abc import Callable
+from typing import Any, Final, cast, override
 
-import voluptuous as vol
+import probatio
 from xknx.dpt import DPTBase
 from xknx.telegram import Telegram, TelegramDirection
 from xknx.telegram.address import DeviceGroupAddress, parse_device_group_address
 from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWrite
 
-from homeassistant.const import CONF_PLATFORM, CONF_TYPE
-from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
+from homeassistant.const import CONF_OPTIONS, CONF_TYPE
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.automation import move_top_level_schema_fields_to_options
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
-from homeassistant.helpers.typing import ConfigType, VolDictType
+from homeassistant.helpers.trigger import (
+    Trigger,
+    TriggerActionRunner,
+    TriggerConfig,
+    TriggerNotTriggeredReporter,
+)
+from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, SIGNAL_KNX_TELEGRAM
+from .const import SIGNAL_KNX_TELEGRAM
 from .schema import ga_validator
 from .telegrams import TelegramDict, decode_telegram_payload
 from .validation import dpt_base_type_validator
 
 TRIGGER_TELEGRAM: Final = "telegram"
-
-PLATFORM_TYPE_TRIGGER_TELEGRAM: Final = f"{DOMAIN}.{TRIGGER_TELEGRAM}"
 
 CONF_KNX_DESTINATION: Final = "destination"
 CONF_KNX_GROUP_VALUE_WRITE: Final = "group_value_write"
@@ -32,61 +37,66 @@ CONF_KNX_INCOMING: Final = "incoming"
 CONF_KNX_OUTGOING: Final = "outgoing"
 
 
-TELEGRAM_TRIGGER_SCHEMA: VolDictType = {
-    vol.Optional(CONF_KNX_DESTINATION): vol.All(cv.ensure_list, [ga_validator]),
-    vol.Optional(CONF_KNX_GROUP_VALUE_WRITE, default=True): cv.boolean,
-    vol.Optional(CONF_KNX_GROUP_VALUE_RESPONSE, default=True): cv.boolean,
-    vol.Optional(CONF_KNX_GROUP_VALUE_READ, default=True): cv.boolean,
-    vol.Optional(CONF_KNX_INCOMING, default=True): cv.boolean,
-    vol.Optional(CONF_KNX_OUTGOING, default=True): cv.boolean,
+TELEGRAM_TRIGGER_SCHEMA: dict[probatio.Marker, Any] = {
+    probatio.Required(CONF_KNX_DESTINATION, default=list): probatio.All(
+        probatio.EnsureList(), [ga_validator]
+    ),
+    probatio.Optional(CONF_KNX_GROUP_VALUE_WRITE, default=True): cv.boolean,
+    probatio.Optional(CONF_KNX_GROUP_VALUE_RESPONSE, default=True): cv.boolean,
+    probatio.Optional(CONF_KNX_GROUP_VALUE_READ, default=True): cv.boolean,
+    probatio.Optional(CONF_KNX_INCOMING, default=True): cv.boolean,
+    probatio.Optional(CONF_KNX_OUTGOING, default=True): cv.boolean,
 }
-# TRIGGER_SCHEMA is exclusive to triggers, the above are used in device triggers too
-TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
-    {
-        vol.Required(CONF_PLATFORM): PLATFORM_TYPE_TRIGGER_TELEGRAM,
-        vol.Optional(CONF_TYPE, default=None): vol.Any(dpt_base_type_validator, None),
-        **TELEGRAM_TRIGGER_SCHEMA,
-    }
+# the DPT type is exclusive to the telegram trigger, the above are used
+# in device triggers too
+_OPTIONS_SCHEMA_DICT: dict[probatio.Marker, Any] = {
+    probatio.Optional(CONF_TYPE, default=None): probatio.Maybe(dpt_base_type_validator),
+    **TELEGRAM_TRIGGER_SCHEMA,
+}
+_TELEGRAM_TRIGGER_SCHEMA = probatio.Schema(
+    {probatio.Required(CONF_OPTIONS, default=dict): _OPTIONS_SCHEMA_DICT}
 )
 
 
-async def async_attach_trigger(
+@callback
+def async_subscribe_telegrams(
     hass: HomeAssistant,
-    config: ConfigType,
-    action: TriggerActionType,
-    trigger_info: TriggerInfo,
+    options: ConfigType,
+    telegram_callback: Callable[[dict[str, Any]], None],
 ) -> CALLBACK_TYPE:
-    """Listen for telegrams based on configuration."""
-    _addresses: list[str] = config.get(CONF_KNX_DESTINATION, [])
+    """Call `telegram_callback` for telegrams matching the filter options.
+
+    Shared by the telegram trigger and the interface device trigger. The payload
+    passed to the callback is the telegram dict, with the values re-decoded when
+    a DPT type is configured.
+    """
+    # an empty destination list matches every group address
     dst_addresses: list[DeviceGroupAddress] = [
-        parse_device_group_address(address) for address in _addresses
+        parse_device_group_address(address) for address in options[CONF_KNX_DESTINATION]
     ]
-    _transcoder = config.get(CONF_TYPE)
+    _transcoder = options.get(CONF_TYPE)
     trigger_transcoder = DPTBase.parse_transcoder(_transcoder) if _transcoder else None
 
-    job = HassJob(action, f"KNX trigger {trigger_info}")
-    trigger_data = trigger_info["trigger_data"]
-
     @callback
-    def async_call_trigger_action(
+    def async_telegram_received(
         telegram: Telegram, telegram_dict: TelegramDict
     ) -> None:
-        """Filter Telegram and call trigger action."""
+        """Filter Telegram and call the callback."""
         payload_apci = type(telegram.payload)
         if payload_apci is GroupValueWrite:
-            if config[CONF_KNX_GROUP_VALUE_WRITE] is False:
+            if options[CONF_KNX_GROUP_VALUE_WRITE] is False:
                 return
         elif payload_apci is GroupValueResponse:
-            if config[CONF_KNX_GROUP_VALUE_RESPONSE] is False:
+            if options[CONF_KNX_GROUP_VALUE_RESPONSE] is False:
                 return
         elif payload_apci is GroupValueRead:
-            if config[CONF_KNX_GROUP_VALUE_READ] is False:
+            if options[CONF_KNX_GROUP_VALUE_READ] is False:
                 return
 
         if telegram.direction is TelegramDirection.INCOMING:
-            if config[CONF_KNX_INCOMING] is False:
+            if options[CONF_KNX_INCOMING] is False:
                 return
-        elif config[CONF_KNX_OUTGOING] is False:
+        elif options[CONF_KNX_OUTGOING] is False:
             return
 
         if dst_addresses and telegram.destination_address not in dst_addresses:
@@ -102,14 +112,74 @@ async def async_attach_trigger(
                 transcoder=trigger_transcoder,
             )
             # overwrite decoded payload values in telegram_dict
-            telegram_trigger_data = {**trigger_data, **telegram_dict, **decoded_payload}
-        else:
-            telegram_trigger_data = {**trigger_data, **telegram_dict}
+            telegram_callback({**telegram_dict, **decoded_payload})
+            return
 
-        hass.async_run_hass_job(job, {"trigger": telegram_trigger_data})
+        telegram_callback(dict(telegram_dict))
 
     return async_dispatcher_connect(
         hass,
         signal=SIGNAL_KNX_TELEGRAM,
-        target=async_call_trigger_action,
+        target=async_telegram_received,
     )
+
+
+class TelegramTrigger(Trigger):
+    """Trigger for KNX telegrams."""
+
+    _options: dict[str, Any]
+
+    @override
+    @classmethod
+    async def async_validate_complete_config(
+        cls, hass: HomeAssistant, complete_config: ConfigType
+    ) -> ConfigType:
+        """Validate complete config, migrating the legacy top-level fields."""
+        complete_config = move_top_level_schema_fields_to_options(
+            complete_config, _OPTIONS_SCHEMA_DICT
+        )
+        return await super().async_validate_complete_config(hass, complete_config)
+
+    @override
+    @classmethod
+    async def async_validate_config(
+        cls, hass: HomeAssistant, config: ConfigType
+    ) -> ConfigType:
+        """Validate config."""
+        return cast(ConfigType, _TELEGRAM_TRIGGER_SCHEMA(config))
+
+    def __init__(self, hass: HomeAssistant, config: TriggerConfig) -> None:
+        """Initialize the trigger."""
+        super().__init__(hass, config)
+        assert config.options is not None
+        self._options = config.options
+
+    @override
+    async def async_attach_runner(
+        self,
+        run_action: TriggerActionRunner,
+        did_not_trigger: TriggerNotTriggeredReporter | None = None,
+    ) -> CALLBACK_TYPE:
+        """Attach the trigger to an action runner."""
+
+        @callback
+        def async_telegram_received(telegram_data: dict[str, Any]) -> None:
+            """Run the action for a matching telegram."""
+            run_action(
+                telegram_data,
+                f"KNX telegram to {telegram_data['destination']}",
+            )
+
+        return async_subscribe_telegrams(
+            self._hass, self._options, async_telegram_received
+        )
+
+
+TRIGGERS: dict[str, type[Trigger]] = {
+    TRIGGER_TELEGRAM: TelegramTrigger,
+}
+
+
+async def async_get_triggers(hass: HomeAssistant) -> dict[str, type[Trigger]]:
+    """Return the triggers for KNX."""
+    return TRIGGERS

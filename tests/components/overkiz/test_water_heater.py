@@ -42,7 +42,7 @@ DHW_CE_FLAT_C2 = FixtureDevice(
 DHW_HITACHI_YUTAKI = FixtureDevice(
     "setup/cloud_atlantic_cozytouch.json",
     "modbus://1234-5678-5643/6381497/1#4",
-    "water_heater.yutaki_dhw",
+    "water_heater.somfy_tahoma_switch_yutaki_dhw",
 )
 
 # Thermor Aéromax 4 (io:AtlanticDomesticHotWaterProductionIOComponent)
