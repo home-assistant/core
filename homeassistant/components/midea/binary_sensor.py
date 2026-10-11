@@ -31,6 +31,28 @@ BINARY_SENSORS: list[BinarySensorEntityDescription] = [
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     BinarySensorEntityDescription(
+        key="refrigerator_door",
+        translation_key="refrigerator_door",
+        device_class=BinarySensorDeviceClass.DOOR,
+    ),
+    BinarySensorEntityDescription(
+        key="freezer_door",
+        translation_key="freezer_door",
+        device_class=BinarySensorDeviceClass.DOOR,
+    ),
+    BinarySensorEntityDescription(
+        key="refrigerator_door_overtime",
+        translation_key="refrigerator_door_overtime",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    BinarySensorEntityDescription(
+        key="freezer_door_overtime",
+        translation_key="freezer_door_overtime",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    BinarySensorEntityDescription(
         key="rinse_aid",
         translation_key="rinse_aid",
         device_class=BinarySensorDeviceClass.PROBLEM,
