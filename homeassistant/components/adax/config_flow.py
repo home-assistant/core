@@ -56,7 +56,7 @@ async def is_adax_tls_device(ip: str, timeout: float = 2.0) -> bool:
 
     try:
         async with asyncio.timeout(timeout):
-            reader, writer = await asyncio.open_connection(
+            _reader, writer = await asyncio.open_connection(
                 ip, 443, ssl=ssl_ctx, server_hostname=ip
             )
             try:
