@@ -65,6 +65,8 @@ from .utils import (
     setup_public_sensor,
 )
 
+pytestmark = pytest.mark.usefixtures("mock_private_only_entities_registered")
+
 CAMERA_SWITCHES_BASIC = [
     d
     for d in CAMERA_SWITCHES

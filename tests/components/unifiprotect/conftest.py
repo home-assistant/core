@@ -84,6 +84,25 @@ def mock_discovery():
         yield
 
 
+@pytest.fixture
+def mock_private_only_entities_registered():
+    """Create the deprecated private-only entities as if they were registered.
+
+    New installs skip them; the platform tests cover existing installs.
+    """
+    with (
+        patch(
+            "homeassistant.components.unifiprotect.entity.async_is_new_private_only_entity",
+            return_value=False,
+        ),
+        patch(
+            "homeassistant.components.unifiprotect.switch.async_is_new_private_only_entity",
+            return_value=False,
+        ),
+    ):
+        yield
+
+
 @pytest.fixture(name="nvr")
 def mock_nvr():
     """Mock UniFi Protect Camera device."""

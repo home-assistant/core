@@ -163,6 +163,11 @@ class ProtectData:
         self.ptz_patrols: dict[str, list[PTZPatrol]] = {}
 
     @property
+    def hass(self) -> HomeAssistant:
+        """Return the Home Assistant instance."""
+        return self._hass
+
+    @property
     def disable_stream(self) -> bool:
         """Check if RTSP is disabled."""
         return self._entry.options.get(CONF_DISABLE_RTSP, False)  # type: ignore[no-any-return]
