@@ -112,7 +112,6 @@ class AdaxConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_dhcp_confirm()
 
-    @override
     async def async_step_dhcp_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -142,6 +141,7 @@ class AdaxConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 if not errors:
+                    assert self.unique_id is not None
                     return self.async_create_entry(
                         title=self.unique_id,
                         data={

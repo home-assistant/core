@@ -455,7 +455,9 @@ async def test_dhcp_discovery_flow_success(hass: HomeAssistant) -> None:
 
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "dhcp_confirm"
-        assert result["context"]["title_placeholders"] == {
+
+        flow = hass.config_entries.flow.async_get(result["flow_id"])
+        assert flow["context"]["title_placeholders"] == {
             "ip_address": "192.168.1.9",
         }
         assert result["description_placeholders"] == {
@@ -470,6 +472,7 @@ async def test_dhcp_discovery_flow_success(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
         assert result2["type"] is FlowResultType.CREATE_ENTRY
+        assert result2["result"].unique_id == TEST_DHCP_UNIQUE_ID
         assert result2["title"] == TEST_DHCP_UNIQUE_ID
         assert result2["data"] == {
             CONF_IP_ADDRESS: "192.168.1.9",
@@ -539,7 +542,7 @@ async def test_dhcp_confirm_connection_errors(
     get_status_return_value: Any,
     expected_error: str,
 ) -> None:
-    """Test connection and unknown errors during DHCP token confirmation."""
+    """Test connection and unknown errors during DHCP token confirmation and recovery."""
     with patch(
         "homeassistant.components.adax.config_flow.is_adax_tls_device",
         return_value=True,
@@ -566,6 +569,27 @@ async def test_dhcp_confirm_connection_errors(
 
         assert result2["type"] is FlowResultType.FORM
         assert result2["errors"] == {"base": expected_error}
+
+    # Recover from the error by submitting valid data and creating entry
+    with (
+        patch(
+            "homeassistant.components.adax.config_flow.AdaxLocal.get_status",
+            new_callable=AsyncMock,
+            return_value={"current_temperature": 21.5},
+        ),
+        patch(
+            "homeassistant.components.adax.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            user_input={CONF_TOKEN: "valid_secret_token"},
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+    assert result3["result"].unique_id == TEST_DHCP_UNIQUE_ID
 
 
 async def test_is_adax_tls_device_helper() -> None:

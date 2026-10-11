@@ -1,6 +1,5 @@
 {
   "config": {
-    "flow_title": "Adax Heater {ip_address}",
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "heater_not_available": "Heater not available. Try to reset the heater by pressing + and OK for some seconds.",
@@ -12,19 +11,20 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
+    "flow_title": "Adax Heater {ip_address}",
     "step": {
+      "cloud": {
+        "data": {
+          "account_id": "Account ID",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      },
       "dhcp_confirm": {
         "data": {
           "token": "Authentication Token"
         },
         "title": "Discovered Adax Heater",
         "description": "An Adax heater was discovered at IP `{ip_address}` (MAC: `{mac}`). Please enter your local authentication token to complete setup."
-      },
-      "cloud": {
-        "data": {
-          "account_id": "Account ID",
-          "password": "[%key:common::config_flow::data::password%]"
-        }
       },
       "local": {
         "data": {
