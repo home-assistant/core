@@ -2,7 +2,6 @@
 
 from unittest.mock import AsyncMock, patch
 
-import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.device_tracker import SourceType
@@ -29,8 +28,15 @@ async def test_device_tracker(
     ):
         await init_integration(hass, mock_config_entry)
 
-        mock_tractive_client.send_position_event(mock_config_entry)
-        mock_tractive_client.send_hardware_event(mock_config_entry)
+        mock_tractive_client.set_tracker_status(
+            latitude=22.333, longitude=44.555, accuracy=99, sensor_used="GPS"
+        )
+        mock_tractive_client.set_tracker_status(
+            battery_level=88,
+            tracker_state="operational",
+            power_saving=True,
+            battery_charging=True,
+        )
         await hass.async_block_till_done()
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
@@ -43,18 +49,15 @@ async def test_source_type_phone(
     """Test the device tracker with source type phone."""
     await init_integration(hass, mock_config_entry)
 
-    mock_tractive_client.send_position_event(
-        mock_config_entry,
-        {
-            "tracker_id": "device_id_123",
-            "position": {
-                "latlong": [22.333, 44.555],
-                "accuracy": 99,
-                "sensor_used": "PHONE",
-            },
-        },
+    mock_tractive_client.set_tracker_status(
+        latitude=22.333, longitude=44.555, accuracy=99, sensor_used="PHONE"
     )
-    mock_tractive_client.send_hardware_event(mock_config_entry)
+    mock_tractive_client.set_tracker_status(
+        battery_level=88,
+        tracker_state="operational",
+        power_saving=True,
+        battery_charging=True,
+    )
     await hass.async_block_till_done()
 
     assert (
@@ -73,18 +76,15 @@ async def test_source_type_gps(
     """Test if the source type is GPS when the location sensor is KNOWN WIFI."""
     await init_integration(hass, mock_config_entry)
 
-    mock_tractive_client.send_position_event(
-        mock_config_entry,
-        {
-            "tracker_id": "device_id_123",
-            "position": {
-                "latlong": [22.333, 44.555],
-                "accuracy": 99,
-                "sensor_used": "KNOWN_WIFI",
-            },
-        },
+    mock_tractive_client.set_tracker_status(
+        latitude=22.333, longitude=44.555, accuracy=99, sensor_used="KNOWN_WIFI"
     )
-    mock_tractive_client.send_hardware_event(mock_config_entry)
+    mock_tractive_client.set_tracker_status(
+        battery_level=88,
+        tracker_state="operational",
+        power_saving=True,
+        battery_charging=True,
+    )
     await hass.async_block_till_done()
 
     assert (
@@ -118,25 +118,17 @@ async def test_device_tracker_device_assignment(
     assert entry.device_id == tracker_device.id
 
 
-@pytest.mark.parametrize(
-    "pos_report",
-    [
-        pytest.param(None, id="none"),
-        pytest.param({}, id="empty"),
-        pytest.param(
-            {"latlong": None, "pos_uncertainty": None, "sensor_used": None},
-            id="no_location",
-        ),
-    ],
-)
 async def test_device_tracker_without_position(
     hass: HomeAssistant,
     mock_tractive_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    pos_report: dict[str, None] | None,
 ) -> None:
     """Test a tracker without a position, like a switched off one, is set up."""
-    mock_tractive_client.tracker.return_value.pos_report.return_value = pos_report
+    tracker_status = mock_tractive_client.status.trackers["device_id_123"]
+    tracker_status.latitude = None
+    tracker_status.longitude = None
+    tracker_status.accuracy = None
+    tracker_status.sensor_used = None
     with patch(
         "homeassistant.components.tractive.PLATFORMS", [Platform.DEVICE_TRACKER]
     ):
@@ -146,7 +138,9 @@ async def test_device_tracker_without_position(
     assert state
     assert state.state == STATE_UNKNOWN
 
-    mock_tractive_client.send_position_event(mock_config_entry)
+    mock_tractive_client.set_tracker_status(
+        latitude=22.333, longitude=44.555, accuracy=99, sensor_used="GPS"
+    )
     await hass.async_block_till_done()
 
     state = hass.states.get("device_tracker.tracker_device_id_123")

@@ -1,8 +1,9 @@
 """Support for Tractive sensors."""
 
-from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, override
+from typing import override
+
+from aiotractive import Trackable
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -16,11 +17,10 @@ from homeassistant.const import (
     EntityCategory,
     UnitOfTime,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import Trackables, TractiveClient, TractiveConfigEntry
 from .const import (
     ATTR_DAILY_GOAL,
     ATTR_MINUTES_ACTIVE,
@@ -28,9 +28,8 @@ from .const import (
     ATTR_MINUTES_NIGHT_SLEEP,
     ATTR_MINUTES_REST,
     ATTR_TRACKER_STATE,
-    TRACKER_HARDWARE_STATUS_UPDATED,
-    TRACKER_HEALTH_OVERVIEW_UPDATED,
 )
+from .coordinator import TractiveConfigEntry, TractiveCoordinator
 from .entity import TractiveEntity
 
 
@@ -38,10 +37,7 @@ from .entity import TractiveEntity
 class TractiveSensorEntityDescription(SensorEntityDescription):
     """Class describing Tractive sensor entities."""
 
-    signal_prefix: str
-
     hardware_sensor: bool = False
-    value_fn: Callable[[StateType], StateType] = lambda state: state
 
 
 class TractiveSensor(TractiveEntity, SensorEntity):
@@ -51,42 +47,33 @@ class TractiveSensor(TractiveEntity, SensorEntity):
 
     def __init__(
         self,
-        hass: HomeAssistant,
-        entry: TractiveConfigEntry,
-        client: TractiveClient,
-        item: Trackables,
+        coordinator: TractiveCoordinator,
+        trackable: Trackable,
         description: TractiveSensorEntityDescription,
     ) -> None:
         """Initialize sensor entity."""
-        if description.hardware_sensor:
-            dispatcher_signal = (
-                f"{description.signal_prefix}-{item.tracker_details['_id']}"
-            )
-        else:
-            dispatcher_signal = f"{description.signal_prefix}-{item.trackable['_id']}"
-        super().__init__(
-            hass,
-            entry,
-            client,
-            item.trackable,
-            item.tracker_details,
-            dispatcher_signal,
-            description.hardware_sensor,
-        )
+        super().__init__(coordinator, trackable, description.hardware_sensor)
 
-        self._attr_unique_id = f"{item.trackable['_id']}_{description.key}"
-        self._attr_available = False
+        self._attr_unique_id = f"{trackable.pet_id}_{description.key}"
         self.entity_description = description
 
-    @callback
+    @property
     @override
-    def handle_status_update(self, event: dict[str, Any]) -> None:
-        """Handle status update."""
-        self._attr_native_value = self.entity_description.value_fn(
-            event[self.entity_description.key]
+    def native_value(self) -> StateType:
+        """Return the state of the sensor."""
+        status = (
+            self._tracker_status
+            if self.entity_description.hardware_sensor
+            else self._pet_status
         )
+        value: StateType = getattr(status, self.entity_description.key)
+        return value
 
-        super().handle_status_update(event)
+    @property
+    @override
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return super().available and self.native_value is not None
 
 
 SENSOR_TYPES: tuple[TractiveSensorEntityDescription, ...] = (
@@ -94,14 +81,12 @@ SENSOR_TYPES: tuple[TractiveSensorEntityDescription, ...] = (
         key=ATTR_BATTERY_LEVEL,
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
-        signal_prefix=TRACKER_HARDWARE_STATUS_UPDATED,
         hardware_sensor=True,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     TractiveSensorEntityDescription(
         key=ATTR_TRACKER_STATE,
         translation_key="tracker_state",
-        signal_prefix=TRACKER_HARDWARE_STATUS_UPDATED,
         hardware_sensor=True,
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.ENUM,
@@ -117,34 +102,29 @@ SENSOR_TYPES: tuple[TractiveSensorEntityDescription, ...] = (
         key=ATTR_MINUTES_ACTIVE,
         translation_key="activity_time",
         native_unit_of_measurement=UnitOfTime.MINUTES,
-        signal_prefix=TRACKER_HEALTH_OVERVIEW_UPDATED,
         state_class=SensorStateClass.TOTAL,
     ),
     TractiveSensorEntityDescription(
         key=ATTR_MINUTES_REST,
         translation_key="rest_time",
         native_unit_of_measurement=UnitOfTime.MINUTES,
-        signal_prefix=TRACKER_HEALTH_OVERVIEW_UPDATED,
         state_class=SensorStateClass.TOTAL,
     ),
     TractiveSensorEntityDescription(
         key=ATTR_DAILY_GOAL,
         translation_key="daily_goal",
         native_unit_of_measurement=UnitOfTime.MINUTES,
-        signal_prefix=TRACKER_HEALTH_OVERVIEW_UPDATED,
     ),
     TractiveSensorEntityDescription(
         key=ATTR_MINUTES_DAY_SLEEP,
         translation_key="minutes_day_sleep",
         native_unit_of_measurement=UnitOfTime.MINUTES,
-        signal_prefix=TRACKER_HEALTH_OVERVIEW_UPDATED,
         state_class=SensorStateClass.TOTAL,
     ),
     TractiveSensorEntityDescription(
         key=ATTR_MINUTES_NIGHT_SLEEP,
         translation_key="minutes_night_sleep",
         native_unit_of_measurement=UnitOfTime.MINUTES,
-        signal_prefix=TRACKER_HEALTH_OVERVIEW_UPDATED,
         state_class=SensorStateClass.TOTAL,
     ),
 )
@@ -156,13 +136,10 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Tractive device trackers."""
-    client = entry.runtime_data.client
-    trackables = entry.runtime_data.trackables
+    coordinator = entry.runtime_data
 
-    entities = [
-        TractiveSensor(hass, entry, client, item, description)
+    async_add_entities(
+        TractiveSensor(coordinator, trackable, description)
         for description in SENSOR_TYPES
-        for item in trackables
-    ]
-
-    async_add_entities(entities)
+        for trackable in coordinator.trackables
+    )
