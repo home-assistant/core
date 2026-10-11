@@ -11,13 +11,18 @@ from homeassistant.components.light import (
     LightEntity,
     LightEntityStateAttribute,
 )
-from homeassistant.config_entries import ConfigEntry, ConfigSubentry
+from homeassistant.config_entries import ConfigSubentry
 from homeassistant.const import STATE_ON
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import DeviceTuple, async_setup_platform_entry, get_device_tuple_from_device
+from . import (
+    DeviceTuple,
+    RfxtrxConfigEntry,
+    async_setup_platform_entry,
+    get_device_tuple_from_device,
+)
 from .const import COMMAND_OFF_LIST, COMMAND_ON_LIST
 from .entity import RfxtrxCommandEntity
 
@@ -34,7 +39,7 @@ def supported(event: rfxtrxmod.RFXtrxEvent) -> bool:
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: RfxtrxConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up config entry."""

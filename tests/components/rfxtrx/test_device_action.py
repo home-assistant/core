@@ -10,6 +10,7 @@ from homeassistant.components import automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.rfxtrx import DOMAIN, device_action
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
@@ -248,3 +249,34 @@ async def test_invalid_action(
     await hass.async_block_till_done()
 
     assert "Subtype invalid not found in device commands" in caplog.text
+
+
+async def test_action_not_connected(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test an action when RFXtrx is not connected."""
+    device = DEVICE_LIGHTING_1
+
+    mock_entry = await setup_entry(hass, {device.code: {}})
+
+    device_entry = device_registry.async_get_device_by_identifier(
+        get_device_identifier(mock_entry, device.device_identifier[1]),
+        mock_entry.entry_id,
+    )
+    assert device_entry
+
+    await hass.config_entries.async_unload(mock_entry.entry_id)
+
+    with pytest.raises(HomeAssistantError, match="RFXtrx is not connected"):
+        await device_action.async_call_action_from_config(
+            hass,
+            {
+                "domain": DOMAIN,
+                "device_id": device_entry.id,
+                "type": "send_command",
+                "subtype": "On",
+            },
+            {},
+            None,
+        )

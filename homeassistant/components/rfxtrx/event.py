@@ -6,13 +6,18 @@ from typing import override
 from RFXtrx import ControlEvent, RFXtrxDevice, RFXtrxEvent, SensorEvent
 
 from homeassistant.components.event import EventEntity
-from homeassistant.config_entries import ConfigEntry, ConfigSubentry
+from homeassistant.config_entries import ConfigSubentry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import slugify
 
-from . import DeviceTuple, async_setup_platform_entry, get_device_tuple_from_device
+from . import (
+    DeviceTuple,
+    RfxtrxConfigEntry,
+    async_setup_platform_entry,
+    get_device_tuple_from_device,
+)
 from .const import DEVICE_PACKET_TYPE_LIGHTING4
 from .entity import RfxtrxEntity
 
@@ -21,7 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: RfxtrxConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up config entry."""

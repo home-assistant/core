@@ -6,7 +6,7 @@ from typing import Any, override
 import RFXtrx as rfxtrxmod
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.config_entries import ConfigEntry, ConfigSubentry
+from homeassistant.config_entries import ConfigSubentry
 from homeassistant.const import CONF_COMMAND_OFF, CONF_COMMAND_ON, STATE_ON
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import Entity
@@ -14,6 +14,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import (
     DeviceTuple,
+    RfxtrxConfigEntry,
     async_setup_platform_entry,
     get_device_tuple_from_device,
     get_pt2262_cmd,
@@ -43,7 +44,7 @@ def supported(event: rfxtrxmod.RFXtrxEvent) -> bool:
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: RfxtrxConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up config entry."""

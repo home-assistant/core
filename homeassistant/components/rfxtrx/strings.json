@@ -230,9 +230,6 @@
       "wind_average_speed": {
         "name": "Wind average speed"
       },
-      "wind_direction": {
-        "name": "Wind direction"
-      },
       "wind_gust": {
         "name": "Wind gust"
       }

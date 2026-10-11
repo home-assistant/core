@@ -44,10 +44,12 @@ async def test_config_flow(
         CONF_COUNTRY: MOCK_COUNTRY,
         CONF_CONNECT_CLIENT_ID: MOCK_CONNECT_CLIENT_ID,
     }
+    assert result["result"].unique_id == MOCK_PAT
 
     mock_config_thinq_api.async_get_device_list.assert_called_once()
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_config_flow_invalid_pat(
     hass: HomeAssistant, mock_invalid_thinq_api: AsyncMock
 ) -> None:
@@ -66,6 +68,14 @@ async def test_config_flow_invalid_pat(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"]
     mock_invalid_thinq_api.async_get_device_list.assert_called_once()
+
+    mock_invalid_thinq_api.async_get_device_list.side_effect = None
+    mock_invalid_thinq_api.async_get_device_list.return_value = ["air_conditioner"]
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_ACCESS_TOKEN: MOCK_PAT, CONF_COUNTRY: MOCK_COUNTRY},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_config_flow_already_configured(
@@ -112,6 +122,7 @@ async def test_dhcp_config_flow(
         CONF_COUNTRY: MOCK_COUNTRY,
         CONF_CONNECT_CLIENT_ID: MOCK_CONNECT_CLIENT_ID,
     }
+    assert result["result"].unique_id == MOCK_PAT
 
     mock_config_thinq_api.async_get_device_list.assert_called_once()
 
