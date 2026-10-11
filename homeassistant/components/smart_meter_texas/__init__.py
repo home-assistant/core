@@ -5,7 +5,7 @@ from smart_meter_texas.exceptions import SmartMeterTexasAuthError
 
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 from .const import DOMAIN
 from .coordinator import (
@@ -31,7 +31,7 @@ async def async_setup_entry(
     try:
         await smart_meter_texas_data.client.authenticate()
     except SmartMeterTexasAuthError as error:
-        raise ConfigEntryError(
+        raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
             translation_key="invalid_auth",
         ) from error
