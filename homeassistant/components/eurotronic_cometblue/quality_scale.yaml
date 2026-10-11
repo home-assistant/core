@@ -56,22 +56,12 @@ rules:
   docs-troubleshooting: done
   docs-use-cases: todo
   dynamic-devices: done
-  entity-category:
-    status: exempt
-    comment: This integration only provides one primary entity.
-  entity-device-class:
-    status: exempt
-    comment: This integration does not provide sensors.
-  entity-disabled-by-default:
-    status: exempt
-    comment: This integration only provides one primary entity.
-  entity-translations:
-    status: exempt
-    comment: This integration only provides one primary entity.
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default: done
+  entity-translations: done
   exception-translations: todo
-  icon-translations:
-    status: exempt
-    comment: Not required.
+  icon-translations: done
   reconfiguration-flow: todo
   repair-issues:
     status: exempt
