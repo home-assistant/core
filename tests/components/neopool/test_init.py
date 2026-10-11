@@ -4,6 +4,7 @@ from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
+from neopool_modbus import NeoPoolModbusClient
 from neopool_modbus.registers import MAX_RELAY_GPIO
 import pytest
 
@@ -72,6 +73,22 @@ async def test_setup_borrows_shared_unit(
     assert get_unit_args[1] is mock_config_entry
     assert get_unit_args[3] == mock_config_entry.data["unit_id"]
     assert mock_client_cls.call_args.kwargs["unit"] is unit
+
+
+async def test_client_close_leaves_borrowed_unit_open() -> None:
+    """A client built on a borrowed unit must not close it on unload.
+
+    async_unload_entry calls client.close(). With an injected unit that close
+    has to be a no-op, since the modbus integration owns the shared connection
+    and may be lending it to other consumers.
+    """
+    unit = MagicMock()
+    client = NeoPoolModbusClient({"unit_id": 1}, unit=unit)
+
+    await client.close()
+
+    for teardown in ("close", "disconnect", "async_close"):
+        assert not getattr(unit, teardown).called
 
 
 async def test_setup_link_conflict_fails_setup(
