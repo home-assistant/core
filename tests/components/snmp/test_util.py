@@ -12,6 +12,7 @@ from homeassistant.components.snmp.const import (
     CONF_AUTH_PROTOCOL,
     CONF_PRIV_KEY,
     CONF_PRIV_PROTOCOL,
+    DEFAULT_RETRIES,
 )
 from homeassistant.components.snmp.util import (
     async_create_transport_target,
@@ -65,7 +66,9 @@ async def test_async_create_transport_target_ipv4_success(
     ) as mock_create:
         result = await async_create_transport_target("192.168.1.1", 161, 5.0)
         assert result == "ipv4_target"
-        mock_create.assert_called_once()
+        mock_create.assert_called_once_with(
+            ("192.168.1.1", 161), timeout=5.0, retries=DEFAULT_RETRIES
+        )
 
 
 async def test_async_create_transport_target_ipv6_fallback(
@@ -84,7 +87,9 @@ async def test_async_create_transport_target_ipv6_fallback(
     ):
         result = await async_create_transport_target("::1", 161, 5.0)
         assert result == "ipv6_target"
-        mock_create6.assert_called_once()
+        mock_create6.assert_called_once_with(
+            ("::1", 161), timeout=5.0, retries=DEFAULT_RETRIES
+        )
 
 
 async def test_async_create_transport_target_all_fail(

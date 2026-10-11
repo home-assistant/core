@@ -32,6 +32,7 @@ from .const import (
     DEFAULT_AUTH_PROTOCOL,
     DEFAULT_COMMUNITY,
     DEFAULT_PRIV_PROTOCOL,
+    DEFAULT_RETRIES,
     MAP_AUTH_PROTOCOLS,
     MAP_PRIV_PROTOCOLS,
 )
@@ -87,9 +88,13 @@ async def async_create_transport_target(
 ) -> UdpTransportTarget | Udp6TransportTarget:
     """Create SNMP transport target with IPv4 / IPv6 fallback."""
     try:
-        return await UdpTransportTarget.create((host, port), timeout=timeout)
+        return await UdpTransportTarget.create(
+            (host, port), timeout=timeout, retries=DEFAULT_RETRIES
+        )
     except PySnmpError:
-        return await Udp6TransportTarget.create((host, port), timeout=timeout)
+        return await Udp6TransportTarget.create(
+            (host, port), timeout=timeout, retries=DEFAULT_RETRIES
+        )
 
 
 async def async_validate_oid(hass: HomeAssistant, oid: str) -> bool:
