@@ -127,8 +127,8 @@ class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[IndiAllSkyData]):
         image_bytes: bytes | None
         try:
             image_bytes = await self.client.fetch_image("latestkeogram")
-        except IndiAllSkyError:
-            _LOGGER.warning("Failed to fetch latest keogram image")
+        except IndiAllSkyError as err:
+            _LOGGER.warning("Failed to fetch latest keogram image: %s", err)
             image_bytes = None
         if media is not self.latest_keogram:
             return
@@ -165,8 +165,8 @@ class IndiAllSkyDataUpdateCoordinator(DataUpdateCoordinator[IndiAllSkyData]):
         image_bytes: bytes | None
         try:
             image_bytes = await self.client.fetch_image("lateststartrail")
-        except IndiAllSkyError:
-            _LOGGER.warning("Failed to fetch latest startrail image")
+        except IndiAllSkyError as err:
+            _LOGGER.warning("Failed to fetch latest startrail image: %s", err)
             image_bytes = None
         if media is not self.latest_startrail:
             return

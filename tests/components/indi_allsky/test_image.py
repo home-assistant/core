@@ -197,6 +197,7 @@ async def test_stale_media_fetch_ignored(
     for cb in startrail_callbacks:
         cb(mock_startrail_data)
 
+    await asyncio.sleep(0)
     await first_keogram_fetch_started.wait()
     await first_startrail_fetch_started.wait()
 
@@ -214,14 +215,29 @@ async def test_stale_media_fetch_ignored(
     assert coordinator.latest_startrail_image is None
     assert coordinator.latest_startrail_updated is None
 
-    # Allow the first (stale) fetches to complete
+    # Wait for the second (newer) fetches to start
+    await asyncio.sleep(0)
+    await second_keogram_fetch_started.wait()
+    await second_startrail_fetch_started.wait()
+
+    # Complete the second (newer) fetches first
+    unblock_second_keogram_fetch.set()
+    await asyncio.sleep(0)
+
+    # The newer keogram image is now loaded, while the first keogram fetch is still in flight
+    assert coordinator.latest_keogram_image == b"new_keogram"
+
+    unblock_second_startrail_fetch.set()
+    await asyncio.sleep(0)
+    assert coordinator.latest_startrail_image == b"new_startrail"
+
+    # Now allow the first (stale) fetches to complete; their results must be ignored
     unblock_first_keogram_fetch.set()
     unblock_first_startrail_fetch.set()
-
-    # Allow the second (new) fetches to complete
-    unblock_second_keogram_fetch.set()
-    unblock_second_startrail_fetch.set()
     await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert coordinator.latest_keogram_image == b"new_keogram"
+    assert coordinator.latest_startrail_image == b"new_startrail"
 
     img = await image.async_get_image(hass, "image.indi_allsky_latest_keogram")
     assert img.content == b"new_keogram"
@@ -286,8 +302,13 @@ async def test_image_last_updated_timezones_and_fallback(
     mock_indi_allsky_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     mock_keogram_data: MediaData,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test image_last_updated timezone parsing and updated_fn fallback without day_date."""
+    frozen_fallback_time = dt_util.parse_datetime("2026-08-14T05:20:00+00:00")
+    assert frozen_fallback_time is not None
+    freezer.move_to(frozen_fallback_time)
+
     with patch("homeassistant.components.indi_allsky._PLATFORMS", [Platform.IMAGE]):
         await setup_integration(hass, mock_config_entry)
 
@@ -302,6 +323,10 @@ async def test_image_last_updated_timezones_and_fallback(
     assert state is not None
     assert state.state == "2026-08-13T20:53:41+00:00"
 
+    fallback_time = dt_util.parse_datetime("2026-08-14T06:30:00+00:00")
+    assert fallback_time is not None
+    freezer.move_to(fallback_time)
+
     no_date_keogram = replace(mock_keogram_data, day_date="")
     for callback in mock_indi_allsky_client.callbacks.get("keogram_complete", []):
         callback(no_date_keogram)
@@ -309,5 +334,4 @@ async def test_image_last_updated_timezones_and_fallback(
 
     state = hass.states.get("image.indi_allsky_latest_keogram")
     assert state is not None
-    assert state.state is not None
-    assert "+00:00" in state.state
+    assert state.state == "2026-08-14T06:30:00+00:00"
